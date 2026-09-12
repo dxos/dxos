@@ -14,6 +14,8 @@ import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 
 import { findObject } from '../assertions.ts';
 import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';
+import type * as McpLatency from '../McpLatency.ts';
+import * as McpTarget from '../McpTarget.ts';
 import * as Scorer from '../Scorer.ts';
 
 //
@@ -29,6 +31,32 @@ import * as Scorer from '../Scorer.ts';
 // Only the server's tools are allowed. No Bash, no file tools: an agent that can shell out could
 // satisfy a prompt without ever reaching the surface, and the run would prove nothing about it.
 //
+// `DX_EVAL_MCP_TARGET` picks the surface: `local` (the in-process host, the default), `local-edge`
+// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Only `local` can be graded from
+// the database — a deployed worker serves its own data plane, which this process neither seeds nor
+// reads — so a remote run drops the write stages and scores what a client can see from outside:
+// discovery through the server, and per-tool latency.
+//
+
+const TARGET = McpTarget.fromEnv();
+
+const REMOTE = !McpTarget.isLocal(TARGET);
+
+/**
+ * The calls the latency report is built from: both read-only and neither needs a space, so the same
+ * probe is safe to point at production as at the in-process host.
+ */
+const LATENCY_PROBES = [
+  { tool: 'queryOperations', args: { query: 'task' } },
+  { tool: 'loadSkill' },
+] satisfies McpLatency.Probe[];
+
+/**
+ * Ceiling for the p95 of a tool call, in ms. The in-process host is a function call behind a
+ * loopback socket; a deployed worker is a TLS round trip in front of a data plane, so the two cannot
+ * share a number. Override with `DX_EVAL_MCP_LATENCY_BUDGET_MS`.
+ */
+const LATENCY_BUDGET = Number(process.env.DX_EVAL_MCP_LATENCY_BUDGET_MS ?? (REMOTE ? 3_000 : 500));
 
 const PROJECT_NAME = 'Lighthouse';
 
@@ -76,7 +104,30 @@ const NOTHING_STAGED: Staged = {
   started: false,
 };
 
-const scorers = (staged: Staged): Scorer.Any[] => [
+/**
+ * Latency as a graded dimension, carrying the whole report as its value: the pass/fail is the p95
+ * against a budget, but what a reader of a run wants is the per-tool spread next to it.
+ */
+const latencyScorer = (report?: McpLatency.Report): Scorer.Any =>
+  Scorer.make({
+    name: 'tool-latency',
+    description: `Client-observed MCP tool latency against "${TARGET}"; p95 within ${LATENCY_BUDGET}ms and no errored call.`,
+    query: Effect.succeed(report),
+    score: (value) => value != null && value.stats['*'].errors === 0 && value.stats['*'].p95 <= LATENCY_BUDGET,
+  });
+
+/** What a deployed target can be held to: the surface answered, and it answered fast enough. */
+const remoteScorers = (discovered: boolean, report?: McpLatency.Report): Scorer.Any[] => [
+  Scorer.make({
+    name: 'operations-discovered',
+    description: 'The agent reached the deployed surface and got operations back through it.',
+    query: Effect.succeed(discovered),
+    score: (ok) => ok,
+  }),
+  latencyScorer(report),
+];
+
+const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
   Scorer.make({
     name: 'scaffold-visible',
     description: 'The seeded ledger is readable outside the agent before the run starts.',
@@ -115,14 +166,37 @@ const scorers = (staged: Staged): Scorer.Any[] => [
     query: Query.select(Filter.type(Task.Task)),
     score: (tasks) => tasks.length === 2,
   }),
+  latencyScorer(report),
 ];
 
 /** Names and descriptions only; the marks come from the run, through `output.scores`. */
-const SCORERS = scorers(NOTHING_STAGED);
+const SCORERS = REMOTE ? remoteScorers(false) : scorers(NOTHING_STAGED);
 
-const task = () =>
+/**
+ * A deployed worker, driven from the outside: no seed, no database check, one discovery turn and a
+ * latency report. It is what remains measurable when the space the agent acts on is not this
+ * process's.
+ */
+const remoteTask = () =>
+  runClaudeEval({ skills: [], target: TARGET }, async ({ send, latency, score }) => {
+    const report = await latency(LATENCY_PROBES);
+    const turn = await send(
+      `Using only the ${SERVER} MCP server, list the operations it offers for working with tasks. ` +
+        'Reply with their keys, one per line, and change nothing.',
+    );
+    const discovered = !turn.isError && turn.toolCalls.includes(tool('queryOperations'));
+    const scores = await score(remoteScorers(discovered, report));
+    return {
+      scores,
+      latency: report,
+      turns: [turn].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
+    };
+  });
+
+const localTask = () =>
   runClaudeEval(
     {
+      target: TARGET,
       skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }],
       plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
       types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
@@ -141,7 +215,7 @@ const task = () =>
           yield* Database.add(Project.make({ name: PROJECT_NAME, taskSet: Ref.make(taskSet) }));
         }),
     },
-    async ({ spaceId, send, query, score }) => {
+    async ({ spaceId, send, query, score, latency }) => {
       // Stage 1 — the starting state, proven before a single token is spent. Without it, a later
       // "the task is done" score cannot distinguish the agent's work from a bad fixture.
       const seeded = await query(readTasks);
@@ -196,16 +270,21 @@ const task = () =>
         // Still done: a later turn must not roll back what an earlier one committed.
         find(afterStart, ROTATE)?.status === 'done';
 
-      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started }));
+      // After the turns, so the probe's own connection is not competing with the agent's for the
+      // listener — and so a latency figure is never what a scenario's writes waited behind.
+      const report = await latency(LATENCY_PROBES);
+
+      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started }, report));
       return {
         scores,
+        latency: report,
         turns: [read, complete, start].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
       };
     },
   );
 
-evalite('MCP server — Claude Code drives the projected surface, graded from the database', {
+evalite(`MCP server (${TARGET}) — Claude Code drives the projected surface`, {
   data: [{ input: null }],
-  task,
+  task: REMOTE ? remoteTask : localTask,
   scorers: Scorer.toEvalite(SCORERS),
 });

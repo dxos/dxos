@@ -30,6 +30,8 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
 import { registerSkills, startMcpHost } from './mcp-host.ts';
+import * as McpLatency from './McpLatency.ts';
+import * as McpTarget from './McpTarget.ts';
 import * as Observe from './Observe.ts';
 import * as Scorer from './Scorer.ts';
 import * as Usage from './Usage.ts';
@@ -64,6 +66,11 @@ export type ClaudeHarnessOptions = {
   allowedTools?: string[];
   model?: string;
   turnTimeout?: number;
+  /**
+   * Which MCP surface to drive: the in-process host, or one of the deployed `mcp-space-service`
+   * workers (see {@link McpTarget}). Defaults to `DX_EVAL_MCP_TARGET`, and to `local` without it.
+   */
+  target?: McpTarget.Target;
   /** Fills the space before the agent starts. */
   seed?: (context: {
     spaceId: SpaceId;
@@ -73,6 +80,20 @@ export type ClaudeHarnessOptions = {
 /** What a scenario drives and reads inside {@link runClaudeEval}. */
 export type ClaudeHarness = {
   readonly spaceId: SpaceId;
+  /** The surface this run is driving. */
+  readonly target: McpTarget.Target;
+  /** Endpoint the agent dials — the in-process listener's, or the deployed worker's. */
+  readonly url: string;
+  /**
+   * Times the surface from the outside, over its own client connection.
+   *
+   * Separate from the agent's turns on purpose: what a turn's wall clock measures is dominated by
+   * the model, so a tool-latency figure has to come from calls nothing else is in front of.
+   */
+  readonly latency: (
+    probes: readonly McpLatency.Probe[],
+    options?: { iterations?: number; warmup?: number },
+  ) => Promise<McpLatency.Report>;
   /** Sends one user message to the agent and resolves when that turn ends. */
   readonly send: (prompt: string) => Promise<Turn>;
   /**
@@ -153,6 +174,11 @@ export const runClaudeEval = async <T>(
   options: ClaudeHarnessOptions,
   body: (harness: ClaudeHarness) => Promise<T>,
 ): Promise<T> => {
+  const target = options.target ?? McpTarget.fromEnv();
+  // The endpoint doubles as the switch: a target with one is dialed, and only the in-process host
+  // has none until its listener is bound.
+  const remoteUrl = McpTarget.url(target);
+  const headers = McpTarget.headers(target);
   if (API_KEY.length === 0) {
     throw new Error('DX_ANTHROPIC_API_KEY is not set; the MCP eval spends real tokens and cannot run without it.');
   }
@@ -179,7 +205,9 @@ export const runClaudeEval = async <T>(
   const link: Usage.Link = { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name };
   try {
     const { defaultSpace } = await EffectEx.runAndForwardErrors(initializeIdentity(app.get(ClientCapabilities.Client)));
-    const spaceId = defaultSpace.id;
+    // A deployed worker serves its own data plane, so the space the harness just created does not
+    // exist there and the scenario has to be pointed at one that does.
+    const spaceId = remoteUrl != null ? (McpTarget.spaceId() ?? defaultSpace.id) : defaultSpace.id;
 
     const query = <D>(
       effect: Effect.Effect<D, unknown, Database.Service | Capabilities.ProcessManagerRuntimeServices>,
@@ -213,16 +241,21 @@ export const runClaudeEval = async <T>(
     // a host that dies after binding the listener has still registered its finalizer on the scope.
     const scope = await EffectEx.runPromise(Scope.make());
     try {
-      const { url } = await EffectEx.runPromise(
-        startMcpHost({
-          skills: options.skills,
-          spaceIds: [spaceId],
-          context: () => context,
-          registry: () => registry,
-        }).pipe(Scope.provide(scope)),
-      );
+      const { url } =
+        remoteUrl != null
+          ? { url: remoteUrl }
+          : await EffectEx.runPromise(
+              startMcpHost({
+                skills: options.skills,
+                spaceIds: [spaceId],
+                context: () => context,
+                registry: () => registry,
+              }).pipe(Scope.provide(scope)),
+            );
 
-      if (options.seed) {
+      // Seeding a deployed worker's space from here would write to the harness's own database
+      // instead — a different space than the agent is about to read, which is worse than no seed.
+      if (options.seed && remoteUrl == null) {
         await query(options.seed({ spaceId }));
         await query(Database.flush());
       }
@@ -231,7 +264,7 @@ export const runClaudeEval = async <T>(
         cwd: workdir,
         // Streamable HTTP, so the agent dials the listener this process owns rather than spawning a
         // server of its own — the difference between measuring this surface and measuring a CLI.
-        mcpServers: { [SERVER]: { type: 'http', url } },
+        mcpServers: { [SERVER]: { type: 'http', url, ...(headers ? { headers } : {}) } },
         apiKey: API_KEY,
         model: options.model ?? DEFAULT_MODEL,
         allowedTools: options.allowedTools ?? [tool('queryOperations'), tool('invokeOperation'), tool('loadSkill')],
@@ -241,8 +274,11 @@ export const runClaudeEval = async <T>(
 
       return await body({
         spaceId,
+        target,
+        url,
         query,
         score,
+        latency: (probes, probeOptions) => McpLatency.probe({ target, url, headers, probes, ...probeOptions }),
         send: async (prompt) => {
           const turn = await claudeAgent.send(prompt);
           durationMillis += turn.end - turn.start;
