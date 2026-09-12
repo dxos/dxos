@@ -6,7 +6,13 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
-import { AgentRequestBegin, AgentRequestEnd, CompleteBlock, DelegationSpawned } from '@dxos/assistant';
+import {
+  AgentRequestBegin,
+  AgentRequestEnd,
+  CompleteBlock,
+  DelegationSpawned,
+  TaskStatusChanged,
+} from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
@@ -62,6 +68,60 @@ interface SessionSource {
   chat?: Chat.Chat;
   pids: Set<string>;
 }
+
+/**
+ * The stretch of a session during which one task was the active one, bounded by the status events
+ * the planning tool writes. Everything the session did inside it belongs to that task.
+ */
+interface TaskSegment {
+  taskId: string;
+  laneId: string;
+  start: number;
+  end?: number;
+}
+
+/**
+ * A status that ends the agent's work on a task. `blocked` is one: the agent moved on, and whatever
+ * it does next is no longer that task's.
+ */
+const TERMINAL_STATUS = new Set<Task.Status>(['done', 'review', 'failed', 'cancelled', 'duplicate', 'blocked']);
+
+/**
+ * Cuts a session's events into one segment per task worked, from the planning tool's status events.
+ * The agent keeps exactly one task started, so a new `started` closes the segment still open.
+ */
+const buildTaskSegments = (events: readonly Trace.FlatEvent[]): TaskSegment[] => {
+  const segments: TaskSegment[] = [];
+  let open: TaskSegment | undefined;
+  for (const event of events) {
+    if (event.type !== TaskStatusChanged.key) {
+      continue;
+    }
+    const data = decode(TaskStatusChanged.schema, event.data);
+    if (!data) {
+      continue;
+    }
+    if (data.status === 'started') {
+      if (open && open.taskId !== data.taskId) {
+        open.end = event.timestamp;
+        open = undefined;
+      }
+      if (!open) {
+        open = { taskId: data.taskId, laneId: taskLaneId(data.taskId), start: event.timestamp };
+        segments.push(open);
+      }
+    } else if (TERMINAL_STATUS.has(data.status)) {
+      const segment = segments.findLast((candidate) => candidate.taskId === data.taskId);
+      if (segment && segment.end === undefined) {
+        segment.end = event.timestamp;
+      }
+      if (open?.taskId === data.taskId) {
+        open = undefined;
+      }
+    }
+  }
+  return segments;
+};
 
 interface SubAgentSpan {
   span: Span;
@@ -143,6 +203,8 @@ export const buildSessionTimeline = ({
   const markers: Marker[] = [];
   const childSessions: { lane: MutableLane; sessionLaneId: string }[] = [];
   const replacedTaskLanes = new Map<string, string>();
+  /** Per session lane: the task segments its markers are attributed to. */
+  const segmentsBySession = new Map<string, TaskSegment[]>();
 
   for (const source of sources) {
     const laneId = sessionLaneId(source.key);
@@ -232,6 +294,20 @@ export const buildSessionTimeline = ({
       lanes.push(taskLane);
     }
 
+    // The status events bound each task's stretch of the session, giving its lane a span of its own
+    // and a node where it started and finished.
+    const segments = buildTaskSegments(sessionEvents).filter((segment) => taskLanes.has(segment.taskId));
+    segmentsBySession.set(laneId, segments);
+    for (const segment of segments) {
+      const taskLane = taskLanes.get(segment.taskId);
+      if (!taskLane) {
+        continue;
+      }
+      taskLane.start = Math.min(taskLane.start ?? segment.start, segment.start);
+      // An open segment leaves the lane open, even if an earlier one closed.
+      taskLane.end = segment.end === undefined ? undefined : Math.max(taskLane.end ?? segment.end, segment.end);
+    }
+
     // Spawned pids without a trace yet still get a lane from their process.
     const subAgentPids = new Set<string>([...subAgentSpans.map(({ pid }) => pid), ...taskByPid.keys()]);
     for (const subPid of subAgentPids) {
@@ -273,6 +349,13 @@ export const buildSessionTimeline = ({
     }
   }
 
+  // A delegated task's lane was replaced by its child session, and its markers follow.
+  for (const segments of segmentsBySession.values()) {
+    for (const segment of segments) {
+      segment.laneId = replacedTaskLanes.get(segment.laneId) ?? segment.laneId;
+    }
+  }
+
   // Dependencies named the task lane; they follow it to the session that replaced it.
   for (const lane of lanes) {
     if (lane.blockedOn) {
@@ -291,7 +374,18 @@ export const buildSessionTimeline = ({
     if (laneId === undefined) {
       continue;
     }
-    const marker = toMarker(event, `${laneId}:${markers.length}`, laneId);
+    // Everything the session did while a task was active is that task's, so the session bar keeps
+    // only what brackets the whole run (its request markers) and the timeline reads per task.
+    const markerLaneId =
+      event.type === AgentRequestBegin.key || event.type === AgentRequestEnd.key
+        ? laneId
+        : (segmentsBySession
+            .get(laneId)
+            ?.find(
+              (segment) =>
+                event.timestamp >= segment.start && event.timestamp <= (segment.end ?? Number.MAX_SAFE_INTEGER),
+            )?.laneId ?? laneId);
+    const marker = toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
     if (marker) {
       markers.push(marker);
       if (marker.kind === 'delegation') {
@@ -381,6 +475,16 @@ const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | 
         label: `Request ${data?.status ?? 'ended'}`,
         level: data?.status === 'error' ? 'error' : data?.status === 'interrupted' ? 'warn' : undefined,
         detail: data?.error,
+      };
+    }
+    case TaskStatusChanged.key: {
+      const data = decode(TaskStatusChanged.schema, event.data);
+      return {
+        ...base,
+        kind: 'task',
+        label: data?.status === 'started' ? 'Task started' : `Task ${data?.status ?? 'updated'}`,
+        level: data?.status === 'failed' ? 'error' : undefined,
+        detail: data,
       };
     }
     case DelegationSpawned.key: {

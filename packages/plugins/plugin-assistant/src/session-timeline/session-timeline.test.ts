@@ -7,7 +7,13 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
-import { AgentRequestBegin, AgentRequestEnd, CompleteBlock, DelegationSpawned } from '@dxos/assistant';
+import {
+  AgentRequestBegin,
+  AgentRequestEnd,
+  CompleteBlock,
+  DelegationSpawned,
+  TaskStatusChanged,
+} from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
@@ -143,6 +149,56 @@ describe('buildSessionTimeline', () => {
     expect(timeline.range).toEqual({ start: 1, end: 100 });
   });
 
+  test('cuts the session into task segments from the status events', ({ expect }) => {
+    const first = Task.make({ title: 'First', status: 'done' });
+    const second = Task.make({ title: 'Second', status: 'started' });
+    const chat = makeChat('Segmented', [first, second]);
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1
+          yield* toolCall('Search'); // 2 — before any task started, stays on the session.
+          yield* Trace.write(TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 3
+          yield* toolCall('Read file'); // 4
+          yield* Trace.write(TaskStatusChanged, {
+            taskId: first.id,
+            title: 'First',
+            status: 'done',
+            previousStatus: 'started',
+          }); // 5
+          yield* toolCall('Think'); // 6 — between segments.
+          yield* Trace.write(TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 7
+          yield* toolCall('Write file'); // 8
+        }),
+      ),
+    );
+
+    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second], now: 20 });
+    const sessionId = `session:${chat.id}`;
+    const firstLane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
+    const secondLane = timeline.lanes.find((lane) => lane.id === `task:${second.id}`);
+    // The first task's lane is bounded by its status events; the second one is still open.
+    expect(firstLane).toMatchObject({ kind: 'task', status: 'done', start: 3, end: 5 });
+    expect(secondLane).toMatchObject({ kind: 'task', status: 'running', start: 7, end: undefined });
+
+    // Every event inside a segment is that task's; the rest stay on the session.
+    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+    expect(lanesByLabel.get('Search')).toBe(sessionId);
+    expect(lanesByLabel.get('Read file')).toBe(firstLane?.id);
+    expect(lanesByLabel.get('Think')).toBe(sessionId);
+    expect(lanesByLabel.get('Write file')).toBe(secondLane?.id);
+    expect(lanesByLabel.get('Request started')).toBe(sessionId);
+
+    // Start and finish are drawn as nodes on the task's own lane.
+    const taskMarkers = timeline.markers.filter((marker) => marker.kind === 'task');
+    expect(taskMarkers.map(({ laneId, label, timestamp }) => ({ laneId, label, timestamp }))).toEqual([
+      { laneId: firstLane?.id, label: 'Task started', timestamp: 3 },
+      { laneId: firstLane?.id, label: 'Task done', timestamp: 5 },
+      { laneId: secondLane?.id, label: 'Task started', timestamp: 7 },
+    ]);
+  });
+
   test('joins the sub-agent by the delegationSpawned event and sums tokens per lane', ({ expect }) => {
     const task = Task.make({ title: 'Write', status: 'done' });
     const chat = makeChat('Tokens', [task]);
@@ -204,6 +260,13 @@ const agentProcess = (pid: string, chat: Chat.Chat, state: Process.State): Proce
 
 const makeChat = (name: string, tasks: readonly Task.Task[]) =>
   Chat.make({ name, feed: Ref.make(Feed.make()), tasks: tasks.map((task) => Ref.make(task)) });
+
+const toolCall = (name: string) =>
+  Trace.write(CompleteBlock, {
+    messageId: MESSAGE_ID,
+    role: 'assistant',
+    block: { _tag: 'toolCall', toolCallId: name, name, input: '{}', providerExecuted: false },
+  });
 
 const stats = (input: number, output: number, toolCalls: number) =>
   Trace.write(CompleteBlock, {
