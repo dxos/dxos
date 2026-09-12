@@ -30,6 +30,7 @@ const draftTask = createEvalRunner({
 
 evalite('Markdown — draft a document', {
   data: [{ input: null }],
+  trialCount: 3,
   task: draftTask,
   scorers: [
     {
@@ -68,6 +69,7 @@ const appendTask = createEvalRunner({
 
 evalite('Markdown — append text to empty document', {
   data: [{ input: null }],
+  trialCount: 3,
   task: appendTask,
   scorers: [
     {

@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
-import { withLayout, withTheme } from '../../testing/index.ts';
+import { withLayout, withTheme } from '../../testing';
 import { Carousel } from './Carousel.tsx';
 
 // Stable placeholder images so the story renders without network fixtures.

@@ -7,8 +7,8 @@ import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useM
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 
 const attentionGlyphStyles = mx(
   'inline-block rounded-xs size-3 bg-transparent text-accent-text transition-colors',

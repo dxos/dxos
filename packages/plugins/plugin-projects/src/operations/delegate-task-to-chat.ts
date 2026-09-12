@@ -25,6 +25,7 @@ import { concat } from '@dxos/util';
 import { ProjectOperation } from '#types';
 
 import { getProjectChatPath } from '../paths.ts';
+import { findProject } from './find-project.ts';
 
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
@@ -47,8 +48,13 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // A chat delegating nothing has no subject; the schema cannot say so (see the operation's
         // input), so the invariant is where an empty list stops.
         invariant(taskRefs.length > 0, 'Expected at least one task to delegate.');
-        const tasks = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
+        const requested = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
         const { db } = yield* Database.Service;
+
+        // Idempotent over re-invocation: a task the agent already holds is skipped rather than
+        // handed to a second session, and a list of nothing else stops here the way an empty one does.
+        const tasks = requested.filter((task) => !Task.isAgentWorking(task));
+        invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
         // than loose in the space. Walked from the tasks rather than taken as input: the list the
@@ -213,18 +219,5 @@ const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, proj
   const objects = project ? [Ref.make(project)] : [];
   yield* Effect.promise(() => binder.use((binder: AiContext.Binder) => binder.bind({ skills, objects })));
 });
-
-/** The task's project, walked up the ECHO parents (task → task set → project). */
-const findProject = (task: Obj.Any): Project.Project | undefined => {
-  let cursor: Obj.Any | undefined = Obj.getParent(task);
-  // Bounded: a malformed parent chain must not spin, and nothing legitimate is this deep.
-  for (let depth = 0; cursor && depth < 8; depth++) {
-    if (Obj.instanceOf(Project.Project, cursor)) {
-      return cursor;
-    }
-    cursor = Obj.getParent(cursor);
-  }
-  return undefined;
-};
 
 export default handler;

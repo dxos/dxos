@@ -20,10 +20,10 @@ import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
 import { useComposedRefs, useControllableState, useMediaQuery } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type Label, toLocalizedString, useTranslation } from '../../providers/index.ts';
-import { type MainStyleProps } from '../../theme/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks';
+import { type Label, toLocalizedString, useTranslation } from '../../providers';
+import { type MainStyleProps } from '../../theme';
+import { type ThemedClassName } from '../../util';
 import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext.ts';
 
 const MAIN_ROOT_NAME = 'Main.Root';

@@ -17,10 +17,10 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { ElevationProvider } from '../../providers/index.ts';
-import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
-import { IconButton, type IconButtonProps } from '../Button/index.ts';
+import { useThemeContext } from '../../hooks';
+import { ElevationProvider } from '../../providers';
+import { type ThemedClassName, composableProps, slottable } from '../../util';
+import { IconButton, type IconButtonProps } from '../Button';
 
 export type FloatingPanelPoint = { x: number; y: number };
 

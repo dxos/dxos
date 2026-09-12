@@ -12,7 +12,8 @@ import { Position } from '@dxos/util';
 import { DeckSchema } from '#types';
 
 /**
- * Companion (child) nodes for a plank.
+ * Companion (child) nodes for a plank; `undefined` until the first read, which is a commit after
+ * mount — a caller that lays out from this needs to tell "not read yet" from "none".
  *
  * The node's child-connections atom is read in a commit-phase effect rather than during render.
  * Subscribing to it during render (via `useConnections`/`useAtomValue`) recomputes the shared atom and
@@ -20,10 +21,10 @@ import { DeckSchema } from '#types';
  * surfaces as a React "cannot update a component while rendering a different component" warning. Reading
  * it from an effect defers that notification to the commit phase where cross-component updates are allowed.
  */
-export const useCompanions = (id?: string): AppGraphNode.Node[] => {
+export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
   const { graph } = useAppGraph();
   const registry = useContext(RegistryContext);
-  const [companions, setCompanions] = useState<AppGraphNode.Node[]>([]);
+  const [companions, setCompanions] = useState<AppGraphNode.Node[] | undefined>(undefined);
 
   useEffect(() => {
     if (!id) {
@@ -38,7 +39,7 @@ export const useCompanions = (id?: string): AppGraphNode.Node[] => {
         .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
         .toSorted((a, b) => Position.compare(a.properties, b.properties));
       setCompanions((prev) =>
-        prev.length === next.length && prev.every((node, index) => node === next[index]) ? prev : next,
+        prev && prev.length === next.length && prev.every((node, index) => node === next[index]) ? prev : next,
       );
     };
 

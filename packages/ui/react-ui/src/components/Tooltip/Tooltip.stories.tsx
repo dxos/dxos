@@ -9,8 +9,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
+import { withTheme } from '../../testing';
+import { Button } from '../Button';
 import { Tooltip } from './Tooltip.tsx';
 
 type StoryArgs = {

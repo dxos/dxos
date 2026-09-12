@@ -36,6 +36,7 @@ const task = createEvalRunner({
 
 evalite('Database — create and query', {
   data: [{ input: { name: 'Cyberdyne Systems' } }],
+  trialCount: 3,
   task,
   scorers: [
     {

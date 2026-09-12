@@ -10,9 +10,9 @@ import { random } from '@dxos/random';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
+import { withTheme } from '../../testing';
+import { Button } from '../Button';
+import { ScrollArea } from '../ScrollArea';
 import { FloatingPanel, type FloatingPanelPoint, type FloatingPanelSize } from './FloatingPanel.tsx';
 
 const paragraphs = Array.from({ length: 4 }, () => random.lorem.paragraph(3));

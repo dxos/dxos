@@ -47,6 +47,18 @@ export const AgentRequestEnd = Trace.EventType('assistant.agentRequestEnd', {
 });
 
 /**
+ * Emitted by the supervisor when a delegated task is handed to a sub-agent process; the only durable
+ * record of the task ↔ pid pairing, since nothing is stamped on the task itself.
+ */
+export const DelegationSpawned = Trace.EventType('assistant.delegationSpawned', {
+  schema: Schema.Struct({
+    taskId: Schema.String,
+    pid: Schema.String,
+  }),
+  isEphemeral: false,
+});
+
+/**
  * Emitted when an MCP server connection fails for a request turn.
  * Ephemeral so that misconfigured/unreachable servers don't pollute the durable feed,
  * but can still be surfaced to the user via the live ephemeral event stream.

@@ -16,10 +16,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useTranslation } from '../../providers/index.ts';
-import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { type MediaKind, MediaPlayer } from '../MediaPlayer/index.ts';
+import { useTranslation } from '../../providers';
+import { type ThemedClassName, composable, composableProps } from '../../util';
+import { IconButton } from '../Button';
+import { type MediaKind, MediaPlayer } from '../MediaPlayer';
 
 //
 // Root
@@ -165,12 +165,12 @@ const CarouselSlide = ({
   return (
     <CarouselPrimitive.Item index={index} className={mx('relative h-full dx-base-surface', classNames)}>
       <MediaPlayer
+        classNames='dx-fill'
         src={src}
         kind={kind}
         alt={alt}
-        classNames='dx-fill'
-        // Every slide stays in the track, so only the one on screen may play — the others would be
-        // heard rather than seen.
+        // Every slide stays in the track, so only the one on screen may play —
+        // the others would be heard rather than seen.
         autoPlay={autoPlay && page === index}
         loop={loop}
         muted={muted}

@@ -153,25 +153,24 @@ should stay deterministic.
 
 ## Running Evals
 
-Requires a real `DX_ANTHROPIC_API_KEY` — never run in CI (evalite isn't in any CI workflow; see
-`.github/workflows/check.yml`), manual/on-demand only for now.
+Requires a real `DX_ANTHROPIC_API_KEY`. Not part of `Check`: the whole suite runs nightly in the
+`Assistant evals` workflow (`.depot/workflows/assistant-evals.yml`), which trends every score in
+the "Assistant evals" PostHog dashboard. On a PR, run the scenario you touched by hand.
 
 ```bash
 # Whole suite
 export DX_ANTHROPIC_API_KEY=...
 moon run assistant-evals:evals
 
-# Single file — the moon task hardcodes `args: [src/evals]`, so passing another arg through
-# `moon run ... -- <file>` errors ("Too many arguments"). Bypass moon:
-cd packages/core/compute/assistant-evals
-npx evalite run src/evals/database.eval.ts
+# Single file — the passthrough replaces the directory
+moon run assistant-evals:evals -- src/evals/database.eval.ts
 ```
 
 In this repo, pull the key from the 1Password `CI` vault rather than exporting it manually:
 
 ```bash
 eval "$(pnpm -ws 1p-credentials)"
-npx evalite run src/evals/planning.eval.ts
+moon run assistant-evals:evals -- src/evals/planning.eval.ts
 ```
 
 ## Gotchas (found the hard way — real debugging sessions, not speculation)

@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { withTheme } from '../../testing';
+import { Icon } from '../Icon';
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup.tsx';
 
 // TODO(burdon): Create composite Root, Item, etc?

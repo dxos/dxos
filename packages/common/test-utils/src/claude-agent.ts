@@ -38,6 +38,9 @@ export type Turn = {
   toolCalls: string[];
   /** Every event of the turn, for diagnosing a failure without re-running the model. */
   events: any[];
+  /** Epoch milliseconds of the send and of the `result` event. */
+  start: number;
+  end: number;
 };
 
 const DEFAULT_TIMEOUT = 300_000;
@@ -162,6 +165,7 @@ export class ClaudeAgent {
       return Promise.reject(new Error('a turn is already in flight; await it before sending the next one'));
     }
     const start = this.#events.length;
+    const startedAt = Date.now();
     return new Promise<Turn>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.#fail(`turn timed out after ${this.#timeout}ms; last events: ${this.#tail(start)}`);
@@ -186,6 +190,8 @@ export class ClaudeAgent {
           isError: event.is_error === true,
           toolCalls: toolCallNames(events),
           events,
+          start: startedAt,
+          end: Date.now(),
         });
       };
 

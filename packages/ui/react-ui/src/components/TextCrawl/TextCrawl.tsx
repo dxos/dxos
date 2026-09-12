@@ -267,9 +267,11 @@ const Line = ({
   return (
     <div
       style={{ transitionDuration: reducedMotion ? '0ms' : `${transition * LINE_FADE_RATIO}ms` }}
-      className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
+      className={mx('flex items-center transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
     >
-      {line}
+      {/* The ellipsis needs a block with inline content: on the flex line itself the text is an
+          anonymous item and `text-overflow` never applies, so a long line was cut mid-glyph. */}
+      <span className='min-w-0 truncate'>{line}</span>
     </div>
   );
 };

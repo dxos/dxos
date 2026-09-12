@@ -19,5 +19,7 @@ export * from './useSelectionContext.ts';
 export * from './useTraceMessages.ts';
 export * from './useHomeSuggestions.ts';
 export * from './useProcessEphemeralStatus.ts';
+export * from './useSessionTimeline.ts';
+export { type Lane, type Marker, type SessionTimeline } from '#session-timeline';
 
 export { type AiChatProcessor } from '../processor/index.ts';

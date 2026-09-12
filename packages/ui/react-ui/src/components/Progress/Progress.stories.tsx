@@ -7,9 +7,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
 
-import { withLayout, withTheme } from '../../testing/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
+import { withLayout, withTheme } from '../../testing';
+import { Panel } from '../Panel';
+import { Toolbar } from '../Toolbar';
 import { Progress, type ProgressProps } from './Progress.tsx';
 
 const TICK_MS = 100;

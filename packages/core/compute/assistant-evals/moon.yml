@@ -26,15 +26,3 @@ tasks:
       - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
     options:
       timeout: 600
-  # Long-running, the way a dev server is: a scenario can hold a session for an hour, so the task
-  # streams and is never timed out, cached, or run in CI.
-  evals:
-    command: evalite
-    args:
-      - src/evals
-    preset: server
-  # One scenario at a time: `evals` hardcodes the directory, so appending a file to it gives evalite
-  # two positionals and it exits on "Too many arguments".
-  eval:
-    command: evalite run
-    preset: server

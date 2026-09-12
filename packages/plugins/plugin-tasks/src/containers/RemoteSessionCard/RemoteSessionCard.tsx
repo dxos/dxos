@@ -10,8 +10,13 @@ import { RemoteSession } from '@dxos/types';
 
 export type RemoteSessionCardProps = AppSurface.ObjectCardProps<RemoteSession.RemoteSession>;
 
-/** Resuming by id is a CLI invocation, so the card offers the command rather than a link. */
-const resumeCommand = (sessionId: string): string => `claude --resume ${sessionId}`;
+/**
+ * Resuming by id is a CLI invocation, so the card offers the command rather than a link.
+ *
+ * Single-quoted: the id is a foreign key any MCP caller can write, so an unquoted one would carry
+ * whatever shell syntax it contains into the terminal the reader pastes it into.
+ */
+const resumeCommand = (sessionId: string): string => `claude --resume '${sessionId.replaceAll("'", String.raw`'\''`)}'`;
 
 const stateOption = (state: RemoteSession.State) => RemoteSession.StateOptions.find(({ id }) => id === state);
 

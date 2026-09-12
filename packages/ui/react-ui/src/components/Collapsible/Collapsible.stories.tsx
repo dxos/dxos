@@ -7,8 +7,8 @@ import React, { useCallback, useState } from 'react';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
+import { withTheme } from '../../testing';
+import { Button } from '../Button';
 import { Collapsible } from './Collapsible.tsx';
 
 type Section = {

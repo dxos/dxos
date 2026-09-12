@@ -7,8 +7,8 @@ import React from 'react';
 
 import { translations } from '#translations';
 
-import { Field, Fieldset } from '../components/index.ts';
-import { withLayoutVariants, withTheme } from '../testing/index.ts';
+import { Field, Fieldset } from '../components';
+import { withLayoutVariants, withTheme } from '../testing';
 
 type StoryArgs = {
   disabled?: boolean;

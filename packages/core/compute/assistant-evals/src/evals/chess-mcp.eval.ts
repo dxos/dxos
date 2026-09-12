@@ -447,9 +447,12 @@ const MODELS = [Model.claudeOpus5, Model.deepseekV4Pro].map((model) => ({
 
 /**
  * `DX_EVAL_MODELS` names the variants to run, comma-separated, for a run that wants one model's
- * hour rather than every model's at once. Unset runs them all.
+ * hour rather than every model's at once. Unset or empty runs them all: a workflow input that was
+ * left blank still sets the variable.
  */
-const selected = process.env.DX_EVAL_MODELS?.split(',').map((name) => name.trim());
+const selected = process.env.DX_EVAL_MODELS?.trim()
+  ? process.env.DX_EVAL_MODELS.split(',').map((name) => name.trim())
+  : undefined;
 const VARIANTS = selected ? MODELS.filter(({ name }) => selected.includes(name)) : MODELS;
 
 evalite.each(VARIANTS)('Chess MCP — a delegated session designs, deploys and serves a chess engine over MCP', {

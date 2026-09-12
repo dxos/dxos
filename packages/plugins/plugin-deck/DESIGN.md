@@ -219,8 +219,11 @@ Exactly three functions write anything:
 immediately; a plank with no node yet renders a loading shell, and says not found once resolution's
 own deadline passes, since past it no node is still coming. A loader that proves the target absent
 says so sooner; one that could not form a question at all never would. It then resolves the pairs and applies
-them again by node id. A plank the deck already holds keeps the id it has, so only genuinely new
-planks change identity.
+them again by node id. A plank the deck already holds keeps the id it has, and an in-app navigation
+hands the projection the node ids it navigated with (`Navigation.known`), so only a plank arriving
+from outside — a deep link, a reload, a history entry the deck no longer holds — changes identity.
+An identity change re-keys the plank's tile and remounts everything in it, its companion included,
+which is why a click must never go through the placeholder.
 
 That identity change is why per-plank preferences are keyed by URL segment rather than plank id: a
 segment is stable across the refinement and an id is not. `segments` is the lookup between them, and

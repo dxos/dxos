@@ -18,12 +18,12 @@ import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { elevationAttrs, elevationSurface, osTranslations } from '@dxos/ui-theme';
 import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { ElevationProvider } from '../../providers/index.ts';
-import { type DialogSize } from '../../theme/index.ts';
-import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { Column } from '../Column/index.ts';
+import { useThemeContext } from '../../hooks';
+import { ElevationProvider } from '../../providers';
+import { type DialogSize } from '../../theme';
+import { type ThemedClassName, composableProps, slottable } from '../../util';
+import { IconButton } from '../Button';
+import { Column } from '../Column';
 import {
   type DialogContentHandlers,
   DialogProvider,

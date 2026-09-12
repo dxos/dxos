@@ -464,6 +464,41 @@ export const TestAgentSpinner: Story = {
 };
 
 /**
+ * A long artifact tag takes at most half the row: the chips cell scrolls what does not fit and the
+ * title truncates instead of collapsing to nothing.
+ */
+export const TestLongArtifactTag: Story = {
+  args: {
+    showGroupLabels: false,
+    seed: () => [
+      Task.make({
+        title: 'Finish the third-party DNS delegation that has blocked ACME automation',
+        status: 'started',
+        assignee: { role: 'assistant' },
+        artifacts: [Ref.make(Task.make({ title: 'Certificate renewal automation — implementation plan' }))],
+      }),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(
+      async () => {
+        const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+        await expect(row).toBeTruthy();
+        return row!;
+      },
+      { timeout: 10_000 },
+    );
+    const title = row.querySelector<HTMLElement>('span.truncate')!;
+    const chips = row.querySelector<HTMLElement>('.col-\\[chips\\]')!;
+    await waitFor(async () => {
+      await expect(chips.getBoundingClientRect().width).toBeLessThanOrEqual(row.getBoundingClientRect().width / 2);
+      await expect(chips.scrollWidth).toBeGreaterThan(chips.clientWidth);
+      await expect(title.getBoundingClientRect().width).toBeGreaterThan(0);
+    });
+  },
+};
+
+/**
  * Checking is selection, not a status write, and it is not the current row either: the box toggles
  * independently of which row the reader is on, and leaves the task's status alone.
  */
