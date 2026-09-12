@@ -11,6 +11,7 @@ export { default as FibonacciHandler } from './fib.ts';
 export { default as ReplyHandler } from './reply.ts';
 export { default as SleepHandler } from './sleep.ts';
 export * from './operation.ts';
+export * from './trace.ts';
 
 export const ExampleHandlers = OperationHandlerSet.lazy([
   Fibonacci.pipe(Operation.lazyHandler(() => import('./fib.ts'))),

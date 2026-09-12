@@ -51,7 +51,7 @@ export const Lane = Schema.Struct({
 });
 export type Lane = Schema.Schema.Type<typeof Lane>;
 
-export const MarkerKind = Schema.Literals(['request', 'operation', 'tool', 'message', 'error', 'delegation']);
+export const MarkerKind = Schema.Literals(['request', 'operation', 'tool', 'message', 'error', 'delegation', 'task']);
 export type MarkerKind = Schema.Schema.Type<typeof MarkerKind>;
 
 export const MarkerLevel = Schema.Literals(['info', 'warn', 'error']);

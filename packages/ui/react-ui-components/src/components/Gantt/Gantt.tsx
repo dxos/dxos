@@ -12,7 +12,7 @@ import { Unit } from '@dxos/util';
 
 export type GanttLaneKind = 'session' | 'task';
 export type GanttLaneStatus = 'pending' | 'blocked' | 'running' | 'review' | 'done' | 'failed';
-export type GanttMarkerKind = 'request' | 'operation' | 'tool' | 'message' | 'error' | 'delegation';
+export type GanttMarkerKind = 'request' | 'operation' | 'tool' | 'message' | 'error' | 'delegation' | 'task';
 
 export type GanttLane = {
   id: string;
