@@ -10,6 +10,8 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 /** One timed round trip: the client-observed wall clock of a single MCP request. */
 export type Sample = {
   readonly tool: string;
+  /** What the sample is grouped under — the tool, or `invokeOperation:<key>` for an operation. */
+  readonly label: string;
   readonly millis: number;
   readonly isError: boolean;
 };
@@ -31,7 +33,7 @@ export type Report = {
   /** Time to `initialize` plus the first `tools/list`, which no per-tool figure should carry. */
   readonly connectMillis: number;
   readonly samples: readonly Sample[];
-  /** Per tool, plus `*` across every call. */
+  /** Per label — one row per tool, and one per operation behind `invokeOperation` — plus `*`. */
   readonly stats: Record<string, Stats>;
 };
 
@@ -39,6 +41,23 @@ export type Report = {
 export type Probe = {
   readonly tool: string;
   readonly args?: Record<string, unknown>;
+  /**
+   * Overrides the row this probe's samples are grouped under.
+   *
+   * Rarely needed: `invokeOperation` is keyed by the operation it invokes automatically, which is
+   * the breakdown that matters — every operation goes through the one tool, so a per-tool figure
+   * for it is an average over verbs that have nothing in common.
+   */
+  readonly label?: string;
+};
+
+/** `invokeOperation` dispatches by `key`, so the operation is what a row must be named after. */
+const labelOf = ({ tool, args, label }: Probe): string => {
+  if (label != null) {
+    return label;
+  }
+  const key = args?.key;
+  return tool === 'invokeOperation' && typeof key === 'string' ? `${tool}:${key}` : tool;
 };
 
 export type ProbeOptions = {
@@ -82,12 +101,12 @@ export const stats = (samples: readonly Sample[]): Stats => {
 };
 
 const summarize = (samples: readonly Sample[]): Record<string, Stats> => {
-  const byTool: Record<string, Sample[]> = {};
+  const byLabel: Record<string, Sample[]> = {};
   for (const sample of samples) {
-    (byTool[sample.tool] ??= []).push(sample);
+    (byLabel[sample.label] ??= []).push(sample);
   }
   return Object.fromEntries([
-    ...Object.entries(byTool).map(([tool, rows]) => [tool, stats(rows)] as const),
+    ...Object.entries(byLabel).map(([label, rows]) => [label, stats(rows)] as const),
     ['*', stats(samples)] as const,
   ]);
 };
@@ -125,7 +144,9 @@ export const probe = async ({
     await client.listTools();
     connectMillis = Date.now() - connectStarted;
 
-    for (const { tool, args } of probes) {
+    for (const probe of probes) {
+      const { tool, args } = probe;
+      const label = labelOf(probe);
       for (let index = 0; index < warmup + iterations; ++index) {
         const started = Date.now();
         let isError = false;
@@ -138,7 +159,7 @@ export const probe = async ({
           isError = true;
         }
         if (index >= warmup) {
-          samples.push({ tool, millis: Date.now() - started, isError });
+          samples.push({ tool, label, millis: Date.now() - started, isError });
         }
       }
     }
@@ -146,8 +167,8 @@ export const probe = async ({
     // Connect or discovery failed: one errored sample per probe, so `stats['*'].errors` is nonzero
     // and the scorer reads a failing report rather than a thrown eval.
     connectMillis ??= Date.now() - connectStarted;
-    for (const { tool } of probes) {
-      samples.push({ tool, millis: Date.now() - connectStarted, isError: true });
+    for (const probe of probes) {
+      samples.push({ tool: probe.tool, label: labelOf(probe), millis: Date.now() - connectStarted, isError: true });
     }
   } finally {
     // The client may never have connected, and closing one that did not is not an error worth

@@ -52,9 +52,15 @@ DX_EVAL_MCP_TARGET=dev DX_EVAL_MCP_TOKEN=... DX_EVAL_SPACE_ID=... \
   remote).
 
 Latency is measured client-side by `src/McpLatency.ts`, over its own MCP connection rather than
-inside a turn — a turn's wall clock is the model's, not the surface's. The scorer's value is the
-full report: connect time plus per-tool count/min/mean/p50/p95/max, so a run can be compared across
-targets.
+inside a turn — a turn's wall clock is the model's, not the surface's. Most of the probe set is
+`invokeOperation` against read-only (`mutation('none')`) operations, since that is the tool an agent
+spends its turns in and the only one whose latency includes resolving a space and running a handler;
+`queryOperations`/`loadSkill` answer out of the registry and measure little more than the transport.
+
+The scorer's value is the full report: connect time plus count/errors/min/mean/p50/p95/max per row,
+where a row is a tool — except `invokeOperation`, which is broken out per operation
+(`invokeOperation:org.dxos.operation.space.queryObjects`, …), because one figure for it would
+average a registry lookup against a full-content query. `*` is the aggregate.
 
 ## PostHog
 

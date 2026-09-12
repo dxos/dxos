@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { evalite } from 'evalite';
 
 import * as Project from '@dxos/compute/Project';
-import { Database, Filter, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Query, Ref, Type } from '@dxos/echo';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -43,13 +43,47 @@ const TARGET = McpTarget.fromEnv();
 const REMOTE = !McpTarget.isLocal(TARGET);
 
 /**
- * The calls the latency report is built from: both read-only and neither needs a space, so the same
- * probe is safe to point at production as at the in-process host.
+ * The calls the latency report is built from.
+ *
+ * `queryOperations` and `loadSkill` answer out of the registry and measure little more than the
+ * transport, so most of the set is `invokeOperation`: that is the tool an agent actually spends its
+ * turns in, and the only one whose latency includes resolving a space and running a handler against
+ * the database. Every operation here is `mutation('none')` and needs no object reference, so the
+ * same set is as safe against production as against the in-process host.
+ *
+ * Rows come back keyed per operation (`invokeOperation:<key>`), because a single figure for
+ * `invokeOperation` would average a registry lookup against a full-content query.
  */
-const LATENCY_PROBES = [
+const readProbes = (spaceId: string): McpLatency.Probe[] => [
   { tool: 'queryOperations', args: { query: 'task' } },
   { tool: 'loadSkill' },
-] satisfies McpLatency.Probe[];
+  // Cheapest handler that still reaches the database: an unfiltered listing, ids and labels only.
+  { tool: 'invokeOperation', args: { key: 'org.dxos.operation.space.queryObjects', input: { limit: 10 }, spaceId } },
+  // The same verb with the objects loaded, which is what separates a query's cost from a handler's.
+  {
+    tool: 'invokeOperation',
+    args: {
+      key: 'org.dxos.operation.space.queryObjects',
+      input: { typename: Type.getTypename(Task.Task), includeContent: true, limit: 10 },
+      spaceId,
+    },
+  },
+  { tool: 'invokeOperation', args: { key: 'org.dxos.operation.tasks.listSessions', input: { limit: 10 }, spaceId } },
+];
+
+/**
+ * Probes that need an object to address, and therefore a space this process seeded.
+ *
+ * A reference travels as the wire envelope the server documents, so these also time the decode path
+ * a ref-taking operation goes through — which no ref-free probe covers.
+ */
+const refProbes = (spaceId: string, projectId: string): McpLatency.Probe[] => {
+  const project = { '/': `echo://${spaceId}/${projectId}` };
+  return [
+    { tool: 'invokeOperation', args: { key: 'org.dxos.operation.projects.get', input: { project }, spaceId } },
+    { tool: 'invokeOperation', args: { key: 'org.dxos.operation.tasks.list', input: { project }, spaceId } },
+  ];
+};
 
 /**
  * Ceiling for the p95 of a tool call, in ms. The in-process host is a function call behind a
@@ -178,8 +212,8 @@ const SCORERS = REMOTE ? remoteScorers(false) : scorers(NOTHING_STAGED);
  * process's.
  */
 const remoteTask = () =>
-  runClaudeEval({ skills: [], target: TARGET }, async ({ send, latency, score }) => {
-    const report = await latency(LATENCY_PROBES);
+  runClaudeEval({ skills: [], target: TARGET }, async ({ spaceId, send, latency, score }) => {
+    const report = await latency(readProbes(spaceId));
     const turn = await send(
       `Using only the ${SERVER} MCP server, list the operations it offers for working with tasks. ` +
         'Reply with their keys, one per line, and change nothing.',
@@ -271,8 +305,10 @@ const localTask = () =>
         find(afterStart, ROTATE)?.status === 'done';
 
       // After the turns, so the probe's own connection is not competing with the agent's for the
-      // listener — and so a latency figure is never what a scenario's writes waited behind.
-      const report = await latency(LATENCY_PROBES);
+      // listener — and so a latency figure is never what a scenario's writes waited behind. The
+      // ledger is at its fullest here too, which is the state worth timing a read against.
+      const project = await query(findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME));
+      const report = await latency([...readProbes(spaceId), ...(project ? refProbes(spaceId, project.id) : [])]);
 
       const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started }, report));
       return {

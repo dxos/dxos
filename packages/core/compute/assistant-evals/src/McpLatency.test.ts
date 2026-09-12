@@ -22,7 +22,10 @@ describe('McpLatency.stats', () => {
   test('an errored call is still a sample, so a dead endpoint reports as errors rather than as nothing', ({
     expect,
   }) => {
-    const stats = McpLatency.stats([...samples(10), { tool: 'loadSkill', millis: 30, isError: true }]);
+    const stats = McpLatency.stats([
+      ...samples(10),
+      { tool: 'loadSkill', label: 'loadSkill', millis: 30, isError: true },
+    ]);
     expect(stats.count).to.equal(2);
     expect(stats.errors).to.equal(1);
   });
@@ -45,4 +48,4 @@ describe('McpLatency.probe', () => {
 });
 
 const samples = (...millis: number[]): McpLatency.Sample[] =>
-  millis.map((value) => ({ tool: 'queryOperations', millis: value, isError: false }));
+  millis.map((value) => ({ tool: 'queryOperations', label: 'queryOperations', millis: value, isError: false }));
