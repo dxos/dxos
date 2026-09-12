@@ -13698,6 +13698,9 @@ importers:
       '@dxos/plugin-tasks':
         specifier: workspace:*
         version: link:../plugin-tasks
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -13756,9 +13759,6 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
