@@ -162,14 +162,14 @@ describe('UpdateTasks', () => {
       TestHelpers.provideTestContext,
     ),
   );
-});
 
-/** The status events on the space's trace feed, in the order they were written. */
-const readStatusEvents = Effect.gen(function* () {
-  const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
-  const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
-  return messages
-    .flatMap((message) => message.events)
-    .filter((event) => event.type === Trace.TaskStatusChanged.key)
-    .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
+  /** The status events on the space's trace feed, in the order they were written. */
+  const readStatusEvents = Effect.gen(function* () {
+    const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
+    const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
+    return messages
+      .flatMap((message) => message.events)
+      .filter((event) => event.type === Trace.TaskStatusChanged.key)
+      .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
+  });
 });

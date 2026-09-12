@@ -260,22 +260,22 @@ describe('update-task tracing', () => {
       Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
     );
   });
+
+  /** Collects what the handler wrote to the trace, so a status change can be asserted on. */
+  const collectingTrace = (messages: Trace.Message[]) =>
+    Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            messages.push(message);
+          },
+        }),
+      ),
+    );
+
+  const statusEvents = (messages: readonly Trace.Message[]) =>
+    messages
+      .flatMap((message) => message.events)
+      .filter((event) => event.type === Trace.TaskStatusChanged.key)
+      .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
 });
-
-/** Collects what the handler wrote to the trace, so a status change can be asserted on. */
-const collectingTrace = (messages: Trace.Message[]) =>
-  Trace.testTraceService().pipe(
-    Layer.provide(
-      Layer.succeed(Trace.TraceSink, {
-        write: (message) => {
-          messages.push(message);
-        },
-      }),
-    ),
-  );
-
-const statusEvents = (messages: readonly Trace.Message[]) =>
-  messages
-    .flatMap((message) => message.events)
-    .filter((event) => event.type === Trace.TaskStatusChanged.key)
-    .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
