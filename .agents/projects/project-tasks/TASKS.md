@@ -238,16 +238,6 @@ the hierarchical list, which is #12787.
       them — so a toolbar's density never reached its controls anywhere in the
       app; and tearing the editor down fires a blur, which commits, so a revert
       wrote the text it was discarding.
-
-- [ ] **`composer-debug` cannot enable a plugin** — the skill documents reading the
-      running app but not turning a plugin on, and the obvious route is a trap:
-      `composer.manager.enable(id)` returns an **Effect**, so awaiting it does
-      nothing and the plugin silently stays disabled. The working call is the
-      operation `org.dxos.operation.registry.enablePlugins` with `{ ids: [...] }`
-      (verified 2026-08-30 enabling plugin-tasks + plugin-projects, which both
-      ship disabled in a default profile). Add it to the skill's recipes, and note
-      that most plugins under development are off until enabled — otherwise every
-      live verification starts by concluding the feature is missing.
 - [ ] **Combine the Send/Stop buttons in `ChatPrompt`** — the two are separate
       controls today, so the prompt's trailing edge changes shape as a turn
       starts and stops. One button that swaps its icon and action with the
@@ -259,15 +249,6 @@ the hierarchical list, which is #12787.
       a read-only indicator on the chat today, derived from the provider in
       settings (`preset?.provider === Provider.edge.id`); as an option on the
       prompt it becomes the control it looks like.
-- [ ] **An unresolvable subject empties the deck instead of showing 404** — proved
-      2026-08-30 with the debug port: opening a path whose graph node does not
-      exist (a project chat addressed at the assistant's Chats section) leaves
-      the deck with no plank at all, and re-opening the correct path does not
-      recover it — the EID dedup in `LayoutOperation.Open` remaps the second
-      subject onto the broken entry. `NotFound.validateNavigationTarget` returns
-      `NOT_FOUND_PATH` as designed, so the loss is downstream of it, in
-      plugin-deck. A 404 plank would have made the delegation bug obvious in
-      seconds rather than a blank screen.
 - [ ] **Record when a task reached a terminal status** — `Task` carries no date
       at all today, so nothing can show when work finished or say how long it
       took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
@@ -279,28 +260,12 @@ the hierarchical list, which is #12787.
       GitHub extension can add a PRs tab to a project. Needs a surface/capability
       for tab registration (label, icon, order) alongside the panel surface each
       tab renders.
-- [ ] **`#nnn` does not resolve in the ProjectArticle story** — diagnosed
-      2026-08-27, not yet fixed. The wiring is complete (the article collects
-      `MarkdownCapabilities.ExtensionProvider` and passes it to the outline,
-      which takes host extensions), `GitHubPlugin` IS mounted in the story now,
-      and the project seeds a `dxos/dxos` Repo — but the outline still renders
-      `#12752` as plain text. Cause: plugin-github's `MarkdownExtension` module
-      activates on `MarkdownEvents.Start`, and the story's `corePlugins()` is
-      attention/graph/process-manager/settings/theme only — no `MarkdownPlugin`,
-      so the event never fires and no provider is ever contributed. Fix is to
-      mount `MarkdownPlugin` in the story, or to activate the module on an event
-      the story reaches. Works elsewhere: `plugins/plugin-tasks/components/
-Outline` → `WithReferences` passes the extension directly.
 - [x] **ProjectArticle `Sections` story was flaky (~1 run in 4)** — the seeding
       ran from `play`, racing the previous story's client teardown, and the
       article rendered with every ref-gated section missing. Seeding moved into
       `onClientInitialized`, so the graph exists before any story mounts: 7
       consecutive `--retry=0` runs green. The play functions now only wait for
       the seeded context.
-- [ ] **`#foo` renders as a heading in chat markdown** — a `#` inside a message
-      is parsed as an ATX heading, so `#foo` comes out as a title. The thread
-      renders through CodeMirror (`MarkdownBlock` → `decorateMarkdown`), so the
-      fix belongs there rather than in `MarkdownView`.
 - [x] **`Repo` type + `Project.repo`** — a host-agnostic repository type in
       `@dxos/types` (`owner`, `name`, `url`, `defaultBranch`, optional
       `organization`; which host it lives on stays provenance on `Obj.getMeta`
