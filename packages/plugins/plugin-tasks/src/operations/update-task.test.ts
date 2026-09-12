@@ -4,9 +4,9 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import { TestTraceService } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -238,44 +238,33 @@ describe('update-task', () => {
 });
 
 describe('update-task tracing', () => {
-  it.effect('traces a status change, and stays silent when the status is unchanged', () => {
-    const messages: Trace.Message[] = [];
-    return Effect.gen(function* () {
-      const taskSet = yield* Database.add(TaskSet.make({}));
-      yield* Database.flush();
-      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+  it.effect(
+    'traces a status change, and stays silent when the status is unchanged',
+    Effect.fnUntraced(
+      function* () {
+        const taskSet = yield* Database.add(TaskSet.make({}));
+        yield* Database.flush();
+        const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
 
-      yield* updateTask.handler({ task: Ref.make(task), status: 'started' });
-      // Only the status change is traced: a title edit moves nothing on the timeline.
-      yield* updateTask.handler({ task: Ref.make(task), title: 'Draft v2' });
-      yield* updateTask.handler({ task: Ref.make(task), status: 'started' });
-      yield* updateTask.handler({ task: Ref.make(task), status: 'done' });
+        yield* updateTask.handler({ task: Ref.make(task), status: 'started' });
+        // Only the status change is traced: a title edit moves nothing on the timeline.
+        yield* updateTask.handler({ task: Ref.make(task), title: 'Draft v2' });
+        yield* updateTask.handler({ task: Ref.make(task), status: 'started' });
+        yield* updateTask.handler({ task: Ref.make(task), status: 'done' });
 
-      expect(statusEvents(messages)).toEqual([
-        { taskId: task.id, title: 'Draft', status: 'started', previousStatus: 'todo' },
-        { taskId: task.id, title: 'Draft v2', status: 'done', previousStatus: 'started' },
-      ]);
-    }).pipe(
-      Effect.provide(collectingTrace(messages)),
+        const events = yield* TestTraceService.events;
+        expect(statusEvents(events)).toEqual([
+          { taskId: task.id, title: 'Draft', status: 'started', previousStatus: 'todo' },
+          { taskId: task.id, title: 'Draft v2', status: 'done', previousStatus: 'started' },
+        ]);
+      },
+      Effect.provide(TestTraceService.layer),
       Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
-    );
-  });
+    ),
+  );
 
-  /** Collects what the handler wrote to the trace, so a status change can be asserted on. */
-  const collectingTrace = (messages: Trace.Message[]) =>
-    Trace.testTraceService().pipe(
-      Layer.provide(
-        Layer.succeed(Trace.TraceSink, {
-          write: (message) => {
-            messages.push(message);
-          },
-        }),
-      ),
-    );
-
-  const statusEvents = (messages: readonly Trace.Message[]) =>
-    messages
-      .flatMap((message) => message.events)
+  const statusEvents = (events: readonly Trace.FlatEvent[]) =>
+    events
       .filter((event) => event.type === Trace.TaskStatusChanged.key)
       .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
 });

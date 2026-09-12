@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
@@ -10,11 +11,11 @@ import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock, DelegationSpawned } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
+import { TestTraceService } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Feed, Obj, Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { collectTraceEvents, withMeta } from '../execution-graph/testing/index.ts';
 import subAgentFixture from '../execution-graph/testing/sub-agent-delegation.json';
 import { buildSessionTimeline } from './session-timeline.ts';
 
@@ -87,12 +88,13 @@ describe('buildSessionTimeline', () => {
     expect(timeline.lanes[0]?.label).toBe('Agent');
   });
 
-  test('running session with a blocked and a running task', ({ expect }) => {
-    const first = Task.make({ title: 'First', status: 'started' });
-    const second = Task.make({ title: 'Second', status: 'todo', dependsOn: [Ref.make(first)] });
-    const chat = makeChat('Work', [first, second]);
-    const messages = collectTraceEvents(
-      withMeta(
+  it.effect(
+    'running session with a blocked and a running task',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'started' });
+      const second = Task.make({ title: 'Second', status: 'todo', dependsOn: [Ref.make(first)] });
+      const chat = makeChat('Work', [first, second]);
+      yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {});
@@ -102,53 +104,55 @@ describe('buildSessionTimeline', () => {
             block: { _tag: 'text', text: 'go' },
           });
           yield* Trace.write(DelegationSpawned, { taskId: first.id, pid: 'sub' });
-          yield* withMeta(
+          yield* TestTraceService.withMeta(
             { pid: 'sub', parentPid: 'agent' },
             Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' }),
           );
         }),
-      ),
-    );
+      );
 
-    const timeline = buildSessionTimeline({
-      traceMessages: messages,
-      chats: [chat],
-      tasks: [first, second],
-      processes: [
-        agentProcess('agent', chat, Process.State.RUNNING),
-        { ...agentProcess('sub', chat, Process.State.RUNNING), key: 'run', parentPid: Process.ID.make('agent') },
-      ],
-      now: 100,
-    });
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        chats: [chat],
+        tasks: [first, second],
+        processes: [
+          agentProcess('agent', chat, Process.State.RUNNING),
+          { ...agentProcess('sub', chat, Process.State.RUNNING), key: 'run', parentPid: Process.ID.make('agent') },
+        ],
+        now: 100,
+      });
 
-    // The delegated task is represented by its session alone — no task lane doubles it — and the
-    // dependency on it follows to that session.
-    const [session, subSession, secondLane] = timeline.lanes;
-    expect(timeline.lanes).toHaveLength(3);
-    expect(session).toMatchObject({ kind: 'session', status: 'running', start: 1, end: undefined });
-    expect(subSession).toMatchObject({
-      kind: 'session',
-      label: 'First',
-      status: 'running',
-      taskId: first.id,
-      pid: 'sub',
-      start: 4,
-      end: undefined,
-      delegatedFrom: {
-        laneId: session?.id,
-        markerId: timeline.markers.find((marker) => marker.kind === 'delegation')?.id,
-      },
-    });
-    expect(secondLane).toMatchObject({ kind: 'task', status: 'blocked', blockedOn: [subSession?.id] });
-    expect(timeline.range).toEqual({ start: 1, end: 100 });
-  });
+      // The delegated task is represented by its session alone — no task lane doubles it — and the
+      // dependency on it follows to that session.
+      const [session, subSession, secondLane] = timeline.lanes;
+      expect(timeline.lanes).toHaveLength(3);
+      expect(session).toMatchObject({ kind: 'session', status: 'running', start: 1, end: undefined });
+      expect(subSession).toMatchObject({
+        kind: 'session',
+        label: 'First',
+        status: 'running',
+        taskId: first.id,
+        pid: 'sub',
+        start: 4,
+        end: undefined,
+        delegatedFrom: {
+          laneId: session?.id,
+          markerId: timeline.markers.find((marker) => marker.kind === 'delegation')?.id,
+        },
+      });
+      expect(secondLane).toMatchObject({ kind: 'task', status: 'blocked', blockedOn: [subSession?.id] });
+      expect(timeline.range).toEqual({ start: 1, end: 100 });
+    }, Effect.provide(TestTraceService.layer)),
+  );
 
-  test('cuts the session into task segments from the status events', ({ expect }) => {
-    const first = Task.make({ title: 'First', status: 'done' });
-    const second = Task.make({ title: 'Second', status: 'started' });
-    const chat = makeChat('Segmented', [first, second]);
-    const messages = collectTraceEvents(
-      withMeta(
+  it.effect(
+    'cuts the session into task segments from the status events',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'done' });
+      const second = Task.make({ title: 'Second', status: 'started' });
+      const chat = makeChat('Segmented', [first, second]);
+      yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {}); // 1.
@@ -165,42 +169,49 @@ describe('buildSessionTimeline', () => {
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 7.
           yield* toolCall('Write file'); // 8.
         }),
-      ),
-    );
+      );
 
-    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second], now: 20 });
-    const sessionId = `session:${chat.id}`;
-    const firstLane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
-    const secondLane = timeline.lanes.find((lane) => lane.id === `task:${second.id}`);
-    // The first task's lane is bounded by its status events; the second one is still open.
-    expect(firstLane).toMatchObject({ kind: 'task', status: 'done', start: 3, end: 5 });
-    expect(secondLane).toMatchObject({ kind: 'task', status: 'running', start: 7, end: undefined });
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        chats: [chat],
+        tasks: [first, second],
+        now: 20,
+      });
+      const sessionId = `session:${chat.id}`;
+      const firstLane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
+      const secondLane = timeline.lanes.find((lane) => lane.id === `task:${second.id}`);
+      // The first task's lane is bounded by its status events; the second one is still open.
+      expect(firstLane).toMatchObject({ kind: 'task', status: 'done', start: 3, end: 5 });
+      expect(secondLane).toMatchObject({ kind: 'task', status: 'running', start: 7, end: undefined });
 
-    // Every event inside a segment is that task's; the rest stay on the session.
-    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
-    expect(lanesByLabel.get('Search')).toBe(sessionId);
-    expect(lanesByLabel.get('Read file')).toBe(firstLane?.id);
-    expect(lanesByLabel.get('Think')).toBe(sessionId);
-    expect(lanesByLabel.get('Write file')).toBe(secondLane?.id);
-    expect(lanesByLabel.get('Request started')).toBe(sessionId);
+      // Every event inside a segment is that task's; the rest stay on the session.
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Search')).toBe(sessionId);
+      expect(lanesByLabel.get('Read file')).toBe(firstLane?.id);
+      expect(lanesByLabel.get('Think')).toBe(sessionId);
+      expect(lanesByLabel.get('Write file')).toBe(secondLane?.id);
+      expect(lanesByLabel.get('Request started')).toBe(sessionId);
 
-    // Start and finish are drawn as nodes on the task's own lane.
-    const taskMarkers = timeline.markers.filter((marker) => marker.kind === 'task');
-    expect(taskMarkers.map(({ laneId, label, timestamp }) => ({ laneId, label, timestamp }))).toEqual([
-      { laneId: firstLane?.id, label: 'Task started', timestamp: 3 },
-      { laneId: firstLane?.id, label: 'Task done', timestamp: 5 },
-      { laneId: secondLane?.id, label: 'Task started', timestamp: 7 },
-    ]);
-  });
+      // Start and finish are drawn as nodes on the task's own lane.
+      const taskMarkers = timeline.markers.filter((marker) => marker.kind === 'task');
+      expect(taskMarkers.map(({ laneId, label, timestamp }) => ({ laneId, label, timestamp }))).toEqual([
+        { laneId: firstLane?.id, label: 'Task started', timestamp: 3 },
+        { laneId: firstLane?.id, label: 'Task done', timestamp: 5 },
+        { laneId: secondLane?.id, label: 'Task started', timestamp: 7 },
+      ]);
+    }, Effect.provide(TestTraceService.layer)),
+  );
 
-  test('cuts a delegated run, where a task is only ever closed', ({ expect }) => {
-    // Delegation marks every task it hands over `started`, so the agent's only event per task is
-    // the one closing it — the cut comes from the previous boundary instead.
-    const first = Task.make({ title: 'First', status: 'done' });
-    const second = Task.make({ title: 'Second', status: 'done' });
-    const chat = makeChat('Delegated', [first, second]);
-    const messages = collectTraceEvents(
-      withMeta(
+  it.effect(
+    'cuts a delegated run, where a task is only ever closed',
+    Effect.fnUntraced(function* ({ expect }) {
+      // Delegation marks every task it hands over `started`, so the agent's only event per task is
+      // the one closing it — the cut comes from the previous boundary instead.
+      const first = Task.make({ title: 'First', status: 'done' });
+      const second = Task.make({ title: 'Second', status: 'done' });
+      const chat = makeChat('Delegated', [first, second]);
+      yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {}); // 1.
@@ -220,25 +231,27 @@ describe('buildSessionTimeline', () => {
           }); // 5.
           yield* Trace.write(AgentRequestEnd, { status: 'success' }); // 6.
         }),
-      ),
-    );
+      );
 
-    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second] });
-    const firstLane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
-    const secondLane = timeline.lanes.find((lane) => lane.id === `task:${second.id}`);
-    expect(firstLane).toMatchObject({ start: 1, end: 3 });
-    expect(secondLane).toMatchObject({ start: 3, end: 5 });
-    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
-    expect(lanesByLabel.get('Read file')).toBe(firstLane?.id);
-    expect(lanesByLabel.get('Write file')).toBe(secondLane?.id);
-  });
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second] });
+      const firstLane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
+      const secondLane = timeline.lanes.find((lane) => lane.id === `task:${second.id}`);
+      expect(firstLane).toMatchObject({ start: 1, end: 3 });
+      expect(secondLane).toMatchObject({ start: 3, end: 5 });
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Read file')).toBe(firstLane?.id);
+      expect(lanesByLabel.get('Write file')).toBe(secondLane?.id);
+    }, Effect.provide(TestTraceService.layer)),
+  );
 
-  test('a task belonging to no lane on this chart cuts nothing', ({ expect }) => {
-    const mine = Task.make({ title: 'Mine', status: 'done' });
-    const other = Task.make({ title: 'Elsewhere', status: 'started' });
-    const chat = makeChat('Scoped', [mine]);
-    const messages = collectTraceEvents(
-      withMeta(
+  it.effect(
+    'a task belonging to no lane on this chart cuts nothing',
+    Effect.fnUntraced(function* ({ expect }) {
+      const mine = Task.make({ title: 'Mine', status: 'done' });
+      const other = Task.make({ title: 'Elsewhere', status: 'started' });
+      const chat = makeChat('Scoped', [mine]);
+      yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {}); // 1.
@@ -254,23 +267,25 @@ describe('buildSessionTimeline', () => {
             previousStatus: 'started',
           }); // 6.
         }),
-      ),
-    );
+      );
 
-    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [mine, other] });
-    const laneId = `task:${mine.id}`;
-    expect(timeline.lanes.find((lane) => lane.id === laneId)).toMatchObject({ start: 2, end: 6 });
-    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
-    expect(lanesByLabel.get('Read file')).toBe(laneId);
-    expect(lanesByLabel.get('Write file')).toBe(laneId);
-  });
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [mine, other] });
+      const laneId = `task:${mine.id}`;
+      expect(timeline.lanes.find((lane) => lane.id === laneId)).toMatchObject({ start: 2, end: 6 });
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Read file')).toBe(laneId);
+      expect(lanesByLabel.get('Write file')).toBe(laneId);
+    }, Effect.provide(TestTraceService.layer)),
+  );
 
-  test('a task dismissed or re-closed claims no stretch of the run', ({ expect }) => {
-    const dismissed = Task.make({ title: 'Dismissed', status: 'blocked' });
-    const worked = Task.make({ title: 'Worked', status: 'done' });
-    const chat = makeChat('Closes', [dismissed, worked]);
-    const messages = collectTraceEvents(
-      withMeta(
+  it.effect(
+    'a task dismissed or re-closed claims no stretch of the run',
+    Effect.fnUntraced(function* ({ expect }) {
+      const dismissed = Task.make({ title: 'Dismissed', status: 'blocked' });
+      const worked = Task.make({ title: 'Worked', status: 'done' });
+      const chat = makeChat('Closes', [dismissed, worked]);
+      yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {}); // 1.
@@ -298,25 +313,27 @@ describe('buildSessionTimeline', () => {
             previousStatus: 'review',
           }); // 7.
         }),
-      ),
-    );
+      );
 
-    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [dismissed, worked] });
-    expect(timeline.lanes.find((lane) => lane.id === `task:${worked.id}`)).toMatchObject({ start: 3, end: 4 });
-    expect(timeline.lanes.find((lane) => lane.id === `task:${dismissed.id}`)).toMatchObject({
-      start: 5,
-      end: undefined,
-    });
-    const unblock = timeline.markers.find((marker) => marker.label === 'Unblock');
-    expect(unblock?.laneId).toBe(`task:${dismissed.id}`);
-  });
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [dismissed, worked] });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${worked.id}`)).toMatchObject({ start: 3, end: 4 });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${dismissed.id}`)).toMatchObject({
+        start: 5,
+        end: undefined,
+      });
+      const unblock = timeline.markers.find((marker) => marker.label === 'Unblock');
+      expect(unblock?.laneId).toBe(`task:${dismissed.id}`);
+    }, Effect.provide(TestTraceService.layer)),
+  );
 
-  test('a close arriving after the next task started leaves that task the stretch', ({ expect }) => {
-    const first = Task.make({ title: 'First', status: 'done' });
-    const second = Task.make({ title: 'Second', status: 'started' });
-    const chat = makeChat('Interleaved', [first, second]);
-    const messages = collectTraceEvents(
-      withMeta(
+  it.effect(
+    'a close arriving after the next task started leaves that task the stretch',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'done' });
+      const second = Task.make({ title: 'Second', status: 'started' });
+      const chat = makeChat('Interleaved', [first, second]);
+      yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {}); // 1.
@@ -333,29 +350,34 @@ describe('buildSessionTimeline', () => {
           }); // 5.
           yield* toolCall('Read file'); // 6.
         }),
-      ),
-    );
+      );
 
-    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second] });
-    expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 2, end: 3 });
-    expect(timeline.lanes.find((lane) => lane.id === `task:${second.id}`)).toMatchObject({ start: 3, end: undefined });
-    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
-    expect(lanesByLabel.get('Write file')).toBe(`task:${second.id}`);
-    expect(lanesByLabel.get('Read file')).toBe(`task:${second.id}`);
-  });
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second] });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 2, end: 3 });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${second.id}`)).toMatchObject({
+        start: 3,
+        end: undefined,
+      });
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Write file')).toBe(`task:${second.id}`);
+      expect(lanesByLabel.get('Read file')).toBe(`task:${second.id}`);
+    }, Effect.provide(TestTraceService.layer)),
+  );
 
-  test('a delegated task keeps its markers on the session that handed it over', ({ expect }) => {
-    const task = Task.make({ title: 'Delegated', status: 'done' });
-    const chat = makeChat('Handover', [task]);
-    const messages = collectTraceEvents(
-      withMeta(
+  it.effect(
+    'a delegated task keeps its markers on the session that handed it over',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Delegated', status: 'done' });
+      const chat = makeChat('Handover', [task]);
+      yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {}); // 1.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Delegated', status: 'started' }); // 2.
           yield* Trace.write(DelegationSpawned, { taskId: task.id, pid: 'sub' }); // 3.
           yield* toolCall('Wait'); // 4.
-          yield* withMeta(
+          yield* TestTraceService.withMeta(
             { pid: 'sub', parentPid: 'agent' },
             Effect.gen(function* () {
               yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' }); // 5.
@@ -374,35 +396,37 @@ describe('buildSessionTimeline', () => {
             previousStatus: 'started',
           }); // 8.
         }),
-      ),
-    );
+      );
 
-    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task] });
-    const sessionId = `session:${chat.id}`;
-    // The task lane was replaced by the child session, drawn with the child's own span.
-    expect(timeline.lanes.find((lane) => lane.id === `task:${task.id}`)).toBeUndefined();
-    const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
-    expect(subSession).toMatchObject({ taskId: task.id, start: 5, end: 7 });
-    // The supervisor's own markers stay on the supervisor, rather than moving onto a bar whose
-    // span does not contain them.
-    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
-    expect(lanesByLabel.get('Wait')).toBe(sessionId);
-    expect(lanesByLabel.get('Task started')).toBe(sessionId);
-    expect(lanesByLabel.get('Delegated')).toBe(sessionId);
-  });
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task] });
+      const sessionId = `session:${chat.id}`;
+      // The task lane was replaced by the child session, drawn with the child's own span.
+      expect(timeline.lanes.find((lane) => lane.id === `task:${task.id}`)).toBeUndefined();
+      const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
+      expect(subSession).toMatchObject({ taskId: task.id, start: 5, end: 7 });
+      // The supervisor's own markers stay on the supervisor, rather than moving onto a bar whose
+      // span does not contain them.
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Wait')).toBe(sessionId);
+      expect(lanesByLabel.get('Task started')).toBe(sessionId);
+      expect(lanesByLabel.get('Delegated')).toBe(sessionId);
+    }, Effect.provide(TestTraceService.layer)),
+  );
 
-  test('joins the sub-agent by the delegationSpawned event and sums tokens per lane', ({ expect }) => {
-    const task = Task.make({ title: 'Write', status: 'done' });
-    const chat = makeChat('Tokens', [task]);
-    const messages = collectTraceEvents(
-      withMeta(
+  it.effect(
+    'joins the sub-agent by the delegationSpawned event and sums tokens per lane',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Write', status: 'done' });
+      const chat = makeChat('Tokens', [task]);
+      yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {});
           yield* stats(10, 20, 1);
           yield* Trace.write(DelegationSpawned, { taskId: task.id, pid: 'sub' });
           yield* Trace.write(AgentRequestEnd, { status: 'success' });
-          yield* withMeta(
+          yield* TestTraceService.withMeta(
             { pid: 'sub', parentPid: 'agent' },
             Effect.gen(function* () {
               yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' });
@@ -412,24 +436,25 @@ describe('buildSessionTimeline', () => {
             }),
           );
         }),
-      ),
-    );
+      );
 
-    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task] });
-    const session = timeline.lanes.find((lane) => lane.id === `session:${chat.id}`);
-    const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
-    expect(session).toMatchObject({ status: 'done', tokens: { input: 10, output: 20, total: 30 }, toolCalls: 1 });
-    expect(subSession).toMatchObject({
-      status: 'done',
-      start: 5,
-      end: 8,
-      tokens: { input: 101, output: 202, total: 303 },
-      toolCalls: 2,
-    });
-    const spawn = timeline.markers.find((marker) => marker.kind === 'delegation');
-    expect(spawn?.laneId).toBe(session?.id);
-    expect(subSession?.delegatedFrom).toEqual({ laneId: session?.id, markerId: spawn?.id });
-  });
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task] });
+      const session = timeline.lanes.find((lane) => lane.id === `session:${chat.id}`);
+      const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
+      expect(session).toMatchObject({ status: 'done', tokens: { input: 10, output: 20, total: 30 }, toolCalls: 1 });
+      expect(subSession).toMatchObject({
+        status: 'done',
+        start: 5,
+        end: 8,
+        tokens: { input: 101, output: 202, total: 303 },
+        toolCalls: 2,
+      });
+      const spawn = timeline.markers.find((marker) => marker.kind === 'delegation');
+      expect(spawn?.laneId).toBe(session?.id);
+      expect(subSession?.delegatedFrom).toEqual({ laneId: session?.id, markerId: spawn?.id });
+    }, Effect.provide(TestTraceService.layer)),
+  );
 });
 
 const agentProcess = (pid: string, chat: Chat.Chat, state: Process.State): Process.Info => ({
