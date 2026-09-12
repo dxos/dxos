@@ -81,14 +81,24 @@ interface TaskSegment {
 const TERMINAL_STATUS = new Set<Task.Status>(['done', 'review', 'failed', 'cancelled', 'duplicate', 'blocked']);
 
 /**
- * Cuts a session's events into one segment per task worked, from the planning tool's status events.
+ * Cuts a session's events into one segment per task worked, from the status events its task tools
+ * write. Only tasks in `taskIds` — the session's own checklist — take part: an agent is free to move
+ * a task belonging to nothing on this chart, and such an event must not close the segment that is
+ * open or move the boundary.
  *
  * A `started` event opens a segment and closes the one still open — the agent keeps exactly one task
  * in progress. A task can also finish without one: delegation marks every task it hands over
- * `started` before the agent's first turn, so the run's only event for a task is the one closing it.
- * Such a task gets the stretch since the last boundary, which is where its work actually happened.
+ * `started` before the agent's first turn, so the run's only event for that task is the one closing
+ * it. Such a task gets the stretch since the last boundary, which is where its work happened — but
+ * only on the transition out of `started`, so a task merely dismissed (`todo` → `blocked`) claims
+ * nothing, and a second close (`review` → `done`, arriving while another task is active) does not
+ * mint a segment overlapping it.
  */
-const buildTaskSegments = (events: readonly Trace.FlatEvent[], sessionStart: number | undefined): TaskSegment[] => {
+const buildTaskSegments = (
+  events: readonly Trace.FlatEvent[],
+  sessionStart: number | undefined,
+  taskIds: ReadonlySet<string>,
+): TaskSegment[] => {
   const segments: TaskSegment[] = [];
   let open: TaskSegment | undefined;
   let boundary = sessionStart;
@@ -105,7 +115,7 @@ const buildTaskSegments = (events: readonly Trace.FlatEvent[], sessionStart: num
       continue;
     }
     const data = decode(Trace.TaskStatusChanged.schema, event.data);
-    if (!data) {
+    if (!data || !taskIds.has(data.taskId)) {
       continue;
     }
     if (data.status === 'started') {
@@ -121,7 +131,7 @@ const buildTaskSegments = (events: readonly Trace.FlatEvent[], sessionStart: num
       const started = segments.findLast((candidate) => candidate.taskId === data.taskId && candidate.end === undefined);
       if (started) {
         close(started, event.timestamp);
-      } else {
+      } else if (data.previousStatus === 'started') {
         const segment = {
           taskId: data.taskId,
           laneId: taskLaneId(data.taskId),
@@ -322,9 +332,7 @@ export const buildSessionTimeline = ({
           source.pids.has(event.meta.parentPid) &&
           !(event.meta.pid !== undefined && subAgentPids.has(event.meta.pid))),
     );
-    const segments = buildTaskSegments(ownEvents, begins[0]?.timestamp).filter((segment) =>
-      taskLanes.has(segment.taskId),
-    );
+    const segments = buildTaskSegments(ownEvents, begins[0]?.timestamp, chatTaskIds);
     segmentsBySession.set(laneId, segments);
     for (const segment of segments) {
       const taskLane = taskLanes.get(segment.taskId);
@@ -375,11 +383,13 @@ export const buildSessionTimeline = ({
     }
   }
 
-  // A delegated task's lane was replaced by its child session, and its markers follow.
-  for (const segments of segmentsBySession.values()) {
-    for (const segment of segments) {
-      segment.laneId = replacedTaskLanes.get(segment.laneId) ?? segment.laneId;
-    }
+  // A delegated task IS its child session, drawn with the child's own span; the parent's markers in
+  // that stretch are the parent's work of handing it over, so the segment goes rather than moving.
+  for (const [sessionId, segments] of segmentsBySession) {
+    segmentsBySession.set(
+      sessionId,
+      segments.filter((segment) => !replacedTaskLanes.has(segment.laneId)),
+    );
   }
 
   // Dependencies named the task lane; they follow it to the session that replaced it.

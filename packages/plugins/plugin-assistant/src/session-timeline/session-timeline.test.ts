@@ -233,6 +233,131 @@ describe('buildSessionTimeline', () => {
     expect(lanesByLabel.get('Write file')).toBe(secondLane?.id);
   });
 
+  test('a task belonging to no lane on this chart cuts nothing', ({ expect }) => {
+    const mine = Task.make({ title: 'Mine', status: 'done' });
+    const other = Task.make({ title: 'Elsewhere', status: 'started' });
+    const chat = makeChat('Scoped', [mine]);
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: mine.id, title: 'Mine', status: 'started' }); // 2
+          yield* toolCall('Read file'); // 3
+          // A task on somebody else's list: it must neither close `Mine` nor move the boundary.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: other.id, title: 'Elsewhere', status: 'started' }); // 4
+          yield* toolCall('Write file'); // 5
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: mine.id,
+            title: 'Mine',
+            status: 'done',
+            previousStatus: 'started',
+          }); // 6
+        }),
+      ),
+    );
+
+    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [mine, other] });
+    const laneId = `task:${mine.id}`;
+    expect(timeline.lanes.find((lane) => lane.id === laneId)).toMatchObject({ start: 2, end: 6 });
+    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+    expect(lanesByLabel.get('Read file')).toBe(laneId);
+    expect(lanesByLabel.get('Write file')).toBe(laneId);
+  });
+
+  test('a task dismissed or re-closed claims no stretch of the run', ({ expect }) => {
+    const dismissed = Task.make({ title: 'Dismissed', status: 'blocked' });
+    const worked = Task.make({ title: 'Worked', status: 'done' });
+    const chat = makeChat('Closes', [dismissed, worked]);
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1
+          // Never started, so it owns nothing — not the reading the agent did before it said so.
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: dismissed.id,
+            title: 'Dismissed',
+            status: 'blocked',
+            previousStatus: 'todo',
+          }); // 2
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: worked.id, title: 'Worked', status: 'started' }); // 3
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: worked.id,
+            title: 'Worked',
+            status: 'review',
+            previousStatus: 'started',
+          }); // 4
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: dismissed.id, title: 'Dismissed', status: 'started' }); // 5
+          yield* toolCall('Unblock'); // 6
+          // The sign-off on a task closed at 4: it must not stretch that lane over this one's work.
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: worked.id,
+            title: 'Worked',
+            status: 'done',
+            previousStatus: 'review',
+          }); // 7
+        }),
+      ),
+    );
+
+    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [dismissed, worked] });
+    expect(timeline.lanes.find((lane) => lane.id === `task:${worked.id}`)).toMatchObject({ start: 3, end: 4 });
+    expect(timeline.lanes.find((lane) => lane.id === `task:${dismissed.id}`)).toMatchObject({
+      start: 5,
+      end: undefined,
+    });
+    const unblock = timeline.markers.find((marker) => marker.label === 'Unblock');
+    expect(unblock?.laneId).toBe(`task:${dismissed.id}`);
+  });
+
+  test('a delegated task keeps its markers on the session that handed it over', ({ expect }) => {
+    const task = Task.make({ title: 'Delegated', status: 'done' });
+    const chat = makeChat('Handover', [task]);
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Delegated', status: 'started' }); // 2
+          yield* Trace.write(DelegationSpawned, { taskId: task.id, pid: 'sub' }); // 3
+          yield* toolCall('Wait'); // 4
+          yield* withMeta(
+            { pid: 'sub', parentPid: 'agent' },
+            Effect.gen(function* () {
+              yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' }); // 5
+              yield* Trace.write(CompleteBlock, {
+                messageId: MESSAGE_ID,
+                role: 'assistant',
+                block: { _tag: 'text', text: 'done' },
+              }); // 6
+              yield* Trace.write(Trace.OperationEnd, { key: 'run', outcome: 'success' }); // 7
+            }),
+          );
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: task.id,
+            title: 'Delegated',
+            status: 'done',
+            previousStatus: 'started',
+          }); // 8
+        }),
+      ),
+    );
+
+    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task] });
+    const sessionId = `session:${chat.id}`;
+    // The task lane was replaced by the child session, drawn with the child's own span.
+    expect(timeline.lanes.find((lane) => lane.id === `task:${task.id}`)).toBeUndefined();
+    const subSession = timeline.lanes.find((lane) => lane.id === 'session:sub');
+    expect(subSession).toMatchObject({ taskId: task.id, start: 5, end: 7 });
+    // The supervisor's own markers stay on the supervisor, rather than moving onto a bar whose
+    // span does not contain them.
+    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+    expect(lanesByLabel.get('Wait')).toBe(sessionId);
+    expect(lanesByLabel.get('Task started')).toBe(sessionId);
+    expect(lanesByLabel.get('Delegated')).toBe(sessionId);
+  });
+
   test('joins the sub-agent by the delegationSpawned event and sums tokens per lane', ({ expect }) => {
     const task = Task.make({ title: 'Write', status: 'done' });
     const chat = makeChat('Tokens', [task]);
