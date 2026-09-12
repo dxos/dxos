@@ -80,35 +80,20 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   /**
-   * Fetches the requested documents, preferring the host's batched call.
+   * Fetches the requested documents in one call.
    *
-   * `getDocument` is one Durable Object round trip per id and they ran in series, so hydrating N
-   * objects cost N wake latencies end to end -- enough, at ~500ms each in production, for the
+   * The host reads them one Durable Object round trip at a time otherwise, in series, so hydrating
+   * N objects cost N wake latencies end to end -- enough, at ~500ms each in production, for the
    * client's 2s per-object load timeout to fire on everything queued behind the first few and for
-   * the query to return a partial result. `getDocuments` is optional on the host interface, so a
-   * host that predates it still resolves through the serial path.
+   * the query to return a partial result.
    *
    * Bytes are copied before the RPC stub is disposed: the stub's own buffers belong to memory the
    * runtime reclaims when it is released.
    * See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
    */
   private async '_loadDocuments'(spaceId: SpaceId, documentIds: string[]): Promise<Map<string, Uint8Array>> {
-    const mutations = new Map<string, Uint8Array>();
-    if (this._dataService.getDocuments) {
-      using documents = await this._dataService.getDocuments(this._executionContext, spaceId, documentIds);
-      for (const document of documents) {
-        mutations.set(document.documentId, copyUint8Array(document.data));
-      }
-      return mutations;
-    }
-
-    for (const documentId of documentIds) {
-      using document = await this._dataService.getDocument(this._executionContext, spaceId, documentId);
-      if (document) {
-        mutations.set(documentId, copyUint8Array(document.data));
-      }
-    }
-    return mutations;
+    using documents = await this._dataService.getDocuments(this._executionContext, spaceId, documentIds);
+    return new Map(documents.map((document) => [document.documentId, copyUint8Array(document.data)]));
   }
 
   ['DataService.createDocument'](

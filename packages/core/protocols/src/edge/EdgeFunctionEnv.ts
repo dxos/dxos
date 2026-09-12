@@ -79,16 +79,15 @@ export interface TraceContext {}
  */
 export interface DataService {
   getSpaceMeta(ctx: TraceContext, spaceId: SpaceId): Promise<RpcResult<SpaceMeta | undefined>>;
-  getDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
-
   /**
-   * Batched {@link getDocument}. Documents absent on the host are omitted, so the result may be
-   * shorter than `documentIds` and is not positionally aligned with it.
+   * Reads documents by id. Documents absent on the host are omitted, so the result may be shorter
+   * than `documentIds` and is not positionally aligned with it.
    *
-   * Optional because the host implementing this interface ships separately from its callers: one
-   * that predates the method is driven through `getDocument` one id at a time instead.
+   * Batched rather than singular because every call is a Durable Object round trip: a singular
+   * form invites a caller loop, which is what made hydrating a query result cost one wake latency
+   * per object.
    */
-  getDocuments?(ctx: TraceContext, spaceId: SpaceId, documentIds: string[]): Promise<RpcResult<RawDocument[]>>;
+  getDocuments(ctx: TraceContext, spaceId: SpaceId, documentIds: string[]): Promise<RpcResult<RawDocument[]>>;
 
   execQuery(ctx: TraceContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
   createDocument(
