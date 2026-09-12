@@ -81,6 +81,15 @@ export interface DataService {
   getSpaceMeta(ctx: TraceContext, spaceId: SpaceId): Promise<RpcResult<SpaceMeta | undefined>>;
   getDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
 
+  /**
+   * Batched {@link getDocument}. Documents absent on the host are omitted, so the result may be
+   * shorter than `documentIds` and is not positionally aligned with it.
+   *
+   * Optional because the host implementing this interface ships separately from its callers: one
+   * that predates the method is driven through `getDocument` one id at a time instead.
+   */
+  getDocuments?(ctx: TraceContext, spaceId: SpaceId, documentIds: string[]): Promise<RpcResult<RawDocument[]>>;
+
   execQuery(ctx: TraceContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
   createDocument(
     ctx: TraceContext,

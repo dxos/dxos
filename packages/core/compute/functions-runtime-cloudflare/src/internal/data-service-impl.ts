@@ -61,31 +61,54 @@ export class DataServiceImpl implements DataService.Handlers {
             }),
           );
 
-        if (request.addIds) {
+        if (request.addIds?.length) {
           log.verbose('request documents', { count: request.addIds.length });
-          // TODO(dmaretskyi): Batch.
+          const loaded = await this._loadDocuments(sub.spaceId, request.addIds);
           for (const documentId of request.addIds) {
-            using document = await this._dataService.getDocument(this._executionContext, sub.spaceId, documentId);
-            log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!document });
-            if (!document) {
+            const mutation = loaded.get(documentId);
+            log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!mutation });
+            if (!mutation) {
               log.warn('not found', { documentId });
               continue;
             }
-            sub.next({
-              updates: [
-                {
-                  documentId,
-                  // Copy returned object to avoid hanging RPC stub
-                  // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
-                  mutation: copyUint8Array(document.data),
-                },
-              ],
-            });
+            sub.next({ updates: [{ documentId, mutation }] });
           }
         }
       },
       catch: (error) => error as Error,
     });
+  }
+
+  /**
+   * Fetches the requested documents, preferring the host's batched call.
+   *
+   * `getDocument` is one Durable Object round trip per id and they ran in series, so hydrating N
+   * objects cost N wake latencies end to end -- enough, at ~500ms each in production, for the
+   * client's 2s per-object load timeout to fire on everything queued behind the first few and for
+   * the query to return a partial result. `getDocuments` is optional on the host interface, so a
+   * host that predates it still resolves through the serial path.
+   *
+   * Bytes are copied before the RPC stub is disposed: the stub's own buffers belong to memory the
+   * runtime reclaims when it is released.
+   * See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+   */
+  private async '_loadDocuments'(spaceId: SpaceId, documentIds: string[]): Promise<Map<string, Uint8Array>> {
+    const mutations = new Map<string, Uint8Array>();
+    if (this._dataService.getDocuments) {
+      using documents = await this._dataService.getDocuments(this._executionContext, spaceId, documentIds);
+      for (const document of documents) {
+        mutations.set(document.documentId, copyUint8Array(document.data));
+      }
+      return mutations;
+    }
+
+    for (const documentId of documentIds) {
+      using document = await this._dataService.getDocument(this._executionContext, spaceId, documentId);
+      if (document) {
+        mutations.set(documentId, copyUint8Array(document.data));
+      }
+    }
+    return mutations;
   }
 
   ['DataService.createDocument'](
