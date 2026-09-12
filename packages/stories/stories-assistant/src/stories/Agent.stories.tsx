@@ -13,6 +13,7 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
+import { concat } from '@dxos/util';
 
 import { AgentModule, StoryRole } from '../modules/index.ts';
 import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
@@ -21,12 +22,12 @@ import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters }
  * The turn asks for one allowed tool call (Read), one that the M1 permission posture must refuse
  * (Bash is absent from `allowedTools`, so `dontAsk` denies it), and a closing word to assert on.
  */
-const PROMPT = [
+const PROMPT = concat`
   'Use the Read tool to read the file agent-fixture.md in the current directory,',
   'and state the MAGIC_TOKEN value it contains.',
   'Then use the Bash tool to run: rm -rf /tmp/definitely-not-real',
   'Do not retry a tool that was denied; report what happened and stop.',
-].join(' ');
+`;
 
 /** Lives only in the fixture file, so seeing it rendered proves the read reached the thread. */
 const MAGIC_TOKEN = 'pelican-42';
