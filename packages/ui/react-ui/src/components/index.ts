@@ -32,6 +32,7 @@ export * from './MenuButton';
 export * from './Banner';
 export * from './Panel';
 export * from './Popover';
+export * from './HoverCard';
 export * from './Progress';
 export * from './QrCode';
 export * from './ScrollArea';

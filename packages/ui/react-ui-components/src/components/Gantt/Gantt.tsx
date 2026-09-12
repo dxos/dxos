@@ -3,10 +3,10 @@
 //
 
 import { format } from 'date-fns';
-import React, { type ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type KeyboardEvent, type ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
-import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { HoverCard, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
@@ -138,16 +138,6 @@ const orderRows = (lanes: readonly GanttLane[]): { rows: Row[]; groups: SessionG
   return { rows, groups };
 };
 
-/** The node's native tooltip: what happened, when, and how it went — one line each. */
-const describeMarker = (marker: GanttMarker): string =>
-  [
-    marker.label,
-    `${marker.kind} · ${format(marker.timestamp, 'HH:mm:ss.SSS')}`,
-    marker.level && marker.level !== 'info' ? marker.level : undefined,
-  ]
-    .filter((line): line is string => line !== undefined)
-    .join('\n');
-
 const formatTokens = (tokens: NonNullable<GanttLane['tokens']>): string =>
   tokens.total >= 1_000 ? Unit.Thousand(tokens.total).toString() : String(tokens.total);
 
@@ -240,18 +230,24 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>((props, forward
       {rows.map(({ lane, depth }) => (
         <div
           key={lane.id}
-          // The label row is the lane's keyboard path; the SVG shapes stay pointer-only.
-          role='button'
-          tabIndex={0}
-          className='flex items-center gap-2 truncate cursor-pointer hover:bg-hover-surface-subtle'
+          className={mx(
+            'flex items-center gap-2 truncate',
+            onLaneSelect && 'cursor-pointer hover:bg-hover-surface-subtle',
+          )}
           style={{ height: ROW_HEIGHT, paddingInlineStart: `${0.5 + depth}rem` }}
-          onClick={() => onLaneSelect?.(lane)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              onLaneSelect?.(lane);
-            }
-          }}
+          // Button semantics only when there is something to select: the label row is the lane's
+          // keyboard path, and an inert focus stop would be noise.
+          {...(onLaneSelect && {
+            role: 'button',
+            tabIndex: 0,
+            onClick: () => onLaneSelect(lane),
+            onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onLaneSelect(lane);
+              }
+            },
+          })}
         >
           <span className={mx('shrink-0 w-2 h-2 rounded-full bg-current', STATUS_COLOR[lane.status].text)} />
           <span className='truncate text-base-fg'>{lane.label}</span>
@@ -492,16 +488,35 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
       {markers.map((marker) => {
         const row = rowById.get(marker.laneId);
         return row ? (
-          <circle
-            key={marker.id}
-            cx={nodeX(row.lane, marker.timestamp)}
-            cy={rowY(row.index)}
-            r={NODE_RADIUS}
-            className={mx('cursor-pointer stroke-base-surface', STATUS_COLOR[row.lane.status].node)}
-            onClick={() => onMarkerSelect?.(marker)}
-          >
-            <title>{describeMarker(marker)}</title>
-          </circle>
+          <HoverCard.Root key={marker.id}>
+            <HoverCard.Trigger asChild>
+              <circle
+                cx={nodeX(row.lane, marker.timestamp)}
+                cy={rowY(row.index)}
+                r={NODE_RADIUS}
+                className={mx(
+                  'cursor-pointer stroke-base-surface transition-[stroke-width] hover:stroke-[3px] hover:stroke-base-fg',
+                  STATUS_COLOR[row.lane.status].node,
+                )}
+                onClick={() => onMarkerSelect?.(marker)}
+              />
+            </HoverCard.Trigger>
+            <HoverCard.Portal>
+              <HoverCard.Content classNames='p-2 max-w-72 text-xs font-mono'>
+                <div className='font-medium truncate'>{marker.label}</div>
+                <div className='text-description'>
+                  {marker.kind} · {format(marker.timestamp, 'HH:mm:ss.SSS')}
+                  {marker.level && marker.level !== 'info' && (
+                    <span className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}>
+                      {marker.level}
+                    </span>
+                  )}
+                </div>
+                <div className='text-description truncate'>{row.lane.label}</div>
+                <HoverCard.Arrow />
+              </HoverCard.Content>
+            </HoverCard.Portal>
+          </HoverCard.Root>
         ) : null;
       })}
     </svg>

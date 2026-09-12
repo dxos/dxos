@@ -21,6 +21,7 @@ import { fieldTheme } from '../components/Field/Field.theme';
 import { fieldsetTheme } from '../components/Fieldset/Fieldset.theme';
 import { floatingPanelTheme } from '../components/FloatingPanel/FloatingPanel.theme';
 import { focusTheme } from '../components/Focus/Focus.theme';
+import { hoverCardTheme } from '../components/HoverCard/HoverCard.theme';
 import { iconTheme } from '../components/Icon/Icon.theme';
 import { linkTheme } from '../components/Link/Link.theme';
 import { mainTheme } from '../components/Main/Main.theme';
@@ -79,6 +80,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   banner: bannerTheme,
   menu: menuTheme,
   popover: popoverTheme,
+  hoverCard: hoverCardTheme,
   progress: progressTheme,
   qrCode: qrCodeTheme,
   scrollArea: scrollAreaTheme,

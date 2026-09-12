@@ -413,16 +413,18 @@ const useToolbarActions = ({
 
     setDelegating(true);
     try {
-      await invokePromise(
+      const { data } = await invokePromise(
         ProjectOperation.DelegateTaskToChat,
         { tasks: checkedTasks.map((task) => Ref.make(task)) },
         { spaceId },
       );
+      // Only a delegation that produced a chat moves the reader on; a refused one keeps the
+      // selection so they can correct it and retry.
+      if (data?.chat) {
+        onDelegated();
+      }
     } finally {
       setDelegating(false);
-      // Whatever the first turn did: the chat and the task hand-over are durable before the turn
-      // starts, and the pipeline is where the reader sees what became of them.
-      onDelegated();
     }
   }, [invokePromise, spaceId, checkedTasks, delegating, onDelegated]);
 
