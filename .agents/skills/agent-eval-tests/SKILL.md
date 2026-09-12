@@ -23,11 +23,12 @@ package, `@dxos/assistant-e2e` — not covered by this skill; see its own README
 ## Eval File Structure
 
 ```typescript
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Filter, Query } from '@dxos/echo';
+import { Organization } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { createEvalRunner } from '../runner';
 import * as Scorer from '../Scorer';
