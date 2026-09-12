@@ -24,9 +24,9 @@ export type ProjectPipelineProps = {
 };
 
 /**
- * The project's assistant sessions and the tasks they work, on a time axis: every chat filed under
- * the project is a session lane, its checklist the task lanes beneath it, redrawn as trace events
- * arrive.
+ * The project's assistant sessions and the tasks they work, on a time axis, drawn under the ledger:
+ * every chat filed under the project is a session, its checklist the task lanes beneath it, redrawn
+ * as trace events arrive.
  */
 export const ProjectPipeline = ({ space, project, tasks }: ProjectPipelineProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -47,16 +47,20 @@ export const ProjectPipeline = ({ space, project, tasks }: ProjectPipelineProps)
     );
   }
 
+  // The chart alone: the ledger above already names every lane.
   return (
     <ScrollArea.Root>
       <ScrollArea.Viewport>
-        <Gantt
+        <Gantt.Root
           lanes={timeline.lanes}
           markers={timeline.markers}
           range={timeline.range}
           now={Date.now()}
-          classNames='p-4'
-        />
+          classNames='p-2'
+          data-testid='projectsPlugin.pipeline.chart'
+        >
+          <Gantt.Chart />
+        </Gantt.Root>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );

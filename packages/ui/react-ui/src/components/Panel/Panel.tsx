@@ -8,9 +8,9 @@ import React, { type CSSProperties } from 'react';
 import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
 import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { PanelStyleProps } from '../../theme/index.ts';
-import { composableProps, slottable } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks';
+import { PanelStyleProps } from '../../theme';
+import { composableProps, slottable } from '../../util';
 
 //
 // Root

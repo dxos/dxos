@@ -9,7 +9,7 @@ import { random } from '@dxos/random';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Gantt, type GanttLane, type GanttMarker, type GanttProps } from './Gantt.tsx';
+import { Gantt, type GanttData, type GanttLane, type GanttMarker } from './Gantt.tsx';
 
 random.seed(1);
 
@@ -166,15 +166,28 @@ const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
   </div>
 );
 
-const DefaultStory = (props: GanttProps) => (
+type StoryArgs = GanttData & {
+  /** Render the drawing alone, as a host that already lists the lanes does. */
+  chartOnly?: boolean;
+};
+
+const Chart = ({ chartOnly, ...data }: StoryArgs) => (
+  <Gantt.Root {...data} classNames='p-4'>
+    {!chartOnly && <Gantt.Legend />}
+    <Gantt.Chart />
+    {!chartOnly && <Gantt.Meta />}
+  </Gantt.Root>
+);
+
+const DefaultStory = (props: StoryArgs) => (
   <Layout
-    chart={<Gantt {...props} classNames='p-4' />}
+    chart={<Chart {...props} />}
     data={{ lanes: props.lanes, markers: props.markers, range: props.range, now: props.now }}
   />
 );
 
 /** Appends a tool marker to the running sub-agent every tick, so its box grows with `now`. */
-const LiveStory = (props: GanttProps) => {
+const LiveStory = (props: StoryArgs) => {
   const [now, setNow] = useState(T0 + 10 * MINUTE);
   const [live, setLive] = useState<GanttMarker[]>([...(props.markers ?? [])]);
   useEffect(() => {
@@ -199,7 +212,7 @@ const LiveStory = (props: GanttProps) => {
   const range = { start: T0, end: now + MINUTE };
   return (
     <Layout
-      chart={<Gantt {...props} markers={live} now={now} range={range} classNames='p-4' />}
+      chart={<Chart {...props} markers={live} now={now} range={range} />}
       data={{ lanes: props.lanes, markers: live, range, now }}
     />
   );
@@ -207,7 +220,6 @@ const LiveStory = (props: GanttProps) => {
 
 const meta = {
   title: 'ui/react-ui-components/Gantt',
-  component: Gantt,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   args: {
@@ -215,16 +227,20 @@ const meta = {
     markers,
     now: T0 + 10 * MINUTE,
     range: { start: T0, end: T0 + 11 * MINUTE },
-    onLaneSelect: (lane) => console.log('lane', lane),
-    onMarkerSelect: (marker) => console.log('marker', marker),
+    onLaneSelect: (lane: GanttLane) => console.log('lane', lane),
+    onMarkerSelect: (marker: GanttMarker) => console.log('marker', marker),
   },
-} satisfies Meta<typeof Gantt>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const ChartOnly: Story = {
+  args: { chartOnly: true },
+};
 
 export const Live: Story = {
   render: LiveStory,

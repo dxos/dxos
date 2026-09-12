@@ -7,8 +7,8 @@ import React, { type ComponentPropsWithRef, forwardRef, memo, useMemo } from 're
 
 import { type Size } from '@dxos/ui-types';
 
-import { useIconHref, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useIconHref, useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
 
 export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof ark.svg>> & {
   icon: string;

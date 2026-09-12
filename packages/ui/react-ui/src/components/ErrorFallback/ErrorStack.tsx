@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { ThemedClassName } from '../../util/index.ts';
+import { ThemedClassName } from '../../util';
 import { type ParsedStackFrame } from './parse-stack.ts';
 
 /** A stack frame resolved to a local (workspace) source location. */

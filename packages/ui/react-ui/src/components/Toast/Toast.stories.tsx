@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
+import { withTheme } from '../../testing';
+import { Button } from '../Button';
 import { Toast } from './Toast.tsx';
 
 type StoryArgs = {

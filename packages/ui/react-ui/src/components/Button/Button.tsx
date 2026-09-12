@@ -7,9 +7,9 @@ import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
 
 import { type Density, type Elevation } from '@dxos/ui-types';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext.ts';
 
 type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof ark.button>> & {

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type ChromaticPalette } from '@dxos/ui-types';
 
-import { withLayout, withTheme } from '../../testing/index.ts';
+import { withLayout, withTheme } from '../../testing';
 import { type Gap, gapClasses } from '../layout.ts';
 import { Flex } from './Flex.tsx';
 

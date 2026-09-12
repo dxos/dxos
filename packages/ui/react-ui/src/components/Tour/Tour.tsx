@@ -19,8 +19,8 @@ import {
 } from '@ark-ui/react/tour';
 import React, { type ComponentPropsWithRef, type ReactNode, forwardRef, useMemo } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
 
 type TourStepAction = NonNullable<TourStepDetails['actions']>[number];
 

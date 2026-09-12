@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../testing/index.ts';
-import { slottable } from '../util/index.ts';
+import { withTheme } from '../testing';
+import { slottable } from '../util';
 
 /**
  * Generic component pattern using the slottable factory.

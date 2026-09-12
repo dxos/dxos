@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '../../testing/index.ts';
+import { withTheme } from '../../testing';
 import { Link } from './Link.tsx';
 
 const meta = {

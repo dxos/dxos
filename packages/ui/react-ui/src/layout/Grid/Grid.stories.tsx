@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type ChromaticPalette } from '@dxos/ui-types';
 
-import { withLayout, withTheme } from '../../testing/index.ts';
+import { withLayout, withTheme } from '../../testing';
 import { Grid } from './Grid.tsx';
 
 const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (

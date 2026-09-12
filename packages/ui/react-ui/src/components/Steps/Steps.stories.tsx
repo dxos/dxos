@@ -8,9 +8,9 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
-import { withLayout, withTheme } from '../../testing/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
+import { withLayout, withTheme } from '../../testing';
+import { Panel } from '../Panel';
+import { Toolbar } from '../Toolbar';
 import { Steps, type StepsProps } from './Steps.tsx';
 
 const TICK_MS = 200;

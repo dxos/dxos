@@ -27,9 +27,9 @@ import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
 import { DX_POPOVER_CONTENT_ATTR, type ElevationLevel } from '@dxos/ui-types';
 
-import { useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
-import { ColumnContext } from '../Column/index.ts';
+import { useElevationContext, usePositioning, useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
+import { ColumnContext } from '../Column';
 import {
   POPOVER_NAME,
   type PopoverContentHandlers,

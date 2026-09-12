@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../util/index.ts';
+import { composableProps, slottable } from '../../util';
 import { type Align, type Gap, alignClasses, gapClasses } from '../layout.ts';
 
 /** A single track: a CSS track size, or a number read as `<n>fr`. */

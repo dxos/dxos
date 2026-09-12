@@ -24,9 +24,9 @@ import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, 
 
 import { createContext } from '@dxos/react-hooks';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable.ts';
 
 const EDITABLE_NAME = 'Editable.Root';

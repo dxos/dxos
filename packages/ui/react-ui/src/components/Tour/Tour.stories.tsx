@@ -6,10 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button, IconButton } from '../Button/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
+import { withLayout, withTheme } from '../../testing';
+import { Button, IconButton } from '../Button';
+import { Panel } from '../Panel';
+import { Toolbar } from '../Toolbar';
 import { Tour, type TourStepDetails, useTour } from './Tour.tsx';
 
 const target = (selector: string) => () => document.querySelector<HTMLElement>(selector);

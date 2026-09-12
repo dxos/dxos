@@ -6,7 +6,7 @@ import { ark } from '@ark-ui/react/factory';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, forwardRef } from 'react';
 
-import { withLayout, withTheme } from '../testing/index.ts';
+import { withLayout, withTheme } from '../testing';
 import { composable, composableProps, slottable } from './slots.ts';
 
 //

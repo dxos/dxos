@@ -20,7 +20,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Flex, Icon, Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -44,8 +44,11 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
 // The Context section edits only the instructions' standing context objects.
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
 
-/** Overview is everything the project owns; Tasks gives the ledger the whole panel; Pipeline shows the agent sessions working it. */
-type Tab = 'overview' | 'tasks' | 'pipeline';
+/** The pipeline pane's initial height in rem: a handful of lanes and the axis. */
+const PIPELINE_SIZE = 14;
+
+/** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
+type Tab = 'overview' | 'tasks';
 
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
@@ -89,25 +92,33 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
           {t('tasks.label')}
         </Tabs.Button>
-        <Tabs.Button value='pipeline' data-testid='projectsPlugin.tab.pipeline'>
-          {t('pipeline.label')}
-        </Tabs.Button>
       </Tabs.Tablist>
     ),
     [t],
   );
+  // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
+  // shows only the drawing.
+  const [showPipeline, setShowPipeline] = useState(false);
+  const togglePipeline = useCallback(() => {
+    setTab('tasks');
+    setShowPipeline((show) => !show);
+  }, []);
+
   // The reader is taken to the pipeline as the session starts, so the first events land in view.
   const handleDelegated = useCallback(() => {
     clearChecked();
-    setTab('pipeline');
+    setTab('tasks');
+    setShowPipeline(true);
   }, [clearChecked]);
 
   const menuActions = useToolbarActions({
     project: subject,
     tabs,
     checkedTasks: delegatableTasks,
+    showPipeline,
     onAddArtifact: () => void handleAddArtifact(),
     onDelegated: handleDelegated,
+    onTogglePipeline: togglePipeline,
   });
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
@@ -232,17 +243,31 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
           )}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
-          {tab === 'tasks' &&
-            (taskSet ? (
-              // TODO(burdon): Inline component for more control?
-              <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
-            ) : (
-              <Flex justify='center' classNames='p-4 text-subdued'>
-                {t('no-task-set.message')}
-              </Flex>
-            ))}
-
-          {tab === 'pipeline' && space && <ProjectPipeline space={space} project={subject} tasks={tasks} />}
+          {tab === 'tasks' && !taskSet && (
+            <Flex justify='center' classNames='p-4 text-subdued'>
+              {t('no-task-set.message')}
+            </Flex>
+          )}
+          {/* One splitter whether or not the chart is shown: collapsing to the ledger keeps the pane the
+              section lays out in, so its add row stays below the list rather than past the panel. */}
+          {tab === 'tasks' && taskSet && (
+            <Splitter.Root
+              orientation='vertical'
+              anchor='end'
+              resizable
+              defaultSize={PIPELINE_SIZE}
+              mode={showPipeline && space ? 'split' : 'start'}
+            >
+              <Splitter.Panel position='start'>
+                {/* TODO(burdon): Inline component for more control? */}
+                <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+              </Splitter.Panel>
+              <Splitter.Handle />
+              <Splitter.Panel position='end'>
+                {space && <ProjectPipeline space={space} project={subject} tasks={tasks} />}
+              </Splitter.Panel>
+            </Splitter.Root>
+          )}
         </Panel.Content>
       </Panel.Root>
     </Tabs.Root>
@@ -329,9 +354,12 @@ export type ToolbarActionsProps = {
   tabs: ReactNode;
   /** The checked rows not already with the agent, which the delegate action hands to one chat, in this order. */
   checkedTasks: readonly Task.Task[];
+  /** Whether the pipeline chart is shown under the ledger. */
+  showPipeline: boolean;
   onAddArtifact: () => void;
   /** Called once the checked tasks are delegated, so the boxes clear with the work. */
   onDelegated: () => void;
+  onTogglePipeline: () => void;
 };
 
 /**
@@ -339,7 +367,15 @@ export type ToolbarActionsProps = {
  * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
  * the navtree row.
  */
-const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDelegated }: ToolbarActionsProps) => {
+const useToolbarActions = ({
+  project,
+  tabs,
+  checkedTasks,
+  showPipeline,
+  onAddArtifact,
+  onDelegated,
+  onTogglePipeline,
+}: ToolbarActionsProps) => {
   const { invokePromise } = useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
@@ -426,6 +462,26 @@ const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDeleg
           },
           () => void delegateTasks(),
         )
+        // A toggle rather than a tab: the chart accompanies the ledger rather than replacing it.
+        .group(
+          'view',
+          {
+            label: ['view.label', { ns: meta.profile.key }],
+            variant: 'toggleGroup',
+            selectCardinality: 'multiple',
+            value: showPipeline ? ['pipeline'] : [],
+          },
+          (group) =>
+            group.action(
+              'pipeline',
+              {
+                label: ['pipeline.label', { ns: meta.profile.key }],
+                icon: 'ph--chart-bar-horizontal--regular',
+                testId: 'projectsPlugin.pipeline',
+              },
+              onTogglePipeline,
+            ),
+        )
         // In the trailing overflow rather than on the toolbar: adding an artifact is occasional
         // next to starting a chat, and a bare `+` beside the tabs read as adding a tab.
         .menu(
@@ -443,7 +499,19 @@ const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDeleg
           'projectsPlugin.overflow',
         )
         .build(),
-    [project, tabs, spaceId, invokePromise, onAddArtifact, createChat, delegateTasks, checkedTasks.length, delegating],
+    [
+      project,
+      tabs,
+      spaceId,
+      invokePromise,
+      onAddArtifact,
+      createChat,
+      delegateTasks,
+      checkedTasks.length,
+      delegating,
+      showPipeline,
+      onTogglePipeline,
+    ],
   );
 };
 

@@ -8,8 +8,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
+import { withTheme } from '../../testing';
+import { Button } from '../Button';
 import { Popover, type PopoverContentProps } from './Popover.tsx';
 
 random.seed(1234);

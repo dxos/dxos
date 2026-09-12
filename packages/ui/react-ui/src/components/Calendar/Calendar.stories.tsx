@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { withLayout, withTheme } from '../../testing/index.ts';
+import { withLayout, withTheme } from '../../testing';
 import { Calendar, type DateRange } from './Calendar.tsx';
 
 const meta: Meta<typeof Calendar.Root> = {

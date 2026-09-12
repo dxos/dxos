@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { withTheme } from '../../testing';
+import { Icon } from '../Icon';
 import { Toggle, type ToggleProps } from './Toggle.tsx';
 
 const DefaultStory = (props: ToggleProps) => {
