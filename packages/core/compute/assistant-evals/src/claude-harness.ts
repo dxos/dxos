@@ -191,7 +191,7 @@ export const runClaudeEval = async <T>(
     let durationMillis = 0;
     const score = (scorers: readonly Scorer.Any[]): Promise<Scorer.Scores> =>
       app.runPromise(
-        Scorer.runAll(scorers, { durationMillis }).pipe(
+        Scorer.sessionServices({ durationMillis })(Scorer.runAll(scorers)).pipe(
           Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, FeedTraceSink.FeedTraceSink)),
         ),
       );

@@ -61,31 +61,39 @@ export class DataServiceImpl implements DataService.Handlers {
             }),
           );
 
-        if (request.addIds) {
+        if (request.addIds?.length) {
           log.verbose('request documents', { count: request.addIds.length });
-          // TODO(dmaretskyi): Batch.
+          const loaded = await this._loadDocuments(sub.spaceId, request.addIds);
           for (const documentId of request.addIds) {
-            using document = await this._dataService.getDocument(this._executionContext, sub.spaceId, documentId);
-            log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!document });
-            if (!document) {
+            const mutation = loaded.get(documentId);
+            log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!mutation });
+            if (!mutation) {
               log.warn('not found', { documentId });
               continue;
             }
-            sub.next({
-              updates: [
-                {
-                  documentId,
-                  // Copy returned object to avoid hanging RPC stub
-                  // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
-                  mutation: copyUint8Array(document.data),
-                },
-              ],
-            });
+            sub.next({ updates: [{ documentId, mutation }] });
           }
         }
       },
       catch: (error) => error as Error,
     });
+  }
+
+  /**
+   * Fetches the requested documents in one call.
+   *
+   * The host reads them one Durable Object round trip at a time otherwise, in series, so hydrating
+   * N objects cost N wake latencies end to end -- enough, at ~500ms each in production, for the
+   * client's 2s per-object load timeout to fire on everything queued behind the first few and for
+   * the query to return a partial result.
+   *
+   * Bytes are copied before the RPC stub is disposed: the stub's own buffers belong to memory the
+   * runtime reclaims when it is released.
+   * See <https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/>.
+   */
+  private async '_loadDocuments'(spaceId: SpaceId, documentIds: string[]): Promise<Map<string, Uint8Array>> {
+    using documents = await this._dataService.getDocuments(this._executionContext, spaceId, documentIds);
+    return new Map(documents.map((document) => [document.documentId, copyUint8Array(document.data)]));
   }
 
   ['DataService.createDocument'](

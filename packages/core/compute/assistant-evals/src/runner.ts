@@ -9,6 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
+import { afterAll } from 'vitest';
 
 import { AiService, Model } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
@@ -60,8 +61,11 @@ export type AgentIncomplete =
 const describeCause = (cause: unknown): string =>
   cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
 
-/** Room after the agent's budget for the query to grade what it left, before the run is abandoned. */
+/** Room after the agent's budget for the harness to be stood up and torn down around it. */
 const GRADE_GRACE_MILLIS = 5 * 60 * 1_000;
+
+/** Distinguishes the open sessions of concurrently running rows, variants and files. */
+let nextRunId = 0;
 
 /**
  * Tags a failure as coming specifically from the agent's own `RunInstructions` invocation —
@@ -205,13 +209,13 @@ export interface CreateEvalRunnerOptions<I, O> {
   timeout?: number;
   /**
    * Grade the state a session reached when it runs out of `timeout` or fails, rather than throwing:
-   * the agent's output becomes an {@link AgentIncomplete} and `dbQuery` still runs. For a scenario
-   * long enough that where it got to is worth knowing. Requires `dbQuery`; a timed-out session is
-   * not stopped, so the query then reads a space the agent may still be writing to.
+   * the agent's output becomes an {@link AgentIncomplete} and the scorers still run. For a scenario
+   * long enough that where it got to is worth knowing. Requires `scored`; a timed-out session is not
+   * stopped, so the scorers then read a space the agent may still be writing to.
    */
   gradeIncomplete?: boolean;
   /**
-   * Additional ECHO types the scenario's seed/dbQuery touch, registered with the harness client.
+   * Additional ECHO types the scenario's seed and scorers touch, registered with the harness client.
    */
   types?: Type.AnyEntity[];
   /**
@@ -220,11 +224,12 @@ export interface CreateEvalRunnerOptions<I, O> {
    */
   config?: Config;
   /**
-   * Graded dimensions, each running its own query against the space while it is still open (see
-   * {@link Scorer}). The task then reports `scores`, and `Scorer.toEvalite` turns the same list
-   * into the evalite scorers that read them.
+   * Keeps this run's space open past the task so the eval's own scorers can query it (see
+   * {@link Scorer}), and returns `{ runId, agentOutput, durationMillis }` in place of the bare agent
+   * output. The harness is disposed by the `afterAll` this runner registers, once every row of the
+   * eval has been graded. Leave it unset for an eval graded from the agent's output alone.
    */
-  scorers?: readonly Scorer.Any[];
+  scored?: boolean;
   /**
    * Seeds the space before the run (e.g. a Project the scenario operates on). Runs inside the
    * harness with `Database.Service` and the runtime's capability services provided (so a seed can
@@ -245,20 +250,6 @@ export type SeedResult = {
   chat?: Ref.Ref<Chat.Chat>;
 };
 
-/**
- * A deterministic DB-state assertion run after the agent completes, before the harness is disposed.
- * Runs with the runtime's capability services as the seed does, so a query can invoke an operation
- * of its own — fetching through the sandbox the agent built in, say.
- */
-export type DbQuery<I, D> = (
-  input: I,
-  spaceId: SpaceId,
-) => Effect.Effect<
-  D,
-  unknown,
-  Database.Service | FeedTraceSink.FeedTraceSink | Capabilities.ProcessManagerRuntimeServices
->;
-
 export type VariantConfig =
   | undefined
   | {
@@ -275,10 +266,9 @@ export type VariantConfig =
  * space. All execution is wrapped in an Effect scope; errors are
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
  *
- * Pass `dbQuery` to additionally run a deterministic DB-state assertion (TESTING.md dimension G)
- * while the space is still open; the task then returns `{ agentOutput, dbQuery, durationMillis }` instead of the
- * bare agent output, so a Scorer can grade the real effect rather than the model's own
- * self-reported completion.
+ * Pass `scored: true` to keep the space open past the task (TESTING.md dimension G); the task then
+ * returns `{ runId, agentOutput, durationMillis }` instead of the bare agent output, and the eval's
+ * `Scorer.toEvalite` dimensions grade the real effect rather than the model's self-reported one.
  *
  * Pass `expect: 'failure'` for scenarios that assert the agent correctly fails; the task then
  * returns `{ failed: boolean }` instead of throwing, so a Scorer can grade "failed as instructed".
@@ -295,49 +285,63 @@ export function createEvalRunner<I, O>(
   options: CreateEvalRunnerOptions<I, O> & { expect: 'failure' },
 ): Evalite.Task<I, { failed: boolean }, VariantConfig>;
 export function createEvalRunner<I, O>(
-  options: CreateEvalRunnerOptions<I, O> & { scorers: readonly Scorer.Any[] },
-): Evalite.Task<I, { agentOutput: O | AgentIncomplete; scores: Scorer.Scores; durationMillis: number }, VariantConfig>;
+  options: CreateEvalRunnerOptions<I, O> & { scored: true },
+): Evalite.Task<I, { runId: string; agentOutput: O | AgentIncomplete; durationMillis: number }, VariantConfig>;
 export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
-export function createEvalRunner<I, O, D>(
-  options: CreateEvalRunnerOptions<I, O> & { dbQuery: DbQuery<I, D> },
-): Evalite.Task<I, { agentOutput: O | AgentIncomplete; dbQuery: D; durationMillis: number }, VariantConfig>;
-export function createEvalRunner<I, O, D>(
-  options: CreateEvalRunnerOptions<I, O> & { dbQuery?: DbQuery<I, D> },
+export function createEvalRunner<I, O>(
+  options: CreateEvalRunnerOptions<I, O>,
 ): Evalite.Task<
   I,
-  | O
-  | { agentOutput: O | AgentIncomplete; dbQuery: D; durationMillis: number }
-  | { agentOutput: O | AgentIncomplete; scores: Scorer.Scores; durationMillis: number }
-  | { failed: boolean },
+  O | { runId: string; agentOutput: O | AgentIncomplete; durationMillis: number } | { failed: boolean },
   VariantConfig
 > {
-  const execute = async (input: I, variant: VariantConfig, record: (call: Usage.Call) => void) => {
-    // One grading path per scenario: with both, the result's shape would not be the one the
-    // overload promised the caller.
-    if (options.dbQuery && options.scorers?.length) {
-      throw new Error('createEvalRunner: pass either `dbQuery` or `scorers`, not both.');
+  // The harnesses this eval's rows left open, by run id. Registered at collection time on the file's
+  // suite: evalite grades a row inside that row's own test, so a harness can only go once every row
+  // of this eval has been scored.
+  const open = new Map<string, () => Promise<void>>();
+  afterAll(async () => {
+    const disposals = [...open.entries()];
+    open.clear();
+    // Every session is closed, and every harness disposed, before any failure is reported: one
+    // harness that will not go must not strand the rest of the file's.
+    for (const [runId] of disposals) {
+      Scorer.closeSession(runId);
     }
+    const results = await Promise.allSettled(disposals.map(([, dispose]) => dispose()));
+    const failures = results.filter((result) => result.status === 'rejected');
+    if (failures.length > 0) {
+      throw new AggregateError(
+        failures.map((failure) => failure.reason),
+        `Failed to dispose ${failures.length} of ${disposals.length} eval harnesses.`,
+      );
+    }
+  });
 
+  const execute = async (input: I, variant: VariantConfig, record: (call: Usage.Call) => void) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
-    const gradeIncomplete =
-      options.gradeIncomplete === true && (options.dbQuery !== undefined || (options.scorers?.length ?? 0) > 0);
+    const gradeIncomplete = options.gradeIncomplete === true && options.scored === true;
 
     const instructions = Instructions.make({
       text: options.instructions,
       skills: (typeof options.skills === 'function' ? options.skills() : options.skills) ?? getDefaultSkills(),
     });
 
+    const runId = `${nextRunId++}`;
+
+    // Scoped for the ungraded path's finalizer; a scored run's harness is not on this scope.
     const run = Effect.scoped(
       Effect.gen(function* () {
-        const harness = yield* Effect.acquireRelease(
-          Effect.promise(async () =>
-            createComposerTestApp({
-              plugins: await createDefaultPlugins({ ...options, model, record }),
-            }),
-          ),
-          (testHarness) => Effect.promise(() => testHarness.dispose()),
+        const harness = yield* Effect.promise(async () =>
+          createComposerTestApp({
+            plugins: await createDefaultPlugins({ ...options, model, record }),
+          }),
         );
+        // The scope owns the harness until a session that outlives this effect takes it over, so a
+        // run that fails before it has anything to grade releases its harness now rather than
+        // holding it — and the whole eval's memory — until the file ends.
+        let handedOver = false;
+        yield* Effect.addFinalizer(() => (handedOver ? Effect.void : Effect.promise(() => harness.dispose())));
 
         const { defaultSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
@@ -367,9 +371,7 @@ export function createEvalRunner<I, O, D>(
             runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
-        const dbQueryFn = options.dbQuery;
-        const scorers = options.scorers;
-        if (!dbQueryFn && !scorers?.length) {
+        if (!options.scored) {
           return yield* agentStep;
         }
 
@@ -388,29 +390,30 @@ export function createEvalRunner<I, O, D>(
           : yield* agentStep;
         const durationMillis = Date.now() - startedAt;
 
-        // Both read the space while it is still open, before the harness is disposed below.
-        const services = ServiceResolver.provide(
+        // What a scorer runs against: the space and its trace feed, the runtime's operations, and
+        // what this run reports about itself.
+        const space = ServiceResolver.provide(
           { space: defaultSpace.id },
           Database.Service,
           FeedTraceSink.FeedTraceSink,
         );
+        const provideRun = Scorer.sessionServices({ durationMillis });
 
-        // `scorers` first, so the branch taken matches the overload the options selected.
-        if (scorers?.length) {
-          const scores = yield* Effect.promise(() =>
-            harness.runPromise(Scorer.runAll(scorers, { durationMillis }).pipe(Effect.provide(services))),
-          );
-          return { agentOutput, scores, durationMillis };
-        }
-
-        if (dbQueryFn) {
-          const dbQuery = yield* Effect.promise(() =>
-            harness.runPromise(dbQueryFn(input, defaultSpace.id).pipe(Effect.provide(services))),
-          );
-          return { agentOutput, dbQuery, durationMillis };
-        }
-
-        return yield* Effect.fail(new Error('Unreachable: neither dbQuery nor scorers.'));
+        // Graded one dimension at a time: `Scorer.shared` memoizes a completed exit, so two
+        // dimensions naming one query must not be in flight together.
+        let queued: Promise<unknown> = Promise.resolve();
+        Scorer.openSession(runId, {
+          grade: (scorer) => {
+            const graded = queued.then(() =>
+              harness.runPromise(provideRun(Effect.exit(scorer.score)).pipe(Effect.provide(space))),
+            );
+            queued = graded.catch(() => undefined);
+            return graded;
+          },
+        });
+        open.set(runId, () => harness.dispose());
+        handedOver = true;
+        return { runId, agentOutput, durationMillis };
       }),
     );
 
