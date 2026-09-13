@@ -39,6 +39,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     ),
 
     /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
+    // TODO(burdon): Change to Collection?
     artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
 
     /** Routines the project owns, in order, parented so they cascade-delete with it. */
@@ -58,6 +59,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
      * mirrors a repository adopts its synced task set AND names it here, while a project whose
      * tasks are local can still reference the repository its issues are filed against.
      */
+    // TODO(burdon): Change to array? Move into taskSet?
     repo: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
