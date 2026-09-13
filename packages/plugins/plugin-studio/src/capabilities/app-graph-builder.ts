@@ -12,7 +12,10 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
 import { isNonNullable } from '@dxos/util';
 
+import { meta } from '#meta';
 import { Frame, MediaArtifact, Storyboard } from '#types';
+
+import { FRAME_COMPANION } from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -21,6 +24,20 @@ export default Capability.makeModule(
     // needs a node of its own under the storyboard, which is where its toolbar reads contributed
     // actions (Connect). Hidden rather than navigable: these nodes have no URL of their own.
     const extensions = yield* Effect.all([
+      // The frame companion: the selected frame's artifact article beside the storyboard plank.
+      AppGraphBuilder.createTypeExtension({
+        id: 'frameCompanion',
+        type: Storyboard.Storyboard,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: FRAME_COMPANION,
+              label: ['frame-companion.label', { ns: meta.profile.key }],
+              icon: 'ph--frame-corners--regular',
+              data: FRAME_COMPANION,
+            }),
+          ]),
+      }),
       AppGraphBuilder.createExtension({
         id: 'storyboardArtifacts',
         match: (node) => (Obj.instanceOf(Storyboard.Storyboard, node.data) ? Option.some(node.data) : Option.none()),

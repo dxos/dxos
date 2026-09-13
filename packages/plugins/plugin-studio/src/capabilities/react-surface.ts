@@ -11,9 +11,11 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 
 import { ImageVariant, MediaArtifactCard, VideoVariant } from '#components';
-import { GalleryArticle, LightboxArticle, MediaArtifactArticle, StoryboardArticle } from '#containers';
+import { FrameCompanion, GalleryArticle, LightboxArticle, MediaArtifactArticle, StoryboardArticle } from '#containers';
 import { VariantRenderer } from '#surfaces';
 import { Lightbox, MediaArtifact, Storyboard } from '#types';
+
+import { FRAME_COMPANION } from '../constants.ts';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
@@ -49,6 +51,16 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Storyboard.Storyboard),
         component: StoryboardArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      // The storyboard's frame companion (see the `frame` node in the graph builder).
+      Surface.create({
+        id: 'frameCompanion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, FRAME_COMPANION),
+          AppSurface.companion(AppSurface.Article, Storyboard.Storyboard),
+        ),
+        component: FrameCompanion,
+        props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
       }),
       Surface.create({
         id: 'galleryArticle',

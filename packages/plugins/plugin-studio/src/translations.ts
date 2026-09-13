@@ -77,6 +77,7 @@ export const translations = [
         'delete-frame.label': 'Delete frame',
         'frame.placeholder': 'Untitled frame',
         'frame-preview.label': 'Frame {{index}}',
+        'frame-companion.label': 'Frame',
         'frame-empty.message': 'No artifact yet.',
         'add-frame-artifact.label': 'Add artifact',
         'storyboard-empty.message': 'No frames yet — append one from the toolbar.',

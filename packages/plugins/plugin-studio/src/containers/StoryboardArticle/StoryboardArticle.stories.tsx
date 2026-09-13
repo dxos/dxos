@@ -23,7 +23,8 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Frame, MediaArtifact, Storyboard, Variant } from '#types';
 
-import { MockProviderPlugin, StubProjectsPlugin, makeMockArtifact } from '../../testing/index.ts';
+import { MockProviderPlugin, StubDeckPlugin, StubProjectsPlugin, makeMockArtifact } from '../../testing/index.ts';
+import { FrameCompanion } from '../FrameCompanion/FrameCompanion.tsx';
 import { StoryboardArticle } from './StoryboardArticle.tsx';
 
 const FRAMES: [name: string, prompt: string][] = [
@@ -53,9 +54,14 @@ const DefaultStory = () => {
     return null;
   }
 
+  // The article beside its frame companion, the way the deck lays them out: picking a frame in
+  // the stack selects it on the plank, and the companion follows the selection.
   return (
-    <div className='contents' {...attentionAttributes}>
+    <div className='grid grid-cols-[1fr_28rem] h-full overflow-hidden' {...attentionAttributes}>
       <StoryboardArticle role='article' subject={storyboard} attendableId={ATTENDABLE_ID} />
+      <div className='grid overflow-hidden border-s border-separator'>
+        <FrameCompanion companionTo={storyboard} attendableId={ATTENDABLE_ID} />
+      </div>
     </div>
   );
 };
@@ -87,6 +93,7 @@ const meta = {
         }),
         StudioPlugin(),
         StubProjectsPlugin(),
+        StubDeckPlugin(),
         MockProviderPlugin(),
         SpacePlugin({}),
         StorybookPlugin.make({}),
@@ -107,18 +114,19 @@ type Story = StoryObj<typeof meta>;
 /**
  * Test:
  * 1. Three previews stack on the left (two with a cover, one "Frame 3" placeholder); the first frame's
- *    artifact article fills the right.
- * 2. Click another preview — the detail switches to that frame's article; the row shows selected.
- * 3. Drag a preview by its handle above another — the order (and the numbering) persists after the drop.
- * 4. Toolbar → Append frame → name + Type → Save: a fourth preview appears and is selected, its
- *    article empty.
+ *    cover plays in the middle and its request form shows in the companion on the right.
+ * 2. Click another preview — the player and the companion switch to that frame; the row shows selected.
+ * 3. Drag a preview above another — the order (and the numbering) persists after the drop.
+ * 4. Toolbar → Append frame → name + Type → Save: a fourth preview appears and is selected, the
+ *    companion's form empty.
  * 5. Toolbar → Delete frame — the selected frame leaves the stack and the selection falls back.
  */
 export const Default: Story = {};
 
 /**
- * Selecting the empty frame, writing a prompt and generating fills its preview: the mock provider
- * answers with a picsum image seeded by the prompt, and the stack's thumbnail follows the cover.
+ * Selecting the empty frame, writing a prompt in the companion and generating fills its preview: the
+ * mock provider answers with a picsum image seeded by the prompt, and the stack's thumbnail follows
+ * the cover.
  */
 export const TestGenerate: Story = {
   play: async ({ canvasElement }) => {

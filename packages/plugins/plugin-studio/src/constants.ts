@@ -18,3 +18,6 @@ export const getKindIcon = (kind: string): string => (isKind(kind) ? KIND_META[k
 
 /** Whether a stored `kind` is one studio renders. */
 export const isKind = (kind: string): kind is Kind => KINDS.some((candidate) => candidate === kind);
+
+/** The storyboard plank's frame companion: its node variant and the surface literal it renders. */
+export const FRAME_COMPANION = 'frame';

@@ -44,7 +44,7 @@ export const FrameStack = <T extends FrameStackItem>({
       {({ items }) => (
         // `select-none`: a pointer drag across the previews would otherwise start a native text
         // selection drag, whose ghost is the whole column.
-        <OrderedList.Content classNames={['flex flex-col gap-1 p-1 select-none', classNames]}>
+        <OrderedList.Content classNames={['flex flex-col gap-3 p-3 select-none', classNames]}>
           {items.map((item, index) => (
             <OrderedList.Item
               key={item.id}

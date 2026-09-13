@@ -4,14 +4,15 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
+import { MediaPlayer, Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
+import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -19,22 +20,23 @@ import { FrameStack, type StoryboardClip, StoryboardPlayer } from '#components';
 import { meta } from '#meta';
 import { Frame, MediaArtifact, Storyboard, type Variant } from '#types';
 
-import { FrameDetail } from './FrameDetail.tsx';
+import { FRAME_COMPANION } from '../../constants.ts';
 import { FrameThumbnail } from './FrameThumbnail.tsx';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
 /** The stack's opening width in rem — the navtree sidebar's (`--dx-nav-sidebar-size`, 350px). */
-const STACK_SIZE = 22;
+const STACK_SIZE = 18;
 const isFrame = Obj.instanceOf(Frame.Frame);
 
 export type StoryboardArticleProps = AppSurface.ObjectArticleProps<Storyboard.Storyboard>;
 
 /**
- * A storyboard as master/detail: the frames as a reorderable stack of previews on the left, the
- * selected frame's artifact article on the right, and a toolbar whose Append frame opens the
- * artifact create dialog — one gesture makes the artifact, parented to its new frame, and the frame,
- * parented to the storyboard. The same shape a slide deck takes; see the plugin design doc.
+ * A storyboard as master/detail: the frames as a reorderable stack of previews on the left and the
+ * selected frame's cover played on the right; the frame's request form lives in the plank's frame
+ * companion, which picking a frame opens. The toolbar's Append frame opens the artifact create
+ * dialog — one gesture makes the artifact, parented to its new frame, and the frame, parented to
+ * the storyboard. The same shape a slide deck takes; see the plugin design doc.
  */
 export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: StoryboardArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -77,15 +79,22 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   const clips = useAtomValue(clipsAtom);
   const [playing, setPlaying] = useState(false);
 
-  // The selected frame, falling back to the first: a deleted or not-yet-loaded selection shows the
-  // storyboard's opening frame rather than nothing.
-  const [selectedId, setSelectedId] = useState<string | undefined>();
+  // The selection is the plank's (attention view state), so the frame companion follows it; it
+  // falls back to the first frame so a deleted or not-yet-loaded selection shows the opening frame.
+  const selectedId = useSelection(attendableId, 'single');
   const selectedFrame = frames.find((frame) => frame.id === selectedId) ?? frames[0];
-  useEffect(() => {
-    if (selectedFrame && selectedFrame.id !== selectedId) {
-      setSelectedId(selectedFrame.id);
-    }
-  }, [selectedFrame, selectedId]);
+  const selectedClip = clips.find((clip) => clip.id === selectedFrame?.id);
+  const showItem = useShowItem();
+  const handleSelect = useCallback(
+    (id: string) => {
+      if (!attendableId) {
+        return;
+      }
+      // Select, then open the frame companion on this plank.
+      void showItem({ contextId: attendableId, selectionId: id, companion: Attention.linkedSegment(FRAME_COMPANION) });
+    },
+    [attendableId, showItem],
+  );
 
   // The create dialog makes the artifact in the space; the frame's ref and parent edge make it the
   // frame's (ref before edge: the frame's `artifact` ref declares the edge).
@@ -110,23 +119,8 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
     }
     const frame = Storyboard.appendFrame(storyboard, Frame.make({ name: artifact.name, artifact }));
     Obj.setParent(artifact, frame);
-    setSelectedId(frame.id);
-  }, [storyboard, createArtifact]);
-
-  // A frame made without an artifact (an agent's generic create, a cleared ref) gets one here.
-  const handleAddArtifact = useCallback(
-    async (frame: Frame.Frame) => {
-      const artifact = await createArtifact();
-      if (!artifact) {
-        return;
-      }
-      Obj.update(frame, (frame) => {
-        frame.artifact = Ref.make(artifact);
-      });
-      Obj.setParent(artifact, frame);
-    },
-    [createArtifact],
-  );
+    handleSelect(frame.id);
+  }, [storyboard, createArtifact, handleSelect]);
 
   const handleDelete = useCallback(
     (frame: Frame.Frame) => {
@@ -202,7 +196,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
                   <FrameStack<Frame.Frame>
                     items={frames}
                     selectedId={selectedFrame?.id}
-                    onSelect={setSelectedId}
+                    onSelect={handleSelect}
                     onMove={handleMove}
                   >
                     {(frame, index) => <FrameThumbnail frame={frame} index={index} />}
@@ -212,13 +206,18 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
             </Splitter.Panel>
             <Splitter.Handle />
             <Splitter.Panel position='end'>
-              {selectedFrame && (
-                <FrameDetail
-                  key={selectedFrame.id}
-                  frame={selectedFrame}
-                  attendableId={attendableId}
-                  onAddArtifact={handleAddArtifact}
+              {selectedClip ? (
+                // Keyed by frame so the element remounts on a different source.
+                <MediaPlayer
+                  key={selectedClip.id}
+                  classNames='dx-expand'
+                  src={selectedClip.src}
+                  kind={selectedClip.contentType?.startsWith('video/') ? 'video' : undefined}
+                  fit='contain'
+                  alt={selectedClip.name}
                 />
+              ) : (
+                <Empty classNames='h-full' label={t('frame-empty.message')} />
               )}
             </Splitter.Panel>
           </Splitter.Root>
