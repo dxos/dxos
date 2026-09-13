@@ -211,6 +211,14 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Settles `whenReady` with the error that stopped the document from being created.
+   * @internal
+   */
+  _failReady(error: Error): void {
+    this._ready.throw(error);
+  }
+
+  /**
    * @internal
    */
   _wakeReady(): void {

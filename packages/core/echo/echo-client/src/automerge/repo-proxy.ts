@@ -468,6 +468,7 @@ export class RepoProxy extends Resource {
         })
         .catch((err) => {
           log.catch(err);
+          handle._failReady(err);
           cleanup();
         })
         .finally(() => {

@@ -251,6 +251,16 @@ describe('RepoProxy', () => {
     }
   });
 
+  test('a document the host refuses to create settles instead of staying pending', { timeout: 5_000 }, async () => {
+    const { dataService } = await setup(undefined, (props) => new RefusingDataService(props));
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
+    await expect(handle.whenReady()).rejects.toThrow();
+    await clientRepo.flush();
+  });
+
   test('document mutation persists with `flush`', async () => {
     const dbPath = createTmpPath();
     let url: AutomergeUrl;
@@ -526,6 +536,13 @@ const setupWithDroppableSubscription = async () => {
 
   return { droppable, host, clientRepo, clientHandle };
 };
+
+/** Fails every document creation, as a host that is gone or refuses the call does. */
+class RefusingDataService extends DataServiceImpl {
+  override ['DataService.createDocument'](): Effect.Effect<DataService.CreateDocumentResponse, Error> {
+    return Effect.fail(new Error('document creation refused'));
+  }
+}
 
 /**
  * Ends the first `subscribe` stream on demand, so the host runs the finalizer that forgets the

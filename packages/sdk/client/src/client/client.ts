@@ -45,7 +45,7 @@ import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
 
 /** Longest a destroy waits for a database's pending writes to reach the host. */
-const DESTROY_FLUSH_TIMEOUT = 5_000;
+const DESTROY_FLUSH_TIMEOUT = 2_000;
 
 /**
  * This options object configures the DXOS Client.
@@ -660,7 +660,7 @@ export class Client {
 
   /**
    * Hands writes still pending to the host, so objects added just before the client is torn down (e.g. by a
-   * React StrictMode remount) are not lost. `reset` skips this: it has already wiped the host.
+   * React StrictMode remount) are not lost. Bounded well inside callers' own shutdown deadlines.
    */
   private async _flushDatabases(): Promise<void> {
     await Promise.all(
