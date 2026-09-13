@@ -2,7 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { setLoggerFactory } from '@automerge/automerge-repo';
+
 import { runDedicatedWorker } from '@dxos/client/worker';
+import { resolveTelemetryTag } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
@@ -27,10 +30,44 @@ const logProcessor = new WorkerLogProcessor({
 });
 log.addProcessor(logProcessor.processor);
 
+/** Longest rendering of a single logger argument kept in a record. */
+const MAX_ARG_LENGTH = 500;
+
+/**
+ * Routes automerge-repo's subduction loggers into `@dxos/log`, so the e2e log capture records sync rounds.
+ * Every other namespace keeps the library default: `debug` output stays off in a worker, the rest reaches the console.
+ */
+const captureSubductionLogs = () =>
+  setLoggerFactory((namespace) => {
+    if (!namespace.startsWith('automerge-repo:subduction')) {
+      const prefix = `[${namespace}]`;
+      return {
+        debug: () => {},
+        info: (message, ...args) => console.info(prefix, message, ...args),
+        warn: (message, ...args) => console.warn(prefix, message, ...args),
+        error: (message, ...args) => console.error(prefix, message, ...args),
+      };
+    }
+
+    const context = (args: unknown[]) => ({
+      namespace,
+      args: args.map((arg) => (arg instanceof Error ? arg.message : String(arg)).slice(0, MAX_ARG_LENGTH)),
+    });
+    return {
+      debug: (message, ...args) => log.debug(message, context(args)),
+      info: (message, ...args) => log.info(message, context(args)),
+      warn: (message, ...args) => log.warn(message, context(args)),
+      error: (message, ...args) => log.error(message, context(args)),
+    };
+  });
+
 let observability: ReturnType<typeof initializeObservability> | undefined;
 
 runDedicatedWorker({
   onBeforeStart: async (cfg) => {
+    if (resolveTelemetryTag(cfg) === 'e2e') {
+      captureSubductionLogs();
+    }
     observability = initializeObservability(cfg, isTauri(), logStore, undefined, {
       post: (message) => observabilityWorker.postMessage(message),
     });
