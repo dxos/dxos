@@ -28,12 +28,16 @@ export const appendFrame = Effect.fn(function* (
   { name, kind, prompt, notes, provider, config: extra }: StudioOperation.FrameInput,
   generate: boolean | undefined,
 ) {
+  const config = { ...(extra ?? {}), prompt };
   const artifact = yield* Database.add(MediaArtifact.make({ name, kind }));
-  if (provider) {
-    Obj.update(artifact, (artifact) => {
+  // The prompt is the frame's substance whether or not it is generated now: it is what the compose
+  // form opens on and what a later Generate submits.
+  Obj.update(artifact, (artifact) => {
+    artifact.request = config;
+    if (provider) {
       artifact.generator = provider;
-    });
-  }
+    }
+  });
   const frame = yield* Database.add(Frame.make({ name, artifact }));
   if (notes) {
     Obj.update(frame, (frame) => {
@@ -44,7 +48,6 @@ export const appendFrame = Effect.fn(function* (
   Obj.setParent(artifact, frame);
   Storyboard.appendFrame(storyboard, frame);
   yield* Database.flush();
-  const config = { ...(extra ?? {}), prompt };
   if (!generate) {
     return { frame: Ref.make(frame), artifact: Ref.make(artifact), config };
   }

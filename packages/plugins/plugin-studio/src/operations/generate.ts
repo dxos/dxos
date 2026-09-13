@@ -63,6 +63,13 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
         ...(config ?? {}),
         ...(count !== undefined ? { count } : {}),
       };
+      // The submitted config becomes the artifact's request: the compose form reopens on what was
+      // last asked for, whichever client or agent asked.
+      if (config) {
+        Obj.update(artifactObj, (artifactObj) => {
+          artifactObj.request = config;
+        });
+      }
 
       // Publish a progress monitor when the app registry is present (absent in headless tests); the
       // provider drives it via `onProgress`, and the meter's cancel aborts the in-flight request.

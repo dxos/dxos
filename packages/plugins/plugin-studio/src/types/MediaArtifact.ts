@@ -42,8 +42,8 @@ const resolveArtifactConnectorIds = (
 /**
  * A media-agnostic unit of creative work: a set of produced {@link Variant}s. `kind` is an open
  * discriminator (`'image' | 'video' | …`) selecting rendering + provider — new media add behavior (a
- * renderer, a provider), never columns. The prompt + request knobs live per-variant in `Variant.config`
- * (the generator's `requestSchema`), composed via an in-memory draft variant in the article.
+ * renderer, a provider), never columns. Each produced variant records the request that made it in
+ * `Variant.config` (the generator's `requestSchema`); `request` is the one being composed.
  */
 export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.dxos.type.mediaArtifact', '0.1.0'))(
   Schema.Struct({
@@ -52,6 +52,12 @@ export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.
     kind: Schema.String,
     /** Chosen GenerationService id for this kind (passed to op:generate as `provider`). */
     generator: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+    /**
+     * The request the compose form edits (prompt + kind-specific knobs). Persisted rather than held in
+     * the article so a prompt authored elsewhere — an agent's frame, another peer — is there when the
+     * artifact opens, and a half-written one survives a remount.
+     */
+    request: Schema.optional(Schema.Record(Schema.String, Schema.Unknown).pipe(FormInputAnnotation.set(false))),
     /** Owned interchangeable alternatives of the primary output; each records its own generation. */
     variants: Schema.Array(Ref.Ref(Variant.Variant)).pipe(
       Annotation.SetParent.set(true),

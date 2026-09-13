@@ -16,9 +16,10 @@ import { Frame, MediaArtifact, Storyboard } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // A storyboard's frames' artifacts as its child nodes (the frames themselves stay hidden — a frame
-    // is a row of the storyboard, not a destination). Gives each nested artifact article a node of its
-    // own under the storyboard, which is where its toolbar reads contributed actions.
+    // A storyboard's frames' artifacts as hidden child nodes: a frame is a row of the storyboard, not
+    // a destination, so nothing is listed in the navtree — but each nested artifact article still
+    // needs a node of its own under the storyboard, which is where its toolbar reads contributed
+    // actions (Connect). Hidden rather than navigable: these nodes have no URL of their own.
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'storyboardArtifacts',
@@ -40,7 +41,7 @@ export default Capability.makeModule(
             );
           return Effect.succeed(
             artifacts
-              .map((artifact) => AppNode.makeObject({ get, db, object: artifact, navigable: true }))
+              .map((artifact) => AppNode.makeObject({ get, db, object: artifact, disposition: 'hidden' }))
               .filter(isNonNullable),
           );
         },

@@ -173,6 +173,8 @@ describe('storyboard operations', () => {
     expect(artifact?.id).toBe(first.artifact.target?.id);
     expect(artifact?.kind).toBe('video');
     expect(artifact?.generator).toBe('mock-video');
+    // The prompt is persisted on the artifact so the compose form opens on it, generated or not.
+    expect(artifact?.request).toEqual({ model: 'mock/v1', prompt: 'A studio at dawn' });
     expect(Obj.getParent(frames[0])?.id).toBe(storyboard.id);
     expect(artifact && Obj.getParent(artifact)?.id).toBe(frames[0].id);
     expect(second.frame.target?.id).toBe(frames[1].id);

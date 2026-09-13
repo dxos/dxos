@@ -98,10 +98,11 @@ export const MediaArtifactArticle = ({
 
   const artifactId = artifact.id;
 
-  // In-memory draft variant (never added to the db): the editable compose surface. Reset when the
-  // generator changes so it seeds from the new provider's default config.
+  // In-memory draft variant (never added to the db): the editable compose surface, seeded from the
+  // artifact's persisted request over the provider's defaults. Reset when the generator changes so
+  // it seeds from the new provider's default config.
   const draft = useMemo(
-    () => Variant.make({ config: { ...(provider?.defaultRequest ?? {}) } }),
+    () => Variant.make({ config: { ...(provider?.defaultRequest ?? {}), ...(artifact.request ?? {}) } }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [artifactId, provider?.id],
   );
@@ -143,13 +144,17 @@ export const MediaArtifactArticle = ({
     () => ({ ...(provider?.defaultRequest ?? {}), ...(draft.config ?? {}) }),
     [provider?.defaultRequest, draft],
   );
+  // Edits land on the artifact too, so the request survives a remount and reaches other peers.
   const handleConfigChange = useCallback(
     (next: Record<string, unknown>) => {
       Obj.update(draft, (draft) => {
         draft.config = next;
       });
+      Obj.update(artifact, (artifact) => {
+        artifact.request = next;
+      });
     },
-    [draft],
+    [draft, artifact],
   );
   const handleNameChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
