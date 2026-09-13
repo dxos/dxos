@@ -187,12 +187,13 @@ export const Default: Story = {
 
 /**
  * Live model + Higgsfield: proves the tool path end to end. The provided account may refuse the
- * generation (no credits), in which case the frames still exist with their prompts. Excluded from CI.
+ * generation (no credits), in which case the frames still exist with their prompts. Manual (not CI).
  */
 export const TestStoryboard: Story = {
   decorators: createDecorators(makeStoryOptions('higgsfield')),
   args: sharedArgs,
-  tags: ['!test'],
+  // Live model + provider: opt in with `DX_RUN_MANUAL_TESTS=1` (see stories-assistant/moon.yml).
+  tags: ['manual'],
   play: async ({ canvasElement }) => {
     await submitPrompt(canvasElement, "Do the task on this project's checklist.");
     await waitForStoryboard(async (_storyboard, frames) => frames.length >= 3, { timeout: 300_000 });

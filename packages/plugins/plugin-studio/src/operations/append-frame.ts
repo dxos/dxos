@@ -2,12 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { Frame, MediaArtifact, Storyboard, StudioOperation } from '#types';
+
+/** The provider's own message when the cause carries an Error, else the pretty cause. */
+const describe = (cause: Cause.Cause<unknown>): string => {
+  const squashed = Cause.squash(cause);
+  return squashed instanceof Error ? squashed.message : String(squashed);
+};
 
 /**
  * Appends one frame: makes the media artifact (its `generator` set to the provider), parents it to
@@ -37,10 +45,23 @@ export const appendFrame = Effect.fn(function* (
   Storyboard.appendFrame(storyboard, frame);
   yield* Database.flush();
   const config = { ...(extra ?? {}), prompt };
-  const generated = generate
-    ? (yield* Operation.invoke(StudioOperation.Generate, { artifact: Ref.make(artifact), provider, config })).count
-    : undefined;
-  return { frame: Ref.make(frame), artifact: Ref.make(artifact), config, generated };
+  if (!generate) {
+    return { frame: Ref.make(frame), artifact: Ref.make(artifact), config };
+  }
+  // A refused generation (credentials, credits, moderation) is a result, not a failure of the
+  // append: the frame and its prompt are the work, and the caller reads `error` to say what to fix.
+  // Provider failures reach the invoker as defects (`Layer.orDie` in the AI stack), so `Effect.exit`
+  // rather than a typed catch; an interruption still propagates.
+  const exit = yield* Effect.exit(
+    Operation.invoke(StudioOperation.Generate, { artifact: Ref.make(artifact), provider, config }),
+  );
+  if (Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)) {
+    return yield* Effect.failCause(exit.cause);
+  }
+  const outcome = Exit.isSuccess(exit)
+    ? { generated: exit.value.count }
+    : { generated: 0, error: describe(exit.cause) };
+  return { frame: Ref.make(frame), artifact: Ref.make(artifact), config, ...outcome };
 });
 
 const handler: Operation.WithHandler<typeof StudioOperation.AppendFrame> = StudioOperation.AppendFrame.pipe(

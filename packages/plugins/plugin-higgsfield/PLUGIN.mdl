@@ -45,16 +45,19 @@ feat HiggsfieldGenerationService
   kinds: [image, video]
   contentType: image/jpeg | video/mp4          # per service; the produced media decides the variant mime
   source: higgsfield.ai
-  requestSchema: { model: string, prompt: string }
+  requestSchema:
+    image: { model, prompt }
+    video: { model, prompt, imageUrl?, stillModel? }   # DoP animates a still: generated from the prompt unless imageUrl is given
   fieldOptions:
-    image.model: static list of the documented model paths (combobox; any path may be typed)
+    image.model: Soul v2 / Soul (text-to-image)
+    video.model: DoP lite / turbo / standard (image-to-video); video.stillModel: the Soul tiers
   defaultRequest:
     image: { model: "higgsfield-ai/soul/v2/standard" }
-    video: none                                  # video model paths are per account
+    video: { model: "higgsfield-ai/dop/lite", stillModel: "higgsfield-ai/soul/v2/standard" }
   enqueue:
     endpoint: POST https://api.higgsfield.ai/<model>   # via edge CORS proxy; header Authorization: Key id:secret
-    body: { prompt }
-    returns: { jobId: request_id }
+    body: { prompt } (image) | { prompt, image_url } (video — the still is a synchronous Soul job inside enqueue)
+    returns: { jobId: request_id }   # the animation's id for video
   awaitResult:
     endpoint: GET https://api.higgsfield.ai/requests/{jobId}/status   # 2s → 10s backoff, 5 min timeout
     terminal: completed | failed | nsfw | canceled

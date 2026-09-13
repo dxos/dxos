@@ -10,12 +10,19 @@ import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
 import {
   HIGGSFIELD_CONNECTOR_ID,
   HIGGSFIELD_DEFAULT_IMAGE_MODEL,
+  HIGGSFIELD_DEFAULT_STILL_MODEL,
+  HIGGSFIELD_DEFAULT_VIDEO_MODEL,
   HIGGSFIELD_ID,
   HIGGSFIELD_SOURCE,
 } from '../constants.ts';
 import { type HiggsfieldOutput, type HiggsfieldRequestStatus } from './higgsfield-provider-types.ts';
 import { HiggsfieldProvider } from './higgsfield-provider.ts';
-import { HiggsfieldRequestConfig, decodeHiggsfieldConfig } from './higgsfield-request.ts';
+import {
+  HiggsfieldImageConfig,
+  HiggsfieldVideoConfig,
+  decodeImageConfig,
+  decodeVideoConfig,
+} from './higgsfield-request.ts';
 
 // api.higgsfield.ai is server-side only (no browser CORS), so route through the DXOS edge CORS proxy;
 // it remaps `Authorization` to `X-Cors-Proxy-Authorization` and restores it on the way out.
@@ -49,48 +56,17 @@ export const toVariants = (output: HiggsfieldOutput): GenerationService.VariantD
   }
 };
 
-type ServiceParams = {
-  kind: 'image' | 'video';
-  label: string;
-  contentType: string;
-  defaultRequest?: Record<string, unknown>;
-  fieldOptions?: GenerationService.GenerationService['fieldOptions'];
-};
-
-/**
- * Builds one asynchronous {@link GenerationService.GenerationService} over the shared provider:
- * `enqueue` posts the prompt to the configured model path (persisted by the studio generate op as
- * the job id), `awaitResult` polls to completion and maps the produced URLs to variants.
- */
-const makeService = (
-  provider: HiggsfieldProvider,
-  { kind, label, contentType, defaultRequest, fieldOptions }: ServiceParams,
-): GenerationService.GenerationService => ({
-  kind,
+/** Everything a service shares; only the request handling differs per kind. */
+const common = {
   id: HIGGSFIELD_ID,
-  label,
-  contentType,
+  label: 'Higgsfield',
   source: HIGGSFIELD_SOURCE,
   connectorId: HIGGSFIELD_CONNECTOR_ID,
-  requestSchema: HiggsfieldRequestConfig,
-  defaultRequest,
-  fieldOptions,
-  // Async so a config decode failure surfaces as a rejection, not a synchronous throw.
-  enqueue: async (request, { apiKey, signal }) => {
-    const config = decodeHiggsfieldConfig(request);
-    return provider.enqueue(
-      { model: config.model, body: { prompt: config.prompt } },
-      { credential: credentialString(apiKey), signal },
-    );
-  },
-  awaitResult: async (jobId, { apiKey, signal, onProgress }) => {
-    const output = await provider.awaitResult(jobId, {
-      credential: credentialString(apiKey),
-      signal,
-      onStatus: (status) => onProgress?.({ status: STATUS_LABELS[status] }),
-    });
-    return { variants: toVariants(output) };
-  },
+} as const;
+
+const credentials = (apiKey?: Redacted.Redacted<string>, signal?: AbortSignal) => ({
+  credential: credentialString(apiKey),
+  signal,
 });
 
 /**
@@ -98,26 +74,83 @@ const makeService = (
  * per account), so this is the documented set; the combobox still accepts any path typed in.
  */
 const IMAGE_MODELS: readonly GenerationService.FieldOption[] = [
-  { value: HIGGSFIELD_DEFAULT_IMAGE_MODEL, label: 'Soul v2 (standard)', secondaryLabel: 'text-to-image' },
+  { value: 'higgsfield-ai/soul/v2/standard', label: 'Soul v2 (standard)', secondaryLabel: 'text-to-image' },
+  { value: 'higgsfield-ai/soul/standard', label: 'Soul (standard)', secondaryLabel: 'text-to-image' },
 ];
 
-/** The Higgsfield `kind: 'image'` service; defaults to the documented Soul v2 text-to-image model. */
-export const makeHiggsfieldImageService = (
-  provider: HiggsfieldProvider = makeHiggsfieldProvider(),
-): GenerationService.GenerationService =>
-  makeService(provider, {
-    kind: 'image',
-    label: 'Higgsfield',
-    contentType: 'image/jpeg',
-    defaultRequest: { model: HIGGSFIELD_DEFAULT_IMAGE_MODEL },
-    fieldOptions: { model: async () => IMAGE_MODELS },
-  });
+/** Video (image-to-video) model paths, cheapest first; verified against the estimate endpoint. */
+const VIDEO_MODELS: readonly GenerationService.FieldOption[] = [
+  { value: 'higgsfield-ai/dop/lite', label: 'DoP (lite)', secondaryLabel: 'image-to-video' },
+  { value: 'higgsfield-ai/dop/turbo', label: 'DoP (turbo)', secondaryLabel: 'image-to-video' },
+  { value: 'higgsfield-ai/dop/standard', label: 'DoP (standard)', secondaryLabel: 'image-to-video' },
+];
 
 /**
- * The Higgsfield `kind: 'video'` service. Video model paths are account-specific and absent from the
- * public docs, so there is no default — the user enters the path in the form.
+ * The Higgsfield `kind: 'image'` service: `enqueue` posts the prompt to the model path (persisted by
+ * the studio generate op as the job id), `awaitResult` polls to completion and maps the produced
+ * URLs to variants. Defaults to the documented Soul v2 text-to-image model.
+ */
+export const makeHiggsfieldImageService = (
+  provider: HiggsfieldProvider = makeHiggsfieldProvider(),
+): GenerationService.GenerationService => ({
+  ...common,
+  kind: 'image',
+  contentType: 'image/jpeg',
+  requestSchema: HiggsfieldImageConfig,
+  defaultRequest: { model: HIGGSFIELD_DEFAULT_IMAGE_MODEL },
+  fieldOptions: { model: async () => IMAGE_MODELS },
+  // Async so a config decode failure surfaces as a rejection, not a synchronous throw.
+  enqueue: async (request, { apiKey, signal }) => {
+    const config = decodeImageConfig(request);
+    return provider.enqueue({ model: config.model, body: { prompt: config.prompt } }, credentials(apiKey, signal));
+  },
+  awaitResult: async (jobId, { apiKey, signal, onProgress }) => {
+    const output = await provider.awaitResult(jobId, {
+      ...credentials(apiKey, signal),
+      onStatus: (status) => onProgress?.({ status: STATUS_LABELS[status] }),
+    });
+    return { variants: toVariants(output) };
+  },
+});
+
+/**
+ * The Higgsfield `kind: 'video'` service. The video models animate a still, so `enqueue` first
+ * produces one from the prompt (unless the config names an `imageUrl`) — a synchronous Soul job
+ * inside the enqueue, since the studio persists only one job id — then submits the animation, whose
+ * id is what `awaitResult` polls.
  */
 export const makeHiggsfieldVideoService = (
   provider: HiggsfieldProvider = makeHiggsfieldProvider(),
-): GenerationService.GenerationService =>
-  makeService(provider, { kind: 'video', label: 'Higgsfield', contentType: 'video/mp4' });
+): GenerationService.GenerationService => ({
+  ...common,
+  kind: 'video',
+  contentType: 'video/mp4',
+  requestSchema: HiggsfieldVideoConfig,
+  defaultRequest: { model: HIGGSFIELD_DEFAULT_VIDEO_MODEL, stillModel: HIGGSFIELD_DEFAULT_STILL_MODEL },
+  fieldOptions: { model: async () => VIDEO_MODELS, stillModel: async () => IMAGE_MODELS },
+  enqueue: async (request, { apiKey, signal, onProgress }) => {
+    const config = decodeVideoConfig(request);
+    const options = credentials(apiKey, signal);
+    let imageUrl = config.imageUrl;
+    if (!imageUrl) {
+      onProgress?.({ status: 'Generating still' });
+      const still = await provider.enqueue(
+        { model: config.stillModel ?? HIGGSFIELD_DEFAULT_STILL_MODEL, body: { prompt: config.prompt } },
+        options,
+      );
+      const output = await provider.awaitResult(still.jobId, options);
+      if (output.kind !== 'image') {
+        throw new Error(`Higgsfield still model returned ${output.kind}, expected an image.`);
+      }
+      imageUrl = output.urls[0];
+    }
+    return provider.enqueue({ model: config.model, body: { prompt: config.prompt, image_url: imageUrl } }, options);
+  },
+  awaitResult: async (jobId, { apiKey, signal, onProgress }) => {
+    const output = await provider.awaitResult(jobId, {
+      ...credentials(apiKey, signal),
+      onStatus: (status) => onProgress?.({ status: STATUS_LABELS[status] }),
+    });
+    return { variants: toVariants(output) };
+  },
+});

@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Redacted from 'effect/Redacted';
 import { describe, test } from 'vitest';
 
 import { HIGGSFIELD_DEFAULT_IMAGE_MODEL } from '../constants.ts';
 import { joinCredential } from './higgsfield-credential.ts';
-import { makeHiggsfieldProvider } from './higgsfield-service.ts';
+import { makeHiggsfieldProvider, makeHiggsfieldVideoService } from './higgsfield-service.ts';
 
 //
 // Live integration test against the real Higgsfield API. Skipped unless HIGGSFIELD_API_KEY and
@@ -32,6 +33,29 @@ describe.skipIf(!credential)('HiggsfieldProvider (live)', () => {
 
     const provider = makeHiggsfieldProvider();
     await expect(provider.awaitResult('00000000-0000-4000-8000-000000000000', { credential })).rejects.toThrow(/404/);
+  });
+
+  test('generates one video clip: a Soul still animated by DoP lite', { timeout: 10 * 60_000 }, async ({ expect }) => {
+    if (!credential) {
+      return;
+    }
+
+    const service = makeHiggsfieldVideoService();
+    const { enqueue, awaitResult } = service;
+    expect(enqueue && awaitResult).toBeTruthy();
+    if (!enqueue || !awaitResult) {
+      return;
+    }
+    const apiKey = Redacted.make(credential);
+    const { jobId } = await enqueue(
+      { ...service.defaultRequest, prompt: 'A quiet alpine lake at sunrise; slow dolly in, mist drifting.' },
+      { apiKey },
+    );
+    expect(jobId).toMatch(/^[0-9a-f-]{36}$/);
+    const { variants } = await awaitResult(jobId, { apiKey });
+    expect(variants[0]?.contentType).toBe('video/mp4');
+    expect(variants[0]?.url).toMatch(/^https:\/\//);
+    console.log('[higgsfield live] clip', variants[0]?.url);
   });
 
   test('generates one image with the default model', { timeout: 5 * 60_000 }, async ({ expect }) => {

@@ -9,7 +9,10 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import { type NoHandlerError } from '@dxos/compute/errors';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
@@ -18,11 +21,31 @@ import { EffectEx } from '@dxos/effect';
 import { Text } from '@dxos/schema';
 import { TaskSet } from '@dxos/types';
 
-import { Frame, type GenerationService, MediaArtifact, Storyboard, StudioCapabilities, Variant } from '#types';
+import {
+  Frame,
+  type GenerationService,
+  MediaArtifact,
+  Storyboard,
+  StudioCapabilities,
+  StudioOperation,
+  Variant,
+} from '#types';
 
 import appendFrame from './append-frame.ts';
 import createStoryboard from './create-storyboard.ts';
+import generateHandler from './generate.ts';
 import listProviders from './list-providers.ts';
+
+const refusingService: GenerationService.GenerationService = {
+  kind: 'video',
+  id: 'refusing',
+  label: 'Refusing',
+  contentType: 'video/mp4',
+  requestSchema: Schema.Struct({ prompt: Schema.String }),
+  generate: async () => {
+    throw new Error('Higgsfield submit failed: 403 not_enough_credits');
+  },
+};
 
 const mockVideoService: GenerationService.GenerationService = {
   kind: 'video',
@@ -58,22 +81,45 @@ describe('storyboard operations', () => {
     await builder.close();
   });
 
+  /** Runs a handler with the space, the mock providers, no credentials, and an invoker that serves `Generate`. */
   const provide = <A>(effect: Effect.Effect<A, unknown, any>): Promise<A> =>
     effect.pipe(
+      Effect.provideService(Operation.Service, operationService()),
       Effect.provide(Database.layer(db)),
       Effect.provideService(Capability.Service, capabilityService()),
+      Effect.provide(configuredCredentialsLayer([])),
       // opaqueHandler erases the context; the layers above satisfy it at runtime.
       (effect) => effect as Effect.Effect<A, unknown, never>,
       EffectEx.runPromise,
     );
 
+  /** Only `Generate` is reachable from these handlers; anything else is a test bug. */
+  const operationService = (): Operation.OperationService => ({
+    // The service's `invoke` is generic over the definition; this stub serves one known operation, so
+    // the concrete effect is widened to the generic signature (test-only stub, as in other handler tests).
+    invoke: <I, O>(op: Operation.Definition<I, O>, ...args: unknown[]): Effect.Effect<O, NoHandlerError> =>
+      (op.meta.key === StudioOperation.Generate.meta.key
+        ? generateHandler
+            .handler(args[0] as Parameters<typeof generateHandler.handler>[0])
+            .pipe(
+              Effect.provide(Database.layer(db)),
+              Effect.provideService(Capability.Service, capabilityService()),
+              Effect.provide(configuredCredentialsLayer([])),
+            )
+        : Effect.die(`unexpected operation: ${op.meta.key}`)) as Effect.Effect<O, NoHandlerError>,
+    schedule: () => Effect.die('schedule is not implemented'),
+    invokePromise: () => Promise.resolve({ error: new Error('invokePromise is not implemented') }),
+  });
+
   const capabilityService = () => {
     const manager = CapabilityManager.make({ registry: Registry.make() });
-    manager.contribute({
-      interface: StudioCapabilities.GenerationService,
-      implementation: mockVideoService,
-      module: 'mock',
-    });
+    for (const service of [mockVideoService, refusingService]) {
+      manager.contribute({
+        interface: StudioCapabilities.GenerationService,
+        implementation: service,
+        module: service.id,
+      });
+    }
     return manager;
   };
 
@@ -132,9 +178,28 @@ describe('storyboard operations', () => {
     expect(second.frame.target?.id).toBe(frames[1].id);
   });
 
+  test('an inline generation that the provider refuses is reported on the frame, not thrown', async ({ expect }) => {
+    const storyboard = db.add(Storyboard.make({ name: 'Board' }));
+    await db.flush();
+
+    const result = await provide(
+      appendFrame.handler({
+        storyboard: Ref.make(storyboard),
+        name: 'Refused',
+        kind: 'video',
+        prompt: 'x',
+        provider: 'refusing',
+        generate: true,
+      }),
+    );
+    expect(result.generated).toBe(0);
+    expect(result.error).toMatch(/not_enough_credits/);
+    expect(storyboard.frames).toHaveLength(1);
+  });
+
   test('list-providers describes each provider with its request schema', async ({ expect }) => {
     const { providers } = await provide(listProviders.handler({ kind: 'video' }));
-    expect(providers.map((provider) => provider.id)).toEqual(['mock-video']);
+    expect(providers.map((provider) => provider.id)).toEqual(['mock-video', 'refusing']);
     expect(providers[0].defaultRequest).toEqual({ model: 'mock/v1' });
     expect(providers[0].requestSchema.properties).toHaveProperty('prompt');
     expect((await provide(listProviders.handler({ kind: 'image' }))).providers).toEqual([]);

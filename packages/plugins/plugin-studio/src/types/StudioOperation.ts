@@ -89,6 +89,11 @@ export const AppendedFrame = Schema.Struct({
     description: 'The request config to pass to generate for this artifact.',
   }),
   generated: Schema.optional(Schema.Number.annotate({ description: 'Variants produced when `generate` was set.' })),
+  error: Schema.optional(
+    Schema.String.annotate({
+      description: 'Why the inline generation failed (credentials, credits, moderation); the frame is kept.',
+    }),
+  ),
 });
 
 /**

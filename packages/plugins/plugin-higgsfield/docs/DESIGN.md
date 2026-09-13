@@ -24,10 +24,12 @@ for the media kinds the API produces.
   payload discriminates by shape, so one `HiggsfieldProvider` (`enqueue` / `awaitResult`) backs
   both the `image` and the `video` `GenerationService`. Both are contributed from one module via
   `Capability.contributeAll`.
-- **D2 — Only the documented model is defaulted.** The image service seeds
-  `defaultRequest: { model: 'higgsfield-ai/soul/v2/standard' }`; the video service has no default
-  and the user enters a model path. The `model` field is an editable free-form string on both
-  forms because availability is per account.
+- **D2 — Video is Soul → DoP.** Probing the cost-free `estimate` endpoint showed Higgsfield's video
+  models (`higgsfield-ai/dop/{lite,turbo,standard}`) are image-to-video (`image_url` required) and
+  text-to-image is `higgsfield-ai/soul/{v2/standard,standard}`. The video service therefore runs
+  the still as a synchronous Soul job inside `enqueue` (the studio persists one job id) and returns
+  the DoP animation's id; a config `imageUrl` skips the still. Both `model` fields are comboboxes
+  over the verified paths, free text accepted.
 - **D3 — Two-field credential, one token.** The connector form has `keyId` and `keySecret`;
   `onSubmit` joins them as `<id>:<secret>` into a single `AccessToken.token` so studio's
   `CredentialsService` lookup (one `apiKey` string) needs no change. The provider prefixes `Key `
