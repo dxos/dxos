@@ -18,6 +18,7 @@ import { Button, Field, Flex, Icon, IconButton, Panel, Select, useTranslation } 
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { mx } from '@dxos/ui-theme';
 
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
@@ -374,7 +375,8 @@ export const MediaArtifactArticle = ({ role, subject: artifact, attendableId }: 
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
       </Panel.Toolbar>
 
-      <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
+      {/* The lower half (gallery / selected variant) only exists once something has been produced. */}
+      <Panel.Content classNames={mx('grid gap-2', variants.length > 0 ? 'grid-rows-[1fr_1fr]' : 'grid-rows-[1fr]')}>
         <div className='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
           {/* A produced (frozen) variant can be designated the artifact's cover default. */}
           <Flex column gap='xs' classNames='pt-3 px-2'>
@@ -416,43 +418,45 @@ export const MediaArtifactArticle = ({ role, subject: artifact, attendableId }: 
             </Form.Root>
           )}
         </div>
-        <div className='dx-expand border-t border-subdued-separator'>
-          {selected === 'all' ? (
-            <VariantGallery
-              variants={galleryItems}
-              emptyMessage={t('empty.message')}
-              onSelect={(id) => {
-                const index = variants.findIndex((variant) => variant.id === id);
-                if (index >= 0) {
-                  setSelected(index);
-                }
-              }}
-            />
-          ) : (
-            selectedVariant &&
-            (selectedVariant.jobId ? (
-              <Flex role='status' center classNames='h-full text-subdued'>
-                {t('generating.label')}
-              </Flex>
+        {variants.length > 0 && (
+          <div className='dx-expand border-t border-subdued-separator'>
+            {selected === 'all' ? (
+              <VariantGallery
+                variants={galleryItems}
+                emptyMessage={t('empty.message')}
+                onSelect={(id) => {
+                  const index = variants.findIndex((variant) => variant.id === id);
+                  if (index >= 0) {
+                    setSelected(index);
+                  }
+                }}
+              />
             ) : (
-              <div className='dx-expand p-2'>
-                <Surface.Surface
-                  type={VariantRenderer}
-                  data={{
-                    variant: {
-                      contentType: selectedVariant.contentType,
-                      url: selectedVariant.url,
-                      content: selectedVariant.content,
-                      generation: selectedVariant.generation,
-                    },
-                    contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
-                  }}
-                  limit={1}
-                />
-              </div>
-            ))
-          )}
-        </div>
+              selectedVariant &&
+              (selectedVariant.jobId ? (
+                <Flex role='status' center classNames='h-full text-subdued'>
+                  {t('generating.label')}
+                </Flex>
+              ) : (
+                <div className='dx-expand p-2'>
+                  <Surface.Surface
+                    type={VariantRenderer}
+                    data={{
+                      variant: {
+                        contentType: selectedVariant.contentType,
+                        url: selectedVariant.url,
+                        content: selectedVariant.content,
+                        generation: selectedVariant.generation,
+                      },
+                      contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
+                    }}
+                    limit={1}
+                  />
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </Panel.Content>
     </Panel.Root>
   );

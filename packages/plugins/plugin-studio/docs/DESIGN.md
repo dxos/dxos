@@ -1,6 +1,6 @@
 # plugin-studio — Design: Project as the studio root
 
-Status: proposed 2026-09-13 (project `studio`, PR #13078).
+Status: proposed 2026-09-13 (project `plugin-studio`, PR #13078).
 
 ## Goal
 
@@ -98,7 +98,7 @@ below has a menu to extend.
 
 A generic way for plugins to add create-menu items to an article's toolbar — e.g. a capability the
 Project/Lightbox article's `+` menu reads, keyed by the host type — replacing the hard-wired
-Lightbox action. Tracked in `.agents/projects/studio/TASKS.md`.
+Lightbox action. Tracked in `.agents/projects/plugin-studio/TASKS.md`.
 
 ## Testing
 

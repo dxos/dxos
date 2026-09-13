@@ -1,4 +1,4 @@
-# studio — Design
+# plugin-studio — Design
 
 ## Goal
 

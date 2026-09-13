@@ -6,14 +6,14 @@
 # status: active | paused | blocked | ended
 
 projects:
-  - name: studio
+  - name: plugin-studio
     status: active
     user: burdon
     host: Mac
     created: 2026-09-13
     summary: 'Extend plugin-studio with more generation providers; first plugin-higgsfield (Connector + image/video GenerationService against api.higgsfield.ai), modelled on plugin-heygen.'
-    tasks: .agents/projects/studio/TASKS.md
-    design: .agents/projects/studio/DESIGN.md
+    tasks: .agents/projects/plugin-studio/TASKS.md
+    design: .agents/projects/plugin-studio/DESIGN.md
     prs: []
     resume: 'plugin-higgsfield built, tested (15 unit + credit-free live auth test), verified in the app; PR opened. Live generation blocked by `403 not_enough_credits` on the provided account; video model path has no verified default.'
   - name: task-visualization

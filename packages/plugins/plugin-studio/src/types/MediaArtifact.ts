@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -23,12 +24,14 @@ import * as Variant from './Variant.ts';
 const resolveArtifactConnectorIds = (
   object: Obj.Unknown,
   capabilities: CapabilityManager.CapabilityManager,
+  get: Atom.AtomContext,
 ): readonly string[] => {
   if (!Obj.instanceOf(MediaArtifact, object)) {
     return [];
   }
-  const forKind = capabilities
-    .getAll(StudioCapabilities.GenerationService)
+  // Through the atom, so the Connect action appears once the providers activate (they ride the
+  // studio start event, which the artifact's own surface fires after the graph first runs).
+  const forKind = get(capabilities.atom(StudioCapabilities.GenerationService))
     .flat()
     .filter((service) => service.kind === object.kind);
   // Match the chosen generator (as `op:generate` does), falling back to the first provider for the kind.

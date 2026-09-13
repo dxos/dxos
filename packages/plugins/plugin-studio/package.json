@@ -167,7 +167,6 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -179,6 +178,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

@@ -11,11 +11,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 
 import { ImageVariant, MediaArtifactCard, VideoVariant } from '#components';
-import { ArtifactsArticle, GalleryArticle, LightboxArticle, MediaArtifactArticle } from '#containers';
+import { GalleryArticle, LightboxArticle, MediaArtifactArticle } from '#containers';
 import { VariantRenderer } from '#surfaces';
 import { Lightbox, MediaArtifact } from '#types';
-
-import { ARTIFACTS_NODE_DATA } from '../constants.ts';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
@@ -44,14 +42,6 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, MediaArtifact.MediaArtifact),
         component: MediaArtifactArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
-
-      // Virtual "Artifacts" navtree node → the browse/create hub (bound by data sentinel, not an object).
-      Surface.create({
-        id: 'artifactsArticle',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.subject === ARTIFACTS_NODE_DATA),
-        component: ArtifactsArticle,
-        props: ({ role, data: { attendableId, properties } }) => ({ role, attendableId, properties }),
       }),
       Surface.create({
         id: 'galleryArticle',

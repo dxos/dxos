@@ -1,4 +1,4 @@
-# studio — Tasks
+# plugin-studio — Tasks
 
 Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plugin-studio/TASKS.md`.
 
@@ -25,11 +25,16 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 
 ## Phase 3: Project as the studio root (design: `agents/superpowers/specs/2026-09-13-studio-projects-design.md`)
 
-- [ ] plugin-studio contributes a `ProjectCapabilities.Template` ("Studio") whose scaffold parents a `Lightbox` to the project and files it in `project.artifacts`.
-- [ ] Remove the Studio navtree section, the virtual Artifacts node, `ArtifactsArticle`, and the `ARTIFACTS_*` paths/constants.
-- [ ] Lightbox toolbar gains **Add artifact** (create dialog → `lightbox.items` + `project.artifacts`).
-- [ ] `MediaArtifact` create entry `targetNodeId` falls back to the project's Artifacts branch.
+- [x] plugin-studio contributes a `ProjectCapabilities.Template` ("Studio") whose scaffold parents a `Lightbox` to the project and files it in `project.artifacts`.
+- [x] Remove the Studio navtree section, the virtual Artifacts node, `ArtifactsArticle`, and the `ARTIFACTS_*` paths/constants.
+- [x] Lightbox toolbar gains **Add artifact** (create dialog → `lightbox.items` + `project.artifacts`).
+- [x] `MediaArtifact` create entry `targetNodeId` falls back to the project's Artifacts branch.
 - [x] `ObjectMasonryArticle` search input centred in its toolbar (`Toolbar.Root`).
+
+- [x] Cold-load Connect: plugin-connector requests `ConnectorEvents.Start` from `connectorAuth`, and
+      `connectorIds` resolvers read providers through `get` (studio, blogger).
+- [x] Media artifact article hides the variants half until something is produced.
+- [x] Lightbox board cell `+` opens the same create dialog (artifact lands in the clicked cell).
 
 ## Follow-ups
 

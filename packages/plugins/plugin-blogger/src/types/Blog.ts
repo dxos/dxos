@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
@@ -47,12 +48,14 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
 const resolvePublicationConnectorIds = (
   object: Obj.Unknown,
   capabilities: CapabilityManager.CapabilityManager,
+  get: Atom.AtomContext,
 ): readonly string[] => {
   if (!Obj.instanceOf(Publication, object)) {
     return [];
   }
-  const connectorIds = capabilities
-    .getAll(PublisherService)
+  // Through the atom, so the Connect action appears once the publishers activate after the graph's
+  // first run.
+  const connectorIds = get(capabilities.atom(PublisherService))
     .flat()
     .map((service) => service.connectorId);
   return Array.from(new Set(connectorIds));
