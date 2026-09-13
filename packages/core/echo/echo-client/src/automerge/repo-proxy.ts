@@ -103,7 +103,7 @@ export class RepoProxy extends Resource {
 
   /**
    * Consecutive attempts to replace a dropped subscription, backing off so a host that is gone for
-   * good is not retried in a tight loop. Reset by the first batch the replacement delivers.
+   * good is not retried in a tight loop. Reset by a batch whose documents all integrate.
    */
   private _resubscribeAttempts = 0;
 
@@ -487,12 +487,13 @@ export class RepoProxy extends Resource {
     // The host opens every subscription with an empty batch once it is registered; a real update
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
-    // A batch proves the subscription is live, so the next drop starts from the shortest backoff.
-    this._resubscribeAttempts = 0;
     if (!updates) {
+      // A batch proves the subscription is live, so the next drop starts from the shortest backoff.
+      this._resubscribeAttempts = 0;
       return;
     }
 
+    let integrationError: Error | undefined;
     for (const update of updates) {
       const { documentId, mutation, requesting } = update;
       const handle = this._handles[documentId];
@@ -510,8 +511,33 @@ export class RepoProxy extends Resource {
       }
 
       if (mutation) {
-        handle._integrateHostUpdate(mutation);
+        try {
+          if (handle._isAwaitingRebuild()) {
+            // Until the replacement subscription is in place, updates are increments from the old one.
+            if (this._isReconnecting) {
+              continue;
+            }
+            handle._rebuild(mutation);
+          } else {
+            handle._integrateHostUpdate(mutation);
+          }
+        } catch (error) {
+          log.error('document could not integrate a host update; rebuilding it from the host copy', {
+            documentId,
+            error,
+          });
+          handle._markForRebuild();
+          integrationError ??= error instanceof Error ? error : new Error(String(error));
+        }
       }
+    }
+
+    if (integrationError) {
+      // A replacement subscription starts the host from scratch, so its first update for each document
+      // is the full copy a marked handle rebuilds from; the backoff keeps growing while that fails too.
+      this._onSubscriptionDropped(integrationError);
+    } else {
+      this._resubscribeAttempts = 0;
     }
   }
 

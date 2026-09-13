@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 import * as EffectStream from 'effect/Stream';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -456,6 +456,35 @@ describe('RepoProxy', () => {
     invariant(hostHandle);
     await hostHandle.waitUntilReady();
     await expect.poll(() => hostHandle.doc()?.text, { timeout: 5000 }).toEqual(text);
+  });
+
+  test('a document that stops accepting host updates is rebuilt from the host copy', async () => {
+    const { droppable, host, clientHandle } = await setupWithDroppableSubscription();
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+
+    // Throws on every update while the handle holds this document, as one does once a call into its
+    // wasm runtime has trapped.
+    const unusable = clientHandle.doc();
+    const integrate = clientHandle._integrateHostUpdate.bind(clientHandle);
+    vi.spyOn(clientHandle, '_integrateHostUpdate').mockImplementation((mutation) => {
+      if (clientHandle.doc() === unusable) {
+        throw new Error('recursive use of an object detected which would lead to unsafe aliasing in rust');
+      }
+      integrate(mutation);
+    });
+
+    hostHandle.change((doc: { text: string }) => {
+      doc.text = 'after the trap';
+    });
+    await expect.poll(() => clientHandle.doc().text, { timeout: 5000 }).toEqual('after the trap');
+
+    hostHandle.change((doc: { text: string }) => {
+      doc.text = 'and after that';
+    });
+    await expect.poll(() => clientHandle.doc().text, { timeout: 5000 }).toEqual('and after that');
+    expect(droppable.subscribeCount).toEqual(2);
   });
 
   test('flush during a dropped subscription delivers the write', async () => {

@@ -75,6 +75,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * If sync is successful, they will be moved to `_lastSentHeads`.
    */
   private _currentlySendingHeads: A.Heads = [];
+  /** Set once the document stops accepting calls, until {@link _rebuild} replaces it. */
+  private _awaitingRebuild = false;
   /**
    * Identifier for internal usage.
    * @internal
@@ -277,6 +279,41 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    */
   _confirmSync(): void {
     this._lastSentHeads = this._currentlySendingHeads;
+  }
+
+  /**
+   * Marks the document as unusable. Once a call into the wasm runtime traps, the object stays borrowed
+   * and every later call fails with "recursive use of an object".
+   * @internal
+   */
+  _markForRebuild(): void {
+    this._awaitingRebuild = true;
+  }
+
+  /** @internal */
+  _isAwaitingRebuild(): boolean {
+    return this._awaitingRebuild;
+  }
+
+  /**
+   * Replaces an unusable document with the host's full copy. Local changes the host had not
+   * confirmed were only in the old document, and are lost.
+   * @internal
+   */
+  _rebuild(save: Uint8Array): void {
+    const doc = A.load<T>(save);
+    const heads = A.getHeads(doc);
+    this._awaitingRebuild = false;
+    this._doc = doc;
+    this._lastSentHeads = heads;
+    this._currentlySendingHeads = heads;
+    this._wakeReady();
+    this.emit('change', {
+      handle: this,
+      doc,
+      patches: A.diff(doc, [], heads),
+      patchInfo: { before: A.init<T>(), after: doc, source: 'change' },
+    });
   }
 
   /**
