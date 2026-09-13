@@ -54,7 +54,7 @@ const SYSTEM_CHANNEL_ID = 0;
 const GRACEFUL_CLOSE_TIMEOUT = 3_000;
 
 /** Backoff for resending an OpenChannel command the remote has not yet acted on. */
-const OPEN_CHANNEL_RESEND_DELAY = 1_000;
+const OPEN_CHANNEL_RESEND_DELAY = 3_000;
 const OPEN_CHANNEL_RESEND_MAX_DELAY = 8_000;
 const OPEN_CHANNEL_RESEND_ATTEMPTS = 6;
 
@@ -363,17 +363,26 @@ export class Muxer {
         contentType: cmd.payload.value.contentType,
       });
       const remoteId = cmd.payload.value.id;
-      channel.remoteId = remoteId;
       log('openChannel received', { tag: channel.tag, id: channel.id, remoteId, buffered: channel.buffer.length });
-
-      // Flush any buffered data.
-      for (const data of channel.buffer) {
-        await this._sendCommand(
-          create(CommandSchema, { payload: { case: 'data', value: { channelId: remoteId, data } } }),
-          channel.id,
-        );
+      // The remote resends OpenChannel until it sees data; flushing again would duplicate whatever the first flush has
+      // not finished sending.
+      if (channel.remoteId !== null) {
+        return;
       }
+      channel.remoteId = remoteId;
+
+      // Every buffered frame is queued before anything awaits, so a write made once `remoteId` is set cannot overtake
+      // the buffer.
+      const buffered = channel.buffer;
       channel.buffer = [];
+      await Promise.all(
+        buffered.map((data) =>
+          this._sendCommand(
+            create(CommandSchema, { payload: { case: 'data', value: { channelId: remoteId, data } } }),
+            channel.id,
+          ),
+        ),
+      );
     } else if (cmd.payload.case === 'data') {
       const stream = this._channelsByLocalId.get(cmd.payload.value.channelId) ?? failUndefined();
       stream.remoteKnowsId = true;

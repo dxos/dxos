@@ -7,7 +7,7 @@ import { EmptySchema } from '@bufbuild/protobuf/wkt';
 import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, latch } from '@dxos/async';
+import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
   TestRpcRequestSchema,
@@ -125,11 +125,40 @@ describe('Muxer', () => {
       ),
     );
 
-    await asyncTimeout(Promise.all(clients.map((client) => client.open())), 5_000);
+    await asyncTimeout(Promise.all(clients.map((client) => client.open())), 10_000);
     expect(await clients[0].rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'test' }))).to.deep.include({
       data: 'test',
     });
   });
+
+  test('a resent OpenChannel does not resend buffered data', async () => {
+    const peer1 = new Muxer();
+    const peer2 = new Muxer();
+    onTestFinished(async () => {
+      await peer1.destroy();
+      await peer2.destroy();
+    });
+    // peer2's frames to peer1 are not consumed until after peer1 has resent its OpenChannel, so peer2's flush of its
+    // buffer is still stalled when the resend arrives.
+    peer1.stream.pipe(peer2.stream);
+
+    const port2 = await peer2.createPort('example.extension/rpc');
+    const count = 20;
+    for (let i = 0; i < count; i++) {
+      await port2.send(new Uint8Array(8_000).fill(i));
+    }
+
+    const port1 = await peer1.createPort('example.extension/rpc');
+    const received: number[] = [];
+    port1.subscribe((data) => received.push(data[0]));
+
+    await sleep(4_000);
+    peer2.stream.pipe(peer1.stream);
+
+    await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count);
+    await sleep(500);
+    expect(received).toEqual(Array.from({ length: count }, (_, index) => index));
+  }, 20_000);
 
   test('destroy releases other stream', async () => {
     const { peer1, peer2 } = setupPeers();
