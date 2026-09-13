@@ -645,9 +645,6 @@ jobs:
           # A page can close or take 50s to create with the runner idle, and only the browser's stderr says
           # why. Dispatches only: it lands in every test's JUnit `system-err`. Not a moon input.
           DEBUG: ${{ (inputs.e2e || inputs.e2e_only) && 'pw:browser' || '' }}
-          # WebKit's web process aborts on a locally gathered ICE candidate its own parser rejects; these
-          # categories print each candidate it hands to the page and the parser's reason. Dispatches only.
-          GST_DEBUG: ${{ (inputs.e2e || inputs.e2e_only) && 'webkitwebrtcutils:2,webkitwebrtcendpoint:5' || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
