@@ -170,7 +170,8 @@ export class RtcPeerConnection {
           return;
         }
 
-        if (event.candidate) {
+        // An empty candidate only marks the end of gathering, which trickle ICE does not need.
+        if (event.candidate?.candidate) {
           log('onicecandidate', { candidate: event.candidate.candidate });
           await this._sendIceCandidate(event.candidate);
         } else {
@@ -348,6 +349,11 @@ export class RtcPeerConnection {
       }
 
       case 'candidate':
+        // WebKit's GStreamer backend aborts the web process adding an empty (end-of-candidates) candidate.
+        if (!data.candidate.candidate) {
+          log('end-of-candidates signal ignored');
+          break;
+        }
         void this._processIceCandidate(connection, data.candidate);
         break;
     }
