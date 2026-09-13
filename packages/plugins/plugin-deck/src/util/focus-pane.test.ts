@@ -37,4 +37,18 @@ describe('focusPane', () => {
     focusPane(pane);
     expect(document.activeElement).toBe(pane);
   });
+
+  test('leaves focus in an open menu', ({ expect }) => {
+    const { pane } = mount();
+    const menu = document.createElement('div');
+    menu.setAttribute('role', 'menu');
+    const item = document.createElement('div');
+    item.setAttribute('role', 'menuitem');
+    item.tabIndex = -1;
+    menu.append(item);
+    document.body.append(menu);
+    item.focus();
+    focusPane(pane);
+    expect(document.activeElement).toBe(item);
+  });
 });
