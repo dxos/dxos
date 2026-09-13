@@ -69,8 +69,16 @@ const createWorkerFactory =
   () => {
     const channel = new MessageChannel();
     channel.port1.start();
-    channel.port1.addEventListener('close', () => onClose?.());
-    void started.then(() =>
+    // A worker closed before it starts never runs, as a terminated one would not.
+    let closed = false;
+    channel.port1.addEventListener('close', () => {
+      closed = true;
+      onClose?.();
+    });
+    void started.then(() => {
+      if (closed) {
+        return;
+      }
       Worker.run({
         endpoint: {
           postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
@@ -83,8 +91,8 @@ const createWorkerFactory =
           Effect.succeed({
             createSession: () => Effect.never,
           }),
-      }),
-    );
+      });
+    });
     return channel.port2 as WorkerProtocol.WorkerOrPort;
   };
 
@@ -326,6 +334,42 @@ describe('Connection multi-client', () => {
     expect(String(error)).toContain('TEST: worker creation failed');
     expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
   }, 30_000);
+
+  test(
+    'a leader session that times out closes its worker, so the retry starts one that works',
+    async () => {
+      const hub = createHub();
+      const keys = uniqueKeys();
+
+      // The first worker starts only once its session has given up on it, like a worker stalled past the budget.
+      const lateStart = new Trigger();
+      const lateClosed = new Trigger();
+      const late = createWorkerFactory(keys.storageLockKey, {
+        started: lateStart.wait(),
+        onClose: () => lateClosed.wake(),
+      });
+      const healthy = createWorkerFactory(keys.storageLockKey);
+      let workersCreated = 0;
+      const { connection, connected } = makeConnection(
+        hub,
+        keys,
+        { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 10_000 },
+        { createWorker: () => (++workersCreated === 1 ? late() : healthy()) },
+      );
+      onTestFinished(async () => {
+        await connection.close();
+      });
+      const opened = connection.open();
+
+      await asyncTimeout(lateClosed.wait(), LOCK_OR_RPC_WAIT_TIMEOUT + 2_000);
+      lateStart.wake();
+
+      await asyncTimeout(opened, 10_000);
+      await asyncTimeout(connected, 5_000);
+      expect(workersCreated).toBe(2);
+    },
+    LOCK_OR_RPC_WAIT_TIMEOUT + 30_000,
+  );
 
   test('a tab that never receives a port reports the port timeouts it accrued', async () => {
     const hub = createHub();

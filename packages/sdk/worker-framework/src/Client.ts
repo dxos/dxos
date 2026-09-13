@@ -321,7 +321,7 @@ export class Connection extends Resource {
             });
             try {
               this.#leaderPhase = 'opening-session';
-              await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
+              await this.#leaderSession.open();
               this.#leaderPhase = 'session-open';
               this.#leaderFailureCount = 0;
               this.#lastLeaderError = undefined;
@@ -656,14 +656,22 @@ class LeaderSession extends Resource {
       };
     }
 
-    await waitWithLockOrRpcTimeout(listening.wait(), 'waiting for worker to start listening');
-    this.#sendMessage({
-      type: 'init',
-      clientId: this.#leaderId,
-      ownerClientId: this.#ownerClientId,
-      config: this.#config,
+    const handshake = async () => {
+      await listening.wait();
+      this.#sendMessage({
+        type: 'init',
+        clientId: this.#leaderId,
+        ownerClientId: this.#ownerClientId,
+        config: this.#config,
+      });
+      return ready.wait();
+    };
+    // Nothing else closes a session whose open failed, and its worker would keep the storage lock that the
+    // next leader's worker waits on.
+    const readyMessage = await waitWithLockOrRpcTimeout(handshake(), 'opening worker leader session').catch((error) => {
+      this.#closeWorker();
+      throw error;
     });
-    const readyMessage = await waitWithLockOrRpcTimeout(ready.wait(), 'waiting for worker ready');
     this.#livenessLockKey = readyMessage.livenessLockKey;
     log('leader-session: ready', { leaderId: this.#leaderId });
 
@@ -699,6 +707,10 @@ class LeaderSession extends Resource {
 
   protected override async _close(): Promise<void> {
     log('leader-session: closing', { leaderId: this.#leaderId });
+    this.#closeWorker();
+  }
+
+  #closeWorker() {
     if (isWorker(this.#worker)) {
       this.#worker.terminate();
     } else if (this.#worker instanceof MessagePort) {
