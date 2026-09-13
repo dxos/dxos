@@ -33,6 +33,8 @@ export type FormFieldSetProps = ThemedClassName<
     descriptionPlacement?: 'below' | 'tooltip';
     /** The legend is a disclosure that folds the body; nested objects fold by default. */
     collapsible?: boolean;
+    /** Controls acting on the group as a whole, rendered at the end of its heading row. */
+    actions?: React.ReactNode;
   }>
 >;
 
@@ -43,7 +45,7 @@ export type FormFieldSetProps = ThemedClassName<
  * section, a nested one an indented, bordered group, so the same element serves both.
  */
 export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
-  ({ children, label, description, descriptionPlacement = 'below', collapsible, ...props }, forwardedRef) => {
+  ({ children, label, description, descriptionPlacement = 'below', collapsible, actions, ...props }, forwardedRef) => {
     const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
     const depth = useFormFieldSetDepth();
     const labelId = useId();
@@ -135,6 +137,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
       >
         {legend}
         {helper}
+        {actions && <div className={styles.fieldSetActions()}>{actions}</div>}
         {body}
       </Fieldset.Root>
     );

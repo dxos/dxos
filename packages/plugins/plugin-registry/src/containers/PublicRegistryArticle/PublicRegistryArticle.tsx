@@ -9,6 +9,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { useSettingsDivergedKeys } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -61,6 +63,7 @@ export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryAr
     const plugins = useAtomValue(manager.plugins);
     const installedIds = useMemo(() => plugins.map((plugin) => plugin.meta.profile.key), [plugins]);
     const extraTagsById = useAutoTags(entries);
+    const deviceOnlyIds = useSettingsDivergedKeys(AppSettings.PLUGINS_NAMESPACE);
 
     // Snapshot of installed plugin ids at mount time. Used to sort installed
     // plugins to the top without having newly-installed rows jump up mid-session.
@@ -189,6 +192,7 @@ export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryAr
         updating={updatingIds}
         updateAvailableIds={updateAvailableIds}
         extraTagsById={extraTagsById}
+        deviceOnlyIds={deviceOnlyIds}
         onInstall={handleInstall}
         onUpdate={handleUpdate}
         empty={empty}

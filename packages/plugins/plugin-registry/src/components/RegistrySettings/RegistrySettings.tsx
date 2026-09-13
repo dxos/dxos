@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Banner, Button, Field, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Banner, Button, Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -18,6 +18,11 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
     activeDevPluginIds: readonly string[];
     onEnableDev: (url: string) => Promise<void>;
     onDisableDev: (id: string) => Promise<void>;
+    /** Whether this device uses its own plugin set rather than the account's; `undefined` hides the section. */
+    pluginScopeLocal?: boolean;
+    onPluginScopeLocalChange?: (local: boolean) => void;
+    /** Controls for the panel's heading row. */
+    scope?: ReactNode;
   }
 >;
 
@@ -39,8 +44,12 @@ export const RegistrySettings = ({
   activeDevPluginIds,
   onEnableDev,
   onDisableDev,
+  pluginScopeLocal,
+  onPluginScopeLocalChange,
+  scope,
 }: RegistrySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const [rejoining, setRejoining] = useState(false);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;
   const url = settings.devPluginUrl ?? '';
@@ -93,6 +102,22 @@ export const RegistrySettings = ({
     <Form.Root variant='settings' readonly={!onSettingsChange} schema={RegistrySettingsSchema} values={settings}>
       <Form.Viewport scroll>
         <Form.Content>
+          {pluginScopeLocal !== undefined && (
+            <Form.FieldSet label={t('plugin-registry.label')} actions={scope}>
+              <Form.Field label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
+                <Field.Root>
+                  <Field.Switch
+                    data-testid='registrySettings.pluginScope'
+                    // The scope is still worth showing without a handler; flipping it is not.
+                    disabled={!onPluginScopeLocalChange}
+                    checked={pluginScopeLocal}
+                    // Only rejoining asks: it replaces this device's choices with the account's.
+                    onCheckedChange={(local) => (local ? onPluginScopeLocalChange?.(true) : setRejoining(true))}
+                  />
+                </Field.Root>
+              </Form.Field>
+            </Form.FieldSet>
+          )}
           <Form.FieldSet label={t('dev-plugin.section.title')}>
             <Banner.Root valence='neutral'>
               <Banner.Content>
@@ -101,6 +126,7 @@ export const RegistrySettings = ({
             </Banner.Root>
             <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
               <Field.Input
+                data-testid='registrySettings.devPluginUrl'
                 disabled={!onSettingsChange || enabled || busy}
                 value={url}
                 onChange={(event) =>
@@ -131,6 +157,34 @@ export const RegistrySettings = ({
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
+      <AlertDialog.Root open={rejoining} onOpenChange={setRejoining}>
+        <AlertDialog.Overlay>
+          <AlertDialog.Content>
+            <AlertDialog.Body>
+              <AlertDialog.Title>{t('plugin-scope.rejoin-dialog.title')}</AlertDialog.Title>
+              <AlertDialog.Description>{t('plugin-scope.rejoin-dialog.description')}</AlertDialog.Description>
+            </AlertDialog.Body>
+            <AlertDialog.ActionBar>
+              <div className='grow' />
+              <AlertDialog.Cancel asChild>
+                <Button>{t('plugin-scope.rejoin-dialog.cancel.label')}</Button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <Button
+                  data-testid='registrySettings.pluginScope.confirm'
+                  variant='primary'
+                  onClick={() => {
+                    onPluginScopeLocalChange?.(false);
+                    setRejoining(false);
+                  }}
+                >
+                  {t('plugin-scope.rejoin-dialog.confirm.label')}
+                </Button>
+              </AlertDialog.Action>
+            </AlertDialog.ActionBar>
+          </AlertDialog.Content>
+        </AlertDialog.Overlay>
+      </AlertDialog.Root>
     </Form.Root>
   );
 };

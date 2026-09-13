@@ -92,6 +92,7 @@ export const Repair = Capability.lazyModule(
   () => import('./repair.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export { SettingsSync } from './settings-sync/index.ts';
 export const SpaceSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });

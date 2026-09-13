@@ -38,6 +38,8 @@ export type PluginItemProps = {
    * Not persisted to plugin meta; computed per-render by the container.
    */
   extraTags?: readonly string[];
+  /** Whether this device's answer for this plugin differs from the account's. */
+  deviceOnly?: boolean;
   onClick?: (id: string) => void;
   onChange?: (id: string, enabled: boolean) => void;
   /**
@@ -69,6 +71,7 @@ export const PluginItem = ({
   installing,
   enabled = [],
   extraTags,
+  deviceOnly,
   onClick,
   onChange,
   onInstall,
@@ -157,6 +160,14 @@ export const PluginItem = ({
         <div className='flex items-center gap-2 overflow-hidden cursor-pointer' onClick={handleClick}>
           <span className='text-lg truncate'>{name ?? id}</span>
           {failure && <PluginFailureBadge failure={failure} />}
+          {deviceOnly && (
+            <Icon
+              data-testid={`pluginList.${id}.deviceOnly`}
+              icon='ph--monitor--regular'
+              size={4}
+              classNames='shrink-0 text-description'
+            />
+          )}
         </div>
 
         <div>

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Browser, type ConsoleMessage, type Locator, type Page, expect } from '@playwright/test';
+import { type Browser, type ConsoleMessage, type Frame, type Locator, type Page, expect } from '@playwright/test';
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
@@ -40,6 +40,15 @@ export const INITIAL_SPACE_COUNT = 1;
  * above the 30s `actionTimeout` a single interaction gets.
  */
 const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
+
+/** The default space's Home, which a first-run boot lands on. */
+const DEFAULT_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}\/home/;
+
+/** A joined device stops at the inviter's workspace root rather than reaching its `/home` plank. */
+const JOINED_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}/;
+
+/** How long the URL must hold still before boot counts as finished. */
+const BOOT_QUIET_PERIOD = 1_000;
 
 /**
  * Typenames behind the friendly names specs pass to `createObject()`, keyed by typename since the
@@ -128,6 +137,41 @@ export class AppManager {
 
   get currentWorkspace(): Locator {
     return this.page.getByTestId('navtree.workspace.visible');
+  }
+
+  /** Waits out the boot-time navigation to the default space, which `init()` returns ahead of. */
+  async waitForDefaultWorkspace(): Promise<void> {
+    await this.#waitForBoot(DEFAULT_WORKSPACE_URL);
+  }
+
+  /** The same, for a device that has just joined an existing identity. */
+  async waitForJoinedWorkspace(): Promise<void> {
+    await this.#waitForBoot(JOINED_WORKSPACE_URL);
+  }
+
+  /**
+   * Arrive at `url`, then wait for boot to stop navigating away from it. Boot navigates more than
+   * once, so the test waits for the URL to stop moving rather than for its first arrival.
+   */
+  async #waitForBoot(url: RegExp): Promise<void> {
+    let lastNavigation = Date.now();
+    const onNavigated = (frame: Frame) => {
+      if (frame === this.page.mainFrame()) {
+        lastNavigation = Date.now();
+      }
+    };
+
+    this.page.on('framenavigated', onNavigated);
+    try {
+      await this.page.waitForURL(url, { timeout: 60_000 });
+      await expect
+        .poll(() => Date.now() - lastNavigation, { timeout: 30_000, intervals: [50] })
+        .toBeGreaterThanOrEqual(BOOT_QUIET_PERIOD);
+    } finally {
+      this.page.off('framenavigated', onNavigated);
+    }
+
+    await expect(this.page).toHaveURL(url);
   }
 
   async openUserAccount(): Promise<void> {
@@ -474,6 +518,70 @@ export class AppManager {
     await this.page.getByTestId('treeView.appSettings').click();
   }
 
+  /** Opens one plugin's settings panel from the settings workspace tree. */
+  async openPluginSettings(plugin: string): Promise<void> {
+    await this.openSettings();
+    const item = this.page.getByTestId(`settings.${plugin}`);
+    await expect(item).toBeVisible();
+    await item.click();
+    await expect(item).toHaveAttribute('aria-selected', 'true');
+  }
+
+  /** The scope toggle group in a settings panel's heading: one item per scope, the active one pressed. */
+  getSettingsScopeToggle(scope: 'synced' | 'local'): Locator {
+    return this.page.getByTestId(`settingsScope.${scope}`);
+  }
+
+  /** Takes the open settings panel off the account. */
+  async useSettingsForThisDeviceOnly(): Promise<void> {
+    const local = this.getSettingsScopeToggle('local');
+    await expect(local).toBeVisible();
+    await local.click();
+    await expect(local).toHaveAttribute('data-state', 'on');
+  }
+
+  /**
+   * Rejoins the account for the open settings panel, keeping the account's values. The confirmation
+   * only appears when the two sides differ, so the dialog is dismissed only if it opened.
+   */
+  async rejoinAccountSettings(): Promise<void> {
+    await this.getSettingsScopeToggle('synced').click();
+    const keepShared = this.page.getByTestId('settingsScope.keepShared');
+    if (await keepShared.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await keepShared.click();
+    }
+    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
+  }
+
+  /** Rejoins the account but publishes this device's values to it, from the conflict dialog. */
+  async rejoinAccountSettingsKeepingLocal(): Promise<void> {
+    await this.getSettingsScopeToggle('synced').click();
+    await this.page.getByTestId('settingsScope.keepLocal').click();
+    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
+  }
+
+  /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */
+  getDevPluginUrlInput(): Locator {
+    return this.page.getByTestId('registrySettings.devPluginUrl');
+  }
+
+  /**
+   * The "use a different plugin set on this device" switch in the registry's settings panel. Absent
+   * until the settings space opens.
+   */
+  getPluginScopeToggle(): Locator {
+    return this.page.getByTestId('registrySettings.pluginScope');
+  }
+
+  /** Detaches this device's plugin set from the account. */
+  async usePluginSetForThisDeviceOnly(): Promise<void> {
+    const toggle = this.getPluginScopeToggle();
+    await expect(toggle).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+    await toggle.click();
+    await expect(toggle).toBeChecked();
+  }
+
   async openPluginRegistry(): Promise<void> {
     // Direct-navigate to the registry workspace rather than clicking the
     // pinned tree node. The click path requires the layout/settings
@@ -487,31 +595,15 @@ export class AppManager {
   }
 
   async openRegistryCategory(category: string): Promise<void> {
-    // A category node's id is the bare category name, addressed as the `category` key.
-    await this.page.goto(`${workspaceUrl(REGISTRY_WORKSPACE)}/category/${category}`);
-    await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
+    // Clicked rather than deep-linked: a cold load of `<workspace>/category/<name>` restores the
+    // workspace but not the category plank, so the list never opens.
+    await this.openPluginRegistry();
+    await this.page.getByTestId(`pluginRegistry.${category}`).click();
+    await expect(this.page.locator('[data-testid^="pluginList."]').first()).toBeVisible();
   }
 
   getPluginToggle(plugin: string): Locator {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
-  }
-
-  async enablePlugin(plugin: string): Promise<void> {
-    const toggle = this.getPluginToggle(plugin);
-    // Wait for the toggle to be present and stable before clicking — the
-    // plugin list re-renders after the workspace switch and the React
-    // onClick handler may not be bound on the first render that produces
-    // the checkbox element.
-    await expect(toggle).toBeVisible();
-    await expect(toggle).not.toBeChecked();
-    await toggle.click();
-    // Wait for the click to actually flip the toggle's checked state before
-    // reloading — the click handler persists the enable into storage and
-    // navigating mid-write leaves the new page's plugin manager in an
-    // inconsistent state where the lazy plugin chunk fetch can be cancelled.
-    await expect(toggle).toBeChecked();
-    await this.page.goto(INITIAL_URL);
-    await this.page.getByTestId('treeView.userAccount').waitFor();
   }
 
   async changeStorageVersionInMetadata(version: number): Promise<void> {
