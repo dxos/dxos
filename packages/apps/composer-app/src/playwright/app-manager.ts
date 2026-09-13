@@ -533,21 +533,44 @@ export class AppManager {
     { instruction, offset = { x: 0, y: 0 } }: { instruction: string; offset?: { x: number; y: number } },
   ): Promise<void> {
     const start = await active.boundingBox();
-    if (!start) {
-      throw new Error('drag source has no layout box');
+    const initial = await over.boundingBox();
+    if (!start || !initial) {
+      throw new Error('drag source or target has no layout box');
     }
+    const startX = start.x + start.width / 2;
+    const startY = start.y + start.height / 2;
     await active.hover();
     await this.page.mouse.down();
-    // Past the drag threshold but still inside the source row.
-    await this.page.mouse.move(start.x + start.width / 2, start.y + start.height / 2 + 6, { steps: 2 });
+    // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
+    // it leaves the pointer over the row that slides into the dragged row's place.
+    await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
     await expect(active).toBeHidden();
 
     const box = await over.boundingBox();
     if (!box) {
       throw new Error('drop target has no layout box');
     }
-    await this.page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
-    await expect(over).toHaveAttribute('data-instruction', instruction);
+    const x = offset.x + box.x + box.width / 2;
+    const y = offset.y + box.y + box.height / 2;
+    await this.page.mouse.move(x, y, { steps: 4 });
+    try {
+      await expect(over).toHaveAttribute('data-instruction', instruction);
+    } catch (err) {
+      const rows = await this.page.evaluate(
+        ({ x, y }) => ({
+          underPointer: document.elementFromPoint(x, y)?.closest('[data-path]')?.getAttribute('data-path') ?? null,
+          rows: [...document.querySelectorAll('[data-testid="spacePlugin.object"]')].map((row) => ({
+            path: row.getAttribute('data-path'),
+            instruction: row.getAttribute('data-instruction'),
+            hidden: row.classList.contains('hidden'),
+            top: Math.round(row.getBoundingClientRect().top),
+            height: Math.round(row.getBoundingClientRect().height),
+          })),
+        }),
+        { x, y },
+      );
+      throw new Error(`no ${instruction} drop zone at (${x}, ${y}): ${JSON.stringify(rows)}`, { cause: err });
+    }
     await this.page.mouse.up();
   }
 
