@@ -35,10 +35,9 @@ import {
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
-import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
+import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
@@ -805,11 +804,20 @@ ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 
 const CHAT_QUEUE_NAME = 'Chat.Queue';
 
+/**
+ * How long a prompt must sit in the queue before the queue shows it. A prompt sent to an idle agent
+ * is taken up within a frame or two, so showing it at once flashes a row that is gone before it can
+ * be read; only one that is actually waiting behind a running turn earns a row.
+ */
+const QUEUE_REVEAL_DELAY = 1_000;
+
 type ChatQueueProps = Omit<NaturalChatQueueProps, 'messages' | 'onCancel'>;
 
 const ChatQueue = (props: ChatQueueProps) => {
   const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
-  return <NaturalChatQueue {...props} messages={queued} onCancel={onCancel} />;
+  const messages = useSettled(queued, QUEUE_REVEAL_DELAY);
+
+  return <NaturalChatQueue {...props} messages={messages} onCancel={onCancel} />;
 };
 
 ChatQueue.displayName = CHAT_QUEUE_NAME;
@@ -837,40 +845,6 @@ const ChatActivity = ({ classNames }: ThemedClassName) => {
 ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
 //
-// StatusStack
-//
-
-const CHAT_STATUS_STACK_NAME = 'Chat.StatusStack';
-
-type ChatStatusStackProps = ThemedClassName<{
-  /** Applied to each row, so the host can give both lines the same text column. */
-  rowClassNames?: string;
-  /** Applied to the counters pill only, which is the row that carries a surface. */
-  pillClassNames?: string;
-}>;
-
-/**
- * The activity line stacked on top of the counters pill.
- *
- * Ordering is the whole point of the component: the activity line names what the request is doing
- * and the pill reports what it has cost so far, so the sentence reads as a caption above the
- * numbers rather than an afterthought below them. Composed here, from the two context-bound parts,
- * rather than in the container so every host gets the same order.
- */
-const ChatStatusStack = ({ classNames, rowClassNames, pillClassNames }: ChatStatusStackProps) => (
-  <div className={mx('flex flex-col', classNames)}>
-    <div className={rowClassNames}>
-      <ChatActivity />
-    </div>
-    <div className={rowClassNames}>
-      <ChatStatus classNames={pillClassNames} />
-    </div>
-  </div>
-);
-
-ChatStatusStack.displayName = CHAT_STATUS_STACK_NAME;
-
-//
 // Chat
 //
 
@@ -882,7 +856,6 @@ export const Chat = {
   Queue: ChatQueue,
   Activity: ChatActivity,
   Status: ChatStatus,
-  StatusStack: ChatStatusStack,
   Thread: ChatThread,
   Outline: ChatOutline,
 };
@@ -894,7 +867,6 @@ export type {
   ChatPromptProps,
   ChatQueueProps,
   ChatRootProps,
-  ChatStatusStackProps,
   ChatThreadProps,
   ChatToolbarProps,
 };
