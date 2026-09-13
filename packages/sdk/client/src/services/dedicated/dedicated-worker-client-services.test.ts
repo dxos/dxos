@@ -37,6 +37,35 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await space.db.flush();
   });
 
+  test('an object added right before destroy reaches a client already running', { timeout: 10_000 }, async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    await using services1 = await testBuilder.createDedicatedWorkerClientServices().open();
+    const client1 = await new Client({ services: services1 }).initialize();
+    await client1.halo.createIdentity();
+    await client1.addTypes([TestSchema.Expando]);
+    const space = await client1.spaces.create();
+    await space.waitUntilReady();
+
+    // As under React StrictMode: the replacement client is up before the first one is torn down.
+    await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client2 = await new Client({ services: services2 }).initialize();
+    await client2.addTypes([TestSchema.Expando]);
+
+    space.db.add(Obj.make(TestSchema.Expando, { name: 'added before destroy' }));
+    await client1.destroy();
+
+    await expect.poll(() => client2.spaces.get(space.id), { timeout: 3_000 }).toBeTruthy();
+    const space2 = client2.spaces.get(space.id)!;
+    await asyncTimeout(space2.waitUntilReady(), 3_000);
+    await expect
+      .poll(async () => (await space2.db.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name), {
+        timeout: 3_000,
+      })
+      .toContain('added before destroy');
+  });
+
   test('two clients share coordinator', async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());

@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { type CleanupFn, Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
@@ -43,6 +43,9 @@ import { type MeshProxy } from '../mesh/mesh-proxy.ts';
 import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
+
+/** Longest a destroy waits for a database's pending writes to reach the host. */
+const DESTROY_FLUSH_TIMEOUT = 5_000;
 
 /**
  * This options object configures the DXOS Client.
@@ -639,7 +642,7 @@ export class Client {
       return;
     }
 
-    // TODO(burdon): Call flush?
+    await this._flushDatabases();
     await this._close();
     this._statusUpdate.emit(null);
     await this._ctx.dispose();
@@ -653,6 +656,20 @@ export class Client {
 
   async [Symbol.asyncDispose]() {
     await this.destroy();
+  }
+
+  /**
+   * Hands writes still pending to the host, so objects added just before the client is torn down (e.g. by a
+   * React StrictMode remount) are not lost. `reset` skips this: it has already wiped the host.
+   */
+  private async _flushDatabases(): Promise<void> {
+    await Promise.all(
+      Array.from(this._echoClient.openDatabases, (db) =>
+        asyncTimeout(db.flush({ indexes: false }), DESTROY_FLUSH_TIMEOUT).catch((err) =>
+          log.warn('pending writes were not handed to the host before destroy', { spaceId: db.spaceId, err }),
+        ),
+      ),
+    );
   }
 
   private async _close(): Promise<void> {
