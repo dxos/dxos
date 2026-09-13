@@ -254,8 +254,8 @@ export class AppManager {
       }
     });
     await action.click();
-    // A delivered action click dismisses the toast; waiting out its own timer would pass for a missed click.
-    await expect(this.page.getByTestId(toastId)).toBeHidden({ timeout: 2_000 });
+    // A delivered click closes the toast at once, ahead of its exit animation; its own timer is paused by the hover.
+    await expect(root).toHaveAttribute('data-state', 'closed', { timeout: 2_000 });
   }
 
   async closeToast(nth = 0): Promise<void> {
