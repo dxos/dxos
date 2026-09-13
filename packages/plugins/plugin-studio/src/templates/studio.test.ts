@@ -7,15 +7,16 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Text } from '@dxos/schema';
-import { TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { Lightbox } from '#types';
 
-import { STUDIO_TEMPLATE_ID, studioTemplate } from './studio.ts';
+import { STUDIO_TASK_TITLE, STUDIO_TEMPLATE_ID, studioTemplate } from './studio.ts';
 
 describe('studio project template', () => {
   let builder: EchoTestBuilder;
@@ -30,7 +31,7 @@ describe('studio project template', () => {
 
   test('scaffolds a project owning one Lightbox filed in its artifacts', async ({ expect }) => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Lightbox.Lightbox],
+      types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task, Lightbox.Lightbox],
     });
 
     const project = await EffectEx.runPromise(
@@ -54,5 +55,11 @@ describe('studio project template', () => {
     // The cascade persisted the parented lightbox alongside the project.
     const persisted = await db.query(Filter.type(Lightbox.Lightbox)).run();
     expect(persisted.map((object) => object.id)).toEqual([lightbox.id]);
+
+    // The starter task rides the ledger's cascade, and the brief enables the studio skill.
+    const tasks = await db.query(Filter.type(Task.Task)).run();
+    expect(tasks.map((task) => task.title)).toEqual([STUDIO_TASK_TITLE]);
+    const instructions = await project.instructions?.load();
+    expect(instructions?.skills?.map((ref) => ref.uri)).toContain(Skill.registryURI('org.dxos.skill.studio'));
   });
 });

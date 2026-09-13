@@ -36,7 +36,21 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Media artifact article hides the variants half until something is produced.
 - [x] Lightbox board cell `+` opens the same create dialog (artifact lands in the clicked cell).
 
+## Phase 4: Storyboard + Studio skill experiment (design in plugin docs/DESIGN.md)
+
+- [x] Accordion → react-ui (ark primitives), `leading` slot + `ref` on Item.
+- [x] `Storyboard` / `Frame` types, `StoryboardArticle` (accordion, dnd reorder, append frame), story.
+- [x] Nested artifact article: `nodeId` prop, studio graph nodes for frame artifacts, self-expanding actions.
+- [ ] `StudioOperation.CreateStoryboard` / `AppendFrame` / `ListProviders` + handlers + tests.
+- [ ] `org.dxos.skill.studio` skill definition; Studio template task + skills.
+- [ ] `stories-assistant` `Studio.stories.tsx`: seeded Studio project, Higgsfield enabled, scripted + live play.
+- [ ] `StoryboardPlayer` (sequential playback) + splice design/task.
+
 ## Follow-ups
+
+- [ ] Retrofit the storyboard shape to plugin-presenter: a `Slide` surface for `Frame`, a pager over
+      `storyboard.frames`; then a generic vertical container shared by storyboard and deck.
+- [ ] Splice frames into one file with ffmpeg.wasm behind `StudioOperation.Splice` (DESIGN.md).
 
 - [ ] Generic mechanism for plugins to add **create menu items to an article's toolbar** (e.g. a
       `CreateObjectEntry`-style capability the Lightbox/Project article's `+` reads), replacing the

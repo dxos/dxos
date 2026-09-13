@@ -35,5 +35,6 @@ export const ProjectTemplates = Capability.lazyModule(
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.plugin.studio.role.variantRenderer', 'org.dxos.role.article', 'org.dxos.role.cardContent'],
 });
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Translations = AppCapability.translations(translations);

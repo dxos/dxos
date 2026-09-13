@@ -19,6 +19,8 @@ export default defineConfig({
     Frame: 'src/types/Frame.ts',
     MediaArtifact: 'src/types/MediaArtifact.ts',
     Storyboard: 'src/types/Storyboard.ts',
+    StudioSkill: 'src/skills/StudioSkill.ts',
+    skills: 'src/skills/index.ts',
     Generation: 'src/types/Generation.ts',
     GenerationService: 'src/types/GenerationService.ts',
     Lightbox: 'src/types/Lightbox.ts',

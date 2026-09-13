@@ -129,3 +129,68 @@ fingerprint with a 5-minute TTL, shared across articles and remounts; a failed l
 the next read retries. A provider's own `fieldMap` still wins for a field it renders itself.
 HeyGen's avatars/voices use it (its React picker is gone); Higgsfield lists its documented image
 model statically because the public API has no catalogue endpoint.
+
+## Storyboard (added 2026-09-13)
+
+`Storyboard { name?, frames: Ref<Frame>[] (SetParent) }` / `Frame { name?, notes?, artifact?: Ref<MediaArtifact> }`
+— the vertical shape a slide deck also takes. `StoryboardArticle` renders the frames as a reorderable
+accordion (`useReorderList` from react-ui-list around `Accordion.Item`s, now in react-ui) whose bodies
+host the artifact's own article through the `Article` surface with a `nodeId` under the storyboard
+(a studio graph extension lists a storyboard's frame artifacts as children, and the nested article
+expands that node's actions itself — the deck only does so for planks). **Append frame** opens the
+artifact create dialog and parents the artifact to its frame. Retrofit to plugin-presenter and a
+generic vertical container are tracked follow-ups.
+
+## Studio skill and the experiment (added 2026-09-13)
+
+**Goal.** The Studio project template carries one task — _Create a simple 3 frame storyboard that
+explains how the Studio plugin works_ — and an agent can complete it through a plugin-studio skill.
+
+**Operations** (`StudioOperation`, all agent-callable):
+
+- `CreateStoryboard { name, project? }` → `{ storyboard }` — filed into the project's artifacts when
+  given (the agent works in project context, so the storyboard shows up where the task lives).
+- `AppendFrame { storyboard, name, kind, prompt, notes?, provider?, config? }` → `{ frame, artifact }`
+  — makes the `MediaArtifact` (its `generator` set to `provider`), parents it to a new `Frame`, appends.
+- `ListProviders { kind? }` → `{ providers: [{ id, kind, label, requestSchema (JSON schema), defaultRequest }] }`
+  — so the agent can fill a provider's config (Higgsfield needs `model`, HeyGen `avatarId`/`voiceId`)
+  without guessing.
+- `Generate` (existing) — one call per frame with `{ artifact, provider, config: { prompt, ...} }`.
+
+**Skill** `org.dxos.skill.studio`: instructions describe the narrative structure (establishing shot →
+development → resolution), the loop (`list-providers` → `create-storyboard` → `append-frame` ×N →
+`generate` ×N), and to report each frame's prompt. Contributed as `SkillDefinition` on the
+assistant's start event.
+
+**Template.** The Studio template's instructions enable the studio + project skills, and its task set
+carries the single task; the Lightbox stays.
+
+**Story** (`stories-assistant` `Studio.stories.tsx`): plugins Space/Projects/Tasks/Studio/Higgsfield/
+Connector; the space is seeded with a Studio project from the template and the chat is bound to it;
+the Higgsfield credential comes from `VITE_HIGGSFIELD_CREDENTIALS` (`id:secret`) through
+`accessTokensFromEnv`. Two stories: `Default` (live model + Higgsfield, `!test`) and `Scripted` — a
+`ScriptedLanguageModel` script that walks the loop against a mock `video` provider, so the flow is
+asserted offline in the storybook runner: a Storyboard with 3 frames, each artifact holding a variant.
+
+**Known limit.** The provided Higgsfield account answers `403 not_enough_credits`, so the live story
+proves the tool path up to the provider's refusal; the scripted story proves the flow.
+
+## Splicing frames into one video (design, added 2026-09-13)
+
+The frames' variants are provider URLs to separate mp4 files. Three ways to present them as one:
+
+1. **Sequential playback (view-time splice).** A `StoryboardPlayer` renders one `<video>` and advances
+   `src` on `ended` over the frames' cover variants (optionally `MediaSource` for gapless play).
+   No new data, works today, zero cost — the right first step; the storyboard toolbar gets **Play**.
+2. **Client-side file splice with ffmpeg.wasm** (`@ffmpeg/ffmpeg` + `@ffmpeg/core`, ~30 MB wasm,
+   loaded lazily from the CDN allowlist). An operation `StudioOperation.Splice { storyboard }` fetches
+   each variant (through the edge CORS proxy — provider CDNs rarely allow browser CORS), runs the
+   concat demuxer (`-f concat -safe 0 -i list.txt -c copy`) when codecs/resolutions match, else
+   re-encodes with `-filter_complex concat`, and stores the result as a `File` object referenced by a
+   new `MediaArtifact` (`kind: 'video'`) on the storyboard (`storyboard.spliced`). Heavy but fully
+   local-first; needs `SharedArrayBuffer` (COOP/COEP headers) for the multi-threaded core.
+3. **Provider-side.** Higgsfield's API has no concat; HeyGen has none either. An EDGE worker cannot
+   run ffmpeg (no native binaries); a container/Media API would be a new service.
+
+Recommendation: ship 1 now; implement 2 behind an operation once frames are reliably generated;
+skip 3.

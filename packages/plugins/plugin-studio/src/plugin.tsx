@@ -12,6 +12,7 @@ import {
   ProjectTemplates,
   ReactSurface,
   Schema,
+  SkillDefinition,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -24,6 +25,7 @@ export const StudioPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ProjectTemplates),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(Translations),
   Plugin.make,
 );
