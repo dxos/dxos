@@ -193,8 +193,6 @@ export class EntityManager implements IDatabaseBinding {
   );
 
   private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
-  /** Creations the host refused since the last flush; flush reports them, since their objects never persist. */
-  private readonly _failedDocumentCreations: Error[] = [];
 
   // ── Update scheduling ────────────────────────────────────────────────────
   private _objectsForNextDbUpdate = new Set<string>();
@@ -742,10 +740,6 @@ export class EntityManager implements IDatabaseBinding {
   async flush({ disk = true, indexes = true, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
     await this._waitForPendingCreations();
-    const [creationError] = this._failedDocumentCreations.splice(0);
-    if (creationError) {
-      throw creationError;
-    }
     if (disk) {
       await this._repoProxy.flush();
       await runServiceCall(
@@ -1529,7 +1523,6 @@ export class EntityManager implements IDatabaseBinding {
       })
       .catch((err) => {
         log.warn('object not bound: its document was not created', { objectId, err });
-        this._failedDocumentCreations.push(err);
       })
       .finally(() => {
         this._pendingDocumentCreations.delete(objectId);

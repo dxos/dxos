@@ -467,7 +467,7 @@ export class RepoProxy extends Resource {
             update();
             handle._wakeReady();
           },
-          // Only a failed call means the host holds no document; an error after creation must not discard it.
+          // A failed call leaves the handle unbound; an error after the host returned a document must not discard it.
           (err) => {
             log.catch(err);
             handle._failReady(err);

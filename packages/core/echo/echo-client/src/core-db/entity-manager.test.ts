@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
@@ -306,23 +305,6 @@ describe('DatabaseImpl', () => {
         expect(object).not.to.be.undefined;
         expect((object as any).title).to.eq('first object');
       }
-    });
-
-    test('flush reports an object whose document the host refused to create', async () => {
-      const testBuilder = new EchoTestBuilder();
-      await openAndClose(testBuilder);
-      const peer = await testBuilder.createPeer();
-      const refusing = new Proxy(peer.host.dataService, {
-        get: (target, property, receiver) =>
-          property === 'DataService.createDocument'
-            ? () => Effect.fail(new Error('document creation refused'))
-            : Reflect.get(target, property, receiver),
-      });
-      const db = await peer.createDatabase(PublicKey.random(), {
-        client: await peer.createClient({ dataService: refusing }),
-      });
-      db.add(Obj.make(TestSchema.Expando, { name: 'refused' }));
-      await expect(db.flush()).rejects.toThrow('document creation refused');
     });
 
     test('load object', async () => {

@@ -198,14 +198,11 @@ export class EchoTestPeer extends Resource {
    * Bridges the host's effect-rpc Handlers to the effect-rpc client surface in-process (no wire),
    * and connects the given client. The bridged clients live on {@link _serviceScope}.
    */
-  private async _connectServices(
-    client: EchoClient,
-    dataServiceHandlers: DataService.Handlers = this._echoHost.dataService,
-  ): Promise<void> {
+  private async _connectServices(client: EchoClient): Promise<void> {
     invariant(this._serviceScope, 'Service scope not initialized');
     const [dataService, queryService, feedService] = await EffectEx.runPromise(
       Effect.all([
-        makeInProcessClient(DataService.Rpcs, dataServiceHandlers),
+        makeInProcessClient(DataService.Rpcs, this._echoHost.dataService),
         makeInProcessClient(QueryService.Rpcs, this._echoHost.queryService),
         makeInProcessClient(FeedService.Rpcs, this._echoHost.feedService),
       ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
@@ -274,14 +271,11 @@ export class EchoTestPeer extends Resource {
     await this.open();
   }
 
-  /**
-   * @param dataService Handlers the client's data service calls; defaults to the host's.
-   */
-  async createClient({ dataService }: { dataService?: DataService.Handlers } = {}): Promise<EchoClient> {
+  async createClient(): Promise<EchoClient> {
     const client = new EchoClient();
     await client.graph.registry.add(this._types);
     this._clients.add(client);
-    await this._connectServices(client, dataService);
+    await this._connectServices(client);
     await client.open();
     return client;
   }
