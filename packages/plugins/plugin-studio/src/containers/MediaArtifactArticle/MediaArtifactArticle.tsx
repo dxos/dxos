@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -121,6 +122,17 @@ export const MediaArtifactArticle = ({
     ? connections.some((connection) => connection.connectorId === provider.connectorId)
     : true;
   const { graph } = useAppGraph();
+  // The deck expands a plank's node; an article nested in another (a storyboard frame) has a node of
+  // its own that nothing else expands, and an unexpanded node has no actions — no Connect.
+  useEffect(() => {
+    if (!graph || nodeId === attendableId) {
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      void AppGraph.expandSync(graph, nodeId, 'action');
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [graph, nodeId, attendableId]);
   const runAction = useActionRunner();
 
   // Provider-listed fields render as comboboxes; the provider's own renderers take precedence.

@@ -11,8 +11,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import * as Trace from '@dxos/compute/Trace';
 import { useSpaces } from '@dxos/react-client/echo';
-import { IconButton, Toolbar } from '@dxos/react-ui';
-import { Accordion } from '@dxos/react-ui-list';
+import { Accordion, IconButton, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { type CustomPanelProps, Panel } from '../Panel.tsx';

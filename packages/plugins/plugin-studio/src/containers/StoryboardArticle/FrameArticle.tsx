@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import { Accordion, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { DropIndicator, type ReorderListController, useReorderItem } from '@dxos/react-ui-list';
 import { Empty } from '@dxos/react-ui-list';
@@ -33,8 +33,10 @@ export type FrameArticleProps = {
  */
 export const FrameArticle = ({ frame, index, attendableId, reorder, onDelete }: FrameArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const [artifact] = useObject(frame.artifact);
+  // The live object, not a snapshot: the surface filter checks the subject's type, and a sync
+  // `.target` read would leave the frame empty until something else re-rendered it.
   const [snapshot] = useObject(frame);
+  const artifact = useResolveRef(snapshot?.artifact);
   const { rowRef, handleRef, closestEdge, isDragging } = useReorderItem(reorder, frame.id);
 
   return (

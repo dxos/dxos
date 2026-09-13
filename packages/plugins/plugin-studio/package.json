@@ -128,6 +128,16 @@
       "source": "./src/types/Variant.ts",
       "types": "./dist/types/src/types/Variant.d.ts",
       "import": "./dist/lib/Variant.mjs"
+    },
+    "./Frame": {
+      "source": "./src/types/Frame.ts",
+      "types": "./dist/types/src/types/Frame.d.ts",
+      "import": "./dist/lib/Frame.mjs"
+    },
+    "./Storyboard": {
+      "source": "./src/types/Storyboard.ts",
+      "types": "./dist/types/src/types/Storyboard.d.ts",
+      "import": "./dist/lib/Storyboard.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -156,6 +166,12 @@
       ],
       "Variant": [
         "dist/types/src/types/Variant.d.ts"
+      ],
+      "Frame": [
+        "dist/types/src/types/Frame.d.ts"
+      ],
+      "Storyboard": [
+        "dist/types/src/types/Storyboard.d.ts"
       ]
     }
   },
