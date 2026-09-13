@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -23,6 +23,9 @@ import { FrameDetail } from './FrameDetail.tsx';
 import { FrameThumbnail } from './FrameThumbnail.tsx';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
+
+/** The stack's opening width in rem — the navtree sidebar's (`--dx-nav-sidebar-size`, 350px). */
+const STACK_SIZE = 22;
 const isFrame = Obj.instanceOf(Frame.Frame);
 
 export type StoryboardArticleProps = AppSurface.ObjectArticleProps<Storyboard.Storyboard>;
@@ -189,31 +192,36 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
           <Empty classNames='h-full' label={t('storyboard-empty.message')} />
         </Panel.Content>
       ) : (
-        // Master/detail: the stack is a sidebar's width so previews read at the navtree's scale, and
-        // the detail is a bounded pane the nested article fills.
-        <Panel.Content classNames='grid grid-cols-[var(--dx-nav-sidebar-size)_1fr] overflow-hidden'>
-          <ScrollArea.Root classNames='border-e border-subdued-separator'>
-            <ScrollArea.Viewport>
-              <FrameStack<Frame.Frame>
-                items={frames}
-                selectedId={selectedFrame?.id}
-                onSelect={setSelectedId}
-                onMove={handleMove}
-              >
-                {(frame, index) => <FrameThumbnail frame={frame} index={index} />}
-              </FrameStack>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-          <div className='grid overflow-hidden'>
-            {selectedFrame && (
-              <FrameDetail
-                key={selectedFrame.id}
-                frame={selectedFrame}
-                attendableId={attendableId}
-                onAddArtifact={handleAddArtifact}
-              />
-            )}
-          </div>
+        // Master/detail: the stack opens at a navtree sidebar's width so previews read at that
+        // scale, and the handle lets the reader trade it against the article.
+        <Panel.Content asChild>
+          <Splitter.Root orientation='horizontal' anchor='start' resizable defaultSize={STACK_SIZE} minSize={8}>
+            <Splitter.Panel position='start'>
+              <ScrollArea.Root>
+                <ScrollArea.Viewport>
+                  <FrameStack<Frame.Frame>
+                    items={frames}
+                    selectedId={selectedFrame?.id}
+                    onSelect={setSelectedId}
+                    onMove={handleMove}
+                  >
+                    {(frame, index) => <FrameThumbnail frame={frame} index={index} />}
+                  </FrameStack>
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Splitter.Panel>
+            <Splitter.Handle />
+            <Splitter.Panel position='end'>
+              {selectedFrame && (
+                <FrameDetail
+                  key={selectedFrame.id}
+                  frame={selectedFrame}
+                  attendableId={attendableId}
+                  onAddArtifact={handleAddArtifact}
+                />
+              )}
+            </Splitter.Panel>
+          </Splitter.Root>
         </Panel.Content>
       )}
     </Panel.Root>

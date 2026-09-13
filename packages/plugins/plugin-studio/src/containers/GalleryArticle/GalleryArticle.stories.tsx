@@ -22,7 +22,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { MediaArtifact, Variant } from '#types';
 
-import { StubProjectsPlugin } from '../../testing/index.ts';
+import { StubProjectsPlugin, makeMockArtifact } from '../../testing/index.ts';
 import { GalleryArticle } from './GalleryArticle.tsx';
 
 const DefaultStory = () => {
@@ -66,27 +66,19 @@ const meta = {
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
               const collection = space.db.add(Collection.make({ name: 'Test gallery' }));
-              // Seed a few Artifacts, each with one generated (url) cover variant, as members.
+              // Seed a few artifacts, each generated from its prompt, as members.
               Obj.update(collection, (collection) => {
-                collection.objects = Array.from({ length: 6 }, (_, index) => {
-                  const artifact = MediaArtifact.make({
-                    [Obj.Parent]: collection,
-                    name: `MediaArtifact ${index + 1}`,
-                    kind: 'image',
-                  });
-                  const variant = space.db.add(
-                    Variant.make({
-                      [Obj.Parent]: artifact,
-                      contentType: 'image/png',
-                      url: `https://picsum.photos/seed/dxos-${index}/512/512`,
+                collection.objects = Array.from({ length: 6 }, (_, index) =>
+                  Ref.make(
+                    makeMockArtifact({
+                      db: space.db,
+                      name: `MediaArtifact ${index + 1}`,
+                      prompt: `Gallery study ${index + 1}: an abstract composition.`,
+                      generated: true,
+                      parent: collection,
                     }),
-                  );
-                  Obj.update(artifact, (artifact) => {
-                    artifact.variants = [Ref.make(variant)];
-                    artifact.cover = Ref.make(variant);
-                  });
-                  return Ref.make(space.db.add(artifact));
-                });
+                  ),
+                );
               });
             }),
         }),

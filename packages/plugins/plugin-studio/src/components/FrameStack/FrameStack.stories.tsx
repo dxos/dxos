@@ -58,7 +58,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Clicking a preview selects its frame; the placeholder row is selectable like any other. */
+/**
+ * Clicking a preview selects its frame; the placeholder row is selectable like any other. The
+ * arrows move between frames and Enter picks one — react-ui-list's listbox grammar.
+ */
 export const TestSelect: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -66,5 +69,10 @@ export const TestSelect: Story = {
     await userEvent.click(reveal);
     const row = reveal.closest('[aria-selected]');
     await expect(row).toHaveAttribute('aria-selected', 'true');
+
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    const closing = await canvas.findByText('Closing');
+    await expect(closing.closest('[aria-selected]')).toHaveAttribute('aria-selected', 'true');
+    await expect(row).toHaveAttribute('aria-selected', 'false');
   },
 };

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -20,7 +20,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { MediaArtifact, Variant } from '#types';
 
-import { MockProviderPlugin, StubProjectsPlugin } from '../../testing/index.ts';
+import { MockProviderPlugin, StubProjectsPlugin, makeMockArtifact } from '../../testing/index.ts';
 import { MediaArtifactArticle } from './MediaArtifactArticle.tsx';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */
@@ -58,24 +58,13 @@ const meta_ = {
               yield* initializeIdentity(client);
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
-              const prompt = 'A serene mountain lake at dawn.';
-              const artifact = space.db.add(MediaArtifact.make({ name: 'Test artifact', kind: 'image' }));
-              // Seed a few generated variants (remote placeholders) to exercise the tabs + gallery.
-              Obj.update(artifact, (artifact) => {
-                artifact.variants = Array.from({ length: 3 }, (_, index) => {
-                  const variant = space.db.add(
-                    Variant.make({
-                      [Obj.Parent]: artifact,
-                      name: prompt,
-                      contentType: 'image/png',
-                      url: `https://picsum.photos/seed/dxos-${index}/512/512`,
-                      config: { prompt },
-                      generation: { provider: 'mock', prompt, seed: index },
-                    }),
-                  );
-                  return Ref.make(variant);
-                });
-                artifact.cover = artifact.variants[0];
+              // Three produced variants exercise the tabs + gallery; the prompt is on the artifact too.
+              makeMockArtifact({
+                db: space.db,
+                name: 'Test artifact',
+                prompt: 'A serene mountain lake at dawn.',
+                generated: true,
+                count: 3,
               });
             }),
         }),

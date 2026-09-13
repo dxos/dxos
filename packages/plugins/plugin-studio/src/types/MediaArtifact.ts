@@ -83,10 +83,13 @@ export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.
  * @param props.kind Media kind (`'image' | 'video' | …`); defaults to `'image'`.
  * @param props[Obj.Parent] Optional parent object to set at construction time.
  */
-export const make = (props: { name?: string; kind?: string; [Obj.Parent]?: Obj.Unknown } = {}): MediaArtifact =>
+export const make = (
+  props: { name?: string; kind?: string; request?: Record<string, unknown>; [Obj.Parent]?: Obj.Unknown } = {},
+): MediaArtifact =>
   Obj.make(MediaArtifact, {
     name: props.name,
     kind: props.kind ?? 'image',
+    request: props.request,
     variants: [],
     [Obj.Parent]: props[Obj.Parent],
   });

@@ -22,7 +22,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Lightbox, MediaArtifact, Variant } from '#types';
 
-import { StubProjectsPlugin } from '../../testing/index.ts';
+import { StubProjectsPlugin, makeMockArtifact } from '../../testing/index.ts';
 import { LightboxArticle } from './LightboxArticle.tsx';
 
 const DefaultStory = () => {
@@ -69,19 +69,12 @@ const meta = {
               // Seed Artifacts (each with a cover variant) and place them across the board grid.
               Obj.update(lightbox, (lightbox) => {
                 for (let index = 0; index < 5; index++) {
-                  const artifact = MediaArtifact.make({ name: `MediaArtifact ${index + 1}`, kind: 'image' });
-                  const variant = space.db.add(
-                    Variant.make({
-                      [Obj.Parent]: artifact,
-                      contentType: 'image/png',
-                      url: `https://picsum.photos/seed/lb-${index}/512/512`,
-                    }),
-                  );
-                  Obj.update(artifact, (artifact) => {
-                    artifact.variants = [Ref.make(variant)];
-                    artifact.cover = Ref.make(variant);
+                  const added = makeMockArtifact({
+                    db: space.db,
+                    name: `MediaArtifact ${index + 1}`,
+                    prompt: `Lightbox study ${index + 1}: a still life in warm light.`,
+                    generated: true,
                   });
-                  const added = space.db.add(artifact);
                   lightbox.items.push(Ref.make(added));
                   lightbox.layout.cells[added.id] = {
                     x: (index % 3) * 2,

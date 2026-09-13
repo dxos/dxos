@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -23,10 +23,14 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Frame, MediaArtifact, Storyboard, Variant } from '#types';
 
-import { MockProviderPlugin, StubProjectsPlugin, mockImageUrl } from '../../testing/index.ts';
+import { MockProviderPlugin, StubProjectsPlugin, makeMockArtifact } from '../../testing/index.ts';
 import { StoryboardArticle } from './StoryboardArticle.tsx';
 
-const FRAMES = ['Establishing shot', 'The reveal', 'Close-up'];
+const FRAMES: [name: string, prompt: string][] = [
+  ['Establishing shot', 'A wide shot of a studio at dawn, light through tall windows.'],
+  ['The reveal', 'Slow push in on a desk where a storyboard takes shape.'],
+  ['Close-up', 'A close-up of a hand pinning the last frame to the board.'],
+];
 
 const ATTENDABLE_ID = 'test';
 
@@ -72,23 +76,10 @@ const meta = {
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
               const storyboard = space.db.add(Storyboard.make({ name: 'Test storyboard' }));
-              // Seed frames: two with a generated cover, one still to be generated.
-              FRAMES.forEach((name, index) => {
-                const artifact = MediaArtifact.make({ name, kind: 'image' });
-                if (index < 2) {
-                  const variant = space.db.add(
-                    Variant.make({
-                      [Obj.Parent]: artifact,
-                      contentType: 'image/png',
-                      url: mockImageUrl(name),
-                      generation: { provider: 'mock', prompt: name },
-                    }),
-                  );
-                  Obj.update(artifact, (artifact) => {
-                    artifact.variants = [Ref.make(variant)];
-                    artifact.cover = Ref.make(variant);
-                  });
-                }
+              // Seed frames: two with a generated cover, one still to be generated — every one with
+              // its prompt, which is what the compose form opens on.
+              FRAMES.forEach(([name, prompt], index) => {
+                const artifact = makeMockArtifact({ db: space.db, name, prompt, generated: index < 2 });
                 const frame = Storyboard.appendFrame(storyboard, Frame.make({ name, artifact }));
                 Obj.setParent(artifact, frame);
               });
