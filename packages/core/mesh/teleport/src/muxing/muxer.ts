@@ -190,6 +190,7 @@ export class Muxer {
         }),
         SYSTEM_CHANNEL_ID,
       );
+      log('openChannel sent', { tag: channel.tag, id: channel.id });
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -249,6 +250,7 @@ export class Muxer {
         }),
         SYSTEM_CHANNEL_ID,
       );
+      log('openChannel sent', { tag: channel.tag, id: channel.id });
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -366,6 +368,7 @@ export class Muxer {
       });
       const remoteId = cmd.payload.value.id;
       channel.remoteId = remoteId;
+      log('openChannel received', { tag: channel.tag, id: channel.id, remoteId, buffered: channel.buffer.length });
 
       // Flush any buffered data.
       for (const data of channel.buffer) {

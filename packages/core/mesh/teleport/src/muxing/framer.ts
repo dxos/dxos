@@ -12,6 +12,9 @@ import { type RpcPort } from './rpc-port.ts';
 
 const FRAME_LENGTH_SIZE = 2;
 
+/** Frames logged per direction at the start of a session, where a lost channel open would be. */
+const LOGGED_FRAMES = 8;
+
 /**
  * Converts a stream of binary messages into a framed RpcPort.
  * Buffers are written prefixed by their length encoded as a varint.
@@ -25,6 +28,8 @@ export class Framer {
 
   private _bytesSent = 0;
   private _bytesReceived = 0;
+  private _framesSent = 0;
+  private _framesReceived = 0;
 
   private _writable = true;
 
@@ -63,7 +68,9 @@ export class Framer {
 
   public readonly port: RpcPort = {
     send: (message) => {
-      // log('write', { len: message.length, frame: Buffer.from(message).toString('hex') })
+      if (this._framesSent++ < LOGGED_FRAMES) {
+        log('frame pushed', { bytes: message.length });
+      }
       return new Promise<void>((resolve) => {
         const frame = encodeFrame(message);
         this._bytesSent += frame.length;
@@ -122,7 +129,9 @@ export class Framer {
       }
       offset += frame.bytesConsumed;
       // TODO(dmaretskyi): Possible bug if the peer unsubscribes while we're reading frames.
-      // log('read', { len: frame.payload.length, frame: Buffer.from(frame.payload).toString('hex') })
+      if (this._framesReceived++ < LOGGED_FRAMES) {
+        log('frame popped', { bytes: frame.payload.length });
+      }
       this._messageCb!(frame.payload);
     }
 
