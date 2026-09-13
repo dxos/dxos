@@ -96,7 +96,8 @@ export class RtcPeerConnection {
       return claimed;
     } else {
       const existingChannel = this._dataChannels.get(topic);
-      if (existingChannel) {
+      // A previous transport on this topic closed its channel; the peer opens a new one to replace it.
+      if (existingChannel && !isClosing(existingChannel.channel)) {
         return existingChannel;
       }
       log('waiting for initiator-peer to open a data channel');
@@ -523,6 +524,8 @@ const createIceFailureError = (details: IceCandidateErrorDetails[]) => {
   const candidateErrors = details.map(({ url, errorCode, errorText }) => `${errorCode} ${url}: ${errorText}`);
   return new ConnectivityError({ message: `ICE failed:\n${candidateErrors.join('\n')}` });
 };
+
+const isClosing = (channel: RTCDataChannel) => channel.readyState === 'closing' || channel.readyState === 'closed';
 
 type ChannelCreatedCallback = {
   resolve: (channel: ClaimedDataChannel) => void;
