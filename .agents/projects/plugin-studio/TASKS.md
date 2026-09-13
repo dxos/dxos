@@ -11,7 +11,7 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
       2s→10s backoff; `completed` → `images[].url` | `video.url`; `failed`/`nsfw`/`canceled` → error.
 - [x] Two `GenerationService`s from one provider: `image` (default model
       `higgsfield-ai/soul/v2/standard`) and `video` (required `model` path, no default).
-- [x] Unit tests (stubbed fetch) + env-gated live integration test (`HF_API_KEY_ID` / `HF_API_KEY_SECRET`).
+- [x] Unit tests (stubbed fetch) + env-gated live integration test (`HIGGSFIELD_API_KEY` / `HIGGSFIELD_SECRET_API_KEY`).
 - [x] Register in composer-app (`plugin-defs.tsx` dev defaults, `package.json`, `tsconfig.json`, `tsconfig.all.json`).
 - [x] `docs/DESIGN.md`, `PLUGIN.mdl` (+ QA flow), README; build, lint, test, format.
 - [x] Verified in the running app: registry card (scribble/lime), Connections → Higgsfield two-field form, Studio artifact provider = Higgsfield with the model default.

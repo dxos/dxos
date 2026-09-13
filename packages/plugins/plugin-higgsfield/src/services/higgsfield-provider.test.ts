@@ -9,13 +9,7 @@ import { HiggsfieldProvider } from './higgsfield-provider.ts';
 
 type Captured = { url: string; method?: string; authorization: string | null; body?: Record<string, unknown> };
 
-const json = (value: unknown, status = 200) =>
-  new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json' } });
-
 describe('HiggsfieldProvider', () => {
-  const provider = (fetchImpl: typeof globalThis.fetch) =>
-    new HiggsfieldProvider({ fetch: fetchImpl, initialPollIntervalMs: 1, maxPollIntervalMs: 2, timeoutMs: 1_000 });
-
   test('enqueue posts the body to the model path with a Key credential and returns the request id', async ({
     expect,
   }) => {
@@ -30,20 +24,32 @@ describe('HiggsfieldProvider', () => {
       return json({
         status: 'queued',
         request_id: 'req-1',
-        status_url: 'https://api.higgsfield.ai/requests/req-1/status',
+        status_url: 'https://status.higgsfield.ai/requests/req-1/status',
       });
     };
 
-    const { jobId } = await provider(fetchImpl).enqueue(
+    const { jobId, statusUrl } = await provider(fetchImpl).enqueue(
       { model: '/higgsfield-ai/soul/v2/standard', body: { prompt: 'a lake at sunrise' } },
       { credential: 'id:secret' },
     );
 
     expect(jobId).toBe('req-1');
+    expect(statusUrl).toBe('https://status.higgsfield.ai/requests/req-1/status');
     expect(captured?.url).toBe('https://api.higgsfield.ai/higgsfield-ai/soul/v2/standard');
     expect(captured?.method).toBe('POST');
     expect(captured?.authorization).toBe('Key id:secret');
     expect(captured?.body).toEqual({ prompt: 'a lake at sunrise' });
+  });
+
+  test('enqueue falls back to the documented status endpoint when the response omits status_url', async ({
+    expect,
+  }) => {
+    const fetchImpl: typeof globalThis.fetch = async () => json({ status: 'queued', request_id: 'req-1' });
+    const { statusUrl } = await provider(fetchImpl).enqueue(
+      { model: 'higgsfield-ai/soul/v2/standard', body: {} },
+      { credential: 'id:secret' },
+    );
+    expect(statusUrl).toBe('https://api.higgsfield.ai/requests/req-1/status');
   });
 
   test('enqueue requires a credential and a model path', async ({ expect }) => {
@@ -63,12 +69,12 @@ describe('HiggsfieldProvider', () => {
     ).rejects.toThrow(/403 Not enough credits/);
   });
 
-  test('awaitResult polls the status endpoint until completed and returns image urls', async ({ expect }) => {
+  test('awaitResult polls the status url verbatim until completed and returns image urls', async ({ expect }) => {
     const statuses: string[] = [];
     let calls = 0;
     const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL) => {
       calls += 1;
-      expect(String(input)).toBe('https://api.higgsfield.ai/requests/req-1/status');
+      expect(String(input)).toBe('https://status.higgsfield.ai/requests/req-1/status');
       return calls < 3
         ? json({ status: calls === 1 ? 'queued' : 'in_progress', request_id: 'req-1' })
         : json({
@@ -78,12 +84,23 @@ describe('HiggsfieldProvider', () => {
           });
     };
 
-    const output = await provider(fetchImpl).awaitResult('req-1', {
+    const output = await provider(fetchImpl).awaitResult('https://status.higgsfield.ai/requests/req-1/status', {
       credential: 'id:secret',
       onStatus: (status) => statuses.push(status),
     });
     expect(output).toEqual({ kind: 'image', urls: ['https://cdn/a.jpg', 'https://cdn/b.jpg'] });
     expect(statuses).toEqual(['queued', 'in_progress', 'completed']);
+  });
+
+  test('awaitResult resolves a bare request id to the documented status endpoint', async ({ expect }) => {
+    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL) => {
+      expect(String(input)).toBe('https://api.higgsfield.ai/requests/req-1/status');
+      return json({ status: 'completed', request_id: 'req-1', video: { url: 'https://cdn/v.mp4' } });
+    };
+    await expect(provider(fetchImpl).awaitResult('req-1', { credential: 'id:secret' })).resolves.toEqual({
+      kind: 'video',
+      url: 'https://cdn/v.mp4',
+    });
   });
 
   test('awaitResult returns a video url for video models', async ({ expect }) => {
@@ -139,4 +156,21 @@ describe('HiggsfieldProvider', () => {
     });
     await expect(instance.awaitResult('req-1', { credential: 'id:secret' })).rejects.toThrow(/timed out/);
   });
+
+  test('a fetch that never settles is cut off by the request deadline', async ({ expect }) => {
+    // Honour the signal the way a real fetch does: reject with its reason once it fires.
+    const stalled: typeof globalThis.fetch = (_input, init) =>
+      new Promise((_resolve, reject) => init?.signal?.addEventListener('abort', () => reject(init.signal?.reason)));
+    const instance = new HiggsfieldProvider({ fetch: stalled, requestTimeoutMs: 10, timeoutMs: 1_000 });
+    await expect(
+      instance.enqueue({ model: 'higgsfield-ai/soul/v2/standard', body: {} }, { credential: 'id:secret' }),
+    ).rejects.toThrow(/timed out/);
+    await expect(instance.awaitResult('req-1', { credential: 'id:secret' })).rejects.toThrow(/timed out/);
+  });
 });
+
+const json = (value: unknown, status = 200) =>
+  new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json' } });
+
+const provider = (fetchImpl: typeof globalThis.fetch) =>
+  new HiggsfieldProvider({ fetch: fetchImpl, initialPollIntervalMs: 1, maxPollIntervalMs: 2, timeoutMs: 1_000 });

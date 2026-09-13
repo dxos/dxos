@@ -9,7 +9,12 @@ import type * as GenerationService from '../types/GenerationService.ts';
 /** How long a loaded list is reused; catalogues (models, voices) change rarely and cost a request. */
 const TTL_MS = 5 * 60_000;
 
-type Entry = { expires: number; promise: Promise<readonly GenerationService.FieldOption[]> };
+type Entry = {
+  expires: number;
+  /** The credential the list was loaded with; compared exactly on a hit since the key holds only its fingerprint. */
+  apiKey?: string;
+  promise: Promise<readonly GenerationService.FieldOption[]>;
+};
 
 const cache = new Map<string, Entry>();
 
@@ -41,10 +46,12 @@ export const loadProviderOptions = (
     return Promise.resolve([]);
   }
 
+  const apiKey = request.apiKey && Redacted.value(request.apiKey);
   const key = cacheKey(provider.id, field, request.apiKey);
   const now = Date.now();
   const cached = cache.get(key);
-  if (cached && cached.expires > now) {
+  // A 32-bit fingerprint can collide; never hand one credential's list to another.
+  if (cached && cached.expires > now && cached.apiKey === apiKey) {
     return cached.promise;
   }
 
@@ -55,7 +62,7 @@ export const loadProviderOptions = (
     }
     throw error;
   });
-  cache.set(key, { expires: now + TTL_MS, promise });
+  cache.set(key, { expires: now + TTL_MS, apiKey, promise });
   return promise;
 };
 

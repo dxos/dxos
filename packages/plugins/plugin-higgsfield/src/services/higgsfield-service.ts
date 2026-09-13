@@ -16,7 +16,7 @@ import {
   HIGGSFIELD_SOURCE,
 } from '../constants.ts';
 import { type HiggsfieldOutput, type HiggsfieldRequestStatus } from './higgsfield-provider-types.ts';
-import { HiggsfieldProvider } from './higgsfield-provider.ts';
+import { type HiggsfieldJob, HiggsfieldProvider } from './higgsfield-provider.ts';
 import {
   HiggsfieldImageConfig,
   HiggsfieldVideoConfig,
@@ -86,9 +86,15 @@ const VIDEO_MODELS: readonly GenerationService.FieldOption[] = [
 ];
 
 /**
- * The Higgsfield `kind: 'image'` service: `enqueue` posts the prompt to the model path (persisted by
- * the studio generate op as the job id), `awaitResult` polls to completion and maps the produced
- * URLs to variants. Defaults to the documented Soul v2 text-to-image model.
+ * The studio persists one opaque job id per pending variant; ours is the API's `status_url`, so a
+ * poll resumed after a remount hits the endpoint the submission named rather than a reconstruction.
+ */
+const toJob = ({ statusUrl }: HiggsfieldJob) => ({ jobId: statusUrl });
+
+/**
+ * The Higgsfield `kind: 'image'` service: `enqueue` posts the prompt to the model path and yields
+ * the status URL as the job id, `awaitResult` polls it to completion and maps the produced URLs to
+ * variants. Defaults to the documented Soul v2 text-to-image model.
  */
 export const makeHiggsfieldImageService = (
   provider: HiggsfieldProvider = makeHiggsfieldProvider(),
@@ -102,7 +108,11 @@ export const makeHiggsfieldImageService = (
   // Async so a config decode failure surfaces as a rejection, not a synchronous throw.
   enqueue: async (request, { apiKey, signal }) => {
     const config = decodeImageConfig(request);
-    return provider.enqueue({ model: config.model, body: { prompt: config.prompt } }, credentials(apiKey, signal));
+    const job = await provider.enqueue(
+      { model: config.model, body: { prompt: config.prompt } },
+      credentials(apiKey, signal),
+    );
+    return toJob(job);
   },
   awaitResult: async (jobId, { apiKey, signal, onProgress }) => {
     const output = await provider.awaitResult(jobId, {
@@ -117,7 +127,7 @@ export const makeHiggsfieldImageService = (
  * The Higgsfield `kind: 'video'` service. The video models animate a still, so `enqueue` first
  * produces one from the prompt (unless the config names an `imageUrl`) — a synchronous Soul job
  * inside the enqueue, since the studio persists only one job id — then submits the animation, whose
- * id is what `awaitResult` polls.
+ * status URL is what `awaitResult` polls.
  */
 export const makeHiggsfieldVideoService = (
   provider: HiggsfieldProvider = makeHiggsfieldProvider(),
@@ -138,13 +148,17 @@ export const makeHiggsfieldVideoService = (
         { model: config.stillModel ?? HIGGSFIELD_DEFAULT_STILL_MODEL, body: { prompt: config.prompt } },
         options,
       );
-      const output = await provider.awaitResult(still.jobId, options);
+      const output = await provider.awaitResult(still.statusUrl, options);
       if (output.kind !== 'image') {
         throw new Error(`Higgsfield still model returned ${output.kind}, expected an image.`);
       }
       imageUrl = output.urls[0];
     }
-    return provider.enqueue({ model: config.model, body: { prompt: config.prompt, image_url: imageUrl } }, options);
+    const job = await provider.enqueue(
+      { model: config.model, body: { prompt: config.prompt, image_url: imageUrl } },
+      options,
+    );
+    return toJob(job);
   },
   awaitResult: async (jobId, { apiKey, signal, onProgress }) => {
     const output = await provider.awaitResult(jobId, {

@@ -129,6 +129,20 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
       if (!artifact || !isArtifact(artifact)) {
         return;
       }
+      // The project link goes first: it is the write that can fail (the operation loads and flushes
+      // the project), and the lightbox write after it is in-memory and cannot, so a failure leaves
+      // neither link rather than a lightbox item the project does not own.
+      const project = Obj.getParent(lightbox);
+      if (project && Obj.instanceOf(Project.Project, project)) {
+        const { error } = await invokePromise(
+          ProjectOperation.ArtifactAdd,
+          { project: Ref.make(project), object: Ref.make(artifact) },
+          { spaceId: db.spaceId, notify: { error: ['add-artifact.error.title', { ns: meta.profile.key }] } },
+        );
+        if (error) {
+          return;
+        }
+      }
       Obj.update(lightbox, (lightbox) => {
         lightbox.items.push(Ref.make(artifact));
         lightbox.layout.cells[artifact.id] = {
@@ -137,14 +151,6 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
           height: CELL_SIZE,
         };
       });
-      const project = Obj.getParent(lightbox);
-      if (project && Obj.instanceOf(Project.Project, project)) {
-        await invokePromise(
-          ProjectOperation.ArtifactAdd,
-          { project: Ref.make(project), object: Ref.make(artifact) },
-          { spaceId: db.spaceId },
-        );
-      }
     },
     [lightbox, bounds, invokePromise],
   );

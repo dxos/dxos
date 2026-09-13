@@ -8,7 +8,7 @@ A **headless** Composer plugin that makes [Higgsfield](https://higgsfield.ai) av
    stored as one `AccessToken.token` (`<id>:<secret>`) in ECHO.
 2. Two **`GenerationService`s** (kinds `image` and `video`, id `higgsfield`) over one provider
    implementing the asynchronous contract (`enqueue` → `awaitResult`): `POST /<model path>` then
-   poll `GET /requests/{request_id}/status`. The kind-specific request config is
+   poll the `status_url` it returns. The kind-specific request config is
    `{ model, prompt }`; the image service defaults the model to `higgsfield-ai/soul/v2/standard`.
 
 The credential is resolved at generation time by `plugin-studio`'s `generate` operation via

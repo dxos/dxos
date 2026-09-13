@@ -38,9 +38,13 @@ for the media kinds the API produces.
   `X-Cors-Proxy-Authorization` for the proxy to restore (the path plugin-typefully and plugin-duffel
   already use). Verified live: an unknown request id answers `404` (credential accepted), and a
   submit answered `403 not_enough_credits` — the request reached Higgsfield and was authenticated.
-- **D5 — Poll per the docs.** 2 s initial interval, ×1.5 backoff to a 10 s ceiling, 5 min
-  application timeout, `5xx` retried, any other non-2xx stops. The non-terminal status is reported
-  through `onProgress({ status })` so the studio meter shows Queued / Generating.
+- **D5 — Poll per the docs.** The submit response's `status_url` is polled verbatim (the documented
+  `/requests/{id}/status` only when a response omits it) and is what the studio persists as the job
+  id, so a poll resumed after a remount hits the endpoint the submission named. 2 s initial
+  interval, ×1.5 backoff to a 10 s ceiling, `5xx` retried, any other non-2xx stops. One 5 min
+  operation deadline covers every poll and the sleeps between them, and each HTTP round trip has
+  its own 60 s deadline, so a stalled socket cannot pend past either. The non-terminal status is
+  reported through `onProgress({ status })` so the studio meter shows Queued / Generating.
 - **D6 — Output mime follows the media produced**, not the service kind: `images[]` →
   `image/jpeg`, `video` → `video/mp4`, `audio(s)` → `audio/mpeg`. A video model entered in an image
   artifact still yields a playable variant.

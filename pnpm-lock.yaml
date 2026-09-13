@@ -11068,6 +11068,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link

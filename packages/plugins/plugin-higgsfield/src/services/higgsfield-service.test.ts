@@ -9,14 +9,12 @@ import { HIGGSFIELD_DEFAULT_IMAGE_MODEL } from '../constants.ts';
 import { HiggsfieldProvider } from './higgsfield-provider.ts';
 import { makeHiggsfieldImageService, makeHiggsfieldVideoService, toVariants } from './higgsfield-service.ts';
 
-const json = (value: unknown) => new Response(JSON.stringify(value));
-
 describe('Higgsfield generation services', () => {
   test('image service defaults the model and forwards the prompt', async ({ expect }) => {
     let captured: { url: string; body: Record<string, unknown> } | undefined;
     const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       captured = { url: String(input), body: JSON.parse(String(init?.body)) };
-      return json({ status: 'queued', request_id: 'req-1' });
+      return json({ status: 'queued', request_id: 'req-1', status_url: 'https://status.higgsfield.ai/req-1' });
     };
     const service = makeHiggsfieldImageService(new HiggsfieldProvider({ fetch: fetchImpl }));
     expect(service.kind).toBe('image');
@@ -31,7 +29,8 @@ describe('Higgsfield generation services', () => {
       { ...service.defaultRequest, prompt: 'hello', count: 2 },
       { apiKey: Redacted.make('id:secret') },
     );
-    expect(jobId).toBe('req-1');
+    // The persisted job id is the API's status url, not the request id.
+    expect(jobId).toBe('https://status.higgsfield.ai/req-1');
     expect(captured?.url).toContain(`/${HIGGSFIELD_DEFAULT_IMAGE_MODEL}`);
     expect(captured?.body).toEqual({ prompt: 'hello' });
   });
@@ -61,7 +60,7 @@ describe('Higgsfield generation services', () => {
       { ...service.defaultRequest, prompt: 'slow dolly in' },
       { apiKey: Redacted.make('id:secret'), onProgress: ({ status }) => statuses.push(status) },
     );
-    expect(jobId).toBe('video-1');
+    expect(jobId).toBe('https://api.higgsfield.ai/requests/video-1/status');
     expect(calls.map((call) => call.url.split('.ai/')[1])).toEqual([
       'higgsfield-ai/soul/v2/standard',
       'higgsfield-ai/dop/lite',
@@ -118,3 +117,5 @@ describe('Higgsfield generation services', () => {
     expect(toVariants({ kind: 'audio', urls: ['a'] })[0]?.contentType).toBe('audio/mpeg');
   });
 });
+
+const json = (value: unknown) => new Response(JSON.stringify(value));

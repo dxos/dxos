@@ -72,6 +72,7 @@ export const translations = [
         'delete.label': 'Delete artifact',
         'delete-variant.label': 'Delete variant',
         'add-artifact.label': 'Add artifact',
+        'add-artifact.error.title': 'Could not add the artifact to the project.',
         'append-frame.label': 'Append frame',
         'delete-frame.label': 'Delete frame',
         'drag-frame.label': 'Drag to reorder',

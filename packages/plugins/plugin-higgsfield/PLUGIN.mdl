@@ -57,9 +57,9 @@ feat HiggsfieldGenerationService
   enqueue:
     endpoint: POST https://api.higgsfield.ai/<model>   # via edge CORS proxy; header Authorization: Key id:secret
     body: { prompt } (image) | { prompt, image_url } (video — the still is a synchronous Soul job inside enqueue)
-    returns: { jobId: request_id }   # the animation's id for video
+    returns: { jobId: status_url }   # the animation's status url for video; polled verbatim
   awaitResult:
-    endpoint: GET https://api.higgsfield.ai/requests/{jobId}/status   # 2s → 10s backoff, 5 min timeout
+    endpoint: GET {status_url}   # 2s → 10s backoff, 5 min operation deadline, 60s per round trip
     terminal: completed | failed | nsfw | canceled
     returns: variants from images[].url (image/jpeg) | video.url (video/mp4) | audio(s) (audio/mpeg)
     progress: onProgress({ status: Queued | Generating | … })
@@ -126,7 +126,7 @@ test QA-1: Connect Higgsfield and generate an image
         const artifact = await space.db.load($created.object);
         const last = await space.db.load(artifact.variants[artifact.variants.length - 1]);
         return $generated.count >= 1 && last.contentType === 'image/jpeg' && typeof last.url === 'string' && last.url.startsWith('https://');
-      note: Async provider — `enqueue` returns the request_id, `awaitResult` polls `GET /requests/{id}/status` until 'completed' before the operation returns.
+      note: Async provider — `enqueue` returns the submit response's status_url, `awaitResult` polls it until 'completed' before the operation returns.
   after:
     - name: Delete the Artifact
       do: Right-click "QA Soul Image" in the navtree and choose Delete.

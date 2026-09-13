@@ -40,6 +40,15 @@ describe('provider options cache', () => {
     expect(calls.count).toBe(2);
   });
 
+  test('credentials whose fingerprints collide never share a list', async ({ expect }) => {
+    const calls = { count: 0 };
+    const provider = makeProvider(calls);
+    // A known FNV-1a 32-bit collision pair.
+    await loadProviderOptions(provider, 'model', { apiKey: Redacted.make('costarring') });
+    await loadProviderOptions(provider, 'model', { apiKey: Redacted.make('liquid') });
+    expect(calls.count).toBe(2);
+  });
+
   test('a failed load is not cached', async ({ expect }) => {
     const calls = { count: 0 };
     const provider = makeProvider(calls, true);
