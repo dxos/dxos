@@ -459,13 +459,15 @@ export class AppManager {
 
     // Waits for an outcome rather than timing out into one: a type either shows its form or closes
     // the dialog, and a page stalled past a short bound would otherwise read as "no form" and leave
-    // the modal open over the next step.
+    // the modal open over the next step. Closed content can stay mounted, so only open content counts.
     const outcome = await this.page.waitForFunction(
       () => {
         if (document.querySelector('[data-testid="create-object-form"]')) {
           return 'form';
         }
-        return document.querySelector('[data-scope="dialog"][data-part="content"]') ? undefined : 'closed';
+        return document.querySelector('[data-scope="dialog"][data-part="content"][data-state="open"]')
+          ? undefined
+          : 'closed';
       },
       undefined,
       { timeout: 30_000 },
