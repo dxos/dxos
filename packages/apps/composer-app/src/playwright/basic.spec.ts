@@ -102,27 +102,29 @@ test.describe('Basic tests', () => {
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
   });
 
-  test('logout', async ({ browserName }) => {
-    // Logout wipes storage and triggers a full page reload; post-reset boot (HTML + bundle parse +
-    // plugin manager + identity creation) consistently runs ~8-11s, which
-    // doesn't fit the default 60s test timeout comfortably alongside setup.
-    test.slow();
+  test.describe(() => {
+    test.skip(
+      ({ browserName }) => browserName !== 'chromium',
+      'TODO(wittjosiah): This test seems to be flaky in firefox & webkit.',
+    );
 
-    // TODO(wittjosiah): This test seems to be flaky in firefox & webkit.
-    if (browserName !== 'chromium') {
-      test.skip();
-    }
+    test('logout', async () => {
+      // Logout wipes storage and triggers a full page reload; post-reset boot (HTML + bundle parse +
+      // plugin manager + identity creation) consistently runs ~8-11s, which
+      // doesn't fit the default 60s test timeout comfortably alongside setup.
+      test.slow();
 
-    await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+      await host.createSpace();
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
 
-    await host.openUserDevices();
-    await host.logout();
-    // Wait for the reset to complete and attempt to reload.
-    await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
-    // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
-    // 30s gives ~3x headroom over the observed worst case.
-    // After reset the exemplar space is re-seeded alongside the default space.
-    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
+      await host.openUserDevices();
+      await host.logout();
+      // Wait for the reset to complete and attempt to reload.
+      await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
+      // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
+      // 30s gives ~3x headroom over the observed worst case.
+      // After reset the exemplar space is re-seeded alongside the default space.
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
+    });
   });
 });
