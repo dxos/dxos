@@ -29,6 +29,7 @@ import {
   createRepo,
   createRepoTopology,
   createSqliteAdapter,
+  createStarTopology,
   disconnectAdapters,
   findInStates,
   reconnectAdapters,
@@ -370,6 +371,40 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
 
       await expect.poll(() => handleB.doc()?.fromHost, { timeout: 30_000 }).toEqual('host-offline');
       await expect.poll(() => handleA.doc()?.fromClient, { timeout: 30_000 }).toEqual('client-offline');
+    });
+
+    test('losing one peer mid-round does not hold back edits for the others', { timeout: 30_000 }, async () => {
+      let server1State: 'on' | 'off' = 'on';
+      const { repos, adapters } = await createStarTopology({
+        connectionStateProviderByConnection: { 0: () => server1State },
+        subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
+      });
+      const [client, , server2] = repos;
+      await connectAdapters(adapters);
+
+      const handle = client.create<{ text?: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'first';
+      });
+      await waitForSubductionSave();
+      const observed = await findInStates<{ text?: string }>(server2, handle.url, FIND_STATES);
+      await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      // server1 goes silent, so the round for this edit waits on a reply that never comes.
+      server1State = 'off';
+      handle.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await waitForSubductionSave();
+      handle.change((doc: any) => {
+        doc.text = 'third';
+      });
+      await waitForSubductionSave();
+
+      const [clientSide, server1Side] = adapters[0];
+      clientSide.peerDisconnected(server1Side.peerId!);
+      server1Side.peerDisconnected(clientSide.peerId!);
+      await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
     });
 
     // Mirrored from `automerge-repo.test.ts:'replicate document after request'`,

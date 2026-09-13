@@ -63,6 +63,11 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   changes, with a fresh heal budget. Without this, a doc that exhausts heal on a dead connection is
   orphaned forever (a healthy WS never bumps the generation). Verified: after a drop, 100/100 rounds
   re-drove ~2.6 s post-settle and all succeeded.
+- **Wake on connection loss**: `AdapterConnections` reports a bound peer's `peer-disconnected` as
+  `connectionLost`, and `SubductionSource` wakes every round in flight. `subduction_core` never
+  settles requests pending on a removed connection, so without this one edge restart held every
+  in-flight round, and every local edit parked behind it on `needsResync`, for the full timeout.
+  A woken round re-syncs at once against the peers still connected.
 - **`lastSyncGeneration` is stamped at round _start_, not enqueue** — a round queued behind the gate
   across a reconnect must count against the generation it actually runs under.
 

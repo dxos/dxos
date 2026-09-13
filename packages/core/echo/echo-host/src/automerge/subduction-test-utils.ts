@@ -114,6 +114,9 @@ export type ConnectedRepoOptions = {
    * `TestAdapter.createPair` pair, in either direction.
    */
   onMessageByConnection?: Record<number, (message: Message) => void>;
+  /** Per-connection transport gates, keyed by index into `connections`; overrides `connectionStateProvider`. */
+  connectionStateProviderByConnection?: Record<number, TestConnectionStateProvider>;
+  subductionTimeouts?: NonNullable<ConstructorParameters<typeof Repo>[0]>['subductionTimeouts'];
 };
 
 export const createRepoTopology = async <Peers extends string[], Peer extends string = Peers[number]>(args: {
@@ -130,7 +133,10 @@ export const createRepoTopology = async <Peers extends string[], Peer extends st
       args.onMessage?.(message);
       perConnectionHook?.(message);
     };
-    return TestAdapter.createPair(args.options?.connectionStateProvider, handler) as [TestAdapter, TestAdapter];
+    return TestAdapter.createPair(
+      args.options?.connectionStateProviderByConnection?.[idx] ?? args.options?.connectionStateProvider,
+      handler,
+    ) as [TestAdapter, TestAdapter];
   });
   const repos = args.peers.map((peerId, peerIndex) => {
     const network = adapters
@@ -155,6 +161,7 @@ export const createRepoTopology = async <Peers extends string[], Peer extends st
         shareConfig: args.options?.shareConfig,
         ...(subductionPolicy ? { subductionPolicy } : {}),
         ...(signer ? { signer } : {}),
+        ...(args.options?.subductionTimeouts ? { subductionTimeouts: args.options.subductionTimeouts } : {}),
         subductionAdapters: network.map((adapter) => ({
           adapter,
           serviceName: SUBDUCTION_SERVICE_NAME,
