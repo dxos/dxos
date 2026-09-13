@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -15,8 +15,9 @@ import { Accordion, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Empty, useReorderList } from '@dxos/react-ui-list';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
+import { type StoryboardClip, StoryboardPlayer } from '#components';
 import { meta } from '#meta';
-import { Frame, MediaArtifact, Storyboard } from '#types';
+import { Frame, MediaArtifact, Storyboard, type Variant } from '#types';
 
 import { FrameArticle } from './FrameArticle.tsx';
 
@@ -51,6 +52,26 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
     [refs],
   );
   const frames = useAtomValue(framesAtom);
+
+  // The frames' cover variants, in order, as a playlist — the view-time splice of the storyboard.
+  const clipsAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        const clips: StoryboardClip[] = [];
+        for (const frame of get(framesAtom)) {
+          const artifact = frame.artifact ? get(Obj.atomReactive(frame.artifact)) : undefined;
+          const cover: Variant.Variant | undefined =
+            artifact && isArtifact(artifact) && artifact.cover ? get(Obj.atomReactive(artifact.cover)) : undefined;
+          if (cover?.url) {
+            clips.push({ id: frame.id, name: frame.name, src: cover.url, contentType: cover.contentType });
+          }
+        }
+        return clips;
+      }),
+    [framesAtom],
+  );
+  const clips = useAtomValue(clipsAtom);
+  const [playing, setPlaying] = useState(false);
 
   const handleAppend = useCallback(async () => {
     const db = Obj.getDatabase(storyboard);
@@ -98,8 +119,19 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
           },
           () => void handleAppend(),
         )
+        .separator('gap')
+        .action(
+          'play',
+          {
+            label: [playing ? 'stop.label' : 'play.label', { ns: meta.profile.key }],
+            icon: playing ? 'ph--film-strip--regular' : 'ph--play--regular',
+            disposition: 'toolbar',
+            disabled: clips.length === 0,
+          },
+          () => setPlaying((current) => !current),
+        )
         .build(),
-    [handleAppend],
+    [handleAppend, playing, clips.length],
   );
 
   // Every frame open by default; the accordion is the storyboard, not an index of it.
@@ -110,35 +142,41 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
       <Panel.Toolbar asChild>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport>
-            {frames.length === 0 ? (
-              <Empty classNames='h-full' label={t('storyboard-empty.message')} />
-            ) : (
-              <Accordion.Root<Frame.Frame>
-                items={frames}
-                getId={getId}
-                defaultValue={defaultValue}
-                classNames='flex flex-col divide-y divide-subdued-separator'
-              >
-                {({ items }) =>
-                  items.map((frame, index) => (
-                    <FrameArticle
-                      key={frame.id}
-                      frame={frame}
-                      index={index}
-                      attendableId={attendableId}
-                      reorder={reorder}
-                      onDelete={handleDelete}
-                    />
-                  ))
-                }
-              </Accordion.Root>
-            )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
+      {playing ? (
+        <Panel.Content>
+          <StoryboardPlayer clips={clips} onClose={() => setPlaying(false)} />
+        </Panel.Content>
+      ) : (
+        <Panel.Content asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
+              {frames.length === 0 ? (
+                <Empty classNames='h-full' label={t('storyboard-empty.message')} />
+              ) : (
+                <Accordion.Root<Frame.Frame>
+                  items={frames}
+                  getId={getId}
+                  defaultValue={defaultValue}
+                  classNames='flex flex-col divide-y divide-subdued-separator'
+                >
+                  {({ items }) =>
+                    items.map((frame, index) => (
+                      <FrameArticle
+                        key={frame.id}
+                        frame={frame}
+                        index={index}
+                        attendableId={attendableId}
+                        reorder={reorder}
+                        onDelete={handleDelete}
+                      />
+                    ))
+                  }
+                </Accordion.Root>
+              )}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      )}
     </Panel.Root>
   );
 };

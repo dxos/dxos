@@ -3,6 +3,7 @@
 //
 
 export * from './MediaArtifactCard/index.ts';
+export * from './StoryboardPlayer/index.ts';
 export * from './GalleryImage/index.ts';
 export * from './VariantGallery/index.ts';
 export * from './VariantRenderer/index.ts';
