@@ -121,7 +121,7 @@ index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..36417e57b19b32e69b2720e03caadf25
      addAdapter(adapter: NetworkAdapterInterface, serviceName: string, role: "connect" | "accept"): void;
  }
 diff --git a/dist/subduction/AdapterConnections.js b/dist/subduction/AdapterConnections.js
-index 40f525a6be944be10dd5e707c73f6af48d7ffde1..b8a94825db56e90e5d2fc504469d1cc7321c66d4 100644
+index 40f525a6be944be10dd5e707c73f6af48d7ffde1..d1d12a6c6cc89d94c0a4aa665798271936fd77b0 100644
 --- a/dist/subduction/AdapterConnections.js
 +++ b/dist/subduction/AdapterConnections.js
 @@ -1,15 +1,19 @@
@@ -145,7 +145,7 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..b8a94825db56e90e5d2fc504469d1cc7
      }
      // ── ConnectionManager interface ─────────────────────────────────────
      isConnecting() {
-@@ -32,17 +36,27 @@ export class AdapterConnections {
+@@ -32,17 +36,26 @@ export class AdapterConnections {
      shutdown() {
          this.#isShutdown = true;
          this.#onChangeCallback = null;
@@ -169,12 +169,11 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..b8a94825db56e90e5d2fc504469d1cc7
 +        adapter.on("peer-disconnected", ({ peerId }) => {
 +            if (this.#isShutdown || !boundPeers.delete(peerId))
 +                return;
-+            this.#generation++;
 +            this.#onChangeCallback?.({ connectionLost: true });
          });
          void this.#watchAdapter(adapter);
          adapter.connect(this.#localPeerId);
-@@ -53,16 +67,16 @@ export class AdapterConnections {
+@@ -53,16 +66,16 @@ export class AdapterConnections {
              this.#onChangeCallback?.();
          }
      }
@@ -198,7 +197,7 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..b8a94825db56e90e5d2fc504469d1cc7
          }
          catch {
              // Transport connection failed (e.g. peer disconnected during handshake)
-@@ -72,6 +86,23 @@ export class AdapterConnections {
+@@ -72,6 +85,23 @@ export class AdapterConnections {
              this.#generation++;
              this.#onChangeCallback?.();
          }
