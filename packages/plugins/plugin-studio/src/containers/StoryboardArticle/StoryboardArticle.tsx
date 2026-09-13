@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Accordion, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -73,10 +73,12 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   const clips = useAtomValue(clipsAtom);
   const [playing, setPlaying] = useState(false);
 
-  const handleAppend = useCallback(async () => {
+  // The create dialog makes the artifact in the space; the frame's ref and parent edge make it the
+  // frame's (ref before edge: the frame's `artifact` ref declares the edge).
+  const createArtifact = useCallback(async () => {
     const db = Obj.getDatabase(storyboard);
     if (!db) {
-      return;
+      return undefined;
     }
     const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
       target: db,
@@ -84,13 +86,32 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
       navigable: false,
     });
     const artifact = ref?.target;
-    if (!artifact || !isArtifact(artifact)) {
+    return artifact && isArtifact(artifact) ? artifact : undefined;
+  }, [storyboard, invokePromise]);
+
+  const handleAppend = useCallback(async () => {
+    const artifact = await createArtifact();
+    if (!artifact) {
       return;
     }
     const frame = Storyboard.appendFrame(storyboard, Frame.make({ name: artifact.name, artifact }));
-    // Ref before parent edge (the frame's `artifact` ref declares it): the artifact goes with its frame.
     Obj.setParent(artifact, frame);
-  }, [storyboard, invokePromise]);
+  }, [storyboard, createArtifact]);
+
+  // A frame made without an artifact (an agent's generic create, a cleared ref) gets one here.
+  const handleAddArtifact = useCallback(
+    async (frame: Frame.Frame) => {
+      const artifact = await createArtifact();
+      if (!artifact) {
+        return;
+      }
+      Obj.update(frame, (frame) => {
+        frame.artifact = Ref.make(artifact);
+      });
+      Obj.setParent(artifact, frame);
+    },
+    [createArtifact],
+  );
 
   const handleDelete = useCallback(
     (frame: Frame.Frame) => {
@@ -168,6 +189,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
                         attendableId={attendableId}
                         reorder={reorder}
                         onDelete={handleDelete}
+                        onAddArtifact={handleAddArtifact}
                       />
                     ))
                   }

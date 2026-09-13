@@ -8,8 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { Accordion, Icon, IconButton, useTranslation } from '@dxos/react-ui';
-import { DropIndicator, type ReorderListController, useReorderItem } from '@dxos/react-ui-list';
-import { Empty } from '@dxos/react-ui-list';
+import { DropIndicator, Empty, type ReorderListController, useReorderItem } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { type Frame } from '#types';
@@ -22,6 +21,8 @@ export type FrameArticleProps = {
   /** Reorder controller of the enclosing storyboard; the header's handle drags the frame. */
   reorder: ReorderListController<Frame.Frame>;
   onDelete?: (frame: Frame.Frame) => void;
+  /** Attaches a new artifact to a frame that has none. */
+  onAddArtifact?: (frame: Frame.Frame) => void;
 };
 
 /**
@@ -31,7 +32,7 @@ export type FrameArticleProps = {
  * nothing to fill. The artifact's toolbar reads its contributed actions (Connect) from the
  * artifact's node under the storyboard, while attention follows the storyboard plank.
  */
-export const FrameArticle = ({ frame, index, attendableId, reorder, onDelete }: FrameArticleProps) => {
+export const FrameArticle = ({ frame, index, attendableId, reorder, onDelete, onAddArtifact }: FrameArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   // The live object, not a snapshot: the surface filter checks the subject's type, and a sync
   // `.target` read would leave the frame empty until something else re-rendered it.
@@ -83,7 +84,20 @@ export const FrameArticle = ({ frame, index, attendableId, reorder, onDelete }: 
               limit={1}
             />
           ) : (
-            <Empty label={t('frame-empty.message')} />
+            <Empty
+              label={
+                <span className='flex flex-col items-center gap-2'>
+                  {t('frame-empty.message')}
+                  {onAddArtifact && (
+                    <IconButton
+                      icon='ph--plus--regular'
+                      label={t('add-frame-artifact.label')}
+                      onClick={() => onAddArtifact(frame)}
+                    />
+                  )}
+                </span>
+              }
+            />
           )}
         </div>
       </Accordion.ItemBody>

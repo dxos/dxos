@@ -27,6 +27,9 @@ export const make = (): Skill.Skill =>
   Skill.make({
     key,
     name: 'Studio',
+    // A session handed a storyboard task without this bound (an older delegation, a plain chat)
+    // can pull it in itself instead of stalling on the user.
+    agentCanEnable: true,
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`

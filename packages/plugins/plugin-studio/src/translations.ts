@@ -78,6 +78,7 @@ export const translations = [
         'drag-frame.label': 'Drag to reorder',
         'frame.placeholder': 'Untitled frame',
         'frame-empty.message': 'No artifact yet.',
+        'add-frame-artifact.label': 'Add artifact',
         'storyboard-empty.message': 'No frames yet — append one from the toolbar.',
         'play.label': 'Play',
         'stop.label': 'Back to frames',
