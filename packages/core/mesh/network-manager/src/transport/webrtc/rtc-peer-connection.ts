@@ -34,13 +34,6 @@ export type RtcPeerChannelFactoryOptions = {
   legacyInitiator?: boolean;
 };
 
-/** A data channel together with the frames that reached it before a transport took it over. */
-export type ClaimedDataChannel = {
-  channel: RTCDataChannel;
-  /** Filled until the transport assigns its own `onmessage`: a browser drops a message nobody listens for. */
-  received: unknown[];
-};
-
 /**
  * A factory for rtc Transport implementations for a particular peer.
  * Contains WebRTC connection establishment logic.
@@ -51,7 +44,7 @@ export class RtcPeerConnection {
   private readonly _channelCreatedCallbacks = new Map<string, ChannelCreatedCallback>();
   // Channels indexed by topic.
   private readonly _transportChannels = new Map<string, RtcTransportChannel>();
-  private readonly _dataChannels = new Map<string, ClaimedDataChannel>();
+  private readonly _dataChannels = new Map<string, RTCDataChannel>();
   // A peer is ready to receive ICE candidates when local and remote description were set.
   private readonly _readyForCandidates = new Trigger();
 
@@ -82,7 +75,7 @@ export class RtcPeerConnection {
     return this._connection;
   }
 
-  public async createDataChannel(topic: string): Promise<ClaimedDataChannel> {
+  public async createDataChannel(topic: string): Promise<RTCDataChannel> {
     const connection = await this._openConnection();
     if (!this._transportChannels.has(topic)) {
       if (!this._transportChannels.size) {
@@ -91,13 +84,12 @@ export class RtcPeerConnection {
       throw new Error('Transport closed while connection was being open');
     }
     if (this._initiator) {
-      const claimed: ClaimedDataChannel = { channel: connection.createDataChannel(topic), received: [] };
-      this._dataChannels.set(topic, claimed);
-      return claimed;
+      const channel = connection.createDataChannel(topic);
+      this._dataChannels.set(topic, channel);
+      return channel;
     } else {
       const existingChannel = this._dataChannels.get(topic);
-      // A previous transport on this topic closed its channel; the peer opens a new one to replace it.
-      if (existingChannel && !isClosing(existingChannel.channel)) {
+      if (existingChannel) {
         return existingChannel;
       }
       log('waiting for initiator-peer to open a data channel');
@@ -111,27 +103,12 @@ export class RtcPeerConnection {
     const channel = new RtcTransportChannel(this, options);
     this._transportChannels.set(options.topic, channel);
     channel.closed.on(() => {
-      // A successor may already own the topic, and with it the pending claim.
-      if (this._transportChannels.get(options.topic) !== channel) {
-        return;
-      }
       this._transportChannels.delete(options.topic);
-      this._channelCreatedCallbacks
-        .get(options.topic)
-        ?.reject(new Error('Transport closed before its data channel arrived.'));
-      this._channelCreatedCallbacks.delete(options.topic);
       if (this._transportChannels.size === 0) {
         void this._lockAndCloseConnection();
       }
     });
     return channel;
-  }
-
-  /** Forgets a channel its transport has finished with, unless a replacement has already taken its place. */
-  public releaseDataChannel(topic: string, claimed: ClaimedDataChannel): void {
-    if (this._dataChannels.get(topic) === claimed) {
-      this._dataChannels.delete(topic);
-    }
   }
 
   @synchronized
@@ -248,15 +225,11 @@ export class RtcPeerConnection {
         }
 
         log('ondatachannel', { label: event.channel.label });
-        const claimed: ClaimedDataChannel = { channel: event.channel, received: [] };
-        // No transport may exist for this topic yet, and the peer's first frame is its only channel handshake.
-        event.channel.binaryType = 'arraybuffer';
-        event.channel.onmessage = (message) => claimed.received.push(message.data);
-        this._dataChannels.set(event.channel.label, claimed);
+        this._dataChannels.set(event.channel.label, event.channel);
         const pendingCallback = this._channelCreatedCallbacks.get(event.channel.label);
         if (pendingCallback) {
           this._channelCreatedCallbacks.delete(event.channel.label);
-          pendingCallback.resolve(claimed);
+          pendingCallback.resolve(event.channel);
         }
       },
     });
@@ -546,9 +519,7 @@ const createIceFailureError = (details: IceCandidateErrorDetails[]) => {
   return new ConnectivityError({ message: `ICE failed:\n${candidateErrors.join('\n')}` });
 };
 
-const isClosing = (channel: RTCDataChannel) => channel.readyState === 'closing' || channel.readyState === 'closed';
-
 type ChannelCreatedCallback = {
-  resolve: (channel: ClaimedDataChannel) => void;
+  resolve: (channel: RTCDataChannel) => void;
   reject: (reason?: any) => void;
 };

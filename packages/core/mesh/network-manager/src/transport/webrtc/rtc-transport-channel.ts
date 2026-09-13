@@ -13,7 +13,7 @@ import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type Transport, type TransportOptions, type TransportStats } from '../transport.ts';
-import { type ClaimedDataChannel, type RtcPeerConnection } from './rtc-peer-connection.ts';
+import { type RtcPeerConnection } from './rtc-peer-connection.ts';
 import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-transport-stats.ts';
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
@@ -51,7 +51,6 @@ export class RtcTransportChannel extends Resource implements Transport {
   public readonly errors = new ErrorStream();
 
   private _channel: RTCDataChannel | undefined;
-  private _claimed: ClaimedDataChannel | undefined;
   private _stream: Duplex | undefined;
   /** Frames delivered before {@link _stream} exists; nothing retransmits them. */
   private _bufferedMessages: (Buffer | string)[] = [];
@@ -82,14 +81,12 @@ export class RtcTransportChannel extends Resource implements Transport {
     this._isChannelCreationInProgress = true;
     this._connection
       .createDataChannel(this._options.topic)
-      .then((claimed) => {
+      .then((channel) => {
         if (this.isOpen) {
-          this._claimed = claimed;
-          this._channel = claimed.channel;
-          this._initChannel(claimed.channel, claimed.received);
+          this._channel = channel;
+          this._initChannel(channel);
         } else {
-          this._safeCloseChannel(claimed.channel);
-          this._connection.releaseDataChannel(this._options.topic, claimed);
+          this._safeCloseChannel(channel);
         }
       })
       .catch((err) => {
@@ -114,17 +111,13 @@ export class RtcTransportChannel extends Resource implements Transport {
       this._channel = undefined;
       this._stream = undefined;
     }
-    if (this._claimed) {
-      this._connection.releaseDataChannel(this._options.topic, this._claimed);
-      this._claimed = undefined;
-    }
     this._bufferedMessages.length = 0;
     this.closed.emit();
 
     log('closed');
   }
 
-  private _initChannel(channel: RTCDataChannel, received: ClaimedDataChannel['received']): void {
+  private _initChannel(channel: RTCDataChannel): void {
     // Bytes rather than the default `blob`, whose async conversion lets two frames complete out of
     // arrival order.
     channel.binaryType = 'arraybuffer';
@@ -155,9 +148,6 @@ export class RtcTransportChannel extends Resource implements Transport {
       buffered.forEach((message) => duplex.push(message));
       this.connected.emit();
     };
-
-    // In the same turn as replacing the peer connection's `onmessage`, so no frame falls between the two.
-    received.splice(0).forEach((data) => this._receive(data));
 
     Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
       onopen: open,
