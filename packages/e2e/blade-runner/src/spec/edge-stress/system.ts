@@ -218,6 +218,36 @@ export const joinPendingSpaces = async (model: Model, real: Real, client: Client
 const SYNC_BARRIER_MS = 30_000;
 
 /**
+ * `flush` proves nothing about the connection beyond its transport: EDGE answers the client's own
+ * keepalive ping via `setWebSocketAutoResponse` at the runtime level, without waking or routing
+ * through the Durable Object actually serving the request, so a peer stuck behind a stalled
+ * dependency downstream of the router still looks fully connected to the client's own heartbeat —
+ * that heartbeat is the client's only signal to restart a dead connection, so it never fires and the
+ * peer never reconnects on its own. A `flush` that blows through the full quiescence budget is
+ * therefore not proof the peer is unrecoverable, only that this connection made no progress; force a
+ * hard reconnect (which redials from scratch, unlike the SDK's own reconnect logic that this incident
+ * showed does not trigger) and give the peer one more full attempt before treating the stall as real.
+ */
+const flushOrReconnect = async (real: Real, client: ClientIndex, spaceSlot: number): Promise<void> => {
+  const label = `flush(client ${client}, space ${spaceSlot})`;
+  try {
+    await withDeadline(
+      label,
+      real.spec.quiescenceTimeoutMs,
+      real.replicants[client].brain.flush({ spaceId: real.spaceIds[spaceSlot] }),
+    );
+  } catch (err) {
+    log.warn('flush stalled; forcing a reconnect and retrying once', { client, space: spaceSlot, err });
+    await real.replicants[client].brain.restart();
+    await withDeadline(
+      `${label} after reconnect`,
+      real.spec.quiescenceTimeoutMs,
+      real.replicants[client].brain.flush({ spaceId: real.spaceIds[spaceSlot] }),
+    );
+  }
+};
+
+/**
  * Wait until every named device reports the EDGE peer fully caught up, and report whether it did.
  *
  * Deliberately not an assertion. `getSyncState` is unreliable between EDGE and the client
@@ -230,11 +260,7 @@ export const quiesce = async (real: Real, spaceSlot: number, clients: ClientInde
   const pending = new Map<ClientIndex, string>();
 
   for (const client of clients) {
-    await withDeadline(
-      `flush(client ${client}, space ${spaceSlot})`,
-      real.spec.quiescenceTimeoutMs,
-      real.replicants[client].brain.flush({ spaceId: real.spaceIds[spaceSlot] }),
-    );
+    await flushOrReconnect(real, client, spaceSlot);
   }
 
   while (Date.now() < deadline) {
