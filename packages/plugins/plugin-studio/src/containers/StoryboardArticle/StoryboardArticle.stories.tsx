@@ -40,8 +40,15 @@ const FRAMES: Pick<MockArtifactProps, 'name' | 'prompt' | 'generated'>[] = [
     prompt: 'A wide shot of a studio at dawn, light through tall windows.',
     generated: true,
   },
-  { name: 'The reveal', prompt: 'Slow push in on a desk where a storyboard takes shape.', generated: true },
-  { name: 'Close-up', prompt: 'A close-up of a hand pinning the last frame to the board.' },
+  {
+    name: 'The reveal',
+    prompt: 'Slow push in on a desk where a storyboard takes shape.',
+    generated: true,
+  },
+  {
+    name: 'Close-up',
+    prompt: 'A close-up of a hand pinning the last frame to the board.',
+  },
 ];
 
 const ATTENDABLE_ID = 'test';
@@ -68,7 +75,7 @@ const DefaultStory = () => {
   // The article beside its frame companion, the way the deck lays them out: picking a frame in
   // the stack selects it on the plank, and the companion follows the selection.
   return (
-    <div className='grid grid-cols-[1fr_28rem] h-full overflow-hidden' {...attentionAttributes}>
+    <div className='dx-expand grid grid-cols-[1fr_28rem]' {...attentionAttributes}>
       <StoryboardArticle role='article' subject={storyboard} attendableId={ATTENDABLE_ID} />
       <div className='grid overflow-hidden border-s border-separator'>
         <FrameCompanion companionTo={storyboard} attendableId={ATTENDABLE_ID} />

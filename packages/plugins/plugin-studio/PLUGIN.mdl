@@ -309,10 +309,11 @@ feat Storyboard
     Storyboard { name?, frames: Ref<Frame>[] (SetParent) } / Frame { name?, notes?, artifact?: Ref<MediaArtifact> }.
     StoryboardArticle: toolbar (Append frame → artifact create dialog; Delete frame; Play) +
     master/detail on a Splitter — a FrameStack of reorderable FramePreview thumbnails (sidebar
-    width) and the selected frame's cover in a MediaPlayer. Picking a frame selects it on the plank
-    and opens the `~frame` companion (FrameCompanion), which hosts the artifact's article (form,
-    Generate, variants) through the Article surface with a nodeId under the storyboard (hidden
-    studio graph nodes), so its Connect/Generate work when nested.
+    width) and the selected frame's produced variants (MediaArtifactVariants: All gallery / one
+    variant, cover toggle). Picking a frame selects it on the plank and opens the `~frame`
+    companion (FrameCompanion), which hosts the artifact's compose form (MediaArtifactForm:
+    generator, request form, Generate) with a nodeId under the storyboard (hidden studio graph
+    nodes), so its Connect/Generate work when nested. MediaArtifactArticle is the two stacked.
     StoryboardPlayer plays the frames' cover variants back to back (view-time splice).
   types: [org.dxos.type.storyboard, org.dxos.type.frame]
   operations:

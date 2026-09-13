@@ -63,6 +63,7 @@ export const translations = [
         'generate-error.title': 'Generation failed',
         'close.label': 'Close',
         'artifact-toolbar.menu': 'Artifact toolbar',
+        'variants-toolbar.menu': 'Variants toolbar',
         'all.tab.label': 'All',
         'draft.label': 'Draft',
         'cover.label': 'Use as cover',

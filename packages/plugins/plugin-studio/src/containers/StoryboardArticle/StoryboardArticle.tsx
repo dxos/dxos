@@ -11,7 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { MediaPlayer, Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
+import { Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -22,6 +22,7 @@ import { Frame, MediaArtifact, Storyboard, type Variant } from '#types';
 
 import { FRAME_COMPANION } from '../../constants.ts';
 import { FrameThumbnail } from './FrameThumbnail.tsx';
+import { FrameVariants } from './FrameVariants.tsx';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
@@ -33,8 +34,8 @@ export type StoryboardArticleProps = AppSurface.ObjectArticleProps<Storyboard.St
 
 /**
  * A storyboard as master/detail: the frames as a reorderable stack of previews on the left and the
- * selected frame's cover played on the right; the frame's request form lives in the plank's frame
- * companion, which picking a frame opens. The toolbar's Append frame opens the artifact create
+ * selected frame's produced variants (the All gallery, or one variant played) on the right; the
+ * frame's request form lives in the plank's frame companion, which picking a frame opens. The toolbar's Append frame opens the artifact create
  * dialog — one gesture makes the artifact, parented to its new frame, and the frame, parented to
  * the storyboard. The same shape a slide deck takes; see the plugin design doc.
  */
@@ -83,7 +84,6 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   // falls back to the first frame so a deleted or not-yet-loaded selection shows the opening frame.
   const selectedId = useSelection(attendableId, 'single');
   const selectedFrame = frames.find((frame) => frame.id === selectedId) ?? frames[0];
-  const selectedClip = clips.find((clip) => clip.id === selectedFrame?.id);
   const showItem = useShowItem();
   const handleSelect = useCallback(
     (id: string) => {
@@ -206,18 +206,8 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
             </Splitter.Panel>
             <Splitter.Handle />
             <Splitter.Panel position='end'>
-              {selectedClip ? (
-                // Keyed by frame so the element remounts on a different source.
-                <MediaPlayer
-                  key={selectedClip.id}
-                  classNames='dx-expand'
-                  src={selectedClip.src}
-                  kind={selectedClip.contentType?.startsWith('video/') ? 'video' : undefined}
-                  fit='contain'
-                  alt={selectedClip.name}
-                />
-              ) : (
-                <Empty classNames='h-full' label={t('frame-empty.message')} />
+              {selectedFrame && (
+                <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId} />
               )}
             </Splitter.Panel>
           </Splitter.Root>

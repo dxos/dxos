@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { type Frame } from '#types';
+
+import { MediaArtifactForm } from '../MediaArtifactArticle/MediaArtifactForm.tsx';
 
 export type FrameDetailProps = {
   frame: Frame.Frame;
@@ -22,9 +22,10 @@ export type FrameDetailProps = {
 };
 
 /**
- * The selected frame's artifact through the article surface — the same `MediaArtifactArticle` the
- * artifact has on its own. The artifact's toolbar reads its contributed actions (Connect) from the
- * artifact's node under the storyboard, while attention follows the storyboard plank.
+ * The selected frame's compose form — the artifact's `MediaArtifactForm`, whose toolbar reads its
+ * contributed actions (Connect) from the artifact's node under the storyboard while attention
+ * follows the storyboard plank. The produced variants are the storyboard's main pane, not the
+ * companion's.
  */
 export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -54,14 +55,10 @@ export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailP
   }
 
   return (
-    <Surface.Surface
-      type={AppSurface.Article}
-      data={{
-        subject: artifact,
-        attendableId,
-        nodeId: attendableId ? `${attendableId}/${artifact.id}` : undefined,
-      }}
-      limit={1}
+    <MediaArtifactForm
+      artifact={artifact}
+      attendableId={attendableId}
+      nodeId={attendableId ? `${attendableId}/${artifact.id}` : undefined}
     />
   );
 };
