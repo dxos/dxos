@@ -457,17 +457,24 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
-    // Waited for, not sampled: `isVisible()` answers immediately, so a form that has not painted
-    // yet reads as absent and this returns with the dialog still open, stranding the next caller.
-    // Types that create without a form legitimately never show one, hence the bounded wait.
-    const objectForm = this.page.getByTestId('create-object-form');
-    const hasForm = await objectForm
-      .waitFor({ state: 'visible', timeout: 5_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (!hasForm) {
+    // Waits for an outcome rather than timing out into one: a type either shows its form or closes
+    // the dialog, and a page stalled past a short bound would otherwise read as "no form" and leave
+    // the modal open over the next step.
+    const outcome = await this.page.waitForFunction(
+      () => {
+        if (document.querySelector('[data-testid="create-object-form"]')) {
+          return 'form';
+        }
+        return document.querySelector('[data-scope="dialog"][data-part="content"]') ? undefined : 'closed';
+      },
+      undefined,
+      { timeout: 30_000 },
+    );
+    if ((await outcome.jsonValue()) === 'closed') {
       return;
     }
+
+    const objectForm = this.page.getByTestId('create-object-form');
 
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
