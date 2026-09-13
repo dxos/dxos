@@ -34,6 +34,13 @@ on:
         required: false
         default: false
 
+      # For A/B experiments on a dispatched batch without a commit per variant (e.g. JSC_useBBQJIT=0).
+      e2e_env:
+        type: string
+        description: 'Semicolon-separated KEY=VALUE pairs exported to the e2e test step'
+        required: false
+        default: ''
+
 permissions:
   contents: read
   packages: read
@@ -626,6 +633,24 @@ jobs:
               [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
+      # A page that crashes with nothing on the browser's stderr may have been killed for memory; the
+      # sampler and report below land in the uploaded traces so a dispatched run can tell. Dispatches only.
+      - name: Start resource monitor
+        if: ${{ inputs.e2e || inputs.e2e_only }}
+        env:
+          E2E_ENV: ${{ inputs.e2e_env }}
+        run: |
+          mkdir -p test-results/playwright/sysmon
+          if [ -n "$E2E_ENV" ]; then
+            echo "$E2E_ENV" | tr ';' '\n' | grep '=' | tee -a test-results/playwright/sysmon/e2e-env.txt >> "$GITHUB_ENV"
+          fi
+          nohup sh -c 'while true; do
+            echo "=== $(date -u +%H:%M:%S) memory.current=$(cat /sys/fs/cgroup/memory.current 2>/dev/null)"
+            ps -eo rss,pid,comm --sort=-rss | head -12
+            sleep 3
+          done' > test-results/playwright/sysmon/samples.txt 2>&1 &
+          echo $! > test-results/playwright/sysmon/sampler.pid
+
       - name: Test
         # Sized to a cold cache, not a warm one. The `rest` shard's own tests total under five
         # minutes; the rest is building its ~380 dependencies, which took 34 minutes the last time
@@ -653,6 +678,19 @@ jobs:
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
             --concurrency=1
+
+      - name: Resource report
+        if: ${{ always() && (inputs.e2e || inputs.e2e_only) }}
+        run: |
+          dir=test-results/playwright/sysmon
+          mkdir -p $dir
+          [ -f $dir/sampler.pid ] && kill "$(cat $dir/sampler.pid)" 2>/dev/null || true
+          {
+            for f in memory.max memory.peak memory.events memory.stat; do echo "== $f"; cat /sys/fs/cgroup/$f 2>&1 | head -40; done
+            echo "== free -m"; free -m 2>&1
+            echo "== dmesg"; dmesg 2>&1 | tail -100
+          } > $dir/report.txt
+          grep -A6 '== memory.events' $dir/report.txt || true
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7
