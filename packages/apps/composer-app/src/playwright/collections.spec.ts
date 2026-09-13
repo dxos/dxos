@@ -43,7 +43,10 @@ test.describe('Collection tests', () => {
     await host.renameObject('Collection 2', 1);
 
     // Items are 32px tall.
-    await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 0, y: -15 });
+    await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), {
+      instruction: 'reorder-above',
+      offset: { x: 0, y: -15 },
+    });
 
     // Folders are now in reverse order.
     await expect(host.getObject(0)).toContainText('Collection 2');
@@ -63,7 +66,9 @@ test.describe('Collection tests', () => {
 
     // Selected first: an unvisited collection takes the drop beside it rather than inside it.
     await host.getObject(1).click();
-    await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), { x: 0, y: 0 });
+    await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), {
+      instruction: 'make-child',
+    });
     // Collection 1 is now inside Collection 2: a row's `data-object-id` is the object's canonical
     // graph path, so Collection 1's parent path is exactly Collection 2's path.
     const collection1 = await host.getObjectByName('Collection 1').getAttribute('data-object-id');

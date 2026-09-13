@@ -238,7 +238,24 @@ export class AppManager {
   //
 
   async toastAction(nth = 0): Promise<void> {
-    await this.page.getByTestId('toast.action').nth(nth).click();
+    const action = this.page.getByTestId('toast.action').nth(nth);
+    const root = action.locator('xpath=ancestor::*[@data-scope="toast" and @data-part="root"][1]');
+    const toastId = await root.getAttribute('data-testid');
+    if (!toastId) {
+      throw new Error('toast root has no data-testid');
+    }
+    // A toast mounts below the viewport and slides in; a press that lands mid-slide releases off the
+    // button and the click never fires. Hovering first also pauses the auto-dismiss timer.
+    await expect(root).toHaveAttribute('data-mounted');
+    await action.hover();
+    await root.evaluate(async (element) => {
+      while (element.getAnimations().some((animation) => animation.playState === 'running')) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+    });
+    await action.click();
+    // A delivered action click dismisses the toast; waiting out its own timer would pass for a missed click.
+    await expect(this.page.getByTestId(toastId)).toBeHidden({ timeout: 2_000 });
   }
 
   async closeToast(nth = 0): Promise<void> {
@@ -505,17 +522,33 @@ export class AppManager {
     return this.currentWorkspace.getByTestId('spacePlugin.object');
   }
 
-  async dragTo(active: Locator, over: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }): Promise<void> {
-    const box = await over.boundingBox();
-    if (box) {
-      await active.hover();
-      await this.page.mouse.down();
-      // Timeouts are for input discretization in WebKit
-      await this.page.waitForTimeout(100);
-      await this.page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
-      await this.page.waitForTimeout(100);
-      await this.page.mouse.up();
+  /**
+   * Drags `active` onto `over` and releases only once `over` reports `instruction` as its drop zone.
+   * The dragged row leaves the list when the drag starts, so rows below it move up: the target is
+   * measured after that, not before.
+   */
+  async dragTo(
+    active: Locator,
+    over: Locator,
+    { instruction, offset = { x: 0, y: 0 } }: { instruction: string; offset?: { x: number; y: number } },
+  ): Promise<void> {
+    const start = await active.boundingBox();
+    if (!start) {
+      throw new Error('drag source has no layout box');
     }
+    await active.hover();
+    await this.page.mouse.down();
+    // Past the drag threshold but still inside the source row.
+    await this.page.mouse.move(start.x + start.width / 2, start.y + start.height / 2 + 6, { steps: 2 });
+    await expect(active).toBeHidden();
+
+    const box = await over.boundingBox();
+    if (!box) {
+      throw new Error('drop target has no layout box');
+    }
+    await this.page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
+    await expect(over).toHaveAttribute('data-instruction', instruction);
+    await this.page.mouse.up();
   }
 
   //
