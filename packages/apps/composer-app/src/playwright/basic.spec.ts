@@ -7,6 +7,7 @@ import { expect, test } from '@playwright/test';
 import { log } from '@dxos/log';
 // TODO(wittjosiah): Importing this causes tests to fail.
 // import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
 
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager.ts';
 import { Markdown, StackPlugin } from './plugins/index.ts';
@@ -24,8 +25,12 @@ test.describe('Basic tests', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   test('create identity, space is created by default', async () => {

@@ -5,6 +5,8 @@
 // TODO(wittjosiah): Consider using playwright locator expects elsewhere for more robust tests.
 import { expect, test } from '@playwright/test';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { AppManager } from './app-manager.ts';
 
 // TODO(wittjosiah): These are skipped because trigger for joyride is currently part of beta auth flow.
@@ -16,8 +18,12 @@ test.describe.skip('First-run tests', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   test('help plugin tooltip displays (eventually) on first run and increments correctly', async () => {

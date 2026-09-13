@@ -5,6 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
 
 import { AppManager } from './app-manager.ts';
 import { Assistant } from './plugins/index.ts';
@@ -35,8 +36,12 @@ test.describe('Chat', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   test('sends a message and receives a response', async () => {

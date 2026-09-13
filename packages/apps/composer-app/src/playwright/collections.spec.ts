@@ -4,6 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { AppManager } from './app-manager.ts';
 
 test.describe('Collection tests', () => {
@@ -14,8 +16,12 @@ test.describe('Collection tests', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   test('create collection', async () => {
