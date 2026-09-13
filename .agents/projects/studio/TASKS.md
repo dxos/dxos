@@ -4,17 +4,19 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 
 ## Phase 1: plugin-higgsfield (image + video provider)
 
-- [ ] Skeleton (`package.json`, `moon.yml`, `dx.config.ts`, `meta`, `events`, `plugin.tsx`,
+- [x] Skeleton (`package.json`, `moon.yml`, `dx.config.ts`, `meta`, `events`, `plugin.tsx`,
       `HiggsfieldPlugin.ts`, `index.ts`) modelled on plugin-heygen; icon `ph--scribble-loop--regular`, hue `lime`.
-- [ ] Connector (`source: higgsfield.ai`): key id + secret form → `AccessToken.token = "id:secret"`.
-- [ ] `HiggsfieldProvider`: `POST /<model>` → `request_id`; poll `GET /requests/{id}/status` with
+- [x] Connector (`source: higgsfield.ai`): key id + secret form → `AccessToken.token = "id:secret"`.
+- [x] `HiggsfieldProvider`: `POST /<model>` → `request_id`; poll `GET /requests/{id}/status` with
       2s→10s backoff; `completed` → `images[].url` | `video.url`; `failed`/`nsfw`/`canceled` → error.
-- [ ] Two `GenerationService`s from one provider: `image` (default model
+- [x] Two `GenerationService`s from one provider: `image` (default model
       `higgsfield-ai/soul/v2/standard`) and `video` (required `model` path, no default).
-- [ ] Unit tests (stubbed fetch) + env-gated live integration test (`HF_API_KEY_ID` / `HF_API_KEY_SECRET`).
-- [ ] Register in composer-app (`plugin-defs.tsx` dev defaults, `package.json`, `tsconfig.json`, `tsconfig.all.json`).
-- [ ] `docs/DESIGN.md`, `PLUGIN.mdl` (+ QA flow), README; build, lint, test, format.
+- [x] Unit tests (stubbed fetch) + env-gated live integration test (`HF_API_KEY_ID` / `HF_API_KEY_SECRET`).
+- [x] Register in composer-app (`plugin-defs.tsx` dev defaults, `package.json`, `tsconfig.json`, `tsconfig.all.json`).
+- [x] `docs/DESIGN.md`, `PLUGIN.mdl` (+ QA flow), README; build, lint, test, format.
+- [x] Verified in the running app: registry card (scribble/lime), Connections → Higgsfield two-field form, Studio artifact provider = Higgsfield with the model default.
 - [ ] PR.
+- [ ] Live generation blocked: the provided account answers `403 not_enough_credits` (auth + proxy proven via the 404 status test).
 
 ## Follow-ups
 

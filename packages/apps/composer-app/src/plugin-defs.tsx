@@ -220,7 +220,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
     // plugin-native's host integration.
     isTauri && !isMobile && !isPopover && FileSystemPlugin.make(),
-    OsrmPlugin.make(),
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
@@ -266,6 +265,7 @@ const experimental: Plugin.Plugin[] = [
   LaMetricPlugin.make(),
   LinearPlugin.make(),
   LingoPlugin.make(),
+  OsrmPlugin.make(),
   S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),

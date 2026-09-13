@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/studio/TASKS.md
     design: .agents/projects/studio/DESIGN.md
     prs: []
-    resume: 'Phase 1 in progress: building plugin-higgsfield.'
+    resume: 'plugin-higgsfield built, tested (15 unit + credit-free live auth test), verified in the app; PR opened. Live generation blocked by `403 not_enough_credits` on the provided account; video model path has no verified default.'
   - name: task-visualization
     status: active
     user: burdon
