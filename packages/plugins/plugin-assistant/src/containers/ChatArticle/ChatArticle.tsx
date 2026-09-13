@@ -129,6 +129,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 {!mobile && viewType !== 'summary' && (
                   <div data-testid='assistant.chat-status' className='absolute bottom-2 left-0 right-0'>
                     <ChatComponent.StatusStack
+                      classNames='border'
                       rowClassNames='dx-document px-4'
                       pillClassNames='px-3 rounded-sm bg-group-surface'
                     />
@@ -136,11 +137,13 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 )}
               </div>
               <div className='dx-document flex flex-col px-4 pb-4'>
-                {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
-                <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
-                {/* On mobile (and in the summary view) the floating stack is dropped, so the activity
+                <div className='border grid grid-cols-2'>
+                  {/* On mobile (and in the summary view) the floating stack is dropped, so the activity
                     line keeps its in-flow slot above the composer. */}
-                {(mobile || viewType === 'summary') && <ChatComponent.Activity classNames='shrink-0' />}
+                  {(mobile || viewType === 'summary') && <ChatComponent.Activity classNames='shrink-0' />}
+                  {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
+                  <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
+                </div>
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}

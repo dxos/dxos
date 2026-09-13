@@ -35,6 +35,7 @@ import {
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
@@ -44,7 +45,6 @@ import { TaskSlashCommands } from '../../commands/index.ts';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
 import {
   ChatStatus,
-  ChatStatusStack,
   ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
@@ -837,6 +837,40 @@ const ChatActivity = ({ classNames }: ThemedClassName) => {
 ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
 //
+// StatusStack
+//
+
+const CHAT_STATUS_STACK_NAME = 'Chat.StatusStack';
+
+type ChatStatusStackProps = ThemedClassName<{
+  /** Applied to each row, so the host can give both lines the same text column. */
+  rowClassNames?: string;
+  /** Applied to the counters pill only, which is the row that carries a surface. */
+  pillClassNames?: string;
+}>;
+
+/**
+ * The activity line stacked on top of the counters pill.
+ *
+ * Ordering is the whole point of the component: the activity line names what the request is doing
+ * and the pill reports what it has cost so far, so the sentence reads as a caption above the
+ * numbers rather than an afterthought below them. Composed here, from the two context-bound parts,
+ * rather than in the container so every host gets the same order.
+ */
+const ChatStatusStack = ({ classNames, rowClassNames, pillClassNames }: ChatStatusStackProps) => (
+  <div className={mx('flex flex-col', classNames)}>
+    <div className={rowClassNames}>
+      <ChatActivity />
+    </div>
+    <div className={rowClassNames}>
+      <ChatStatus classNames={pillClassNames} />
+    </div>
+  </div>
+);
+
+ChatStatusStack.displayName = CHAT_STATUS_STACK_NAME;
+
+//
 // Chat
 //
 
@@ -860,6 +894,7 @@ export type {
   ChatPromptProps,
   ChatQueueProps,
   ChatRootProps,
+  ChatStatusStackProps,
   ChatThreadProps,
   ChatToolbarProps,
 };
