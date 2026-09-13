@@ -33,6 +33,16 @@ log.addProcessor(logProcessor.processor);
 /** Longest rendering of a single logger argument kept in a record. */
 const MAX_ARG_LENGTH = 500;
 
+/** Byte arrays as their length: sync messages carry payloads that would otherwise serialize per byte. */
+function jsonReplacer(this: Record<string, unknown>, key: string, value: unknown): unknown {
+  // `this[key]` is the value before `toJSON`, which a Buffer uses to turn itself into an array.
+  const original = this[key];
+  if (ArrayBuffer.isView(original) || original instanceof ArrayBuffer) {
+    return `<${original.byteLength} bytes>`;
+  }
+  return typeof value === 'bigint' ? value.toString() : value;
+}
+
 /** A logger argument as text: objects as JSON, since their default rendering is `[object Object]`. */
 const renderArg = (arg: unknown): string => {
   if (arg instanceof Error) {
@@ -40,7 +50,7 @@ const renderArg = (arg: unknown): string => {
   }
   if (typeof arg === 'object' && arg !== null) {
     try {
-      return JSON.stringify(arg) ?? Object.prototype.toString.call(arg);
+      return JSON.stringify(arg, jsonReplacer) ?? Object.prototype.toString.call(arg);
     } catch {
       return Object.prototype.toString.call(arg);
     }

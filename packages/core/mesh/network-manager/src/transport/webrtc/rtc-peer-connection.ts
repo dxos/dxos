@@ -140,9 +140,8 @@ export class RtcPeerConnection {
         }
 
         log('onnegotiationneeded');
-        // Under the same lock as offer/answer handling: one connection is shared across swarms, so a
-        // second transport opening its data channel renegotiates while an answer for the first may
-        // still be in flight, and `setLocalDescription` would move the state out from under it.
+        // Under the lock that guards offer/answer handling, so `setLocalDescription` never interleaves
+        // with a remote description being applied.
         await this._offerProcessingMutex.executeSynchronized(async () => {
           try {
             const offer = await connection.createOffer();
