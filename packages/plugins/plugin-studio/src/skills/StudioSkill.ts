@@ -42,14 +42,15 @@ export const make = (): Skill.Skill =>
         2. Call list-providers to learn which provider serves the kind you need and which config keys
            it expects beyond the prompt (a model path, an avatar). Prefer video for narratives with
            motion; fall back to image if no video provider is registered.
-        3. Call create-storyboard with the project from your context so it is filed there.
-        4. For each beat, call append-frame with the storyboard, the title, kind, prompt, notes, the
-           provider id, and the provider's extra config (use its defaultRequest when present).
-        5. For each returned artifact, call generate with the artifact, the provider, and the config
-           append-frame returned. A generation may take minutes; call them in order and report each
-           frame's outcome. If a generation fails (credentials, credits, moderation), keep the frame
-           — its prompt is the work — and say what failed and what would fix it.
-        6. Finish with a short summary: the storyboard's name and each frame's title and prompt.
+        3. Call create-storyboard with the project from your context (so it is filed there), the
+           frames in order — each with title, kind, prompt, notes, the provider id and the
+           provider's extra config (use its defaultRequest when present) — and generate: true to
+           produce every frame in the same call. To work incrementally instead, create the storyboard
+           without frames, then append-frame per beat and generate each returned artifact.
+        4. A generation may take minutes; report each frame's outcome. If a generation fails
+           (credentials, credits, moderation), keep the frame — its prompt is the work — and say
+           what failed and what would fix it.
+        5. Finish with a short summary: the storyboard's name and each frame's title and prompt.
       `,
     }),
   });

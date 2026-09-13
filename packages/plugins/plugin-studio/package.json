@@ -148,6 +148,11 @@
       "source": "./src/skills/StudioSkill.ts",
       "types": "./dist/types/src/skills/StudioSkill.d.ts",
       "import": "./dist/lib/StudioSkill.mjs"
+    },
+    "./templates": {
+      "source": "./src/templates/index.ts",
+      "types": "./dist/types/src/templates/index.d.ts",
+      "import": "./dist/lib/templates.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -77,17 +77,27 @@ describe('storyboard operations', () => {
     return manager;
   };
 
-  test('create-storyboard files the storyboard into the project', async ({ expect }) => {
+  test('create-storyboard files the storyboard into the project and appends inline frames', async ({ expect }) => {
     const project = db.add(Project.make({ name: 'Studio' }));
     await db.flush();
 
-    const { storyboard: ref } = await provide(
-      createStoryboard.handler({ name: 'How Studio works', project: Ref.make(project) }),
+    const { storyboard: ref, frames: appended } = await provide(
+      createStoryboard.handler({
+        name: 'How Studio works',
+        project: Ref.make(project),
+        frames: [
+          { name: 'One', kind: 'video', prompt: 'first', provider: 'mock-video' },
+          { name: 'Two', kind: 'video', prompt: 'second', provider: 'mock-video' },
+        ],
+      }),
     );
     const storyboard = await db.query(Filter.type(Storyboard.Storyboard)).first();
     expect(ref.target?.id).toBe(storyboard.id);
     expect(storyboard.name).toBe('How Studio works');
     expect(project.artifacts.map((artifact) => artifact.target?.id)).toEqual([storyboard.id]);
+    expect(appended.map((entry) => entry.config.prompt)).toEqual(['first', 'second']);
+    const frames = await Promise.all(storyboard.frames.map((frameRef) => frameRef.load()));
+    expect(frames.map((frame) => frame.name)).toEqual(['One', 'Two']);
   });
 
   test('append-frame makes a parented artifact and frame, in order, with the config to generate', async ({

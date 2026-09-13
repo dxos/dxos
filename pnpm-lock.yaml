@@ -19357,6 +19357,9 @@ importers:
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../../plugins/plugin-game
+      '@dxos/plugin-higgsfield':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-higgsfield
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../../plugins/plugin-illustrator
@@ -19387,6 +19390,9 @@ importers:
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../../plugins/plugin-script
+      '@dxos/plugin-studio':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-studio
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table

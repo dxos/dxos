@@ -62,9 +62,38 @@ export const Generate = Operation.make({
   services: [Database.Service, Capability.Service, Credential.CredentialsService],
 });
 
+/** A frame to append: the media artifact's kind, prompt and provider config. */
+export const FrameInput = Schema.Struct({
+  name: Schema.String.annotate({ description: 'Short title of the frame (shown in the storyboard).' }),
+  kind: Schema.Literals(['image', 'video']).annotate({ description: 'Media kind the frame shows.' }),
+  prompt: Schema.String.annotate({ description: 'Generation prompt describing the frame.' }),
+  notes: Schema.optional(Schema.String.annotate({ description: 'Narration or director notes for the frame.' })),
+  provider: Schema.optional(
+    Schema.String.annotate({
+      description: 'GenerationService id to use (from list-providers); defaults to the first for the kind.',
+    }),
+  ),
+  config: Schema.optional(
+    Schema.Record(Schema.String, Schema.Unknown).annotate({
+      description: 'Extra provider config merged with the prompt (e.g. { model }); see the provider requestSchema.',
+    }),
+  ),
+});
+export interface FrameInput extends Schema.Schema.Type<typeof FrameInput> {}
+
+/** What appending a frame yields: the frame, its artifact, and the config to generate it with. */
+export const AppendedFrame = Schema.Struct({
+  frame: Ref.Ref(Frame.Frame).annotate({ description: 'The appended frame.' }),
+  artifact: Ref.Ref(MediaArtifact.MediaArtifact).annotate({ description: "The frame's media artifact, to generate." }),
+  config: Schema.Record(Schema.String, Schema.Unknown).annotate({
+    description: 'The request config to pass to generate for this artifact.',
+  }),
+  generated: Schema.optional(Schema.Number.annotate({ description: 'Variants produced when `generate` was set.' })),
+});
+
 /**
- * Create an empty {@link Storyboard}, filed into a project's artifacts when one is given so it appears
- * where the task that asked for it lives.
+ * Create a {@link Storyboard}, optionally with its frames in one call, filed into a project's
+ * artifacts when one is given so it appears where the task that asked for it lives.
  */
 export const CreateStoryboard = Operation.make({
   meta: {
@@ -72,9 +101,11 @@ export const CreateStoryboard = Operation.make({
     name: 'Create storyboard',
     icon: 'ph--film-strip--regular',
     description: trim`
-      Creates an empty storyboard — an ordered sequence of frames, each showing one media artifact.
-      Pass the project you are working in so the storyboard is filed into its artifacts.
-      Then add frames with append-frame and produce each frame's media with generate.
+      Creates a storyboard — an ordered sequence of frames, each showing one media artifact — with
+      any frames given (each a name, kind, prompt and provider config, as append-frame takes).
+      Pass the project you are working in so the storyboard is filed into its artifacts. Pass
+      generate: true to produce every frame's media in the same call, else generate each frame's
+      artifact afterwards (or append frames later with append-frame).
     `,
   },
   input: Schema.Struct({
@@ -84,11 +115,16 @@ export const CreateStoryboard = Operation.make({
         description: 'Project to file the storyboard into (from the chat context).',
       }),
     ),
+    frames: Schema.optional(Schema.Array(FrameInput).annotate({ description: 'Frames to append, in order.' })),
+    generate: Schema.optional(
+      Schema.Boolean.annotate({ description: 'Generate every given frame in this call (slow for video).' }),
+    ),
   }),
   output: Schema.Struct({
     storyboard: Ref.Ref(Storyboard.Storyboard).annotate({ description: 'The created storyboard.' }),
+    frames: Schema.Array(AppendedFrame).annotate({ description: 'The appended frames, in order.' }),
   }),
-  services: [Database.Service],
+  services: [Database.Service, Capability.Service, Credential.CredentialsService],
 }).pipe(Operation.mutation('write'));
 
 /**
@@ -102,38 +138,22 @@ export const AppendFrame = Operation.make({
     icon: 'ph--frame-corners--regular',
     description: trim`
       Appends a frame to a storyboard. Creates the frame's media artifact (image or video) with the
-      given prompt as its draft config; nothing is generated yet — call generate on the returned
-      artifact to produce it. Use list-providers first to learn which provider handles the kind and
-      which extra config keys (e.g. a model) it needs.
+      given prompt as its draft config; nothing is generated unless generate: true — else call
+      generate on the returned artifact to produce it. Use list-providers first to learn which
+      provider handles the kind and which extra config keys (e.g. a model) it needs.
     `,
   },
   input: Schema.Struct({
     storyboard: Ref.Ref(Storyboard.Storyboard).annotate({ description: 'The storyboard to append to.' }),
-    name: Schema.String.annotate({ description: 'Short title of the frame (shown in the storyboard).' }),
-    kind: Schema.Literals(['image', 'video']).annotate({ description: 'Media kind the frame shows.' }),
-    prompt: Schema.String.annotate({ description: 'Generation prompt describing the frame.' }),
-    notes: Schema.optional(Schema.String.annotate({ description: 'Narration or director notes for the frame.' })),
-    provider: Schema.optional(
-      Schema.String.annotate({
-        description: 'GenerationService id to use (from list-providers); defaults to the first for the kind.',
-      }),
-    ),
-    config: Schema.optional(
-      Schema.Record(Schema.String, Schema.Unknown).annotate({
-        description: 'Extra provider config merged with the prompt (e.g. { model }); see the provider requestSchema.',
+    ...FrameInput.fields,
+    generate: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Generate the frame immediately (one generate call with the returned config); slow for video.',
       }),
     ),
   }),
-  output: Schema.Struct({
-    frame: Ref.Ref(Frame.Frame).annotate({ description: 'The appended frame.' }),
-    artifact: Ref.Ref(MediaArtifact.MediaArtifact).annotate({
-      description: "The frame's media artifact, to generate.",
-    }),
-    config: Schema.Record(Schema.String, Schema.Unknown).annotate({
-      description: 'The request config to pass to generate for this artifact.',
-    }),
-  }),
-  services: [Database.Service],
+  output: AppendedFrame,
+  services: [Database.Service, Capability.Service, Credential.CredentialsService],
 }).pipe(Operation.mutation('write'));
 
 export const ProviderInfo = Schema.Struct({
