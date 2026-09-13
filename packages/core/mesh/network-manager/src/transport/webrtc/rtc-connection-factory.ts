@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Mutex, sleep } from '@dxos/async';
+import { Mutex } from '@dxos/async';
 
 export type ConnectionInfo = {
   initiator: boolean;
@@ -15,27 +15,14 @@ export interface RtcConnectionFactory {
   initConnection(connection: RTCPeerConnection, info: ConnectionInfo): Promise<void>;
 }
 
-/** Page global an e2e run sets to space a new RTCPeerConnection out from the last one closed. */
-const E2E_RECREATE_DELAY_GLOBAL = '__DX_E2E_RTC_RECREATE_DELAY_MS';
-
-/** When the last RTCPeerConnection in this realm was closed. */
-let lastConnectionClosedAt = 0;
-
 /**
  * Use built-in browser RTCPeerConnection.
  */
 class BrowserRtcConnectionFactory implements RtcConnectionFactory {
   async initialize(): Promise<void> {}
-  async onConnectionDestroyed(): Promise<void> {
-    lastConnectionClosedAt = Date.now();
-  }
+  async onConnectionDestroyed(): Promise<void> {}
 
   async createConnection(config: RTCConfiguration): Promise<RTCPeerConnection> {
-    const delay = Number(Reflect.get(globalThis, E2E_RECREATE_DELAY_GLOBAL) ?? 0);
-    const wait = lastConnectionClosedAt + delay - Date.now();
-    if (delay > 0 && wait > 0) {
-      await sleep(wait);
-    }
     return new RTCPeerConnection(config);
   }
 

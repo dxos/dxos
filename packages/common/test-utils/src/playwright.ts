@@ -17,8 +17,13 @@ import { dirname, join, resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Lock } from './lock.ts';
+import { RTC_TRACE_PREFIX, installRtcTrace } from './rtc-trace.ts';
 
 export * from './debug-log.ts';
+export { RTC_TRACE_PREFIX } from './rtc-trace.ts';
+
+/** Values of `DX_E2E_RTC_TRACE` that install the RTC tracer in every page `setupPage` opens. */
+const RTC_TRACE_ENABLED = new Set(['1', 'true']);
 
 const findWorkspaceRoot = (startDir: string): string => {
   let dir = resolve(startDir);
@@ -165,12 +170,9 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
   try {
     page = await context.newPage();
 
-    // Experiment knob: spaces a tab's new RTCPeerConnection out from the one it last closed.
-    const recreateDelay = Number(process.env.DX_E2E_RTC_RECREATE_DELAY_MS ?? 0);
-    if (recreateDelay > 0) {
-      await page.addInitScript((ms) => {
-        Reflect.set(globalThis, '__DX_E2E_RTC_RECREATE_DELAY_MS', ms);
-      }, recreateDelay);
+    // DX_E2E_RTC_TRACE=1 logs the page's RTCPeerConnection calls and events to the console, which the trace records.
+    if (RTC_TRACE_ENABLED.has(process.env.DX_E2E_RTC_TRACE ?? '')) {
+      await page.addInitScript(installRtcTrace, RTC_TRACE_PREFIX);
     }
 
     if (viewportSize) {
