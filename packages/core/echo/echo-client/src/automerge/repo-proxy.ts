@@ -458,19 +458,23 @@ export class RepoProxy extends Resource {
         }),
         { timeout: RPC_TIMEOUT },
       )
-        .then((response) => {
-          const documentId = response.documentId as DocumentId;
-          handle._setDocumentId(documentId);
-          this._pendingAddIds.add(documentId);
-          this._handles[documentId] = handle;
-          update();
-          handle._wakeReady();
-        })
-        .catch((err) => {
-          log.catch(err);
-          handle._failReady(err);
-          cleanup();
-        })
+        .then(
+          (response) => {
+            const documentId = response.documentId as DocumentId;
+            handle._setDocumentId(documentId);
+            this._pendingAddIds.add(documentId);
+            this._handles[documentId] = handle;
+            update();
+            handle._wakeReady();
+          },
+          // Only a failed call means the host holds no document; an error after creation must not discard it.
+          (err) => {
+            log.catch(err);
+            handle._failReady(err);
+            cleanup();
+          },
+        )
+        .catch((err) => log.catch(err))
         .finally(() => {
           this._pendingCreations.delete(handle._internalId);
         }),
