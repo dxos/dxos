@@ -78,7 +78,7 @@ type Channel = {
   remoteKnowsId: boolean;
 
   /**
-   * Set by the first OpenChannel from the remote. `remoteId` is only assigned once the send buffer has drained.
+   * Set by the first OpenChannel from the remote, which flushes the send buffer; later ones are ignored.
    */
   remoteOpened: boolean;
 
@@ -376,16 +376,19 @@ export class Muxer {
       }
       channel.remoteOpened = true;
 
-      // `remoteId` stays unset until the buffer is empty, so writes made meanwhile queue behind it instead of overtaking
-      // it, and each frame's send deadline starts once the frame ahead of it has gone out.
-      let data: Uint8Array | undefined;
-      while ((data = channel.buffer.shift()) !== undefined) {
-        await this._sendCommand(
+      // The buffer goes to the balancer in one synchronous pass and `remoteId` is set before anything awaits, so later
+      // writes queue behind it and wait on their own sends. Each frame's deadline starts once the frame ahead has gone.
+      const sends = channel.buffer.map((data) =>
+        this._enqueueCommand(
           create(CommandSchema, { payload: { case: 'data', value: { channelId: remoteId, data } } }),
           channel.id,
-        );
-      }
+        ),
+      );
+      channel.buffer = [];
       channel.remoteId = remoteId;
+      for (const send of sends) {
+        await this._awaitCommand(send);
+      }
     } else if (cmd.payload.case === 'data') {
       const stream = this._channelsByLocalId.get(cmd.payload.value.channelId) ?? failUndefined();
       stream.remoteKnowsId = true;
@@ -436,14 +439,30 @@ export class Muxer {
   }
 
   private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {
+    await this._awaitCommand(this._enqueueCommand(cmd, channelId), timeout);
+  }
+
+  /** Hands a command to the balancer without waiting for it to go out; `undefined` once the muxer is disposed. */
+  private _enqueueCommand(cmd: Command, channelId: number): Trigger<void> | undefined {
     if (this._disposed) {
-      // log.info('ignoring sendCommand after disposed', { cmd });
+      return undefined;
+    }
+    const trigger = new Trigger<void>();
+    try {
+      this._balancer.pushData(toBinary(CommandSchema, cmd), trigger, channelId);
+    } catch (err: any) {
+      trigger.throw(err);
+    }
+    return trigger;
+  }
+
+  /** Waits for an enqueued command to go out, destroying the muxer if sending fails or times out. */
+  private async _awaitCommand(send: Trigger<void> | undefined, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {
+    if (!send) {
       return;
     }
     try {
-      const trigger = new Trigger<void>();
-      this._balancer.pushData(toBinary(CommandSchema, cmd), trigger, channelId);
-      await trigger.wait({ timeout });
+      await send.wait({ timeout });
     } catch (err: any) {
       await this.destroy(err);
     }

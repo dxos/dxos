@@ -152,7 +152,7 @@ describe('Muxer', () => {
     const received: number[] = [];
     port1.subscribe((data) => received.push(data[0]));
 
-    await sleep(6_000);
+    await sleep(7_000);
     peer2.stream.pipe(peer1.stream);
     // Written while the buffer is still flushing, so they must arrive after it.
     const later = 5;
@@ -163,7 +163,38 @@ describe('Muxer', () => {
     await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count + later);
     await sleep(500);
     expect(received).toEqual(Array.from({ length: count + later }, (_, index) => index));
-  }, 25_000);
+  }, 30_000);
+
+  test('a write made after the remote opens the channel waits on the link', async () => {
+    const peer1 = new Muxer();
+    const peer2 = new Muxer();
+    onTestFinished(async () => {
+      await peer1.destroy();
+      await peer2.destroy();
+    });
+    // peer2's frames to peer1 are not consumed yet, so everything peer2 sends backs up.
+    peer1.stream.pipe(peer2.stream);
+
+    const port2 = await peer2.createPort('example.extension/rpc');
+    const count = 20;
+    for (let i = 0; i < count; i++) {
+      await port2.send(new Uint8Array(8_000).fill(i));
+    }
+    const port1 = await peer1.createPort('example.extension/rpc');
+    const received: number[] = [];
+    port1.subscribe((data) => received.push(data[0]));
+    await sleep(200);
+
+    // Once the remote has opened the channel a write is a real send, so it cannot complete while the link is stalled.
+    const write = Promise.resolve(port2.send(new Uint8Array(8_000).fill(count)));
+    const outcome = await Promise.race([write.then(() => 'sent'), sleep(500).then(() => 'waiting')]);
+    expect(outcome).toEqual('waiting');
+
+    peer2.stream.pipe(peer1.stream);
+    await write;
+    await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count + 1);
+    expect(received).toEqual(Array.from({ length: count + 1 }, (_, index) => index));
+  });
 
   test('destroy releases other stream', async () => {
     const { peer1, peer2 } = setupPeers();
