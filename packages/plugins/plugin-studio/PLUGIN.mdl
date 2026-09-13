@@ -307,9 +307,10 @@ Both depend on `@dxos/plugin-studio/types` and resolve their credential via
 feat Storyboard
   desc: >
     Storyboard { name?, frames: Ref<Frame>[] (SetParent) } / Frame { name?, notes?, artifact?: Ref<MediaArtifact> }.
-    StoryboardArticle: toolbar (Append frame → artifact create dialog; Play) + reorderable accordion
-    of FrameArticles, each hosting the artifact's own article through the Article surface with a
-    nodeId under the storyboard (studio graph nodes), so its Connect/Generate work when nested.
+    StoryboardArticle: toolbar (Append frame → artifact create dialog; Delete frame; Play) +
+    master/detail — a FrameStack of reorderable FramePreview thumbnails (sidebar width) and the
+    selected frame's artifact article through the Article surface with a nodeId under the
+    storyboard (hidden studio graph nodes), so its Connect/Generate work when nested.
     StoryboardPlayer plays the frames' cover variants back to back (view-time splice).
   types: [org.dxos.type.storyboard, org.dxos.type.frame]
   operations:

@@ -22,6 +22,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Lightbox, MediaArtifact, Variant } from '#types';
 
+import { StubProjectsPlugin } from '../../testing/index.ts';
 import { LightboxArticle } from './LightboxArticle.tsx';
 
 const DefaultStory = () => {
@@ -93,6 +94,7 @@ const meta = {
             }),
         }),
         StudioPlugin(),
+        StubProjectsPlugin(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
       ],

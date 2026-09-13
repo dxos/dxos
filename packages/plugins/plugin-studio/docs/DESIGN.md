@@ -133,13 +133,14 @@ model statically because the public API has no catalogue endpoint.
 ## Storyboard (added 2026-09-13)
 
 `Storyboard { name?, frames: Ref<Frame>[] (SetParent) }` / `Frame { name?, notes?, artifact?: Ref<MediaArtifact> }`
-— the vertical shape a slide deck also takes. `StoryboardArticle` renders the frames as a reorderable
-accordion (`useReorderList` from react-ui-list around `Accordion.Item`s, now in react-ui) whose bodies
-host the artifact's own article through the `Article` surface with a `nodeId` under the storyboard
-(a studio graph extension lists a storyboard's frame artifacts as children, and the nested article
-expands that node's actions itself — the deck only does so for planks). **Append frame** opens the
-artifact create dialog and parents the artifact to its frame. Retrofit to plugin-presenter and a
-generic vertical container are tracked follow-ups.
+— the shape a slide deck also takes. `StoryboardArticle` is master/detail: a `FrameStack` (a
+reorderable `OrderedList` of `FramePreview` thumbnails — the cover at 16:9, or a "Frame n"
+placeholder — a navtree sidebar's width) on the left, and the selected frame's artifact article on
+the right through the `Article` surface with a `nodeId` under the storyboard (a studio graph extension
+keeps a storyboard's frame artifacts as hidden child nodes, and the nested article expands that
+node's actions itself — the deck only does so for planks). **Append frame** opens the artifact create
+dialog, parents the artifact to its frame and selects it; **Delete frame** removes the selection.
+Retrofit to plugin-presenter and a generic master/detail container are tracked follow-ups.
 
 ## Studio skill and the experiment (added 2026-09-13)
 

@@ -4,13 +4,10 @@
 
 import { type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -21,50 +18,12 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
-import { GenerationService, MediaArtifact, StudioCapabilities, Variant } from '#types';
+import { MediaArtifact, Variant } from '#types';
 
+import { MockProviderPlugin, StubProjectsPlugin } from '../../testing/index.ts';
 import { MediaArtifactArticle } from './MediaArtifactArticle.tsx';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */
-const MockRequestSchema = Schema.Struct({
-  prompt: Schema.optional(Schema.String.annotate({ title: 'Prompt' })),
-  style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
-  aspectRatio: Schema.optional(Schema.String.annotate({ title: 'Aspect ratio' })),
-});
-
-/** A keyless mock provider (kind 'image') returning placeholder images. */
-const mockService: GenerationService.GenerationService = {
-  kind: 'image',
-  id: 'mock',
-  label: 'Mock',
-  contentType: 'image/png',
-  requestSchema: MockRequestSchema,
-  defaultRequest: { aspectRatio: '1x1' },
-  generate: async (request) => {
-    const prompt = typeof request.prompt === 'string' ? request.prompt : undefined;
-    const count = request.count ?? 1;
-    return {
-      variants: Array.from({ length: count }, (_, index) => ({
-        contentType: 'image/png',
-        url: `https://picsum.photos/seed/gen-${index}/512/512`,
-        generation: { provider: 'mock', prompt, seed: index },
-      })),
-    };
-  },
-};
-
-/** Registers the mock provider so the toolbar shows the request form + enables Generate. */
-const MockProviderPlugin = Plugin.define(
-  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.studio.story.mockProvider'), name: 'Mock Provider' }),
-).pipe(
-  Plugin.addModule({
-    id: 'story.studio.mock-provider/module',
-    provides: [StudioCapabilities.GenerationService],
-    activate: () => Effect.succeed([Capability.contribute(StudioCapabilities.GenerationService, mockService)]),
-  }),
-  Plugin.make,
-);
-
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
@@ -121,6 +80,7 @@ const meta_ = {
             }),
         }),
         StudioPlugin(),
+        StubProjectsPlugin(),
         MockProviderPlugin(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),

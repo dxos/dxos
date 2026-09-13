@@ -4,13 +4,11 @@
 
 import { type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -18,51 +16,25 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Frame, type GenerationService, MediaArtifact, Storyboard, StudioCapabilities, Variant } from '#types';
+import { Frame, MediaArtifact, Storyboard, Variant } from '#types';
 
+import { MockProviderPlugin, StubProjectsPlugin, mockImageUrl } from '../../testing/index.ts';
 import { StoryboardArticle } from './StoryboardArticle.tsx';
-
-const MockRequestSchema = Schema.Struct({
-  prompt: Schema.optional(Schema.String.annotate({ title: 'Prompt' })),
-});
-
-/** A keyless mock provider (kind 'image') returning placeholder images, so frames can Generate. */
-const mockService: GenerationService.GenerationService = {
-  kind: 'image',
-  id: 'mock',
-  label: 'Mock',
-  contentType: 'image/png',
-  requestSchema: MockRequestSchema,
-  generate: async (request) => ({
-    variants: [
-      {
-        contentType: 'image/png',
-        url: `https://picsum.photos/seed/sb-${Date.now()}/512/512`,
-        generation: { provider: 'mock', prompt: typeof request.prompt === 'string' ? request.prompt : undefined },
-      },
-    ],
-  }),
-};
-
-const MockProviderPlugin = Plugin.define(
-  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.studio.story.mockProvider'), name: 'Mock Provider' }),
-).pipe(
-  Plugin.addModule({
-    id: 'story.studio.mock-provider/module',
-    provides: [StudioCapabilities.GenerationService],
-    activate: () => Effect.succeed([Capability.contribute(StudioCapabilities.GenerationService, mockService)]),
-  }),
-  Plugin.make,
-);
 
 const FRAMES = ['Establishing shot', 'The reveal', 'Close-up'];
 
+const ATTENDABLE_ID = 'test';
+
 const DefaultStory = () => {
   const spaces = useSpaces();
+  // Marks the article as the attended surface (the deck's plank does this in the app), so the
+  // nested artifact toolbar's Generate is live once the prompt is filled.
+  const attentionAttributes = useAttentionAttributes(ATTENDABLE_ID);
   const space = spaces[spaces.length - 1];
   const storyboards = useQuery(space?.db, Filter.type(Storyboard.Storyboard));
   const [storyboard, setStoryboard] = useState<Storyboard.Storyboard>();
@@ -77,7 +49,11 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <StoryboardArticle role='article' subject={storyboard} attendableId='test' />;
+  return (
+    <div className='contents' {...attentionAttributes}>
+      <StoryboardArticle role='article' subject={storyboard} attendableId={ATTENDABLE_ID} />
+    </div>
+  );
 };
 
 const meta = {
@@ -104,7 +80,7 @@ const meta = {
                     Variant.make({
                       [Obj.Parent]: artifact,
                       contentType: 'image/png',
-                      url: `https://picsum.photos/seed/sb-${index}/768/432`,
+                      url: mockImageUrl(name),
                       generation: { provider: 'mock', prompt: name },
                     }),
                   );
@@ -119,6 +95,7 @@ const meta = {
             }),
         }),
         StudioPlugin(),
+        StubProjectsPlugin(),
         MockProviderPlugin(),
         SpacePlugin({}),
         StorybookPlugin.make({}),
@@ -138,10 +115,38 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Test:
- * 1. Three frames render expanded, each with its artifact article (two with a cover, one empty).
- * 2. Drag a frame by its handle above another — the order persists after the drop.
- * 3. Collapse a frame from its header; the caret rotates and the body slides up.
- * 4. Toolbar → Append frame → name + Type → Save: a fourth frame appears with an empty article.
- * 5. Delete a frame from its header trash — it leaves the accordion.
+ * 1. Three previews stack on the left (two with a cover, one "Frame 3" placeholder); the first frame's
+ *    artifact article fills the right.
+ * 2. Click another preview — the detail switches to that frame's article; the row shows selected.
+ * 3. Drag a preview by its handle above another — the order (and the numbering) persists after the drop.
+ * 4. Toolbar → Append frame → name + Type → Save: a fourth preview appears and is selected, its
+ *    article empty.
+ * 5. Toolbar → Delete frame — the selected frame leaves the stack and the selection falls back.
  */
 export const Default: Story = {};
+
+/**
+ * Selecting the empty frame, writing a prompt and generating fills its preview: the mock provider
+ * answers with a picsum image seeded by the prompt, and the stack's thumbnail follows the cover.
+ */
+export const TestGenerate: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const placeholder = await canvas.findByText('Frame 3', {}, { timeout: 30_000 });
+    await userEvent.click(placeholder);
+
+    const prompt = await canvas.findByPlaceholderText('Prompt', {}, { timeout: 10_000 });
+    await userEvent.click(prompt);
+    await userEvent.type(prompt, 'A close-up of the studio desk');
+
+    const generate = await canvas.findByRole('button', { name: 'Generate' });
+    await waitFor(() => expect(generate).toBeEnabled());
+    await userEvent.click(generate);
+
+    // The third row's placeholder gives way to the generated cover.
+    await waitFor(() => expect(canvas.queryByText('Frame 3')).not.toBeInTheDocument(), { timeout: 10_000 });
+    const previews = canvasElement.querySelectorAll('[data-testid="studio.frame-preview"] img');
+    await expect(previews).toHaveLength(3);
+    await expect(previews[2].getAttribute('src')).toContain('picsum.photos/seed/');
+  },
+};
