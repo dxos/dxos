@@ -552,6 +552,9 @@ class Slice {
   initOnce<E>(
     requirements: Effect.Effect<Context.Context<unknown>, E, Scope.Scope>,
   ): Effect.Effect<void, E | ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+    if (this.#initialized) {
+      return Effect.void;
+    }
     return this.#lock.withPermits(1)(
       Effect.suspend(() =>
         this.#initialized

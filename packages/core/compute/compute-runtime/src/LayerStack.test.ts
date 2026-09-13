@@ -271,13 +271,13 @@ describe('LayerStack', () => {
         const stack = new LayerStack.LayerStack({ layers: [appLayer, spaceLayer] });
         const resolver = stack.getServiceResolver();
 
-        const spaceResolution = yield* Effect.forkChild(
-          resolveWithScope(resolver.resolve(ServiceB, { space: SpaceId.random() })),
-        );
+        const space = SpaceId.random();
+        const spaceResolution = yield* Effect.forkChild(resolveWithScope(resolver.resolve(ServiceB, { space })));
         yield* Deferred.await(building);
 
-        const resolved = yield* resolveWithScope(resolver.resolve(ServiceA, {}));
-        expect(resolved).toEqual({ value: 'app' });
+        expect(yield* resolveWithScope(resolver.resolve(ServiceA, {}))).toEqual({ value: 'app' });
+        // A resolution that carries the same space still reaches application services.
+        expect(yield* resolveWithScope(resolver.resolve(ServiceA, { space }))).toEqual({ value: 'app' });
         yield* Fiber.interrupt(spaceResolution);
       }),
     );
