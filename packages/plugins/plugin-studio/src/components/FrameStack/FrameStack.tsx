@@ -35,7 +35,9 @@ export const FrameStack = <T extends FrameStackItem>({
     // The stack carries a selection, so a reader arrows between frames rather than their handles.
     <OrderedList.Root<T> items={items} getId={getId} onMove={onMove} navigationMode='listbox'>
       {({ items }) => (
-        <OrderedList.Content classNames={['flex flex-col gap-1 p-1', classNames]}>
+        // `select-none`: a pointer drag across the previews would otherwise start a native text
+        // selection drag, whose ghost is the whole column.
+        <OrderedList.Content classNames={['flex flex-col gap-1 p-1 select-none', classNames]}>
           {items.map((item, index) => (
             <OrderedList.Item
               key={item.id}
@@ -43,11 +45,13 @@ export const FrameStack = <T extends FrameStackItem>({
               item={item}
               hover
               selected={item.id === selectedId}
-              classNames='flex items-start gap-1 p-1 rounded-sm cursor-pointer'
+              classNames='p-1 rounded-sm cursor-pointer'
               onClick={() => onSelect?.(item.id)}
             >
-              <OrderedList.DragHandle />
-              <div className='grow min-w-0'>{children(item, index)}</div>
+              {/* The preview itself is the handle: the thumbnail is what a reader expects to grab. */}
+              <OrderedList.DragHandle asChild>
+                <div className='min-w-0 cursor-grab data-[disabled]:cursor-default'>{children(item, index)}</div>
+              </OrderedList.DragHandle>
             </OrderedList.Item>
           ))}
         </OrderedList.Content>

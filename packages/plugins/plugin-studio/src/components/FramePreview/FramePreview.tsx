@@ -36,9 +36,16 @@ export const FramePreview = ({ classNames, index, name, src, contentType }: Fram
         data-testid='studio.frame-preview'
       >
         {src && isVideo ? (
-          <video src={src} muted playsInline preload='metadata' className='block dx-fill object-cover' />
+          <video
+            src={src}
+            muted
+            playsInline
+            preload='metadata'
+            draggable={false}
+            className='block dx-fill object-cover'
+          />
         ) : src ? (
-          <img src={src} alt={name ?? label} loading='lazy' className='block dx-fill object-cover' />
+          <img src={src} alt={name ?? label} loading='lazy' draggable={false} className='block dx-fill object-cover' />
         ) : (
           <div role='img' aria-label={label} className='dx-fill flex items-center justify-center text-description'>
             {label}
