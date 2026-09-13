@@ -104,13 +104,44 @@ describe('EchoNetworkAdapter', () => {
     await waitForCondition({ condition: () => sentTotal === totalMessages });
   });
 
-  const createConnectedAdapter = async (replicator: MeshEchoReplicator) => {
+  test('an auth scope change re-offers the peer by default', async () => {
+    const controller = createReplicatorController();
+    const adapter = await createConnectedAdapter(controller.replicator);
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const events: string[] = [];
+    adapter.on('peer-disconnected', () => events.push('disconnected'));
+    adapter.on('peer-candidate', () => events.push('candidate'));
+    // A second session to the same peer widens the auth scope of the connection already enabled.
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    expect(events).toEqual(['disconnected', 'candidate']);
+  });
+
+  test('an auth scope change goes to the handler instead of re-offering the peer', async () => {
+    const controller = createReplicatorController();
+    const changed: PeerId[] = [];
+    const adapter = await createConnectedAdapter(controller.replicator, {
+      onConnectionAuthScopeChanged: (peerId) => changed.push(peerId),
+    });
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const events: string[] = [];
+    adapter.on('peer-disconnected', () => events.push('disconnected'));
+    adapter.on('peer-candidate', () => events.push('candidate'));
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    expect(changed).toEqual([ANOTHER_PEER_ID]);
+    expect(events).toEqual([]);
+  });
+
+  const createConnectedAdapter = async (
+    replicator: MeshEchoReplicator,
+    props: Partial<ConstructorParameters<typeof EchoNetworkAdapter>[0]> = {},
+  ) => {
     const adapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: async () => null,
       getContainingSpaceIdForDocument: async () => null,
       isDocumentInRemoteCollection: async () => true,
       onCollectionStateQueried: () => {},
       onCollectionStateReceived: () => {},
+      ...props,
     });
     adapter.connect(PEER_ID);
     await adapter.open();

@@ -7,7 +7,7 @@ import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
-import { setupPage } from '@dxos/test-utils/playwright';
+import { readLogStore, setupPage } from '@dxos/test-utils/playwright';
 
 import { DeckManager } from './plugins/index.ts';
 
@@ -34,6 +34,18 @@ const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/$
 // Only the default space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateSampleSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
+// `LOG_STORE_DB_NAME`, restated for the reason given above rather than imported through `src/util`,
+// whose barrel drags the client and observability graphs into every worker.
+const LOG_STORE_DB_NAME = 'composer-logs';
+
+/** A subduction sync round is fire-and-wait with this deadline and no per-round re-ask. */
+const SYNC_ROUND_TIMEOUT = 60_000;
+
+/** Two rounds plus slack, so one disrupted round does not exhaust the wait by itself. */
+const UPLOAD_SETTLE_TIMEOUT = SYNC_ROUND_TIMEOUT * 2 + 10_000;
+
+/** One try at revealing a settings page, short enough that the enclosing `toPass` gets several. */
+const EXPAND_ATTEMPT_TIMEOUT = 5_000;
 
 /**
  * Budget for `joinNewIdentity()`: spans a storage reset, page reload and app boot, so it is sized well
@@ -101,6 +113,16 @@ export class AppManager {
     await this._close?.();
   }
 
+  /**
+   * Reads the app's own debug log store as NDJSON.
+   *
+   * The console keeps a fraction of what is logged and none of it across a reload, which is where
+   * the HALO failures live. This store holds every record at DEBUG and above and survives the reload.
+   */
+  async readDebugLog(): Promise<string> {
+    return readLogStore(this.page, { dbName: LOG_STORE_DB_NAME });
+  }
+
   //
   // Page
   //
@@ -130,13 +152,20 @@ export class AppManager {
     return this.page.getByTestId('navtree.workspace.visible');
   }
 
-  async openUserAccount(): Promise<void> {
-    await this.page.getByTestId('clientPlugin.account').click();
+  get workspaceId(): string | undefined {
+    const [anchor, workspace] = new URL(this.page.url()).pathname.split('/').filter(Boolean);
+    return anchor === WORKSPACE_KEY ? workspace : undefined;
   }
 
-  async openUserDevices(): Promise<void> {
-    await this.openUserAccount();
+  async openUserAccount(timeout = 60_000): Promise<void> {
+    await this.page.getByTestId('clientPlugin.account').click();
+    await this.page.getByTestId('clientPlugin.devices').waitFor({ state: 'visible', timeout });
+  }
+
+  async openUserDevices(timeout = 60_000): Promise<void> {
+    await this.openUserAccount(timeout);
     await this.page.getByTestId('clientPlugin.devices').click();
+    await this.page.getByTestId('devicesContainer.logout').waitFor({ state: 'visible', timeout });
   }
 
   async createDeviceInvitation(): Promise<string> {
@@ -175,18 +204,19 @@ export class AppManager {
     });
   }
 
-  async shareSpace(): Promise<void> {
-    // Members is nested under the Settings section, so scope the generic `treeItem.heading` testid
-    // to the members row and expand Settings first when that heading is not showing yet.
-    const membersHeading = this.currentWorkspace
-      .getByTestId('spacePlugin.members')
-      .first()
-      .getByTestId('treeItem.heading')
-      .first();
-    if (!(await membersHeading.isVisible())) {
-      await this.expandSection('spacePlugin.settings');
-    }
-    await membersHeading.click();
+  async shareSpace(timeout = 15_000): Promise<void> {
+    await this.#openSpaceSettingsPage('spacePlugin.members', timeout);
+  }
+
+  async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
+    const heading = this.currentWorkspace.getByTestId(testId).first().getByTestId('treeItem.heading').first();
+    // Expanding is retried, not done once: a navtree re-render under the open section collapses it
+    // again, and only the next expand reveals the page.
+    await expect(async () => {
+      await this.expandSection('spacePlugin.settings', EXPAND_ATTEMPT_TIMEOUT);
+      await heading.waitFor({ state: 'visible', timeout: EXPAND_ATTEMPT_TIMEOUT });
+    }).toPass({ timeout });
+    await heading.click({ timeout });
   }
 
   async createSpaceInvitation(): Promise<string> {
@@ -238,9 +268,17 @@ export class AppManager {
   /** Opens the add-space dialog, submits it, and waits for it to close. */
   async #submitCreateSpaceForm(): Promise<void> {
     const dialog = this.page.getByTestId('create-space-dialog');
-    await this.page.getByTestId('spacePlugin.addSpace').click();
-    await this.page.getByTestId('spacePlugin.createSpace').click();
-    await expect(dialog).toBeVisible({ timeout: 15_000 });
+    // A navigation landing while the menu is open detaches the item mid-click, and the overlay that
+    // replaces it swallows the pointer. `addSpace` is the menu's trigger, so a retry must not click
+    // it again once the dialog is up — that would toggle the menu behind a modal.
+    await expect(async () => {
+      if (await dialog.isVisible()) {
+        return;
+      }
+      await this.page.getByTestId('spacePlugin.addSpace').click({ timeout: 5_000 });
+      await this.page.getByTestId('spacePlugin.createSpace').click({ timeout: 5_000 });
+      await expect(dialog).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 30_000 });
 
     const form = this.page.getByTestId('create-space-form');
     // The action row is pinned outside the scrolling field region, so it is scoped to the dialog,
@@ -301,6 +339,19 @@ export class AppManager {
     await this.page.waitForTimeout(500);
   }
 
+  /**
+   * Waits for this peer to have nothing left to push, before inviting a device to a just-created
+   * space — `createSpace` returns once the space is locally ready, not once it has reached EDGE.
+   *
+   * Best-effort: the attribute is a client-wide summary that reads settled at rest, so it cannot
+   * distinguish "already uploaded" from "not started yet".
+   */
+  async waitForUploadsSettled(timeout = UPLOAD_SETTLE_TIMEOUT): Promise<void> {
+    await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-upload-settled', 'true', {
+      timeout,
+    });
+  }
+
   getSpacePresenceMembers(): Locator {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
@@ -309,27 +360,25 @@ export class AppManager {
    * Opens the General settings panel (SpaceSettingsContainer) for the currently active space,
    * expanding the Settings section first if necessary.
    */
-  async openSpaceSettings(): Promise<void> {
-    const generalHeading = this.currentWorkspace
-      .getByTestId('spacePlugin.general')
-      .first()
-      .getByTestId('treeItem.heading')
-      .first();
-    if (!(await generalHeading.isVisible())) {
-      await this.expandSection('spacePlugin.settings');
-    }
-    await generalHeading.click();
+  async openSpaceSettings(timeout = 15_000): Promise<void> {
+    await this.#openSpaceSettingsPage('spacePlugin.general', timeout);
   }
 
   /**
    * Deletes the space at the given index (default: the first non-default space) via its
    * settings danger zone, including the confirmation step.
    */
-  async deleteSpace(nth = 1): Promise<void> {
-    // Select the space so its Settings section is available in the navtree.
-    await this.getSpaceItems().nth(nth).click();
-    await this.openSpaceSettings();
-    await this.page.getByTestId('spaceSettings.deleteSpace').click();
+  async deleteSpace(nth = 1, timeout = 30_000): Promise<void> {
+    const space = this.getSpaceItems().nth(nth);
+    // The rail is a tablist, and a click landing while the navtree is still settling after a
+    // navigation is dropped — the row takes focus and then loses it, never becoming selected.
+    // Clicking an already-selected row is a no-op, so re-running the block is safe.
+    await expect(async () => {
+      await space.click();
+      await expect(space).toHaveAttribute('aria-selected', 'true', { timeout: 5_000 });
+    }).toPass({ timeout });
+    await this.openSpaceSettings(timeout);
+    await this.page.getByTestId('spaceSettings.deleteSpace').click({ timeout });
     await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
   }
 
@@ -349,6 +398,9 @@ export class AppManager {
   /** Discloses a row's children, leaving an already-open row alone. */
   async #expandRow(row: Locator, timeout: number): Promise<void> {
     const toggle = row.getByTestId('treeItem.toggle').first();
+    // Read the state only once the toggle exists: `getAttribute` on a detached element answers
+    // `null`, which is indistinguishable from "collapsed" and would click an open row shut.
+    await expect(toggle).toBeAttached({ timeout });
     if ((await toggle.getAttribute('aria-expanded')) === 'true') {
       return;
     }

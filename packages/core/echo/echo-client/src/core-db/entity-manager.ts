@@ -1521,6 +1521,9 @@ export class EntityManager implements IDatabaseBinding {
           newDoc.links[objectId] = new A.RawString(url);
         });
       })
+      .catch((err) => {
+        log.warn('object not bound: its document was not created', { objectId, err });
+      })
       .finally(() => {
         this._pendingDocumentCreations.delete(objectId);
       });

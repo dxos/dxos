@@ -47,6 +47,21 @@ describe('serializeToJsonl', () => {
     }
   });
 
+  test('keeps an error passed only in the context', ({ expect }) => {
+    const error = new Error('worker init failed');
+    const record = parseLine(serializeToJsonl(createEntry({ context: { clientId: 'abc', error } })));
+    const context = JSON.parse(record.c as string) as Record<string, string>;
+    expect(context.clientId).toBe('abc');
+    expect(context.error).toContain('worker init failed');
+  });
+
+  test('drops a context error already carried as the entry error', ({ expect }) => {
+    const error = new Error('boom');
+    const record = parseLine(serializeToJsonl(createEntry({ context: { clientId: 'abc', error }, error })));
+    expect(record.e).toContain('boom');
+    expect(JSON.parse(record.c as string)).toEqual({ clientId: 'abc' });
+  });
+
   test('omits optional fields when not present', ({ expect }) => {
     const record = parseLine(serializeToJsonl(createEntry({ message: 'plain' })));
     expect(record.f).toBeUndefined();

@@ -29,6 +29,7 @@ import {
   createRepo,
   createRepoTopology,
   createSqliteAdapter,
+  createStarTopology,
   disconnectAdapters,
   findInStates,
   reconnectAdapters,
@@ -43,6 +44,53 @@ import {
 describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
   beforeAll(async () => {
     await initSubduction();
+  });
+
+  test('a fetch answered before the relay has the document recovers when it arrives', async () => {
+    // `client` reaches the holder only through `relay`. The recovery shown here comes from the
+    // relay being an automerge `Repo` that opens its own query: `SubductionSource#save` then
+    // triggers the round that reaches the client. The edge DO runs no `SubductionSource`, so this
+    // does not say what happens when EDGE is the intermediary.
+    // Counts subduction traffic on client↔relay, so the assertion below can tell a fetch the relay
+    // answered from a query that settled because the handshake had not finished — those settle the
+    // same way and recover differently.
+    let clientRelayMessages = 0;
+    const { repos, adapters } = await createRepoTopology({
+      peers: ['client', 'relay', 'holder'],
+      connections: [
+        ['client', 'relay'],
+        ['relay', 'holder'],
+      ],
+      onMessageByConnection: {
+        0: (message) => {
+          if (message.type === SUBDUCTION_MESSAGE_TYPE) {
+            clientRelayMessages++;
+          }
+        },
+      },
+    });
+    const [client, relay, holder] = repos;
+    await connectAdapters([adapters[0]]);
+
+    // Created while the holder is still isolated, so the relay cannot have it yet.
+    const handle = holder.create<{ text: string }>({ text: 'arrived late' });
+    const url = handle.url;
+    await waitForSubductionSave();
+
+    // The relay has nothing to give, and the query settles on that rather than staying in flight.
+    const progress = client.findWithProgress<{ text: string }>(url);
+    await waitForQueryState(progress, ['unavailable'], { timeout: 10_000 });
+    // The premise: the relay was reachable and answered. Without this the test would also pass
+    // when the client simply had no peer to ask.
+    expect(clientRelayMessages).to.be.greaterThan(0);
+
+    // The relay now reaches the holder and takes the document. Its query is what gives the relay a
+    // source entry, which is the precondition for the broadcast below.
+    await connectAdapters([adapters[1]]);
+    await findInStates(relay, url, ['ready'], { timeout: 10_000 });
+
+    // The client asked nothing further and the document still reaches it.
+    await waitForQueryState(progress, ['ready'], { timeout: 10_000 });
   });
 
   test('documents missing from local storage go to loading state', async () => {
@@ -323,6 +371,74 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
 
       await expect.poll(() => handleB.doc()?.fromHost, { timeout: 30_000 }).toEqual('host-offline');
       await expect.poll(() => handleA.doc()?.fromClient, { timeout: 30_000 }).toEqual('client-offline');
+    });
+
+    test('a peer offered again mid-round does not hold back later edits', { timeout: 30_000 }, async () => {
+      let connectionState: 'on' | 'off' = 'on';
+      const { repos, adapters } = await createHostClientRepoTopology({
+        connectionStateProvider: () => connectionState,
+        subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
+      });
+      const [host, client] = repos;
+      await connectAdapters(adapters);
+
+      const handle = host.create<{ text?: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'first';
+      });
+      await waitForSubductionSave();
+      const observed = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
+      await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      // Frames are dropped while the round for this edit runs, so it waits on replies that never come.
+      connectionState = 'off';
+      handle.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await waitForSubductionSave();
+      handle.change((doc: any) => {
+        doc.text = 'third';
+      });
+      await waitForSubductionSave();
+
+      // A mesh connection whose auth scope changes is dropped and offered again at once.
+      connectionState = 'on';
+      await reconnectAdapters(adapters);
+      await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
+    });
+
+    test('losing one peer mid-round does not hold back edits for the others', { timeout: 30_000 }, async () => {
+      let server1State: 'on' | 'off' = 'on';
+      const { repos, adapters } = await createStarTopology({
+        connectionStateProviderByConnection: { 0: () => server1State },
+        subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
+      });
+      const [client, , server2] = repos;
+      await connectAdapters(adapters);
+
+      const handle = client.create<{ text?: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'first';
+      });
+      await waitForSubductionSave();
+      const observed = await findInStates<{ text?: string }>(server2, handle.url, FIND_STATES);
+      await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      // server1 goes silent, so the round for this edit waits on a reply that never comes.
+      server1State = 'off';
+      handle.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await waitForSubductionSave();
+      handle.change((doc: any) => {
+        doc.text = 'third';
+      });
+      await waitForSubductionSave();
+
+      const [clientSide, server1Side] = adapters[0];
+      clientSide.peerDisconnected(server1Side.peerId!);
+      server1Side.peerDisconnected(clientSide.peerId!);
+      await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
     });
 
     // Mirrored from `automerge-repo.test.ts:'replicate document after request'`,

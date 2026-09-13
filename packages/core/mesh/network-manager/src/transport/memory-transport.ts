@@ -13,11 +13,22 @@ import { log, logInfo } from '@dxos/log';
 import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions } from './transport.ts';
+import {
+  type Transport,
+  TRANSPORT_CONNECTION_TIMEOUT,
+  type TransportFactory,
+  type TransportOptions,
+} from './transport.ts';
 
 // TODO(burdon): Make configurable.
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
 const MEMORY_TRANSPORT_DELAY = 1;
+
+/**
+ * Fires one second inside `Connection`'s abort, so a peer whose remote signal never arrived reports
+ * that cause rather than the generic connect timeout.
+ */
+const REMOTE_SIGNAL_TIMEOUT = TRANSPORT_CONNECTION_TIMEOUT - 1_000;
 
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
@@ -87,7 +98,7 @@ export class MemoryTransport implements Transport {
     } else {
       // Don't block the open method.
       this._remote
-        .wait({ timeout: this._options.timeout ?? 1_000 })
+        .wait({ timeout: this._options.timeout ?? REMOTE_SIGNAL_TIMEOUT })
         .then((remoteId) => {
           if (this._closed) {
             return;
@@ -130,6 +141,7 @@ export class MemoryTransport implements Transport {
   async close(): Promise<this> {
     log('closing...');
     this._closed = true;
+    this._remote.throw(new Error('Transport closed before the remote signal arrived.'));
 
     MemoryTransport._connections.delete(this._instanceId);
     if (this._remoteConnection) {

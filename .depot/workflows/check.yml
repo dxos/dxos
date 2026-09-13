@@ -26,6 +26,14 @@ on:
         required: false
         default: false
 
+      # For sampling one commit many times at once: the jobs it skips would otherwise share the remote
+      # cache with the shards being measured, and ten concurrent full runs starve `e2e-bundle` past its cap.
+      e2e_only:
+        type: boolean
+        description: 'Run the e2e tests and skip every other job'
+        required: false
+        default: false
+
 permissions:
   contents: read
   packages: read
@@ -55,6 +63,7 @@ concurrency:
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.e2e_only) }}
     permissions:
       contents: read
       packages: read
@@ -183,6 +192,7 @@ jobs:
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
   # instead.
   boot-budget:
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.e2e_only) }}
     permissions:
       contents: read
       packages: read
@@ -324,6 +334,7 @@ jobs:
   # with `test.fails`, which would also swallow an unrelated crash (the WASM allocator abort these
   # suites can provoke looks identical to an assertion failure from the outside).
   memory:
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.e2e_only) }}
     permissions:
       contents: read
       packages: read
@@ -380,6 +391,7 @@ jobs:
   # the win is concurrency across machines, not within one. `--on-failure continue` because moon's
   # default bail drops a failing cell's remaining targets, hiding what they cost.
   test:
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.e2e_only) }}
     strategy:
       fail-fast: false
       matrix:
@@ -477,7 +489,7 @@ jobs:
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
+      inputs.e2e || inputs.e2e_only
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -507,7 +519,7 @@ jobs:
       - name: Resolve affected scope
         uses: ./.depot/actions/affected
         with:
-          all: ${{ inputs.e2e }}
+          all: ${{ inputs.e2e || inputs.e2e_only }}
 
       # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
       # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
@@ -535,7 +547,7 @@ jobs:
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
+      inputs.e2e || inputs.e2e_only
     strategy:
       fail-fast: false
       matrix:
@@ -579,7 +591,7 @@ jobs:
       - name: Resolve affected scope
         uses: ./.depot/actions/affected
         with:
-          all: ${{ inputs.e2e }}
+          all: ${{ inputs.e2e || inputs.e2e_only }}
 
       # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
       # cache `e2e-bundle` warmed. Step `id`s and outputs survive the block (Depot merges each unit's env
@@ -615,13 +627,24 @@ jobs:
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
       - name: Test
-        timeout-minutes: 35
+        # Sized to a cold cache, not a warm one. The `rest` shard's own tests total under five
+        # minutes; the rest is building its ~380 dependencies, which took 34 minutes the last time
+        # the remote cache could not serve them. At 35 the step was killed mid-build and reported as
+        # a test failure, which is the one outcome that tells you nothing.
+        timeout-minutes: 50
         uses: trunk-io/analytics-uploader@v1
         env:
           # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit and
           # reports green without executing a test. Unlike MOON_CACHE=off, this leaves the cached
           # bundle/build dependencies alone.
-          DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+          DX_E2E_RUN_ID: ${{ (inputs.e2e || inputs.e2e_only || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+          # A failing spec writes each app's `@dxos/log` NDJSON beside its trace, which the upload below
+          # collects. The browser console carries only the tab; the client runs in a worker, so this is
+          # the only route to what the failing peer was doing.
+          DX_E2E_CAPTURE_LOGS: '1'
+          # A page can close or take 50s to create with the runner idle, and only the browser's stderr says
+          # why. Dispatches only: it lands in every test's JUnit `system-err`. Not a moon input.
+          DEBUG: ${{ (inputs.e2e || inputs.e2e_only) && 'pw:browser' || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -644,10 +667,11 @@ jobs:
   # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
   cli:
     if: >-
+      ${{ !(github.event_name == 'workflow_dispatch' && inputs.e2e_only) && (
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
+      inputs.e2e) }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1

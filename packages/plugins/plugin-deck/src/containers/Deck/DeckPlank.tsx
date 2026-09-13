@@ -16,6 +16,7 @@ import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
+import { focusPane } from '../../util/index.ts';
 import { CompanionPlank } from './CompanionPlank.tsx';
 import { PlankControls } from './PlankControls.tsx';
 import { PlankErrorFallback } from './PlankFallback.tsx';
@@ -90,7 +91,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   // not scroll on its own.
   useEffect(() => {
     if (scrollIntoView === id) {
-      rootRef.current?.focus({ preventScroll: true });
+      focusPane(rootRef.current);
       onScrollIntoView(undefined);
     }
   }, [scrollIntoView, id, onScrollIntoView]);

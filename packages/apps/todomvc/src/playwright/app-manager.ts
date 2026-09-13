@@ -6,9 +6,9 @@ import { type Browser, type ConsoleMessage, type Page } from '@playwright/test';
 
 import { Trigger, sleep } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
-import { setupPage } from '@dxos/test-utils/playwright';
+import { readLogStore, setupPage } from '@dxos/test-utils/playwright';
 
-import { type FILTER } from '../constants.ts';
+import { type FILTER, LOG_STORE_DB_NAME } from '../constants.ts';
 
 export const INITIAL_URL = 'http://localhost:9006/';
 
@@ -39,6 +39,11 @@ export class AppManager {
 
   async close(): Promise<void> {
     await this._close?.();
+  }
+
+  /** Reads the app's debug log store as NDJSON; written only by an e2e build. */
+  async readDebugLog(): Promise<string> {
+    return readLogStore(this.page, { dbName: LOG_STORE_DB_NAME });
   }
 
   // Getters

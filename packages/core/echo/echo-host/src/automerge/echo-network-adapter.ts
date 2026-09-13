@@ -49,6 +49,11 @@ export type EchoNetworkAdapterProps = {
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   /** Invoked when a replicator connection opens (including after reconnect). */
   onConnectionOpen?: () => void;
+  /**
+   * Handles a connection whose auth scope changed. Without it the peer is dropped and offered again, which classic
+   * automerge-repo sync needs to re-announce documents.
+   */
+  onConnectionAuthScopeChanged?: (peerId: PeerId) => void;
   monitor?: NetworkDataMonitor;
 };
 
@@ -134,6 +139,10 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     if (entry) {
       this._onConnectionAuthScopeChanged(entry.connection);
     }
+  }
+
+  onPeerBound(peerId: PeerId): void {
+    this._connections.get(peerId)?.connection.onPeerBound?.();
   }
 
   @synchronized
@@ -316,6 +325,10 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     log('Connection auth scope changed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
+    if (this._params.onConnectionAuthScopeChanged) {
+      this._params.onConnectionAuthScopeChanged(connection.peerId as PeerId);
+      return;
+    }
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
     this._emitPeerCandidate(connection);
   }

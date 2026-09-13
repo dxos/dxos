@@ -63,6 +63,19 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   changes, with a fresh heal budget. Without this, a doc that exhausts heal on a dead connection is
   orphaned forever (a healthy WS never bumps the generation). Verified: after a drop, 100/100 rounds
   re-drove ~2.6 s post-settle and all succeeded.
+- **Wake on connection loss**: `AdapterConnections` reports a bound peer's `peer-disconnected` as
+  `connectionLost`, and `SubductionSource` wakes every round in flight. `subduction_core` never
+  settles requests pending on a removed connection, so without this one edge restart held every
+  in-flight round, and every local edit parked behind it on `needsResync`, for the full timeout.
+  A woken round re-syncs at once against the peers still connected. The loss does not bump the
+  connection generation: that would re-sync every idle document against the peers left.
+- **Never re-offer a peer on one side only**: dropping and re-offering a peer restarts the handshake
+  on that side, and the remote's established `NetworkAdapterTransport` (which ignores the tag byte)
+  swallows the new handshake frames, so neither side's edits flow again. A mesh connection's auth
+  scope change therefore re-queries the peer's collections and runs `shareConfigChanged` in
+  subduction mode (`EchoNetworkAdapter` `onConnectionAuthScopeChanged`) instead of re-offering.
+  `shareConfigChanged` resets only this host's failed entries; the peer's denied fetches recover
+  through its own heal retries or its own scope change.
 - **`lastSyncGeneration` is stamped at round _start_, not enqueue** — a round queued behind the gate
   across a reconnect must count against the generation it actually runs under.
 
@@ -133,11 +146,51 @@ waiting for recv-drain before flushing) turns that into a deterministic stall.
 - `shareConfigChanged()` re-drives only `all-failed` / `no-peers` entries; it does **not** rescue a
   round still `syncInFlight` (that's the §1 timeout's job) and does **not** recover an
   `authorizePut` deny (needs a fresh holder commit — see the policy skill).
-- A fetch for a doc the peer doesn't have yet settles as **success-empty** — nothing re-asks when it
-  arrives later, so `loadDoc(fetchFromNetwork)` racing a not-yet-pushed doc hangs unboundedly. Tests
-  must barrier on the push landing (`waitForEdgeSyncPeer`) before fetching.
+- A fetch for a doc the peer doesn't have yet settles as **success-empty**, and the query goes
+  `unavailable`. Whether it later recovers depends on what the peer is:
+  - **A peer that is itself an automerge `Repo`** re-drives it. When that peer obtains the document
+    through its own query, `SubductionSource`'s `#save` triggers a sync round, and the waiting query
+    reaches `ready` with nothing re-asking from this side. Shown by `'a fetch answered before the
+relay has the document recovers when it arrives'` in `automerge-repo-subduction.test.ts` — note
+    that suite is `describe.skipIf(process.env.CI)`, so it is a local characterization, not a
+    CI-enforced pin.
+  - **The edge DO is not such a peer.** It has no `Repo` and no `SubductionSource`, so a document
+    pushed into its store by another device triggers no equivalent broadcast. Do not carry the
+    guarantee above across to EDGE; it has not been shown there.
 
-## 10. Diagnosing a non-converging document from logs
+  Client-side re-ask mitigations for the EDGE case — a plain retry, repo-wide `shareConfigChanged`,
+  targeted `resyncSubduction`, and evicting the handle — were each measured against
+  `composer-app` `halo.spec.ts` at n=80 with `--retries=0`. None reduced the failure rate.
+
+  The cause is [inkandswitch/subduction#286](https://github.com/inkandswitch/subduction/issues/286):
+  the edge advertises `getAllHeads()` while the host advertises materialized automerge heads, and on
+  subduction <= 0.16.1 `heads_assuming_minimal` extends the head set with each fragment's boundary
+  rather than its head, so a boundary-less fragment carrying the newest change makes the edge
+  advertise a stale ancestor with no head in common. Both peers hold identical bytes, so re-asking
+  cannot converge the advertised sets — which is why all four mitigations measured flat. The fix is
+  [subduction#290](https://github.com/inkandswitch/subduction/pull/290), unreleased as of 0.16.1.
+  Add no client-side measure until that release lands; this row of null results is what the
+  alternatives cost.
+
+## 10. Share-policy denials are the background, not the signal
+
+Measured on composer's `halo.spec.ts`, twenty passing runs with `--trace on`: **every** run emits
+54–94 `document not found locally for share policy check` refusals and roughly ninety
+`authorizeFetch` denials. Failing runs show the same magnitude. Cross-space documents fan out
+across every space-scoped peer each sync round, so a denial is what healthy replication looks like.
+
+Two consequences, both learned the expensive way:
+
+- **A denial correlated with a failure proves nothing** without a passing-run control. Traces are
+  kept only for failures by default, which makes the correlation look damning; `--trace on` is what
+  produces the control. An investigation ended here after naming the unattributable-document
+  refusal as the mechanism, on two failing traces, before the control showed it in 20/20 passes.
+- **Do not promote these to `warn`.** At ~60 per ninety-second run they leave DEBUG (which the
+  default `INFO` filter drops), enter the OTLP export, promote their enclosing trace past tail
+  sampling (`DEFAULT_RATIO = 0.3`), and evict the 2,000-entry feedback log buffer that user
+  submission triage reads.
+
+## 11. Diagnosing a non-converging document from logs
 
 Symptom: a `(collection, peer)` pair diffs forever. `collection-synchronizer.ts` re-queries every
 ~10 s, the diff reports the same `different` document each pass, and nothing else changes. Observed

@@ -140,13 +140,17 @@ export class RtcPeerConnection {
         }
 
         log('onnegotiationneeded');
-        try {
-          const offer = await connection.createOffer();
-          await connection.setLocalDescription(offer);
-          await this._sendDescription(connection, offer);
-        } catch (err: any) {
-          void this._lockAndAbort(connection, err);
-        }
+        // Under the lock that guards offer/answer handling, so `setLocalDescription` never interleaves
+        // with a remote description being applied.
+        await this._offerProcessingMutex.executeSynchronized(async () => {
+          try {
+            const offer = await connection.createOffer();
+            await connection.setLocalDescription(offer);
+            await this._sendDescription(connection, offer);
+          } catch (err: any) {
+            void this._lockAndAbort(connection, err);
+          }
+        });
       },
 
       // When ICE candidate identified (should be sent to remote peer) and when ICE gathering finalized.
@@ -157,7 +161,8 @@ export class RtcPeerConnection {
           return;
         }
 
-        if (event.candidate) {
+        // An empty candidate only marks the end of gathering, which trickle ICE does not need.
+        if (event.candidate?.candidate) {
           log('onicecandidate', { candidate: event.candidate.candidate });
           await this._sendIceCandidate(event.candidate);
         } else {
@@ -301,7 +306,7 @@ export class RtcPeerConnection {
             await this._sendDescription(connection, answer);
             this._onSessionNegotiated(connection);
           } catch (err) {
-            this._abortConnection(connection, new Error('Error handling a remote offer.', { cause: err }));
+            this._abortConnection(connection, new Error(`Error handling a remote offer: ${err}`, { cause: err }));
           }
         });
         break;
@@ -324,13 +329,18 @@ export class RtcPeerConnection {
             await connection.setRemoteDescription({ type, sdp });
             this._onSessionNegotiated(connection);
           } catch (err) {
-            this._abortConnection(connection, new Error('Error handling a remote answer.', { cause: err }));
+            this._abortConnection(connection, new Error(`Error handling a remote answer: ${err}`, { cause: err }));
           }
         });
         break;
       }
 
       case 'candidate':
+        // WebKit's GStreamer backend aborts the web process adding an empty (end-of-candidates) candidate.
+        if (!data.candidate.candidate) {
+          log('end-of-candidates signal ignored');
+          break;
+        }
         void this._processIceCandidate(connection, data.candidate);
         break;
     }

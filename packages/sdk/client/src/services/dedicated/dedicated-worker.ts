@@ -22,20 +22,34 @@ export type RunDedicatedWorkerOptions = {
   onStart?: (host: ClientServicesHost) => Promise<void>;
 };
 
+/** Removed as soon as the probe below has opened it. */
+const OPFS_PROBE_FILE = '.dxos-opfs-probe';
+
 /**
- * Probes whether OPFS is available in this worker (it is not, e.g., in private-browsing contexts),
- * gating persistent indexing.
+ * Probes whether OPFS is usable in this worker — it is not in private browsing, and WebKit can fail
+ * it for what it calls a transient reason.
+ *
+ * Takes a sync access handle rather than just resolving the directory: that is what the SQLite VFS
+ * needs, and a directory that resolves is no promise the handle will follow. Getting this wrong
+ * commits the worker to a storage layer it cannot open, which it then retries for the life of the
+ * page instead of falling back to memory.
  */
 const probeOpfsAvailable = async (): Promise<boolean> => {
   try {
-    if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
-      await navigator.storage.getDirectory();
-      return true;
+    if (typeof navigator === 'undefined' || !navigator.storage?.getDirectory) {
+      return false;
     }
-  } catch {
-    log.warn('OPFS not available, disabling persistent indexing');
+
+    const root = await navigator.storage.getDirectory();
+    const file = await root.getFileHandle(OPFS_PROBE_FILE, { create: true });
+    const handle = await (file as any).createSyncAccessHandle();
+    handle.close();
+    await root.removeEntry(OPFS_PROBE_FILE).catch(() => {});
+    return true;
+  } catch (err) {
+    log.warn('OPFS not usable, falling back to in-memory storage', { err });
+    return false;
   }
-  return false;
 };
 
 /** Runs the dedicated worker loop. Exported so apps can use a custom worker entrypoint and inject setup (e.g. observability). */

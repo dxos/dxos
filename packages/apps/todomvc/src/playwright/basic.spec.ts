@@ -4,6 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { FILTER } from '../constants.ts';
 import { AppManager } from './app-manager.ts';
 
@@ -16,13 +18,6 @@ enum Groceries {
 }
 
 test.describe('Basic test', () => {
-  // TODO(wittjosiah): STRICTLY temporary, remove when DX-1152 lands. Every test here runs a two-peer
-  //   invitation in `beforeEach`, and a controlled comparison measured this suite failing at the same
-  //   rate as composer's collaboration tests with the same signature (the shell's auth-code input
-  //   disabled at `connectingSpaceInvitation`) — the production-edge stall, not this app. Trunk still
-  //   records every first-attempt failure. Do not copy this pattern without a tracked issue.
-  test.describe.configure({ retries: 2 });
-
   let host: AppManager;
   let guest: AppManager;
 
@@ -44,7 +39,9 @@ test.describe('Basic test', () => {
     await guest.page.waitForURL(await host.page.url());
   });
 
-  test.afterEach(async () => {
+  // Playwright requires the first parameter to be a destructuring pattern, so a fixture is named and discarded.
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    await captureDebugLogs({ host, guest }, testInfo);
     await Promise.all([host.close(), guest.close()]);
   });
 

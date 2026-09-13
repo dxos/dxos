@@ -103,12 +103,15 @@ export class RepoProxy extends Resource {
 
   /**
    * Consecutive attempts to replace a dropped subscription, backing off so a host that is gone for
-   * good is not retried in a tight loop. Reset by the first batch the replacement delivers.
+   * good is not retried in a tight loop. Reset by a batch whose documents all integrate.
    */
   private _resubscribeAttempts = 0;
 
   /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
   private _resubscribeDelay = 0;
+
+  /** Documents that failed to integrate an update, until their handle rebuilds from the host copy. */
+  private readonly _rebuildIds = new Set<string>();
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
 
@@ -455,18 +458,23 @@ export class RepoProxy extends Resource {
         }),
         { timeout: RPC_TIMEOUT },
       )
-        .then((response) => {
-          const documentId = response.documentId as DocumentId;
-          handle._setDocumentId(documentId);
-          this._pendingAddIds.add(documentId);
-          this._handles[documentId] = handle;
-          update();
-          handle._wakeReady();
-        })
-        .catch((err) => {
-          log.catch(err);
-          cleanup();
-        })
+        .then(
+          (response) => {
+            const documentId = response.documentId as DocumentId;
+            handle._setDocumentId(documentId);
+            this._pendingAddIds.add(documentId);
+            this._handles[documentId] = handle;
+            update();
+            handle._wakeReady();
+          },
+          // A failed call leaves the handle unbound; an error after the host returned a document must not discard it.
+          (err) => {
+            log.catch(err);
+            handle._failReady(err);
+            cleanup();
+          },
+        )
+        .catch((err) => log.catch(err))
         .finally(() => {
           this._pendingCreations.delete(handle._internalId);
         }),
@@ -487,12 +495,16 @@ export class RepoProxy extends Resource {
     // The host opens every subscription with an empty batch once it is registered; a real update
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
-    // A batch proves the subscription is live, so the next drop starts from the shortest backoff.
-    this._resubscribeAttempts = 0;
     if (!updates) {
+      // A batch proves the subscription is live, so the next drop starts from the shortest backoff —
+      // unless a document is still waiting on the full copy that would show it recovered.
+      if (!this._isRebuildPending()) {
+        this._resubscribeAttempts = 0;
+      }
       return;
     }
 
+    let integrationError: Error | undefined;
     for (const update of updates) {
       const { documentId, mutation, requesting } = update;
       const handle = this._handles[documentId];
@@ -510,9 +522,47 @@ export class RepoProxy extends Resource {
       }
 
       if (mutation) {
-        handle._integrateHostUpdate(mutation);
+        try {
+          if (handle._isAwaitingRebuild()) {
+            // Until the replacement subscription is in place, updates are increments from the old one.
+            if (this._isReconnecting) {
+              continue;
+            }
+            handle._rebuild(mutation);
+          } else {
+            handle._integrateHostUpdate(mutation);
+          }
+        } catch (error) {
+          // A throw from outside the document, such as a change listener, is not recovered by replacing it.
+          if (!handle._isAwaitingRebuild()) {
+            throw error;
+          }
+          log.error('document could not integrate a host update; rebuilding it from the host copy', {
+            documentId,
+            error,
+          });
+          this._rebuildIds.add(documentId);
+          integrationError ??= error instanceof Error ? error : new Error(String(error));
+        }
       }
     }
+
+    if (integrationError) {
+      // A replacement subscription starts the host from scratch, so its first update for each document
+      // is the full copy a marked handle rebuilds from.
+      this._onSubscriptionDropped(integrationError);
+    } else if (!this._isRebuildPending()) {
+      this._resubscribeAttempts = 0;
+    }
+  }
+
+  private _isRebuildPending(): boolean {
+    for (const documentId of this._rebuildIds) {
+      if (!this._handles[documentId]?._isAwaitingRebuild()) {
+        this._rebuildIds.delete(documentId);
+      }
+    }
+    return this._rebuildIds.size > 0;
   }
 
   /**

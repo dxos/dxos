@@ -5,17 +5,13 @@
 import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager.ts';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
 test.describe('HALO tests', () => {
-  // TODO(wittjosiah): STRICTLY temporary, remove when DX-1152 lands. These retries exist solely
-  //   because the production edge's two-peer path stalls endemically (invitations and replication,
-  //   ~2% per operation); the defect is known, tracked, and not maskable — Trunk still records every
-  //   first-attempt failure. Do not copy this pattern to any suite without a tracked issue.
-  test.describe.configure({ retries: 2 });
-
   let host: AppManager;
   let guest: AppManager;
 
@@ -30,19 +26,23 @@ test.describe('HALO tests', () => {
     await guest.init();
   });
 
-  test.afterEach(async () => {
+  // Playwright requires the first parameter to be a destructuring pattern and `no-empty-pattern`
+  // forbids an empty one, so a fixture is named and discarded. `browserName` is a plain value.
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
     // Playwright runs `afterEach` even when `beforeEach` skipped, so neither manager may exist.
     if (host !== undefined && guest !== undefined) {
+      await captureDebugLogs({ host, guest }, testInfo);
       await Promise.all([host.close(), guest.close()]);
     }
   });
 
   test('join new identity', async () => {
-    test.setTimeout(90_000);
+    test.setTimeout(240_000);
 
     await host.createSpace();
 
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+    await host.waitForUploadsSettled();
     // The guest has only its own default space until it joins the host's identity.
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT);
 
@@ -73,11 +73,12 @@ test.describe('HALO tests', () => {
   });
 
   test('deleting a space replicates across devices', async () => {
-    test.setTimeout(120_000);
+    test.setTimeout(240_000);
 
     // Host creates a space; guest joins the host's identity and inherits it.
     await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+    await host.waitForUploadsSettled();
 
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();

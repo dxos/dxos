@@ -312,7 +312,21 @@ export class AutomergeHost extends Resource {
       isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
-      onConnectionOpen: () => this._sharePolicyChangedTask?.schedule(),
+      onConnectionOpen: () => {
+        this._sharePolicyChangedTask?.schedule();
+        this._resyncAwaitedDocuments();
+      },
+      // Subduction consults the share policy on every request, so a wider auth scope needs this host's denied
+      // documents re-driven and the peer's collections queried again. Dropping and re-offering the peer restarts
+      // the handshake on this side alone, and the remote's established transport swallows it.
+      ...(this._useSubduction
+        ? {
+            onConnectionAuthScopeChanged: (peerId: PeerId) => {
+              this._collectionSynchronizer.onConnectionOpen(peerId);
+              this._sharePolicyChangedTask?.schedule();
+            },
+          }
+        : {}),
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
@@ -374,6 +388,7 @@ export class AutomergeHost extends Resource {
       Event.wrap<SubductionPeerBinding>(this._repo, 'subduction-peer-bound').on(this._ctx, (binding) => {
         if ('repoPeerId' in binding) {
           this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
+          this._echoNetworkAdapter.onPeerBound(binding.repoPeerId);
         }
       });
 
@@ -1007,13 +1022,12 @@ export class AutomergeHost extends Resource {
     },
     authorizeFetch: async (subductionPeerId, sedimentreeId) => {
       const allow = await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sedimentreeId);
-      // The throw below is the only record of a denial, and the peer's matching WASM warning is
-      // suppressed (see `_open`), so a refused document is otherwise invisible on both sides.
-      log.verbose('subduction authorizeFetch', {
-        documentId: sedimentreeIdToDocumentId(sedimentreeId),
-        subductionPeerId: subductionPeerId.toString(),
-        allow,
-      });
+      const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+      const subductionPeerIdHex = subductionPeerId.toString();
+      // Verbose in both directions: a soak of passing runs emits ~90 denials each, so a denial is
+      // ordinary traffic — cross-space documents fan out across every space-scoped peer each round
+      // — and carries no signal about a stalled document on its own.
+      log.verbose('subduction authorizeFetch', { documentId, subductionPeerId: subductionPeerIdHex, allow });
       if (!allow) {
         throw new Error('authorizeFetch denied by client share policy');
       }
@@ -1033,13 +1047,14 @@ export class AutomergeHost extends Resource {
           denied.push(sedimentreeIdToDocumentId(sid));
         }
       }
-      // Silently dropping ids from the response would otherwise leave no trace of the omission.
-      log.verbose('subduction filterAuthorizedFetch', {
+      // Silently dropping ids from the response would otherwise leave no trace of the omission,
+      // so a broadcast the peer never receives is only visible here.
+      const summary = {
         subductionPeerId: subductionPeerId.toString(),
         requested: sedimentreeIds.length,
         allowed: allowed.length,
-        denied,
-      });
+      };
+      log.verbose('subduction filterAuthorizedFetch', { ...summary, denied: denied.join(',') });
       return allowed;
     },
   };
@@ -1406,19 +1421,21 @@ export class AutomergeHost extends Resource {
         collectionId,
         peerId,
         passes,
-        missingOnLocal,
-        missingOnRemote,
-        different,
-        localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
-        remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
-        // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
-        // searched for the diverged document's storage or policy activity.
-        sedimentreeIds: Object.fromEntries(
-          different.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
-        ),
-        handleStates: Object.fromEntries(
-          different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
-        ),
+        // Flattened to strings, and ordered before the counts: a browser console preview renders a
+        // nested array as `Array(n)` and truncates after a few keys, so this is what reaches a
+        // captured Playwright trace. Subduction addresses documents by sedimentree id, so the hex
+        // is what a log bundle is searched by.
+        different: different
+          .map(
+            (documentId) =>
+              `${documentId}[${documentIdToSedimentreeIdHex(documentId)}] ` +
+              `state=${getHandleState(this._repo, documentId)} ` +
+              `local=${(localState.documents[documentId] ?? []).join('|')} ` +
+              `remote=${(remoteState.documents[documentId] ?? []).join('|')}`,
+          )
+          .join(' ;; '),
+        missingOnLocal: missingOnLocal.join(','),
+        missingOnRemote: missingOnRemote.join(','),
       });
     }
 
@@ -1429,8 +1446,7 @@ export class AutomergeHost extends Resource {
     }
 
     // Per-handle state included: a document stuck in `unavailable`/`loading` here on every diff
-    // pass is the signature of a subduction DocumentQuery parked without retry —
-    // `findWithProgress` will not re-issue the query, so the doc never arrives.
+    // pass is what a stalled fetch looks like from the collection-sync side.
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
@@ -1446,19 +1462,6 @@ export class AutomergeHost extends Resource {
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
     for (const documentId of toReplicate) {
-      // `findWithProgress` resolves from the existing query for an already-`ready` document and
-      // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
-      // document reaching here gets no retry from either — the diff simply repeats next pass.
-      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
-        // Verbose: this fires on every diff pass for docs that are in practice fully synced,
-        // so at warn level it floods the console without indicating a real fault.
-        log.verbose('diverged document has no subduction retry path', {
-          collectionId,
-          peerId,
-          documentId,
-          sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-        });
-      }
       this._documentsToSync.add(documentId);
       this._leaseUntilSettled(documentId as DocumentId);
     }
@@ -1473,6 +1476,25 @@ export class AutomergeHost extends Resource {
    * can advertise a document it never delivers, and `'unavailable'` is transient here (the query
    * reports it whenever no source can serve the document *yet*), so it cannot be the release signal.
    */
+  /**
+   * Re-drives the documents this peer is still waiting on.
+   *
+   * Called when a connection opens, which includes the replacement one a Subduction restart brings
+   * up. The repo-wide kick beside this only revives `all-failed`/`no-peers` entries; a document
+   * whose fetch was in flight when the connection went away leaves an entry Subduction considers
+   * settled, so nothing else re-asks for it.
+   */
+  private _resyncAwaitedDocuments(): void {
+    if (!this._useSubduction || this._replicationLeases.size === 0) {
+      return;
+    }
+
+    log('re-driving documents awaiting replication', { count: this._replicationLeases.size });
+    for (const documentId of this._replicationLeases.keys()) {
+      this._repo.resyncSubduction(documentId);
+    }
+  }
+
   private _leaseUntilSettled(documentId: DocumentId): void {
     if (this._replicationLeases.has(documentId)) {
       return;

@@ -60,6 +60,15 @@ const RESTART_DELAY_JITTER = 250;
 const MAX_RESTART_DELAY = 5000;
 
 /**
+ * Deadline for Subduction to bind a peer to a new connection. The repo swallows a failed handshake,
+ * so an unbound connection stays open carrying nothing until it is restarted.
+ */
+const DEFAULT_BIND_TIMEOUT = 10_000;
+
+/** The deadline doubles with each consecutive restart that never bound, up to this ceiling. */
+const MAX_BIND_TIMEOUT = 120_000;
+
+/**
  * Outbound frame batching bounds (see `frame-batching-spec.md`). Subduction transport frames are
  * coalesced into one {@link SubductionBatchEnvelope}, flushed on whichever bound trips first:
  * {@link SUBDUCTION_BATCH_MAX_FRAMES} frames, {@link SUBDUCTION_BATCH_MAX_BYTES} accumulated, or
@@ -80,6 +89,8 @@ export type EchoEdgeSubductionReplicatorProps = {
    * deployed. See `frame-batching-spec.md`.
    */
   frameBatching?: boolean;
+  /** Milliseconds before restarting a connection whose handshake has not bound a peer. */
+  bindTimeout?: number;
 };
 
 /**
@@ -116,6 +127,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _spaceMutexes = new Map<SpaceId, Mutex>();
   private readonly _disableSharePolicy: boolean;
   private readonly _frameBatching: boolean;
+  private readonly _bindTimeout: number;
 
   private _ctx?: Context = undefined;
   private _context: AutomergeReplicatorContext | null = null;
@@ -138,11 +150,13 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     edgeHttpClient,
     disableSharePolicy,
     frameBatching,
+    bindTimeout,
   }: EchoEdgeSubductionReplicatorProps) {
     this._edgeConnection = edgeConnection;
     this._edgeHttpClient = edgeHttpClient;
     this._disableSharePolicy = disableSharePolicy ?? false;
     this._frameBatching = frameBatching ?? true;
+    this._bindTimeout = bindTimeout ?? DEFAULT_BIND_TIMEOUT;
   }
 
   async connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
@@ -250,7 +264,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     // residual cost is one Mutex per ever-connected space.
   }
 
-  private async _openConnection(spaceId: SpaceId, reconnects: number = 0): Promise<void> {
+  private async _openConnection(spaceId: SpaceId, reconnects: number = 0, unboundRestarts: number = 0): Promise<void> {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));
 
@@ -274,6 +288,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       context: this._context,
       sharedPolicyEnabled: !this._disableSharePolicy,
       frameBatching: this._frameBatching,
+      bindTimeout: Math.max(this._bindTimeout, Math.min(MAX_BIND_TIMEOUT, this._bindTimeout * 2 ** unboundRestarts)),
       onRemoteConnected: async () => {
         log.trace('dxos.echo.edge.subduction-replicator.onRemoteConnected', { spaceId });
         this._context?.onConnectionOpen(connection);
@@ -312,7 +327,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
               return;
             }
             log.trace('dxos.echo.edge.subduction-replicator.restart', { spaceId, reconnects, restartDelay });
-            await this._openConnection(spaceId, reconnects + 1);
+            await this._openConnection(spaceId, reconnects + 1, connection.isBound ? 0 : unboundRestarts + 1);
           },
           restartDelay,
         );
@@ -330,6 +345,7 @@ type EdgeSubductionReplicatorConnectionProps = {
   context: AutomergeReplicatorContext;
   sharedPolicyEnabled: boolean;
   frameBatching: boolean;
+  bindTimeout: number;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
   onRestartRequested: () => Promise<void>;
@@ -350,6 +366,8 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
   private readonly _frameBatching: boolean;
+  private readonly _bindTimeout: number;
+  #bound = false;
 
   // Outbound batching state. `#pending` holds encoded-size-tracked inner frames awaiting a
   // flush; `#firstFrameSent` forces the handshake (first frame) to go single so session
@@ -372,6 +390,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     context,
     sharedPolicyEnabled,
     frameBatching,
+    bindTimeout,
     onRemoteConnected,
     onRemoteDisconnected,
     onRestartRequested,
@@ -382,6 +401,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     this._context = context;
     this._sharedPolicyEnabled = sharedPolicyEnabled;
     this._frameBatching = frameBatching;
+    this._bindTimeout = bindTimeout;
     // Generate a unique peer id for every connection so sync-state is fresh on reconnect.
     this._subductionServiceId = compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId);
     this._remotePeerId = `${this._subductionServiceId}-${this._connectionId}`;
@@ -425,6 +445,21 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       ),
     );
 
+    // Armed before the handshake starts; closing the connection disposes the context and cancels it.
+    scheduleTask(
+      this._ctx,
+      () => {
+        if (!this.#bound) {
+          log.info('subduction handshake did not bind a peer; restarting', {
+            spaceId: this._spaceId,
+            bindTimeout: this._bindTimeout,
+          });
+          this._onRestartRequested();
+        }
+      },
+      this._bindTimeout,
+    );
+
     await this._onRemoteConnected();
   }
 
@@ -440,6 +475,14 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     return this._remotePeerId;
   }
 
+  onPeerBound(): void {
+    this.#bound = true;
+  }
+
+  get isBound(): boolean {
+    return this.#bound;
+  }
+
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
       log.verbose('share policy probe', { documentId: params.documentId, allow: true, reason: 'policy-disabled' });
@@ -451,10 +494,13 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         documentId: params.documentId,
         peerId: this._remotePeerId as PeerId,
       });
+      // Verbose even when refused: a soak of passing runs emits ~60 of these each, so an
+      // unattributable document is ordinary traffic rather than a signal that one is stuck.
       log.verbose('document not found locally for share policy check', {
         documentId: params.documentId,
         acceptDocument: remoteDocumentExists,
         remoteId: this._remotePeerId,
+        connectionSpaceId: this._spaceId,
       });
       // If a document is not present locally return true only if it already exists on edge.
       return remoteDocumentExists;

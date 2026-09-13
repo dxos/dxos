@@ -159,6 +159,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
             deviceKey: connection.remoteDeviceKey,
             spaceId,
             isAuthorized,
+            knownAuthorizedDevices: authorizedDevices?.size ?? 0,
           });
           return isAuthorized;
         } catch (err) {

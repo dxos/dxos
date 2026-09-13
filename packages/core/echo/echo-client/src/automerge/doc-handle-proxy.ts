@@ -75,6 +75,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * If sync is successful, they will be moved to `_lastSentHeads`.
    */
   private _currentlySendingHeads: A.Heads = [];
+  /** Set once the document stops accepting calls, until {@link _rebuild} replaces it. */
+  private _awaitingRebuild = false;
   /**
    * Identifier for internal usage.
    * @internal
@@ -209,6 +211,14 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Settles `whenReady` with the error that stopped the document from being created.
+   * @internal
+   */
+  _failReady(error: Error): void {
+    this._ready.throw(error);
+  }
+
+  /**
    * @internal
    */
   _wakeReady(): void {
@@ -245,6 +255,10 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    */
   _getPendingChanges(): Uint8Array | undefined {
     invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
+    // An unusable document throws on every call, and the rebuild discards its unconfirmed changes.
+    if (this._awaitingRebuild) {
+      return;
+    }
     if (A.equals(A.getHeads(this._doc), this._lastSentHeads)) {
       return;
     }
@@ -268,7 +282,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     // `_lastSentHeads` advances only on a confirmed send or on integrating a host update, and a send
     // in flight leaves it behind the doc's heads — so heads equality alone means the host holds
     // everything this handle does, with nothing outstanding.
-    return this._doc !== undefined && A.equals(A.getHeads(this._doc), this._lastSentHeads);
+    return this._doc !== undefined && !this._awaitingRebuild && A.equals(A.getHeads(this._doc), this._lastSentHeads);
   }
 
   /**
@@ -277,6 +291,42 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    */
   _confirmSync(): void {
     this._lastSentHeads = this._currentlySendingHeads;
+  }
+
+  /**
+   * Marks the document as unusable. Once a call into the wasm runtime traps, the object stays borrowed
+   * and every later call fails with "recursive use of an object".
+   * @internal
+   */
+  _markForRebuild(): void {
+    this._awaitingRebuild = true;
+  }
+
+  /** @internal */
+  _isAwaitingRebuild(): boolean {
+    return this._awaitingRebuild;
+  }
+
+  /**
+   * Replaces an unusable document with the host's full copy. Local changes the host had not
+   * confirmed were only in the old document, and are lost.
+   * @internal
+   */
+  _rebuild(save: Uint8Array): void {
+    const doc = A.load<T>(save);
+    const heads = A.getHeads(doc);
+    const patches = A.diff(doc, [], heads);
+    this._awaitingRebuild = false;
+    this._doc = doc;
+    this._lastSentHeads = heads;
+    this._currentlySendingHeads = heads;
+    this._wakeReady();
+    this.emit('change', {
+      handle: this,
+      doc,
+      patches,
+      patchInfo: { before: A.init<T>(), after: doc, source: 'change' },
+    });
   }
 
   /**
@@ -289,21 +339,28 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     }
     invariant(this._doc, 'Doc is deleted, cannot write mutation');
     const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    this._doc = A.loadIncremental(this._doc, mutation);
+    let patches: A.Patch[];
+    try {
+      const headsBefore = A.getHeads(before);
+      this._doc = A.loadIncremental(before, mutation);
+      const headsAfter = A.getHeads(this._doc);
+      if (A.equals(headsBefore, this._lastSentHeads)) {
+        this._lastSentHeads = headsAfter;
+      }
 
-    if (A.equals(headsBefore, this._lastSentHeads)) {
-      this._lastSentHeads = A.getHeads(this._doc);
+      // The host echoes a client's own mutation back over its subscription as a separate change; it
+      // merges cleanly and moves the heads but alters nothing, so emitting for it would report a
+      // change that did not happen — a listener waiting for the *next* remote edit would be woken by
+      // its own. Patches, not heads, are the test: a merge can advance the heads without touching any
+      // value.
+      patches = A.diff(this._doc, headsBefore, headsAfter);
+    } catch (error) {
+      // Only a failure inside automerge leaves the document unusable; a listener throwing below does not.
+      this._awaitingRebuild = true;
+      throw error;
     }
 
     this._wakeReady();
-
-    // The host echoes a client's own mutation back over its subscription as a separate change; it
-    // merges cleanly and moves the heads but alters nothing, so emitting for it would report a
-    // change that did not happen — a listener waiting for the *next* remote edit would be woken by
-    // its own. Patches, not heads, are the test: a merge can advance the heads without touching any
-    // value.
-    const patches = A.diff(this._doc, headsBefore, A.getHeads(this._doc));
     if (patches.length === 0) {
       return;
     }

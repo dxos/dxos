@@ -46,6 +46,10 @@ test.describe('Chat', () => {
     await host.createSpace();
     await host.createObject({ type: 'Chat' });
 
+    // Opened from the navtree rather than relying on creation to leave it open: a navigation landing
+    // late replaces the deck's contents, and the chat is the only object in this space.
+    await host.navigateToObject(0);
+
     const assistant = new Assistant(Assistant.plank(host.page));
     await expect(assistant.prompt).toBeVisible();
 

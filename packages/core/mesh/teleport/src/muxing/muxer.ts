@@ -5,7 +5,7 @@
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { Duplex } from 'node:stream';
 
-import { Event, Trigger, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
+import { Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -53,6 +53,11 @@ const MAX_SAFE_FRAME_SIZE = 1_000_000;
 const SYSTEM_CHANNEL_ID = 0;
 const GRACEFUL_CLOSE_TIMEOUT = 3_000;
 
+/** Backoff for resending an OpenChannel command the remote has not yet acted on. */
+const OPEN_CHANNEL_RESEND_DELAY = 5_000;
+const OPEN_CHANNEL_RESEND_MAX_DELAY = 8_000;
+const OPEN_CHANNEL_RESEND_ATTEMPTS = 6;
+
 type Channel = {
   /**
    * Our local channel ID.
@@ -67,12 +72,27 @@ type Channel = {
    */
   remoteId: null | number;
 
+  /**
+   * Set once the remote sends data addressed to our id, which it can only do after receiving our OpenChannel command.
+   */
+  remoteKnowsId: boolean;
+
+  /**
+   * Set by the first OpenChannel from the remote, which flushes the send buffer; later ones are ignored.
+   */
+  remoteOpened: boolean;
+
   contentType?: string;
 
   /**
    * Send buffer.
    */
   buffer: Uint8Array[];
+
+  /**
+   * Settles once the buffer handed over when the remote opened the channel has gone out.
+   */
+  flushing?: Promise<void>;
 
   /**
    * Set when we initialize a NodeJS stream or an RPC port consuming the channel.
@@ -181,15 +201,9 @@ export class Muxer {
 
     // NOTE: Make sure channel.push is set before sending the command.
     try {
-      await this._sendCommand(
-        create(CommandSchema, {
-          payload: {
-            case: 'openChannel',
-            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
-          },
-        }),
-        SYSTEM_CHANNEL_ID,
-      );
+      await this._sendOpenChannel(channel);
+      log('openChannel sent', { tag: channel.tag, id: channel.id });
+      this._scheduleOpenChannelResend(channel);
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -240,15 +254,9 @@ export class Muxer {
 
     // NOTE: Make sure channel.push is set before sending the command.
     try {
-      await this._sendCommand(
-        create(CommandSchema, {
-          payload: {
-            case: 'openChannel',
-            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
-          },
-        }),
-        SYSTEM_CHANNEL_ID,
-      );
+      await this._sendOpenChannel(channel);
+      log('openChannel sent', { tag: channel.tag, id: channel.id });
+      this._scheduleOpenChannelResend(channel);
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -307,6 +315,7 @@ export class Muxer {
       await this._sendCommand(
         create(CommandSchema, { payload: { case: 'close', value: { error: err?.message } } }),
         SYSTEM_CHANNEL_ID,
+        DESTROY_COMMAND_SEND_TIMEOUT,
       ).catch(async (err: any) => {
         log('error sending courtesy close command', { err });
       });
@@ -365,18 +374,36 @@ export class Muxer {
         contentType: cmd.payload.value.contentType,
       });
       const remoteId = cmd.payload.value.id;
-      channel.remoteId = remoteId;
+      log('openChannel received', { tag: channel.tag, id: channel.id, remoteId, buffered: channel.buffer.length });
+      // The remote resends OpenChannel until it sees data; only the first hands the buffer over.
+      if (channel.remoteOpened) {
+        return;
+      }
+      channel.remoteOpened = true;
 
-      // Flush any buffered data.
-      for (const data of channel.buffer) {
-        await this._sendCommand(
+      // The buffer goes to the balancer in one synchronous pass and `remoteId` is set before anything awaits, so later
+      // writes queue behind it. Each frame's deadline starts once the frame ahead has gone.
+      const sends = channel.buffer.map((data) =>
+        this._enqueueCommand(
           create(CommandSchema, { payload: { case: 'data', value: { channelId: remoteId, data } } }),
           channel.id,
-        );
-      }
+        ),
+      );
       channel.buffer = [];
+      channel.remoteId = remoteId;
+      const flushing = (async () => {
+        for (const send of sends) {
+          await this._awaitCommand(send);
+        }
+      })();
+      channel.flushing = flushing;
+      await flushing;
+      if (channel.flushing === flushing) {
+        channel.flushing = undefined;
+      }
     } else if (cmd.payload.case === 'data') {
       const stream = this._channelsByLocalId.get(cmd.payload.value.channelId) ?? failUndefined();
+      stream.remoteKnowsId = true;
       if (!stream.push) {
         log.warn('Received data for channel before it was opened', { tag: stream.tag });
         return;
@@ -385,15 +412,69 @@ export class Muxer {
     }
   }
 
+  private async _sendOpenChannel(channel: Channel): Promise<void> {
+    await this._sendCommand(
+      create(CommandSchema, {
+        payload: {
+          case: 'openChannel',
+          value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
+        },
+      }),
+      SYSTEM_CHANNEL_ID,
+    );
+  }
+
+  /**
+   * Resends a channel's OpenChannel command until the remote sends data on the channel. Until it has our id the
+   * remote buffers everything it writes to the channel, so one lost command would stall the channel for good;
+   * receiving it again is harmless.
+   */
+  private _scheduleOpenChannelResend(channel: Channel, attempt = 1, delay = OPEN_CHANNEL_RESEND_DELAY): void {
+    scheduleTask(
+      this._ctx,
+      async () => {
+        if (channel.remoteKnowsId || this._channelsByLocalId.get(channel.id) !== channel) {
+          return;
+        }
+        log.info('remote has not used the channel; resending openChannel', {
+          tag: channel.tag,
+          id: channel.id,
+          attempt,
+        });
+        await this._sendOpenChannel(channel);
+        if (attempt < OPEN_CHANNEL_RESEND_ATTEMPTS) {
+          this._scheduleOpenChannelResend(channel, attempt + 1, Math.min(delay * 2, OPEN_CHANNEL_RESEND_MAX_DELAY));
+        }
+      },
+      delay,
+    );
+  }
+
   private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {
+    await this._awaitCommand(this._enqueueCommand(cmd, channelId), timeout);
+  }
+
+  /** Hands a command to the balancer without waiting for it to go out; `undefined` once the muxer is disposed. */
+  private _enqueueCommand(cmd: Command, channelId: number): Trigger<void> | undefined {
     if (this._disposed) {
-      // log.info('ignoring sendCommand after disposed', { cmd });
+      return undefined;
+    }
+    const trigger = new Trigger<void>();
+    try {
+      this._balancer.pushData(toBinary(CommandSchema, cmd), trigger, channelId);
+    } catch (err: any) {
+      trigger.throw(err);
+    }
+    return trigger;
+  }
+
+  /** Waits for an enqueued command to go out, destroying the muxer if sending fails or times out. */
+  private async _awaitCommand(send: Trigger<void> | undefined, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {
+    if (!send) {
       return;
     }
     try {
-      const trigger = new Trigger<void>();
-      this._balancer.pushData(toBinary(CommandSchema, cmd), trigger, channelId);
-      await trigger.wait({ timeout });
+      await send.wait({ timeout });
     } catch (err: any) {
       await this.destroy(err);
     }
@@ -408,6 +489,8 @@ export class Muxer {
       channel = {
         id: this._nextId++,
         remoteId: null,
+        remoteKnowsId: false,
+        remoteOpened: false,
         tag: params.tag,
         contentType: params.contentType,
         buffer: [],
@@ -437,11 +520,13 @@ export class Muxer {
       channel.buffer.push(data);
       return;
     }
-    await this._sendCommand(
+    const send = this._enqueueCommand(
       create(CommandSchema, { payload: { case: 'data', value: { channelId: channel.remoteId, data } } }),
       channel.id,
-      timeout,
     );
+    // The deadline covers this write's own send, not the backlog queued ahead of it at open.
+    await channel.flushing;
+    await this._awaitCommand(send, timeout);
   }
 
   private _destroyChannel(channel: Channel, err?: Error): void {

@@ -28,7 +28,7 @@ The base comes from the event payload rather than from moon's own `vcs.defaultBr
 | no event payload | affected | merge-base with `origin/main` |
 | `all: true` on the action | all | none |
 
-`e2e-bundle` and `e2e` pass `all: ${{ inputs.e2e }}`, because that dispatch exists to run the whole suite. The two must agree, or a cell runs suites whose bundle was never warmed.
+`e2e-bundle` and `e2e` pass `all: ${{ inputs.e2e || inputs.e2e_only }}`, because that dispatch exists to run the whole suite. The two must agree, or a cell runs suites whose bundle was never warmed.
 
 **A base that will not resolve means a full run, never an empty one.** `moon` exits 0 having run nothing when the affected set comes back empty, so a base that quietly fails to resolve would turn every gate in the workflow green. Same silent-degradation class as a dropped remote cache, which the CI project's [`DESIGN.md`](../../../.agents/projects/ci/DESIGN.md) covers.
 
