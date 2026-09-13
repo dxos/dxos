@@ -41,17 +41,17 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
+    // The running client leads, so the worker outlives the client that is torn down.
+    await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client2 = await new Client({ services: services2 }).initialize();
+    await client2.halo.createIdentity();
+    await client2.addTypes([TestSchema.Expando]);
+
     await using services1 = await testBuilder.createDedicatedWorkerClientServices().open();
     const client1 = await new Client({ services: services1 }).initialize();
-    await client1.halo.createIdentity();
     await client1.addTypes([TestSchema.Expando]);
     const space = await client1.spaces.create();
     await space.waitUntilReady();
-
-    // As under React StrictMode: the replacement client is up before the first one is torn down.
-    await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
-    await using client2 = await new Client({ services: services2 }).initialize();
-    await client2.addTypes([TestSchema.Expando]);
 
     space.db.add(Obj.make(TestSchema.Expando, { name: 'added before destroy' }));
     await client1.destroy();

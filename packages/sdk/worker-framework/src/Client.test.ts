@@ -61,24 +61,32 @@ const createHub = () => {
  * Minimal MessagePort-backed dedicated worker running the real {@link Worker.run} loop with a no-op
  * runtime — exercises leader election and port exchange without a service runtime.
  */
-const createWorkerFactory = (storageLockKey: string) => () => {
-  const channel = new MessageChannel();
-  channel.port1.start();
-  Worker.run({
-    endpoint: {
-      postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
-      addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
-      removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
-      close: () => channel.port1.close(),
-    },
-    storageLockKey,
-    createRuntime: () =>
-      Effect.succeed({
-        createSession: () => Effect.never,
+const createWorkerFactory =
+  (
+    storageLockKey: string,
+    { started = Promise.resolve(), onClose }: { started?: Promise<void>; onClose?: () => void } = {},
+  ) =>
+  () => {
+    const channel = new MessageChannel();
+    channel.port1.start();
+    channel.port1.addEventListener('close', () => onClose?.());
+    void started.then(() =>
+      Worker.run({
+        endpoint: {
+          postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
+          addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
+          removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
+          close: () => channel.port1.close(),
+        },
+        storageLockKey,
+        createRuntime: () =>
+          Effect.succeed({
+            createSession: () => Effect.never,
+          }),
       }),
-  });
-  return channel.port2 as WorkerProtocol.WorkerOrPort;
-};
+    );
+    return channel.port2 as WorkerProtocol.WorkerOrPort;
+  };
 
 /** Reads the diagnostics the connection merges into a failure. */
 const diagnosticsOf = (error: unknown): Record<string, unknown> =>
@@ -432,6 +440,52 @@ describe('Connection multi-client', () => {
     const { held } = await navigator.locks.query();
     expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
   }, 30_000);
+
+  test('a connection closed while its leader session opens closes that session and does not lead again', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const first = makeConnection(hub, keys);
+    onTestFinished(async () => {
+      await first.connection.close();
+    });
+    await first.connection.open();
+
+    const workerStarted = new Trigger();
+    const workerClosed = new Trigger();
+    let workersCreated = 0;
+    const createWorker = createWorkerFactory(uniqueKeys().storageLockKey, {
+      started: workerStarted.wait(),
+      onClose: () => workerClosed.wake(),
+    });
+    const second = makeConnection(hub, keys, undefined, {
+      maxLeaderFailures: 1,
+      createWorker: () => {
+        workersCreated++;
+        return createWorker();
+      },
+    });
+    onTestFinished(async () => {
+      await second.connection.close();
+    });
+    await second.connection.open();
+
+    // The follower wins the election once the leader leaves; its worker is held back from starting.
+    await first.connection.close();
+    await waitForCondition({ condition: () => workersCreated === 1, timeout: 5_000 });
+
+    const closing = second.connection.close();
+    await sleep(50);
+    workerStarted.wake();
+    await closing;
+
+    await asyncTimeout(workerClosed.wait(), 2_000);
+    await sleep(200);
+    const { held } = await navigator.locks.query();
+    expect(held?.map((lock) => lock.name)).not.toContain(keys.leaderLockKey);
+    expect(workersCreated).toBe(1);
+    expect(second.failures).toEqual([]);
+  });
 
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();

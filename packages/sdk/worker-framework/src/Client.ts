@@ -236,7 +236,7 @@ export class Connection extends Resource {
         }
       }
     });
-    this.#watchLeader();
+    this.#watchLeader(this._ctx);
     this.#connectTask.open();
     // The connect task retries on its own, so its first run completing is not the readiness signal —
     // only `#initialConnection` is. Bounding that first run separately would reject `open()` for a
@@ -274,7 +274,8 @@ export class Connection extends Resource {
     await this.#leaderSession?.close();
   }
 
-  #watchLeader() {
+  // Bound to the context it started under: after close, `_ctx` is a fresh, undisposed context.
+  #watchLeader(ctx: Context) {
     // Recovery paths call this whenever they cannot prove a request is outstanding, and a second
     // concurrent chain would trip the `!this.#leaderSession` invariant below.
     if (this.#electionActive) {
@@ -285,7 +286,7 @@ export class Connection extends Resource {
       try {
         log('worker-connection: requesting leader lock', { clientId: this.#clientId });
         this.#leaderPhase = 'awaiting-lock';
-        await requestExclusiveLock(this.#leaderLockKey, this._ctx.signal, async () => {
+        await requestExclusiveLock(this.#leaderLockKey, ctx.signal, async () => {
           log('worker-connection: leader lock acquired (this tab is leader)', { clientId: this.#clientId });
           this.#leaderPhase = 'lock-held';
           this.#holdsLeaderLock = true;
@@ -308,7 +309,7 @@ export class Connection extends Resource {
             this.#leaderDone = done;
             // Removed in the `finally` below: election re-enters on every steal/failure, so a
             // permanent registration would grow the connection's dispose list for the tab's lifetime.
-            const removeDoneDisposer = this._ctx.onDispose(() => done.wake());
+            const removeDoneDisposer = ctx.onDispose(() => done.wake());
             this.#leaderSession.onClose.on((error) => {
               log('worker-connection: leader session closed', { hasError: !!error });
               this.#leaderSession = undefined;
@@ -324,6 +325,10 @@ export class Connection extends Resource {
               this.#leaderPhase = 'session-open';
               this.#leaderFailureCount = 0;
               this.#lastLeaderError = undefined;
+              // A close that ran while this session was opening skipped it, so nothing else closes it.
+              if (ctx.disposed) {
+                await this.#leaderSession?.close();
+              }
               await done.wait();
             } finally {
               removeDoneDisposer();
@@ -338,12 +343,12 @@ export class Connection extends Resource {
         log('worker-connection: leader lock released');
         // Returning here would drop this tab out of the lock's wait queue for good, leaving it able
         // to steal but never to lead.
-        if (!this._ctx.disposed) {
-          this.#watchLeader();
+        if (!ctx.disposed) {
+          this.#watchLeader(ctx);
         }
       } catch (error: any) {
         this.#electionActive = false;
-        if (isAbortError(error) && this._ctx.disposed) {
+        if (isAbortError(error) && ctx.disposed) {
           // Normal shutdown: the leader-lock request was aborted because the resource is closing.
           log('worker-connection: leader watch aborted (closing)');
           return;
@@ -352,14 +357,14 @@ export class Connection extends Resource {
         const session = this.#leaderSession;
         this.#leaderSession = undefined;
         await session?.close();
-        if (this._ctx.disposed) {
+        if (ctx.disposed) {
           return;
         }
         if (isAbortError(error)) {
           // Our exclusive lock was stolen by another tab that judged this leader stale. The lock
           // callback keeps running per spec, so tear down our leader session and re-enter election.
           log.warn('worker-connection: leader lock stolen, tearing down and re-watching', { clientId: this.#clientId });
-          this.#watchLeader();
+          this.#watchLeader(ctx);
           return;
         }
         // The leader session itself failed (e.g. worker init/crash). The lock is released once this
@@ -385,12 +390,12 @@ export class Connection extends Resource {
           }
         }
         try {
-          await sleepWithContext(this._ctx, jitteredBackoff);
+          await sleepWithContext(ctx, jitteredBackoff);
         } catch {
           // Disposed while backing off.
           return;
         }
-        this.#watchLeader();
+        this.#watchLeader(ctx);
       }
     });
   }
@@ -573,7 +578,7 @@ export class Connection extends Resource {
 
     // The steal only evicts — the lock is released the moment the callback above returns — so without
     // re-arming, a tab whose chain has ended takes the lock and hands it straight back.
-    this.#watchLeader();
+    this.#watchLeader(this._ctx);
   }
 
   async #isLeaderLockHeld(): Promise<boolean> {
