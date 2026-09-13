@@ -34,6 +34,13 @@ export type RtcPeerChannelFactoryOptions = {
   legacyInitiator?: boolean;
 };
 
+/** A data channel together with the frames that reached it before a transport took it over. */
+export type ClaimedDataChannel = {
+  channel: RTCDataChannel;
+  /** Filled until the transport assigns its own `onmessage`: a browser drops a message nobody listens for. */
+  received: unknown[];
+};
+
 /**
  * A factory for rtc Transport implementations for a particular peer.
  * Contains WebRTC connection establishment logic.
@@ -44,7 +51,7 @@ export class RtcPeerConnection {
   private readonly _channelCreatedCallbacks = new Map<string, ChannelCreatedCallback>();
   // Channels indexed by topic.
   private readonly _transportChannels = new Map<string, RtcTransportChannel>();
-  private readonly _dataChannels = new Map<string, RTCDataChannel>();
+  private readonly _dataChannels = new Map<string, ClaimedDataChannel>();
   // A peer is ready to receive ICE candidates when local and remote description were set.
   private readonly _readyForCandidates = new Trigger();
 
@@ -75,7 +82,7 @@ export class RtcPeerConnection {
     return this._connection;
   }
 
-  public async createDataChannel(topic: string): Promise<RTCDataChannel> {
+  public async createDataChannel(topic: string): Promise<ClaimedDataChannel> {
     const connection = await this._openConnection();
     if (!this._transportChannels.has(topic)) {
       if (!this._transportChannels.size) {
@@ -84,9 +91,9 @@ export class RtcPeerConnection {
       throw new Error('Transport closed while connection was being open');
     }
     if (this._initiator) {
-      const channel = connection.createDataChannel(topic);
-      this._dataChannels.set(topic, channel);
-      return channel;
+      const claimed: ClaimedDataChannel = { channel: connection.createDataChannel(topic), received: [] };
+      this._dataChannels.set(topic, claimed);
+      return claimed;
     } else {
       const existingChannel = this._dataChannels.get(topic);
       if (existingChannel) {
@@ -224,11 +231,15 @@ export class RtcPeerConnection {
         }
 
         log('ondatachannel', { label: event.channel.label });
-        this._dataChannels.set(event.channel.label, event.channel);
+        const claimed: ClaimedDataChannel = { channel: event.channel, received: [] };
+        // No transport may exist for this topic yet, and the peer's first frame is its only channel handshake.
+        event.channel.binaryType = 'arraybuffer';
+        event.channel.onmessage = (message) => claimed.received.push(message.data);
+        this._dataChannels.set(event.channel.label, claimed);
         const pendingCallback = this._channelCreatedCallbacks.get(event.channel.label);
         if (pendingCallback) {
           this._channelCreatedCallbacks.delete(event.channel.label);
-          pendingCallback.resolve(event.channel);
+          pendingCallback.resolve(claimed);
         }
       },
     });
@@ -514,6 +525,6 @@ const createIceFailureError = (details: IceCandidateErrorDetails[]) => {
 };
 
 type ChannelCreatedCallback = {
-  resolve: (channel: RTCDataChannel) => void;
+  resolve: (channel: ClaimedDataChannel) => void;
   reject: (reason?: any) => void;
 };

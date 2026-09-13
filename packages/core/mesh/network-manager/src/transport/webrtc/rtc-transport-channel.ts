@@ -13,7 +13,7 @@ import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type Transport, type TransportOptions, type TransportStats } from '../transport.ts';
-import { type RtcPeerConnection } from './rtc-peer-connection.ts';
+import { type ClaimedDataChannel, type RtcPeerConnection } from './rtc-peer-connection.ts';
 import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-transport-stats.ts';
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
@@ -76,10 +76,10 @@ export class RtcTransportChannel extends Resource implements Transport {
     this._isChannelCreationInProgress = true;
     this._connection
       .createDataChannel(this._options.topic)
-      .then((channel) => {
+      .then(({ channel, received }) => {
         if (this.isOpen) {
           this._channel = channel;
-          this._initChannel(this._channel);
+          this._initChannel(channel, received);
         } else {
           this._safeCloseChannel(channel);
         }
@@ -112,7 +112,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     log('closed');
   }
 
-  private _initChannel(channel: RTCDataChannel): void {
+  private _initChannel(channel: RTCDataChannel, received: ClaimedDataChannel['received']): void {
     // Bytes rather than the default `blob`, whose async conversion lets two frames complete out of
     // arrival order.
     channel.binaryType = 'arraybuffer';
@@ -144,6 +144,9 @@ export class RtcTransportChannel extends Resource implements Transport {
       this.connected.emit();
     };
 
+    // In the same turn as replacing the peer connection's `onmessage`, so no frame falls between the two.
+    received.splice(0).forEach((data) => this._receive(data));
+
     Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
       onopen: open,
 
@@ -152,23 +155,7 @@ export class RtcTransportChannel extends Resource implements Transport {
         await this.close();
       },
 
-      onmessage: (event: MessageEvent) => {
-        const data = toFrame(event.data);
-        if (this._stream) {
-          this._stream.push(data);
-          return;
-        }
-        if (!this.isOpen) {
-          log.warn('ignoring message on a closed channel');
-          return;
-        }
-        // Nothing retransmits a frame that lands before the channel reports open, so it waits.
-        if (this._bufferedMessages.length >= MAX_PREOPEN_MESSAGES) {
-          this.errors.raise(new Error(`More than ${MAX_PREOPEN_MESSAGES} frames before the channel opened.`));
-          return;
-        }
-        this._bufferedMessages.push(data);
-      },
+      onmessage: (event: MessageEvent) => this._receive(event.data),
 
       onerror: (event: Event & any) => {
         if (this.isOpen) {
@@ -189,6 +176,24 @@ export class RtcTransportChannel extends Resource implements Transport {
     if (channel.readyState === 'open') {
       open();
     }
+  }
+
+  private _receive(data: unknown): void {
+    const frame = toFrame(data);
+    if (this._stream) {
+      this._stream.push(frame);
+      return;
+    }
+    if (!this.isOpen) {
+      log.warn('ignoring message on a closed channel');
+      return;
+    }
+    // Nothing retransmits a frame that lands before the channel reports open, so it waits.
+    if (this._bufferedMessages.length >= MAX_PREOPEN_MESSAGES) {
+      this.errors.raise(new Error(`More than ${MAX_PREOPEN_MESSAGES} frames before the channel opened.`));
+      return;
+    }
+    this._bufferedMessages.push(frame);
   }
 
   private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback): Promise<void> {

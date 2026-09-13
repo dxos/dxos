@@ -228,7 +228,7 @@ describe('RtcTransportChannel', () => {
     let onChannelCreationFailed = () => {};
     const createChannelPromise = new Promise((resolve, reject) => {
       onChannelCreated = async () => {
-        resolve(channel);
+        resolve({ channel, received: [] });
         await sleep(5);
       };
       onChannelCreationFailed = reject;
