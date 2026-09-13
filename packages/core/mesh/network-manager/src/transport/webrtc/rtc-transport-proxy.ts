@@ -33,6 +33,7 @@ import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { arrayToBuffer } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
+import { LOGGED_FRAMES } from './rtc-transport-channel.ts';
 
 type BridgeService = BufService<typeof BridgeServiceDesc>;
 
@@ -52,6 +53,8 @@ export class RtcTransportProxy extends Resource implements Transport {
   readonly errors = new ErrorStream();
 
   private _serviceStream: Stream<BridgeEvent> | undefined;
+  private _framesToBridge = 0;
+  private _framesFromBridge = 0;
 
   constructor(private readonly _options: RtcTransportProxyOptions) {
     super();
@@ -106,6 +109,9 @@ export class RtcTransportProxy extends Resource implements Transport {
 
         const connectorStream = new Writable({
           write: (chunk, _, callback) => {
+            if (this._framesToBridge++ < LOGGED_FRAMES) {
+              log('frame to bridge', { topic: this._options.topic, bytes: chunk.length });
+            }
             const sendStartMs = Date.now();
             this._options.bridgeService
               .sendData(create(DataRequestSchema, { proxyId: fromPublicKey(this._proxyId), payload: chunk }), {
@@ -190,6 +196,9 @@ export class RtcTransportProxy extends Resource implements Transport {
   }
 
   private _handleData(dataEvent: BridgeEvent_DataEvent): void {
+    if (this._framesFromBridge++ < LOGGED_FRAMES) {
+      log('frame from bridge', { topic: this._options.topic, bytes: dataEvent.payload.length });
+    }
     try {
       // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
       this._options.stream.write(arrayToBuffer(dataEvent.payload));

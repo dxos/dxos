@@ -24,6 +24,9 @@ const MAX_BUFFERED_AMOUNT = 64 * 1024;
 /** A peer sends a handful of frames before the channel opens; past that something is wrong. */
 const MAX_PREOPEN_MESSAGES = 64;
 
+/** Frames logged in each direction from a channel's start, where every session handshake travels. */
+export const LOGGED_FRAMES = 8;
+
 /** Copied rather than aliased: a buffered frame outlives the event that carried it. */
 const toFrame = (data: unknown): Buffer | string => {
   if (data instanceof ArrayBuffer) {
@@ -54,6 +57,8 @@ export class RtcTransportChannel extends Resource implements Transport {
   private _bufferedMessages: (Buffer | string)[] = [];
   private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
   private _isChannelCreationInProgress = false;
+  private _framesSent = 0;
+  private _framesReceived = 0;
 
   constructor(
     private readonly _connection: RtcPeerConnection,
@@ -187,6 +192,9 @@ export class RtcTransportChannel extends Resource implements Transport {
 
   private _receive(data: unknown): void {
     const frame = toFrame(data);
+    if (this._framesReceived++ < LOGGED_FRAMES) {
+      log('frame received', { topic: this._options.topic, bytes: frame.length, streamReady: !!this._stream });
+    }
     if (this._stream) {
       this._stream.push(frame);
       return;
@@ -222,6 +230,9 @@ export class RtcTransportChannel extends Resource implements Transport {
 
     try {
       this._channel.send(chunk);
+      if (this._framesSent++ < LOGGED_FRAMES) {
+        log('frame sent', { topic: this._options.topic, bytes: chunk.length });
+      }
     } catch (err: any) {
       this.errors.raise(err);
       callback();
