@@ -20,62 +20,88 @@ export type ReadLogStoreOptions = {
   maxBytes?: number;
 };
 
+/** Runs inside the page: IndexedDB is per origin, so any document on the app's origin can read it. */
+const readStoreInPage = async ({ dbName, storeName, maxBytes }: Required<ReadLogStoreOptions>): Promise<string> => {
+  const request = indexedDB.open(dbName);
+  const db = await new Promise<IDBDatabase | undefined>((resolve) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(undefined);
+    // Fires only when the database does not exist: abort rather than create one from here.
+    request.onupgradeneeded = () => {
+      request.transaction?.abort();
+      resolve(undefined);
+    };
+  });
+  if (!db) {
+    return '';
+  }
+  try {
+    if (!db.objectStoreNames.contains(storeName)) {
+      return `{"error":"no object store ${storeName}; found ${JSON.stringify([...db.objectStoreNames])}"}`;
+    }
+    const rows = await new Promise<{ lines?: string }[]>((resolve, reject) => {
+      const query = db.transaction(storeName, 'readonly').objectStore(storeName).getAll();
+      query.onsuccess = () => resolve(query.result ?? []);
+      query.onerror = () => reject(query.error);
+    });
+    // Accumulated newest-first and capped: one string the size of the whole store can exceed the
+    // engine's maximum string length.
+    const kept: string[] = [];
+    let bytes = 0;
+    let dropped = 0;
+    for (let index = rows.length - 1; index >= 0; index--) {
+      const chunk = rows[index]?.lines ?? '';
+      if (bytes + chunk.length > maxBytes) {
+        dropped = index + 1;
+        break;
+      }
+      kept.push(chunk);
+      bytes += chunk.length + 1;
+    }
+    kept.reverse();
+    // Chunks are stored as `batch.join('\n')` with no trailing newline, so they are rejoined with one.
+    const ndjson = kept.join('\n');
+    return dropped > 0 ? `{"note":"dropped ${dropped} older chunks over ${maxBytes} bytes"}\n${ndjson}` : ndjson;
+  } finally {
+    db.close();
+  }
+};
+
+/** A same-origin document with no scripts, so reading the store never boots the app. */
+const READER_PATH = '/__dx_log_reader__';
+
+const isPageGone = (err: unknown): boolean =>
+  /Target crashed|Page crashed|Target page, context or browser has been closed/.test(String(err));
+
 /**
  * Reads a page's `IdbLogStore` database as NDJSON: the most recent `maxBytes`, prefixed with a marker
- * when older records were dropped. Unlike the console, the store survives a reload.
+ * when older records were dropped. Unlike the console, the store survives a reload and a renderer crash.
  */
-export const readLogStore = (
+export const readLogStore = async (
   page: Page,
   { dbName, storeName = 'logs', maxBytes = DEFAULT_MAX_BYTES }: ReadLogStoreOptions,
-): Promise<string> =>
-  page.evaluate(
-    async ({ dbName, storeName, maxBytes }) => {
-      const request = indexedDB.open(dbName);
-      const db = await new Promise<IDBDatabase | undefined>((resolve) => {
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => resolve(undefined);
-        // Fires only when the database does not exist: abort rather than create one from here.
-        request.onupgradeneeded = () => {
-          request.transaction?.abort();
-          resolve(undefined);
-        };
-      });
-      if (!db) {
-        return '';
-      }
-      try {
-        if (!db.objectStoreNames.contains(storeName)) {
-          return `{"error":"no object store ${storeName}; found ${JSON.stringify([...db.objectStoreNames])}"}`;
-        }
-        const rows = await new Promise<{ lines?: string }[]>((resolve, reject) => {
-          const query = db.transaction(storeName, 'readonly').objectStore(storeName).getAll();
-          query.onsuccess = () => resolve(query.result ?? []);
-          query.onerror = () => reject(query.error);
-        });
-        // Accumulated newest-first and capped: one string the size of the whole store can exceed the
-        // engine's maximum string length.
-        const kept: string[] = [];
-        let bytes = 0;
-        let dropped = 0;
-        for (let index = rows.length - 1; index >= 0; index--) {
-          const chunk = rows[index]?.lines ?? '';
-          if (bytes + chunk.length > maxBytes) {
-            dropped = index + 1;
-            break;
-          }
-          kept.push(chunk);
-          bytes += chunk.length + 1;
-        }
-        kept.reverse();
-        // Chunks are stored as `batch.join('\n')` with no trailing newline, so they are rejoined with one.
-        const ndjson = kept.join('\n');
-        return dropped > 0 ? `{"note":"dropped ${dropped} older chunks over ${maxBytes} bytes"}\n${ndjson}` : ndjson;
-      } finally {
-        db.close();
-      }
-    },
-    { dbName, storeName, maxBytes },
-  );
+): Promise<string> => {
+  const args = { dbName, storeName, maxBytes };
+  try {
+    return await page.evaluate(readStoreInPage, args);
+  } catch (err) {
+    if (!isPageGone(err)) {
+      throw err;
+    }
+    const readerUrl = new URL(READER_PATH, page.url()).href;
+    const reader = await page.context().newPage();
+    try {
+      await reader.route(readerUrl, (route) =>
+        route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>log reader</title>' }),
+      );
+      await reader.goto(readerUrl);
+      const ndjson = await reader.evaluate(readStoreInPage, args);
+      return `{"note":"read after the page was lost: ${JSON.stringify(String(err)).slice(1, -1)}"}\n${ndjson}`;
+    } finally {
+      await reader.close().catch(() => {});
+    }
+  }
+};
 
 export type DebugLogSource = {
   readDebugLog(): Promise<string>;
