@@ -18,6 +18,11 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [ ] PR.
 - [ ] Live generation blocked: the provided account answers `403 not_enough_credits` (auth + proxy proven via the 404 status test).
 
+## Phase 2: adjacent fixes (same PR)
+
+- [x] Dev server brands as the `dev` channel: boot mark filter + favicon middleware (`channel-branding.ts`).
+- [x] `TaskSet` hidden from the Database section (`HiddenAnnotation`, like `Milestone`).
+
 ## Follow-ups
 
 - [ ] Verify a video model path against a real account and set it as the video default.

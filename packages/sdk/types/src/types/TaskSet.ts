@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Database, DXN, type Error, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { GeneratorAnnotation, HiddenAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 import { type EntityId } from '@dxos/echo/Key';
 import { BaseError } from '@dxos/errors';
@@ -50,6 +50,7 @@ export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.ta
   }).pipe(
     Schema.annotate({ title: 'Task Set' }),
     LabelAnnotation.set(['name']),
+    HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square-offset--regular', hue: 'indigo' }),
   ),
 ) {}
