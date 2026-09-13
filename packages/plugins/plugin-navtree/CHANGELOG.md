@@ -1,5 +1,133 @@
 # @dxos/plugin-navtree
 
+## 0.12.0
+
+### Minor Changes
+
+- 329faa0: The URL is now the deck's only record of what is open, and the relationship between the two is one-way: an operation computes a target and pushes the URL, the URL is projected into deck state, the deck renders. Nothing else writes what is open. This replaces a bidirectional sync between the address bar and persisted deck state that needed five separate guards to referee it, and whose failures cleared the URL on reload.
+
+  A URL resolves asynchronously, so the projection applies it twice: once synchronously by the pairs themselves, so the planks the URL names render their chrome immediately, and again once each pair has resolved to a graph node. Per-plank preferences and the closed-plank record hang off a plank's URL segment rather than its id, so they survive that refinement. A plank whose node has no URL binding cannot be opened and is logged with the extension that produced it.
+
+  `AppGraphBuilder` no longer stamps `properties.urlSegment` onto nodes, and the `BuilderNode` type that described the stamped shape is gone. A node's URL representation comes from `PathResolution.representNode`, which reads the producing extension's binding and so still works for a node whose subtree has momentarily left the graph.
+
+  What is open is no longer persisted. `active` and `inactive` moved out of the deck's stored state into `EphemeralDeckState.open`, keyed by workspace, and `DeckCapabilities.getDeck` merges them with the workspace's persisted preferences so nothing downstream has to know which atom a field came from. A workspace's open planks are remembered for the session and no longer: the URL records only the workspace you are in, so a reload seeds any other workspace from its first child as it does on a first visit. The persisted-state migration is deleted along with them, since a stored blob now carries only preferences and dropping a field the deck no longer knows costs nothing.
+
+  Breaking for plugin authors: `LayoutOperation.Open`'s `navigation` option is no longer read, a node needs a `url` binding on its graph-builder extension to be openable as a plank, and the pinned workspaces lost their `!` id prefix. A plugin's own workspace is now named the way a plugin should name one, by its namespace: `dxos:settings`, `dxos:registry` and `dxos:account`. No space id can collide with a name of that shape, so the namespace is what keeps two plugins from claiming the same workspace.
+
+### Patch Changes
+
+- 9e449df: Fix the L0 rail insetting its items by the scrollbar strip, which narrowed the space around the
+  workspace avatars and pushed the active-tab indicator underneath them.
+- 3214dcf: **Breaking:** `Graph.expand` is renamed to `Graph.expandSync`, and `Graph.expand` now returns an `Effect` that runs the expansion off the paint-critical path. Both overloads (direct and curried) are preserved on `expandSync`, so migrating is a rename. Interrupting the new `expand` cancels a still-pending expansion, which makes superseding one scheduled expansion with another a matter of interrupting the previous fiber.
+
+  Expanding a node also no longer blocks the main thread on stack-trace capture. `Atom.withLabel` records a stack trace on every call, and the graph labelled an atom per node, per connection key and per extension, so a single expansion cost hundreds of captures — measured at 17ms with 40 registered extensions. Labels are now opt-in via `VITE_ATOM_LABELS` under the dev server.
+
+  The nav-tree's hover prefetch uses the new scheduled `expand` behind a 150ms settle delay, so moving the cursor across rows only expands the row it stops on.
+
+  The tooltip context is split so that pointing at a trigger no longer re-renders every `Tooltip.Trigger` in the app, and the open tooltip's `data-state`/`aria-describedby` are applied to the active trigger alone rather than to all of them.
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [6a457ac]
+- Updated dependencies [96f94c2]
+- Updated dependencies [6d52561]
+- Updated dependencies [520c34f]
+- Updated dependencies [9714c75]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [34a8433]
+- Updated dependencies [b8762ef]
+- Updated dependencies [2d4107f]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [864cd0d]
+- Updated dependencies [5305365]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [513cac6]
+- Updated dependencies [6d28380]
+- Updated dependencies [329faa0]
+- Updated dependencies [7ec1738]
+- Updated dependencies [2643a00]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [b02fe16]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [8cb5553]
+- Updated dependencies [8c20ee2]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [cc45381]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [c0e5651]
+- Updated dependencies [3214dcf]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [7c426d4]
+- Updated dependencies [987f7e1]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [b7822a7]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [0e44f24]
+- Updated dependencies [bd06669]
+- Updated dependencies [1d6f730]
+- Updated dependencies [dea5df9]
+- Updated dependencies [fc83abd]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [886453b]
+- Updated dependencies [582fc22]
+- Updated dependencies [63629c5]
+- Updated dependencies [0c92b44]
+- Updated dependencies [32584c9]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [f9816c0]
+- Updated dependencies [78523d2]
+- Updated dependencies [520c34f]
+- Updated dependencies [4ae2005]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/react-ui-list@0.12.0
+  - @dxos/plugin-deck@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/graph@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/lit-ui@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/react-ui-search@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

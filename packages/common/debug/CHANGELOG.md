@@ -1,5 +1,12 @@
 # @dxos/debug
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [4da1052]
+  - @dxos/node-std@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,27 @@
 # @dxos/halo-e2e
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [86d1482]
+- Updated dependencies [3b78bb6]
+- Updated dependencies [a069511]
+- Updated dependencies [5df602e]
+- Updated dependencies [881f900]
+- Updated dependencies [0ef896f]
+- Updated dependencies [777d24a]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [a74e9b0]
+- Updated dependencies [df22dec]
+- Updated dependencies [139a3b0]
+- Updated dependencies [c4188a6]
+- Updated dependencies [0280a6a]
+  - @dxos/client@0.12.0
+  - @dxos/halo@0.12.0
+  - @dxos/halo-adapter-client@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

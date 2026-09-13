@@ -1,5 +1,83 @@
 # @dxos/plugin-theme
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [6a457ac]
+- Updated dependencies [96f94c2]
+- Updated dependencies [6d52561]
+- Updated dependencies [520c34f]
+- Updated dependencies [9714c75]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [34a8433]
+- Updated dependencies [2d4107f]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [5305365]
+- Updated dependencies [6d28380]
+- Updated dependencies [329faa0]
+- Updated dependencies [7ec1738]
+- Updated dependencies [2643a00]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [b02fe16]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [882ac2a]
+- Updated dependencies [9c86066]
+- Updated dependencies [cc45381]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [b7822a7]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [0e44f24]
+- Updated dependencies [bd06669]
+- Updated dependencies [1d6f730]
+- Updated dependencies [dea5df9]
+- Updated dependencies [fc83abd]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [886453b]
+- Updated dependencies [582fc22]
+- Updated dependencies [63629c5]
+- Updated dependencies [32584c9]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [f9816c0]
+- Updated dependencies [520c34f]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/ui-types@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/i18n@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

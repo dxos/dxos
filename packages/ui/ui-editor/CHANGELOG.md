@@ -1,5 +1,177 @@
 # @dxos/ui-editor
 
+## 0.12.0
+
+### Minor Changes
+
+- ec4f4ca: The outliner shares a document with prose: each top-level list is its own island in the outline tree, headings and paragraphs between lists belong to no item, the caret may rest in them, and Enter on an empty item ends the list with a blank line before the caret (Backspace still deletes the item). Empty rows hint at what they want: an empty item shows an "Enter task" placeholder and a blank line shows an add-task button in the grip gutter; an empty item shows no drag grip. Gutter controls are a control-sized box around a 24px button, and `createBlockDrag` takes a `canDrag` predicate. `Form.FieldSet` accepts `descriptionPlacement='tooltip'`, which replaces the helper text with a question-mark button after the label that carries the description; `FormFieldHeader` gains a `labelEnd` slot. Task status glyphs live on `Task.StatusOptions` beside title and colour, and `@dxos/react-ui-task` exports `statusIcon` in place of the `STATUS_ICONS` record. The Project article's Notes section uses the tooltip placement, and the outliner's first-item seeding is opt-in.
+- b2a44d6: Cards and dialogs each sit one level lower on the surface ladder: a card takes the canvas's `base` level and a dialog (with sheets and drawers) the `raised` level, so both read darker in the dark theme and closer to the canvas in the light one. The `elevation` prop's explicit levels are unchanged, and `Select`'s list moves to the popup level with menus rather than following dialogs down.
+
+  The editor's widget machinery is split from what it matches. `widgets` owns the decoration field, the portal lifecycle (`widgetHost({ setWidgets, bookmarks })`), the `widgetContextEffect`/`widgetResetEffect`/`widgetUpdateEffect` effects and bookmark navigation; `xmlTags({ registry })` is the XML element matcher and `linkWidgets({ match, link, image })` the markdown link matcher, with `matchSchemes`, `matchHosts` and `matchPattern` to build a `(url) => boolean`. `objectLinks()` is the `dxn:`/`echo:` case with the anchor chip as its default inline widget and an optional block `image` widget; the `urlSchemes` field on a registry entry and the shared `xmlWidgetRegistry` are gone, and `XmlWidgetProps`/`XmlWidgetState`/`xmlTag*Effect` are `WidgetProps`/`WidgetState`/`widget*Effect`. A host composes `[widgetHost(…), xmlTags(…), objectLinks(…)]` instead of passing `setWidgets` to `xmlTags`. A plugin contributes its own matcher the same way: plugin-github's `githubLinks({ trigger, link })` turns repository, pull-request and issue URLs into anchor chips, contributed through `MarkdownCapabilities.ExtensionProvider`. The popover's lookup is now an extension point too: plugin-preview's `PreviewCapabilities.LinkResolver` is a multi capability each plugin answers for its own kind of link (the ECHO entity resolver is plugin-preview's own contribution), and plugin-github resolves a GitHub URL to an in-memory `Repo`, `PullRequest` or `Issue` — the latter two new host-agnostic types in `@dxos/types` beside `Repo` — fetched from the GitHub API with the space's connection token (anonymously without one) unless a host contributes a `GitHubCapabilities.LinkSource`. `GitHubCard` is the `CardContent` surface for all three, so the deck popover shows the PR or issue with no further wiring. The anchor chain names what it carries: `<dx-anchor eid>` (was `dxn`), `DxAnchorActivate.eid`, `PreviewLinkRef.eid` and `ObjectLinkProps.eid` hold an ECHO entity URI (`echo:///<id>`), and the legacy single-slash `echo:/<id>` spelling is retired from stories, tests and comments in favour of the canonical triple-slash form. A task's description takes the same contributions: `MarkdownEditable` and `TaskList.Edit` accept host extensions, and the task-set article passes what `MarkdownCapabilities.ExtensionProvider` contributes, so a GitHub URL in a description is a chip while editing. plugin-github's provider no longer needs a document for the URL matcher; only the bare `#123` decoration does.
+
+### Patch Changes
+
+- cff33b7: Operations that let an agent drive Composer end to end through the debug port, and two fixes found by doing so.
+
+  - `review.create` accepts `range: { from, to }` (character offsets, converted to the editor's cursor anchor), and `text` + `sender` to submit the thread with a first message; it now returns `{ threadId, anchorId }`.
+  - `assistant.runPromptInChat` accepts `companionTo` in place of `chat`, resolving and persisting the object's companion chat the way the companion's own submit does. `ensureCompanionChat` and `runPromptInChat` activate the assistant plugin themselves, so they work before the assistant UI has been opened.
+  - `debug.snapshot` reports spaces, toasts, errors since a timestamp, comment threads per plank and a markdown document's text; `debug.revertLast` undoes the last undoable operation as the undo toast does; `composer.invoke` forwards a `spaceId`.
+  - The editor's comments extension no longer throws from a state update when a thread's anchor is not a valid cursor pair (`Cursor.getRangeFromCursor` returns `undefined`).
+
+- 4800a6f: Restore a markdown document's scroll position when navigating back to it: the position is now recorded as you scroll (not only when the caret moves), read back on mount, and re-anchored to the exact pixel rather than the enclosing line.
+- 1b62726: Keep the editor scrollbar thumb inset from the edge while hovered or scrolling. The `background`
+  shorthand reset `background-clip` to `border-box`, painting over the transparent border that forms
+  the inset exactly when the thumb became visible.
+- 41e2750: Render bare URLs and `<url>` autolinks as clickable links in markdown (previously only `[label](url)` was decorated), so links in assistant chat messages can be followed instead of copy-pasted. `@dxos/observability` now reaches `SpaceState`/`DeviceKind` through `@dxos/protocols` rather than the `@dxos/client` barrels, keeping echo-client out of a consuming app's eager boot graph.
+- d4b4919: `dx-anchor` preview cards now open on hover by default (`trigger='click'` opts out) with a
+  shadcn-style fade+zoom animation; hosts close on `state: false`. Editor block widgets survive
+  replacement (root-keyed unmount) and suspending portals; `#`/`@` link chips resolve the linked
+  object's label.
+- Updated dependencies [0c6c186]
+- Updated dependencies [86d1482]
+- Updated dependencies [af1c007]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [6a457ac]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [7c87626]
+- Updated dependencies [6388838]
+- Updated dependencies [3b78bb6]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [5df602e]
+- Updated dependencies [63fc847]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [4e417e9]
+- Updated dependencies [194b1d3]
+- Updated dependencies [ea11703]
+- Updated dependencies [dcf911b]
+- Updated dependencies [881f900]
+- Updated dependencies [329faa0]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [7ec1738]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [9817b6f]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [b3673ee]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [915db6a]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [c8b7158]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [e56276b]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [0132aab]
+- Updated dependencies [a74e9b0]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [b600f72]
+- Updated dependencies [32468c3]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [ca34a80]
+- Updated dependencies [3214dcf]
+- Updated dependencies [df22dec]
+- Updated dependencies [24fcadc]
+- Updated dependencies [1160094]
+- Updated dependencies [4804da0]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [19f19a2]
+- Updated dependencies [139a3b0]
+- Updated dependencies [987f7e1]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [256f286]
+- Updated dependencies [4689d66]
+- Updated dependencies [e207c68]
+- Updated dependencies [092f3be]
+- Updated dependencies [c4188a6]
+- Updated dependencies [5b504b4]
+- Updated dependencies [a53cabb]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [4663f24]
+- Updated dependencies [2513a52]
+- Updated dependencies [2896a58]
+- Updated dependencies [17ed864]
+- Updated dependencies [b125655]
+- Updated dependencies [9e91762]
+- Updated dependencies [4f55909]
+- Updated dependencies [f4c2702]
+- Updated dependencies [318bbad]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [ea11703]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [72b2984]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [40b50c2]
+- Updated dependencies [520c34f]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/echo@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/echo-client@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/nlp@0.12.0
+  - @dxos/ui-types@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/echo-doc@0.12.0
+  - @dxos/ui@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/display-name@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

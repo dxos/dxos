@@ -1,5 +1,205 @@
 # @dxos/echo-host
 
+## 0.12.0
+
+### Minor Changes
+
+- 5cfa37d: A feed query with a `limit` now reads bounded work: the planner pushes the cap into the index scan (`ORDER BY objectId … LIMIT n`, with the deleted filter folded in), so asking a feed for 10 items reads 10 rows and decodes 10 snapshots instead of materialising every block in the feed to hand back 10. Measured on a 40-item feed, the two tail reads `Cursor.seedDedupSet` issues per sync go from 40 index hits and 40 decoded documents each to 5 and 5.
+
+  The cap moves into the scan only where the planner can prove it sound — a feed-only scope, a natural (insertion-order) ordering in either direction, and no step between the select and the limit that would prune the page. Anything else keeps the previous behaviour.
+
+  A queue read is now scoped by the space that owns the queue. `objectMeta` and the FTS index previously matched a feed on `queueId` alone, so a queue id occurring in two spaces would have read both spaces' rows; the feed URI already carries the space, and the query now uses it. An unqualified feed URI (`echo:///<id>`) names no space to scope to and still matches on the id alone.
+
+  `QueueWindow` in `@dxos/index-core` is now a tagged union: `{ kind: 'cursor', after, before?, limit? }` for a positional cursor read (its previous shape, plus the tag) and `{ kind: 'natural', direction, limit, deleted? }` for a bounded natural read. `queryAll` / `queryTypes` / the FTS query take `queues: QueueRef[]` (`{ queueId, spaceId? }`) in place of `queueIds: string[]`, and a new `objectMeta(spaceId, queueId, objectId)` index backs the natural read.
+
+- f8bfba0: Anchor spaces on a space root document, behind `DX_AUTOMERGE_CREDENTIALS`.
+
+  Off by default: a space keeps its key-derived id and its hypercore control feed, as before.
+  Setting `DX_AUTOMERGE_CREDENTIALS=1` (config `runtime.client.automergeCredentials`) opts a client
+  in, and then a new space takes its id from an immutable root document rather than from the space
+  key and carries it in `SpaceMetadata.space_id`, credentials are mirrored into a credentials
+  document, and a legacy space is migrated onto a root when it loads, keeping its id.
+  `SpaceMember` credentials gain `space_root_url`, so an admitted member can find the root from its
+  admission alone. `createSpace` still takes `useSpaceRootDocument` to override the flag per space.
+
+### Patch Changes
+
+- ed9aeba: Host document handles are acquired through ref-counted `DocumentLease`s (`Symbol.dispose`, usable with `using`), and a document is evicted from the repo cache once its last lease is disposed.
+- 882ac2a: The ECHO indexer now reports why it ran.
+
+  Each pass is a single `EchoHost._runIndexPass` span carrying the histogram of requests that triggered it (`documents-saved`, `feed-blocks`, `batch-continuation`, …) plus what the pass did (`updated`, `done`, `invalidates`), and the two `IndexEngine.update` calls nest under it instead of each starting its own root trace.
+
+  The trigger and outcome ride on the span rather than a log line: the only level the OTLP log sink exports is INFO, which is also a level the browser console shows, and at three passes a second that would bury the console it is meant to help.
+
+  Supporting changes:
+
+  - `EffectEx.withContext(ctx)` runs an Effect under a DXOS `Context`: the context's W3C trace identity becomes the effect's parent span, and disposing the context interrupts the fiber. Apply it before `RuntimeProvider.runPromise`/`provide`.
+  - `@trace.span({ attributes })` accepts a function of the decorated call's own arguments, and a new `resultAttributes` derives attributes from the return value, attached when it resolves. A fault in either extractor costs the span its attributes and never fails the traced method.
+  - `RemoteSpan.setAttributes` lets a backend attach attributes after a span started; buffered spans replay them.
+
+- 10defed: Report a space's root document to edge once the space is anchored.
+
+  `EdgeHttpClient` gains `recordSpaceRoot`, which names the automerge document that roots a space.
+  Edge cannot derive it — a space id is the hash of its space key, and no document id reproduces
+  that — so without being told, edge never finds the credentials document and the space stays on its
+  control feed. `DataSpaceManager` calls it as part of anchoring, behind the same
+  `DX_AUTOMERGE_CREDENTIALS` opt-in; a failed report is logged rather than raised, since anchoring is
+  local and already complete by then.
+
+  The record is write-once on the edge side, so re-anchoring an existing space returns the root
+  already in force rather than replacing it.
+
+  `EchoHost` also enrols the space root and credentials documents in the space's replicated set. They
+  hang off the space rather than the directory's links, so nothing replicated them and edge could not
+  read the documents it was being asked to validate.
+
+- 631ade3: Fix a space's directory-update context being torn down by another space that shares its root document, and keep an accepted space's anchor retry alive after the invitation context is disposed.
+- 2b6eb8d: A space whose automerge root document stalls mid-load (e.g. after a network reconnect during space setup) is now re-driven with a bounded, backing-off retry instead of waiting on a single unbounded `loadDoc` call forever.
+- 4fc8f3a: Stop re-persisting already-stored Automerge data on startup, and halve the indexer's per-pass reads.
+
+  **Reload no longer rewrites the whole document history.** `SubductionSource` dedupes writes against `entry.knownHashes`, which starts empty every process and was never seeded from disk, so the first save after reattaching a document treated its entire on-disk sedimentree as new and wrote all of it back. The pinned `@automerge/automerge-repo@2.6.0-subduction.40` patch now mirrors the attach-time hash scan into `knownHashes` (ports upstream automerge/automerge-repo#712). Measured on a real profile, `subduction-commits-*` / `subduction-fragments-*` inserts on boot drop to zero.
+
+  Note this does not cover `subduction-remote-heads-*` records, which are deduped through a separate in-memory cache with the same cold-start blindness and are still rewritten each boot.
+
+  **Indexer reads halved per pass.** Document heads are read once per `IndexEngine.update` and shared across the `fts5` and `reverseRef` indexes instead of being re-scanned for each, and each source's cursors load in a single statement rather than one per index. Cursor state remains per-index, so what gets indexed is unchanged; the heads snapshot lives only for the duration of one pass, so it cannot go stale. On a real boot this took `indexCursor` from 4 to 2 reads and the unbounded `automerge_heads` scan from 2 to 1 per pass.
+
+  The index-pass completion log now reports `reasons`, `durationMs`, and `invalidates`, attributing each run to what scheduled it — `DeferredTask` coalesces callers, so the reason is recorded as a multiset.
+
+- Updated dependencies [0c6c186]
+- Updated dependencies [af1c007]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [7c87626]
+- Updated dependencies [6388838]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [63fc847]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [4e417e9]
+- Updated dependencies [194b1d3]
+- Updated dependencies [ea11703]
+- Updated dependencies [dcf911b]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [7575cb6]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [b3673ee]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [915db6a]
+- Updated dependencies [3e02201]
+- Updated dependencies [dde6714]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [34e4fb7]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [5cfa37d]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [e56276b]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [882ac2a]
+- Updated dependencies [0132aab]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [ca34a80]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [63e500b]
+- Updated dependencies [19f19a2]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [256f286]
+- Updated dependencies [4689d66]
+- Updated dependencies [e207c68]
+- Updated dependencies [df93cc2]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [4663f24]
+- Updated dependencies [2513a52]
+- Updated dependencies [2896a58]
+- Updated dependencies [17ed864]
+- Updated dependencies [b125655]
+- Updated dependencies [10defed]
+- Updated dependencies [9e91762]
+- Updated dependencies [f4c2702]
+- Updated dependencies [318bbad]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [ea11703]
+- Updated dependencies [18597fc]
+- Updated dependencies [4fc8f3a]
+- Updated dependencies [881f900]
+- Updated dependencies [72b2984]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [dac61d5]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [4da1052]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/echo@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/sql-sqlite@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/feed@0.12.0
+  - @dxos/index-core@0.12.0
+  - @dxos/tracing@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/echo-protocol@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/teleport@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/teleport-extension-automerge-replicator@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/crypto@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/errors@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/typings@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

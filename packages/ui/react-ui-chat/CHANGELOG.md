@@ -1,5 +1,60 @@
 # @dxos/react-ui-chat
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [6a457ac]
+- Updated dependencies [96f94c2]
+- Updated dependencies [9714c75]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [cff33b7]
+- Updated dependencies [7ec1738]
+- Updated dependencies [4800a6f]
+- Updated dependencies [1b62726]
+- Updated dependencies [813069c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [41e2750]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [d4b4919]
+- Updated dependencies [ec4f4ca]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [306f50d]
+- Updated dependencies [6c881a2]
+- Updated dependencies [b7822a7]
+- Updated dependencies [cc9b81f]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [0e44f24]
+- Updated dependencies [bd06669]
+- Updated dependencies [1d6f730]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [1957b39]
+- Updated dependencies [32584c9]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [f9816c0]
+- Updated dependencies [06cbe76]
+- Updated dependencies [520c34f]
+- Updated dependencies [b2a44d6]
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/react-ui-editor@0.12.0
+  - @dxos/react-ui-components@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/react-ui-dnd@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

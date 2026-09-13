@@ -1,5 +1,12 @@
 # @dxos/av
 
+## 0.12.0
+
+### Patch Changes
+
+- @dxos/async@0.12.0
+  - @dxos/context@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

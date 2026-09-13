@@ -1,5 +1,69 @@
 # @dxos/react-ui-editor
 
+## 0.12.0
+
+### Patch Changes
+
+- d4b4919: `dx-anchor` preview cards now open on hover by default (`trigger='click'` opts out) with a
+  shadcn-style fade+zoom animation; hosts close on `state: false`. Editor block widgets survive
+  replacement (root-keyed unmount) and suspending portals; `#`/`@` link chips resolve the linked
+  object's label.
+- Updated dependencies [6a457ac]
+- Updated dependencies [96f94c2]
+- Updated dependencies [9714c75]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [cff33b7]
+- Updated dependencies [329faa0]
+- Updated dependencies [7ec1738]
+- Updated dependencies [4800a6f]
+- Updated dependencies [1b62726]
+- Updated dependencies [b02fe16]
+- Updated dependencies [813069c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [41e2750]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [3214dcf]
+- Updated dependencies [d4b4919]
+- Updated dependencies [ec4f4ca]
+- Updated dependencies [987f7e1]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [306f50d]
+- Updated dependencies [b7822a7]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [0e44f24]
+- Updated dependencies [bd06669]
+- Updated dependencies [1d6f730]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [32584c9]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [f9816c0]
+- Updated dependencies [520c34f]
+- Updated dependencies [b2a44d6]
+- Updated dependencies [77d0026]
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/ui-types@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
