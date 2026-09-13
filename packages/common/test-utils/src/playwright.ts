@@ -163,6 +163,14 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
   try {
     page = await context.newPage();
 
+    // Experiment knob: spaces a tab's new RTCPeerConnection out from the one it last closed.
+    const recreateDelay = Number(process.env.DX_E2E_RTC_RECREATE_DELAY_MS ?? 0);
+    if (recreateDelay > 0) {
+      await page.addInitScript((ms) => {
+        Reflect.set(globalThis, '__DX_E2E_RTC_RECREATE_DELAY_MS', ms);
+      }, recreateDelay);
+    }
+
     if (viewportSize) {
       await page.setViewportSize(viewportSize);
     }
