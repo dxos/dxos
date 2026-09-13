@@ -3047,6 +3047,9 @@ importers:
 
   packages/apps/todomvc:
     dependencies:
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -3056,6 +3059,12 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/log-store-idb':
+        specifier: workspace:*
+        version: link:../../common/log-store-idb
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

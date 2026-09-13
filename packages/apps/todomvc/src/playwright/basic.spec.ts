@@ -4,6 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { FILTER } from '../constants.ts';
 import { AppManager } from './app-manager.ts';
 
@@ -37,7 +39,9 @@ test.describe('Basic test', () => {
     await guest.page.waitForURL(await host.page.url());
   });
 
-  test.afterEach(async () => {
+  // Playwright requires the first parameter to be a destructuring pattern, so a fixture is named and discarded.
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    await captureDebugLogs({ host, guest }, testInfo);
     await Promise.all([host.close(), guest.close()]);
   });
 

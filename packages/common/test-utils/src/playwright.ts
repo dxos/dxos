@@ -18,6 +18,8 @@ import pkgUp from 'pkg-up';
 
 import { Lock } from './lock.ts';
 
+export * from './debug-log.ts';
+
 const findWorkspaceRoot = (startDir: string): string => {
   let dir = resolve(startDir);
   while (dir !== '/') {

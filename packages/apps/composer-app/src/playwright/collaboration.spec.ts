@@ -4,8 +4,9 @@
 
 import { expect, test } from '@playwright/test';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { AppManager } from './app-manager.ts';
-import { captureDebugLogs } from './capture-debug-logs.ts';
 import { Markdown } from './plugins/index.ts';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {

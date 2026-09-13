@@ -31,6 +31,12 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/log-store-idb"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {
@@ -38,6 +44,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
