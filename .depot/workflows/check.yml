@@ -645,9 +645,6 @@ jobs:
           # A page can close or take 50s to create with the runner idle, and only the browser's stderr says
           # why. Dispatches only: it lands in every test's JUnit `system-err`. Not a moon input.
           DEBUG: ${{ (inputs.e2e || inputs.e2e_only) && 'pw:browser' || '' }}
-          # WebKit's WebRTC log names each gathered ICE candidate before the web process builds it, so an
-          # abort on a candidate is preceded by the candidate itself. Dispatches only, like `DEBUG`.
-          WEBKIT_DEBUG: ${{ (inputs.e2e || inputs.e2e_only) && matrix.browser == 'webkit' && 'WebRTC' || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
