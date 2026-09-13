@@ -136,6 +136,10 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     }
   }
 
+  onPeerBound(peerId: PeerId): void {
+    this._connections.get(peerId)?.connection.onPeerBound?.();
+  }
+
   @synchronized
   async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);

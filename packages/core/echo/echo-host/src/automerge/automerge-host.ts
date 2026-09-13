@@ -377,6 +377,7 @@ export class AutomergeHost extends Resource {
       Event.wrap<SubductionPeerBinding>(this._repo, 'subduction-peer-bound').on(this._ctx, (binding) => {
         if ('repoPeerId' in binding) {
           this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
+          this._echoNetworkAdapter.onPeerBound(binding.repoPeerId);
         }
       });
 
