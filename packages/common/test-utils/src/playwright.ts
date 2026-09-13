@@ -156,9 +156,11 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
 
   // Playwright opens a trace chunk on every live context at test start, so a context left behind by a
   // closed page is re-serialized into every later trace in that worker.
-  const close = async (): Promise<void> => {
-    await (ownsContext ? context.close() : page?.close());
+  // The reason becomes the rejection message of every call still pending on the page.
+  const dispose = async (reason: string): Promise<void> => {
+    await (ownsContext ? context.close({ reason }) : page?.close({ reason }));
   };
+  const close = (): Promise<void> => dispose(`${ownsContext ? 'context' : 'page'} closed by test teardown`);
 
   try {
     page = await context.newPage();
@@ -210,9 +212,13 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
 
     return { context, page, close };
   } catch (err) {
-    // The caller never received `close`, so this is the only chance to dispose what got created. The
-    // setup error is the one worth reporting, so a failure to clean up does not displace it.
-    await close().catch(() => {});
+    // The caller never received `close`, so this is the only chance to dispose what got created; a
+    // disposal failure is reported with the setup error as its cause.
+    await dispose('page setup failed').catch((disposeErr: unknown) => {
+      throw Object.assign(new Error(`disposing a page whose setup failed also failed: ${String(disposeErr)}`), {
+        cause: err,
+      });
+    });
     throw err;
   }
 };

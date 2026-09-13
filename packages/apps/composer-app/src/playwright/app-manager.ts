@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Browser, type ConsoleMessage, type Locator, type Page, expect } from '@playwright/test';
+import { type Browser, type ConsoleMessage, type Locator, type Page, errors, expect } from '@playwright/test';
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
@@ -98,13 +98,23 @@ export class AppManager {
     this._close = close;
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
+    // Playwright emits `crash` before it rejects the calls pending on the page.
+    let crashed = false;
+    this.page.once('crash', () => {
+      crashed = true;
+    });
+
     // A failed boot fails here with its cause (a timeout, a crashed page) instead of as a bare `Test timeout`
     // inside the first action. 30s is ~2x the slowest healthy boot (CI firefox measures ~16s).
+    // Any other rejection, such as teardown closing the page, is rethrown as is.
     await this.page
       .getByTestId('treeView.userAccount')
       .waitFor({ timeout: 30_000 })
       .catch((err: Error) => {
-        throw new Error(`app did not boot: ${err.message}`, { cause: err });
+        if (crashed || err instanceof errors.TimeoutError) {
+          throw new Error(`app did not boot: ${err.message}`, { cause: err });
+        }
+        throw err;
       });
 
     this.shell = new ShellManager(this.page, this._inIframe);
