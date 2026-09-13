@@ -152,13 +152,18 @@ describe('Muxer', () => {
     const received: number[] = [];
     port1.subscribe((data) => received.push(data[0]));
 
-    await sleep(4_000);
+    await sleep(6_000);
     peer2.stream.pipe(peer1.stream);
+    // Written while the buffer is still flushing, so they must arrive after it.
+    const later = 5;
+    for (let i = count; i < count + later; i++) {
+      await port2.send(new Uint8Array(8_000).fill(i));
+    }
 
-    await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count);
+    await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count + later);
     await sleep(500);
-    expect(received).toEqual(Array.from({ length: count }, (_, index) => index));
-  }, 20_000);
+    expect(received).toEqual(Array.from({ length: count + later }, (_, index) => index));
+  }, 25_000);
 
   test('destroy releases other stream', async () => {
     const { peer1, peer2 } = setupPeers();

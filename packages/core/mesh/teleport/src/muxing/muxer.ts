@@ -54,7 +54,7 @@ const SYSTEM_CHANNEL_ID = 0;
 const GRACEFUL_CLOSE_TIMEOUT = 3_000;
 
 /** Backoff for resending an OpenChannel command the remote has not yet acted on. */
-const OPEN_CHANNEL_RESEND_DELAY = 3_000;
+const OPEN_CHANNEL_RESEND_DELAY = 5_000;
 const OPEN_CHANNEL_RESEND_MAX_DELAY = 8_000;
 const OPEN_CHANNEL_RESEND_ATTEMPTS = 6;
 
@@ -76,6 +76,11 @@ type Channel = {
    * Set once the remote sends data addressed to our id, which it can only do after receiving our OpenChannel command.
    */
   remoteKnowsId: boolean;
+
+  /**
+   * Set by the first OpenChannel from the remote. `remoteId` is only assigned once the send buffer has drained.
+   */
+  remoteOpened: boolean;
 
   contentType?: string;
 
@@ -364,25 +369,23 @@ export class Muxer {
       });
       const remoteId = cmd.payload.value.id;
       log('openChannel received', { tag: channel.tag, id: channel.id, remoteId, buffered: channel.buffer.length });
-      // The remote resends OpenChannel until it sees data; flushing again would duplicate whatever the first flush has
-      // not finished sending.
-      if (channel.remoteId !== null) {
+      // The remote resends OpenChannel until it sees data; a second flush would duplicate whatever the first has not
+      // finished sending.
+      if (channel.remoteOpened) {
         return;
       }
-      channel.remoteId = remoteId;
+      channel.remoteOpened = true;
 
-      // Every buffered frame is queued before anything awaits, so a write made once `remoteId` is set cannot overtake
-      // the buffer.
-      const buffered = channel.buffer;
-      channel.buffer = [];
-      await Promise.all(
-        buffered.map((data) =>
-          this._sendCommand(
-            create(CommandSchema, { payload: { case: 'data', value: { channelId: remoteId, data } } }),
-            channel.id,
-          ),
-        ),
-      );
+      // `remoteId` stays unset until the buffer is empty, so writes made meanwhile queue behind it instead of overtaking
+      // it, and each frame's send deadline starts once the frame ahead of it has gone out.
+      let data: Uint8Array | undefined;
+      while ((data = channel.buffer.shift()) !== undefined) {
+        await this._sendCommand(
+          create(CommandSchema, { payload: { case: 'data', value: { channelId: remoteId, data } } }),
+          channel.id,
+        );
+      }
+      channel.remoteId = remoteId;
     } else if (cmd.payload.case === 'data') {
       const stream = this._channelsByLocalId.get(cmd.payload.value.channelId) ?? failUndefined();
       stream.remoteKnowsId = true;
@@ -456,6 +459,7 @@ export class Muxer {
         id: this._nextId++,
         remoteId: null,
         remoteKnowsId: false,
+        remoteOpened: false,
         tag: params.tag,
         contentType: params.contentType,
         buffer: [],
