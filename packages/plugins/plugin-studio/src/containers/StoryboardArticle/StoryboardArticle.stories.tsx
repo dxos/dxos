@@ -23,14 +23,25 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Frame, MediaArtifact, Storyboard, Variant } from '#types';
 
-import { MockProviderPlugin, StubDeckPlugin, StubProjectsPlugin, makeMockArtifact } from '../../testing/index.ts';
+import {
+  type MockArtifactProps,
+  MockProviderPlugin,
+  StubDeckPlugin,
+  StubProjectsPlugin,
+  makeMockArtifact,
+} from '../../testing/index.ts';
 import { FrameCompanion } from '../FrameCompanion/FrameCompanion.tsx';
 import { StoryboardArticle } from './StoryboardArticle.tsx';
 
-const FRAMES: [name: string, prompt: string][] = [
-  ['Establishing shot', 'A wide shot of a studio at dawn, light through tall windows.'],
-  ['The reveal', 'Slow push in on a desk where a storyboard takes shape.'],
-  ['Close-up', 'A close-up of a hand pinning the last frame to the board.'],
+/** The seeded frames: what the mock provider is asked for, and whether it has answered yet. */
+const FRAMES: Pick<MockArtifactProps, 'name' | 'prompt' | 'generated'>[] = [
+  {
+    name: 'Establishing shot',
+    prompt: 'A wide shot of a studio at dawn, light through tall windows.',
+    generated: true,
+  },
+  { name: 'The reveal', prompt: 'Slow push in on a desk where a storyboard takes shape.', generated: true },
+  { name: 'Close-up', prompt: 'A close-up of a hand pinning the last frame to the board.' },
 ];
 
 const ATTENDABLE_ID = 'test';
@@ -84,9 +95,9 @@ const meta = {
               const storyboard = space.db.add(Storyboard.make({ name: 'Test storyboard' }));
               // Seed frames: two with a generated cover, one still to be generated — every one with
               // its prompt, which is what the compose form opens on.
-              FRAMES.forEach(([name, prompt], index) => {
-                const artifact = makeMockArtifact({ db: space.db, name, prompt, generated: index < 2 });
-                const frame = Storyboard.appendFrame(storyboard, Frame.make({ name, artifact }));
+              FRAMES.forEach((props) => {
+                const artifact = makeMockArtifact({ db: space.db, ...props });
+                const frame = Storyboard.appendFrame(storyboard, Frame.make({ name: props.name, artifact }));
                 Obj.setParent(artifact, frame);
               });
             }),
