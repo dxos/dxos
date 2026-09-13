@@ -373,6 +373,40 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
       await expect.poll(() => handleA.doc()?.fromClient, { timeout: 30_000 }).toEqual('client-offline');
     });
 
+    test('a peer offered again mid-round does not hold back later edits', { timeout: 30_000 }, async () => {
+      let connectionState: 'on' | 'off' = 'on';
+      const { repos, adapters } = await createHostClientRepoTopology({
+        connectionStateProvider: () => connectionState,
+        subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
+      });
+      const [host, client] = repos;
+      await connectAdapters(adapters);
+
+      const handle = host.create<{ text?: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'first';
+      });
+      await waitForSubductionSave();
+      const observed = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
+      await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      // Frames are dropped while the round for this edit runs, so it waits on replies that never come.
+      connectionState = 'off';
+      handle.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await waitForSubductionSave();
+      handle.change((doc: any) => {
+        doc.text = 'third';
+      });
+      await waitForSubductionSave();
+
+      // A mesh connection whose auth scope changes is dropped and offered again at once.
+      connectionState = 'on';
+      await reconnectAdapters(adapters);
+      await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
+    });
+
     test('losing one peer mid-round does not hold back edits for the others', { timeout: 30_000 }, async () => {
       let server1State: 'on' | 'off' = 'on';
       const { repos, adapters } = await createStarTopology({
