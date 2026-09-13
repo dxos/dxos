@@ -470,6 +470,7 @@ describe('RepoProxy', () => {
     const integrate = clientHandle._integrateHostUpdate.bind(clientHandle);
     vi.spyOn(clientHandle, '_integrateHostUpdate').mockImplementation((mutation) => {
       if (clientHandle.doc() === unusable) {
+        clientHandle._markForRebuild();
         throw new Error('recursive use of an object detected which would lead to unsafe aliasing in rust');
       }
       integrate(mutation);

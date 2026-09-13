@@ -110,6 +110,9 @@ export class RepoProxy extends Resource {
   /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
   private _resubscribeDelay = 0;
 
+  /** Documents that failed to integrate an update, until their handle rebuilds from the host copy. */
+  private readonly _rebuildIds = new Set<string>();
+
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
 
   constructor(
@@ -488,8 +491,11 @@ export class RepoProxy extends Resource {
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
     if (!updates) {
-      // A batch proves the subscription is live, so the next drop starts from the shortest backoff.
-      this._resubscribeAttempts = 0;
+      // A batch proves the subscription is live, so the next drop starts from the shortest backoff —
+      // unless a document is still waiting on the full copy that would show it recovered.
+      if (!this._isRebuildPending()) {
+        this._resubscribeAttempts = 0;
+      }
       return;
     }
 
@@ -522,11 +528,15 @@ export class RepoProxy extends Resource {
             handle._integrateHostUpdate(mutation);
           }
         } catch (error) {
+          // A throw from outside the document, such as a change listener, is not recovered by replacing it.
+          if (!handle._isAwaitingRebuild()) {
+            throw error;
+          }
           log.error('document could not integrate a host update; rebuilding it from the host copy', {
             documentId,
             error,
           });
-          handle._markForRebuild();
+          this._rebuildIds.add(documentId);
           integrationError ??= error instanceof Error ? error : new Error(String(error));
         }
       }
@@ -534,11 +544,20 @@ export class RepoProxy extends Resource {
 
     if (integrationError) {
       // A replacement subscription starts the host from scratch, so its first update for each document
-      // is the full copy a marked handle rebuilds from; the backoff keeps growing while that fails too.
+      // is the full copy a marked handle rebuilds from.
       this._onSubscriptionDropped(integrationError);
-    } else {
+    } else if (!this._isRebuildPending()) {
       this._resubscribeAttempts = 0;
     }
+  }
+
+  private _isRebuildPending(): boolean {
+    for (const documentId of this._rebuildIds) {
+      if (!this._handles[documentId]?._isAwaitingRebuild()) {
+        this._rebuildIds.delete(documentId);
+      }
+    }
+    return this._rebuildIds.size > 0;
   }
 
   /**
