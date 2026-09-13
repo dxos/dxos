@@ -26,9 +26,9 @@ type Selected = 'all' | number;
 /**
  * The produced side of a {@link MediaArtifact}: a toolbar with an "All" gallery tab and a tab per
  * produced variant, the gallery or the selected variant rendered through the variant surface, and
- * — for a produced variant — the cover toggle and delete. A variant that is still generating shows
- * as a spinner tab; the newest variant is selected as it lands, so a Generate in the form ends on
- * its result.
+ * — for a produced variant — the cover toggle and delete. Opens on the cover; a variant that is
+ * still generating shows as a spinner tab, and the newest variant is selected as it lands, so a
+ * Generate in the form ends on its result.
  */
 export const MediaArtifactVariants = ({ classNames, artifact, attendableId }: MediaArtifactVariantsProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -48,7 +48,12 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId }: Me
     [variants],
   );
 
-  const [selected, setSelected] = useState<Selected>('all');
+  // Opens on the cover (the artifact's chosen picture) until the reader picks a tab; `undefined`
+  // rather than a default so a cover that resolves after mount still wins.
+  const [picked, setSelected] = useState<Selected | undefined>();
+  const coverId = artifactSnapshot?.cover?.target?.id;
+  const coverIndex = variants.findIndex((variant) => variant.id === coverId);
+  const selected: Selected = picked ?? (coverIndex >= 0 ? coverIndex : 'all');
   const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
 
   // A variant appended since the last render is the one just generated: show it.
