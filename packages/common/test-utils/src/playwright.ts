@@ -155,15 +155,9 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
   let page: Page | undefined;
 
   // Playwright opens a trace chunk on every live context at test start, so a context left behind by a
-  // closed page is re-serialized into every later trace in that worker. Pages are unloaded first: closing
-  // skips unload teardown, and in Firefox what that leaves lengthens cycle-collector pauses for later pages.
+  // closed page is re-serialized into every later trace in that worker.
   const close = async (): Promise<void> => {
-    const open = (ownsContext ? context.pages() : page ? [page] : []).filter((candidate) => !candidate.isClosed());
-    try {
-      await Promise.all(open.map((candidate) => candidate.goto('about:blank')));
-    } finally {
-      await (ownsContext ? context.close() : page?.close());
-    }
+    await (ownsContext ? context.close() : page?.close());
   };
 
   try {
