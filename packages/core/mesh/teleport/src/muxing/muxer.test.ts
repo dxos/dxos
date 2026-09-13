@@ -131,7 +131,7 @@ describe('Muxer', () => {
     });
   });
 
-  test('a resent OpenChannel does not resend buffered data', async () => {
+  test('a write made while the buffer flushes keeps its own deadline, even after a resent OpenChannel', async () => {
     const peer1 = new Muxer();
     const peer2 = new Muxer();
     onTestFinished(async () => {
@@ -143,7 +143,7 @@ describe('Muxer', () => {
     peer1.stream.pipe(peer2.stream);
 
     const port2 = await peer2.createPort('example.extension/rpc');
-    const count = 20;
+    const count = 40;
     for (let i = 0; i < count; i++) {
       await port2.send(new Uint8Array(8_000).fill(i));
     }
@@ -153,11 +153,16 @@ describe('Muxer', () => {
     port1.subscribe((data) => received.push(data[0]));
 
     await sleep(7_000);
-    peer2.stream.pipe(peer1.stream);
-    // Written while the buffer is still flushing, so they must arrive after it.
+    // One frame every 60 ms: the backlog takes longer to go out than a later write is allowed to wait.
+    const throttle = new Transform({
+      transform: (chunk, _encoding, callback) => {
+        setTimeout(() => callback(null, chunk), 60);
+      },
+    });
+    peer2.stream.pipe(throttle).pipe(peer1.stream);
     const later = 5;
     for (let i = count; i < count + later; i++) {
-      await port2.send(new Uint8Array(8_000).fill(i));
+      await port2.send(new Uint8Array(8_000).fill(i), 1_500);
     }
 
     await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count + later);
@@ -195,6 +200,27 @@ describe('Muxer', () => {
     await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count + 1);
     expect(received).toEqual(Array.from({ length: count + 1 }, (_, index) => index));
   });
+
+  test('destroying a muxer releases writes still waiting on the link', async () => {
+    const peer1 = new Muxer();
+    const peer2 = new Muxer();
+    onTestFinished(async () => {
+      await peer1.destroy();
+    });
+    // peer2's frames to peer1 are never consumed, so everything peer2 sends backs up.
+    peer1.stream.pipe(peer2.stream);
+
+    const port2 = await peer2.createPort('example.extension/rpc');
+    for (let i = 0; i < 20; i++) {
+      await port2.send(new Uint8Array(8_000).fill(i));
+    }
+    await peer1.createPort('example.extension/rpc');
+    await sleep(200);
+
+    const write = Promise.resolve(port2.send(new Uint8Array(8_000).fill(20)));
+    await peer2.destroy();
+    await asyncTimeout(write, 1_000);
+  }, 15_000);
 
   test('destroy releases other stream', async () => {
     const { peer1, peer2 } = setupPeers();
