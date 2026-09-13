@@ -33,6 +33,21 @@ log.addProcessor(logProcessor.processor);
 /** Longest rendering of a single logger argument kept in a record. */
 const MAX_ARG_LENGTH = 500;
 
+/** A logger argument as text: objects as JSON, since their default rendering is `[object Object]`. */
+const renderArg = (arg: unknown): string => {
+  if (arg instanceof Error) {
+    return arg.message;
+  }
+  if (typeof arg === 'object' && arg !== null) {
+    try {
+      return JSON.stringify(arg) ?? Object.prototype.toString.call(arg);
+    } catch {
+      return Object.prototype.toString.call(arg);
+    }
+  }
+  return String(arg);
+};
+
 /**
  * Routes automerge-repo's subduction loggers into `@dxos/log`, so the e2e log capture records sync rounds.
  * Every other namespace keeps the library default: `debug` output stays off in a worker, the rest reaches the console.
@@ -51,7 +66,7 @@ const captureSubductionLogs = () =>
 
     const context = (args: unknown[]) => ({
       namespace,
-      args: args.map((arg) => (arg instanceof Error ? arg.message : String(arg)).slice(0, MAX_ARG_LENGTH)),
+      args: args.map((arg) => renderArg(arg).slice(0, MAX_ARG_LENGTH)),
     });
     return {
       debug: (message, ...args) => log.debug(message, context(args)),

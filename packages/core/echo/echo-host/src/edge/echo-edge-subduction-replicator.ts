@@ -65,8 +65,8 @@ const MAX_RESTART_DELAY = 5000;
  */
 const DEFAULT_BIND_TIMEOUT = 10_000;
 
-/** The deadline doubles on each restart, so an edge that never answers for a space is retried rarely. */
-const MAX_BIND_TIMEOUT = 120_000;
+/** The deadline doubles with each consecutive restart that never bound, up to this many times. */
+const MAX_BIND_DOUBLINGS = 4;
 
 /**
  * Outbound frame batching bounds (see `frame-batching-spec.md`). Subduction transport frames are
@@ -264,7 +264,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     // residual cost is one Mutex per ever-connected space.
   }
 
-  private async _openConnection(spaceId: SpaceId, reconnects: number = 0): Promise<void> {
+  private async _openConnection(spaceId: SpaceId, reconnects: number = 0, unboundRestarts: number = 0): Promise<void> {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));
 
@@ -288,7 +288,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       context: this._context,
       sharedPolicyEnabled: !this._disableSharePolicy,
       frameBatching: this._frameBatching,
-      bindTimeout: Math.min(MAX_BIND_TIMEOUT, this._bindTimeout * 2 ** reconnects),
+      bindTimeout: this._bindTimeout * 2 ** Math.min(unboundRestarts, MAX_BIND_DOUBLINGS),
       onRemoteConnected: async () => {
         log.trace('dxos.echo.edge.subduction-replicator.onRemoteConnected', { spaceId });
         this._context?.onConnectionOpen(connection);
@@ -327,7 +327,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
               return;
             }
             log.trace('dxos.echo.edge.subduction-replicator.restart', { spaceId, reconnects, restartDelay });
-            await this._openConnection(spaceId, reconnects + 1);
+            await this._openConnection(spaceId, reconnects + 1, connection.isBound ? 0 : unboundRestarts + 1);
           },
           restartDelay,
         );
@@ -477,6 +477,10 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   onPeerBound(): void {
     this.#bound = true;
+  }
+
+  get isBound(): boolean {
+    return this.#bound;
   }
 
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
