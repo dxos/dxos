@@ -311,6 +311,16 @@ const computeContext = (entry: LogEntry, rawContext: unknown): Record<string, un
 /** Max depth when walking `error.cause` / Effect `UnknownException.error`. */
 const MAX_ERROR_CAUSE_DEPTH = 10;
 
+/** V8 stacks open with `Name: message`; JavaScriptCore and SpiderMonkey stacks are frames only. */
+const formatError = (error: Error): string => {
+  const header = error.message ? `${error.name}: ${error.message}` : error.name;
+  const stack = error.stack;
+  if (!stack) {
+    return header;
+  }
+  return stack.startsWith(header) ? stack : `${header}\n${stack}`;
+};
+
 /**
  * Formats an error for JSONL / file processors, including the cause chain.
  * Walks standard `Error.cause` and falls back to Effect's `UnknownException.error`
@@ -333,7 +343,7 @@ const stringifyError = (err: unknown): string | undefined => {
     seen.add(current);
 
     if (current instanceof Error) {
-      parts.push(current.stack ?? current.message);
+      parts.push(formatError(current));
       const next = current.cause ?? (current as { error?: unknown }).error;
       // Stop when there is no distinct wrapped value (UnknownException sets both to the same object).
       current = next !== undefined && next !== current ? next : undefined;
