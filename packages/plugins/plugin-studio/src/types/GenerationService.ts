@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
 import { type FormFieldMap } from '@dxos/react-ui-form';
+import { type OptionsLookupEntry } from '@dxos/react-ui-form/annotations';
 
 import * as Generation from './Generation.ts';
 
@@ -53,6 +54,16 @@ export type GenerationProgress = {
   readonly total?: number;
 };
 
+/** One selectable value of a request field, as loaded by {@link GenerationService.fieldOptions}. */
+export type FieldOption = OptionsLookupEntry;
+
+/** Options passed to a {@link GenerationService.fieldOptions} loader. */
+export interface FieldOptionsRequest {
+  /** API key resolved from the Connector-managed credential (absent for keyless providers). */
+  readonly apiKey?: Redacted.Redacted<string>;
+  readonly signal?: AbortSignal;
+}
+
 /** Options passed to every provider call by the generate operation. */
 export interface GenerateOptions {
   /** API key resolved from the Connector-managed credential (absent for keyless providers). */
@@ -94,8 +105,15 @@ export interface GenerationService {
   readonly requestSchema: Schema.Codec<any, any>;
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;
+  /**
+   * Loaders for request fields whose values come from the provider (keyed by JSON path — HeyGen's
+   * avatars/voices, a model catalogue). Studio renders each as a combobox over the loaded list,
+   * resolves the credential, and caches the result per provider/field/credential, so a provider
+   * supplies only the fetch. A static list is a loader that ignores its request.
+   */
+  readonly fieldOptions?: Record<string, (request: FieldOptionsRequest) => Promise<readonly FieldOption[]>>;
   /** Per-field renderers (keyed by JSON path) for the schema-driven form — customizes specific
-   * request fields (e.g. HeyGen's avatar/voice pickers) without replacing the whole form. */
+   * request fields without replacing the whole form; takes precedence over {@link fieldOptions}. */
   readonly fieldMap?: FormFieldMap;
   /** One-shot generation (synchronous providers). Mutually exclusive with enqueue/awaitResult. */
   generate?(request: GenerationRequest, options: GenerateOptions): Promise<GenerationResult>;

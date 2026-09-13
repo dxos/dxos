@@ -46,6 +46,8 @@ feat HiggsfieldGenerationService
   contentType: image/jpeg | video/mp4          # per service; the produced media decides the variant mime
   source: higgsfield.ai
   requestSchema: { model: string, prompt: string }
+  fieldOptions:
+    image.model: static list of the documented model paths (combobox; any path may be typed)
   defaultRequest:
     image: { model: "higgsfield-ai/soul/v2/standard" }
     video: none                                  # video model paths are per account

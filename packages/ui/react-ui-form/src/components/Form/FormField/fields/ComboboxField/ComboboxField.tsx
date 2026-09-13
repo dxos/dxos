@@ -23,7 +23,8 @@ export type ComboboxFieldProps = FormFieldRendererProps<string> & {
  * the same family as `ObjectPicker`/`SearchList`). The trigger shows the current value; opening it reveals
  * a search input that loads suggestions (debounced) via an {@link OptionsLookup} and filters
  * them as you type. The literal typed text is offered as a fallback option at the bottom (deduped), so a
- * value not among the suggestions can still be selected. No options are shown until something is typed.
+ * value not among the suggestions can still be selected. No options are shown until something is typed,
+ * unless the lookup is `eager`.
  */
 export const ComboboxField = ({
   lookup,
@@ -56,13 +57,16 @@ export const ComboboxField = ({
 
   const trimmed = query.trim();
   const normalized = trimmed.toLowerCase();
-  // No options until something is typed; then filter the loaded suggestions by the input text.
+  // No options until something is typed (unless the lookup is eager); then filter the loaded
+  // suggestions by the input text.
   const results = useMemo(
     () =>
       normalized.length === 0
-        ? []
+        ? lookup.eager
+          ? (data ?? [])
+          : []
         : (data ?? []).filter((option) => (option.label ?? option.value).toLowerCase().includes(normalized)),
-    [data, normalized],
+    [data, normalized, lookup.eager],
   );
   const hasExact = results.some((option) => option.value === trimmed);
 

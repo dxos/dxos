@@ -42,4 +42,5 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
       `CreateObjectEntry`-style capability the Lightbox/Project article's `+` reads), replacing the
       hard-wired Lightbox "Add artifact" action.
 - [ ] Verify a video model path against a real account and set it as the video default.
-- [ ] Model picker (`fieldMap`) once Higgsfield exposes a model catalog endpoint.
+- [x] Shared `GenerationService.fieldOptions` → cached combobox (`ProviderOptionsField`); HeyGen migrated, Higgsfield static image list.
+- [ ] Higgsfield model catalogue from the API once it exposes one.

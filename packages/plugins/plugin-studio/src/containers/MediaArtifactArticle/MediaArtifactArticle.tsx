@@ -25,6 +25,8 @@ import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
 import { MediaArtifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
+import { providerFieldMap } from './ProviderOptionsField.tsx';
+
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<MediaArtifact.MediaArtifact>;
 
 /** `'all'` gallery, `'draft'` compose tab, or the index of a produced (frozen) variant. */
@@ -108,6 +110,9 @@ export const MediaArtifactArticle = ({ role, subject: artifact, attendableId }: 
     : true;
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
+
+  // Provider-listed fields render as comboboxes; the provider's own renderers take precedence.
+  const fieldMap = useMemo(() => (provider ? providerFieldMap(provider) : undefined), [provider]);
 
   // The draft's request config (provider defaults overlaid with the draft's edits).
   const draftConfig = useMemo<Record<string, unknown>>(
@@ -404,7 +409,7 @@ export const MediaArtifactArticle = ({ role, subject: artifact, attendableId }: 
               key={composing ? 'draft' : selectedVariant?.id}
               schema={provider.requestSchema}
               values={composing ? draftConfig : (selectedVariant?.config ?? {})}
-              fieldMap={provider.fieldMap}
+              fieldMap={fieldMap}
               readonly={formReadonly}
               hideEmpty={!formReadonly}
               autoSave={!formReadonly}

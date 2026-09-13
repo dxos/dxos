@@ -116,3 +116,16 @@ Lightbox action. Tracked in `.agents/projects/plugin-studio/TASKS.md`.
 - Migrating existing `org.dxos.type.artifact` objects (labs plugin, dev profiles only).
 - A studio-specific project article tab (decision 3: none).
 - Instructions / skills for the studio brief (decision 4: not yet).
+
+## Provider-listed request fields (added 2026-09-13)
+
+A provider that can enumerate a field's values declares
+`fieldOptions: { <jsonPath>: (request: { apiKey?, signal? }) => Promise<FieldOption[]> }` on its
+`GenerationService`. Studio turns each entry into a `fieldMap` renderer (`ProviderOptionsField`): a
+`ComboboxField` with an `eager` `OptionsLookup` (every option listed on open, free text accepted),
+the credential resolved from the active space's `AccessToken` for the provider's `source`, and the
+list served from `loadProviderOptions` — a module cache keyed by provider/field/credential
+fingerprint with a 5-minute TTL, shared across articles and remounts; a failed load is evicted so
+the next read retries. A provider's own `fieldMap` still wins for a field it renders itself.
+HeyGen's avatars/voices use it (its React picker is gone); Higgsfield lists its documented image
+model statically because the public API has no catalogue endpoint.

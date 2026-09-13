@@ -54,6 +54,7 @@ type ServiceParams = {
   label: string;
   contentType: string;
   defaultRequest?: Record<string, unknown>;
+  fieldOptions?: GenerationService.GenerationService['fieldOptions'];
 };
 
 /**
@@ -63,7 +64,7 @@ type ServiceParams = {
  */
 const makeService = (
   provider: HiggsfieldProvider,
-  { kind, label, contentType, defaultRequest }: ServiceParams,
+  { kind, label, contentType, defaultRequest, fieldOptions }: ServiceParams,
 ): GenerationService.GenerationService => ({
   kind,
   id: HIGGSFIELD_ID,
@@ -73,6 +74,7 @@ const makeService = (
   connectorId: HIGGSFIELD_CONNECTOR_ID,
   requestSchema: HiggsfieldRequestConfig,
   defaultRequest,
+  fieldOptions,
   // Async so a config decode failure surfaces as a rejection, not a synchronous throw.
   enqueue: async (request, { apiKey, signal }) => {
     const config = decodeHiggsfieldConfig(request);
@@ -91,6 +93,14 @@ const makeService = (
   },
 });
 
+/**
+ * Image model paths offered in the form. The public API has no catalogue endpoint (models are
+ * per account), so this is the documented set; the combobox still accepts any path typed in.
+ */
+const IMAGE_MODELS: readonly GenerationService.FieldOption[] = [
+  { value: HIGGSFIELD_DEFAULT_IMAGE_MODEL, label: 'Soul v2 (standard)', secondaryLabel: 'text-to-image' },
+];
+
 /** The Higgsfield `kind: 'image'` service; defaults to the documented Soul v2 text-to-image model. */
 export const makeHiggsfieldImageService = (
   provider: HiggsfieldProvider = makeHiggsfieldProvider(),
@@ -100,6 +110,7 @@ export const makeHiggsfieldImageService = (
     label: 'Higgsfield',
     contentType: 'image/jpeg',
     defaultRequest: { model: HIGGSFIELD_DEFAULT_IMAGE_MODEL },
+    fieldOptions: { model: async () => IMAGE_MODELS },
   });
 
 /**
