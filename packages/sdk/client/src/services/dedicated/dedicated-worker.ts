@@ -3,14 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import type * as Layer from 'effect/Layer';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type ClientServicesHost, makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key.ts';
@@ -20,6 +23,8 @@ export type RunDedicatedWorkerOptions = {
   onBeforeStart?: (config: Config) => Promise<void>;
   /** Runs once the runtime has started, with the host it serves from. */
   onStart?: (host: ClientServicesHost) => Promise<void>;
+  /** Storage for the runtime; by default OPFS-backed SQLite, or in-memory where OPFS is unavailable. */
+  sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 };
 
 /**
@@ -58,7 +63,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
           acquireLock: async () => {},
           releaseLock: () => {},
           automaticallyConnectWebrtc: false,
-          sqliteLayer: opfsAvailable ? undefined : layerMemory,
+          sqliteLayer: options.sqliteLayer ?? (opfsAvailable ? undefined : layerMemory),
         });
 
         if (options.onBeforeStart) {

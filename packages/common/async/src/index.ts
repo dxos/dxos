@@ -23,3 +23,4 @@ export * from './timer.ts';
 export * from './track-leaks.ts';
 export * from './trigger.ts';
 export * from './update-scheduler.ts';
+export * from './yield.ts';

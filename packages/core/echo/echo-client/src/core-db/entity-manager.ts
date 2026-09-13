@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -18,6 +18,7 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
+  yieldToEventLoop,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
@@ -39,7 +40,13 @@ import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
-import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge/index.ts';
+import {
+  type ChangeEvent,
+  type DocHandleProxy,
+  RepoProxy,
+  type SaveStateChangedEvent,
+  toDocumentId,
+} from '../automerge/index.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
@@ -58,6 +65,15 @@ import {
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
 
 const TRACE_LOADING = false;
+
+/** Ceiling on db update emissions per second while a bulk delivery keeps arriving. */
+const DB_UPDATE_MAX_FREQ = 10;
+
+/**
+ * Longest synchronous run of speculative link loading. A space root arriving over sync names every
+ * object at once, and opening a handle per link is enough work per link to block input for the lot.
+ */
+const LINK_LOAD_SLICE_MS = 8;
 
 /** A satisfaction request that will not change again without a new load. */
 const isSettled = (request: RefResolverRequest): boolean =>
@@ -199,6 +215,10 @@ export class EntityManager implements IDatabaseBinding {
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
 
+  /** Links seen on the space root that nothing has asked for yet, loaded in {@link LINK_LOAD_SLICE_MS} slices. */
+  #queuedLinkLoads = new Map<string, NonNullable<SpaceDocumentLinks>[string]>();
+  #drainingLinkLoads = false;
+
   // ── Private event field ──────────────────────────────────────────────────
   private readonly _rootChangedEvent = new Event<void>();
 
@@ -236,9 +256,12 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
-    // Unthrottled: every call site already bypassed the rate, so configuring one only made the two
-    // disagree.
-    this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {});
+    // The rate only coalesces a bulk delivery from the host, where every emission re-runs each live
+    // query and re-hydrates index results over the whole space; every other trigger skips the delay,
+    // so a query reflects a local write, or a peer's single edit, at once.
+    this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {
+      maxFrequency: DB_UPDATE_MAX_FREQ,
+    });
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
@@ -343,7 +366,7 @@ export class EntityManager implements IDatabaseBinding {
       const spaceRootDocHandle = this.getSpaceRootDocHandle();
       await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
-      this._updateScheduler.trigger(); // Flush notifications from the swap window.
+      this._updateScheduler.forceTrigger(); // Flush notifications from the swap window.
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return;
@@ -685,7 +708,7 @@ export class EntityManager implements IDatabaseBinding {
       this._objects.delete(id);
       this._releaseObject(id, { releaseDocument: true });
     }
-    this._updateScheduler.trigger();
+    this._updateScheduler.forceTrigger();
 
     return dropped;
   }
@@ -772,9 +795,7 @@ export class EntityManager implements IDatabaseBinding {
     const headsStates = await runServiceCall(
       this._runtime,
       this._dataService['DataService.getDocumentHeads']({
-        documentIds: Object.values(doc.links ?? {}).map((link) =>
-          interpretAsDocumentId(link.toString() as AutomergeUrl),
-        ),
+        documentIds: Object.values(doc.links ?? {}).map((link) => toDocumentId(link.toString() as AutomergeUrl)),
       }),
       { timeout: RPC_TIMEOUT },
     );
@@ -842,7 +863,7 @@ export class EntityManager implements IDatabaseBinding {
       this._dataService['DataService.reIndexHeads']({
         documentIds: [
           root.documentId,
-          ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+          ...Object.values(doc.links ?? {}).map((link) => toDocumentId(link as AutomergeUrl)),
         ],
       }),
     );
@@ -990,7 +1011,7 @@ export class EntityManager implements IDatabaseBinding {
       return this._spaceRootDocHandle.documentId;
     }
     const documentUrl = this._getLinkedDocumentUrl(objectId);
-    return documentUrl && interpretAsDocumentId(documentUrl.toString() as AutomergeUrl);
+    return documentUrl && toDocumentId(documentUrl.toString() as AutomergeUrl);
   }
 
   //
@@ -1452,7 +1473,46 @@ export class EntityManager implements IDatabaseBinding {
       ([objectId]) => !this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId),
     );
     if (newLinks.length > 0) {
-      this._loadLinkedObjects(Object.fromEntries(newLinks), { diskOnly: true });
+      this.#queueLinkLoads(newLinks);
+    }
+  }
+
+  #queueLinkLoads(links: [string, NonNullable<SpaceDocumentLinks>[string]][]): void {
+    for (const [objectId, link] of links) {
+      this.#queuedLinkLoads.set(objectId, link);
+    }
+    void this.#drainQueuedLinkLoads();
+  }
+
+  /**
+   * Opens handles for queued links a slice at a time. A link bound by another path while queued
+   * (an explicit load, a rebind) is skipped rather than loaded twice.
+   */
+  async #drainQueuedLinkLoads(): Promise<void> {
+    if (this.#drainingLinkLoads) {
+      return;
+    }
+    this.#drainingLinkLoads = true;
+    try {
+      // Speculative, so the update that queued these links finishes its own slice first.
+      await yieldToEventLoop();
+      while (this.#queuedLinkLoads.size > 0 && this._ctx && !this._ctx.disposed) {
+        const started = performance.now();
+        for (const [objectId, link] of this.#queuedLinkLoads) {
+          this.#queuedLinkLoads.delete(objectId);
+          if (!this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId)) {
+            this._loadLinkedObjects({ [objectId]: link }, { diskOnly: true });
+          }
+          if (performance.now() - started >= LINK_LOAD_SLICE_MS) {
+            break;
+          }
+        }
+        if (this.#queuedLinkLoads.size > 0) {
+          await yieldToEventLoop();
+        }
+      }
+    } finally {
+      this.#drainingLinkLoads = false;
     }
   }
 
@@ -1734,7 +1794,9 @@ export class EntityManager implements IDatabaseBinding {
     this._onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
     this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
-    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
+    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds, {
+      coalesce: event.patchInfo.source === 'bulk',
+    });
   };
 
   /**
@@ -1761,7 +1823,7 @@ export class EntityManager implements IDatabaseBinding {
       this._releaseObject(objectId, { releaseDocument: true });
     }
     log('evicted objects removed from the space directory', { count: removed.length });
-    this._updateScheduler.trigger();
+    this._updateScheduler.forceTrigger();
   }
 
   /**
@@ -2023,14 +2085,19 @@ export class EntityManager implements IDatabaseBinding {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
-    this._updateScheduler.trigger();
+    this._updateScheduler.forceTrigger();
   }
 
-  private _scheduleThrottledDbUpdate(objectId: string[]): void {
+  /** `coalesce` lets the emission wait out the rate; otherwise it runs at once. */
+  private _scheduleThrottledDbUpdate(objectId: string[], { coalesce = false }: { coalesce?: boolean } = {}): void {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }
-    this._updateScheduler.trigger();
+    if (coalesce) {
+      this._updateScheduler.trigger();
+    } else {
+      this._updateScheduler.forceTrigger();
+    }
   }
 }
 
