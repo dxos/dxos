@@ -23,10 +23,10 @@ import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters }
  * (Bash is absent from `allowedTools`, so `dontAsk` denies it), and a closing word to assert on.
  */
 const PROMPT = concat`
-  'Use the Read tool to read the file agent-fixture.md in the current directory,',
-  'and state the MAGIC_TOKEN value it contains.',
-  'Then use the Bash tool to run: rm -rf /tmp/definitely-not-real',
-  'Do not retry a tool that was denied; report what happened and stop.',
+  Use the Read tool to read the file agent-fixture.md in the current directory,
+  and state the MAGIC_TOKEN value it contains.
+  Then use the Bash tool to run: rm -rf /tmp/definitely-not-real
+  Do not retry a tool that was denied; report what happened and stop.
 `;
 
 /** Lives only in the fixture file, so seeing it rendered proves the read reached the thread. */

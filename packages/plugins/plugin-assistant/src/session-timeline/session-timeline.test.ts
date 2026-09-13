@@ -280,6 +280,70 @@ describe('buildSessionTimeline', () => {
   );
 
   it.effect(
+    "a task started over an open one closes it at the boundary, which is the newcomer's",
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'started' });
+      const second = Task.make({ title: 'Second', status: 'started' });
+      const chat = makeChat('Handover', [first, second]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
+          yield* toolCall('Read file'); // 3.
+          // No close for the first: starting the second is what ends it.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 4.
+          yield* toolCall('Write file'); // 5.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second] });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 2, end: 4 });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${second.id}`)).toMatchObject({
+        start: 4,
+        end: undefined,
+      });
+      // The two segments share the boundary at 4; the second task's own start node sits on its lane.
+      const taskMarkers = timeline.markers.filter((marker) => marker.kind === 'task');
+      expect(taskMarkers.map(({ laneId, timestamp }) => ({ laneId, timestamp }))).toEqual([
+        { laneId: `task:${first.id}`, timestamp: 2 },
+        { laneId: `task:${second.id}`, timestamp: 4 },
+      ]);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    'putting a task back to todo ends its stretch as surely as finishing it',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Deferred', status: 'todo' });
+      const chat = makeChat('Deferred', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Deferred', status: 'started' }); // 2.
+          yield* toolCall('Read file'); // 3.
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: task.id,
+            title: 'Deferred',
+            status: 'todo',
+            previousStatus: 'started',
+          }); // 4.
+          yield* toolCall('Think'); // 5 — after the task was put down, so the session's.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task] });
+      expect(timeline.lanes.find((lane) => lane.id === `task:${task.id}`)).toMatchObject({ start: 2, end: 4 });
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Read file')).toBe(`task:${task.id}`);
+      expect(lanesByLabel.get('Think')).toBe(`session:${chat.id}`);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
     'a task dismissed or re-closed claims no stretch of the run',
     Effect.fnUntraced(function* ({ expect }) {
       const dismissed = Task.make({ title: 'Dismissed', status: 'blocked' });

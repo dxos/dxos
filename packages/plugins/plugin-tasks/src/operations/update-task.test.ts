@@ -262,9 +262,9 @@ describe('update-task tracing', () => {
       Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
     ),
   );
-
-  const statusEvents = (events: readonly Trace.FlatEvent[]) =>
-    events
-      .filter((event) => event.type === Trace.TaskStatusChanged.key)
-      .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
 });
+
+const statusEvents = (events: readonly Trace.FlatEvent[]) =>
+  events
+    .filter((event) => event.type === Trace.TaskStatusChanged.key)
+    .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));

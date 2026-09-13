@@ -1,4 +1,7 @@
 ---
+# multiple-changesets: three unrelated fixes rode one branch — the boot loader's sprite (app-framework), a tree
+# branch's clip (react-ui-list/ui-theme) and the session gantt (compute/plugin-assistant); a reader
+# upgrading one package looks up only its own entry.
 '@dxos/app-framework': patch
 ---
 
