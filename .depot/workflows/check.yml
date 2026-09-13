@@ -642,6 +642,9 @@ jobs:
           # collects. The browser console carries only the tab; the client runs in a worker, so this is
           # the only route to what the failing peer was doing.
           DX_E2E_CAPTURE_LOGS: '1'
+          # A WebKit page can close mid-test with no crash event, and only the browser's stderr says why.
+          # Not a moon input, so no hash moves.
+          DEBUG: ${{ matrix.browser == 'webkit' && 'pw:browser' || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
