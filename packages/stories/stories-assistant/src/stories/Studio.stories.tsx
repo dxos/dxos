@@ -197,6 +197,23 @@ export const TestStoryboard: Story = {
   play: async ({ canvasElement }) => {
     await submitPrompt(canvasElement, "Do the task on this project's checklist.");
     await waitForStoryboard(async (_storyboard, frames) => frames.length >= 3, { timeout: 300_000 });
+    // Each frame is a Soul still animated by DoP (minutes each, run in order); wait for the clips
+    // and print their URLs — the evidence a reader of the run wants.
+    const storyboard = await waitForStoryboard(
+      async (_storyboard, frames) => {
+        const artifacts = await Promise.all(frames.map((frame) => frame.artifact?.load()));
+        // A pending variant (async job) has no url yet; wait for the produced ones.
+        const variants = await Promise.all(artifacts.map((artifact) => artifact?.variants?.[0]?.load()));
+        return artifacts.length >= 3 && variants.every((variant) => !!variant?.url);
+      },
+      { timeout: 900_000 },
+    );
+    const frames = await Promise.all(storyboard.frames.map((ref) => ref.load()));
+    for (const frame of frames) {
+      const artifact = await frame.artifact?.load();
+      const variant = await artifact?.variants?.[0]?.load();
+      console.log(`[studio live] ${frame.name}: ${variant?.contentType} ${variant?.url}`);
+    }
   },
 };
 

@@ -300,6 +300,36 @@ Both depend on `@dxos/plugin-studio/types` and resolve their credential via
   downstream chains.
 ```
 
+
+## Storyboard
+
+```mdl
+feat Storyboard
+  desc: >
+    Storyboard { name?, frames: Ref<Frame>[] (SetParent) } / Frame { name?, notes?, artifact?: Ref<MediaArtifact> }.
+    StoryboardArticle: toolbar (Append frame → artifact create dialog; Play) + reorderable accordion
+    of FrameArticles, each hosting the artifact's own article through the Article surface with a
+    nodeId under the storyboard (studio graph nodes), so its Connect/Generate work when nested.
+    StoryboardPlayer plays the frames' cover variants back to back (view-time splice).
+  types: [org.dxos.type.storyboard, org.dxos.type.frame]
+  operations:
+    - org.dxos.operation.studio.createStoryboard { name, project?, frames?, generate? }
+    - org.dxos.operation.studio.appendFrame { storyboard, name, kind, prompt, notes?, provider?, config?, generate? }
+    - org.dxos.operation.studio.listProviders { kind? }
+```
+
+## Skill and template
+
+```mdl
+feat StudioSkill
+  desc: >
+    org.dxos.skill.studio — list-providers → create-storyboard (frames inline, generate: true) or
+    append-frame + generate per beat; narrative = establishing shot → development → resolution.
+  template: >
+    The Studio project template enables the studio + project skills and seeds one task:
+    "Create a simple 3 frame storyboard that explains how the Studio plugin works", plus a Lightbox.
+```
+
 ## QA
 
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an

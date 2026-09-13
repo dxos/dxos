@@ -41,10 +41,16 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Accordion → react-ui (ark primitives), `leading` slot + `ref` on Item.
 - [x] `Storyboard` / `Frame` types, `StoryboardArticle` (accordion, dnd reorder, append frame), story.
 - [x] Nested artifact article: `nodeId` prop, studio graph nodes for frame artifacts, self-expanding actions.
-- [ ] `StudioOperation.CreateStoryboard` / `AppendFrame` / `ListProviders` + handlers + tests.
-- [ ] `org.dxos.skill.studio` skill definition; Studio template task + skills.
-- [ ] `stories-assistant` `Studio.stories.tsx`: seeded Studio project, Higgsfield enabled, scripted + live play.
-- [ ] `StoryboardPlayer` (sequential playback) + splice design/task.
+- [x] `StudioOperation.CreateStoryboard` / `AppendFrame` / `ListProviders` + handlers + tests.
+- [x] `org.dxos.skill.studio` skill definition; Studio template task + skills.
+- [x] `stories-assistant` `Studio.stories.tsx`: seeded Studio project, Higgsfield enabled, scripted + live play.
+- [x] `StoryboardPlayer` (sequential playback) + splice design/task.
+
+- [x] Higgsfield video = Soul still → DoP animation (image-to-video); live clip generated end to end.
+- [ ] Live story flake: the first attempt in a fresh runner is starved (prompt never reaches the thread
+      for ~200 s, the retry passes); `PersistentLifecycle Start failed: Edge connection closed` in two
+      runs. Investigate the harness before relying on the live story.
+- [ ] `tasks-update` from the live model fails with `Invalid EID: echo://…` (plugin-tasks input parsing).
 
 ## Follow-ups
 

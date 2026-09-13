@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/plugin-studio/TASKS.md
     design: .agents/projects/plugin-studio/DESIGN.md
     prs: []
-    resume: 'plugin-higgsfield built, tested (15 unit + credit-free live auth test), verified in the app; PR opened. Live generation blocked by `403 not_enough_credits` on the provided account; video model path has no verified default.'
+    resume: 'PR #13078 open (Check via Depot). Landed on the branch: plugin-higgsfield (image + Soul→DoP video), Studio on Projects (template, no Studio section), Storyboard/Frame + accordion article + player, studio skill + ops, stories-assistant Studio story (scripted passes; live produced real Higgsfield stills/clips twice, then edge disconnects). NEXT: address review, land; follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake).'
   - name: task-visualization
     status: active
     user: burdon

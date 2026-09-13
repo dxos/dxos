@@ -40,8 +40,9 @@ export const make = (): Skill.Skill =>
            setting, camera, motion for video, mood). Prompts must stand alone — the generator sees
            nothing but the prompt.
         2. Call list-providers to learn which provider serves the kind you need and which config keys
-           it expects beyond the prompt (a model path, an avatar). Prefer video for narratives with
-           motion; fall back to image if no video provider is registered.
+           it expects beyond the prompt (a model path, an avatar). Make every frame a video when a
+           video provider is registered (a storyboard plays back to back); use image only when none
+           is, or the brief asks for stills.
         3. Call create-storyboard with the project from your context (so it is filed there), the
            frames in order — each with title, kind, prompt, notes, the provider id and the
            provider's extra config (use its defaultRequest when present) — and generate: true to
