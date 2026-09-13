@@ -65,6 +65,9 @@ const MAX_RESTART_DELAY = 5000;
  */
 const DEFAULT_BIND_TIMEOUT = 10_000;
 
+/** The deadline doubles on each restart, so an edge that never answers for a space is retried rarely. */
+const MAX_BIND_TIMEOUT = 120_000;
+
 /**
  * Outbound frame batching bounds (see `frame-batching-spec.md`). Subduction transport frames are
  * coalesced into one {@link SubductionBatchEnvelope}, flushed on whichever bound trips first:
@@ -285,7 +288,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       context: this._context,
       sharedPolicyEnabled: !this._disableSharePolicy,
       frameBatching: this._frameBatching,
-      bindTimeout: this._bindTimeout,
+      bindTimeout: Math.min(MAX_BIND_TIMEOUT, this._bindTimeout * 2 ** reconnects),
       onRemoteConnected: async () => {
         log.trace('dxos.echo.edge.subduction-replicator.onRemoteConnected', { spaceId });
         this._context?.onConnectionOpen(connection);
