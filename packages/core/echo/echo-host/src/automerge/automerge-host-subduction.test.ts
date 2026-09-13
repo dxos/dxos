@@ -734,7 +734,9 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
         await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
         const updates: CollectionId[] = [];
-        const unsubscribe = host1.host.collectionStateUpdated.on(({ collectionId }) => updates.push(collectionId));
+        const unsubscribe = host1.host.collectionStateUpdated.on(({ collectionId }) => {
+          updates.push(collectionId);
+        });
         onTestFinished(() => unsubscribe());
         await sleep(POLICY_NEGATIVE_DELAY_MS);
         expect(updates).toEqual([]);
