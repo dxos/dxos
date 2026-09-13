@@ -354,6 +354,9 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   async close(): Promise<void> {
+    // Objects added just before close are still being bound to their documents; hand those writes to the host first.
+    await this._waitForPendingCreations();
+    await this._repoProxy.flush();
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
     await this._repoProxy.close();

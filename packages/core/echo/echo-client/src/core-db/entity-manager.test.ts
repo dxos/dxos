@@ -307,6 +307,21 @@ describe('DatabaseImpl', () => {
       }
     });
 
+    test('an object added right before close reaches the host', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const peer = await testBuilder.createPeer();
+      const spaceKey = PublicKey.random();
+      const db = await peer.createDatabase(spaceKey);
+      const rootUrl = db.rootUrl!;
+      const object = db.add(Obj.make(TestSchema.Expando, { name: 'added before close' }));
+      await db.close();
+
+      const db2 = await peer.openDatabase(spaceKey, rootUrl, { client: await peer.createClient() });
+      const loaded = await db2.query(Query.type(TestSchema.Expando, { id: object.id })).first();
+      expect(loaded.name).to.eq('added before close');
+    });
+
     test('load object', async () => {
       const object = Obj.make(TestSchema.Expando, { title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(object);
