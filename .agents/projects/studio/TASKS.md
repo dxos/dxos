@@ -23,7 +23,18 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Dev server brands as the `dev` channel: boot mark filter + favicon middleware (`channel-branding.ts`).
 - [x] `TaskSet` hidden from the Database section (`HiddenAnnotation`, like `Milestone`).
 
+## Phase 3: Project as the studio root (design: `agents/superpowers/specs/2026-09-13-studio-projects-design.md`)
+
+- [ ] plugin-studio contributes a `ProjectCapabilities.Template` ("Studio") whose scaffold parents a `Lightbox` to the project and files it in `project.artifacts`.
+- [ ] Remove the Studio navtree section, the virtual Artifacts node, `ArtifactsArticle`, and the `ARTIFACTS_*` paths/constants.
+- [ ] Lightbox toolbar gains **Add artifact** (create dialog → `lightbox.items` + `project.artifacts`).
+- [ ] `MediaArtifact` create entry `targetNodeId` falls back to the project's Artifacts branch.
+- [x] `ObjectMasonryArticle` search input centred in its toolbar (`Toolbar.Root`).
+
 ## Follow-ups
 
+- [ ] Generic mechanism for plugins to add **create menu items to an article's toolbar** (e.g. a
+      `CreateObjectEntry`-style capability the Lightbox/Project article's `+` reads), replacing the
+      hard-wired Lightbox "Add artifact" action.
 - [ ] Verify a video model path against a real account and set it as the video default.
 - [ ] Model picker (`fieldMap`) once Higgsfield exposes a model catalog endpoint.

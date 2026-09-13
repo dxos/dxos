@@ -77,7 +77,7 @@ const listStyles = tv({
     //
     // `m-form-chrome mb-0` mirrors the rest of the form-chrome padding convention.
     comboboxInput: 'm-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]',
-    comboboxList: 'py-form-chrome',
+    comboboxList: 'p-form-chrome',
     // Trigger value / placeholder text — grows and truncates; subdued when placeholder.
     comboboxTriggerText: 'font-normal text-start flex-1 min-w-0 truncate me-trim-sm',
     // Item row adds flex layout; `dx-hover`/`dx-selected` and padding come from `Picker.Item`.
