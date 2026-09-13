@@ -79,6 +79,35 @@ describe('CollectionSynchronizer', () => {
     expect(peer2.getRemoteCollectionStates(collectionId).get(peerId1)).to.deep.equal(STATE_1);
   });
 
+  test('a repeated connection open queries only the collections the peer newly qualifies for', async ({ expect }) => {
+    const peerId = 'peer1' as PeerId;
+    const allowed = new Set(['collection-a']);
+    const queried: string[] = [];
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: (collectionId) => {
+        queried.push(collectionId);
+      },
+      sendCollectionState: () => {},
+      shouldSyncCollection: (collectionId) => allowed.has(collectionId),
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+    peer.setLocalCollectionState('collection-a', STATE_1);
+    peer.setLocalCollectionState('collection-b', STATE_1);
+    await sleep(10);
+
+    peer.onConnectionOpen(peerId);
+    await sleep(10);
+    expect(queried).toEqual(['collection-a']);
+
+    // The peer's auth scope widens to a second collection.
+    allowed.add('collection-b');
+    peer.onConnectionOpen(peerId);
+    await sleep(10);
+    expect(queried).toEqual(['collection-a', 'collection-b']);
+  });
+
   test('pushes state to all interested peers on setLocalCollectionState', async ({ expect }) => {
     // Push covers peers that queried us before we had state — `onCollectionStateQueried`
     // silently drops that case; without this push the asker would wait up to POLL_INTERVAL
