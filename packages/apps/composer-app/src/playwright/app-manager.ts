@@ -554,7 +554,16 @@ export class AppManager {
     const y = offset.y + box.y + box.height / 2;
     await this.page.mouse.move(x, y, { steps: 4 });
     try {
-      await expect(over).toHaveAttribute('data-instruction', instruction);
+      // Chromium drops a dragover sent while the previous one is still unacknowledged, so the last
+      // position can go unseen: keep hovering inside the zone until the target reports it.
+      let nudge = 0;
+      await expect
+        .poll(async () => {
+          nudge = nudge === 0 ? 1 : 0;
+          await this.page.mouse.move(x, y + nudge);
+          return over.getAttribute('data-instruction');
+        })
+        .toBe(instruction);
     } catch (err) {
       const rows = await this.page.evaluate(
         ({ x, y }) => ({
