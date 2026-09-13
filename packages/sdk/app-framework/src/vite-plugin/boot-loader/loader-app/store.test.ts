@@ -237,3 +237,40 @@ describe('plugin activation row', () => {
     store.dispose();
   });
 });
+
+describe('loadSprite', () => {
+  const sprite =
+    '<svg xmlns="http://www.w3.org/2000/svg"><symbol id="ph--planet--regular" viewBox="0 0 256 256"><path d="M0 0h1"/></symbol></svg>';
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('requests the sprite at once and exposes its symbols once it lands', async ({ expect }) => {
+    const fetchMock = vi.fn(async () => new Response(sprite, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const store = createLoaderStore();
+    const loading = store.loadSprite('/icons.svg');
+    expect(fetchMock).toHaveBeenCalledWith('/icons.svg');
+    expect(store.sprite()).toBeUndefined();
+    await loading;
+    expect(store.sprite()).toContain('id="ph--planet--regular"');
+    store.dispose();
+  });
+
+  test('leaves the sprite unset on a failed response, a network error, or a non-svg body', async ({ expect }) => {
+    for (const impl of [
+      async () => new Response('missing', { status: 404 }),
+      async () => {
+        throw new Error('offline');
+      },
+      async () => new Response('<html></html>', { status: 200 }),
+    ]) {
+      vi.stubGlobal('fetch', vi.fn(impl));
+      const store = createLoaderStore();
+      await store.loadSprite('/icons.svg');
+      expect(store.sprite()).toBeUndefined();
+      store.dispose();
+    }
+  });
+});

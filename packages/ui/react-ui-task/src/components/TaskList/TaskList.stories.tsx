@@ -104,7 +104,7 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
     const task = Task.make({
       title: `Task ${path.join('.')} — ${random.lorem.words(random.number.int({ min: 2, max: 5 }))}`,
       status: statuses[(path.length + path[path.length - 1]) % statuses.length],
-      description: when(path[path.length - 1] === 2, () => random.lorem.sentence()),
+      description: when(path[path.length - 1] === 2, () => random.lorem.paragraph()),
       estimate: when(path.length === depth, () => random.helpers.arrayElement([...Task.Estimate.literals])),
       ...(parent && { parentTask: Ref.make(parent) }),
     });

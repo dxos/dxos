@@ -1,4 +1,4 @@
-# Project Tasks — Design
+# Task delegation — Design
 
 Agent delegation and task management over durable tasks: the conversation's
 working surface is a `TaskSet` — the owning project's ledger for a project
