@@ -111,12 +111,27 @@ export class RtcPeerConnection {
     const channel = new RtcTransportChannel(this, options);
     this._transportChannels.set(options.topic, channel);
     channel.closed.on(() => {
+      // A successor may already own the topic, and with it the pending claim.
+      if (this._transportChannels.get(options.topic) !== channel) {
+        return;
+      }
       this._transportChannels.delete(options.topic);
+      this._channelCreatedCallbacks
+        .get(options.topic)
+        ?.reject(new Error('Transport closed before its data channel arrived.'));
+      this._channelCreatedCallbacks.delete(options.topic);
       if (this._transportChannels.size === 0) {
         void this._lockAndCloseConnection();
       }
     });
     return channel;
+  }
+
+  /** Forgets a channel its transport has finished with, unless a replacement has already taken its place. */
+  public releaseDataChannel(topic: string, claimed: ClaimedDataChannel): void {
+    if (this._dataChannels.get(topic) === claimed) {
+      this._dataChannels.delete(topic);
+    }
   }
 
   @synchronized

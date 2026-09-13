@@ -48,6 +48,7 @@ export class RtcTransportChannel extends Resource implements Transport {
   public readonly errors = new ErrorStream();
 
   private _channel: RTCDataChannel | undefined;
+  private _claimed: ClaimedDataChannel | undefined;
   private _stream: Duplex | undefined;
   /** Frames delivered before {@link _stream} exists; nothing retransmits them. */
   private _bufferedMessages: (Buffer | string)[] = [];
@@ -76,12 +77,14 @@ export class RtcTransportChannel extends Resource implements Transport {
     this._isChannelCreationInProgress = true;
     this._connection
       .createDataChannel(this._options.topic)
-      .then(({ channel, received }) => {
+      .then((claimed) => {
         if (this.isOpen) {
-          this._channel = channel;
-          this._initChannel(channel, received);
+          this._claimed = claimed;
+          this._channel = claimed.channel;
+          this._initChannel(claimed.channel, claimed.received);
         } else {
-          this._safeCloseChannel(channel);
+          this._safeCloseChannel(claimed.channel);
+          this._connection.releaseDataChannel(this._options.topic, claimed);
         }
       })
       .catch((err) => {
@@ -105,6 +108,10 @@ export class RtcTransportChannel extends Resource implements Transport {
       this._safeCloseChannel(this._channel);
       this._channel = undefined;
       this._stream = undefined;
+    }
+    if (this._claimed) {
+      this._connection.releaseDataChannel(this._options.topic, this._claimed);
+      this._claimed = undefined;
     }
     this._bufferedMessages.length = 0;
     this.closed.emit();

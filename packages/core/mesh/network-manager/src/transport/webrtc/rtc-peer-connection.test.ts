@@ -62,7 +62,7 @@ describe('RtcPeerConnection', () => {
     await previous.open();
     await expect.poll(() => previous.isRtcChannelCreationInProgress).toBe(false);
     await previous.close();
-    expect(closedChannel.readyState).toBe('closed');
+    expect(closedChannel.closed).toBe(true);
 
     const { options, delivered } = createOptions('second');
     const reopened = peer.createTransportChannel(options);
@@ -109,6 +109,37 @@ describe('RtcPeerConnection', () => {
 
     await expect.poll(() => added.map((init) => init.candidate)).toStrictEqual([candidate]);
   });
+
+  test('a transport that closes while waiting leaves the replacement channel to its successor', async () => {
+    const { connection, peer } = createAnswerer();
+
+    const first = peer.createTransportChannel(createOptions('first').options);
+    onTestFinished(async () => {
+      await first.close();
+    });
+    await first.open();
+    await expect.poll(() => peer.currentConnection).toBe(connection);
+
+    const waiting = peer.createTransportChannel(createOptions('second').options);
+    await waiting.open();
+    // Its claim is pending before it gives up.
+    await sleep(20);
+    await waiting.close();
+
+    const replacement = createChannel('second');
+    connection.ondatachannel!({ channel: replacement } as any as RTCDataChannelEvent);
+    replacement.deliver('handshake');
+
+    const { options, delivered } = createOptions('second');
+    const successor = peer.createTransportChannel(options);
+    onTestFinished(async () => {
+      await successor.close();
+    });
+    await successor.open();
+
+    await expect.poll(() => delivered).toStrictEqual(['handshake']);
+    expect(replacement.closed).toBe(false);
+  });
 });
 
 const createSignal = (data: JsonObject) => create(SignalSchema, { payload: { data } });
@@ -150,8 +181,10 @@ const createChannel = (label: string) => {
     readyState: 'open' as RTCDataChannelState,
     binaryType: 'blob',
     onmessage: null as ((event: { data: unknown }) => void) | null,
+    closed: false,
+    // Leaves `readyState` alone, as node-datachannel does until its native close completes.
     close: () => {
-      channel.readyState = 'closed';
+      channel.closed = true;
     },
     send: () => {},
     /** Mirrors the browser: a message with no listener is gone. */
