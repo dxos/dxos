@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { random } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { withLayout, withTheme } from '../../testing';
 import { Accordion } from './Accordion.tsx';
 
 random.seed(1);
@@ -22,9 +22,10 @@ const items: TestItem[] = Array.from({ length: 10 }, (_, i) => ({
 
 const DefaultStory = () => {
   return (
-    <Accordion.Root<TestItem> items={items} classNames='w-[40rem]'>
+    <Accordion.Root<TestItem> items={items}>
       {({ items }) => (
-        <div className='flex flex-col w-full border-y border-separator divide-y divide-subdued-separator'>
+        // TODO(burdon): Provide Container component?
+        <div className='flex flex-col w-full rounded-md border-y border-separator divide-y divide-subdued-separator'>
           {items.map((item) => (
             <Accordion.Item key={item.id} item={item} classNames='border-x border-separator'>
               <Accordion.ItemHeader icon='ph--circle--regular'>{item.name}</Accordion.ItemHeader>
@@ -42,7 +43,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-2' })],
 } satisfies Meta<typeof Accordion>;
 
 export default meta;
