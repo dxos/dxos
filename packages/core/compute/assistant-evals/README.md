@@ -21,6 +21,47 @@ moon run assistant-evals:evals-watch                             # re-run on cha
 The tasks come from the `evalite` moon tag (`.moon/tasks/tag-evalite.yml`); the nightly
 `.depot/workflows/assistant-evals.yml` runs the same `evals` task.
 
+## MCP targets and latency
+
+`src/evals/mcp-server.eval.ts` drives the projected MCP surface. `DX_EVAL_MCP_TARGET` picks which
+one:
+
+| Target       | Endpoint                          | Graded on                     |
+| ------------ | --------------------------------- | ----------------------------- |
+| `local`      | in-process host (`src/mcp-host.ts`) | the database + latency        |
+| `local-edge` | `http://127.0.0.1:8791/mcp`       | discovery + latency           |
+| `dev`        | `https://mcp.dev.dxos.network/mcp` | discovery + latency           |
+| `main`       | `https://mcp.preview.dxos.network/mcp` | discovery + latency      |
+| `prod`       | `https://mcp.dxos.network/mcp`    | discovery + latency           |
+
+Only `local` is graded from the database: a deployed `mcp-space-service` worker serves its own data
+plane, which this process neither seeds nor reads.
+
+```bash
+moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts                  # in-process host
+DX_EVAL_MCP_TARGET=dev DX_EVAL_MCP_TOKEN=... DX_EVAL_SPACE_ID=... \
+  moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts               # deployed dev worker
+```
+
+- `DX_EVAL_MCP_TOKEN` — bearer token for a deployed endpoint (it is OAuth-gated, and an eval cannot
+  complete a passkey ceremony).
+- `DX_EVAL_SPACE_ID` — the space a remote run acts on.
+- `DX_EVAL_MCP_URL` — override the endpoint of a non-`local` target; `local` is always the
+  in-process host.
+- `DX_EVAL_MCP_LATENCY_BUDGET_MS` — p95 ceiling for the `tool-latency` scorer (500 local, 3000
+  remote).
+
+Latency is measured client-side by `src/McpLatency.ts`, over its own MCP connection rather than
+inside a turn — a turn's wall clock is the model's, not the surface's. Most of the probe set is
+`invokeOperation` against read-only (`mutation('none')`) operations, since that is the tool an agent
+spends its turns in and the only one whose latency includes resolving a space and running a handler;
+`queryOperations`/`loadSkill` answer out of the registry and measure little more than the transport.
+
+The scorer's value is the full report: connect time plus count/errors/min/mean/p50/p95/max per row,
+where a row is a tool — except `invokeOperation`, which is broken out per operation
+(`invokeOperation:org.dxos.operation.space.queryObjects`, …), because one figure for it would
+average a registry lookup against a full-content query. `*` is the aggregate.
+
 ## PostHog
 
 With `DX_EVALS_POSTHOG_API_KEY` set (the Composer project's token; the nightly sets it), every run

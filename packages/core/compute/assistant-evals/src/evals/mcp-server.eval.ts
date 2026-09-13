@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { evalite } from 'evalite';
 
 import * as Project from '@dxos/compute/Project';
-import { Database, Filter, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Query, Ref, Type } from '@dxos/echo';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -14,6 +14,8 @@ import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 
 import { findObject } from '../assertions.ts';
 import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';
+import type * as McpLatency from '../McpLatency.ts';
+import * as McpTarget from '../McpTarget.ts';
 import * as Scorer from '../Scorer.ts';
 
 //
@@ -29,6 +31,69 @@ import * as Scorer from '../Scorer.ts';
 // Only the server's tools are allowed. No Bash, no file tools: an agent that can shell out could
 // satisfy a prompt without ever reaching the surface, and the run would prove nothing about it.
 //
+// `DX_EVAL_MCP_TARGET` picks the surface: `local` (the in-process host, the default), `local-edge`
+// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Only `local` can be graded from
+// the database — a deployed worker serves its own data plane, which this process neither seeds nor
+// reads — so a remote run drops the write stages and scores what a client can see from outside:
+// discovery through the server, and per-tool latency.
+//
+
+const TARGET = McpTarget.fromEnv();
+
+const REMOTE = !McpTarget.isLocal(TARGET);
+
+/**
+ * The calls the latency report is built from.
+ *
+ * `queryOperations` and `loadSkill` answer out of the registry and measure little more than the
+ * transport, so most of the set is `invokeOperation`: that is the tool an agent actually spends its
+ * turns in, and the only one whose latency includes resolving a space and running a handler against
+ * the database. Every operation here is `mutation('none')` and needs no object reference, so the
+ * same set is as safe against production as against the in-process host.
+ *
+ * Rows come back keyed per operation (`invokeOperation:<key>`), because a single figure for
+ * `invokeOperation` would average a registry lookup against a full-content query.
+ */
+const readProbes = (spaceId: string): McpLatency.Probe[] => [
+  { tool: 'queryOperations', args: { query: 'task' } },
+  { tool: 'loadSkill' },
+  // Cheapest handler that still reaches the database: an unfiltered listing, ids and labels only.
+  { tool: 'invokeOperation', args: { key: 'org.dxos.operation.space.queryObjects', input: { limit: 10 }, spaceId } },
+  // The same verb with the objects loaded, which is what separates a query's cost from a handler's.
+  // Labelled, because the operation key alone would fold it into the row above and average the two
+  // shapes into a figure describing neither.
+  {
+    tool: 'invokeOperation',
+    label: 'invokeOperation:org.dxos.operation.space.queryObjects(content)',
+    args: {
+      key: 'org.dxos.operation.space.queryObjects',
+      input: { typename: Type.getTypename(Task.Task), includeContent: true, limit: 10 },
+      spaceId,
+    },
+  },
+  { tool: 'invokeOperation', args: { key: 'org.dxos.operation.tasks.listSessions', input: { limit: 10 }, spaceId } },
+];
+
+/**
+ * Probes that need an object to address, and therefore a space this process seeded.
+ *
+ * A reference travels as the wire envelope the server documents, so these also time the decode path
+ * a ref-taking operation goes through — which no ref-free probe covers.
+ */
+const refProbes = (spaceId: string, projectId: string): McpLatency.Probe[] => {
+  const project = { '/': `echo://${spaceId}/${projectId}` };
+  return [
+    { tool: 'invokeOperation', args: { key: 'org.dxos.operation.projects.get', input: { project }, spaceId } },
+    { tool: 'invokeOperation', args: { key: 'org.dxos.operation.tasks.list', input: { project }, spaceId } },
+  ];
+};
+
+/**
+ * Ceiling for the p95 of a tool call, in ms. The in-process host is a function call behind a
+ * loopback socket; a deployed worker is a TLS round trip in front of a data plane, so the two cannot
+ * share a number. Override with `DX_EVAL_MCP_LATENCY_BUDGET_MS`.
+ */
+const LATENCY_BUDGET = McpTarget.latencyBudget(REMOTE ? 3_000 : 500);
 
 const PROJECT_NAME = 'Lighthouse';
 
@@ -76,7 +141,30 @@ const NOTHING_STAGED: Staged = {
   started: false,
 };
 
-const scorers = (staged: Staged): Scorer.Any[] => [
+/**
+ * Latency as a graded dimension, carrying the whole report as its value: the pass/fail is the p95
+ * against a budget, but what a reader of a run wants is the per-tool spread next to it.
+ */
+const latencyScorer = (report?: McpLatency.Report): Scorer.Any =>
+  Scorer.make({
+    name: 'tool-latency',
+    description: `Client-observed MCP tool latency against "${TARGET}"; p95 within ${LATENCY_BUDGET}ms and no errored call.`,
+    query: Effect.succeed(report),
+    score: (value) => value != null && value.stats['*'].errors === 0 && value.stats['*'].p95 <= LATENCY_BUDGET,
+  });
+
+/** What a deployed target can be held to: the surface answered, and it answered fast enough. */
+const remoteScorers = (discovered: boolean, report?: McpLatency.Report): Scorer.Any[] => [
+  Scorer.make({
+    name: 'operations-discovered',
+    description: 'The agent reached the deployed surface and got operations back through it.',
+    query: Effect.succeed(discovered),
+    score: (ok) => ok,
+  }),
+  latencyScorer(report),
+];
+
+const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
   Scorer.make({
     name: 'scaffold-visible',
     description: 'The seeded ledger is readable outside the agent before the run starts.',
@@ -110,14 +198,37 @@ const scorers = (staged: Staged): Scorer.Any[] => [
     query: Query.select(Filter.type(Task.Task)),
     score: (tasks) => tasks.length === 2,
   }),
+  latencyScorer(report),
 ];
 
 /** Names and descriptions only; the marks come from the run, through `output.scores`. */
-const SCORERS = scorers(NOTHING_STAGED);
+const SCORERS = REMOTE ? remoteScorers(false) : scorers(NOTHING_STAGED);
 
-const task = () =>
+/**
+ * A deployed worker, driven from the outside: no seed, no database check, one discovery turn and a
+ * latency report. It is what remains measurable when the space the agent acts on is not this
+ * process's.
+ */
+const remoteTask = () =>
+  runClaudeEval({ skills: [], target: TARGET }, async ({ spaceId, send, latency, score }) => {
+    const report = await latency(readProbes(spaceId));
+    const turn = await send(
+      `Using only the ${SERVER} MCP server, list the operations it offers for working with tasks. ` +
+        'Reply with their keys, one per line, and change nothing.',
+    );
+    const discovered = !turn.isError && turn.toolCalls.includes(tool('queryOperations'));
+    const scores = await score(remoteScorers(discovered, report));
+    return {
+      scores,
+      latency: report,
+      turns: [turn].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
+    };
+  });
+
+const localTask = () =>
   runClaudeEval(
     {
+      target: TARGET,
       skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }],
       plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
       types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
@@ -136,7 +247,7 @@ const task = () =>
           yield* Database.add(Project.make({ name: PROJECT_NAME, taskSet: Ref.make(taskSet) }));
         }),
     },
-    async ({ spaceId, send, query, score }) => {
+    async ({ spaceId, send, query, score, latency }) => {
       // Stage 1 — the starting state, proven before a single token is spent. Without it, a later
       // "the task is done" score cannot distinguish the agent's work from a bad fixture.
       const seeded = await query(readTasks);
@@ -191,16 +302,23 @@ const task = () =>
         // Still done: a later turn must not roll back what an earlier one committed.
         find(afterStart, ROTATE)?.status === 'done';
 
-      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started }));
+      // After the turns, so the probe's own connection is not competing with the agent's for the
+      // listener — and so a latency figure is never what a scenario's writes waited behind. The
+      // ledger is at its fullest here too, which is the state worth timing a read against.
+      const project = await query(findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME));
+      const report = await latency([...readProbes(spaceId), ...(project ? refProbes(spaceId, project.id) : [])]);
+
+      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started }, report));
       return {
         scores,
+        latency: report,
         turns: [read, complete, start].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
       };
     },
   );
 
-evalite('MCP server — Claude Code drives the projected surface, graded from the database', {
+evalite(`MCP server (${TARGET}) — Claude Code drives the projected surface`, {
   data: [{ input: null }],
-  task,
+  task: REMOTE ? remoteTask : localTask,
   scorers: Scorer.toEvalite(SCORERS),
 });
