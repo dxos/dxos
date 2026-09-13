@@ -6,8 +6,8 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Accordion, Empty, Listbox } from '@dxos/react-ui-list';
+import { Accordion, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Empty, Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';

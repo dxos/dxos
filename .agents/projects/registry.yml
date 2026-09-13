@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-studio
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-13
+    summary: 'Extend plugin-studio with more generation providers; first plugin-higgsfield (Connector + image/video GenerationService against api.higgsfield.ai), modelled on plugin-heygen.'
+    tasks: .agents/projects/plugin-studio/TASKS.md
+    design: .agents/projects/plugin-studio/DESIGN.md
+    prs: []
+    resume: 'PR #13078 open (Check via Depot). Landed on the branch: plugin-higgsfield (image + Soul→DoP video), Studio on Projects (template, no Studio section), Storyboard/Frame + accordion article + player, studio skill + ops, stories-assistant Studio story (scripted passes; live produced real Higgsfield stills/clips twice, then edge disconnects). NEXT: address review, land; follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake).'
   - name: task-visualization
     status: active
     user: burdon

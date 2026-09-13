@@ -20,7 +20,7 @@ import { Text } from '@dxos/schema';
 
 import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Artifact, Lightbox, Variant } from '#types';
+import { Lightbox, MediaArtifact, Variant } from '#types';
 
 import { LightboxArticle } from './LightboxArticle.tsx';
 
@@ -52,7 +52,13 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin.make({
-          types: [Lightbox.Lightbox, Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
+          types: [
+            Lightbox.Lightbox,
+            MediaArtifact.MediaArtifact,
+            Variant.Variant,
+            Instructions.Instructions,
+            Text.Text,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -62,7 +68,7 @@ const meta = {
               // Seed Artifacts (each with a cover variant) and place them across the board grid.
               Obj.update(lightbox, (lightbox) => {
                 for (let index = 0; index < 5; index++) {
-                  const artifact = Artifact.make({ name: `Artifact ${index + 1}`, kind: 'image' });
+                  const artifact = MediaArtifact.make({ name: `MediaArtifact ${index + 1}`, kind: 'image' });
                   const variant = space.db.add(
                     Variant.make({
                       [Obj.Parent]: artifact,

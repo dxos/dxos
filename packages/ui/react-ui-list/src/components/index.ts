@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Accordion/index.ts';
 export * from './Combobox/index.ts';
 export * from './DropIndicator/index.ts';
 export * from './Empty/index.ts';

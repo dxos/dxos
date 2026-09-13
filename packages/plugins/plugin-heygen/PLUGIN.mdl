@@ -61,20 +61,17 @@ feat HeyGenGenerationService
 ## Avatar/voice picker
 
 ```mdl
-feat HeyGenGenerateForm
+feat HeyGenFieldOptions
   desc: >
-    Overrides studio's default schema-driven GenerateForm for kind:'video' with a
-    provider-specific picker: `avatarId`/`voiceId` render as SelectFields populated
-    from listAvatars()/listVoices(). Contributed as a ReactSurface on the studio
-    `GenerateForm` role token (@dxos/plugin-studio/surfaces) with Position.first +
-    filter data.kind==='video'. The API key is read from the Connector AccessToken
-    (useQuery, source 'heygen.com'). Ported from the former plugin-generator
-    GenerationProperties.
+    `avatarId` / `voiceId` are listed through the studio's shared field-options mechanism:
+    the GenerationService's `fieldOptions` map loaders (listAvatars / listVoices, with the
+    Connector credential) that plugin-studio renders as comboboxes and caches per
+    provider/field/credential. No React in this plugin.
 ```
 
 ## Dependencies
 
-- `@dxos/plugin-studio` (workspace:\*) — `/types` (GenerationService contract) + `/surfaces` (GenerateForm role token).
+- `@dxos/plugin-studio` (workspace:\*) — `/GenerationService` (the provider contract).
 - `@dxos/plugin-connector`, `@dxos/types` (AccessToken), `@dxos/edge-client`
   (CORS proxy), `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/echo`,
   `@dxos/invariant`, `@dxos/log`, `@dxos/react-client`, `@dxos/react-ui-form`,
@@ -97,7 +94,7 @@ test QA-1: Connect a HeyGen key and generate a video
     generic `Generate` operation with `provider: "heygen"`; there is no plugin-heygen-local key to
     invoke.
   actors: both
-  covers: [HeyGenConnector, HeyGenGenerationService, HeyGenGenerateForm]
+  covers: [HeyGenConnector, HeyGenGenerationService, HeyGenFieldOptions]
   status: unverified
   given:
     - an identity exists

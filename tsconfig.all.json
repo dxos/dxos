@@ -457,6 +457,9 @@
       "path": "packages/plugins/plugin-heygen/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
     },
     {

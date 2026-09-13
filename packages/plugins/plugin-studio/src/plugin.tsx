@@ -7,11 +7,12 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AppGraphBuilder,
   CreateObject,
-  NavigationTargetResolver,
   OperationHandler,
   PluginAsset,
+  ProjectTemplates,
   ReactSurface,
   Schema,
+  SkillDefinition,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -19,11 +20,12 @@ import { meta } from '#meta';
 export const StudioPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ProjectTemplates),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(Translations),
   Plugin.make,
 );

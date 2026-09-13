@@ -92,6 +92,7 @@
     "@dxos/plugin-google": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-heygen": "workspace:*",
+    "@dxos/plugin-higgsfield": "workspace:*",
     "@dxos/plugin-ibkr": "workspace:*",
     "@dxos/plugin-ideogram": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",

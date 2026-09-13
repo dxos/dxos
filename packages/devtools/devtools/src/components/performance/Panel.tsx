@@ -4,8 +4,7 @@
 
 import React, { type JSX, type PropsWithChildren } from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { Accordion } from '@dxos/react-ui-list';
+import { Accordion, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type PanelProps = ThemedClassName<{

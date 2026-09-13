@@ -267,6 +267,7 @@
       "@dxos/plugin-google",
       "@dxos/plugin-graph",
       "@dxos/plugin-heygen",
+      "@dxos/plugin-higgsfield",
       "@dxos/plugin-ibkr",
       "@dxos/plugin-ideogram",
       "@dxos/plugin-illustrator",

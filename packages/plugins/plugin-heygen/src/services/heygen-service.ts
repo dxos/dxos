@@ -8,6 +8,7 @@ import { proxyFetchLegacy } from '@dxos/edge-client';
 import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
 import { HEYGEN_CONNECTOR_ID, HEYGEN_ID, HEYGEN_SOURCE } from '../constants.ts';
+import { type GenerationOption } from './heygen-provider-types.ts';
 import { HeyGenProvider } from './heygen-provider.ts';
 import { HeyGenRequestConfig, decodeHeyGenConfig } from './heygen-request.ts';
 
@@ -17,6 +18,9 @@ const proxyFetch: typeof globalThis.fetch = (input, init) =>
   proxyFetchLegacy(new URL(typeof input === 'string' ? input : input.toString()), init);
 
 const apiKeyString = (apiKey?: Redacted.Redacted<string>): string => (apiKey ? Redacted.value(apiKey) : '');
+
+const toFieldOptions = (options: readonly GenerationOption[]): GenerationService.FieldOption[] =>
+  options.map((option) => ({ value: option.id, label: option.name }));
 
 /** A HeyGen provider wired to the edge CORS proxy (shared by the generation service and the picker UI). */
 export const makeHeyGenProvider = (): HeyGenProvider => new HeyGenProvider({ fetch: proxyFetch });
@@ -36,6 +40,13 @@ export const makeHeyGenGenerationService = (): GenerationService.GenerationServi
     source: HEYGEN_SOURCE,
     connectorId: HEYGEN_CONNECTOR_ID,
     requestSchema: HeyGenRequestConfig,
+    // The account's own avatars/voices, listed by studio as comboboxes and cached per credential.
+    fieldOptions: {
+      avatarId: ({ apiKey, signal }) =>
+        provider.listAvatars({ apiKey: apiKeyString(apiKey), signal }).then(toFieldOptions),
+      voiceId: ({ apiKey, signal }) =>
+        provider.listVoices({ apiKey: apiKeyString(apiKey), signal }).then(toFieldOptions),
+    },
     enqueue: (request, { apiKey, signal }) => {
       const config = decodeHeyGenConfig(request);
       return provider.enqueue(

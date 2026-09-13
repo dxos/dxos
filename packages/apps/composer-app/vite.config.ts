@@ -579,7 +579,7 @@ export default defineConfig((env) => ({
     // loses the brand mark — the loader still renders the bar + status
     // without it.
     bootLoaderPlugin({
-      // A prerelease bundle recolours the released mark; production and any dev server show it as is.
+      // A prerelease bundle and the dev server recolour the released mark; production shows it as is.
       markFilter: bootMarkFilter(channelVariant(env.command)),
       markSvg: (() => {
         const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');

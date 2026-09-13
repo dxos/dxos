@@ -16,7 +16,7 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
+import { GenerationService, MediaArtifact, StudioCapabilities, Variant } from '#types';
 
 import generateHandler from './generate.ts';
 
@@ -86,7 +86,7 @@ describe('generate', () => {
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({
-      types: [Artifact.Artifact, Variant.Variant],
+      types: [MediaArtifact.MediaArtifact, Variant.Variant],
     }));
   });
 
@@ -94,10 +94,10 @@ describe('generate', () => {
     await builder.close();
   });
 
-  const addArtifact = (kind = 'image'): Artifact.Artifact => db.add(Artifact.make({ kind }));
+  const addArtifact = (kind = 'image'): MediaArtifact.MediaArtifact => db.add(MediaArtifact.make({ kind }));
 
   const run = (
-    artifact: Artifact.Artifact,
+    artifact: MediaArtifact.MediaArtifact,
     {
       services = [],
       creds = [],

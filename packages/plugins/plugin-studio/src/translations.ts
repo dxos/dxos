@@ -6,16 +6,16 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Artifact, Lightbox, Variant } from '#types';
+import { Frame, Lightbox, MediaArtifact, Storyboard, Variant } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Artifact.Artifact)]: {
-        'typename.label': 'Artifact',
-        'typename.label_zero': 'Artifacts',
-        'typename.label_one': 'Artifact',
-        'typename.label_other': 'Artifacts',
+      [Type.getTypename(MediaArtifact.MediaArtifact)]: {
+        'typename.label': 'Media artifact',
+        'typename.label_zero': 'Media artifacts',
+        'typename.label_one': 'Media artifact',
+        'typename.label_other': 'Media artifacts',
         'object-name.placeholder': 'New artifact',
         'add-object.label': 'Add artifact',
         'rename-object.label': 'Rename artifact',
@@ -37,6 +37,24 @@ export const translations = [
         'delete-object.label': 'Delete lightbox',
         'object-deleted.label': 'Lightbox deleted',
       },
+      [Type.getTypename(Storyboard.Storyboard)]: {
+        'typename.label': 'Storyboard',
+        'typename.label_zero': 'Storyboards',
+        'typename.label_one': 'Storyboard',
+        'typename.label_other': 'Storyboards',
+        'object-name.placeholder': 'New storyboard',
+        'add-object.label': 'Add storyboard',
+        'rename-object.label': 'Rename storyboard',
+        'delete-object.label': 'Delete storyboard',
+        'object-deleted.label': 'Storyboard deleted',
+      },
+      [Type.getTypename(Frame.Frame)]: {
+        'typename.label': 'Frame',
+        'typename.label_zero': 'Frames',
+        'typename.label_one': 'Frame',
+        'typename.label_other': 'Frames',
+        'object-name.placeholder': 'New frame',
+      },
       [meta.profile.key]: {
         'plugin.name': 'Studio',
         'generate.label': 'Generate',
@@ -53,13 +71,21 @@ export const translations = [
         'more.label': 'More',
         'delete.label': 'Delete artifact',
         'delete-variant.label': 'Delete variant',
+        'add-artifact.label': 'Add artifact',
+        'add-artifact.error.title': 'Could not add the artifact to the project.',
+        'append-frame.label': 'Append frame',
+        'delete-frame.label': 'Delete frame',
+        'drag-frame.label': 'Drag to reorder',
+        'frame.placeholder': 'Untitled frame',
+        'frame-empty.message': 'No artifact yet.',
+        'storyboard-empty.message': 'No frames yet — append one from the toolbar.',
+        'play.label': 'Play',
+        'stop.label': 'Back to frames',
+        'previous-frame.label': 'Previous frame',
+        'next-frame.label': 'Next frame',
+        'nothing-to-play.message': 'No generated frames to play yet.',
         'center.label': 'Center',
         'zoom.label': 'Toggle zoom',
-        'studio-section.label': 'Studio',
-        'artifacts.label': 'Artifacts',
-        'kind.placeholder': 'Kind',
-        'kind.image.label': 'Image',
-        'kind.video.label': 'Video',
         'generator.placeholder': 'Generator',
       },
     },

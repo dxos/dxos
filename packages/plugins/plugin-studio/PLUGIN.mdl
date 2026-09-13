@@ -4,7 +4,7 @@ name: StudioPlugin
 version: 0.1.0
 ---
 
-A studio for **creative artifacts** in `DXOS` Composer. An `Artifact` is a
+A studio for **creative artifacts** in `DXOS` Composer. A `MediaArtifact` is a
 media-agnostic unit of creative work — a prompt plus the outputs generated (or
 uploaded) from it — spanning images, video, and future media. The plugin owns
 the cross-cutting ontology and the generic authoring UI; concrete media
@@ -12,7 +12,7 @@ the cross-cutting ontology and the generic authoring UI; concrete media
 
 ## Design tenets
 
-- **One extensible `Artifact` type**, discriminated by an open-string `kind`
+- **One extensible `MediaArtifact` type**, discriminated by an open-string `kind`
   (`'image' | 'video' | …`). No per-medium ECHO types; new media add *behavior*
   (a renderer + optionally a provider), never columns.
 - **Two output relationships**: `variants` (interchangeable alternatives of the
@@ -26,7 +26,7 @@ the cross-cutting ontology and the generic authoring UI; concrete media
   medium's request config; studio renders the request form from the schema (a
   generic `Form`) or a provider-supplied custom UI (a Surface).
 - **Layout reuses/extends view types**: a masonry gallery is a
-  `Collection<Artifact>`; a spatial lightbox is a `Lightbox` (a board layout over
+  `Collection<MediaArtifact>`; a spatial lightbox is a `Lightbox` (a board layout over
   referenced Artifacts). Layout is a *view*, not a medium.
 - **Credentialed access via Connectors**: providers store an `AccessToken`; the
   generate op resolves it via `CredentialsService`, keyed by the provider's
@@ -46,9 +46,9 @@ the cross-cutting ontology and the generic authoring UI; concrete media
 ## Types
 
 ```mdl
-type Artifact
+type MediaArtifact
   desc: >
-    A creative artifact (typename org.dxos.type.artifact): a prompt plus the
+    A creative artifact (typename org.dxos.type.mediaArtifact): a prompt plus the
     outputs produced from it. Media-agnostic; `kind` selects rendering + provider.
   fields:
     name?: string
@@ -69,7 +69,7 @@ type Artifact
 type Variant
   desc: >
     One produced output (typename org.dxos.type.variant; hidden from the navtree,
-    owned by its Artifact). Generated variants carry `generation`; uploaded or
+    owned by its MediaArtifact). Generated variants carry `generation`; uploaded or
     external ones do not.
   fields:
     contentType?: string              # mime — selects the VariantRenderer surface (image/png, video/mp4, …)
@@ -98,7 +98,7 @@ type Lightbox
     BoardLayout); the artifacts are referenced, not owned.
   fields:
     name?: string
-    items: Ref<Artifact>[]
+    items: Ref<MediaArtifact>[]
     layout: BoardLayout               # { size: { width, height }, cells: Record<id, { x, y, width?, height? }> }
 ```
 
@@ -153,13 +153,13 @@ surface GenerateForm                  # role org.dxos.plugin.studio.role.generat
 op generate
   key: org.dxos.operation.studio.generate
   desc: >
-    Generate variants for an Artifact. Resolves the GenerationService (by
+    Generate variants for a MediaArtifact. Resolves the GenerationService (by
     artifact.kind + optional provider), resolves the API key from the
     Connector-managed AccessToken via CredentialsService when `source` is set,
     builds the request from the prompt (instructions.text) + artifact.config,
     calls generate(), and appends a Variant per result (recording Generation,
     seeding `cover` with the first).
-  input:  { artifact: Ref<Artifact>, provider?: string, name?: string, config?: Record<string, unknown>, variant?: Ref<Variant>, count?: number }
+  input:  { artifact: Ref<MediaArtifact>, provider?: string, name?: string, config?: Record<string, unknown>, variant?: Ref<Variant>, count?: number }
   output: { count: number }
   errors: [NoGenerationService, MissingCredential, GenerationError]
   services: [Database.Service, Capability.Service, CredentialsService]
@@ -169,36 +169,36 @@ op generate
 ## Components / surfaces
 
 ```mdl
-component ArtifactArticle
+component MediaArtifactArticle
   desc: >
-    Media-agnostic article for an Artifact. Toolbar: variant chooser (tabs) +
+    Media-agnostic article for a MediaArtifact. Toolbar: variant chooser (tabs) +
     a Generator selector (the GenerationServices for the artifact's kind) +
     Upload + Connect/Generate. Below: the prompt editor, the kind-specific
     GenerateForm (schema-driven or overridden), and either the selected variant
     (rendered via the VariantRenderer surface for its contentType) or the variant
-    gallery. The chosen generator is stored in `Artifact.generator` and passed to
+    gallery. The chosen generator is stored in `MediaArtifact.generator` and passed to
     op:generate as `provider`.
-  props: { role, subject: Artifact, attendableId? }
+  props: { role, subject: MediaArtifact, attendableId? }
 
 component ArtifactsArticle           # bound to the virtual "Artifacts" navtree node (not an ECHO object)
   desc: >
     Browse/create hub for all Artifacts in a space. Toolbar: a kind selector
-    (image | video) that sets the kind of the next created Artifact, and a Create
+    (image | video) that sets the kind of the next created MediaArtifact, and a Create
     action. Body: a masonry of ArtifactCards (useQuery all Artifacts). Creating or
-    clicking a card navigates to that Artifact's ArtifactArticle.
+    clicking a card navigates to that MediaArtifact's MediaArtifactArticle.
   props: { role, space, attendableId? }
 
 component GalleryArticle
   desc: >
     A masonry of Artifacts in a Collection (guarded: matches Collections whose
-    members are Artifacts). Toolbar creates a new Artifact and multi-select deletes.
+    members are Artifacts). Toolbar creates a new MediaArtifact and multi-select deletes.
   props: { role, subject: Collection }
 
 component LightboxArticle
   desc: A spatial board of Artifacts (react-ui-board); each artifact renders as its cover card. Dragging persists layout.
   props: { role, subject: Lightbox, attendableId? }
 
-component ArtifactCard              # CardContent surface for an Artifact
+component MediaArtifactCard              # CardContent surface for a MediaArtifact
   desc: Cover-variant thumbnail; lets Artifacts compose into collections/boards laid out by the host.
 
 component ImageVariant / VideoVariant   # default VariantRenderer surfaces (image/*, video/*), overridable
@@ -216,9 +216,9 @@ feat kind:image
 feat kind:video
   provider: plugin-heygen (GenerationService id 'heygen', source 'heygen.com') —
     asynchronous: enqueue → poll (awaitResult). The generate op persists the job
-    id on the Artifact and resumes the poll across remount.
+    id on the MediaArtifact and resumes the poll across remount.
   requestSchema: { avatarId?, voiceId? } — provider-specific config held in
-    Artifact.config; the prompt (script) is Artifact.instructions.
+    MediaArtifact.config; the prompt (script) is MediaArtifact.instructions.
   renderer: VideoVariant (<video>) plays the produced video URL / uploaded bytes.
   variants: each completed generation is a Variant (most-recent-first ⇒ carousel).
 ```
@@ -231,7 +231,7 @@ feat kind:video
 
 ```mdl
 feat F-1: Author + generate
-  req F-1.1: An Artifact opens in ArtifactArticle showing its prompt + kind-specific request form.
+  req F-1.1: A MediaArtifact opens in MediaArtifactArticle showing its prompt + kind-specific request form.
   req F-1.2: Generate runs op:generate against the resolved kind provider and appends Variant(s).
   req F-1.3: The request form is rendered from provider.requestSchema unless a kind GenerateForm surface overrides it.
   req F-1.4: When the provider needs a credential and none is connected, the toolbar shows the ConnectorAuth surface.
@@ -242,23 +242,23 @@ feat F-2: Variants + rendering
   req F-2.3: Uploaded files are appended as Variants with content=Ref<File> and no generation.
 
 feat F-3: Galleries + lightboxes
-  req F-3.1: A Collection of Artifacts renders as a masonry gallery; Create adds a new Artifact; multi-select + Delete removes.
+  req F-3.1: A Collection of Artifacts renders as a masonry gallery; Create adds a new MediaArtifact; multi-select + Delete removes.
   req F-3.2: A Lightbox renders its Artifacts spatially on a board; dragging persists positions.
-  req F-3.3: An Artifact renders as a cover card (CardContent) so it composes into host-laid-out collections/boards.
+  req F-3.3: A MediaArtifact renders as a cover card (CardContent) so it composes into host-laid-out collections/boards.
 
 feat F-4: Navigation hub
-  req F-4.1: A "Studio" section node appears under the navtree `content` group (AppNode.makeSection) only while the space contains at least one Artifact.
+  req F-4.1: A "Studio" section node appears under the navtree `content` group (AppNode.makeSection) only while the space contains at least one MediaArtifact.
   req F-4.2: A virtual "Artifacts" child node under Studio opens ArtifactsArticle (bound by node data sentinel, not an ECHO object).
-  req F-4.3: ArtifactsArticle shows a masonry of all Artifacts in the space; a toolbar kind selector sets the create-kind; Create makes an Artifact of that kind and opens it. Clicking a card opens its ArtifactArticle.
-  req F-4.4: ArtifactArticle exposes a Generator selector (GenerationServices for the kind); the choice persists to Artifact.generator and drives op:generate's provider.
-  req F-4.5: Creating an Artifact from the space's generic create menu navigates to it under the Artifacts node, not the database subtree; a caller-supplied target (e.g. a collection) still wins.
+  req F-4.3: ArtifactsArticle shows a masonry of all Artifacts in the space; a toolbar kind selector sets the create-kind; Create makes a MediaArtifact of that kind and opens it. Clicking a card opens its MediaArtifactArticle.
+  req F-4.4: MediaArtifactArticle exposes a Generator selector (GenerationServices for the kind); the choice persists to MediaArtifact.generator and drives op:generate's provider.
+  req F-4.5: Creating a MediaArtifact from the space's generic create menu navigates to it under the Artifacts node, not the database subtree; a caller-supplied target (e.g. a collection) still wins.
 ```
 
 ## Acceptance
 
 ```mdl
 scenario T-1: Generate appends variants (mock provider)
-  given: an Artifact{kind:'image'}; a mock GenerationService for 'image' with a requestSchema
+  given: a MediaArtifact{kind:'image'}; a mock GenerationService for 'image' with a requestSchema
   when: op:generate runs
   then: artifact.variants gains a Variant per result (each with a Generation); cover seeded; output.count matches
 
@@ -273,7 +273,7 @@ scenario T-3: Kind-specific request form
 scenario T-4: Gallery create/delete + multi-select
 
 scenario T-5: Video playback
-  given: an Artifact{kind:'video'} whose cover Variant url is a YouTube/Vimeo/direct URL
+  given: a MediaArtifact{kind:'video'} whose cover Variant url is a YouTube/Vimeo/direct URL
   then: VideoVariant renders an embeddable player; uploaded video bytes play in <video>
 ```
 
@@ -293,11 +293,41 @@ Both depend on `@dxos/plugin-studio/types` and resolve their credential via
 ## Roadmap (out of scope this milestone)
 
 - **`kind:'audio'`**: an `audio/*` default `VariantRenderer` + an audio provider.
-- **Graduate** `Artifact`/`Variant`/`Generation` to `@dxos/types` (namespace
+- **Graduate** `MediaArtifact`/`Variant`/`Generation` to `@dxos/types` (namespace
   re-export; no call-site changes).
 - **Materialize** ephemeral generated URLs into `File`s for permanence.
 - Multi-account credential selection; a `DerivedFrom` relation for heavy
   downstream chains.
+```
+
+
+## Storyboard
+
+```mdl
+feat Storyboard
+  desc: >
+    Storyboard { name?, frames: Ref<Frame>[] (SetParent) } / Frame { name?, notes?, artifact?: Ref<MediaArtifact> }.
+    StoryboardArticle: toolbar (Append frame → artifact create dialog; Play) + reorderable accordion
+    of FrameArticles, each hosting the artifact's own article through the Article surface with a
+    nodeId under the storyboard (studio graph nodes), so its Connect/Generate work when nested.
+    StoryboardPlayer plays the frames' cover variants back to back (view-time splice).
+  types: [org.dxos.type.storyboard, org.dxos.type.frame]
+  operations:
+    - org.dxos.operation.studio.createStoryboard { name, project?, frames?, generate? }
+    - org.dxos.operation.studio.appendFrame { storyboard, name, kind, prompt, notes?, provider?, config?, generate? }
+    - org.dxos.operation.studio.listProviders { kind? }
+```
+
+## Skill and template
+
+```mdl
+feat StudioSkill
+  desc: >
+    org.dxos.skill.studio — list-providers → create-storyboard (frames inline, generate: true) or
+    append-frame + generate per beat; narrative = establishing shot → development → resolution.
+  template: >
+    The Studio project template enables the studio + project skills and seeds one task:
+    "Create a simple 3 frame storyboard that explains how the Studio plugin works", plus a Lightbox.
 ```
 
 ## QA
@@ -306,8 +336,8 @@ Executable tests. Each step carries a human instruction (`do`) and, where the st
 invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-test QA-1: Create an image Artifact and generate a variant
-  desc: The core studio round-trip — create an Artifact, generate a variant against a mock/real provider, read it back.
+test QA-1: Create an image MediaArtifact and generate a variant
+  desc: The core studio round-trip — create a MediaArtifact, generate a variant against a mock/real provider, read it back.
   actors: both
   covers: [F-1.1, F-1.2, F-2.1, T-1]
   status: unverified
@@ -316,38 +346,38 @@ test QA-1: Create an image Artifact and generate a variant
     - space: a space is open
     - collection: a collection in that space, to create into
     - a GenerationService for kind 'image' is registered (e.g. plugin-ideogram, with a connected credential)
-    - no Artifact named "QA Artifact" exists — ABORT rather than deleting one this test did not create
+    - no MediaArtifact named "QA MediaArtifact" exists — ABORT rather than deleting one this test did not create
   steps:
-    - name: Create the Artifact
+    - name: Create the MediaArtifact
       id: create
-      do: In the navtree, click + on a collection and choose Artifact (image). Name it "QA Artifact".
-      expect: an Artifact{kind:'image'} appears under the collection with an empty prompt
+      do: In the navtree, click + on a collection and choose MediaArtifact (image). Name it "QA MediaArtifact".
+      expect: a MediaArtifact{kind:'image'} appears under the collection with an empty prompt
       note: |
         NO `invoke` — the create path is a `SpaceCapabilities.CreateObjectEntry` factory
-        (`Artifact.make()`), not an operation; there is no `org.dxos.operation.studio.create`.
+        (`MediaArtifact.make()`), not an operation; there is no `org.dxos.operation.studio.create`.
         Human-only, same shape as plugin-chess's `startGame`. The agent path resolves the created
-        Artifact afterwards by querying the space for the "QA Artifact" name — the only live
+        MediaArtifact afterwards by querying the space for the "QA MediaArtifact" name — the only live
         reference available, since no `invoke` result is there to capture.
     - name: Write the prompt
-      do: In the ArtifactArticle, type a prompt into the instructions editor, e.g. "a red bicycle".
+      do: In the MediaArtifactArticle, type a prompt into the instructions editor, e.g. "a red bicycle".
       expect: the prompt text persists in the editor
       note: NO `invoke` — editing `Instructions.text` is a keystroke, not an operation call.
     - name: Generate a variant
       do: Click Generate.
       invoke: |
         org.dxos.operation.studio.generate {
-          artifact: (await space.db.query(dxos.Filter.type(Artifact)).run()).objects.find((a) => a.name === 'QA Artifact'),
+          artifact: (await space.db.query(dxos.Filter.type(MediaArtifact)).run()).objects.find((a) => a.name === 'QA MediaArtifact'),
           count: 1
         }
       capture: generated
       expect: a Variant appears in the variant chooser and renders via the image VariantRenderer; it becomes the cover
       assert: return $result.count === 1
   after:
-    - name: Delete the Artifact
-      do: Right-click "QA Artifact" in the navtree and choose Delete.
+    - name: Delete the MediaArtifact
+      do: Right-click "QA MediaArtifact" in the navtree and choose Delete.
       invoke: |
         org.dxos.operation.space.removeObjects {
-          objects: [(await space.db.query(dxos.Filter.type(Artifact)).run()).objects.find((a) => a.name === 'QA Artifact') ?? (() => { throw new Error("Artifact QA Artifact not found — refusing to remove an unrelated object"); })()],
+          objects: [(await space.db.query(dxos.Filter.type(MediaArtifact)).run()).objects.find((a) => a.name === 'QA MediaArtifact') ?? (() => { throw new Error("MediaArtifact QA MediaArtifact not found — refusing to remove an unrelated object"); })()],
           target: $given.collection
         }
       expect: the row leaves the navtree and its plank closes if it was open
