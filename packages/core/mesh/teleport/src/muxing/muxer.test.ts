@@ -92,6 +92,45 @@ describe('Muxer', () => {
     await wait();
   });
 
+  test('an rpc port opens when the first frame to the remote is lost', async () => {
+    const peer1 = new Muxer();
+    const peer2 = new Muxer();
+    // Drops peer2's first frame, which carries its OpenChannel command.
+    let dropped = false;
+    const lossy = new Transform({
+      transform: (chunk, _encoding, callback) => {
+        if (!dropped) {
+          dropped = true;
+          callback();
+          return;
+        }
+        callback(null, chunk);
+      },
+    });
+    peer1.stream.pipe(peer2.stream);
+    peer2.stream.pipe(lossy).pipe(peer1.stream);
+    onTestFinished(async () => {
+      await peer1.destroy();
+      await peer2.destroy();
+    });
+
+    const clients = await Promise.all(
+      [peer1, peer2].map(async (peer) =>
+        createRpc(
+          await peer.createPort('example.extension/rpc', {
+            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
+          }),
+          async ({ data }) => create(TestRpcResponseSchema, { data }),
+        ),
+      ),
+    );
+
+    await asyncTimeout(Promise.all(clients.map((client) => client.open())), 5_000);
+    expect(await clients[0].rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'test' }))).to.deep.include({
+      data: 'test',
+    });
+  });
+
   test('destroy releases other stream', async () => {
     const { peer1, peer2 } = setupPeers();
 

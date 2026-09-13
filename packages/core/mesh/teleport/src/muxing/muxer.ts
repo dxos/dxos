@@ -5,7 +5,7 @@
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { Duplex } from 'node:stream';
 
-import { Event, Trigger, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
+import { Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -53,6 +53,11 @@ const MAX_SAFE_FRAME_SIZE = 1_000_000;
 const SYSTEM_CHANNEL_ID = 0;
 const GRACEFUL_CLOSE_TIMEOUT = 3_000;
 
+/** Backoff for resending an OpenChannel command the remote has not yet acted on. */
+const OPEN_CHANNEL_RESEND_DELAY = 1_000;
+const OPEN_CHANNEL_RESEND_MAX_DELAY = 8_000;
+const OPEN_CHANNEL_RESEND_ATTEMPTS = 6;
+
 type Channel = {
   /**
    * Our local channel ID.
@@ -66,6 +71,11 @@ type Channel = {
    * The originating Data commands should carry this id.
    */
   remoteId: null | number;
+
+  /**
+   * Set once the remote sends data addressed to our id, which it can only do after receiving our OpenChannel command.
+   */
+  remoteKnowsId: boolean;
 
   contentType?: string;
 
@@ -181,16 +191,9 @@ export class Muxer {
 
     // NOTE: Make sure channel.push is set before sending the command.
     try {
-      await this._sendCommand(
-        create(CommandSchema, {
-          payload: {
-            case: 'openChannel',
-            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
-          },
-        }),
-        SYSTEM_CHANNEL_ID,
-      );
+      await this._sendOpenChannel(channel);
       log('openChannel sent', { tag: channel.tag, id: channel.id });
+      this._scheduleOpenChannelResend(channel);
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -241,16 +244,9 @@ export class Muxer {
 
     // NOTE: Make sure channel.push is set before sending the command.
     try {
-      await this._sendCommand(
-        create(CommandSchema, {
-          payload: {
-            case: 'openChannel',
-            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
-          },
-        }),
-        SYSTEM_CHANNEL_ID,
-      );
+      await this._sendOpenChannel(channel);
       log('openChannel sent', { tag: channel.tag, id: channel.id });
+      this._scheduleOpenChannelResend(channel);
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -380,12 +376,51 @@ export class Muxer {
       channel.buffer = [];
     } else if (cmd.payload.case === 'data') {
       const stream = this._channelsByLocalId.get(cmd.payload.value.channelId) ?? failUndefined();
+      stream.remoteKnowsId = true;
       if (!stream.push) {
         log.warn('Received data for channel before it was opened', { tag: stream.tag });
         return;
       }
       stream.push(cmd.payload.value.data);
     }
+  }
+
+  private async _sendOpenChannel(channel: Channel): Promise<void> {
+    await this._sendCommand(
+      create(CommandSchema, {
+        payload: {
+          case: 'openChannel',
+          value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
+        },
+      }),
+      SYSTEM_CHANNEL_ID,
+    );
+  }
+
+  /**
+   * Resends a channel's OpenChannel command until the remote sends data on the channel. Until it has our id the
+   * remote buffers everything it writes to the channel, so one lost command would stall the channel for good;
+   * receiving it again is harmless.
+   */
+  private _scheduleOpenChannelResend(channel: Channel, attempt = 1, delay = OPEN_CHANNEL_RESEND_DELAY): void {
+    scheduleTask(
+      this._ctx,
+      async () => {
+        if (channel.remoteKnowsId || this._channelsByLocalId.get(channel.id) !== channel) {
+          return;
+        }
+        log.info('remote has not used the channel; resending openChannel', {
+          tag: channel.tag,
+          id: channel.id,
+          attempt,
+        });
+        await this._sendOpenChannel(channel);
+        if (attempt < OPEN_CHANNEL_RESEND_ATTEMPTS) {
+          this._scheduleOpenChannelResend(channel, attempt + 1, Math.min(delay * 2, OPEN_CHANNEL_RESEND_MAX_DELAY));
+        }
+      },
+      delay,
+    );
   }
 
   private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {
@@ -411,6 +446,7 @@ export class Muxer {
       channel = {
         id: this._nextId++,
         remoteId: null,
+        remoteKnowsId: false,
         tag: params.tag,
         contentType: params.contentType,
         buffer: [],
