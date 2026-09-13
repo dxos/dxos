@@ -3,7 +3,7 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
@@ -21,7 +21,7 @@ import {
 } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { Serializer } from '@dxos/echo-client';
+import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
@@ -56,6 +56,43 @@ describe('Spaces', () => {
 
     // Get by key.
     expect(client.spaces.get(space.key) === space).to.be.true;
+  });
+
+  test('creates a space whose database opens only after a long stall', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    const openStarted = new Trigger();
+    const openReleased = new Trigger();
+    const open = DatabaseImpl.prototype.open;
+    const openSpy = vi
+      .spyOn(DatabaseImpl.prototype, 'open')
+      .mockImplementationOnce(async function (this: DatabaseImpl, ctx) {
+        openStarted.wake();
+        await openReleased.wait();
+        return open.call(this, ctx);
+      });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+      openSpy.mockRestore();
+    });
+
+    const created = client.spaces.create({ name: 'Stalled' });
+    await openStarted.wait();
+    // Stands in for a frozen thread: the clock moves on while the open makes no progress.
+    await vi.advanceTimersByTimeAsync(10_000);
+    openReleased.wake();
+
+    const space = await created;
+    expect(space.properties.name).toEqual('Stalled');
+  });
+
+  test('create rejects with the error when the space database fails to open', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    const error = new Error('Database open failed.');
+    const openSpy = vi.spyOn(DatabaseImpl.prototype, 'open').mockRejectedValueOnce(error);
+    onTestFinished(() => openSpy.mockRestore());
+
+    await expect(client.spaces.create()).rejects.toBe(error);
   });
 
   // TODO(dmaretskyi): Test suit for different conditions/storages.
