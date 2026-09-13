@@ -4,8 +4,10 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as Tracer from 'effect/Tracer';
@@ -251,6 +253,32 @@ describe('LayerStack', () => {
         const space = SpaceId.random();
         const resolved = yield* resolveWithScope(resolver.resolve(ServiceB, { space }));
         expect(resolved).toEqual({ value: `shared:${space}` });
+      }),
+    );
+
+    it.effect(
+      'resolves an application service while a space layer is still building',
+      Effect.fn(function* ({ expect }) {
+        const building = yield* Deferred.make<void>();
+        const appLayer = LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+          Layer.succeed(ServiceA, { value: 'app' }),
+        );
+        // Stands in for a space-scoped layer waiting on its space to become ready.
+        const spaceLayer = LayerSpec.make({ affinity: 'space', requires: [], provides: [ServiceB] }, () =>
+          Layer.effect(ServiceB, Deferred.succeed(building, undefined).pipe(Effect.andThen(Effect.never))),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [appLayer, spaceLayer] });
+        const resolver = stack.getServiceResolver();
+
+        const spaceResolution = yield* Effect.forkChild(
+          resolveWithScope(resolver.resolve(ServiceB, { space: SpaceId.random() })),
+        );
+        yield* Deferred.await(building);
+
+        const resolved = yield* resolveWithScope(resolver.resolve(ServiceA, {}));
+        expect(resolved).toEqual({ value: 'app' });
+        yield* Fiber.interrupt(spaceResolution);
       }),
     );
   });
