@@ -67,7 +67,15 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   `connectionLost`, and `SubductionSource` wakes every round in flight. `subduction_core` never
   settles requests pending on a removed connection, so without this one edge restart held every
   in-flight round, and every local edit parked behind it on `needsResync`, for the full timeout.
-  A woken round re-syncs at once against the peers still connected.
+  A woken round re-syncs at once against the peers still connected. The loss does not bump the
+  connection generation: that would re-sync every idle document against the peers left.
+- **Never re-offer a peer on one side only**: dropping and re-offering a peer restarts the handshake
+  on that side, and the remote's established `NetworkAdapterTransport` (which ignores the tag byte)
+  swallows the new handshake frames, so neither side's edits flow again. A mesh connection's auth
+  scope change therefore re-queries the peer's collections and runs `shareConfigChanged` in
+  subduction mode (`EchoNetworkAdapter` `onConnectionAuthScopeChanged`) instead of re-offering.
+  `shareConfigChanged` resets only this host's failed entries; the peer's denied fetches recover
+  through its own heal retries or its own scope change.
 - **`lastSyncGeneration` is stamped at round _start_, not enqueue** — a round queued behind the gate
   across a reconnect must count against the generation it actually runs under.
 

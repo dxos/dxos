@@ -316,10 +316,17 @@ export class AutomergeHost extends Resource {
         this._sharePolicyChangedTask?.schedule();
         this._resyncAwaitedDocuments();
       },
-      // Subduction consults the share policy on every request, so a wider auth scope only needs denied documents
-      // re-driven. Dropping and re-offering the peer restarts the handshake on this side alone, and the remote's
-      // established transport swallows it.
-      ...(this._useSubduction ? { onConnectionAuthScopeChanged: () => this._sharePolicyChangedTask?.schedule() } : {}),
+      // Subduction consults the share policy on every request, so a wider auth scope needs this host's denied
+      // documents re-driven and the peer's collections queried again. Dropping and re-offering the peer restarts
+      // the handshake on this side alone, and the remote's established transport swallows it.
+      ...(this._useSubduction
+        ? {
+            onConnectionAuthScopeChanged: (peerId: PeerId) => {
+              this._collectionSynchronizer.onConnectionOpen(peerId);
+              this._sharePolicyChangedTask?.schedule();
+            },
+          }
+        : {}),
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
