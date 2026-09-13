@@ -165,17 +165,6 @@ projects:
     design: .agents/projects/client-edge-audit/DESIGN.md
     prs: [12598]
     resume: 'PR #12598 OPEN (https://github.com/dxos/dxos/pull/12598) — watch Check to green. Phase 1 audit in DESIGN.md (boot path was already URL-gated everywhere; echo/halo/common have zero direct network calls; observability has 2 consent-gating bugs). Phase 2 verified by packages/sdk/client/src/client/client-offline.test.ts — empty Config boots, DB round-trips, ZERO network calls (fetch/WebSocket/isomorphic-ws intercepted) and ZERO WARN+ logs, green first run; only SDK fix needed was ipdata missing-key warn→debug. Phase 3 removed every SDK read-time edge-endpoint default: by revised decision the CLI first-run profile WRITES its endpoints (hub/edge/ICE/IPFS via defaultProfileEndpoints, DX_LOCAL_DEV forks edge to main.dxos.network per #12658) and no code path substitutes them on load (hub commands error when the profile lacks a hub URL), configPreset omit-when-unset (no implicit main), EDGE_SERVICE_DEFAULTS deleted (getEdgeServiceEndpoint returns string|undefined, pinned by no-default-endpoints.test.ts), plus CLI hub ?? fallbacks, DEFAULT_VAULT_URL, DEFAULT_IMAGE_SERVICE_URL, DEFAULT_INTROSPECT_MCP_URL, GptRealtime/plugin-wnfs localhost:8787, devtools halo.dxos.org target; ~10 consumers updated to handle absence (clear error at use / unconfigured UI state / skip), composer dx.yml gained the introspect entry. Full-repo :build green, touched-package tests+lint+format green. NEXT: drive PR #12598 review + Check to green and land, then Phase 4 backlog in TASKS.md: proxyFetchLegacy cors.dxos.network through config, optional capability contributions (module-loader warn), observability consent gating, plugin-script ??"" masking, react-edge-client removal, files: allowlists.'
-  - name: project-tasks
-    status: active
-    user: burdon
-    host: burdon-mbp-2092
-    created: 2026-08-25
-    summary: 'Agent delegation and task management over the two-forms model — make the delegation loop (supervisor -> durable Task in a TaskSet -> sub-agent -> fold-back) work live and be visible in the UI.'
-    tasks: .agents/projects/project-tasks/TASKS.md
-    design: .agents/projects/project-tasks/DESIGN.md
-    prs: [12752, 12784, 12787, 12839, 12847]
-    resume: "#12752, #12784, #12787 and #12839 are MERGED onto main (#12839 squashed as 0132aab498 on 2026-08-29). IN FLIGHT: PR #12847, open on this branch — Task.Event narrowed to created|updated with an optional description, plus the ledger entries; everything else the branch carries is already on main. #12839 turned TaskList.Create into TaskList.Edit — a detail pane that creates when nothing is selected and edits the selection otherwise, title as an input, description as a held-open markdown editor, with a density=sm Save/Cancel toolbar on the title line (both leave the pane; neither may take focus, since the fields commit on blur). It also fixed three things worth remembering: the markdown bundle needs createBasicExtensions (else white-space: pre, no wrap, no undo) AND createThemeExtensions (else CodeMirror's invisible 1px black caret); Toolbar.Root declared density as a CSS class only while Button/Input stamp data-density from React context, and that stamp shadows the variable the class sets around them, so a toolbar's density reached no control ANYWHERE in the app until Toolbar.Root started providing the context too; and destroying a CodeMirror field fires a blur, which commits, so a revert wrote the very text it discarded. NOTE main has since refactored TaskList further in #12840 (mosaic): TaskPatch is now TaskEdit/TaskDraft and Root gained a `selectable` prop — read the current file, not this session's memory of it. NEXT: pick from Phase 3 (terminal-status dates, extension-contributed tabs, cancel/delete, the joined delegation+TaskSet story). KNOWN: `#nnn` stays plain text in the ProjectArticle story because corePlugins() mounts no MarkdownPlugin. TOOLING: CI is on Depot — use `gh pr checks <n>`; Depot job logs need a browser login, so reproduce failures locally."
-
   - name: hardware-devices
     status: active
     user: burdon
@@ -404,11 +393,17 @@ projects:
         12677,
         12735,
         12736,
+        12752,
+        12784,
+        12787,
+        12839,
+        12847,
         12918,
         13016,
         13028,
+        13077,
       ]
-    resume: 'M6 Phases 1-2 MERGED as #12595 (2026-08-18: Project@0.4.0 inline artifacts, Milestone type, TaskSet@0.3.0 ordered tasks+milestones, Task@0.3.0 milestone/parentTask, eight task/milestone verbs, linear+github mirror milestones). Follow-ups merged: #12675 chat ownership on the ECHO parent edge (CompanionTo deleted, Filter.hasParent), #12677 tool names derived from operation keys, #12735 chat context bound via a contributed capability, #12736 explicit routine ownership (routines companion dropped), #12918 sample-spaces builder. NEXT: M6 Phase 3 (outline-first skill rule + promote-task verb + promotion eval), then Phase 4 routine staleness and Phase 5 deletion guards. Open follow-ups in TASKS.md: milestone rendering/authoring in TaskSetArticle, ProjectMcpOperation rename + leaf-import guard, setParent ref-less-edge sweep -> invariant, live Project conversation fixture, unify project-context binding, daily goals agent. Do NOT pin a worktree in this pointer.'
+    resume: 'Folded in the project-tasks stream (task delegation + execution; design notes in docs/DELEGATION.md, ledger section "Task delegation and execution" in TASKS.md) on 2026-09-13. IN FLIGHT: PR #13077 — the session gantt separates events by task via a task.statusChanged trace event emitted by both task tools, plus the boot-loader sprite fix and the tree-branch clip fix; Check was red (job tssm2xl5dv) and CodeRabbit left 4 inline comments — resolve both. Prior delegation PRs MERGED: #12752 #12784 #12787 #12839 #12847. Plugin side as before: M6 Phases 1-2 MERGED as #12595; follow-ups #12675 #12677 #12735 #12736 #12918 #13016 #13028 merged. NEXT: land #13077; then delegation backlog — terminal-status dates (the timeline now consumes them), extension-contributed tabs, cancel/delete, the joined delegation+TaskSet story — and M6 Phase 3 (outline-first skill rule + promote-task verb + promotion eval). TOOLING: CI is on Depot — `gh pr checks <n>`; depot CLI needs DEPOT_TOKEN, else reproduce locally. Do NOT pin a worktree in this pointer.'
   - name: illustrator-scene-dsl
     status: active
     user: burdon

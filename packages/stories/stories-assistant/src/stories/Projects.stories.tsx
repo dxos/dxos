@@ -85,8 +85,6 @@ const storyOptions = {
         Collection.Collection,
         Text.Text,
         Mailbox.Mailbox,
-        // The mailbox and every feed trigger spec resolve `Feed`; unregistered, feed-backed reads
-        // come up empty.
         Feed.Feed,
         TagIndex.TagIndex,
         Sandbox.Sandbox,

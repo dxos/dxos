@@ -75,19 +75,15 @@ interface TaskSegment {
 }
 
 /**
- * A status that ends the agent's work on a task. `blocked` is one: the agent moved on, and whatever
- * it does next is no longer that task's.
- */
-const TERMINAL_STATUS = new Set<Task.Status>(['done', 'review', 'failed', 'cancelled', 'duplicate', 'blocked']);
-
-/**
  * Cuts a session's events into one segment per task worked, from the status events its task tools
  * write. Only tasks in `taskIds` — the session's own checklist — take part: an agent is free to move
  * a task belonging to nothing on this chart, and such an event must not close the segment that is
  * open or move the boundary.
  *
  * A `started` event opens a segment and closes the one still open — the agent keeps exactly one task
- * in progress. A task can also finish without one: delegation marks every task it hands over
+ * in progress. Any other status ends the agent's work on the task: `todo` puts it down as surely as
+ * `done`, and whatever the agent does next is no longer that task's. A task can also finish without
+ * a start: delegation marks every task it hands over
  * `started` before the agent's first turn, so the run's only event for that task is the one closing
  * it. Such a task gets the stretch since the last boundary, which is where its work happened — but
  * only on the transition out of `started` and only while no other task holds the stretch: a task
@@ -128,7 +124,7 @@ const buildTaskSegments = (
         segments.push(open);
         boundary = event.timestamp;
       }
-    } else if (TERMINAL_STATUS.has(data.status)) {
+    } else {
       const started = segments.findLast((candidate) => candidate.taskId === data.taskId && candidate.end === undefined);
       if (started) {
         close(started, event.timestamp);
@@ -144,6 +140,24 @@ const buildTaskSegments = (
     }
   }
   return segments;
+};
+
+/**
+ * The segment an event belongs to. Segments meet where one task starts over another, so a
+ * status event is matched to its own task's segment, and any other event at a shared boundary
+ * goes to the later segment — the newcomer's start is the first thing the agent did on it.
+ */
+const segmentFor = (segments: readonly TaskSegment[] | undefined, event: Trace.FlatEvent): TaskSegment | undefined => {
+  if (!segments) {
+    return undefined;
+  }
+  const contains = (segment: TaskSegment) =>
+    event.timestamp >= segment.start && event.timestamp <= (segment.end ?? Number.MAX_SAFE_INTEGER);
+  if (event.type === Trace.TaskStatusChanged.key) {
+    const data = decode(Trace.TaskStatusChanged.schema, event.data);
+    return data && segments.findLast((segment) => segment.taskId === data.taskId && contains(segment));
+  }
+  return segments.findLast(contains);
 };
 
 interface SubAgentSpan {
@@ -416,12 +430,7 @@ export const buildSessionTimeline = ({
     const markerLaneId =
       event.type === AgentRequestBegin.key || event.type === AgentRequestEnd.key
         ? laneId
-        : (segmentsBySession
-            .get(laneId)
-            ?.find(
-              (segment) =>
-                event.timestamp >= segment.start && event.timestamp <= (segment.end ?? Number.MAX_SAFE_INTEGER),
-            )?.laneId ?? laneId);
+        : (segmentFor(segmentsBySession.get(laneId), event)?.laneId ?? laneId);
     const marker = toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
     if (marker) {
       markers.push(marker);
