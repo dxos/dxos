@@ -41,6 +41,19 @@ on:
         required: false
         default: ''
 
+      # For sampling one browser or cell without loading the others: JSON arrays, empty for all.
+      e2e_browsers:
+        type: string
+        description: 'JSON array of e2e browsers to run, e.g. ["firefox"]; empty runs all'
+        required: false
+        default: ''
+
+      e2e_shards:
+        type: string
+        description: 'JSON array of e2e cells to run, e.g. ["composer"]; empty runs all'
+        required: false
+        default: ''
+
 permissions:
   contents: read
   packages: read
@@ -558,11 +571,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: ${{ fromJSON(inputs.e2e_browsers != '' && inputs.e2e_browsers || '["chromium","firefox","webkit"]') }}
         # `composer` gets a dedicated cell (it dwarfs every other suite); `rest` runs the pool.
         # Explicit here rather than via `moon --job`, whose partitioner co-located composer's former
         # halves and (at --concurrency=1) ran them serially — measured in .agents/projects/ci/DESIGN.md.
-        shard: [composer, rest]
+        shard: ${{ fromJSON(inputs.e2e_shards != '' && inputs.e2e_shards || '["composer","rest"]') }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
