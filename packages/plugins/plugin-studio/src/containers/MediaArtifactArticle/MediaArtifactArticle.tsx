@@ -27,7 +27,14 @@ import { MediaArtifact, StudioCapabilities, StudioOperation, Variant } from '#ty
 
 import { providerFieldMap } from './ProviderOptionsField.tsx';
 
-export type ArtifactArticleProps = AppSurface.ObjectArticleProps<MediaArtifact.MediaArtifact>;
+export type MediaArtifactArticleProps = AppSurface.ObjectArticleProps<MediaArtifact.MediaArtifact> & {
+  /**
+   * App-graph node the toolbar's contributed actions (Connect) are read from. Defaults to
+   * `attendableId`, which is the plank's node when the article is the plank; an article nested in
+   * another (a storyboard frame) is attended through its host but has its own node.
+   */
+  nodeId?: string;
+};
 
 /** `'all'` gallery, `'draft'` compose tab, or the index of a produced (frozen) variant. */
 type Selected = 'all' | 'draft' | number;
@@ -40,7 +47,12 @@ type Selected = 'all' | 'draft' | number;
  * "Draft"/"All", or the selected produced variant read-only (frozen once generated). Generating
  * consumes the draft to append a new frozen variant; the draft persists for the next compose.
  */
-export const MediaArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
+export const MediaArtifactArticle = ({
+  role,
+  subject: artifact,
+  attendableId,
+  nodeId = attendableId,
+}: MediaArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const { invokePromise } = useOperationInvoker();
@@ -330,7 +342,7 @@ export const MediaArtifactArticle = ({ role, subject: artifact, attendableId }: 
           },
         );
       } else {
-        builder.subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }));
+        builder.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }));
       }
 
       // Overflow (object-level delete actions) at the end of the toolbar.
@@ -353,7 +365,7 @@ export const MediaArtifactArticle = ({ role, subject: artifact, attendableId }: 
     },
     [
       graph,
-      attendableId,
+      nodeId,
       selected,
       variants,
       providers,

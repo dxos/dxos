@@ -11,7 +11,7 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { Lightbox, MediaArtifact } from '#types';
+import { Lightbox, MediaArtifact, Storyboard } from '#types';
 
 import { KINDS } from '../constants.ts';
 
@@ -31,6 +31,21 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = MediaArtifact.make({ name: props?.name, kind: props?.kind });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
+            }),
+        },
+        {
+          id: Type.getTypename(Storyboard.Storyboard),
+          createObject: (_props, options) =>
+            Effect.gen(function* () {
+              const object = Storyboard.make();
               return yield* Operation.invoke(
                 SpaceOperation.AddObject,
                 {

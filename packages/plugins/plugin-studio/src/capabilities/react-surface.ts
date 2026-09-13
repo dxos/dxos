@@ -11,9 +11,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 
 import { ImageVariant, MediaArtifactCard, VideoVariant } from '#components';
-import { GalleryArticle, LightboxArticle, MediaArtifactArticle } from '#containers';
+import { GalleryArticle, LightboxArticle, MediaArtifactArticle, StoryboardArticle } from '#containers';
 import { VariantRenderer } from '#surfaces';
-import { Lightbox, MediaArtifact } from '#types';
+import { Lightbox, MediaArtifact, Storyboard } from '#types';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
@@ -41,6 +41,13 @@ export default Capability.makeModule(() =>
         id: 'artifactArticle',
         filter: AppSurface.object(AppSurface.Article, MediaArtifact.MediaArtifact),
         component: MediaArtifactArticle,
+        // `nodeId` rides along for an article nested in another (a storyboard frame) — see the article.
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
+      }),
+      Surface.create({
+        id: 'storyboardArticle',
+        filter: AppSurface.object(AppSurface.Article, Storyboard.Storyboard),
+        component: StoryboardArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({

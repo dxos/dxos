@@ -8,6 +8,7 @@ import React, {
   type CSSProperties,
   type PropsWithChildren,
   type ReactNode,
+  type Ref,
 } from 'react';
 
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -83,15 +84,21 @@ AccordionRoot.displayName = 'Accordion.Root';
 // Item
 //
 
-export type AccordionItemProps<T extends AccordionItemRecord> = ThemedClassName<PropsWithChildren<{ item: T }>>;
+export type AccordionItemProps<T extends AccordionItemRecord> = ThemedClassName<
+  PropsWithChildren<{
+    item: T;
+    /** The item's element — a reorder aspect binds its drop target here. */
+    ref?: Ref<HTMLDivElement>;
+  }>
+>;
 
-const AccordionItem = <T extends AccordionItemRecord>({ children, classNames, item }: AccordionItemProps<T>) => {
+const AccordionItem = <T extends AccordionItemRecord>({ children, classNames, item, ref }: AccordionItemProps<T>) => {
   const { tx } = useThemeContext();
   const { getId } = useAccordionContext(ACCORDION_ITEM_NAME);
 
   return (
     <AccordionItemProvider {...{ item }}>
-      <AccordionPrimitive.Item value={getId(item)} className={tx('accordion.item', {}, classNames)}>
+      <AccordionPrimitive.Item ref={ref} value={getId(item)} className={tx('accordion.item', {}, classNames)}>
         {children}
       </AccordionPrimitive.Item>
     </AccordionItemProvider>

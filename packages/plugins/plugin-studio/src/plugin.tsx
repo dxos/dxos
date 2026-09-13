@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AppGraphBuilder,
   CreateObject,
   OperationHandler,
   PluginAsset,
@@ -16,6 +17,7 @@ import {
 import { meta } from '#meta';
 
 export const StudioPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),

@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Lightbox, MediaArtifact, Variant } from '#types';
+import { Frame, Lightbox, MediaArtifact, Storyboard, Variant } from '#types';
 
 export const translations = [
   {
@@ -37,6 +37,24 @@ export const translations = [
         'delete-object.label': 'Delete lightbox',
         'object-deleted.label': 'Lightbox deleted',
       },
+      [Type.getTypename(Storyboard.Storyboard)]: {
+        'typename.label': 'Storyboard',
+        'typename.label_zero': 'Storyboards',
+        'typename.label_one': 'Storyboard',
+        'typename.label_other': 'Storyboards',
+        'object-name.placeholder': 'New storyboard',
+        'add-object.label': 'Add storyboard',
+        'rename-object.label': 'Rename storyboard',
+        'delete-object.label': 'Delete storyboard',
+        'object-deleted.label': 'Storyboard deleted',
+      },
+      [Type.getTypename(Frame.Frame)]: {
+        'typename.label': 'Frame',
+        'typename.label_zero': 'Frames',
+        'typename.label_one': 'Frame',
+        'typename.label_other': 'Frames',
+        'object-name.placeholder': 'New frame',
+      },
       [meta.profile.key]: {
         'plugin.name': 'Studio',
         'generate.label': 'Generate',
@@ -54,6 +72,12 @@ export const translations = [
         'delete.label': 'Delete artifact',
         'delete-variant.label': 'Delete variant',
         'add-artifact.label': 'Add artifact',
+        'append-frame.label': 'Append frame',
+        'delete-frame.label': 'Delete frame',
+        'drag-frame.label': 'Drag to reorder',
+        'frame.placeholder': 'Untitled frame',
+        'frame-empty.message': 'No artifact yet.',
+        'storyboard-empty.message': 'No frames yet — append one from the toolbar.',
         'center.label': 'Center',
         'zoom.label': 'Toggle zoom',
         'generator.placeholder': 'Generator',
