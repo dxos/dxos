@@ -643,8 +643,8 @@ jobs:
           # the only route to what the failing peer was doing.
           DX_E2E_CAPTURE_LOGS: '1'
           # A page can close or take 50s to create with the runner idle, and only the browser's stderr says
-          # why. Not a moon input, so no hash moves.
-          DEBUG: pw:browser
+          # why. Dispatches only: it lands in every test's JUnit `system-err`. Not a moon input.
+          DEBUG: ${{ (inputs.e2e || inputs.e2e_only) && 'pw:browser' || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -667,10 +667,11 @@ jobs:
   # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
   cli:
     if: >-
+      !(github.event_name == 'workflow_dispatch' && inputs.e2e_only) && (
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      (inputs.e2e && !inputs.e2e_only)
+      inputs.e2e)
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1

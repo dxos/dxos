@@ -41,6 +41,7 @@ describe('RtcPeerConnection', () => {
     await second.open();
 
     await expect.poll(() => delivered).toStrictEqual(['handshake']);
+    expect(channel.binaryType).toBe('arraybuffer');
   });
 
   // The connection outlives a transport while another swarm still uses it, so a topic can be reopened
