@@ -22,22 +22,22 @@ import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuild
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
-import { Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
+import { MediaArtifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
-export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
+export type ArtifactArticleProps = AppSurface.ObjectArticleProps<MediaArtifact.MediaArtifact>;
 
 /** `'all'` gallery, `'draft'` compose tab, or the index of a produced (frozen) variant. */
 type Selected = 'all' | 'draft' | number;
 
 /**
- * Media-agnostic article surface for an {@link Artifact}. The toolbar has an "All" gallery tab, a
+ * Media-agnostic article surface for an {@link MediaArtifact}. The toolbar has an "All" gallery tab, a
  * "Draft" compose tab, and a tab per produced {@link Variant}, plus a generator selector +
  * Connect/Generate action and an overflow menu (Delete). The properties panel (prompt + kind-specific
  * request form) binds to the current selection: the editable in-memory draft variant for
  * "Draft"/"All", or the selected produced variant read-only (frozen once generated). Generating
  * consumes the draft to append a new frozen variant; the draft persists for the next compose.
  */
-export const ArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
+export const MediaArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const { invokePromise } = useOperationInvoker();
@@ -100,7 +100,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   const composing = !selectedVariant;
 
   // Connector-managed credential: the connector plugin contributes a "Connect" action (via the
-  // Artifact type's `ConnectorAuthAnnotation`) until a connection for the provider exists.
+  // MediaArtifact type's `ConnectorAuthAnnotation`) until a connection for the provider exists.
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connected = provider?.connectorId
     ? connections.some((connection) => connection.connectorId === provider.connectorId)
@@ -378,7 +378,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
         <div className='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
           {/* A produced (frozen) variant can be designated the artifact's cover default. */}
           <Flex column gap='xs' classNames='pt-3 px-2'>
-            {/* Artifact-level name (independent of the selected variant). */}
+            {/* MediaArtifact-level name (independent of the selected variant). */}
             <Field.Root>
               <Field.Input
                 placeholder={t('name.placeholder')}
@@ -458,4 +458,4 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
   );
 };
 
-ArtifactArticle.displayName = 'ArtifactArticle';
+MediaArtifactArticle.displayName = 'MediaArtifactArticle';

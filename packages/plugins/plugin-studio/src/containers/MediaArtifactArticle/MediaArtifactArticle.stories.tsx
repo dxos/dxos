@@ -21,9 +21,9 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
+import { GenerationService, MediaArtifact, StudioCapabilities, Variant } from '#types';
 
-import { ArtifactArticle } from './ArtifactArticle.tsx';
+import { MediaArtifactArticle } from './MediaArtifactArticle.tsx';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */
 const MockRequestSchema = Schema.Struct({
@@ -68,8 +68,8 @@ const MockProviderPlugin = Plugin.define(
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const artifacts = useQuery(space?.db, Filter.type(Artifact.Artifact));
-  const [artifact, setArtifact] = useState<Artifact.Artifact>();
+  const artifacts = useQuery(space?.db, Filter.type(MediaArtifact.MediaArtifact));
+  const [artifact, setArtifact] = useState<MediaArtifact.MediaArtifact>();
 
   useEffect(() => {
     if (artifacts.length && !artifact) {
@@ -81,11 +81,11 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <ArtifactArticle role='article' subject={artifact} attendableId='test' />;
+  return <MediaArtifactArticle role='article' subject={artifact} attendableId='test' />;
 };
 
 const meta_ = {
-  title: 'plugins/plugin-studio/containers/ArtifactArticle',
+  title: 'plugins/plugin-studio/containers/MediaArtifactArticle',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -93,14 +93,14 @@ const meta_ = {
       plugins: [
         ...corePlugins(),
         ClientPlugin.make({
-          types: [Artifact.Artifact, Variant.Variant],
+          types: [MediaArtifact.MediaArtifact, Variant.Variant],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
               const prompt = 'A serene mountain lake at dawn.';
-              const artifact = space.db.add(Artifact.make({ name: 'Test artifact', kind: 'image' }));
+              const artifact = space.db.add(MediaArtifact.make({ name: 'Test artifact', kind: 'image' }));
               // Seed a few generated variants (remote placeholders) to exercise the tabs + gallery.
               Obj.update(artifact, (artifact) => {
                 artifact.variants = Array.from({ length: 3 }, (_, index) => {

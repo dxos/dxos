@@ -18,15 +18,15 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Artifact, Variant } from '#types';
+import { MediaArtifact, Variant } from '#types';
 
-import { ArtifactCard } from './ArtifactCard.tsx';
+import { MediaArtifactCard } from './MediaArtifactCard.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const artifacts = useQuery(space?.db, Filter.type(Artifact.Artifact));
-  const [artifact, setArtifact] = useState<Artifact.Artifact>();
+  const artifacts = useQuery(space?.db, Filter.type(MediaArtifact.MediaArtifact));
+  const [artifact, setArtifact] = useState<MediaArtifact.MediaArtifact>();
 
   useEffect(() => {
     if (artifacts.length && !artifact) {
@@ -40,13 +40,13 @@ const DefaultStory = () => {
 
   return (
     <div className='w-64'>
-      <ArtifactCard subject={artifact} />
+      <MediaArtifactCard subject={artifact} />
     </div>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-studio/components/ArtifactCard',
+  title: 'plugins/plugin-studio/components/MediaArtifactCard',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -55,13 +55,13 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin.make({
-          types: [Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
+          types: [MediaArtifact.MediaArtifact, Variant.Variant, Instructions.Instructions, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
-              const artifact = space.db.add(Artifact.make({ name: 'Mountain lake', kind: 'image' }));
+              const artifact = space.db.add(MediaArtifact.make({ name: 'Mountain lake', kind: 'image' }));
               const variant = space.db.add(
                 Variant.make({
                   [Obj.Parent]: artifact,

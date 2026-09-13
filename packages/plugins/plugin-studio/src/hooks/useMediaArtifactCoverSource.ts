@@ -11,7 +11,7 @@ import { Variant } from '#types';
 
 import { useVariantSource } from './useVariantSource.ts';
 
-/** The subset of an Artifact needed to resolve its cover thumbnail (live object or snapshot). */
+/** The subset of a MediaArtifact needed to resolve its cover thumbnail (live object or snapshot). */
 export type ArtifactCoverLike = {
   cover?: Ref.Ref<Variant.Variant>;
   variants?: ReadonlyArray<Ref.Ref<Variant.Variant>>;
@@ -23,8 +23,8 @@ export type ArtifactCover = {
   contentType?: string;
 };
 
-/** Resolves an Artifact's cover thumbnail: its cover variant (else its first variant). */
-export const useArtifactCoverSource = (artifact?: ArtifactCoverLike): ArtifactCover => {
+/** Resolves a MediaArtifact's cover thumbnail: its cover variant (else its first variant). */
+export const useMediaArtifactCoverSource = (artifact?: ArtifactCoverLike): ArtifactCover => {
   const coverRef = artifact?.cover ?? artifact?.variants?.[0];
   const key = coverRef?.uri;
   const [variant, setVariant] = useState<Variant.Variant>();

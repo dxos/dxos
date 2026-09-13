@@ -13,23 +13,23 @@ import { isSpace } from '@dxos/react-client/echo';
 import { Flex, Icon, IconButton, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
-import { ArtifactCard } from '#components';
+import { MediaArtifactCard } from '#components';
 import { meta } from '#meta';
-import { Artifact } from '#types';
+import { MediaArtifact } from '#types';
 
 import { getKindIcon } from '../../constants.ts';
 
 type Kind = 'image' | 'video';
 
 type TileData = {
-  artifact: Artifact.Artifact;
+  artifact: MediaArtifact.MediaArtifact;
 };
 
 const ArtifactTile = ({ data }: { data?: TileData }) => {
   if (!data) {
     return null;
   }
-  return <ArtifactCard subject={data.artifact} />;
+  return <MediaArtifactCard subject={data.artifact} />;
 };
 
 export type ArtifactsArticleProps = {
@@ -42,14 +42,14 @@ export type ArtifactsArticleProps = {
 /**
  * Browse/create hub for all Artifacts in a space, bound to the virtual "Artifacts" navtree node. The
  * toolbar's Create button opens a menu to pick the kind (image/video); selecting one creates that
- * Artifact and opens it. Clicking a card opens that Artifact's ArtifactArticle.
+ * MediaArtifact and opens it. Clicking a card opens that MediaArtifact's MediaArtifactArticle.
  */
 export const ArtifactsArticle = ({ role, properties }: ArtifactsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   // The hub is bound by a data sentinel rather than an object, so its space arrives via the node.
   const space = isSpace(properties?.space) ? properties.space : undefined;
-  const artifacts = useQuery(space?.db, Filter.type(Artifact.Artifact));
+  const artifacts = useQuery(space?.db, Filter.type(MediaArtifact.MediaArtifact));
   const items = useMemo<TileData[]>(() => artifacts.map((artifact) => ({ artifact })), [artifacts]);
 
   const open = useCallback(
@@ -63,7 +63,7 @@ export const ArtifactsArticle = ({ role, properties }: ArtifactsArticleProps) =>
       if (!space?.db) {
         return;
       }
-      const artifact = space.db.add(Artifact.make({ kind }));
+      const artifact = space.db.add(MediaArtifact.make({ kind }));
       await open(artifact);
     },
     [space, open],
@@ -83,7 +83,7 @@ export const ArtifactsArticle = ({ role, properties }: ArtifactsArticleProps) =>
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          {/* The Create button opens a menu to pick the kind; selecting one creates that Artifact. */}
+          {/* The Create button opens a menu to pick the kind; selecting one creates that MediaArtifact. */}
           <Menu.Root>
             <Menu.Trigger asChild>
               <IconButton icon='ph--plus--regular' label={t('create.label')} disabled={!space?.db} />

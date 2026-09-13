@@ -16,7 +16,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     surfaces: 'src/surfaces.ts',
     translations: 'src/translations.ts',
-    Artifact: 'src/types/Artifact.ts',
+    MediaArtifact: 'src/types/MediaArtifact.ts',
     Generation: 'src/types/Generation.ts',
     GenerationService: 'src/types/GenerationService.ts',
     Lightbox: 'src/types/Lightbox.ts',

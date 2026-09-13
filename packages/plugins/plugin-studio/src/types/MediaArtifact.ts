@@ -17,14 +17,14 @@ import * as Variant from './Variant.ts';
 /**
  * Resolve the connector(s) whose credential this artifact's provider needs, from the artifact's
  * `kind` via the registered {@link StudioCapabilities.GenerationService} providers. The explicit
- * return type keeps the {@link Artifact} reference (below) out of the annotation's inferred type,
+ * return type keeps the {@link MediaArtifact} reference (below) out of the annotation's inferred type,
  * which would otherwise make the class recursively reference itself.
  */
 const resolveArtifactConnectorIds = (
   object: Obj.Unknown,
   capabilities: CapabilityManager.CapabilityManager,
 ): readonly string[] => {
-  if (!Obj.instanceOf(Artifact, object)) {
+  if (!Obj.instanceOf(MediaArtifact, object)) {
     return [];
   }
   const forKind = capabilities
@@ -42,7 +42,7 @@ const resolveArtifactConnectorIds = (
  * renderer, a provider), never columns. The prompt + request knobs live per-variant in `Variant.config`
  * (the generator's `requestSchema`), composed via an in-memory draft variant in the article.
  */
-export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.artifact', '0.1.0'))(
+export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.dxos.type.mediaArtifact', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     /** Open discriminator: 'image' | 'video' | … (no enum). Selects renderer + provider. */
@@ -69,10 +69,15 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
 ) {}
 
 /**
- * Creates an Artifact.
+ * Creates a MediaArtifact.
  * @param props.name Optional display name.
  * @param props.kind Media kind (`'image' | 'video' | …`); defaults to `'image'`.
  * @param props[Obj.Parent] Optional parent object to set at construction time.
  */
-export const make = (props: { name?: string; kind?: string; [Obj.Parent]?: Obj.Unknown } = {}): Artifact =>
-  Obj.make(Artifact, { name: props.name, kind: props.kind ?? 'image', variants: [], [Obj.Parent]: props[Obj.Parent] });
+export const make = (props: { name?: string; kind?: string; [Obj.Parent]?: Obj.Unknown } = {}): MediaArtifact =>
+  Obj.make(MediaArtifact, {
+    name: props.name,
+    kind: props.kind ?? 'image',
+    variants: [],
+    [Obj.Parent]: props[Obj.Parent],
+  });

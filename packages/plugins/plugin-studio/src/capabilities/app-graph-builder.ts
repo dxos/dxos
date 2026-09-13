@@ -16,7 +16,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 
 import { meta } from '#meta';
-import { Artifact } from '#types';
+import { MediaArtifact } from '#types';
 
 import {
   ARTIFACTS_NODE_DATA,
@@ -41,7 +41,7 @@ export default Capability.makeModule(
         connector: (space, get) => {
           // The section is elided while the space has no Artifacts (as plugin-inbox does for
           // Mailboxes), so the first one is created from the space's generic create-object menu.
-          const artifacts = get(space.db.query(Filter.type(Artifact.Artifact)).atom);
+          const artifacts = get(space.db.query(Filter.type(MediaArtifact.MediaArtifact)).atom);
           if (artifacts.length === 0) {
             return Effect.succeed([]);
           }
@@ -68,9 +68,9 @@ export default Capability.makeModule(
           return node.type === STUDIO_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
         // The virtual "Artifacts" node opens the browse/create hub and lists the space's Artifacts as
-        // navigable children (each routes to its ArtifactArticle via the object-article surface).
+        // navigable children (each routes to its MediaArtifactArticle via the object-article surface).
         connector: (space, get) => {
-          const artifacts = get(space.db.query(Filter.type(Artifact.Artifact)).atom);
+          const artifacts = get(space.db.query(Filter.type(MediaArtifact.MediaArtifact)).atom);
           return Effect.succeed([
             AppGraphNode.make({
               id: ARTIFACTS_SEGMENT,
@@ -84,9 +84,9 @@ export default Capability.makeModule(
                 role: 'branch',
               },
               nodes: artifacts
-                .map((artifact: Artifact.Artifact) => {
+                .map((artifact: MediaArtifact.MediaArtifact) => {
                   const node = AppNode.makeObject({ get, db: space.db, object: artifact });
-                  // Show the kind's icon (image/video) rather than the generic Artifact-type glyph.
+                  // Show the kind's icon (image/video) rather than the generic MediaArtifact-type glyph.
                   return node
                     ? { ...node, properties: { ...node.properties, icon: getKindIcon(artifact.kind) } }
                     : null;

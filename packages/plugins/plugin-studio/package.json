@@ -84,10 +84,10 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
-    "./Artifact": {
-      "source": "./src/types/Artifact.ts",
-      "types": "./dist/types/src/types/Artifact.d.ts",
-      "import": "./dist/lib/Artifact.mjs"
+    "./MediaArtifact": {
+      "source": "./src/types/MediaArtifact.ts",
+      "types": "./dist/types/src/types/MediaArtifact.d.ts",
+      "import": "./dist/lib/MediaArtifact.mjs"
     },
     "./Generation": {
       "source": "./src/types/Generation.ts",
@@ -133,8 +133,8 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Artifact": [
-        "dist/types/src/types/Artifact.d.ts"
+      "MediaArtifact": [
+        "dist/types/src/types/MediaArtifact.d.ts"
       ],
       "Generation": [
         "dist/types/src/types/Generation.d.ts"

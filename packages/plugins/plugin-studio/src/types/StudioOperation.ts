@@ -11,11 +11,11 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import * as Artifact from './Artifact.ts';
+import * as MediaArtifact from './MediaArtifact.ts';
 import * as Variant from './Variant.ts';
 
 /**
- * Generate variants for an Artifact from its prompt and append them. Resolves the
+ * Generate variants for a MediaArtifact from its prompt and append them. Resolves the
  * `GenerationService` (by `artifact.kind`, then `provider` id, else the first for the kind),
  * resolves the provider's API key from the Connector-managed `AccessToken` via `CredentialsService`
  * when `service.source` is set, builds the request from the supplied `config` (which includes the
@@ -27,12 +27,12 @@ export const Generate = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.studio.generate'),
     name: 'Generate',
-    description: 'Generate variants for an Artifact from its prompt.',
+    description: 'Generate variants for a MediaArtifact from its prompt.',
     icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({
-    artifact: Ref.Ref(Artifact.Artifact).annotate({
-      description: 'Reference to the Artifact whose prompt drives generation.',
+    artifact: Ref.Ref(MediaArtifact.MediaArtifact).annotate({
+      description: 'Reference to the MediaArtifact whose prompt drives generation.',
     }),
     provider: Schema.optional(
       Schema.String.annotate({ description: 'GenerationService id; defaults to the first for the kind.' }),

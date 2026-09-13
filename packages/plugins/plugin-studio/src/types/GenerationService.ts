@@ -72,7 +72,7 @@ export interface GenerateOptions {
  *
  * A provider is either **synchronous** (implements {@link generate}, e.g. a single request/response
  * like Ideogram) or **asynchronous/job-based** (implements {@link enqueue} + {@link awaitResult},
- * e.g. HeyGen: submit → poll). The generate operation persists the job id on the Artifact between
+ * e.g. HeyGen: submit → poll). The generate operation persists the job id on the MediaArtifact between
  * enqueue and completion so a long poll resumes across navigation/remount.
  */
 export interface GenerationService {

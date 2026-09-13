@@ -6,16 +6,16 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Artifact, Lightbox, Variant } from '#types';
+import { Lightbox, MediaArtifact, Variant } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Artifact.Artifact)]: {
-        'typename.label': 'Artifact',
-        'typename.label_zero': 'Artifacts',
-        'typename.label_one': 'Artifact',
-        'typename.label_other': 'Artifacts',
+      [Type.getTypename(MediaArtifact.MediaArtifact)]: {
+        'typename.label': 'Media artifact',
+        'typename.label_zero': 'Media artifacts',
+        'typename.label_one': 'Media artifact',
+        'typename.label_other': 'Media artifacts',
         'object-name.placeholder': 'New artifact',
         'add-object.label': 'Add artifact',
         'rename-object.label': 'Rename artifact',

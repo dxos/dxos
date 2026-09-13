@@ -20,7 +20,7 @@ import { Text } from '@dxos/schema';
 
 import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Artifact, Variant } from '#types';
+import { MediaArtifact, Variant } from '#types';
 
 import { GalleryArticle } from './GalleryArticle.tsx';
 
@@ -52,7 +52,13 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin.make({
-          types: [Collection.Collection, Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
+          types: [
+            Collection.Collection,
+            MediaArtifact.MediaArtifact,
+            Variant.Variant,
+            Instructions.Instructions,
+            Text.Text,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -62,9 +68,9 @@ const meta = {
               // Seed a few Artifacts, each with one generated (url) cover variant, as members.
               Obj.update(collection, (collection) => {
                 collection.objects = Array.from({ length: 6 }, (_, index) => {
-                  const artifact = Artifact.make({
+                  const artifact = MediaArtifact.make({
                     [Obj.Parent]: collection,
-                    name: `Artifact ${index + 1}`,
+                    name: `MediaArtifact ${index + 1}`,
                     kind: 'image',
                   });
                   const variant = space.db.add(

@@ -13,16 +13,16 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Layout, resizeToFit } from '@dxos/react-ui-board';
 
-import { ArtifactCard } from '#components';
+import { MediaArtifactCard } from '#components';
 import { meta } from '#meta';
-import { Artifact, Lightbox } from '#types';
+import { Lightbox, MediaArtifact } from '#types';
 
-const isArtifact = Obj.instanceOf(Artifact.Artifact);
+const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
 export type LightboxArticleProps = AppSurface.ObjectArticleProps<Lightbox.Lightbox>;
 
 /**
- * A spatial "lightbox" of {@link Artifact}s laid out on a `Board` (react-ui-board). Each artifact
+ * A spatial "lightbox" of {@link MediaArtifact}s laid out on a `Board` (react-ui-board). Each artifact
  * renders as its cover-variant card (the `CardContent` surface); dragging persists cell positions.
  * The same artifacts can also be viewed as a `Collection` masonry — layout is a view, not a schema.
  */
@@ -34,7 +34,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
   const itemsAtom = useMemo(
     () =>
       Atom.make((get) => {
-        const result: Artifact.Artifact[] = [];
+        const result: MediaArtifact.MediaArtifact[] = [];
         for (const ref of items ?? []) {
           const obj = get(Obj.atomReactive(ref));
           if (obj && isArtifact(obj)) {
@@ -103,7 +103,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
                   const itemLayout = layout.items[artifact.id];
                   return itemLayout ? (
                     <Board.Cell item={artifact} key={artifact.id} layout={itemLayout}>
-                      <ArtifactCard subject={artifact} />
+                      <MediaArtifactCard subject={artifact} />
                     </Board.Cell>
                   ) : null;
                 })}

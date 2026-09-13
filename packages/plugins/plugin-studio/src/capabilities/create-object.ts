@@ -11,7 +11,7 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { Artifact, Lightbox } from '#types';
+import { Lightbox, MediaArtifact } from '#types';
 
 import { KINDS } from '../constants.ts';
 
@@ -26,11 +26,11 @@ export default Capability.makeModule(
     return [
       Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
         {
-          id: Type.getTypename(Artifact.Artifact),
+          id: Type.getTypename(MediaArtifact.MediaArtifact),
           inputSchema: ArtifactForm,
           createObject: (props, options) =>
             Effect.gen(function* () {
-              const object = Artifact.make({ name: props?.name, kind: props?.kind });
+              const object = MediaArtifact.make({ name: props?.name, kind: props?.kind });
               return yield* Operation.invoke(
                 SpaceOperation.AddObject,
                 {

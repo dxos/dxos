@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Artifact from './Artifact.ts';
+export * as MediaArtifact from './MediaArtifact.ts';
 export * as Generation from './Generation.ts';
 export * as GenerationService from './GenerationService.ts';
 export * as Lightbox from './Lightbox.ts';
