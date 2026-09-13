@@ -667,11 +667,11 @@ jobs:
   # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
   cli:
     if: >-
-      !(github.event_name == 'workflow_dispatch' && inputs.e2e_only) && (
+      ${{ !(github.event_name == 'workflow_dispatch' && inputs.e2e_only) && (
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e)
+      inputs.e2e) }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
