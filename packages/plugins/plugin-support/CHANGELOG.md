@@ -1,5 +1,254 @@
 # @dxos/plugin-support
 
+## 0.12.0
+
+### Minor Changes
+
+- 8567a1b: Load the welcome tour's steps on demand. BREAKING: `SupportPlugin`'s `helpSteps` option takes a `() => Promise<Tour.Step[]>` loader instead of a `Tour.Step[]` array, keeping the step definitions and the operations they invoke out of the host's eager startup bundle.
+- bd06669: Adds `Toc` and `Tour` on Ark's machines, and moves the welcome tour off `react-joyride`. `Toc.Root` takes the headings as `{ value, depth }` items and an optional scroll container, watches which headings are in view and marks their links (`aria-current="location"`, `data-active`); `Indicator` is a bar beside the active items, `Item` indents by depth, and `Link` scrolls the heading into view within the container instead of jumping the page (headings must carry the ids the items name). `useTour` takes a walkthrough's steps (tooltip steps beside a target, dialog steps centred, with actions, arrow, backdrop and an effect that runs before a step shows) and `Tour.Root` provides it; `Backdrop` cuts the target out of the scrim, `Spotlight` frames it, and `Positioner`/`Content`/`Arrow`/`Title`/`Description`/`ProgressText`/`Close`/`Control`/`Actions`/`ActionTrigger` make up the card. The machine waits for a target to appear, scrolls it into view, marks it `data-tour-highlighted` (which shows hover-revealed controls), traps focus and walks steps on the arrow keys. `plugin-support`'s welcome tour runs on it: `Tour.Step` is now `{ target, title, description, placement, before }` (`content` is `description`; the joyride-only fields are no longer accepted), and `react-joyride` is gone. Below `lg`, dismissing a `Main` sidebar now returns it to `collapsed` rather than `closed`, and the edge swipe opens it from there.
+- 78a3bd7: Replace survey-based feedback capture with PostHog Support tickets.
+
+  The feedback panel now has a single submit that files the report through the support service, which creates the PostHog ticket anchoring its telemetry (session replay, events, errors, debug logs) and opens the public Discord help thread. The crash dialog files through the same path. The GitHub-issue action and the separate PostHog/Discord submit buttons are gone.
+
+  Breaking, `@dxos/observability`: the `feedback` extension kind and `observability.feedback.captureUserFeedback` are replaced by a `support` kind supplying what only the browser knows — `uploadLogs()`, `sessionContext()`, and `flushLogs(attributes)` — with the ticket itself filed by the service. `Extension.initialize` now receives an `ExtensionContext`, and `setTags` takes an optional kind so tags can be scoped to one signal.
+
+  Breaking, `@dxos/plugin-support`: `FeedbackForm.Submit` replaces `SubmitPosthog` / `SubmitGitHub` / `SubmitDiscord` and renders the public-posting notice itself, so no caller can post publicly without showing it. A new `@dxos/plugin-support/SupportService` subpath carries the service client (endpoint plus the two submits) apart from the operation definitions, keeping them off consumers' eager boot graph.
+
+### Patch Changes
+
+- 96f94c2: `Carousel`, `Editable`, `Splitter` and `Stepper` are now built on `@ark-ui/react`'s zag state machines rather than hand-written interaction and a11y logic. The namespaced APIs (`Carousel.Root`, `Editable.Preview`, `Splitter.Panel`, …) and their props are unchanged apart from the two noted below, and every part still takes `classNames`.
+
+  Breaking: `Carousel.Root` no longer takes `transition` — the machine has one way to move between slides, so a carousel that previously hard-swapped now slides — and `useCarousel` is removed. `Editable`'s `useEditableContext` is now the machine's own context hook and takes no consumer name; `useEditable` keeps its options and return shape, with `onBlur` dropped (an interaction outside the field is the machine's to handle) and `activation` widened to also accept `'focus'` and `'none'`.
+
+  `Escape` on an `Editable` that was empty when it opened now discards the typed text rather than keeping it, and a field held open through `editing` commits at all — a controlled editing state made the machine treat a submit as a request to its host, so a pane editor driven that way wrote nothing.
+
+  `Stepper` no longer eases its progress line back to nothing when a run is reset or wound back; only the line leaving the stage in flight animates, and everything else lands at once. A run that fails now draws every stage it started in the error hue rather than only the stage it stopped on.
+
+  An article surface is told which graph node it renders (`nodeId`), separate from which node holds attention (`attendableId`). The two are the same for a primary plank and differ for a companion, which shares its host's attention — so a surface reading its own contributed actions from `attendableId` was rendering the host's toolbar. Actions can also say which surface they suit: `disposition` already accepted an array, and `'prompt'` joins `'toolbar'` for actions that belong beside a text input rather than on an object.
+
+  An editor's placeholder no longer shows behind streamed pending text, which is a decoration rather than document content.
+
+- 5689802: Feedback panel: the "Attach screenshot" toggle is now always available (alongside "Include debug logs") and applies to every submit path — PostHog feedback and Discord help threads embed the uploaded screenshot in the report, not just GitHub issues.
+- 8d872f7: Feedback screenshot upload failures now log the image-service endpoint and the blob size alongside
+  the error. A browser reports every CORS rejection, DNS failure, and offline attempt as the same
+  opaque `TypeError: Failed to fetch`, so the previous log line could not distinguish them or even
+  name the host that was refused — diagnosing DX-1203 required re-deriving the endpoint from config.
+- ffb3c44: Point the help menu's app download at the running environment's release channel. CrabNebula's dashboard only lists the primary channel, so a prerelease deployment previously linked users at an installer for a different channel than the one they were using; it now links straight at that channel's latest installer via the CDN's public download endpoint.
+- e8088ea: Fix logs and file exports in the native app, where both halves failed silently: downloads went through `<a download>`, which the Tauri webview drops, and are now saved via the native save dialog, falling back to the anchor where the dialog is unreachable; feedback log uploads posted to a relative path that does not exist on the app's own origin, and now take a configurable absolute endpoint.
+- Updated dependencies [0280a6a]
+- Updated dependencies [0c6c186]
+- Updated dependencies [86d1482]
+- Updated dependencies [af1c007]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [6a457ac]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [96f94c2]
+- Updated dependencies [7c87626]
+- Updated dependencies [6d52561]
+- Updated dependencies [520c34f]
+- Updated dependencies [9714c75]
+- Updated dependencies [3b78bb6]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [5df602e]
+- Updated dependencies [63fc847]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [34a8433]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [b8762ef]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [069e8ed]
+- Updated dependencies [7becabf]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [b4c7782]
+- Updated dependencies [fee7666]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [5305365]
+- Updated dependencies [c01fef6]
+- Updated dependencies [a09e18e]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [dcf911b]
+- Updated dependencies [881f900]
+- Updated dependencies [513cac6]
+- Updated dependencies [6d28380]
+- Updated dependencies [329faa0]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [7ec1738]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [2643a00]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [b3673ee]
+- Updated dependencies [915db6a]
+- Updated dependencies [6c6987e]
+- Updated dependencies [3e02201]
+- Updated dependencies [ed43a8d]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [8cb5553]
+- Updated dependencies [4c107a2]
+- Updated dependencies [8c20ee2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [9477170]
+- Updated dependencies [0ef896f]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [882ac2a]
+- Updated dependencies [0132aab]
+- Updated dependencies [a74e9b0]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [df0ab57]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [557e243]
+- Updated dependencies [ca34a80]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [3214dcf]
+- Updated dependencies [df22dec]
+- Updated dependencies [24fcadc]
+- Updated dependencies [77a2d34]
+- Updated dependencies [5ae704b]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [7c426d4]
+- Updated dependencies [19f19a2]
+- Updated dependencies [139a3b0]
+- Updated dependencies [987f7e1]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [a78a66d]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [b7822a7]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [0e44f24]
+- Updated dependencies [bd06669]
+- Updated dependencies [c4188a6]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [20e86ba]
+- Updated dependencies [1482a3f]
+- Updated dependencies [2513a52]
+- Updated dependencies [17ed864]
+- Updated dependencies [1d6f730]
+- Updated dependencies [b125655]
+- Updated dependencies [9e91762]
+- Updated dependencies [f4c2702]
+- Updated dependencies [dea5df9]
+- Updated dependencies [318bbad]
+- Updated dependencies [fc83abd]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [77d0026]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [886453b]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [582fc22]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [72b2984]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [5d816a6]
+- Updated dependencies [f9816c0]
+- Updated dependencies [78523d2]
+- Updated dependencies [40b50c2]
+- Updated dependencies [520c34f]
+- Updated dependencies [85bdad2]
+- Updated dependencies [77d0026]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [79d5ecf]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/echo@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/brand@0.12.0
+  - @dxos/config@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/plugin-deck@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/graph@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/plugin-observability@0.12.0
+  - @dxos/react-ui-markdown@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/plugin-status-bar@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/halo-react@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/errors@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

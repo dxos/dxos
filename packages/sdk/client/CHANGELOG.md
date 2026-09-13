@@ -1,5 +1,250 @@
 # @dxos/client
 
+## 0.12.0
+
+### Minor Changes
+
+- 3b78bb6: Move the WebRTC transport bridge to buf types
+
+  `BridgeService`'s RPC payloads are buf messages. The transport itself (`RtcTransportService`,
+  `RtcTransportProxyFactory`) keeps the protobuf.js shapes, and `bridge-codec.ts` converts at the RPC
+  boundary, so consumers of the transport interface are unaffected. Both codecs produce identical
+  wire bytes.
+
+- 881f900: The agent debug port can now survive a reload of the tab it was authorized in. `start({ persist: true })` records the session in `sessionStorage`, and `resume()` restarts the loop under the same id, so an agent's session id keeps working across a navigation the user did not intend to end it — an OAuth redirect above all, which previously stranded the investigation exactly when the interesting state appeared.
+
+  Deliberately narrow: `sessionStorage`, not `localStorage`, so an arbitrary-eval port cannot outlive its tab; a 30-minute expiry so a forgotten port lapses on its own; `resume()` never mints a session, so mounting the devtools hook cannot switch the port on; and stopping clears the record.
+
+- a74e9b0: **Breaking:** `Invitation` and `QueryInvitationsResponse` are now the buf-generated types. `InvitationsService` carries them over `bufMessage`, which matches the previous wire format byte-for-byte apart from proto3 default values that protobuf.js wrote explicitly, so invitation codes stay interchangeable across the change.
+
+  Consumers of `@dxos/client/invitations` and `@dxos/react-client/invitations`:
+
+  - Nested enums are flattened: `Invitation.State.SUCCESS` becomes `Invitation_State.SUCCESS`, and likewise for `Type`, `Kind` and `AuthMethod`. The enum values are unchanged.
+  - `Invitation` is now a type; construct one with `create(InvitationSchema, { ... })` from `@bufbuild/protobuf`.
+  - Key fields (`spaceKey`, `swarmKey`, `identityKey`, `delegationCredentialId`) are `dxos.keys.PublicKey` messages rather than the `PublicKey` class. Read one with `PublicKey.from(key.data)`; the `useInvitationStatus` hook still reports the class.
+  - `created` is a `google.protobuf.Timestamp` rather than a `Date`.
+
+- df22dec: Move the network carrier group to buf types
+
+  `NetworkService` and `EdgeAgentService` now speak buf messages, so the types they carry change
+  shape for consumers:
+
+  - `MeshProxy.networkStatus` reports the buf `NetworkStatus`. Its `swarm` field uses the buf
+    `ConnectionState` enum, imported from `@dxos/protocols/buf/dxos/client/services_pb` rather than
+    `@dxos/protocols/proto/dxos/client/services`.
+  - Nested enums flatten: `EdgeStatus.ConnectionState.X` becomes `EdgeStatus_ConnectionState.X`, and
+    `QueryAgentStatusResponse.AgentStatus.X` becomes `QueryAgentStatusResponse_AgentStatus.X`.
+  - Building one of these messages by object literal no longer typechecks; construct it with
+    `create(NetworkStatusSchema, { … })` from `@bufbuild/protobuf`.
+
+  Both codecs produce identical wire bytes, so no persisted or in-flight data changes.
+
+- 139a3b0: Move `SystemService.getPlatform` to buf types
+
+  `Platform` — reachable through `client.diagnostics()` — is now the buf message. Its nested enum
+  flattens: `Platform.PLATFORM_TYPE.X` becomes `Platform_PLATFORM_TYPE.X`, imported from
+  `@dxos/protocols/buf/dxos/client/services_pb`. Both codecs produce identical wire bytes.
+
+  This retires the last `protoMessage` payload in `SystemService`.
+
+- 0280a6a: Cut app startup cost by loading feature code on demand rather than at boot.
+
+  Activation: the coarse `DeferredStartup` event is replaced by per-plugin start events (`<pluginKey>.event.start`, built with `ActivationEvent.pluginStart`). A plugin's own start event now fires when one of its modules contributes a `ReactSurface` — the feature being rendered is the demand signal — so an unvisited feature's contributions never load. Contributions no surface can gate ride the feature they belong to instead: app-graph builders default to the graph plugin's start event, skill definitions to the assistant's, and cross-plugin contributions (markdown extensions, connectors, game variants) to the consuming plugin's. React surfaces activate on their declared roles.
+
+  Client: initialization can run forked off app startup. `Client.waitUntilInitialized()` exposes a stable completion signal, `useClient` suspends until it resolves, `ClientProvider` gains a `suspend` mode that provides context immediately instead of rendering the fallback subtree-wide, and the HALO adapters are construction-safe over an uninitialized client.
+
+  Bundle: `runDedicatedWorker` moves to `@dxos/client/worker` so the worker-side service runtime (client-services, sqlite, hypercore) is no longer statically reachable from main-thread bundles; the in-process host (`fromHost`) and the RTC ice provider load on demand. A new engine-free `@dxos/compute-hyperformula/types` subpath lets schema and operation definitions use cell-address helpers without loading HyperFormula.
+
+  Breaking: `ActivationEvents.DeferredStartup` and `ActivationEvents.SkillsRequested` are removed; worker entrypoints importing `runDedicatedWorker` from the root must import it from `@dxos/client/worker`; and a plugin's React surface must declare the roles it serves to be activated.
+
+### Patch Changes
+
+- 86d1482: Let a dev server start the agent debug port on a known session, and let plugins contribute
+  slash-menu commands to the markdown editor.
+
+  `DebugPortStartOptions` gains `session`, so a caller that already knows the id skips the
+  copy-the-id handshake. `MarkdownCapabilities.MenuExtension` is a new multi capability: an entry
+  names an Operation (not a callback), and contributions are grouped by the contributing plugin.
+
+  Also renames the settings-panel operation's key to `org.dxos.operation.appToolkit.openSettings`.
+  It collided with `LayoutOperation.Open`, so neither could be resolved by key alone.
+
+- a069511: Move the identity, contacts, devices and spaces service RPCs to buf messages, and correct
+  `ClientServices` to declare the buf shapes those methods actually carry. The credential subsystem
+  keeps its protobuf.js shapes — the payloads cross the RPC boundary as their shared wire bytes — so
+  `@dxos/client`'s public API is unchanged.
+- 5df602e: Move the wire enums (`EdgeReplicationSetting`, `MembershipPolicy`, `SpaceState`, `ConnectionState`,
+  `DeviceKind`, `DeviceType`) and the remaining `EchoMetadata` decode sites to buf. The enums
+  `@dxos/client` re-exports (`SpaceState`, `DeviceKind`, `DeviceType`) are now the buf declarations:
+  their members and values are unchanged, but TypeScript enums are nominal, so code comparing one of
+  them against the same enum imported from `@dxos/protocols/proto/...` must import it from
+  `@dxos/protocols/buf/...` instead.
+- c4188a6: Fix every identity recovery path — passkey, recovery code, email token and OAuth proof — failing in
+  the client before a request reached EDGE.
+
+  `HaloProxy.recoverIdentity` forwarded the caller's `RecoverIdentityArgs` union straight to the rpc,
+  where the payload codec encodes `RecoverIdentityRequest` and throws on a message whose `request`
+  oneof was never selected. The proxy maps the union onto that oneof again, as it did before the buf
+  migration; the public API is unchanged.
+
+- Updated dependencies [0c6c186]
+- Updated dependencies [af1c007]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [7c87626]
+- Updated dependencies [6388838]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [5df602e]
+- Updated dependencies [63fc847]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [069e8ed]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [b4c7782]
+- Updated dependencies [4e417e9]
+- Updated dependencies [194b1d3]
+- Updated dependencies [ea11703]
+- Updated dependencies [c01fef6]
+- Updated dependencies [dcf911b]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [7575cb6]
+- Updated dependencies [2c5aaf0]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [9817b6f]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [ed9aeba]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [b3673ee]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [915db6a]
+- Updated dependencies [6c6987e]
+- Updated dependencies [3e02201]
+- Updated dependencies [ed43a8d]
+- Updated dependencies [dde6714]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [c8b7158]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [e56276b]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [882ac2a]
+- Updated dependencies [0132aab]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [ca4429a]
+- Updated dependencies [10b1239]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [ca34a80]
+- Updated dependencies [24fcadc]
+- Updated dependencies [1160094]
+- Updated dependencies [4804da0]
+- Updated dependencies [63e500b]
+- Updated dependencies [19f19a2]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [256f286]
+- Updated dependencies [4689d66]
+- Updated dependencies [e207c68]
+- Updated dependencies [df93cc2]
+- Updated dependencies [092f3be]
+- Updated dependencies [5b504b4]
+- Updated dependencies [a53cabb]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [4663f24]
+- Updated dependencies [2513a52]
+- Updated dependencies [2896a58]
+- Updated dependencies [17ed864]
+- Updated dependencies [b125655]
+- Updated dependencies [10defed]
+- Updated dependencies [9e91762]
+- Updated dependencies [4f55909]
+- Updated dependencies [f4c2702]
+- Updated dependencies [318bbad]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [631ade3]
+- Updated dependencies [cd9bf16]
+- Updated dependencies [2b6eb8d]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [ea11703]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [72b2984]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [4da1052]
+- Updated dependencies [cc11297]
+- Updated dependencies [461ce1e]
+- Updated dependencies [ff37699]
+  - @dxos/echo@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/config@0.12.0
+  - @dxos/client-protocol@0.12.0
+  - @dxos/client-services@0.12.0
+  - @dxos/echo-client@0.12.0
+  - @dxos/sql-sqlite@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/tracing@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/echo-protocol@0.12.0
+  - @dxos/credentials@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/worker-framework@0.12.0
+  - @dxos/messaging@0.12.0
+  - @dxos/network-manager@0.12.0
+  - @dxos/rpc@0.12.0
+  - @dxos/websocket-rpc@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/timeframe@0.12.0
+  - @dxos/blob@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/rpc-tunnel@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

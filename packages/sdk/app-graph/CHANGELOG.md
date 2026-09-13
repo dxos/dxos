@@ -1,5 +1,135 @@
 # @dxos/app-graph
 
+## 0.12.0
+
+### Minor Changes
+
+- 329faa0: The URL is now the deck's only record of what is open, and the relationship between the two is one-way: an operation computes a target and pushes the URL, the URL is projected into deck state, the deck renders. Nothing else writes what is open. This replaces a bidirectional sync between the address bar and persisted deck state that needed five separate guards to referee it, and whose failures cleared the URL on reload.
+
+  A URL resolves asynchronously, so the projection applies it twice: once synchronously by the pairs themselves, so the planks the URL names render their chrome immediately, and again once each pair has resolved to a graph node. Per-plank preferences and the closed-plank record hang off a plank's URL segment rather than its id, so they survive that refinement. A plank whose node has no URL binding cannot be opened and is logged with the extension that produced it.
+
+  `AppGraphBuilder` no longer stamps `properties.urlSegment` onto nodes, and the `BuilderNode` type that described the stamped shape is gone. A node's URL representation comes from `PathResolution.representNode`, which reads the producing extension's binding and so still works for a node whose subtree has momentarily left the graph.
+
+  What is open is no longer persisted. `active` and `inactive` moved out of the deck's stored state into `EphemeralDeckState.open`, keyed by workspace, and `DeckCapabilities.getDeck` merges them with the workspace's persisted preferences so nothing downstream has to know which atom a field came from. A workspace's open planks are remembered for the session and no longer: the URL records only the workspace you are in, so a reload seeds any other workspace from its first child as it does on a first visit. The persisted-state migration is deleted along with them, since a stored blob now carries only preferences and dropping a field the deck no longer knows costs nothing.
+
+  Breaking for plugin authors: `LayoutOperation.Open`'s `navigation` option is no longer read, a node needs a `url` binding on its graph-builder extension to be openable as a plank, and the pinned workspaces lost their `!` id prefix. A plugin's own workspace is now named the way a plugin should name one, by its namespace: `dxos:settings`, `dxos:registry` and `dxos:account`. No space id can collide with a name of that shape, so the namespace is what keeps two plugins from claiming the same workspace.
+
+- b02fe16: Rebuilt `@dxos/graph` on Effect's `Graph` module and split the generic expansion engine out of the app graph builder.
+
+  `GraphModel` is now a long-lived Effect `MutableGraph` with granular per-node and per-edge atom views, `batch()` for single-notification mutation groups, incremental adjacency, `release(ids)` for unloading a subgraph outright (distinct from tombstoning `removeNode`), and opt-in `retainAtoms` that keeps each node's atom mounted for the life of the node. `ReadonlyGraphModel` and `ReactiveGraphModel` merge into `AbstractGraphModel`; constructors take an options bag.
+
+  `@dxos/graph/GraphBuilder` owns the extension registry, connector subscriptions, id qualification, ordering and dirty-flush over a `Store` port, with `ModelGraphBuilder` as the default specialization; `@dxos/app-graph`'s `AppGraphBuilder` specializes the same engine with app nodes, actions and URL bindings (`BuilderExtension.url` is now the generic `meta`). Node-id path helpers move to `@dxos/graph/GraphNode`. The app-graph namespaces are renamed to `AppGraph`/`AppGraphBuilder`/`AppGraphNode` and published as subpaths under those names; the old `NodeMatcher` splits, with the generic combinators in `@dxos/graph/GraphNodeMatcher` and the ECHO-aware ones in `@dxos/app-toolkit/AppNodeMatcher`. Writes read the model directly instead of atoms (a mid-flush atom read returns pre-flush state), flushes coalesce through `GraphModel.batch` rather than `Atom.batch` (whose deferred rebuild strands invalidations raised after its rebuild pass), and expansion, updates and removal are measured faster than before the rebuild across the board.
+
+- 3214dcf: **Breaking:** `Graph.expand` is renamed to `Graph.expandSync`, and `Graph.expand` now returns an `Effect` that runs the expansion off the paint-critical path. Both overloads (direct and curried) are preserved on `expandSync`, so migrating is a rename. Interrupting the new `expand` cancels a still-pending expansion, which makes superseding one scheduled expansion with another a matter of interrupting the previous fiber.
+
+  Expanding a node also no longer blocks the main thread on stack-trace capture. `Atom.withLabel` records a stack trace on every call, and the graph labelled an atom per node, per connection key and per extension, so a single expansion cost hundreds of captures — measured at 17ms with 40 registered extensions. Labels are now opt-in via `VITE_ATOM_LABELS` under the dev server.
+
+  The nav-tree's hover prefetch uses the new scheduled `expand` behind a 150ms settle delay, so moving the cursor across rows only expands the row it stops on.
+
+  The tooltip context is split so that pointing at a trigger no longer re-renders every `Tooltip.Trigger` in the app, and the open tooltip's `data-state`/`aria-describedby` are applied to the active trigger alone rather than to all of them.
+
+- 987f7e1: Replace each plugin's `./plugin` entrypoint with an `XPlugin` namespace. **Breaking:** import the plugin from its own subpath and construct it with `make` — `import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin'; ChessPlugin.make()` in place of `import { ChessPlugin } from '@dxos/plugin-chess/plugin'; ChessPlugin()`. Plugin metadata is available as `XPlugin.meta` without loading the plugin body. **Breaking:** `@dxos/plugin-graph` no longer re-exports `@dxos/app-graph`, which now publishes per-namespace subpaths: `AppGraph`, `AppGraphBuilder` and `AppGraphNode`. The old `NodeMatcher` splits by member — the generic combinators (`whenRoot`, `whenId`, `whenNodeType`, `whenAll`, `whenAny`, `whenNot`) move to `@dxos/graph/GraphNodeMatcher` and the ECHO-aware ones (`whenEchoObject`, `whenEchoObjectMatches`, `whenEchoType`, `whenEchoTypeMatches`) to `@dxos/app-toolkit/AppNodeMatcher`.
+
+### Patch Changes
+
+- bf4f1e6: Key observable atoms by reference so graph extensions no longer fail on clients without a shell.
+- Updated dependencies [0c6c186]
+- Updated dependencies [af1c007]
+- Updated dependencies [106d38a]
+- Updated dependencies [9049c30]
+- Updated dependencies [6a457ac]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [7c87626]
+- Updated dependencies [63fc847]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [ea11703]
+- Updated dependencies [dcf911b]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [7ec1738]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [07565c8]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [0cde959]
+- Updated dependencies [e094f74]
+- Updated dependencies [b3673ee]
+- Updated dependencies [915db6a]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [882ac2a]
+- Updated dependencies [0132aab]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [0ac2e5f]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [ca34a80]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [19f19a2]
+- Updated dependencies [e1ee9dd]
+- Updated dependencies [256f286]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [2513a52]
+- Updated dependencies [17ed864]
+- Updated dependencies [b125655]
+- Updated dependencies [f4c2702]
+- Updated dependencies [318bbad]
+- Updated dependencies [9a3f01e]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [ea11703]
+- Updated dependencies [18597fc]
+- Updated dependencies [881f900]
+- Updated dependencies [72b2984]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [5d816a6]
+- Updated dependencies [40b50c2]
+- Updated dependencies [520c34f]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/echo@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/graph@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

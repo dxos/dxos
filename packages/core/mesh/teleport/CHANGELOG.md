@@ -1,5 +1,47 @@
 # @dxos/teleport
 
+## 0.12.0
+
+### Patch Changes
+
+- dac61d5: Fixed a `TypeError: Cannot read properties of undefined (reading 'abort')` thrown from `ControlExtension.onAbort` when a Teleport session is aborted while its handshake is still in flight.
+
+  `Teleport` registers the control extension before opening it, and `abort()`/`destroy()` invoke the lifecycle hooks of every registered extension — so an abort racing `onOpen` (for example a swarm renegotiating and closing the connection from `Peer.onOffer`) reached `this._rpc.abort()` before `_rpc` had been assigned. The RPC peer and extension context are now optional-typed and guarded in `onAbort`, `onClose`, the context error handler and the heartbeat's `RpcClosedError` branch, matching the pattern `RpcExtension` already used. The thrown error previously masked the real reason the connection was closing.
+
+- Updated dependencies [6388838]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [73daef4]
+- Updated dependencies [4e417e9]
+- Updated dependencies [194b1d3]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [e56276b]
+- Updated dependencies [4689d66]
+- Updated dependencies [e207c68]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [e8088ea]
+- Updated dependencies [85e6347]
+- Updated dependencies [4da1052]
+  - @dxos/protocols@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/rpc@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
