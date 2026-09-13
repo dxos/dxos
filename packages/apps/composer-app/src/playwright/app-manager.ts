@@ -254,8 +254,11 @@ export class AppManager {
       }
     });
     await action.click();
-    // A delivered click closes the toast at once, ahead of its exit animation; its own timer is paused by the hover.
-    await expect(root).toHaveAttribute('data-state', 'closed', { timeout: 2_000 });
+    // A delivered click closes the toast at once, ahead of its exit animation, and may unmount it; its
+    // own timer is paused by the hover. Addressed by id: the action it was found through goes first.
+    await expect(this.page.locator(`[data-testid="${toastId}"]:not([data-state="closed"])`)).toHaveCount(0, {
+      timeout: 2_000,
+    });
   }
 
   async closeToast(nth = 0): Promise<void> {

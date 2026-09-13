@@ -11,7 +11,10 @@ export const Thread = {
     // The button's disabled state is driven by aspect, which updates via a
     // debounce after a CodeMirror selection dispatch. Wait until it is enabled.
     await expect(addButton).toBeEnabled();
-    const existing = await Thread.getThreads(page).evaluateAll((elements) => elements.map((element) => element.id));
+    // Object ids, not element ids: a thread's URI changes spelling when its draft persists.
+    const existing = await Thread.getThreads(page).evaluateAll((elements) =>
+      elements.map((element) => element.id.split('/').pop()),
+    );
     await addButton.click();
     // The previous thread stays current until the new draft renders, so waiting for any current
     // thread can hand back the old one and send the reply there. Wait for a thread that is new.
@@ -19,9 +22,9 @@ export const Thread = {
     try {
       const handle = await page.waitForFunction(
         (previous) =>
-          Array.from(document.querySelectorAll('[data-testid=thread][aria-current="location"]')).find(
-            (element) => element.id && !previous.includes(element.id),
-          )?.id,
+          Array.from(document.querySelectorAll('[data-testid=thread][aria-current="location"]'))
+            .map((element) => element.id.split('/').pop())
+            .find((objectId) => objectId && !previous.includes(objectId)),
         existing,
       );
       threadId = await handle.jsonValue();
@@ -38,7 +41,7 @@ export const Thread = {
     if (!threadId) {
       throw new Error(`the new current thread has no id; threads: ${await Thread.describeThreads(page)}`);
     }
-    const currentThread = page.locator(`[data-testid=thread][id="${threadId}"]`);
+    const currentThread = page.locator(`[data-testid=thread][id$="/${threadId}"]`);
     const input = Thread.getReplyInput(currentThread);
     await input.fill(comment);
     await input.press('Enter');
