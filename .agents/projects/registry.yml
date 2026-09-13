@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: studio
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-13
+    summary: 'Extend plugin-studio with more generation providers; first plugin-higgsfield (Connector + image/video GenerationService against api.higgsfield.ai), modelled on plugin-heygen.'
+    tasks: .agents/projects/studio/TASKS.md
+    design: .agents/projects/studio/DESIGN.md
+    prs: []
+    resume: 'Phase 1 in progress: building plugin-higgsfield.'
   - name: task-visualization
     status: active
     user: burdon
