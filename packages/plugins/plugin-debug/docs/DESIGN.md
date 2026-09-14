@@ -20,12 +20,10 @@ to the graph root, so each page exists twice (`root/devtools/...` and `root/<spa
   filters, so nothing else has to learn about the category. It is a root child, not a per-space
   group: the debug tree has one root and no "which space" question.
 - Tool plugins attach with `GraphNodeMatcher.whenNodeType(GraphPath.GroupTypes.debug)` (a new
-  `AppNodeMatcher.whenDebugGroup` wraps it). Global tools (client, HALO, mesh, edge, app graph, CLI,
-  tools explorer) are direct children. Per-space tools live under `root/debug/spaces/<spaceId>`:
-  a `spaces` branch whose children are one node per space (label = space name, data = the space),
-  and space-scoped tools (ECHO inspectors, **Generate objects**) attach to those via
-  `AppNodeMatcher.whenDebugSpace`. This is the structure the follow-up cleanup (§4) completes; the
-  first PR moves the existing trees wholesale.
+  `AppNodeMatcher.whenDebugGroup` wraps it). Every tool is a global node: there is no per-space
+  enumeration in the debug tree. A tool that inspects a space (ECHO inspectors, **Generate objects**)
+  resolves the **active workspace's** space at render time, as the devtools containers do today
+  through the client's spaces and the deck's active workspace.
 - The console and logs become the first two nodes of the tree (`root/debug/console`,
   `root/debug/logs`), each with an `article` surface; the title-bar tabs go.
 - Nothing under `root/debug` declares a URL binding. The devtools bindings added in #13087 and the
@@ -66,18 +64,19 @@ FloatingPanel
   existing title bar. The story renders the same composition without the floating window, with a
   `StubDevtoolsPlugin`-style extension contributing a few debug nodes so the tree is populated.
 
-### 4. Follow-up: root-vs-space attachment cleanup (phase 2)
+### 4. Follow-up: devtools attachment cleanup (phase 2)
 
-Today devtools matches `whenAny(whenRoot, whenNavTreeGroup(system))` and every page carries
-`space`-agnostic data even when it inspects a space. Phase 2 splits the tree as §1 describes:
-global pages under `root/debug`, space pages under `root/debug/spaces/<spaceId>` with the space as
-node data, and the duplicate root-matched copy removed. The `Devtools.*` id namespace and
-`DevtoolsSurfaces` stay; only the graph extension and the space-scoped containers' props change.
+Today devtools matches `whenAny(whenRoot, whenNavTreeGroup(system))`, so each page exists twice, and
+plugin-debug's generator carries the space in node data. Phase 2 makes `root/debug` the single
+attachment: the root-matched duplicate goes, and the space-scoped containers read the active
+workspace's space uniformly (one hook, no space in node data). The `Devtools.*` id namespace and
+`DevtoolsSurfaces` stay.
 
 ## Rejected
 
-- Per-space `debug` group (`root/<spaceId>/debug`): the panel is app-wide; it would need an
-  active-space rule and global tools would be duplicated per space.
+- Per-space `debug` group (`root/<spaceId>/debug`) or a `spaces/<spaceId>` branch: the panel is
+  app-wide and one tree; enumerating spaces duplicates global tools or forces a which-space rule
+  into the tree, when the active workspace already answers it.
 - plugin-debug depending on plugin-navtree for the model: shares the navtree's persisted open/current
   map (path keys collide) and makes "current" mean the deck's selection.
 - Keeping the console/logs tabs beside a "Tools" tab: two navigation systems in one window.

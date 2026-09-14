@@ -15,6 +15,5 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 
 ## Phase 2: devtools attachment cleanup
 
-- [ ] Split the devtools tree: global pages directly under `root/debug`; space pages under `root/debug/spaces/<spaceId>` with the space as node data (`AppNodeMatcher.whenDebugSpace`).
-- [ ] Remove the root-matched duplicate (`root/devtools/...`) and the `whenAny(whenRoot, …)` match.
-- [ ] Space-scoped containers take the space from node data rather than the active workspace.
+- [ ] `root/debug` is the single attachment: remove the root-matched duplicate (`root/devtools/...`) and the `whenAny(whenRoot, …)` match.
+- [ ] Space-scoped containers (ECHO inspectors, Generate objects) read the active workspace's space through one shared hook; no space in node data.
