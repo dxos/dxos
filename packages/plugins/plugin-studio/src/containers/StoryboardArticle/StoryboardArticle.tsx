@@ -11,7 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel, ScrollArea, Splitter, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -21,6 +21,8 @@ import { meta } from '#meta';
 import { Frame, MediaArtifact, Storyboard, type Variant } from '#types';
 
 import { FRAME_COMPANION } from '../../constants.ts';
+import { type PlayControl } from '../MediaArtifactArticle/MediaArtifactVariants.tsx';
+import { EmptyPanel } from './EmptyPanel.tsx';
 import { FrameThumbnail } from './FrameThumbnail.tsx';
 import { FrameVariants } from './FrameVariants.tsx';
 
@@ -171,17 +173,9 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   );
 
   // Play sits at the end of the main panel's toolbar, whichever content that panel shows.
-  const play = (
-    <>
-      <Toolbar.Separator variant='gap' />
-      <Toolbar.IconButton
-        icon='ph--play--regular'
-        iconOnly
-        label={t('play.label')}
-        disabled={clips.length === 0}
-        onClick={() => setPlaying(true)}
-      />
-    </>
+  const play = useMemo<PlayControl>(
+    () => ({ disabled: clips.length === 0, onPlay: () => setPlaying(true) }),
+    [clips.length],
   );
 
   return (
@@ -219,18 +213,9 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
         {playing ? (
           <StoryboardPlayer clips={clips} onClose={() => setPlaying(false)} />
         ) : selectedFrame ? (
-          <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId}>
-            {play}
-          </FrameVariants>
+          <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId} play={play} />
         ) : (
-          <Panel.Root>
-            <Panel.Toolbar asChild>
-              <ActionToolbar attendableId={attendableId}>{play}</ActionToolbar>
-            </Panel.Toolbar>
-            <Panel.Content>
-              <Empty classNames='h-full' label={t('storyboard-empty.message')} />
-            </Panel.Content>
-          </Panel.Root>
+          <EmptyPanel label={t('storyboard-empty.message')} attendableId={attendableId} play={play} />
         )}
       </Splitter.Panel>
     </Splitter.Root>

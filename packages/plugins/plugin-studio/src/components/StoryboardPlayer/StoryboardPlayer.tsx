@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { MediaPlayer, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -40,7 +40,7 @@ export const StoryboardPlayer = ({
   attendableId,
   onClose,
 }: StoryboardPlayerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const clip = clips[index];
   const isVideo = clip?.contentType?.startsWith('video/') ?? false;
@@ -120,12 +120,18 @@ export const StoryboardPlayer = ({
     [index, clips.length, clip?.name, advance, onClose],
   );
 
+  // Opening the player unmounts whatever control opened it, which drops focus to the body; take it
+  // back so the transport works from the keyboard and attention stays on the plank.
+  useEffect(() => {
+    rootRef.current?.querySelector<HTMLElement>('[role="toolbar"] button:not(:disabled)')?.focus();
+  }, []);
+
   if (!clip) {
     return null;
   }
 
   return (
-    <Panel.Root classNames={classNames}>
+    <Panel.Root classNames={classNames} ref={rootRef}>
       <Panel.Toolbar asChild>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>

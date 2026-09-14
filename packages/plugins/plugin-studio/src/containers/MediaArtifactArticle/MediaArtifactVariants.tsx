@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
@@ -15,12 +15,17 @@ import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
 import { type MediaArtifact } from '#types';
 
-export type MediaArtifactVariantsProps = ThemedClassName<
-  PropsWithChildren<{
-    artifact: MediaArtifact.MediaArtifact;
-    attendableId?: string;
-  }>
->;
+/** A host's Play control, appended to the toolbar when given (a storyboard playing its frames). */
+export type PlayControl = {
+  disabled?: boolean;
+  onPlay: () => void;
+};
+
+export type MediaArtifactVariantsProps = ThemedClassName<{
+  artifact: MediaArtifact.MediaArtifact;
+  attendableId?: string;
+  play?: PlayControl;
+}>;
 
 /** `'all'` gallery, or the index of a produced (frozen) variant. */
 type Selected = 'all' | number;
@@ -30,10 +35,9 @@ type Selected = 'all' | number;
  * produced variant, the gallery or the selected variant rendered through the variant surface, and
  * — for a produced variant — the cover toggle and delete. Opens on the cover; a variant that is
  * still generating shows as a spinner tab, and the newest variant is selected as it lands, so a
- * Generate in the form ends on its result. `children` land at the end of the toolbar — a host's
- * own controls (the storyboard's Play).
+ * Generate in the form ends on its result. A host's `play` becomes the toolbar's last action.
  */
-export const MediaArtifactVariants = ({ classNames, artifact, attendableId, children }: MediaArtifactVariantsProps) => {
+export const MediaArtifactVariants = ({ classNames, artifact, attendableId, play }: MediaArtifactVariantsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(artifact);
   const [artifactSnapshot] = useObject(artifact);
@@ -152,21 +156,26 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId, chil
         },
         () => {},
       );
-      // builder.action(
-      //   'delete-variant',
-      //   { label: ['delete-variant.label', { ns: meta.profile.key }], icon: 'ph--trash--regular' },
-      //   handleDeleteVariant,
-      // );
+    }
+    if (play) {
+      builder.action(
+        'play',
+        {
+          label: ['play.label', { ns: meta.profile.key }],
+          icon: 'ph--play--regular',
+          disposition: 'toolbar',
+          disabled: play.disabled,
+        },
+        play.onPlay,
+      );
     }
     return builder.build();
-  }, [selected, variants, selectedVariant, isCover, t, handleCoverChange, handleDeleteVariant]);
+  }, [selected, variants, selectedVariant, isCover, play, t, handleCoverChange]);
 
   return (
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
-        <ActionToolbar {...menuActions} attendableId={attendableId}>
-          {children}
-        </ActionToolbar>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
       <Panel.Content>
         {selected === 'all' ? (

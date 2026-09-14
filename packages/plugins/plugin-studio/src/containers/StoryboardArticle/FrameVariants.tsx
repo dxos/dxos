@@ -2,47 +2,33 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React from 'react';
 
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { Panel, useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
-import { ActionToolbar } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { type Frame } from '#types';
 
-import { MediaArtifactVariants } from '../MediaArtifactArticle/MediaArtifactVariants.tsx';
+import { MediaArtifactVariants, type PlayControl } from '../MediaArtifactArticle/MediaArtifactVariants.tsx';
+import { EmptyPanel } from './EmptyPanel.tsx';
 
-export type FrameVariantsProps = PropsWithChildren<{
+export type FrameVariantsProps = {
   frame: Frame.Frame;
   attendableId?: string;
-}>;
+  play?: PlayControl;
+};
 
-/** The selected frame's produced variants — the storyboard's main pane; `children` end its toolbar. */
-export const FrameVariants = ({ children, frame, attendableId }: FrameVariantsProps) => {
+/** The selected frame's produced variants — the storyboard's main pane, with Play in its toolbar. */
+export const FrameVariants = ({ frame, attendableId, play }: FrameVariantsProps) => {
   const { t } = useTranslation(meta.profile.key);
   // The snapshot re-renders this on frame changes; the ref is read live so the artifact is the live object.
   const [snapshot] = useObject(frame);
   const artifact = useResolveRef(snapshot ? frame.artifact : undefined);
   if (!artifact) {
-    return (
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <ActionToolbar attendableId={attendableId}>{children}</ActionToolbar>
-        </Panel.Toolbar>
-        <Panel.Content>
-          <Empty classNames='h-full' label={t('frame-empty.message')} />
-        </Panel.Content>
-      </Panel.Root>
-    );
+    return <EmptyPanel label={t('frame-empty.message')} attendableId={attendableId} play={play} />;
   }
-
-  return (
-    <MediaArtifactVariants artifact={artifact} attendableId={attendableId}>
-      {children}
-    </MediaArtifactVariants>
-  );
+  return <MediaArtifactVariants artifact={artifact} attendableId={attendableId} play={play} />;
 };
 
 FrameVariants.displayName = 'FrameVariants';
