@@ -35,11 +35,23 @@ export type ContentBlock =
   | { type: 'tool_use'; id: string; name: string; input: unknown }
   | { type: 'tool_result'; tool_use_id: string; content: unknown; is_error?: boolean };
 
+/** Token counts on an `assistant` event's message, as the Anthropic Messages API reports them. */
+export type MessageUsage = {
+  input_tokens?: number;
+  output_tokens?: number;
+  cache_read_input_tokens?: number;
+  cache_creation_input_tokens?: number;
+};
+
 /** One line of `claude --print --output-format stream-json` output. */
 export type StreamEvent =
   | { type: 'system'; subtype?: string; [key: string]: unknown }
   | { type: 'user'; message: { role: 'user'; content: ContentBlock[] }; [key: string]: unknown }
-  | { type: 'assistant'; message: { role: 'assistant'; content: ContentBlock[] }; [key: string]: unknown }
+  | {
+      type: 'assistant';
+      message: { role: 'assistant'; content: ContentBlock[]; model?: string; usage?: MessageUsage };
+      [key: string]: unknown;
+    }
   | { type: 'result'; result?: string; is_error?: boolean; [key: string]: unknown };
 
 /** True when `value` is a parsed stream-json line, i.e. carries the `type` tag every event has. */
