@@ -15,7 +15,7 @@ import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx, SchemaAST } from '@dxos/effect';
@@ -41,6 +41,9 @@ export type EdgeFunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
+  // The cross-space counterpart to `Database.Service`, for an operation that must find its own
+  // space rather than be told it.
+  | Hypergraph.Service
   | Trace.TraceService
   | Operation.Service
   | Registry.Service
@@ -246,6 +249,9 @@ export class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
+    // The graph alongside the one space's database, because declaring `Database.Service` is what
+    // marks an operation as acting on a named space and work fired by a hook cannot name one.
+    const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
     // A function context has no identity to sign a presentation with, so managed tokens resolve
     // through the space-bound EDGE binding rather than the HTTP endpoint the client uses.
     const accessTokenResolver = this.context.services.accessTokenService
@@ -277,12 +283,15 @@ export class FunctionContext extends Resource {
       types: this.opts.types?.length ?? 0,
     });
 
-    const registryLayer = this.db
-      ? Layer.succeed(Registry.Service, this.db.graph.registry)
+    // The client's graph rather than the database's (they are the same graph), so the registry
+    // reached through `Hypergraph.Service` and `Registry.Service` is one object even with no space.
+    const registryLayer = this.client
+      ? Layer.succeed(Registry.Service, this.client.graph.registry)
       : Layer.succeed(Registry.Service, makeRegistry());
 
     return Layer.mergeAll(
       dbLayer,
+      hypergraphLayer,
       credentials,
       operationServiceLayer,
       aiLayer,
