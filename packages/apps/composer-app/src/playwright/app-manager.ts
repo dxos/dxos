@@ -28,6 +28,10 @@ const REGISTRY_WORKSPACE = 'dxos:registry';
 // `UrlPath.WORKSPACE_KEY` — the pair-chain anchor segment, restated for the same reason.
 const WORKSPACE_KEY = 'w';
 
+// localStorage prefix of the navtree's `navtree-open` view-state aspect, restated for the same reason;
+// the key's suffix is the tree path joined with `+`.
+const NAVTREE_OPEN_STORAGE_PREFIX = 'dxos:view-state:navtree-open:';
+
 /** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
 const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
 
@@ -92,6 +96,29 @@ export class AppManager {
     const authenticated = await this.isAuthenticated({ timeout: 30_000 });
     expect(authenticated, 'app did not boot: treeView.userAccount never appeared').toBe(true);
 
+    // Boot's last write is onboarding's Expose of the default space's Home, scheduled after the
+    // SwitchWorkspace and Set that land there; on a new identity only it persists that path as open.
+    await this.page
+      .waitForFunction(
+        ({ anchorKey, storagePrefix }) => {
+          const [anchor, workspaceId, ...rest] = window.location.pathname.split('/').filter(Boolean);
+          if (anchor !== anchorKey || rest.join('/') !== 'home') {
+            return false;
+          }
+          const home = `root/${workspaceId}/home`;
+          const plank = document.querySelector('[data-testid="deck.plank"]');
+          const exposed = window.localStorage.getItem(`${storagePrefix}root+root/${workspaceId}+${home}`);
+          return plank?.getAttribute('data-attendable-id') === home && exposed === '{"open":true}';
+        },
+        { anchorKey: WORKSPACE_KEY, storagePrefix: NAVTREE_OPEN_STORAGE_PREFIX },
+        { timeout: 30_000 },
+      )
+      .catch((err: Error) => {
+        throw new Error(`boot did not settle on an exposed default-space Home (at ${this.page.url()})`, {
+          cause: err,
+        });
+      });
+
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
     this.deck = new DeckManager(this.page);
@@ -130,13 +157,20 @@ export class AppManager {
     return this.page.getByTestId('navtree.workspace.visible');
   }
 
-  async openUserAccount(): Promise<void> {
-    await this.page.getByTestId('clientPlugin.account').click();
+  get workspaceId(): string | undefined {
+    const [anchor, workspace] = new URL(this.page.url()).pathname.split('/').filter(Boolean);
+    return anchor === WORKSPACE_KEY ? workspace : undefined;
   }
 
-  async openUserDevices(): Promise<void> {
-    await this.openUserAccount();
+  async openUserAccount(timeout = 30_000): Promise<void> {
+    await this.page.getByTestId('clientPlugin.account').click();
+    await this.page.getByTestId('clientPlugin.devices').waitFor({ state: 'visible', timeout });
+  }
+
+  async openUserDevices(timeout = 30_000): Promise<void> {
+    await this.openUserAccount(timeout);
     await this.page.getByTestId('clientPlugin.devices').click();
+    await this.page.getByTestId('devicesContainer.logout').waitFor({ state: 'visible', timeout });
   }
 
   async createDeviceInvitation(): Promise<string> {
@@ -175,18 +209,15 @@ export class AppManager {
     });
   }
 
-  async shareSpace(): Promise<void> {
-    // Members is nested under the Settings section, so scope the generic `treeItem.heading` testid
-    // to the members row and expand Settings first when that heading is not showing yet.
-    const membersHeading = this.currentWorkspace
-      .getByTestId('spacePlugin.members')
-      .first()
-      .getByTestId('treeItem.heading')
-      .first();
-    if (!(await membersHeading.isVisible())) {
-      await this.expandSection('spacePlugin.settings');
-    }
-    await membersHeading.click();
+  async shareSpace(timeout = 15_000): Promise<void> {
+    await this.#openSpaceSettingsPage('spacePlugin.members', timeout);
+  }
+
+  async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
+    await this.expandSection('spacePlugin.settings', timeout);
+    const heading = this.currentWorkspace.getByTestId(testId).first().getByTestId('treeItem.heading').first();
+    await expect(heading).toBeVisible({ timeout });
+    await heading.click({ timeout });
   }
 
   async createSpaceInvitation(): Promise<string> {
@@ -208,7 +239,27 @@ export class AppManager {
   //
 
   async toastAction(nth = 0): Promise<void> {
-    await this.page.getByTestId('toast.action').nth(nth).click();
+    const action = this.page.getByTestId('toast.action').nth(nth);
+    const root = action.locator('xpath=ancestor::*[@data-scope="toast" and @data-part="root"][1]');
+    const toastId = await root.getAttribute('data-testid');
+    if (!toastId) {
+      throw new Error('toast root has no data-testid');
+    }
+    // A toast mounts below the viewport and slides in; a press that lands mid-slide releases off the
+    // button and the click never fires. Hovering first also pauses the auto-dismiss timer.
+    await expect(root).toHaveAttribute('data-mounted');
+    await action.hover();
+    await root.evaluate(async (element) => {
+      while (element.getAnimations().some((animation) => animation.playState === 'running')) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+    });
+    await action.click();
+    // A delivered click closes the toast at once, ahead of its exit animation, and may unmount it; its
+    // own timer is paused by the hover. Addressed by id: the action it was found through goes first.
+    await expect(this.page.locator(`[data-testid="${toastId}"]:not([data-state="closed"])`)).toHaveCount(0, {
+      timeout: 2_000,
+    });
   }
 
   async closeToast(nth = 0): Promise<void> {
@@ -220,8 +271,7 @@ export class AppManager {
   //
 
   async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
-    // `init()` only waits for `treeView.userAccount`, so the space list is still empty for a moment
-    // after boot and a baseline taken there undercounts.
+    // The baseline counts rendered rail rows, so it is taken once one exists.
     await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
     const initialCount = await this.getSpaceItems().count();
 
@@ -238,6 +288,7 @@ export class AppManager {
   /** Opens the add-space dialog, submits it, and waits for it to close. */
   async #submitCreateSpaceForm(): Promise<void> {
     const dialog = this.page.getByTestId('create-space-dialog');
+    // Opened once, because `init()` waits out the boot writes that could detach the menu mid-click.
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
     await expect(dialog).toBeVisible({ timeout: 15_000 });
@@ -309,27 +360,21 @@ export class AppManager {
    * Opens the General settings panel (SpaceSettingsContainer) for the currently active space,
    * expanding the Settings section first if necessary.
    */
-  async openSpaceSettings(): Promise<void> {
-    const generalHeading = this.currentWorkspace
-      .getByTestId('spacePlugin.general')
-      .first()
-      .getByTestId('treeItem.heading')
-      .first();
-    if (!(await generalHeading.isVisible())) {
-      await this.expandSection('spacePlugin.settings');
-    }
-    await generalHeading.click();
+  async openSpaceSettings(timeout = 15_000): Promise<void> {
+    await this.#openSpaceSettingsPage('spacePlugin.general', timeout);
   }
 
   /**
    * Deletes the space at the given index (default: the first non-default space) via its
    * settings danger zone, including the confirmation step.
    */
-  async deleteSpace(nth = 1): Promise<void> {
-    // Select the space so its Settings section is available in the navtree.
-    await this.getSpaceItems().nth(nth).click();
-    await this.openSpaceSettings();
-    await this.page.getByTestId('spaceSettings.deleteSpace').click();
+  async deleteSpace(nth = 1, timeout = 30_000): Promise<void> {
+    const space = this.getSpaceItems().nth(nth);
+    // Clicked once. A row left unselected after a reload is an app defect, and the assertion below reports it.
+    await space.click();
+    await expect(space).toHaveAttribute('aria-selected', 'true', { timeout });
+    await this.openSpaceSettings(timeout);
+    await this.page.getByTestId('spaceSettings.deleteSpace').click({ timeout });
     await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
   }
 
@@ -349,6 +394,9 @@ export class AppManager {
   /** Discloses a row's children, leaving an already-open row alone. */
   async #expandRow(row: Locator, timeout: number): Promise<void> {
     const toggle = row.getByTestId('treeItem.toggle').first();
+    // Read the state only once the toggle exists: `getAttribute` on a detached element answers
+    // `null`, which is indistinguishable from "collapsed" and would click an open row shut.
+    await expect(toggle).toBeAttached({ timeout });
     if ((await toggle.getAttribute('aria-expanded')) === 'true') {
       return;
     }
@@ -358,6 +406,8 @@ export class AppManager {
     await row.hover();
     await expect(toggle).toBeEnabled({ timeout });
     await toggle.click();
+    // An open commits through the model at once, so an expand that did not take fails here.
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true', { timeout });
   }
 
   async expandCollection(nth = 0, timeout = 15_000): Promise<void> {
@@ -388,17 +438,26 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
-    // Waited for, not sampled: `isVisible()` answers immediately, so a form that has not painted
-    // yet reads as absent and this returns with the dialog still open, stranding the next caller.
-    // Types that create without a form legitimately never show one, hence the bounded wait.
-    const objectForm = this.page.getByTestId('create-object-form');
-    const hasForm = await objectForm
-      .waitFor({ state: 'visible', timeout: 5_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (!hasForm) {
+    // Waits for an outcome rather than timing out into one: a type either shows its form or closes
+    // the dialog, and a page stalled past a short bound would otherwise read as "no form" and leave
+    // the modal open over the next step. Closed content can stay mounted, so only open content counts.
+    const outcome = await this.page.waitForFunction(
+      () => {
+        if (document.querySelector('[data-testid="create-object-form"]')) {
+          return 'form';
+        }
+        return document.querySelector('[data-scope="dialog"][data-part="content"][data-state="open"]')
+          ? undefined
+          : 'closed';
+      },
+      undefined,
+      { timeout: 30_000 },
+    );
+    if ((await outcome.jsonValue()) === 'closed') {
       return;
     }
+
+    const objectForm = this.page.getByTestId('create-object-form');
 
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
@@ -453,17 +512,65 @@ export class AppManager {
     return this.currentWorkspace.getByTestId('spacePlugin.object');
   }
 
-  async dragTo(active: Locator, over: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }): Promise<void> {
-    const box = await over.boundingBox();
-    if (box) {
-      await active.hover();
-      await this.page.mouse.down();
-      // Timeouts are for input discretization in WebKit
-      await this.page.waitForTimeout(100);
-      await this.page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
-      await this.page.waitForTimeout(100);
-      await this.page.mouse.up();
+  /**
+   * Drags `active` onto `over` and releases only once `over` reports `instruction` as its drop zone.
+   * The dragged row leaves the list when the drag starts, so rows below it move up: the target is
+   * measured after that, not before.
+   */
+  async dragTo(
+    active: Locator,
+    over: Locator,
+    { instruction, offset = { x: 0, y: 0 } }: { instruction: string; offset?: { x: number; y: number } },
+  ): Promise<void> {
+    const start = await active.boundingBox();
+    const initial = await over.boundingBox();
+    if (!start || !initial) {
+      throw new Error('drag source or target has no layout box');
     }
+    const startX = start.x + start.width / 2;
+    const startY = start.y + start.height / 2;
+    await active.hover();
+    await this.page.mouse.down();
+    // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
+    // it leaves the pointer over the row that slides into the dragged row's place.
+    await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
+    await expect(active).toBeHidden();
+
+    const box = await over.boundingBox();
+    if (!box) {
+      throw new Error('drop target has no layout box');
+    }
+    const x = offset.x + box.x + box.width / 2;
+    const y = offset.y + box.y + box.height / 2;
+    await this.page.mouse.move(x, y, { steps: 4 });
+    try {
+      // Chromium drops a dragover sent while the previous one is still unacknowledged, so the last
+      // position can go unseen: keep hovering inside the zone until the target reports it.
+      let nudge = 0;
+      await expect
+        .poll(async () => {
+          nudge = nudge === 0 ? 1 : 0;
+          await this.page.mouse.move(x, y + nudge);
+          return over.getAttribute('data-instruction');
+        })
+        .toBe(instruction);
+    } catch (err) {
+      const rows = await this.page.evaluate(
+        ({ x, y }) => ({
+          underPointer: document.elementFromPoint(x, y)?.closest('[data-path]')?.getAttribute('data-path') ?? null,
+          rows: [...document.querySelectorAll('[data-testid="spacePlugin.object"]')].map((row) => ({
+            path: row.getAttribute('data-path'),
+            instruction: row.getAttribute('data-instruction'),
+            hidden: row.classList.contains('hidden'),
+            top: Math.round(row.getBoundingClientRect().top),
+            height: Math.round(row.getBoundingClientRect().height),
+          })),
+        }),
+        { x, y },
+      );
+      throw new Error(`no ${instruction} drop zone at (${x}, ${y}): ${JSON.stringify(rows)}`, { cause: err });
+    }
+    await this.page.mouse.up();
   }
 
   //
