@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -13,21 +13,20 @@ import { useAttendedData } from './useAttendedData.ts';
 
 const NO_STEPS: Tour.Step[] = [];
 
-/** Tours that apply to `data`; `undefined` selects the global tours. */
 export const useTours = (data?: unknown): readonly Tour.Definition[] => {
   const tours = useCapabilities(AppCapabilities.Tour);
   return useMemo(() => Tour.matching(tours, data), [tours, data]);
 };
 
-/**
- * Steps for the running tour: its own plus every fragment matching what is on screen, in position
- * order. Pass the id only while the tour is running, so composition happens in the render that starts
- * it rather than at boot, where nothing is attended yet.
- */
 export const useTourSteps = (tourId: string | undefined): readonly Tour.Step[] => {
   const tours = useCapabilities(AppCapabilities.Tour);
   const fragments = useCapabilities(AppCapabilities.TourFragment);
   const data = useAttendedData();
+  const [start, setStart] = useState<{ tourId?: string; subject: unknown }>({ subject: undefined });
+  if (start.tourId !== tourId) {
+    setStart({ tourId, subject: data });
+  }
+  const subject = start.tourId === tourId ? start.subject : data;
 
   return useMemo(() => {
     if (!tourId) {
@@ -40,14 +39,11 @@ export const useTourSteps = (tourId: string | undefined): readonly Tour.Step[] =
       return NO_STEPS;
     }
 
-    const steps = Tour.composeSteps(tour, fragments, data);
+    const steps = Tour.composeSteps(tour, fragments, subject);
     if (steps.length === 0) {
       log.warn('tour has no steps', { tourId });
     }
 
     return steps;
-    // The subject is read when the tour starts and deliberately not tracked: a step's `before` hook
-    // moves the page about, and recomposing mid-tour would swap the machine's steps under the reader.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tourId, tours, fragments]);
+  }, [tourId, tours, fragments, subject]);
 };

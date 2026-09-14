@@ -9,7 +9,6 @@ import { Obj, Type } from '@dxos/echo';
 import type { TourStepPlacement } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
-// eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations from '../app/Translations.ts';
 
 /**
@@ -75,10 +74,6 @@ export const whenTypes = (types: readonly Type.AnyEntity[]): Matcher => {
 
 /**
  * The steps a tour runs for `data`: its own, plus every fragment accepting the same subject.
- *
- * Synchronous, because a registration already sits behind its plugin's lazy module and costs nothing
- * until that module loads. Resolving steps in a later tick than the one that starts a tour is what
- * lets the machine open on the wrong set.
  */
 export const composeSteps = (definition: Definition, fragments: readonly Fragment[], data?: unknown): readonly Step[] =>
   [{ position: definition.position, steps: definition.steps }, ...fragments.filter((f) => f.matches(data))]

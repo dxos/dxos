@@ -72,7 +72,6 @@ export const Transcriber = Capability.lazyModule(
 export const TranscriptionSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [TranscriptionCapabilities.Settings],
 });
-// Lazy: schemas in the plugin definition's static closure drag their barrels onto the boot path.
 export const TourFragment = Capability.lazyModule(
   'TourFragment',
   { provides: [AppCapabilities.TourFragment], environments: [] },

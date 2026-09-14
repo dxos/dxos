@@ -4,14 +4,12 @@
 
 import type * as Tour from '@dxos/app-toolkit/Tour';
 
-/** Puts the article in the tab a step is about before it shows. */
 const showTab =
   (tab: 'overview' | 'tasks'): Tour.Step['before'] =>
   () => {
     document.querySelector<HTMLElement>(`[data-testid="projectsPlugin.tab.${tab}"]`)?.click();
   };
 
-/** Walks what a project is made of, switching tabs as it goes. */
 export const steps: Tour.Step[] = [
   {
     before: showTab('overview'),

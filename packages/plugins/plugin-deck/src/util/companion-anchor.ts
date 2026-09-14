@@ -31,7 +31,6 @@ export const isCompanionOpen = (
   flatten: boolean | undefined,
   plankId: string | undefined,
 ): boolean =>
-  // Absent is "not decided", which reads as open so a workspace starts with the pane up.
   companionPlanks === undefined ||
   (flatten ? companionPlanks.length > 0 : !!plankId && companionPlanks.includes(plankId));
 
@@ -57,7 +56,6 @@ export const closeCompanionPlank = (
   companionPlanks: readonly string[] | undefined,
   flatten: boolean | undefined,
   plankId: string | undefined,
-  /** Every plank the deck currently lays out, so closing an undecided companion closes all of them. */
   rendered: readonly string[] = [],
 ): string[] => (flatten ? [] : (companionPlanks ?? rendered).filter((id) => id !== plankId));
 

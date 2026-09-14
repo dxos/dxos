@@ -4,8 +4,6 @@
 
 import type * as Tour from '@dxos/app-toolkit/Tour';
 
-// Targets the control's own testid: the graph action is a `custom` variant that renders its own
-// element, so a `testId` on the action's properties never reaches the DOM.
 export const steps: Tour.Step[] = [
   {
     target: '[data-testid="transcription.record"]',

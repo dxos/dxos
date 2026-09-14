@@ -15,10 +15,6 @@ const WELCOME_SLIDE = {
   description: 'Welcome to DXOS',
 };
 
-/**
- * Help companion for a space's Home: what Composer is, a showcase of the installed plugins, and the
- * guided tour.
- */
 export const SupportHomeCompanion = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
@@ -46,10 +42,6 @@ export const SupportHomeCompanion = () => {
   );
 };
 
-/**
- * Memoized (no props) so the pane's ongoing re-renders never re-create the cross-origin Cloudflare
- * Stream iframe the carousel hosts — that remount froze the UI.
- */
 const WelcomePanel = memo(() => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
@@ -67,7 +59,6 @@ const WelcomePanel = memo(() => {
         result.push({
           key: `${plugin.meta.profile.key}:${index}`,
           src,
-          // Use the short plugin name — meta.description can be multi-kB and stalls caption/layout.
           description: plugin.meta.profile.name ?? plugin.meta.profile.key,
         });
       }

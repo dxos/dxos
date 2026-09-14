@@ -56,7 +56,6 @@ export const Templates = Capability.lazyModule(
   () => import('./templates.ts'),
 );
 
-// Lazy: a schema in the plugin definition's static closure drags its barrel onto the boot path.
 export const ProjectTour = Capability.lazyModule(
   'ProjectTour',
   { provides: [AppCapabilities.Tour], environments: [] },

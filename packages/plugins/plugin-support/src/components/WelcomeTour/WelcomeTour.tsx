@@ -26,7 +26,6 @@ import { TourContext } from './TourContext.ts';
 const resolveTarget = (target: Tour.Step['target']) =>
   typeof target === 'string' ? () => document.querySelector<HTMLElement>(target) : target;
 
-/** `before` becomes the machine's step effect, so the target is resolved after it settles. */
 const toStep = (
   step: Tour.Step,
   index: number,
@@ -55,7 +54,6 @@ export type WelcomeTourProps = {
   onRunningChanged?: (state: boolean) => any;
 };
 
-/** Pauses while a dialog is open, resuming at the same step, and ends when a target never appears. */
 export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: WelcomeTourProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
@@ -112,7 +110,6 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   });
 
   // The machine takes its steps once, at creation, so a later set must be pushed in through the api.
-  // Must precede the start effect below.
   useEffect(() => {
     tour.setSteps([...tourSteps]);
   }, [tourSteps]);

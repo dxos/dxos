@@ -10,10 +10,6 @@ import { Obj } from '@dxos/echo';
 
 import { steps } from '../tours/index.ts';
 
-/**
- * Adds a comments step to any tour running on an object that can carry comments, matched against the
- * live comment-config registry so the step is present exactly when the button it points at is.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;

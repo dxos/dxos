@@ -45,7 +45,6 @@ describe('getCompanionSelection', () => {
   });
 
   test('mobile reads the drawer rather than the plank companion bookkeeping', ({ expect }) => {
-    // The drawer never populates `companionPlanks`; an explicit empty list is the desktop's "closed".
     const state = makeState({
       complementarySidebarState: 'collapsed',
       complementarySidebarPanel: 'assistant-chat',

@@ -36,7 +36,6 @@ const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.pro
 const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.profile.key }];
 const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.profile.key }];
 
-/** The "Help" tab beside a plank: the owning plugin's description for an object, the app's for a Home. */
 const makeHelpCompanion = () =>
   AppNode.makeCompanion({
     variant: 'help',
@@ -53,7 +52,6 @@ export default Capability.makeModule(
     // modules contribute individually, not batched per wave).
     const settingsCapabilityAtom = yield* Capability.atom(SupportCapabilities.Settings);
 
-    /** Whether the reader keeps the help panels; they are on until the setting turns them off. */
     const showHelpCompanions = (get: Atom.AtomContext): boolean => {
       const [settingsAtom] = get(settingsCapabilityAtom);
       return !settingsAtom || !get(settingsAtom).hideHelpCompanions;
@@ -111,9 +109,6 @@ export default Capability.makeModule(
         connector: (_object, get) => Effect.succeed(showHelpCompanions(get) ? [makeHelpCompanion()] : []),
       }),
 
-      // The same panel on a space's Home, where it introduces the app rather than a type (surface
-      // `homeHelpCompanion`). Home is what a fresh profile opens on, so this is the first help the
-      // reader sees.
       AppGraphBuilder.createExtension({
         id: 'homeHelpCompanion',
         match: (node) =>

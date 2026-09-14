@@ -17,10 +17,6 @@ import { meta } from '#meta';
 
 import { DICTATABLE_TYPES } from '../dictatable.ts';
 
-/**
- * One matcher rather than one extension per host, so a new surface is a typename in
- * {@link DICTATABLE_TYPES} and the hosts stay unaware that transcription exists.
- */
 const whenDictatable = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObjectMatches,
   GraphNodeMatcher.whenAny(...DICTATABLE_TYPES.map((type) => AppNodeMatcher.whenEchoTypeMatches(type))),

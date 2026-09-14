@@ -49,7 +49,6 @@ export const MarkdownState = Capability.lazyModule(
   () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
-// Lazy: a schema in the plugin definition's static closure drags its barrel onto the boot path.
 export const DocumentTour = Capability.lazyModule(
   'DocumentTour',
   { provides: [AppCapabilities.Tour], environments: [] },

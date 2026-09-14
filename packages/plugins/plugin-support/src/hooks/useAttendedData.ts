@@ -9,7 +9,6 @@ import { useMemo } from 'react';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useAttended } from '@dxos/react-ui-attention';
 
-/** The attended node's `data`: the subject a tour matcher is asked about. */
 export const useAttendedData = (): unknown => {
   const { graph } = useAppGraph();
   const attended = useAttended();

@@ -11,7 +11,6 @@ import * as Tour from '@dxos/app-toolkit/Tour';
 import { useAttendedData, useAutoToursEnabled } from '#hooks';
 import { HelpCapabilities, HelpOperation } from '#types';
 
-/** Runs a matching `auto` tour the first time the user attends something it applies to. */
 export const TourAutoStart = () => {
   const enabled = useAutoToursEnabled();
   const tours = useCapabilities(AppCapabilities.Tour);

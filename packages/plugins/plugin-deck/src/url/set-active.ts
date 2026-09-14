@@ -40,8 +40,6 @@ const carryCompanions = (
   next: readonly string[],
   flatten: boolean | undefined,
 ): string[] | undefined => {
-  // Undecided is carried, never settled here: only the reader opening or closing the pane decides,
-  // and navigation is not that.
   if (companionPlanks === undefined) {
     return undefined;
   }

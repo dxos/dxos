@@ -73,10 +73,6 @@ export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigat
   return toAttend;
 });
 
-/**
- * Whether two plank lists hold the same ids in the same order. Two absent lists are the same, which
- * is what keeps an undecided companion from being rewritten on every projection.
- */
 const sameList = (a: readonly string[] | undefined, b: readonly string[] | undefined): boolean =>
   a === undefined || b === undefined ? a === b : a.length === b.length && a.every((id, index) => id === b[index]);
 
@@ -132,9 +128,6 @@ export const applyCompanion = Effect.fnUntraced(function* (target: CompanionTarg
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
   if (!target) {
-    // An undecided companion is left alone: every URL lacks a pair until something opens one, so
-    // treating absence as a close here would settle the default to closed on the first projection.
-    // The reader's own close writes the empty list, and this then only prunes it.
     if (deck.companionPlanks === undefined) {
       return;
     }

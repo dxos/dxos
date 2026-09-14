@@ -40,7 +40,6 @@ export const addFormatting =
             type,
             {
               label: [`formatting.${type}.label`, { ns: translationKey }],
-              // On the action, not the group: a toggle group renders no element of its own.
               testId: `editor.toolbar.${type}`,
               checked,
               icon,

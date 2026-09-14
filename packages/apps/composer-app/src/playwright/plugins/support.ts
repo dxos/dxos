@@ -4,7 +4,6 @@
 
 import { type Page } from '@playwright/test';
 
-/** The guided-tour card, and the two controls that start a tour: Home's help companion and an object's. */
 export const Support = {
   card: (page: Page) => page.getByTestId('helpPlugin.tooltip'),
   title: (page: Page) => page.getByTestId('helpPlugin.tooltip.title'),
@@ -23,11 +22,6 @@ export const Support = {
     await page.getByTestId('supportPlugin.startTour').click();
   },
 
-  /**
-   * Waits for the controls the contributed steps point at. A fragment's steps are only in the tour once
-   * its plugin has activated, so starting before the editor toolbar has both controls composes a
-   * shorter tour than the one under test.
-   */
   awaitFragments: async (page: Page) => {
     await page.getByTestId('comments.comment.add').first().waitFor({ state: 'visible' });
     await page.getByTestId('transcription.record').first().waitFor({ state: 'visible' });

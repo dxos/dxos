@@ -70,8 +70,6 @@ export default Capability.makeModule(() =>
         component: SupportCompanion,
         props: ({ data: { companionTo } }) => ({ companionTo }),
       }),
-      // Help companion for a space's Home, which is not an ECHO object and so has no owning plugin
-      // to describe: it introduces the app itself and starts the tour.
       Surface.create({
         id: 'homeHelpCompanion',
         filter: AppSurface.allOf(

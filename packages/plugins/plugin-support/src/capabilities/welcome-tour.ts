@@ -13,14 +13,6 @@ import { meta } from '#meta';
 
 import { WELCOME_TOUR_ID } from '../constants.ts';
 
-/**
- * Registers the host app's walkthrough as an ordinary global-trigger tour, so it and a type's tour
- * run through one mechanism.
- *
- * The app passes a loader rather than an array because its plugin definitions are eager; it is
- * awaited here, once, so the capability only ever holds steps. A loader that fails costs the welcome
- * tour rather than this module, which other tours are registered through.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* (helpSteps?: () => Promise<Tour.Step[]>) {
     if (!helpSteps) {

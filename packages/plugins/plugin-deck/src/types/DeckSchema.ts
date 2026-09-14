@@ -52,15 +52,6 @@ export const StoredDeck = Schema.Struct({
    * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
    */
   plankSizing: Schema.mutableKey(PlankSizing),
-  /**
-   * Planks showing their companion, by id, or absent where the reader has not decided yet — which
-   * reads as open, so a workspace starts with the pane up. The first plank makes it concrete, and
-   * from then on it is only what the reader left: closing writes an empty list, which stays closed.
-   *
-   * Per plank while the deck slides, so moving between planks restores what each was left in. Under
-   * `flatten` only one plank is laid out at a time and the flag is read deck-wide instead
-   * (`isCompanionOpen`).
-   */
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
    * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave

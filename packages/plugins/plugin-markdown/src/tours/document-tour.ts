@@ -4,7 +4,6 @@
 
 import type * as Tour from '@dxos/app-toolkit/Tour';
 
-/** Walks the editor's toolbar controls. */
 export const steps: Tour.Step[] = [
   {
     target: '[data-testid="editor.toolbar.strong"]',

@@ -15,8 +15,6 @@ export type TourContextType = {
   stop: () => void;
 };
 
-// Not under `types/`: that barrel is reachable from the node capabilities, and `createContext` would
-// pull React into a headless bundle.
 export const TourContext: ReactContext<TourContextType> = createContext<TourContextType>({
   running: false,
   steps: [],
