@@ -5,13 +5,13 @@
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { Duplex } from 'node:stream';
 
-import { Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { Event, Trigger, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { TimeoutError } from '@dxos/protocols';
+import { ProtocolError, TimeoutError } from '@dxos/protocols';
 import {
   type ConnectionInfo_StreamStats,
   ConnectionInfo_StreamStatsSchema,
@@ -53,11 +53,6 @@ const MAX_SAFE_FRAME_SIZE = 1_000_000;
 const SYSTEM_CHANNEL_ID = 0;
 const GRACEFUL_CLOSE_TIMEOUT = 3_000;
 
-/** Backoff for resending an OpenChannel command the remote has not yet acted on. */
-const OPEN_CHANNEL_RESEND_DELAY = 5_000;
-const OPEN_CHANNEL_RESEND_MAX_DELAY = 8_000;
-const OPEN_CHANNEL_RESEND_ATTEMPTS = 6;
-
 type Channel = {
   /**
    * Our local channel ID.
@@ -71,11 +66,6 @@ type Channel = {
    * The originating Data commands should carry this id.
    */
   remoteId: null | number;
-
-  /**
-   * Set once the remote sends data addressed to our id, which it can only do after receiving our OpenChannel command.
-   */
-  remoteKnowsId: boolean;
 
   /**
    * Set by the first OpenChannel from the remote, which flushes the send buffer; later ones are ignored.
@@ -203,7 +193,6 @@ export class Muxer {
     try {
       await this._sendOpenChannel(channel);
       log('openChannel sent', { tag: channel.tag, id: channel.id });
-      this._scheduleOpenChannelResend(channel);
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -256,7 +245,6 @@ export class Muxer {
     try {
       await this._sendOpenChannel(channel);
       log('openChannel sent', { tag: channel.tag, id: channel.id });
-      this._scheduleOpenChannelResend(channel);
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -375,7 +363,7 @@ export class Muxer {
       });
       const remoteId = cmd.payload.value.id;
       log('openChannel received', { tag: channel.tag, id: channel.id, remoteId, buffered: channel.buffer.length });
-      // The remote resends OpenChannel until it sees data; only the first hands the buffer over.
+      // Only the first OpenChannel hands the buffer over; sending it again would duplicate every buffered frame.
       if (channel.remoteOpened) {
         return;
       }
@@ -403,9 +391,16 @@ export class Muxer {
       }
     } else if (cmd.payload.case === 'data') {
       const stream = this._channelsByLocalId.get(cmd.payload.value.channelId) ?? failUndefined();
-      stream.remoteKnowsId = true;
       if (!stream.push) {
         log.warn('Received data for channel before it was opened', { tag: stream.tag });
+        return;
+      }
+      // The remote's OpenChannel goes out ahead of its data on the channel, so data first means that frame was lost.
+      if (!stream.remoteOpened) {
+        if (!this._destroying) {
+          log.warn('data arrived before the remote opened the channel', { tag: stream.tag });
+          await this.destroy(new ProtocolError({ message: `Data on ${stream.tag} arrived before its OpenChannel.` }));
+        }
         return;
       }
       stream.push(cmd.payload.value.data);
@@ -421,32 +416,6 @@ export class Muxer {
         },
       }),
       SYSTEM_CHANNEL_ID,
-    );
-  }
-
-  /**
-   * Resends a channel's OpenChannel command until the remote sends data on the channel. Until it has our id the
-   * remote buffers everything it writes to the channel, so one lost command would stall the channel for good;
-   * receiving it again is harmless.
-   */
-  private _scheduleOpenChannelResend(channel: Channel, attempt = 1, delay = OPEN_CHANNEL_RESEND_DELAY): void {
-    scheduleTask(
-      this._ctx,
-      async () => {
-        if (channel.remoteKnowsId || this._channelsByLocalId.get(channel.id) !== channel) {
-          return;
-        }
-        log.info('remote has not used the channel; resending openChannel', {
-          tag: channel.tag,
-          id: channel.id,
-          attempt,
-        });
-        await this._sendOpenChannel(channel);
-        if (attempt < OPEN_CHANNEL_RESEND_ATTEMPTS) {
-          this._scheduleOpenChannelResend(channel, attempt + 1, Math.min(delay * 2, OPEN_CHANNEL_RESEND_MAX_DELAY));
-        }
-      },
-      delay,
     );
   }
 
@@ -489,7 +458,6 @@ export class Muxer {
       channel = {
         id: this._nextId++,
         remoteId: null,
-        remoteKnowsId: false,
         remoteOpened: false,
         tag: params.tag,
         contentType: params.contentType,

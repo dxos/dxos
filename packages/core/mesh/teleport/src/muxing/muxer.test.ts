@@ -8,6 +8,7 @@ import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
+import { ProtocolError } from '@dxos/protocols';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
   TestRpcRequestSchema,
@@ -92,55 +93,24 @@ describe('Muxer', () => {
     await wait();
   });
 
-  test('an rpc port opens when the first frame to the remote is lost', async () => {
+  test('a repeated OpenChannel flushes the buffer once, and a write made during the flush keeps its own deadline', async () => {
     const peer1 = new Muxer();
     const peer2 = new Muxer();
-    // Drops peer2's first frame, which carries its OpenChannel command.
-    let dropped = false;
-    const lossy = new Transform({
+    onTestFinished(async () => {
+      await peer1.destroy();
+      await peer2.destroy();
+    });
+    // peer1's first frame, its OpenChannel, reaches peer2 twice.
+    let repeated = false;
+    const repeatFirstFrame = new Transform({
       transform: (chunk, _encoding, callback) => {
-        if (!dropped) {
-          dropped = true;
-          callback();
-          return;
-        }
-        callback(null, chunk);
+        const frames = repeated ? chunk : Buffer.concat([chunk, chunk]);
+        repeated = true;
+        callback(null, frames);
       },
     });
-    peer1.stream.pipe(peer2.stream);
-    peer2.stream.pipe(lossy).pipe(peer1.stream);
-    onTestFinished(async () => {
-      await peer1.destroy();
-      await peer2.destroy();
-    });
-
-    const clients = await Promise.all(
-      [peer1, peer2].map(async (peer) =>
-        createRpc(
-          await peer.createPort('example.extension/rpc', {
-            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
-          }),
-          async ({ data }) => create(TestRpcResponseSchema, { data }),
-        ),
-      ),
-    );
-
-    await asyncTimeout(Promise.all(clients.map((client) => client.open())), 10_000);
-    expect(await clients[0].rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'test' }))).to.deep.include({
-      data: 'test',
-    });
-  });
-
-  test('a write made while the buffer flushes keeps its own deadline, even after a resent OpenChannel', async () => {
-    const peer1 = new Muxer();
-    const peer2 = new Muxer();
-    onTestFinished(async () => {
-      await peer1.destroy();
-      await peer2.destroy();
-    });
-    // peer2's frames to peer1 are not consumed until after peer1 has resent its OpenChannel, so peer2's flush of its
-    // buffer is still stalled when the resend arrives.
-    peer1.stream.pipe(peer2.stream);
+    // peer2's frames to peer1 are not consumed yet, so peer2's flush of its buffer is stalled when the repeat arrives.
+    peer1.stream.pipe(repeatFirstFrame).pipe(peer2.stream);
 
     const port2 = await peer2.createPort('example.extension/rpc');
     const count = 40;
@@ -152,7 +122,7 @@ describe('Muxer', () => {
     const received: number[] = [];
     port1.subscribe((data) => received.push(data[0]));
 
-    await sleep(7_000);
+    await sleep(200);
     // One frame every 60 ms: the backlog takes longer to go out than a later write is allowed to wait.
     const throttle = new Transform({
       transform: (chunk, _encoding, callback) => {
@@ -168,7 +138,37 @@ describe('Muxer', () => {
     await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count + later);
     await sleep(500);
     expect(received).toEqual(Array.from({ length: count + later }, (_, index) => index));
-  }, 30_000);
+  }, 15_000);
+
+  test('data that arrives before the remote opened the channel closes the muxer', async () => {
+    const peer1 = new Muxer();
+    const peer2 = new Muxer();
+    onTestFinished(async () => {
+      await peer1.destroy();
+      await peer2.destroy();
+    });
+    // Drops peer2's first frame, its OpenChannel.
+    let dropped = false;
+    const dropFirstFrame = new Transform({
+      transform: (chunk, _encoding, callback) => {
+        if (dropped) {
+          callback(null, chunk);
+          return;
+        }
+        dropped = true;
+        callback();
+      },
+    });
+    peer1.stream.pipe(peer2.stream);
+    peer2.stream.pipe(dropFirstFrame).pipe(peer1.stream);
+
+    const closed = peer1.afterClosed.waitForCount(1);
+    const port2 = await peer2.createPort('example.extension/rpc');
+    await port2.send(new Uint8Array([1]));
+    await peer1.createPort('example.extension/rpc');
+
+    expect(await asyncTimeout(closed, 2_000)).toBeInstanceOf(ProtocolError);
+  });
 
   test('a write made after the remote opens the channel waits on the link', async () => {
     const peer1 = new Muxer();
