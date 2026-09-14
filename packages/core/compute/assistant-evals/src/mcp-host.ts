@@ -8,8 +8,8 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Scope from 'effect/Scope';
-import { type IncomingMessage, type ServerResponse, createServer } from 'node:http';
+import type * as Scope from 'effect/Scope';
+import { type IncomingMessage, type ServerResponse } from 'node:http';
 
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
@@ -17,6 +17,8 @@ import { type Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
+
+import { listenLoopback, loopbackUrl } from './loopback-server.ts';
 
 /** Where the Streamable HTTP endpoint is mounted; the client dials this path, not the root. */
 const PATH = '/mcp';
@@ -72,9 +74,6 @@ export type StartMcpHostOptions = {
  * harness's next operation invocation dies inside `Schema` with "cannot read properties of undefined
  * (reading 'encoding')". Building the server before the harness does not avoid it — the damaged
  * schemas are ones both sides share — so the eval harness owns its transport instead.
- *
- * Scoped: the listener is torn down when the caller's scope closes, so a failed eval cannot leave a
- * port bound for the next one.
  */
 export const startMcpHost = ({
   skills,
@@ -96,38 +95,8 @@ export const startMcpHost = ({
       return { server, transport };
     };
 
-    const listener = yield* Effect.acquireRelease(
-      Effect.sync(() =>
-        createServer((request, response) => {
-          void handle(connect, request, response);
-        }),
-      ),
-      (listener) =>
-        Effect.promise(async () => {
-          // Sockets first: a client holding its connection open would otherwise make `close` wait
-          // for it.
-          listener.closeAllConnections();
-          await new Promise<void>((resolve) => listener.close(() => resolve()));
-        }),
-    );
-
-    // Port 0, and the address read back after `listening`: a fixed port collides with whatever the
-    // developer already has bound, and with a second eval running beside this one.
-    const port = yield* Effect.callback<number>((resume) => {
-      listener.once('listening', () => {
-        const address = listener.address();
-        resume(
-          address !== null && typeof address === 'object'
-            ? Effect.succeed(address.port)
-            : Effect.die(new Error(`MCP host bound to an unexpected address: ${String(address)}`)),
-        );
-      });
-      listener.listen(0, '127.0.0.1');
-    });
-
-    // Literal `127.0.0.1`, never `localhost`: the name resolves to `::1` first on Linux, which no
-    // listener bound to the IPv4 loopback answers.
-    return { url: `http://127.0.0.1:${port}${PATH}` };
+    const { port } = yield* listenLoopback((request, response) => handle(connect, request, response));
+    return { url: loopbackUrl(port, PATH) };
   });
 
 /**

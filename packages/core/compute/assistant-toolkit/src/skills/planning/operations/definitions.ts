@@ -11,19 +11,35 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Task } from '@dxos/types';
-import { trim } from '@dxos/util';
 
 import INSTRUCTIONS from './update-tasks.md?raw';
 
 /**
- * LLM-facing checklist entry: items are addressed by title (the checklist is markdown — see
- * `Outline.upsertChecklistItems`); `started` renders unchecked, nuance lives in conversation.
+ * One edit to the conversation's tasks. Flat rather than a union of create/update shapes: a union
+ * renders as `anyOf`, which some providers handle poorly, so the handler enforces the combinations.
  */
-// TODO(burdon): Reconcile with Task.
-const SimpleTask = Schema.Struct({
-  title: Schema.String.annotate({ description: 'Task title; also the key for updates.' }),
-  status: Schema.Literals(['todo', 'started', 'done']),
+const TaskChange = Schema.Struct({
+  task: Ref.Ref(Task.Task)
+    .annotate({ description: 'The existing task to change, as the ref on its checklist line. Omit with `create`.' })
+    .pipe(Schema.optional),
+  create: Schema.Boolean.annotate({
+    description: 'Create a new task on this checklist, assigned to you. Requires `title`; omit `task`.',
+  }).pipe(Schema.optional),
+  assign: Schema.Boolean.annotate({
+    description: 'Put the task on this checklist and make you its assignee.',
+  }).pipe(Schema.optional),
+  unassign: Schema.Boolean.annotate({
+    description: 'Take the task off this checklist and clear its assignee. Never deletes the task.',
+  }).pipe(Schema.optional),
+  title: Schema.String.annotate({ description: 'The new task title, or a rename of an existing task.' }).pipe(
+    Schema.optional,
+  ),
+  status: Schema.Literals(['todo', 'started', 'done'])
+    .annotate({ description: '`started` also assigns the task to you.' })
+    .pipe(Schema.optional),
 });
+
+export type TaskChange = Schema.Schema.Type<typeof TaskChange>;
 
 export const UpdateTasks = Operation.make({
   meta: {
@@ -33,34 +49,10 @@ export const UpdateTasks = Operation.make({
     icon: 'ph--check-square-offset--regular',
   },
   input: Schema.Struct({
-    tasks: Schema.Array(SimpleTask),
+    changes: Schema.Array(TaskChange),
   }),
   output: Schema.Any,
   services: [Harness.HarnessService, Database.Service, Trace.TraceService],
-});
-
-const TaskRefs = Schema.Array(Ref.Ref(Task.Task));
-
-export const AssignTasks = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.assistantToolkit.assignTasks'),
-    name: 'Assign tasks',
-    icon: 'ph--list-plus--regular',
-    description: trim`
-      Puts tasks that already exist elsewhere (a project's task set, another conversation) onto this
-      conversation's checklist, or takes them off it.
-      Use update-tasks instead to create a task or to change one's status; this tool only changes
-      which existing tasks the conversation is working on.
-      Removing a task only unassigns it from this conversation — the task itself is not deleted.
-      Both arrays take task references and either may be omitted.
-    `,
-  },
-  input: Schema.Struct({
-    add: TaskRefs.annotate({ description: 'Existing tasks to add to the checklist.' }).pipe(Schema.optional),
-    remove: TaskRefs.annotate({ description: 'Tasks to take off the checklist.' }).pipe(Schema.optional),
-  }),
-  output: Schema.Any,
-  services: [Harness.HarnessService, Database.Service],
 });
 
 export const PlanReminder = Operation.make({

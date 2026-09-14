@@ -5,7 +5,7 @@
 import { type Context } from '@dxos/context';
 
 import { scheduleMicroTask } from './task-scheduling.ts';
-import { Trigger } from './trigger.ts';
+import { Trigger, TriggerState } from './trigger.ts';
 
 export type UpdateSchedulerOptions = {
   /**
@@ -92,7 +92,9 @@ export class UpdateScheduler {
       if (this._params.maxFrequency) {
         const now = performance.now();
         const delay = this._lastUpdateTime + TIME_PERIOD / this._params.maxFrequency - now;
-        if (delay > 0) {
+        // A forced trigger has already woken the skip; awaiting it anyway would still cost the
+        // microtask hops, and a forced run must claim exactly when an unthrottled one would.
+        if (delay > 0 && this._skipDelay.state !== TriggerState.RESOLVED) {
           const skipDelay = this._skipDelay;
           await new Promise<void>((resolve) => {
             const timeoutId = setTimeout(() => {
