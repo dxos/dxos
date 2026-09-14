@@ -60,11 +60,13 @@ const createSpaceSaveTracker = (space: Space, cb: (state: 'saved' | 'saving') =>
         } else {
           const flushPromise = space.db.flush();
           lastFlushPromise = flushPromise;
-          void flushPromise.then(() => {
-            if (lastFlushPromise === flushPromise) {
-              cb('saved');
-            }
-          });
+          void flushPromise
+            .then(() => {
+              if (lastFlushPromise === flushPromise) {
+                cb('saved');
+              }
+            })
+            .catch((err) => log.catch(err));
         }
       });
     })

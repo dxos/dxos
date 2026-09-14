@@ -12,6 +12,7 @@ import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EntityId, PublicKey } from '@dxos/keys';
+import { type LogConfig, type LogEntry, log } from '@dxos/log';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DataService, QueryService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
@@ -356,7 +357,7 @@ describe('DatabaseImpl', () => {
         expect(rootDoc?.links?.[object.id]).to.not.be.undefined;
       });
 
-      test('flush rejects when the host refused to create an object document', async () => {
+      test('a flush reports a failed document creation only when it waited on it', async () => {
         const testBuilder = new EchoTestBuilder();
         await openAndClose(testBuilder);
         const peer = await testBuilder.createPeer();
@@ -395,6 +396,18 @@ describe('DatabaseImpl', () => {
         await expect(db.flush()).rejects.toThrow('document creation refused');
         // The refusal must not keep the rest of the database's writes from being persisted.
         expect(hostAskedToFlush).toBe(true);
+
+        const failedCreations: LogEntry[] = [];
+        onTestFinished(
+          log.addProcessor((_config: LogConfig, entry: LogEntry) => {
+            if (entry.message === 'object not bound: its document was not created') {
+              failedCreations.push(entry);
+            }
+          }),
+        );
+        db.add(Obj.make(TestSchema.Expando, { name: 'refused before any flush' }));
+        await expect.poll(() => failedCreations.length).toBe(1);
+        await expect(db.flush()).resolves.toBeUndefined();
       });
 
       test('object becomes available via loadObjectCoreById after linked document is loaded', async () => {
