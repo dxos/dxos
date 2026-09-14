@@ -1,8 +1,6 @@
 ---
-'@dxos/types': minor
-'@dxos/compute': minor
-'@dxos/assistant-toolkit': minor
-'@dxos/plugin-assistant': minor
+'@dxos/echo': minor
+'@dxos/plugin-markdown': minor
 ---
 
 Let a planning agent ask the user a question and resume on the answer.
