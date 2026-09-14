@@ -60,8 +60,8 @@ export interface AgentProcessOptions {
    */
   makeTurnProducer?: MakeTurnProducer;
 
-  /** Model identifier. */
-  model?: DXN.DXN;
+  /** Model used when the chat the process is bound to has not selected one. */
+  defaultModel?: DXN.DXN;
 
   /**
    * The catalog's shared model ids are served by several providers, so resolution needs the provider
@@ -216,8 +216,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const strategy = Option.fromNullishOr(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
+        // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
+        // recovered from the chat on rehydration like the instructions are.
+        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? options.defaultModel;
         const requestModelLayer = AiService.model(
-          options.model ? DXN.getName(options.model) : 'com.anthropic.model.claude-opus-5.default',
+          model ? DXN.getName(model) : 'com.anthropic.model.claude-opus-5.default',
           {
             provider: options.provider,
           },

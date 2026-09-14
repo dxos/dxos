@@ -233,6 +233,7 @@ export const translations: Resource[] = [
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
+        'model-unavailable.label': '{{label}} (unavailable)',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',

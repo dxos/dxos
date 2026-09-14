@@ -11,7 +11,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Chat from '@dxos/assistant/Chat';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
@@ -49,8 +49,14 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
           yield* Effect.promise(() => db.flush());
         }
         const preset = yield* chatPreset;
+        // As the chat's own UI does before its first request: the process reads the model off the
+        // chat, so a chat without one is stamped with the model its picker would show.
+        if (!chat.model && preset) {
+          Obj.update(chat, (chat) => {
+            chat.model = Ref.fromURI(preset.model);
+          });
+        }
         const session = yield* getSession(chat, {
-          model: preset?.model,
           provider: preset?.provider,
           location: chat.remote ? 'edge' : 'local',
         });
