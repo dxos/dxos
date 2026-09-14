@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { withTheme } from '../../testing';
+import { withTheme } from '../../testing/index.ts';
 import { Skeleton } from './Skeleton.tsx';
 
 export default {
