@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -35,15 +34,8 @@ import {
   type SignalManager,
   SignalManagerService,
 } from '@dxos/messaging';
-import {
-  SwarmNetworkManager,
-  SwarmNetworkManagerService,
-  type TransportFactory,
-  createIceProvider,
-  createRtcTransportFactory,
-} from '@dxos/network-manager';
+import { type SwarmNetworkManager, SwarmNetworkManagerService, type TransportFactory } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   ContactsService,
   DataService,
@@ -93,7 +85,7 @@ import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 import { SystemServiceImpl } from '../system/index.ts';
 import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
-import { Opening, StackOpened } from './events.ts';
+import { NetworkingEnabled, Opening, StackOpened } from './events.ts';
 import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
 import { type StackReadiness, StackReadinessService } from './stack-readiness.ts';
 
@@ -153,6 +145,8 @@ export class ClientServicesHost {
   #config?: Config;
   #signalManager?: SignalManager;
   #networkManager?: SwarmNetworkManager;
+  #transportFactory?: TransportFactory;
+  #connectionLog = true;
   #callbacks?: ClientServicesHostCallbacks;
   #devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   #edgeConnection?: EdgeConnection = undefined;
@@ -174,9 +168,6 @@ export class ClientServicesHost {
 
   // Stack components, resolved from the layer runtime on open. Present after `open` starts.
   #ctx?: Context;
-
-  /** Guards {@link startNetworking} so repeated calls cannot start two connection loops. */
-  #networkingStarted = false;
 
   /** See {@link ClientServicesHostProps.autoConnect}. */
   readonly #autoConnect: boolean;
@@ -397,11 +388,7 @@ export class ClientServicesHost {
 
     const {
       connectionLog = true,
-      transportFactory = createRtcTransportFactory(
-        { iceServers: this.#config?.get('runtime.services.ice') },
-        this.#config?.get('runtime.services.iceProviders') &&
-          createIceProvider(this.#config!.get('runtime.services.iceProviders')!),
-      ),
+      transportFactory,
       // Edge is the only real signaling transport; without it fall back to an isolated in-memory
       // manager (no cross-process signaling). The former KUBE `WebsocketSignalManager` is removed.
       signalManager = this.#edgeConnection && this.#config?.get('runtime.client.edgeFeatures')?.signaling
@@ -409,19 +396,8 @@ export class ClientServicesHost {
         : new MemorySignalManager(new MemorySignalManagerContext()),
     } = options;
     this.#signalManager = signalManager;
-
-    invariant(!this.#networkManager, 'network manager already set');
-    this.#networkManager = new SwarmNetworkManager({
-      enableDevtoolsLogging: connectionLog,
-      transportFactory,
-      signalManager,
-      peerInfo:
-        this.#edgeConnection &&
-        create(PeerSchema, {
-          identityDid: this.#edgeConnection.identityDid,
-          peerKey: this.#edgeConnection.peerKey,
-        }),
-    });
+    this.#transportFactory = transportFactory;
+    this.#connectionLog = connectionLog;
 
     log('initialized');
   }
@@ -437,10 +413,8 @@ export class ClientServicesHost {
 
     invariant(this.#config, 'config not set');
     invariant(this.#signalManager, 'signal manager not set');
-    invariant(this.#networkManager, 'network manager not set');
     const config = this.#config;
     const signalManager = this.#signalManager;
-    const networkManager = this.#networkManager;
 
     this.#opening = true;
     this.#ctx = ctx;
@@ -456,9 +430,11 @@ export class ClientServicesHost {
           edgeFeatures: config.get('runtime.client.edgeFeatures'),
           edgeConnection: this.#edgeConnection,
           edgeHttpClient: this.#edgeHttpClient,
+          transportFactory: this.#transportFactory,
+          connectionLog: this.#connectionLog,
+          autoConnect: this.#autoConnect,
         }),
       ),
-      Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
       Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
       Layer.provideMerge(Layer.succeed(ConfigService, config)),
       Layer.provideMerge(EffectEvent.busLayer),
@@ -482,6 +458,7 @@ export class ClientServicesHost {
         edgeAgentManager: EdgeAgentManagerService,
         identityLifecycle: IdentityLifecycleService,
         readiness: StackReadinessService,
+        networkManager: SwarmNetworkManagerService,
         // Handlers.
         identityService: IdentityService.Tag,
         contactsService: ContactsService.Tag,
@@ -512,6 +489,7 @@ export class ClientServicesHost {
     this.#identityLifecycle = resolved.identityLifecycle;
     this.#readiness = resolved.readiness;
     this.#devtoolsHost = resolved.devtoolsHost;
+    this.#networkManager = resolved.networkManager;
 
     this.#handlers = {
       SystemService: this.#systemService,
@@ -558,21 +536,16 @@ export class ClientServicesHost {
   }
 
   /**
-   * Allows outbound network activity to begin. Idempotent. Called automatically when the stack opens
-   * unless {@link ClientServicesHostProps.autoConnect} is `false`, in which case the embedder decides
-   * when connecting is safe (and owns any delay).
-   *
-   * Only the edge dial needs gating: subduction defers while the socket is not `CONNECTED` and
-   * resumes from its reconnect handler, and feed sync starts from `onReconnected`. Both therefore
-   * follow this gate without their own.
+   * Allows outbound network activity to begin. Idempotent. Emitted automatically when the stack
+   * opens unless {@link ClientServicesHostProps.autoConnect} is `false`, in which case the embedder
+   * decides when connecting is safe (and owns any delay).
    */
   startNetworking(): void {
-    if (this.#networkingStarted || !this.#edgeConnection) {
+    if (!this.#stackRuntime) {
+      log.warn('startNetworking called before the stack is open; ignoring');
       return;
     }
-    this.#networkingStarted = true;
-    log('starting edge networking');
-    this.#edgeConnection.startNetworking();
+    void this.#emit(NetworkingEnabled, undefined);
   }
 
   @synchronized
@@ -649,10 +622,6 @@ export class ClientServicesHost {
     await this.#emit(Opening, { ctx });
     await this.#emit(StackOpened, { ctx });
     log('stack opened');
-
-    if (this.#autoConnect) {
-      this.startNetworking();
-    }
   }
 
   /**

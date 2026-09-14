@@ -16,6 +16,7 @@ import { type Identity } from '../identity/index.ts';
 //   IdentityBound                                            (a created or accepted identity)
 //   IdentityAvailable → DataSpacesReady                      (identity-bound services)
 //   StackOpened                                              (host, once the cascade is done)
+//   NetworkingEnabled                                        (auto-connect, or the embedder)
 //
 // Teardown has no events: each layer closes its component in its layer finalizer, so runtime
 // disposal unwinds the stack in reverse build order.
@@ -57,6 +58,9 @@ export const DataSpacesReady = Event.make<LifecyclePayload & { identity: Identit
 
 /** The open sequence has completed, with or without an identity. */
 export const StackOpened = Event.make<LifecyclePayload>()('client-services/StackOpened');
+
+/** Outbound networking may begin; emitted on `StackOpened` when auto-connecting, else by the embedder. */
+export const NetworkingEnabled = Event.make<void>()('client-services/NetworkingEnabled');
 
 /** The local profile changed and should be broadcast to every open space. */
 export const ProfileUpdated = Event.make<{ profile: ProfileDocument }>()('client-services/ProfileUpdated');

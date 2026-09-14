@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
+import { type ConfigService } from '@dxos/config';
 import {
   EchoEdgeSubductionReplicatorLayer,
   EchoHostLayer,
@@ -29,7 +30,7 @@ import { FeedFactoryLayer, FeedStoreLayer, FeedStoreService } from '@dxos/feed-s
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';
-import { SwarmNetworkManagerService } from '@dxos/network-manager';
+import { SwarmNetworkManagerService, type TransportFactory } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
@@ -73,7 +74,7 @@ import {
 } from './cross-device-space-synchronizer.ts';
 import { NetworkReady, Opening, StorageReady } from './events.ts';
 import { FeedSyncerLayer } from './feed-syncer.ts';
-import { NetworkLifecycleLayer } from './network-lifecycle.ts';
+import { NetworkLifecycleLayer, SwarmNetworkManagerLayer } from './network-lifecycle.ts';
 import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
 import { StackReadinessLayer, StackReadinessService } from './stack-readiness.ts';
 
@@ -103,6 +104,9 @@ export type ServiceStackServices = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime_Client_EdgeFeatures;
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
+  transportFactory?: TransportFactory;
+  connectionLog?: boolean;
+  autoConnect?: boolean;
 };
 
 /**
@@ -126,7 +130,8 @@ export type ServiceContextStackContext =
   | FeedStoreService
   | StorageMigrationService
   | IdentityLifecycleService
-  | StackReadinessService;
+  | StackReadinessService
+  | SwarmNetworkManagerService;
 
 /**
  * Effect Layer composing the dormant client-stack components, constructed before identity is ready.
@@ -138,7 +143,7 @@ export const ServiceStack = (
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  Event.Bus | SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
+  Event.Bus | ConfigService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
 > => {
   const { edgeConnection, edgeHttpClient } = options;
 
@@ -169,7 +174,10 @@ export const ServiceStack = (
       }),
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
-    Layer.provideMerge(NetworkLifecycleLayer),
+    Layer.provideMerge(NetworkLifecycleLayer({ autoConnect: options.autoConnect })),
+    Layer.provideMerge(
+      SwarmNetworkManagerLayer({ transportFactory: options.transportFactory, connectionLog: options.connectionLog }),
+    ),
     Layer.provideMerge(StackReadinessLayer),
     Layer.provideMerge(storageLifecycleLayer),
     Layer.provideMerge(storageLayer),

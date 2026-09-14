@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { Mutex } from '@dxos/async';
+import { ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import {
@@ -21,72 +22,137 @@ import { Event } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';
-import { SwarmNetworkManagerService } from '@dxos/network-manager';
+import {
+  SwarmNetworkManager,
+  SwarmNetworkManagerService,
+  type TransportFactory,
+  createIceProvider,
+  createRtcTransportFactory,
+} from '@dxos/network-manager';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type Identity } from '../identity/index.ts';
-import { IdentityBound, IdentityLoaded, NetworkReady } from './events.ts';
+import { IdentityBound, IdentityLoaded, NetworkingEnabled, NetworkReady, StackOpened } from './events.ts';
+
+export type SwarmNetworkManagerLayerOptions = {
+  transportFactory?: TransportFactory;
+  /** @default true */
+  connectionLog?: boolean;
+};
+
+/**
+ * Constructs the swarm network manager over the ambient signal manager. Without an explicit
+ * transport factory it dials WebRTC with the ICE servers from config.
+ */
+export const SwarmNetworkManagerLayer = (
+  options: SwarmNetworkManagerLayerOptions = {},
+): Layer.Layer<SwarmNetworkManagerService, never, ConfigService | SignalManagerService> =>
+  Layer.effect(
+    SwarmNetworkManagerService,
+    Effect.gen(function* () {
+      const config = yield* ConfigService;
+      const signalManager = yield* SignalManagerService;
+      const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
+      const iceProviders = config.get('runtime.services.iceProviders');
+      return new SwarmNetworkManager({
+        enableDevtoolsLogging: options.connectionLog ?? true,
+        transportFactory:
+          options.transportFactory ??
+          createRtcTransportFactory(
+            { iceServers: config.get('runtime.services.ice') },
+            iceProviders && createIceProvider(iceProviders),
+          ),
+        signalManager,
+        peerInfo:
+          edgeConnection &&
+          create(PeerSchema, { identityDid: edgeConnection.identityDid, peerKey: edgeConnection.peerKey }),
+      });
+    }),
+  );
+
+export type NetworkLifecycleLayerOptions = {
+  /** Emit `NetworkingEnabled` as soon as the stack is open; otherwise the embedder emits it. */
+  autoConnect?: boolean;
+};
 
 /**
  * Binds the current identity to edge, signaling, and swarm networking, and drives their lifecycle:
- * opens them once the identity is loaded and closes them when the layer is destroyed.
+ * opens them once the identity is loaded, starts the edge dial when networking is enabled, and
+ * closes them when the layer is destroyed.
  */
-export const NetworkLifecycleLayer: Layer.Layer<
-  never,
-  never,
-  Event.Bus | SwarmNetworkManagerService | SignalManagerService
-> = Layer.effectDiscard(
-  Effect.gen(function* () {
-    const networkManager = yield* SwarmNetworkManagerService;
-    const signalManager = yield* SignalManagerService;
-    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
-    const edgeHttpClient = Option.getOrUndefined(yield* Effect.serviceOption(EdgeHttpClientService));
-    const identityUpdateMutex = new Mutex();
+export const NetworkLifecycleLayer = (
+  options: NetworkLifecycleLayerOptions = {},
+): Layer.Layer<never, never, Event.Bus | SwarmNetworkManagerService | SignalManagerService> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      const networkManager = yield* SwarmNetworkManagerService;
+      const signalManager = yield* SignalManagerService;
+      const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
+      const edgeHttpClient = Option.getOrUndefined(yield* Effect.serviceOption(EdgeHttpClientService));
+      const identityUpdateMutex = new Mutex();
 
-    const setNetworkIdentity = async (params?: { deviceCredential?: Credential; identity?: Identity }) => {
-      log('setting network identity...');
-      using _ = await identityUpdateMutex.acquire();
-      const edgeIdentity = await createEdgeIdentity(params);
-      edgeConnection?.setIdentity(edgeIdentity);
-      edgeHttpClient?.setIdentity(edgeIdentity);
-      networkManager.setPeerInfo(
-        create(PeerSchema, { identityDid: edgeIdentity.identityDid, peerKey: edgeIdentity.peerKey }),
-      );
-      log('network identity set');
-    };
+      const setNetworkIdentity = async (params?: { deviceCredential?: Credential; identity?: Identity }) => {
+        log('setting network identity...');
+        using _ = await identityUpdateMutex.acquire();
+        const edgeIdentity = await createEdgeIdentity(params);
+        edgeConnection?.setIdentity(edgeIdentity);
+        edgeHttpClient?.setIdentity(edgeIdentity);
+        networkManager.setPeerInfo(
+          create(PeerSchema, { identityDid: edgeIdentity.identityDid, peerKey: edgeIdentity.peerKey }),
+        );
+        log('network identity set');
+      };
 
-    yield* Effect.addFinalizer(() =>
-      Effect.promise(async () => {
-        await networkManager.close(Context.default());
-        await signalManager.close();
-        await edgeConnection?.close();
-      }),
-    );
-
-    yield* IdentityLoaded.pipe(
-      Event.handler(({ ctx, identity }) =>
+      yield* Effect.addFinalizer(() =>
         Effect.promise(async () => {
-          await setNetworkIdentity({ identity });
-          log('opening edge connection...');
-          await edgeConnection?.open(ctx);
-          log('opening signal manager...');
-          await signalManager.open(ctx);
-          log('opening network manager...');
-          await networkManager.open();
-        }).pipe(Effect.andThen(Event.emit(NetworkReady, { ctx }))),
-      ),
-      Event.subscribe,
-    );
+          await networkManager.close(Context.default());
+          await signalManager.close();
+          await edgeConnection?.close();
+        }),
+      );
 
-    yield* IdentityBound.pipe(
-      Event.handler(({ identity, deviceCredential }) =>
-        Effect.promise(() => setNetworkIdentity({ identity, deviceCredential })),
-      ),
-      Event.subscribe,
-    );
-  }),
-);
+      yield* IdentityLoaded.pipe(
+        Event.handler(({ ctx, identity }) =>
+          Effect.promise(async () => {
+            await setNetworkIdentity({ identity });
+            log('opening edge connection...');
+            await edgeConnection?.open(ctx);
+            log('opening signal manager...');
+            await signalManager.open(ctx);
+            log('opening network manager...');
+            await networkManager.open();
+          }).pipe(Effect.andThen(Event.emit(NetworkReady, { ctx }))),
+        ),
+        Event.subscribe,
+      );
+
+      yield* IdentityBound.pipe(
+        Event.handler(({ identity, deviceCredential }) =>
+          Effect.promise(() => setNetworkIdentity({ identity, deviceCredential })),
+        ),
+        Event.subscribe,
+      );
+
+      // Only the edge dial is gated: subduction and feed sync resume from the edge reconnect.
+      yield* NetworkingEnabled.pipe(
+        Event.handler(() =>
+          Effect.sync(() => {
+            log('starting edge networking');
+            edgeConnection?.startNetworking();
+          }),
+        ),
+        Event.subscribe,
+      );
+
+      if (options.autoConnect) {
+        yield* StackOpened.pipe(
+          Event.handler(() => Event.emit(NetworkingEnabled, undefined)),
+          Event.subscribe,
+        );
+      }
+    }),
+  );
 
 const createEdgeIdentity = async (params?: {
   deviceCredential?: Credential;
