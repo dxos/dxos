@@ -29,14 +29,14 @@ import { HelpOperation } from '#types';
 // `data: 'help'`, parent article is an ECHO object) but this component only
 // consumes `companionTo`, so we pick it off the article shape rather than
 // requiring callers to thread the rest.
-export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj.Any>, 'companionTo'>;
+export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj.Any>, 'companionTo' | 'attendableId'>;
 
 /**
  * Plank companion panel showing help for any open ECHO article. Resolves the
  * article's typename to the plugin that registered its schema and renders that
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
-export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
+export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const { invokePromise } = useOperationInvoker();
@@ -80,7 +80,7 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
               key={tour.id}
               icon='ph--path--regular'
               label={toLocalizedString(tour.label, t)}
-              onClick={() => invokePromise(HelpOperation.StartTour, { tourId: tour.id })}
+              onClick={() => invokePromise(HelpOperation.StartTour, { tourId: tour.id, subjectId: attendableId })}
               data-testid='supportPlugin.startCompanionTour'
             />
           ))}

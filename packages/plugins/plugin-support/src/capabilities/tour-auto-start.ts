@@ -54,7 +54,7 @@ export default Capability.makeModule(
       nextTourAtom,
       (tourId) => {
         if (tourId) {
-          void operationInvoker.invokePromise(HelpOperation.StartTour, { tourId });
+          void operationInvoker.invokePromise(HelpOperation.StartTour, { tourId, subjectId: registry.get(attendedAtom) });
         }
       },
       { immediate: true },

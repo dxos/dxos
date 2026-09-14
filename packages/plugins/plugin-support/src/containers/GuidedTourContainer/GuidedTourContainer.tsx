@@ -13,7 +13,7 @@ import { HelpCapabilities } from '#types';
 /** Runs whichever tour the help state names, and forgets it once the reader closes it. */
 export const GuidedTourContainer = () => {
   const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
-  const steps = useTourSteps(state.tourId);
+  const steps = useTourSteps(state.tourId, state.subjectId);
 
   return (
     <GuidedTour
@@ -23,7 +23,7 @@ export const GuidedTourContainer = () => {
         updateState((current) =>
           running
             ? { ...current, running: true }
-            : { ...current, running: false, tourId: undefined, showHints: false },
+            : { ...current, running: false, tourId: undefined, subjectId: undefined, showHints: false },
         )
       }
     />

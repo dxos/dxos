@@ -18,6 +18,7 @@ export const StateSchema = Schema.Struct({
   showHints: Schema.Boolean,
   showWelcome: Schema.Boolean,
   tourId: Schema.optional(Schema.String),
+  subjectId: Schema.optional(Schema.String),
   seenTours: Schema.mutable(Schema.Array(Schema.String)).pipe(Schema.withDecodingDefaultKey(Effect.succeed([]))),
 }).mapFields(Struct.map(Schema.mutableKey));
 

@@ -21,7 +21,7 @@ export const Start = Operation.make({
   output: Schema.Void,
 });
 
-/** Runs a tour registered via `AppCapabilities.Tour`, by id, and records it as seen. */
+/** Runs a tour registered via `AppCapabilities.Tour`, by id, for the graph node `subjectId`, and records it as seen. */
 export const StartTour = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.startTour'),
@@ -29,6 +29,6 @@ export const StartTour = Operation.make({
     icon: 'ph--path--regular',
   },
   services: [Capability.Service],
-  input: Schema.Struct({ tourId: Schema.String }),
+  input: Schema.Struct({ tourId: Schema.String, subjectId: Schema.optional(Schema.String) }),
   output: Schema.Void,
 });

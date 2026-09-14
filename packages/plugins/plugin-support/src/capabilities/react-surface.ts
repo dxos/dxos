@@ -68,7 +68,7 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article),
         ),
         component: SupportCompanion,
-        props: ({ data: { companionTo } }) => ({ companionTo }),
+        props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
       }),
       Surface.create({
         id: 'homeHelpCompanion',

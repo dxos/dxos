@@ -11,11 +11,12 @@ import { HelpCapabilities, HelpOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof HelpOperation.StartTour> = HelpOperation.StartTour.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ tourId }) {
+    Effect.fnUntraced(function* ({ tourId, subjectId }) {
       yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({
         ...state,
         running: true,
         tourId,
+        subjectId,
         seenTours: state.seenTours.includes(tourId) ? state.seenTours : [...state.seenTours, tourId],
       }));
     }),

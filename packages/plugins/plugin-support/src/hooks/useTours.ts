@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useMemo, useState } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Option from 'effect/Option';
+import { useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Tour from '@dxos/app-toolkit/Tour';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-
-import { useAttendedData } from './useAttendedData.ts';
 
 const NO_STEPS: Tour.Step[] = [];
 
@@ -18,15 +19,14 @@ export const useTours = (data?: unknown): readonly Tour.Definition[] => {
   return useMemo(() => Tour.matching(tours, data), [tours, data]);
 };
 
-export const useTourSteps = (tourId: string | undefined): readonly Tour.Step[] => {
+/** The steps `tourId` runs for the graph node `subjectId`: its own, plus every fragment accepting that node's data. */
+export const useTourSteps = (tourId: string | undefined, subjectId: string | undefined): readonly Tour.Step[] => {
   const tours = useCapabilities(AppCapabilities.Tour);
   const fragments = useCapabilities(AppCapabilities.TourFragment);
-  const data = useAttendedData();
-  const [start, setStart] = useState<{ tourId?: string; subject: unknown }>({ subject: undefined });
-  if (start.tourId !== tourId) {
-    setStart({ tourId, subject: data });
-  }
-  const subject = start.tourId === tourId ? start.subject : data;
+  const { graph } = useAppGraph();
+  const nodeAtom = useMemo(() => graph.node(subjectId ?? ''), [graph, subjectId]);
+  const node = useAtomValue(nodeAtom);
+  const subject = subjectId ? Option.getOrUndefined(node)?.data : undefined;
 
   return useMemo(() => {
     if (!tourId) {
