@@ -28,14 +28,15 @@ import { Sync } from './sync.ts';
  * whether an edit reaches the account.
  */
 const makeStore = (
-  settings: AppSettings.AppSettings,
+  current: () => AppSettings.AppSettings,
   device: Atom.Writable<AppSettings.DeviceSettings>,
   registry: AtomRegistry.AtomRegistry,
 ): Store => ({
-  read: () => ({ shared: settings.shared, local: registry.get(device) }),
+  read: () => ({ shared: current().shared, local: registry.get(device) }),
   update: (fn) => {
     const before = registry.get(device);
     const local: AppSettings.DeviceSettings = structuredClone(before);
+    const settings = current();
     Obj.update(settings, (settings) => fn({ shared: settings.shared, local }));
     if (JSON.stringify(local) !== JSON.stringify(before)) {
       registry.set(device, local);
@@ -61,7 +62,7 @@ export default Capability.makeModule(
 
     const space = yield* resolveSettingsSpace(client);
     // Named at genesis; a settings space that predates the name is given one here.
-    const settings = yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+    let settings = yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
       Option.match({
         onSome: (ref) => Database.load(ref),
         onNone: () =>
@@ -80,7 +81,7 @@ export default Capability.makeModule(
       schema: AppSettings.DeviceSettings,
       defaultValue: AppSettings.makeDeviceSettings,
     });
-    const store = makeStore(settings, device, registry);
+    const store = makeStore(() => settings, device, registry);
     const sync = new Sync(store);
 
     //
@@ -117,10 +118,40 @@ export default Capability.makeModule(
       sync.pull();
     };
 
+    //
+    // Follow the annotation. Devices that each created an object settle on the one it names, so a
+    // device switches to it and reseeds, republishing what only it holds.
+    //
+
+    const follow = () => {
+      const ref = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrUndefined);
+      void ref?.load().then(
+        (next) => {
+          const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+            Option.getOrUndefined,
+          );
+          if (next.id === settings.id || named?.uri !== ref.uri) {
+            return;
+          }
+
+          unsubscribeSettings();
+          settings = next;
+          unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
+          sync.seed();
+          refresh();
+        },
+        (error) => log.catch(error),
+      );
+    };
+
+    const onSettingsChange = () => (Obj.isDeleted(settings) ? follow() : refresh());
+    let unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
+
     const unsubscribe = [
       registry.subscribe(contributed, bindSettings),
-      Obj.subscribe(settings, refresh),
+      Obj.subscribe(space.properties, follow),
       registry.subscribe(device, refresh),
+      () => unsubscribeSettings(),
     ];
 
     yield* Effect.addFinalizer(() =>

@@ -28,6 +28,13 @@ export class Sync {
     }
   }
 
+  /** Reconcile every namespace afresh, after the store starts reading a different object. */
+  seed(): void {
+    for (const reconciler of this.#entries) {
+      reconciler.seed();
+    }
+  }
+
   /** Put newly resolved values into effect everywhere, after the store moved. */
   pull(): void {
     for (const reconciler of this.#entries) {
