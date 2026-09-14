@@ -19236,6 +19236,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../sdk/client-services
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -19251,6 +19254,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -19293,6 +19299,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing
