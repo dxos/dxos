@@ -25,8 +25,10 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 
 ## Devtools panels (observed 2026-09-14)
 
-- [x] Storage panel's tree did not scroll; Diagnostics used a bare `JsonView` — Storage tree in a
-      `ScrollArea`, Diagnostics on `Syntax.Root/Filter/Viewport/Code` (JSONPath filter + scroll).
+- [x] JSON panels did not scroll — `JsonView` now renders `Syntax.Root/Filter/Viewport/Code`
+      (JSONPath filter, `filter={false}` for embedded sections); Storage tree full width with the
+      feed detail beneath; SpaceInfo scrolls; Client → Logging renamed Logs; Debug listed before
+      DevTools; react-ui-table translations registered so column menus resolve.
 - [ ] The `@dxos/devtools` panels hard-code every string (no `useTranslation` anywhere under
       `packages/devtools/devtools/src/panels`): add a `@dxos/devtools` translations resource,
       register it from plugin-devtools, and route the ~30 panels' labels through `t()`.

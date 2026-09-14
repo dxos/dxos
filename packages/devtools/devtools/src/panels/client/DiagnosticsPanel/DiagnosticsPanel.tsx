@@ -7,7 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Field, Icon, Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+
+import { JsonView } from '../../../components/index.ts';
 
 export const DiagnosticsPanel = () => {
   const client = useClient();
@@ -69,14 +70,7 @@ export const DiagnosticsPanel = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <Syntax.Root data={data}>
-          <Syntax.Content>
-            <Syntax.Filter />
-            <Syntax.Viewport>
-              <Syntax.Code />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
+        <JsonView data={data} />
       </Panel.Content>
       {info && (
         <Panel.Statusbar asChild>

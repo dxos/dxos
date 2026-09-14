@@ -53,8 +53,8 @@ export const createDebugExtension = () =>
           properties: {
             label: ['debug.label', { ns: meta.profile.key }],
             icon: 'ph--bug--regular',
-            // After DevTools (10), whichever plugin registers first.
-            position: 20,
+            // Before DevTools (10), whichever plugin registers first: the panel's own pages lead the tree.
+            position: 0,
           },
           nodes: [
             AppGraphNode.make({
