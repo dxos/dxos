@@ -43,12 +43,14 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
+
   const { position, size = DEFAULT_SIZE } = useViewState(debugPanelAspect, DEBUG_PANEL_CONTEXT);
   const { update } = useViewStateActions(debugPanelAspect, DEBUG_PANEL_CONTEXT);
   const handlePositionChangeEnd = useCallback(
     (next: FloatingPanelPoint) => update((prev) => ({ ...prev, position: next })),
     [update],
   );
+
   const handleSizeChangeEnd = useCallback(
     (next: FloatingPanelSize) => update((prev) => ({ ...prev, size: next })),
     [update],
