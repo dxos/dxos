@@ -126,14 +126,16 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
       name: 'webkit',
       use: {
         ...devices['Desktop Safari'],
-        ...(webkitRtcEvents
-          ? {
-              launchOptions: {
-                // Replaces the browser's whole environment rather than extending it.
-                env: { ...definedEnv(), [WEBKIT_RTC_EVENTS_FILE_ENV]: webkitRtcEvents.fifoPath },
-              },
-            }
-          : {}),
+        launchOptions: {
+          // Replaces the browser's whole environment rather than extending it.
+          env: {
+            // WebKit's thread-suspend signal handler does not preserve errno, so a concurrent-GC suspension of the
+            // page's main thread makes errno-checked parses fail (ICE candidates, SDP ports, GLib getauxval).
+            JSC_useConcurrentGC: 'false',
+            ...definedEnv(),
+            ...(webkitRtcEvents ? { [WEBKIT_RTC_EVENTS_FILE_ENV]: webkitRtcEvents.fifoPath } : {}),
+          },
+        },
       },
     },
   ].filter((project) => {
