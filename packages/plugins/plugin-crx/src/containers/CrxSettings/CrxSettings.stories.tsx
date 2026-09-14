@@ -6,6 +6,7 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useEffect, useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Proxy } from '@dxos/crx-protocol';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -63,7 +64,7 @@ const DefaultStory = ({ initial, readonly }: { initial?: Settings.Settings; read
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-crx/containers/CrxSettings',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   parameters: {
     translations,
   },
