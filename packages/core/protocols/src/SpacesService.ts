@@ -82,12 +82,12 @@ export const SubscribeMessagesRequest = Schema.Struct({
 });
 export interface SubscribeMessagesRequest extends Schema.Schema.Type<typeof SubscribeMessagesRequest> {}
 
-export const SubscribeMessagesResponse = Schema.Struct({
+export const SubscribeMessagesResponse = Schema.Union([
   /** Sent once the channel listener is registered; messages posted earlier may have been dropped. */
-  ready: Schema.optional(Schema.Struct({})),
-  message: Schema.optional(bufMessage(GossipMessageSchema)),
-});
-export interface SubscribeMessagesResponse extends Schema.Schema.Type<typeof SubscribeMessagesResponse> {}
+  Schema.TaggedStruct('Ready', {}),
+  Schema.TaggedStruct('Message', { message: bufMessage(GossipMessageSchema) }),
+]);
+export type SubscribeMessagesResponse = Schema.Schema.Type<typeof SubscribeMessagesResponse>;
 
 export const WriteCredentialsRequest = Schema.Struct({
   spaceKey: publicKey,

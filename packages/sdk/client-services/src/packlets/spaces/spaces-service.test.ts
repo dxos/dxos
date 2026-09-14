@@ -132,28 +132,30 @@ describe('SpacesService', () => {
       invariant(space);
       const listen = vi.spyOn(space, 'listen');
 
+      const ready = new Trigger();
+      // Armed before timers freeze, so a missing ready fails within a second instead of hanging.
+      const readyWait = ready.wait({ timeout: 1_000 });
       // With timers frozen, a listener registered behind a timer cannot exist yet when ready arrives.
       vi.useFakeTimers({ toFake: ['setTimeout'] });
       onTestFinished(() => {
         vi.useRealTimers();
       });
-      const ready = new Trigger();
       const received = new Trigger<GossipMessage>();
       const unsubscribe = subscribeStream(
         EffectContext.empty(),
         spacesService['SpacesService.subscribeMessages']({ spaceKey, channel: 'test' }),
         {
           onData: (response) => {
-            if (response.ready) {
+            if (response._tag === 'Ready') {
               ready.wake();
-            } else if (response.message) {
+            } else {
               received.wake(response.message);
             }
           },
         },
       );
       onTestFinished(() => unsubscribe());
-      await ready.wait();
+      await readyWait;
       const deliver = listen.mock.lastCall?.[1];
       vi.useRealTimers();
 

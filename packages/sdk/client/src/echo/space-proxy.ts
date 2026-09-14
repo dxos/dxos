@@ -41,7 +41,7 @@ import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ListenHandle, decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { type ListenHandle, RpcClosedError, decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { fromPublicKey, packJson, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
@@ -570,23 +570,35 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._runtime,
       this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: this.key, channel }),
       {
-        onData: ({ ready, message }) => {
-          if (ready) {
-            registered.wake();
-          } else if (message) {
-            callback(message);
+        onData: (response) => {
+          switch (response._tag) {
+            case 'Ready':
+              registered.wake();
+              break;
+            case 'Message':
+              callback(response.message);
+              break;
           }
         },
         onError: (err) => {
           registered.throw(err);
-          log.catch(err);
+          if (!(err instanceof RpcClosedError)) {
+            log.catch(err);
+          }
         },
+        onClose: () => registered.throw(new RpcClosedError()),
       },
     );
     const ready = registered.wait();
-    // Most callers never await readiness, and the failure is already logged above.
+    // Most callers never await readiness; a closed connection is expected and anything else is logged above.
     ready.catch(() => {});
-    return Object.assign(cleanup, { ready });
+    return Object.assign(
+      () => {
+        registered.throw(new RpcClosedError());
+        cleanup();
+      },
+      { ready },
+    );
   }
 
   /**

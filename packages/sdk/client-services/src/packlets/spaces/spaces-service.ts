@@ -269,8 +269,8 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
               emit.fail(new SpaceNotFoundError(spaceKey));
               return;
             }
-            const handle = space.listen(getChannelId(channel), (message) => emit.single({ message }));
-            emit.single({ ready: {} });
+            const handle = space.listen(getChannelId(channel), (message) => emit.single({ _tag: 'Message', message }));
+            emit.single({ _tag: 'Ready' });
             return Effect.sync(() => handle.unsubscribe());
           }),
         ),

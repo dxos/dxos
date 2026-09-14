@@ -12,7 +12,10 @@ import { type GossipMessage } from './buf/proto/gen/dxos/mesh/teleport/gossip_pb
  * Registered channel listener; calling it unsubscribes.
  */
 export type ListenHandle = CleanupFn & {
-  /** Resolves once the listener is registered, since a message posted before then can be dropped. */
+  /**
+   * Resolves once the listener is registered, since a message posted before then can be dropped.
+   * Rejects if the subscription ends first.
+   */
   readonly ready: Promise<void>;
 };
 
