@@ -29,7 +29,13 @@ import {
   resolveSeededPlanks,
   updatePlankNames,
 } from '../util/index.ts';
-import { openableChildren, openCompanionPlank, resolveDeckSpec, updateActiveDeck } from '../util/index.ts';
+import {
+  isCompanionOpen,
+  openableChildren,
+  openCompanionPlank,
+  resolveDeckSpec,
+  updateActiveDeck,
+} from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
@@ -181,7 +187,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // it mid-read would also narrow the deck, which the browser answers by clamping the scroll — a
         // one-frame snap measured at exactly the lost width.
         const companionPlanks =
-          levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
+          levelOpen?.replacedId &&
+          input.subject[0] &&
+          isCompanionOpen(deck.companionPlanks, flatten, levelOpen.replacedId)
             ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
             : deckUpdates.companionPlanks;
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));

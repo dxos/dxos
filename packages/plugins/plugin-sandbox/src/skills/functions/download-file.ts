@@ -26,14 +26,12 @@ export default SandboxOperation.DownloadFile.pipe(
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
 
-      const content = yield* sandboxClient.readFile(spaceId, sandboxId, path).pipe(Effect.orDie);
-
-      const bytes = new TextEncoder().encode(content);
+      const { bytes, type } = yield* sandboxClient.readFileBytes(spaceId, sandboxId, path).pipe(Effect.orDie);
       const fileName = path.split('/').at(-1) ?? path;
 
       if (dest) {
         const loadedDest = yield* Database.load(dest);
-        const blob = yield* Blob.fromBytes(bytes, { type: 'text/plain' });
+        const blob = yield* Blob.fromBytes(bytes, { type });
         Obj.setParent(blob, loadedDest);
         yield* Database.add(blob);
         Obj.update(loadedDest, (loadedDest) => {
@@ -44,7 +42,7 @@ export default SandboxOperation.DownloadFile.pipe(
         return { objectId: Obj.getURI(loadedDest) };
       }
 
-      const fileObj = yield* File.fromBytes(bytes, { name: fileName, type: 'text/plain' });
+      const fileObj = yield* File.fromBytes(bytes, { name: fileName, type });
       yield* CollectionModel.add({ object: fileObj });
 
       return { objectId: Obj.getURI(fileObj) };

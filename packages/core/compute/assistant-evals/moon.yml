@@ -8,7 +8,7 @@ tasks:
   # `--project=node`, and this package's vitest config has to stay flat for evalite's file discovery
   # to find the scenarios at all, so it defines no projects and the filter matches nothing.
   test:
-    # No `--passWithNoTests`, unlike the inherited task: this package has exactly one test file, so
+    # No `--passWithNoTests`, unlike the inherited task: this package has test files of its own, so
     # discovering none is a regression in the config rather than a shard with nothing to run.
     command: pnpm exec dx-killorphans vitest run
     deps:
