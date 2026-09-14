@@ -5,7 +5,7 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import type * as Tour from '@dxos/app-toolkit/Tour';
+import type * as TourModule from '@dxos/app-toolkit/Tour';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
@@ -34,14 +34,14 @@ export const HelpState = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
-export const WelcomeTour = Capability.lazyModule(
-  'WelcomeTour',
+export const Tour = Capability.lazyModule(
+  'Tour',
   {
     provides: [AppCapabilities.Tour],
     environments: [],
-    props: (options: { helpSteps?: () => Promise<Tour.Step[]> }) => options.helpSteps,
+    props: (options: { helpSteps?: () => Promise<TourModule.Step[]> }) => options.helpSteps,
   },
-  () => import('./welcome-tour.ts'),
+  () => import('./tour.ts'),
 );
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [

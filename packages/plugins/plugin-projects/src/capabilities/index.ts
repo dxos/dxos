@@ -56,10 +56,10 @@ export const Templates = Capability.lazyModule(
   () => import('./templates.ts'),
 );
 
-export const ProjectTour = Capability.lazyModule(
-  'ProjectTour',
+export const Tour = Capability.lazyModule(
+  'Tour',
   { provides: [AppCapabilities.Tour], environments: [] },
-  () => import('./project-tour.ts'),
+  () => import('./tour.ts'),
 );
 
 export const Translations = AppCapability.translations(translations);

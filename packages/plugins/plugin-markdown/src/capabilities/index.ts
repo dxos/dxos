@@ -49,9 +49,9 @@ export const MarkdownState = Capability.lazyModule(
   () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
-export const DocumentTour = Capability.lazyModule(
-  'DocumentTour',
+export const Tour = Capability.lazyModule(
+  'Tour',
   { provides: [AppCapabilities.Tour], environments: [] },
-  () => import('./document-tour.ts'),
+  () => import('./tour.ts'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'));

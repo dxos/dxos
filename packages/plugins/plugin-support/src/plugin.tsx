@@ -3,7 +3,7 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import type * as Tour from '@dxos/app-toolkit/Tour';
+import type * as TourModule from '@dxos/app-toolkit/Tour';
 
 import {
   AppGraphBuilder,
@@ -16,8 +16,8 @@ import {
   Schema,
   SkillDefinition,
   SupportSettings,
+  Tour,
   Translations,
-  WelcomeTour,
 } from '#capabilities';
 import { meta } from '#meta';
 
@@ -25,7 +25,7 @@ import { meta } from '#meta';
  * `helpSteps` is a loader rather than an array so the tour's step definitions — and the operations
  * their `before` hooks invoke — stay out of the host's eager boot graph.
  */
-export type SupportPluginOptions = { helpSteps?: () => Promise<Tour.Step[]> };
+export type SupportPluginOptions = { helpSteps?: () => Promise<TourModule.Step[]> };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
@@ -39,7 +39,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SupportSettings),
   Plugin.addModule(Translations),
-  Plugin.addModule(WelcomeTour),
+  Plugin.addModule(Tour),
   Plugin.make,
 );
 
