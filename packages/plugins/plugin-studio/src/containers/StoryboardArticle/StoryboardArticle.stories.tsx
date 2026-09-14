@@ -142,9 +142,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Selecting the empty frame, writing a prompt in the companion and generating fills its preview: the
- * mock provider answers with a picsum image seeded by the prompt, and the stack's thumbnail follows
- * the cover.
+ * Selecting the empty frame shows its seeded prompt in the companion's editor; generating fills its
+ * preview: the mock provider answers with a picsum image seeded by the prompt, and the stack's
+ * thumbnail follows the cover.
  */
 export const TestGenerate: Story = {
   play: async ({ canvasElement }) => {
@@ -152,9 +152,8 @@ export const TestGenerate: Story = {
     const placeholder = await canvas.findByText('Frame 3', {}, { timeout: 30_000 });
     await userEvent.click(placeholder);
 
-    const prompt = await canvas.findByPlaceholderText('Prompt', {}, { timeout: 10_000 });
-    await userEvent.click(prompt);
-    await userEvent.type(prompt, 'A close-up of the studio desk');
+    // The frame's persisted request seeds the markdown editor.
+    await canvas.findByText(/pinning the last frame/, {}, { timeout: 10_000 });
 
     const generate = await canvas.findByRole('button', { name: 'Generate' });
     await waitFor(() => expect(generate).toBeEnabled());

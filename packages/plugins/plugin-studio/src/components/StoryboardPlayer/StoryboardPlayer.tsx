@@ -119,7 +119,7 @@ export const StoryboardPlayer = ({
         {/* Keyed by clip so the element remounts and autoplays the next source. */}
         <MediaPlayer
           key={clip.id}
-          classNames='dx-expand bg-black'
+          classNames='dx-expand bg-neutral-100 dark:bg-neutral-800'
           src={clip.src}
           kind={isVideo ? 'video' : undefined}
           fit='contain'
