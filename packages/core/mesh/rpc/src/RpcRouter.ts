@@ -166,7 +166,15 @@ export const make: Effect.Effect<Service, never, RpcServer.Protocol | Scope.Scop
     Effect.flatMap((clientId) =>
       Effect.forEach([fallback, ...routes.values()], (target) => Queue.offer(target.disconnects, clientId), {
         discard: true,
-      }),
+      }).pipe(
+        // A disconnected client has no requests to route and nothing left to end.
+        Effect.andThen(
+          Effect.sync(() => {
+            requestRoutes.delete(clientId);
+            pendingEnds.delete(clientId);
+          }),
+        ),
+      ),
     ),
     Effect.forever,
     Effect.forkScoped,
@@ -182,7 +190,7 @@ export const make: Effect.Effect<Service, never, RpcServer.Protocol | Scope.Scop
         const protocol = yield* makeChildProtocol(route);
         routes.set(prefix, route);
         yield* Effect.addFinalizer(() =>
-          Effect.sync(() => {
+          Effect.suspend(() => {
             routes.delete(prefix);
             for (const [clientId, requests] of requestRoutes) {
               for (const [requestId, owner] of requests) {
@@ -191,6 +199,11 @@ export const make: Effect.Effect<Service, never, RpcServer.Protocol | Scope.Scop
                 }
               }
             }
+            // A route closing before its server accepted an `Eof` never ends that client itself, so
+            // settle its share here or the last pending route would never end the transport.
+            return Effect.forEach([...pendingEnds.keys()], (clientId) => onRouteEndedClient(clientId, route), {
+              discard: true,
+            });
           }),
         );
         // The group server lives in a scope forked from the caller's: closing the caller's scope
