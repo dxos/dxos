@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { type Atom } from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -69,7 +69,7 @@ export default Capability.makeModule(
 );
 
 /** The devtools tree: a container under the debug category with one page per tool, grouped by subsystem. */
-export const createDevtoolsExtension = (appGraphAtom: Atom<AppCapabilities.AppGraph[]>) =>
+export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.AppGraph[]>) =>
   AppGraphBuilder.createExtension({
     id: 'devtools',
     match: AppNodeMatcher.whenDebugGroup,
