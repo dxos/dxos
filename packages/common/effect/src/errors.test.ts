@@ -28,12 +28,6 @@ test.skip('Data error formatting', () => {
 });
 
 describe('causeToError', () => {
-  const failWith = async (effect: Effect.Effect<unknown, unknown>): Promise<Error> => {
-    const exit = await Effect.runPromiseExit(effect);
-    invariant(Exit.isFailure(exit));
-    return causeToError(exit.cause);
-  };
-
   test('appends the failing span and its parents as stack frames', async ({ expect }) => {
     const error = await failWith(
       Effect.fail(new MyError()).pipe(Effect.withSpan('inner-span'), Effect.withSpan('outer-span')),
@@ -68,3 +62,9 @@ describe('causeToError', () => {
     expect(error.stack).not.to.match(/~effect\/|FiberImpl/);
   });
 });
+
+const failWith = async (effect: Effect.Effect<unknown, unknown>): Promise<Error> => {
+  const exit = await Effect.runPromiseExit(effect);
+  invariant(Exit.isFailure(exit));
+  return causeToError(exit.cause);
+};
