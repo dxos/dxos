@@ -10,6 +10,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type ConfigService } from '@dxos/config';
+import { failUndefined } from '@dxos/debug';
 import {
   EchoEdgeSubductionReplicatorLayer,
   EchoHostLayer,
@@ -19,18 +20,13 @@ import {
   MeshEchoReplicatorService,
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
-import {
-  type EdgeConnection,
-  EdgeConnectionService,
-  type EdgeHttpClient,
-  EdgeHttpClientService,
-} from '@dxos/edge-client';
+import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
 import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
 import { FeedFactoryLayer, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';
-import { SwarmNetworkManagerService, type TransportFactory } from '@dxos/network-manager';
+import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
@@ -68,6 +64,7 @@ import {
   SigningContextProviderLayer,
   SigningContextProviderService,
 } from '../spaces/index.ts';
+import { type TransportFactoryService } from './client-platform.ts';
 import {
   CrossDeviceSpaceSynchronizerLayer,
   CrossDeviceSpaceSynchronizerService,
@@ -102,9 +99,6 @@ export class StorageMigrationService extends EffectContext.Service<
 
 export type ServiceStackServices = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime_Client_EdgeFeatures;
-  edgeConnection?: EdgeConnection;
-  edgeHttpClient?: EdgeHttpClient;
-  transportFactory?: TransportFactory;
   connectionLog?: boolean;
   autoConnect?: boolean;
 };
@@ -143,10 +137,8 @@ export const ServiceStack = (
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  Event.Bus | ConfigService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
+  Event.Bus | ConfigService | SignalManagerService | TransportFactoryService | SqlClient.SqlClient | SqlTransactionTag
 > => {
-  const { edgeConnection, edgeHttpClient } = options;
-
   // Core stack, flattened into a single pipe. Optional replicators expose their service via
   // `provideMerge` and are read with `serviceOption` down the stack; their absence is modelled by
   // not wiring the layer, not by a null value.
@@ -175,36 +167,45 @@ export const ServiceStack = (
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
     Layer.provideMerge(NetworkLifecycleLayer({ autoConnect: options.autoConnect })),
-    Layer.provideMerge(
-      SwarmNetworkManagerLayer({ transportFactory: options.transportFactory, connectionLog: options.connectionLog }),
-    ),
+    Layer.provideMerge(SwarmNetworkManagerLayer({ connectionLog: options.connectionLog })),
     Layer.provideMerge(StackReadinessLayer),
     Layer.provideMerge(storageLifecycleLayer),
     Layer.provideMerge(storageLayer),
   );
 
-  // Non-edge: just the core.
-  if (!edgeConnection || !edgeHttpClient) {
-    return core;
-  }
-
-  // Edge: the feed syncer sits above the core for its `EchoHostService` requirement; the edge
-  // replicator sits below — it needs only the edge inputs, resolved via `serviceOption` inside the
-  // core. Edge inputs are provided internally so they never surface as stack requirements.
-  return FeedSyncerLayer({
-    peerId: '',
-    syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
-  }).pipe(
-    Layer.provideMerge(core),
-    Layer.provideMerge(options.edgeFeatures?.subductionReplicator ? EchoEdgeSubductionReplicatorLayer() : Layer.empty),
-    Layer.provideMerge(
-      Layer.mergeAll(
-        Layer.succeed(EdgeConnectionService, edgeConnection),
-        Layer.succeed(EdgeHttpClientService, edgeHttpClient),
-      ),
-    ),
+  // The edge clients come from the platform layer below and exist only with a configured endpoint.
+  // With edge: the feed syncer sits above the core for its `EchoHostService` requirement; the edge
+  // replicator sits below, needing only the edge inputs, which the core reads via `serviceOption`.
+  return Layer.unwrap(
+    Effect.gen(function* () {
+      const edge = Option.isSome(yield* Effect.serviceOption(EdgeConnectionService));
+      if (!edge) {
+        return core;
+      }
+      return FeedSyncerLayer({
+        peerId: '',
+        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+      }).pipe(
+        Layer.provideMerge(core),
+        Layer.provideMerge(
+          options.edgeFeatures?.subductionReplicator ? EchoEdgeSubductionReplicatorLayer() : Layer.empty,
+        ),
+        // The platform layer cannot declare the edge tags (they exist only with an endpoint); this
+        // branch runs only when they do, so re-provide them as declared services.
+        Layer.provideMerge(
+          Layer.mergeAll(
+            Layer.effect(EdgeConnectionService, presentService(EdgeConnectionService)),
+            Layer.effect(EdgeHttpClientService, presentService(EdgeHttpClientService)),
+          ),
+        ),
+      );
+    }),
   );
 };
+
+/** Reads an optional service that the caller has established is present. */
+const presentService = <Self, Service>(tag: EffectContext.Key<Self, Service>): Effect.Effect<Service> =>
+  Effect.map(Effect.serviceOption(tag), Option.getOrElse(failUndefined));
 
 /**
  * Attaches the configured replicators to the echo host once networking is up. Sits above both

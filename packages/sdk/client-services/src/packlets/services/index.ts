@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './client-platform.ts';
 export * from './client-services-layer.ts';
 export * from './cross-device-space-synchronizer.ts';
 export * as HostEvents from './events.ts';

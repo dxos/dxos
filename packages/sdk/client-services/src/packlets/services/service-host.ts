@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
@@ -17,23 +18,17 @@ import {
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { type Config, ConfigService, resolveTelemetryTag } from '@dxos/config';
+import { type Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost, EchoHostService } from '@dxos/echo-host';
-import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { Event as EffectEvent, EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { log } from '@dxos/log';
-import {
-  EdgeSignalManager,
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  type SignalManager,
-  SignalManagerService,
-} from '@dxos/messaging';
+import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService, type TransportFactory } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
@@ -84,16 +79,24 @@ import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 import { SystemServiceImpl } from '../system/index.ts';
+import { ClientPlatformLayer, type ClientPlatformLayerOptions, TransportFactoryService } from './client-platform.ts';
 import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
 import { NetworkingEnabled, Opening, StackOpened } from './events.ts';
 import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
+import { wipeSqliteStorage } from './sqlite-storage.ts';
 import { type StackReadiness, StackReadinessService } from './stack-readiness.ts';
 
 /**
  * Everything the host's stack runtime provides: the event bus, the component layers, and the RPC
  * handler layers.
  */
-export type ClientServicesStackContext = EffectEvent.Bus | ClientServicesRpcContext | ServiceContextStackContext;
+export type ClientServicesStackContext =
+  | EffectEvent.Bus
+  | ConfigService
+  | ClientServicesRpcContext
+  | ServiceContextStackContext
+  | SignalManagerService
+  | TransportFactoryService;
 
 export type ClientServicesHostProps = {
   /**
@@ -151,13 +154,12 @@ export class ClientServicesHost {
 
   #config?: Config;
   #signalManager?: SignalManager;
+  #platformOptions: ClientPlatformLayerOptions = {};
   #networkManager?: SwarmNetworkManager;
-  #transportFactory?: TransportFactory;
   #connectionLog = true;
   #callbacks?: ClientServicesHostCallbacks;
   #devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
-  #edgeConnection?: EdgeConnection = undefined;
-  #edgeHttpClient?: EdgeHttpClient = undefined;
+  #edgeConnection?: EdgeConnection;
 
   #stackRuntime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
   #stackContext?: EffectContext.Context<ClientServicesStackContext>;
@@ -386,30 +388,9 @@ export class ClientServicesHost {
       this.#config = config;
     }
 
-    const endpoint = config?.get('runtime.services.edge.url');
-    if (endpoint) {
-      const clientTag = resolveTelemetryTag(config);
-      // Dialing is driven by `startNetworking()` rather than `open()`, so the host controls when
-      // outbound work is allowed to compete with boot.
-      this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), {
-        socketEndpoint: endpoint,
-        clientTag,
-        deferConnect: true,
-      });
-      this.#edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
-    }
-
-    const {
-      connectionLog = true,
-      transportFactory,
-      // Edge is the only real signaling transport; without it fall back to an isolated in-memory
-      // manager (no cross-process signaling). The former KUBE `WebsocketSignalManager` is removed.
-      signalManager = this.#edgeConnection && this.#config?.get('runtime.client.edgeFeatures')?.signaling
-        ? new EdgeSignalManager({ edgeConnection: this.#edgeConnection })
-        : new MemorySignalManager(new MemorySignalManagerContext()),
-    } = options;
-    this.#signalManager = signalManager;
-    this.#transportFactory = transportFactory;
+    // The edge clients, signal manager and transport are built by the platform layer on open.
+    const { connectionLog = true, transportFactory, signalManager } = options;
+    this.#platformOptions = { signalManager, transportFactory };
     this.#connectionLog = connectionLog;
 
     log('initialized');
@@ -425,9 +406,7 @@ export class ClientServicesHost {
     log('opening service host');
 
     invariant(this.#config, 'config not set');
-    invariant(this.#signalManager, 'signal manager not set');
     const config = this.#config;
-    const signalManager = this.#signalManager;
 
     this.#opening = true;
     this.#ctx = ctx;
@@ -441,14 +420,11 @@ export class ClientServicesHost {
         ServiceStack({
           ...this.#runtimeProps,
           edgeFeatures: config.get('runtime.client.edgeFeatures'),
-          edgeConnection: this.#edgeConnection,
-          edgeHttpClient: this.#edgeHttpClient,
-          transportFactory: this.#transportFactory,
           connectionLog: this.#connectionLog,
           autoConnect: this.#autoConnect,
         }),
       ),
-      Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
+      Layer.provideMerge(ClientPlatformLayer(this.#platformOptions)),
       Layer.provideMerge(Layer.succeed(ConfigService, config)),
       Layer.provideMerge(EffectEvent.busLayer),
       Layer.provideMerge(RuntimeProvider.toLayer(this.#runtime)),
@@ -474,6 +450,8 @@ export class ClientServicesHost {
           identityLifecycle: IdentityLifecycleService,
           readiness: StackReadinessService,
           networkManager: SwarmNetworkManagerService,
+          signalManager: SignalManagerService,
+          edgeConnection: Effect.serviceOption(EdgeConnectionService),
           // Handlers.
           identityService: IdentityService.Tag,
           contactsService: ContactsService.Tag,
@@ -505,6 +483,8 @@ export class ClientServicesHost {
       this.#readiness = resolved.readiness;
       this.#devtoolsHost = resolved.devtoolsHost;
       this.#networkManager = resolved.networkManager;
+      this.#signalManager = resolved.signalManager;
+      this.#edgeConnection = Option.getOrUndefined(resolved.edgeConnection);
 
       this.#handlers = {
         SystemService: this.#systemService,
@@ -591,32 +571,7 @@ export class ClientServicesHost {
       await this.close();
     }
     // Wipe all SQLite tables so next open starts fresh.
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        // Echo metadata + large space data.
-        yield* sql`DELETE FROM space_metadata`;
-        yield* sql`DELETE FROM space_large`;
-        // Keyring.
-        yield* sql`DELETE FROM keyring`;
-        // Automerge chunks + heads.
-        yield* sql`DELETE FROM automerge_chunks`;
-        yield* sql`DELETE FROM automerge_heads`;
-        // Hypercore feed files.
-        yield* sql`DELETE FROM hypercore_files`;
-        // Feed store (queue feeds, blocks, etc.).
-        yield* sql`DELETE FROM feeds`;
-        yield* sql`DELETE FROM blocks`;
-        yield* sql`DELETE FROM subscriptions`;
-        yield* sql`DELETE FROM cursor_tokens`;
-        yield* sql`DELETE FROM sync_state`;
-        // Index tables.
-        yield* sql`DELETE FROM indexCursor`;
-        yield* sql`DELETE FROM objectMeta`;
-        yield* sql`DELETE FROM reverseRef`;
-        yield* sql`DELETE FROM ftsIndex`;
-      }),
-    );
+    await RuntimeProvider.runPromise(this.#runtime)(wipeSqliteStorage);
     log.info('reset');
     await this.#callbacks?.onReset?.();
   }
@@ -674,6 +629,8 @@ export class ClientServicesHost {
     this.#readiness = undefined;
     this.#devtoolsHost = undefined;
     this.#networkManager = undefined;
+    this.#signalManager = undefined;
+    this.#edgeConnection = undefined;
   }
 
   /**

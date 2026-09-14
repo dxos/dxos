@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { Mutex } from '@dxos/async';
-import { ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import {
@@ -22,47 +21,34 @@ import { EffectEx, Event } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';
-import {
-  SwarmNetworkManager,
-  SwarmNetworkManagerService,
-  type TransportFactory,
-  createIceProvider,
-  createRtcTransportFactory,
-} from '@dxos/network-manager';
+import { SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type Identity } from '../identity/index.ts';
+import { TransportFactoryService } from './client-platform.ts';
 import { IdentityBound, IdentityLoaded, NetworkingEnabled, NetworkReady, StackOpened } from './events.ts';
 
 export type SwarmNetworkManagerLayerOptions = {
-  transportFactory?: TransportFactory;
   /** @default true */
   connectionLog?: boolean;
 };
 
 /**
- * Constructs the swarm network manager over the ambient signal manager. Without an explicit
- * transport factory it dials WebRTC with the ICE servers from config.
+ * Constructs the swarm network manager over the ambient signal manager and transport factory.
  */
 export const SwarmNetworkManagerLayer = (
   options: SwarmNetworkManagerLayerOptions = {},
-): Layer.Layer<SwarmNetworkManagerService, never, ConfigService | SignalManagerService> =>
+): Layer.Layer<SwarmNetworkManagerService, never, SignalManagerService | TransportFactoryService> =>
   Layer.effect(
     SwarmNetworkManagerService,
     Effect.gen(function* () {
-      const config = yield* ConfigService;
       const signalManager = yield* SignalManagerService;
+      const transportFactory = yield* TransportFactoryService;
       const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
-      const iceProviders = config.get('runtime.services.iceProviders');
       return new SwarmNetworkManager({
         enableDevtoolsLogging: options.connectionLog ?? true,
-        transportFactory:
-          options.transportFactory ??
-          createRtcTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            iceProviders && createIceProvider(iceProviders),
-          ),
+        transportFactory,
         signalManager,
         peerInfo:
           edgeConnection &&
