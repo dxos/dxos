@@ -188,6 +188,7 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
 };
 

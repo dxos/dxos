@@ -316,6 +316,8 @@ describe('mapAst', () => {
     ];
     for (const [node, value] of cases) {
       const mapped = mapAst(node, (child) => child);
+      expect(mapped, mapped._tag).to.have.property('encodingChecks', rejectAll);
+      expect(mapped.checks, mapped._tag).to.be.undefined;
       expect(() => Schema.decodeUnknownSync(Schema.make<Schema.Codec<unknown>>(mapped))(value), mapped._tag).to.throw(
         'rejected',
       );

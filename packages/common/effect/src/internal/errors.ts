@@ -11,36 +11,32 @@ import type * as References from 'effect/References';
 
 const locationRegex = /\((.*)\)/g;
 
+/** Frames up to the first effect runtime frame; runtime functions carry `~effect/*` names, except the caller's `~effect/Effect/args` thunk. */
+const userFrames = (lines: readonly string[]): string[] => {
+  const out = [];
+  for (const line of lines) {
+    if (/Generator\.next|~effect\/(?!Effect\/args\b)/.test(line)) {
+      break;
+    }
+    out.push(
+      line.replace(/at Object\.~effect\/Effect\/args \((.*)\)$/, 'at $1').replace(' [as ~effect/Effect/args]', ''),
+    );
+  }
+  return out;
+};
+
 /**
  * Adds effect spans.
  * Removes effect internal functions.
- * Unwraps error proxy.
  */
 const prettyErrorStack = (error: any, frame?: References.StackFrame, appendStacks: string[] = []): any => {
   if (typeof error !== 'object' || error === null) {
     return error;
   }
 
-  const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];
-  const out = [];
-
-  let atStack = false;
-  for (const line of lines) {
-    if (!atStack && !line.startsWith('    at ')) {
-      out.push(line);
-      continue;
-    }
-    atStack = true;
-
-    // The runtime's functions carry `~effect/*` names; only `~effect/Effect/args` is the caller's own thunk.
-    if (/Generator\.next|~effect\/(?!Effect\/args\b)/.test(line)) {
-      break;
-    }
-
-    out.push(
-      line.replace(/at Object\.~effect\/Effect\/args \((.*)\)$/, 'at $1').replace(' [as ~effect/Effect/args]', ''),
-    );
-  }
+  const lines: string[] = typeof error.stack === 'string' ? error.stack.split('\n') : [];
+  const stackStart = lines.findIndex((line) => line.startsWith('    at '));
+  const out = stackStart === -1 ? lines : [...lines.slice(0, stackStart), ...userFrames(lines.slice(stackStart))];
 
   let current = frame;
   for (let i = 0; current && i < 10; i++) {
@@ -96,7 +92,7 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
       // Bun requies the target object for `captureStackTrace` to be an Error.
       const err = new Error();
       Error.captureStackTrace(err, causeToError);
-      return err.stack!.split('\n').slice(1);
+      return userFrames(err.stack!.split('\n').slice(1));
     };
 
     const stackFrames = getStackFrames();

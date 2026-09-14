@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
-import { causeToError } from './internal/errors.ts';
+import { causeToError, runPromise } from './internal/errors.ts';
 
 class MyError extends Data.TaggedError('MyError')<{
   message: string;
@@ -42,13 +42,29 @@ describe('causeToError', () => {
   });
 
   test('drops effect runtime frames but keeps the location of the thunk that threw', async ({ expect }) => {
-    const error = await failWith(
+    const defects = [
       Effect.sync(() => {
         throw new Error('defect');
       }),
-    );
-    const [, thunkFrame] = error.stack!.split('\n');
-    expect(thunkFrame).to.match(/^ {4}at \S*errors\.test\.ts:\d+:\d+$/);
+      // `map` calls the thunk through an anonymous runtime callback, which carries no `~effect/` name and stays.
+      Effect.succeed(1).pipe(
+        Effect.map(() => {
+          throw new Error('defect');
+        }),
+      ),
+    ];
+    for (const defect of defects) {
+      const error = await failWith(defect);
+      const [, thunkFrame] = error.stack!.split('\n');
+      expect(thunkFrame).to.match(/^ {4}at \S*errors\.test\.ts:\d+:\d+$/);
+      expect(error.stack).not.to.match(/~effect\/|FiberImpl/);
+    }
+  });
+
+  test('drops effect runtime frames from the call site when converting inside a fiber', async ({ expect }) => {
+    const exit = await Effect.runPromiseExit(Effect.die(new Error('defect')));
+    invariant(Exit.isFailure(exit));
+    const error = await runPromise(Effect.sync(() => causeToError(exit.cause)));
     expect(error.stack).not.to.match(/~effect\/|FiberImpl/);
   });
 });
