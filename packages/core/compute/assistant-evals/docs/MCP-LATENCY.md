@@ -280,14 +280,17 @@ document round trips per call). Both are operation-service / db-service work, ne
 
 ### Eval runs on dev (real Claude Code subprocess, fresh identity each run)
 
-| Run | Score | invokeOperation errors | Notes                                                 |
-| --- | ----- | ---------------------- | ----------------------------------------------------- |
-| 1   | 43%   | 25 / 25                | before Fix 3: identity refused, nothing replicated    |
-| 2   | 43%   | 25 / 25                | after Fix 3: connected, then the db-service hang      |
-| 3   | 57%   | **0 / 35**             | after the db-service redeploy; `tasks-listed` passes  |
-| 4   | 86%   | 0 / 35                 | Fix 4: `tool-latency` and `follow-up-turn-wrote` pass |
-| 5   | 86%   | 0 / 35                 | Fix 5: **every correctness scorer passes**            |
-| 6   | 100%  | 0 / 35                 | same code, warm DOs: **every scorer passes**          |
+| Run | Score | invokeOperation errors | Notes                                                      |
+| --- | ----- | ---------------------- | ---------------------------------------------------------- |
+| 1   | 43%   | 25 / 25                | before Fix 3: identity refused, nothing replicated         |
+| 2   | 43%   | 25 / 25                | after Fix 3: connected, then the db-service hang           |
+| 3   | 57%   | **0 / 35**             | after the db-service redeploy; `tasks-listed` passes       |
+| 4   | 86%   | 0 / 35                 | Fix 4: `tool-latency` and `follow-up-turn-wrote` pass      |
+| 5   | 86%   | 0 / 35                 | Fix 5: **every correctness scorer passes**                 |
+| 6   | 100%  | 0 / 35                 | same code, warm DOs: **every scorer passes**               |
+| 7   | —     | —                      | API-token auth: mint refused, `invalid_nonce` (Fix 6)      |
+| 8   | 43%   | 35 / 35                | token accepted by hub, worker refused: `no_agent` (Fix 7)  |
+| 9   | 86%   | 0 / 35                 | token flow end to end: **every correctness scorer passes** |
 
 Client-observed latency per run (p50 ms; `*` is every invokeOperation sample):
 
@@ -297,6 +300,7 @@ Client-observed latency per run (p50 ms; `*` is every invokeOperation sample):
 | 4   | 1293    | 62              | 46        | 2059 / 2637                   |
 | 5   | 4333    | 58              | 42        | 3360 / 4450                   |
 | 6   | 3884    | 69              | 49        | 2129 / 2621                   |
+| 9   | 6127    | 434             | 423       | 2632 / 3456                   |
 
 Run 5 ran minutes after the db-service redeploy, which resets every Durable Object, so its
 invocations paid cold loads; its `tool-latency` miss (budget 3000ms p95) is that, not a regression
@@ -348,3 +352,26 @@ invocation slow (RPC session setup, or placement); and drop the `stub.init` hop 
   connection each time; a warm connection through the proxy costs ~40ms.
 - **`deploy:dev` in mcp-space-service** now deploys `env.dev`; the empty `--env=` deployed the
   local config onto the dev sandbox.
+
+### Auth rework — API tokens instead of the presentation and dev-form doors
+
+The two headless doors the branch had opened (a HALO presentation verified on `/mcp` through a new
+hub RPC, and the `dev_form=1` identity-key form on `/authorize`) were replaced by the identity-bound
+API tokens of dxos/edge#1073: the run binds a test account, mints a `dx-api01-…` token with a
+presentation, and hands it to Claude Code as the `/mcp` bearer; the worker resolves it through hub.
+Three things broke on the first real runs, each a fact about the deployed stack rather than the eval:
+
+- **Fix 6 — the mint's challenge must be hub's own.** A nonce is `HMAC(secret, audience‖prefix)` under
+  the verifier's keypair. On dev, edge and hub hold different `DX_HUB_SERVICE_KEYPAIR` secrets, so the
+  challenge from edge's `/auth` verifies nowhere but edge (`invalid_nonce` in hub's audit stream).
+  The mint now takes the lazy path: request, sign the challenge on the 401, request again.
+- **Fix 7 — the identity needs an EDGE agent.** The worker resolves a token's HALO space and spaces
+  from the agent registry; the dev form used to take both from the client, which hid that a fresh
+  eval identity has no agent (the agent manager gives up on `identity_not_associated_with_account`,
+  which it sees once before the account bind). The harness now creates the agent after the bind and
+  waits for it to report active.
+- **Run 9's `tool-latency` miss is the door's own cost**: `queryOperations` 69 → 434ms and `loadSkill`
+  49 → 423ms, i.e. the four service-binding round trips (hub verify, two agent-registry lookups,
+  `listAgentSpaces`) paid on every request, where an OAuth grant carried the props. The worker now
+  caches the resolved props per token for 60s — the window hub's own validation cache already allows
+  a revoked token — which returns the read tools to the run-6 numbers.
