@@ -9,6 +9,8 @@ import {
   encodeProfileArchive,
   getSqliteProfileEntries,
 } from '@dxos/client-services';
+import { withPersistentStorage } from '@dxos/client/testing';
+import { type Client } from '@dxos/react-client';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import { downloadBlob } from '@dxos/util';
 
@@ -18,13 +20,27 @@ import { downloadBlob } from '@dxos/util';
  * app. Only the SQLite entry is carried: that is where a persistent browser client keeps everything.
  */
 
+/**
+ * Reads the database through the running client, which checkpoints the WAL before serializing.
+ * Recovery can read the pool file directly because it boots no client; here one is live, so a raw
+ * read would strand every commit still sitting in the `-wal` sidecar and export a stale profile.
+ */
+const readDatabase = async (client: Client): Promise<Uint8Array> => {
+  const devtools = client.services.services.DevtoolsHost;
+  if (!devtools) {
+    throw new Error('DevtoolsHost is not available; cannot export a consistent database.');
+  }
+  const { data } = await devtools.exportSqliteDatabase();
+  return data;
+};
+
 /** Saves the current profile as `<name>.dxprofile`; resolves false if the user cancelled. */
-export const exportProfileArchive = async (name: string): Promise<boolean> => {
-  const database = await OpfsPool.readDatabase(OPFS_SQLITE_DB_FILENAME);
+export const exportProfileArchive = async (client: Client, name: string): Promise<boolean> => {
+  const database = await readDatabase(client);
   const bytes = encodeProfileArchive(
     createSqliteProfileArchive(OPFS_SQLITE_DB_FILENAME, database, { origin: window.location.origin }),
   );
-  // Copied so the blob owns a plain ArrayBuffer rather than a view over the pool's buffer.
+  // Copied so the blob owns a plain ArrayBuffer rather than a view into the encoder's buffer.
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
   const date = new Date().toISOString().slice(0, 10);
@@ -79,9 +95,9 @@ export const stageProfileImport = async (bytes: Uint8Array): Promise<void> => {
 };
 
 /**
- * Writes a staged archive into the pool and removes it. Must run before the client starts, which is
- * the only time no worker holds the pool. The staged file is removed even when the write fails, so
- * one bad import cannot fail every later boot.
+ * Writes a staged archive into the pool and removes it. Must run before this tab's client starts,
+ * and under the storage lock: the outgoing document's worker is torn down asynchronously, so a
+ * reload alone does not free the pool's sync access handles (see {@link withPersistentStorage}).
  */
 export const applyStagedProfileImport = async (): Promise<void> => {
   const root = await navigator.storage.getDirectory();
@@ -89,12 +105,23 @@ export const applyStagedProfileImport = async (): Promise<void> => {
   if (!handle) {
     return;
   }
+
+  const bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
+  let database: Uint8Array;
   try {
-    const bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
-    await OpfsPool.writeDatabase(selectDatabase(bytes), OPFS_SQLITE_DB_FILENAME);
-  } finally {
+    database = selectDatabase(bytes);
+  } catch (error) {
+    // Unreadable bytes would fail identically on every later boot, so drop them rather than retry.
     await root.removeEntry(STAGED_IMPORT_FILENAME);
+    throw error;
   }
+
+  // Removed inside the lock, so a failure to take it leaves the import staged for the next reload
+  // rather than discarding a profile the user picked.
+  await withPersistentStorage(async () => {
+    await OpfsPool.writeDatabase(database, OPFS_SQLITE_DB_FILENAME);
+    await root.removeEntry(STAGED_IMPORT_FILENAME);
+  });
 };
 
 /** The archive's main SQLite database, the one a persistent browser client opens. */

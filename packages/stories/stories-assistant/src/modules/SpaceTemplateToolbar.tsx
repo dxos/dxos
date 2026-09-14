@@ -173,11 +173,11 @@ const ProfileControls = () => {
 
   const handleExport = useCallback(async () => {
     try {
-      await exportProfileArchive('stories-assistant');
+      await exportProfileArchive(client, 'stories-assistant');
     } catch (error) {
       log.catch(error);
     }
-  }, []);
+  }, [client]);
 
   /** Staged and applied on reload, before the client starts: the running worker holds the pool open. */
   const handleImport = useCallback(async () => {
@@ -220,8 +220,7 @@ const ProfileControls = () => {
         icon='ph--upload-simple--regular'
         iconOnly
         label='Import profile (.dxprofile)'
-        // TODO(dmaretskyi): Import does not restore a working profile yet; re-enable once it does.
-        disabled
+        disabled={!persistent}
         onClick={() => void handleImport()}
       />
       <Field.Checkbox checked={persistent} onCheckedChange={handlePersistentChange}>
