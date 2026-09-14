@@ -229,7 +229,15 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     }
 
     const props = Object.assign({}, this.props, { view }) as TProps;
-    this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
+    // `WidgetState` erases the specific `TProps` this instance renders with (a heterogeneous list of
+    // portaled widgets shares one array element type); `Component` and `props` are still built from
+    // the same `TProps` above, so the pairing stays sound despite the erasure.
+    this.notifier.mounted({
+      id: this.id,
+      root: this.#root,
+      props,
+      Component: this.Component as FunctionComponent<WidgetProps>,
+    });
     this.#trace(cached ? 'toDOM (reuse cached root)' : 'toDOM (create)', {
       blockHeight: this.blockHeight,
       scrollTop: Math.round(view.scrollDOM.scrollTop),
@@ -244,7 +252,12 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     this.#root = dom;
     this.#view = view;
     const props = Object.assign({}, this.props, { view }) as TProps;
-    this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
+    this.notifier.mounted({
+      id: this.id,
+      root: this.#root,
+      props,
+      Component: this.Component as FunctionComponent<WidgetProps>,
+    });
     this.#trace('updateDOM (reuse/re-parent)', { connected: dom.isConnected });
     this.#measureAfterPaint('updateDOM');
     return true;
