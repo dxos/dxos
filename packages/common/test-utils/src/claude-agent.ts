@@ -28,6 +28,24 @@ export type ClaudeAgentOptions = {
   timeout?: number;
 };
 
+/** One content block of an `assistant` message, as `claude --print --output-format stream-json` emits it. */
+export type ContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'thinking'; thinking: string }
+  | { type: 'tool_use'; id: string; name: string; input: unknown }
+  | { type: 'tool_result'; tool_use_id: string; content: unknown; is_error?: boolean };
+
+/** One line of `claude --print --output-format stream-json` output. */
+export type StreamEvent =
+  | { type: 'system'; subtype?: string; [key: string]: unknown }
+  | { type: 'user'; message: { role: 'user'; content: ContentBlock[] }; [key: string]: unknown }
+  | { type: 'assistant'; message: { role: 'assistant'; content: ContentBlock[] }; [key: string]: unknown }
+  | { type: 'result'; result?: string; is_error?: boolean; [key: string]: unknown };
+
+/** True when `value` is a parsed stream-json line, i.e. carries the `type` tag every event has. */
+const isStreamEvent = (value: unknown): value is StreamEvent =>
+  typeof value === 'object' && value !== null && 'type' in value && typeof value.type === 'string';
+
 /** One assistant turn, reduced to what an assertion needs. */
 export type Turn = {
   /** The `result` event's text, or undefined when the turn produced none. */
@@ -37,7 +55,7 @@ export type Turn = {
   /** Names of every MCP tool the agent called this turn, in order. */
   toolCalls: string[];
   /** Every event of the turn, for diagnosing a failure without re-running the model. */
-  events: any[];
+  events: StreamEvent[];
   /** Epoch milliseconds of the send and of the `result` event. */
   start: number;
   end: number;
@@ -48,10 +66,10 @@ const DEFAULT_TIMEOUT = 300_000;
 export class ClaudeAgent {
   #child: ChildProcessWithoutNullStreams;
   #buffer = '';
-  #events: any[] = [];
+  #events: StreamEvent[] = [];
   #timeout: number;
   #stderr = '';
-  #onEvent?: (event: any) => void;
+  #onEvent?: (event: StreamEvent) => void;
   #onFail?: (error: Error) => void;
   #exited?: Error;
 
@@ -239,23 +257,26 @@ export class ClaudeAgent {
       if (line.trim().length === 0) {
         continue;
       }
-      let event: any;
+      let parsed: unknown;
       try {
-        event = JSON.parse(line);
+        parsed = JSON.parse(line);
       } catch {
         // stream-json is line-delimited; anything else on stdout is noise.
         continue;
       }
-      this.#events.push(event);
-      this.#onEvent?.(event);
+      if (!isStreamEvent(parsed)) {
+        continue;
+      }
+      this.#events.push(parsed);
+      this.#onEvent?.(parsed);
     }
   }
 }
 
 /** Tool names an assistant event asked for, so a test can assert the agent went through MCP. */
-const toolCallNames = (events: any[]): string[] =>
+const toolCallNames = (events: StreamEvent[]): string[] =>
   events
-    .filter((event) => event.type === 'assistant')
-    .flatMap((event) => event.message?.content ?? [])
-    .filter((block: any) => block?.type === 'tool_use')
-    .map((block: any) => String(block.name));
+    .filter((event): event is Extract<StreamEvent, { type: 'assistant' }> => event.type === 'assistant')
+    .flatMap((event) => event.message.content)
+    .filter((block): block is Extract<ContentBlock, { type: 'tool_use' }> => block.type === 'tool_use')
+    .map((block) => block.name);

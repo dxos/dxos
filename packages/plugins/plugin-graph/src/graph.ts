@@ -50,8 +50,8 @@ export default Capability.makeModule(
         }
         const current = Record.values(registry.get(builder.extensions));
         const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));
-        removed.forEach((extension) => AppGraphBuilder.removeExtension(builder, extension.id));
-        next.forEach((extension) => AppGraphBuilder.addExtension(builder, extension));
+        removed.forEach((extension) => AppGraphBuilder.GraphBuilder.removeExtension(builder, extension.id));
+        next.forEach((extension) => AppGraphBuilder.GraphBuilder.addExtension(builder, extension));
       },
       { immediate: true },
     );

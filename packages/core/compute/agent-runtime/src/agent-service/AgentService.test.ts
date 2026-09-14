@@ -22,7 +22,7 @@ import { LanguageModelFixture } from '@dxos/ai/testing';
 import { type HarnessControlRpcs, PartialBlock, SessionLink } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { getSession, hydrate } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -41,7 +41,7 @@ import { ContentBlock, Message, Organization } from '@dxos/types';
 import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
 import * as ResearchService from '../testing/ResearchService.ts';
 import { AGENT_PROCESS_KEY } from './agent-process.ts';
-import * as AgentService from './AgentService.ts';
+import * as AgentServiceRuntime from './AgentService.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
 
 EntityId.dangerouslyDisableRandomness();

@@ -112,7 +112,7 @@ describe('report-session', () => {
 
       const { sessions } = yield* listSessions.handler({ sessionId: 'session_dup' });
       expect(sessions).toHaveLength(1);
-      expect(sessions[0]!.session.title).toBe('Survivor');
+      expect(sessions[0].session.title).toBe('Survivor');
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 

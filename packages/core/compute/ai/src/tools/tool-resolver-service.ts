@@ -23,37 +23,37 @@ export class ToolResolverService extends Context.Service<
   {
     readonly resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError>;
   }
->()('@dxos/ai/ToolResolverService') {
-  static layerEmpty = Layer.succeed(ToolResolverService, {
-    resolve: (id) => Effect.fail(new AiToolNotFoundError(id)),
-  });
+>()('@dxos/ai/ToolResolverService') {}
 
-  static resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError, ToolResolverService> = (id) =>
-    ToolResolverService.use((service) => service.resolve(id));
+export const layerEmpty = Layer.succeed(ToolResolverService, {
+  resolve: (id) => Effect.fail(new AiToolNotFoundError(id)),
+});
 
-  static resolveToolkit: (
-    ids: ToolId[],
-  ) => Effect.Effect<Toolkit.Toolkit<Record<string, Tool.Any>>, AiToolNotFoundError, ToolResolverService> = (ids) =>
-    Effect.gen(function* () {
-      const tools = yield* Effect.forEach(ids, (id) =>
-        ToolResolverService.resolve(id).pipe(
-          // A resolver may throw rather than fail — an operation whose persisted schema cannot be
-          // projected to tool parameters is the common case. A defect would abort the whole request
-          // over one bad tool, so it is demoted to the not-found failure the filter below drops.
-          Effect.catchDefect((defect) => {
-            log.error('AI tool resolution failed; excluded from context', { id, defect });
-            return Effect.fail(new AiToolNotFoundError(id));
+export const resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError, ToolResolverService> = (id) =>
+  ToolResolverService.use((service) => service.resolve(id));
+
+export const resolveToolkit: (
+  ids: ToolId[],
+) => Effect.Effect<Toolkit.Toolkit<Record<string, Tool.Any>>, AiToolNotFoundError, ToolResolverService> = (ids) =>
+  Effect.gen(function* () {
+    const tools = yield* Effect.forEach(ids, (id) =>
+      resolve(id).pipe(
+        // A resolver may throw rather than fail — an operation whose persisted schema cannot be
+        // projected to tool parameters is the common case. A defect would abort the whole request
+        // over one bad tool, so it is demoted to the not-found failure the filter below drops.
+        Effect.catchDefect((defect) => {
+          log.error('AI tool resolution failed; excluded from context', { id, defect });
+          return Effect.fail(new AiToolNotFoundError(id));
+        }),
+        Effect.tapErrorTag('AiToolNotFoundError', (error) =>
+          Effect.sync(() => {
+            log.warn('Failed to resolve AI tool', { id, error });
+            return Effect.void;
           }),
-          Effect.tapErrorTag('AiToolNotFoundError', (error) =>
-            Effect.sync(() => {
-              log.warn('Failed to resolve AI tool', { id, error });
-              return Effect.void;
-            }),
-          ),
-          Effect.result,
         ),
-      ).pipe(Effect.map((results) => Array.filterMap(results, (result) => result)));
+        Effect.result,
+      ),
+    ).pipe(Effect.map((results) => Array.filterMap(results, (result) => result)));
 
-      return Toolkit.make(...tools);
-    });
-}
+    return Toolkit.make(...tools);
+  });

@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Obj } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/Obj';
 import { random } from '@dxos/random';
 import { renderObjectLink, textStream } from '@dxos/react-ui-markdown';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
@@ -119,14 +118,14 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     yield* Effect.promise(async () => {
       for await (const chunk of textStream(fullText, { wordsPerChunk: 2, chunkDelay: 60 })) {
         Obj.update(message, (message) => {
-          const block = message.blocks[0] as Mutable<ContentBlock.Text>;
+          const block = message.blocks[0] as Obj.Mutable<ContentBlock.Text>;
           block.text += chunk;
         });
         // Feed queries only react to feed-level updates, not in-place object mutations.
         await db.appendToFeed(feed, []);
       }
       Obj.update(message, (message) => {
-        const block = message.blocks[0] as Mutable<ContentBlock.Text>;
+        const block = message.blocks[0] as Obj.Mutable<ContentBlock.Text>;
         block.pending = false;
       });
       await db.appendToFeed(feed, []);

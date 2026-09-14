@@ -76,14 +76,16 @@ const createProject = (space: Space, storyGeneration: number) => {
   // The project names its repository, which is what makes a `#nnn` reference in its documents
   // resolve (plugin-github reads `project.repo`).
   const repo = space.db.add(Repo.make({ name: 'dxos', owner: 'dxos', url: 'https://github.com/dxos/dxos' }));
-  const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
+  const instructions = Instructions.make({
+    [Obj.Parent]: project,
+    text: 'You are an assistant focused on this project.',
+  });
   const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
   Obj.update(project, (project) => {
     project.repo = Ref.make(repo);
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
-  Obj.setParent(instructions, project);
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
   const linkTask = space.db.add(

@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board/types';
 
 import * as MediaArtifact from './MediaArtifact.ts';
@@ -20,14 +19,14 @@ import * as MediaArtifact from './MediaArtifact.ts';
 export class Lightbox extends Type.makeObject<Lightbox>(DXN.make('org.dxos.type.lightbox', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    items: Schema.Array(Ref.Ref(MediaArtifact.MediaArtifact)).pipe(FormInputAnnotation.set(false)),
-    layout: BoardLayout.pipe(FormInputAnnotation.set(false)),
+    items: Schema.Array(Ref.Ref(MediaArtifact.MediaArtifact)).pipe(Annotation.FormInputAnnotation.set(false)),
+    layout: BoardLayout.pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'indigo' }),
   ),
 ) {}
 
 /** Creates an empty {@link Lightbox} with the default board layout. */
-export const make = ({ name }: { name?: string } = {}): Lightbox =>
-  Obj.make(Lightbox, { name, items: [], layout: defaultLayout });
+export const make = ({ [Obj.Parent]: parent, name }: { [Obj.Parent]?: Obj.Unknown; name?: string } = {}): Lightbox =>
+  Obj.make(Lightbox, { [Obj.Parent]: parent, name, items: [], layout: defaultLayout });
