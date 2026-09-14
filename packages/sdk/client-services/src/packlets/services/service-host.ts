@@ -528,8 +528,7 @@ export class ClientServicesHost {
       // is released: the stores below it are not closed, since the metadata store persists on close
       // and nothing guarantees the storage stage loaded it.
       await this.#stackRuntime?.dispose();
-      this.#stackRuntime = undefined;
-      this.#stackContext = undefined;
+      this.#releaseStack();
       this.#handlers = { SystemService: this.#systemService };
       this.#opening = false;
       throw err;
@@ -648,11 +647,33 @@ export class ClientServicesHost {
   async #disposeStack(): Promise<void> {
     log('closing stack...');
     await this.#stackRuntime?.dispose();
-    this.#stackRuntime = undefined;
-    this.#stackContext = undefined;
     await this.#feedStore?.close();
     await this.#metadataStore?.close();
+    this.#releaseStack();
     log('stack closed');
+  }
+
+  /**
+   * Drops every reference into a disposed runtime so the getters cannot hand out dead instances.
+   */
+  #releaseStack(): void {
+    this.#stackRuntime = undefined;
+    this.#stackContext = undefined;
+    this.#metadataStore = undefined;
+    this.#keyring = undefined;
+    this.#feedStore = undefined;
+    this.#spaceManager = undefined;
+    this.#identityManager = undefined;
+    this.#recoveryManager = undefined;
+    this.#invitations = undefined;
+    this.#invitationsManager = undefined;
+    this.#echoHost = undefined;
+    this.#dataSpaceManager = undefined;
+    this.#edgeAgentManager = undefined;
+    this.#identityLifecycle = undefined;
+    this.#readiness = undefined;
+    this.#devtoolsHost = undefined;
+    this.#networkManager = undefined;
   }
 
   /**

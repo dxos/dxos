@@ -94,8 +94,14 @@ const createIdentityLifecycle = ({
     acceptIdentity: async (params) => {
       const ctx = defaultCtx;
       const { identity, identityRecord } = await identityManager.prepareIdentity(params, ctx);
-      await emit(EffectEvent.emit(IdentityBound, { identity, deviceCredential: params.authorizedDeviceCredential! }));
-      await identity.joinNetwork(ctx);
+      try {
+        await emit(EffectEvent.emit(IdentityBound, { identity, deviceCredential: params.authorizedDeviceCredential! }));
+        await identity.joinNetwork(ctx);
+      } catch (err) {
+        // Nothing owns the prepared identity until the manager accepts it.
+        await identity.close(ctx).catch((closeErr) => log.catch(closeErr));
+        throw err;
+      }
       await identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
       await emit(EffectEvent.emit(IdentityAvailable, { identity }));
       log('identity accepted', { identityKey: identity.identityKey });
