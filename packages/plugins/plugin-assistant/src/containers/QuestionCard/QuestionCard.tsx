@@ -6,6 +6,7 @@ import React, { type KeyboardEvent, useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Button, Field, Flex, Icon, useTranslation } from '@dxos/react-ui';
 import { Question } from '@dxos/types';
@@ -35,12 +36,15 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
 
   const submit = useCallback(
     async (answer: string) => {
-      if (busy || answer.trim() === '') {
+      // The operation's `Database.Service` is space-affinity, so the invocation has to name the
+      // space: without it the process spawns with no database and the answer is silently lost.
+      const spaceId = Obj.getDatabase(subject)?.spaceId;
+      if (busy || !spaceId || answer.trim() === '') {
         return;
       }
       setBusy(true);
       try {
-        await invokePromise(AssistantOperation.AnswerQuestion, { question: subject, answer });
+        await invokePromise(AssistantOperation.AnswerQuestion, { question: subject, answer }, { spaceId });
       } finally {
         setBusy(false);
       }
