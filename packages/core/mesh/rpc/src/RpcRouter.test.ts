@@ -2,19 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import { describe, onTestFinished, test } from 'vitest';
-
-import { EffectEx } from '@dxos/effect';
 
 import { layerProtocolRpcPortServer, makeProtocolRpcPortClient } from './effect-rpc.ts';
 import * as RpcRouter from './RpcRouter.ts';
@@ -52,99 +50,126 @@ const counterHandlers = CounterRpcs.toLayer(
   }),
 );
 
-describe('RpcRouter', () => {
-  const setup = async () => {
-    const [clientPort, serverPort] = createLinkedPorts();
+const serveEcho = (reply: string) => RpcRouter.serve('Echo.', EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
+const serveCatchAll = (reply: string) => RpcRouter.serve('', EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
+const serveCounter = RpcRouter.serve('Counter.', CounterRpcs).pipe(Effect.provide(counterHandlers));
 
-    const routerRuntime = ManagedRuntime.make(
-      RpcRouter.layer.pipe(Layer.provide(layerProtocolRpcPortServer(serverPort))),
-    );
-    onTestFinished(() => routerRuntime.dispose());
-    await routerRuntime.runPromise(Effect.void);
+/**
+ * One transport with the router on the server end and a client for the merged group on the other,
+ * both living in the test's scope. `register` runs a `serve` in a child scope and returns it so a
+ * test can close the route on its own.
+ */
+const makeHarness = Effect.gen(function* () {
+  const [clientPort, serverPort] = createLinkedPorts();
+  const router = yield* Layer.build(RpcRouter.layer.pipe(Layer.provide(layerProtocolRpcPortServer(serverPort))));
+  const protocol = yield* makeProtocolRpcPortClient(clientPort);
+  const client = yield* RpcClient.make(AllRpcs, { disableTracing: true }).pipe(
+    Effect.provideService(RpcClient.Protocol, protocol),
+  );
 
-    const clientScope = Effect.runSync(Scope.make());
-    onTestFinished(() => EffectEx.runPromise(Scope.close(clientScope, Exit.void)));
-    const client = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const protocol = yield* makeProtocolRpcPortClient(clientPort);
-        return yield* RpcClient.make(AllRpcs, { disableTracing: true }).pipe(
-          Effect.provideService(RpcClient.Protocol, protocol),
-        );
-      }).pipe(Scope.provide(clientScope)),
-    );
-
-    /** Runs a `RpcRouter.serve` until the returned scope closes. */
-    const register = async (serving: Effect.Effect<void, never, RpcRouter.RpcRouter | Scope.Scope>) => {
-      const scope = Effect.runSync(Scope.make());
-      onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-      await routerRuntime.runPromise(serving.pipe(Scope.provide(scope)));
+  const register = (serving: Effect.Effect<void, never, RpcRouter.RpcRouter | Scope.Scope>) =>
+    Effect.gen(function* () {
+      const scope = yield* Scope.fork(yield* Effect.scope, 'sequential');
+      yield* serving.pipe(Effect.provide(router), Scope.provide(scope));
       return scope;
-    };
-    const serveEcho = (reply: string) => RpcRouter.serve('Echo.', EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
-    const serveCounter = RpcRouter.serve('Counter.', CounterRpcs).pipe(Effect.provide(counterHandlers));
-    const serveCatchAll = (reply: string) => RpcRouter.serve('', EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
+    });
 
-    return { client, register, serveEcho, serveCounter, serveCatchAll };
-  };
+  return { client, register };
+});
 
-  test('routes requests to the group serving their prefix', async ({ expect }) => {
-    const { client, register, serveEcho, serveCounter, serveCatchAll } = await setup();
-    await register(serveEcho('echo'));
-    await register(serveCounter);
+const closeScope = (scope: Scope.Closeable) => Scope.close(scope, Exit.void);
 
-    expect(await EffectEx.runPromise(client['Echo.echo']({ message: 'hi' }))).toEqual('echo: hi');
-    const values = await EffectEx.runPromise(client['Counter.countdown']({ from: 3 }).pipe(Stream.runCollect));
-    expect([...values]).toEqual([3, 2, 1]);
-  });
+describe('RpcRouter', () => {
+  it.live(
+    'routes requests to the group serving their prefix',
+    Effect.fn(function* ({ expect }) {
+      const { client, register } = yield* makeHarness;
+      yield* register(serveEcho('echo'));
+      yield* register(serveCounter);
 
-  test('a request with no route fails instead of hanging', async ({ expect }) => {
-    const { client, register, serveEcho, serveCounter, serveCatchAll } = await setup();
-    await register(serveEcho('echo'));
+      expect(yield* client['Echo.echo']({ message: 'hi' })).toEqual('echo: hi');
+      const values = yield* client['Counter.countdown']({ from: 3 }).pipe(Stream.runCollect);
+      expect([...values]).toEqual([3, 2, 1]);
+    }),
+  );
 
-    const exit = await EffectEx.runPromise(
-      Effect.exit(client['Counter.countdown']({ from: 1 }).pipe(Stream.runCollect)),
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.live(
+    'a request with no route fails instead of hanging',
+    Effect.fn(function* ({ expect }) {
+      const { client, register } = yield* makeHarness;
+      yield* register(serveEcho('echo'));
 
-  test('a group registered after the client connected is reachable', async ({ expect }) => {
-    const { client, register, serveEcho, serveCounter, serveCatchAll } = await setup();
-    const early = EffectEx.runPromise(client['Echo.echo']({ message: 'queued' }).pipe(Effect.exit));
-    await register(serveEcho('late'));
+      const exit = yield* Effect.exit(client['Counter.countdown']({ from: 1 }).pipe(Stream.runCollect));
+      expect(Exit.isFailure(exit)).toBe(true);
+    }),
+  );
 
-    // The early call raced registration, so either outcome is valid; a call after it must succeed.
-    await early;
-    expect(await EffectEx.runPromise(client['Echo.echo']({ message: 'now' }))).toEqual('late: now');
-  });
+  it.live(
+    'a group registered after the client connected is reachable',
+    Effect.fn(function* ({ expect }) {
+      const { client, register } = yield* makeHarness;
+      // Sent before any route exists: it may fail or, if registration wins the race, succeed.
+      const early = yield* Effect.forkChild(client['Echo.echo']({ message: 'queued' }));
+      yield* register(serveEcho('late'));
+      yield* Fiber.await(early);
 
-  test('closing a route scope removes it and leaves the others serving', async ({ expect }) => {
-    const { client, register, serveEcho, serveCounter, serveCatchAll } = await setup();
-    const echoScope = await register(serveEcho('echo'));
-    await register(serveCounter);
+      expect(yield* client['Echo.echo']({ message: 'now' })).toEqual('late: now');
+    }),
+  );
 
-    await EffectEx.runPromise(Scope.close(echoScope, Exit.void));
+  it.live(
+    'closing a route scope removes it and leaves the others serving',
+    Effect.fn(function* ({ expect }) {
+      const { client, register } = yield* makeHarness;
+      const echoScope = yield* register(serveEcho('echo'));
+      yield* register(serveCounter);
 
-    const exit = await EffectEx.runPromise(Effect.exit(client['Echo.echo']({ message: 'gone' })));
-    expect(Exit.isFailure(exit)).toBe(true);
-    const values = await EffectEx.runPromise(client['Counter.countdown']({ from: 2 }).pipe(Stream.runCollect));
-    expect([...values]).toEqual([2, 1]);
-  });
+      yield* closeScope(echoScope);
 
-  test('a prefix can be re-served with a different implementation', async ({ expect }) => {
-    const { client, register, serveEcho, serveCounter, serveCatchAll } = await setup();
-    const first = await register(serveEcho('first'));
-    expect(await EffectEx.runPromise(client['Echo.echo']({ message: 'a' }))).toEqual('first: a');
+      const exit = yield* Effect.exit(client['Echo.echo']({ message: 'gone' }));
+      expect(Exit.isFailure(exit)).toBe(true);
+      const values = yield* client['Counter.countdown']({ from: 2 }).pipe(Stream.runCollect);
+      expect([...values]).toEqual([2, 1]);
+    }),
+  );
 
-    await EffectEx.runPromise(Scope.close(first, Exit.void));
-    await register(serveEcho('second'));
-    expect(await EffectEx.runPromise(client['Echo.echo']({ message: 'b' }))).toEqual('second: b');
-  });
+  it.live(
+    'a prefix can be re-served with a different implementation',
+    Effect.fn(function* ({ expect }) {
+      const { client, register } = yield* makeHarness;
+      const first = yield* register(serveEcho('first'));
+      expect(yield* client['Echo.echo']({ message: 'a' })).toEqual('first: a');
 
-  test('the longest matching prefix wins', async ({ expect }) => {
-    const { client, register, serveEcho, serveCounter, serveCatchAll } = await setup();
-    await register(serveCatchAll('catch-all'));
-    await register(serveEcho('specific'));
+      yield* closeScope(first);
+      yield* register(serveEcho('second'));
+      expect(yield* client['Echo.echo']({ message: 'b' })).toEqual('second: b');
+    }),
+  );
 
-    expect(await EffectEx.runPromise(client['Echo.echo']({ message: 'x' }))).toEqual('specific: x');
-  });
+  it.live(
+    'the longest matching prefix wins',
+    Effect.fn(function* ({ expect }) {
+      const { client, register } = yield* makeHarness;
+      yield* register(serveCatchAll('catch-all'));
+      yield* register(serveEcho('specific'));
+
+      expect(yield* client['Echo.echo']({ message: 'x' })).toEqual('specific: x');
+    }),
+  );
+
+  it.live(
+    'an in-flight stream is cut off when its route closes',
+    Effect.fn(function* ({ expect }) {
+      const { client, register } = yield* makeHarness;
+      const counterScope = yield* register(serveCounter);
+      const collecting = yield* Effect.forkChild(
+        client['Counter.countdown']({ from: 1_000_000 }).pipe(Stream.runCount),
+      );
+
+      yield* closeScope(counterScope);
+
+      const exit = yield* Fiber.await(collecting);
+      expect(Exit.isSuccess(exit) && exit.value === 1_000_000).toBe(false);
+    }),
+  );
 });
