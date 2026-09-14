@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './Accordion/index.ts';
 export * from './AttentionGlyph/index.ts';
 export * from './Avatars/index.ts';
 export * from './Breadcrumb/index.ts';
@@ -32,6 +33,7 @@ export * from './MenuButton/index.ts';
 export * from './Banner/index.ts';
 export * from './Panel/index.ts';
 export * from './Popover/index.ts';
+export * from './HoverCard/index.ts';
 export * from './Progress/index.ts';
 export * from './QrCode/index.ts';
 export * from './ScrollArea/index.ts';

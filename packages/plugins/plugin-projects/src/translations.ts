@@ -23,6 +23,7 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Projects',
+        'project-tour.label': 'Take the project tour',
         'project.label': 'Project',
         'projects.label': 'Projects',
         'instructions.label': 'Instructions',
@@ -31,6 +32,9 @@ export const translations = [
         'views.label': 'Views',
         'overview.label': 'Overview',
         'tasks.label': 'Tasks',
+        'view.label': 'View',
+        'pipeline.label': 'Show pipeline',
+        'no-sessions.message': 'No agent sessions yet. Assign tasks to an agent to start one.',
         'no-task-set.message': 'This project has no task set yet.',
         'artifacts.label': 'Artifacts',
         'artifacts-empty.message': 'This project has no artifacts yet.',

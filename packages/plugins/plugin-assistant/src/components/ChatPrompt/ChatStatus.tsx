@@ -66,6 +66,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
         }
       }
     }
+
     return { lastOutputTokens: last, sessionTotalTokens: total };
   }, [messages]);
 
@@ -103,11 +104,11 @@ export const ChatStatusView = ({
   }
 
   return (
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-2 gap-2 text-sm', classNames]}>
+    <NaturalChatStatus.Root defaultRunning={false} classNames={['gap-2 text-sm', classNames]}>
       {icon && (
         <NaturalChatStatus.Icon>
           <Matrix
-            classNames='w-5 h-5'
+            classNames='size-5'
             dotClassNames='bg-primary-500'
             dim={4}
             dotSize={3}

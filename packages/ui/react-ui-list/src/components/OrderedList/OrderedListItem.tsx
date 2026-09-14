@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import React, {
   type ComponentProps,
   type CSSProperties,
@@ -160,16 +161,31 @@ export const OrderedListItem = <T extends ListItemRecord>({
   );
 };
 
+export type OrderedListDragHandleProps = PropsWithChildren<{
+  /**
+   * Make the child the handle instead of rendering the grip button: the child receives the drag
+   * ref and a disabled marker, so a whole row (a thumbnail, a card) can be what the reader grabs.
+   */
+  asChild?: boolean;
+}>;
+
 /**
  * Drag handle. Disabled when the list is readonly or the item opts out via `canDrag={false}`.
- * The button is the only element that initiates drag — pragmatic-dnd's `dragHandle:` option
+ * The handle is the only element that initiates drag — pragmatic-dnd's `dragHandle:` option
  * scopes the source surface to this ref.
  */
-export const OrderedListDragHandle = () => {
+export const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps) => {
   const { readonly } = useOrderedListContext('OrderedListDragHandle');
   const { canDrag, handleRef } = useOrderedListItemContext('OrderedListDragHandle');
   const { t } = useTranslation(osTranslations);
   const disabled = readonly || !canDrag;
+  if (asChild) {
+    return (
+      <ark.div asChild ref={handleRef as RefCallback<HTMLDivElement>} data-disabled={disabled || undefined}>
+        {children}
+      </ark.div>
+    );
+  }
   return (
     <IconButton
       variant='ghost'

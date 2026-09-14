@@ -431,6 +431,14 @@ body {
   fill: currentColor;
 }
 
+/* Holds the inlined sprite's symbols: out of flow and sized to nothing, never painted itself. */
+#boot-loader-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .boot-loader-plugin {
     animation: none;

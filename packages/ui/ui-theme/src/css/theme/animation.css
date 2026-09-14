@@ -80,15 +80,19 @@
    * Tree disclosure (enter only — Ark's BranchContent hides immediately on collapse).
    * Height animates where `interpolate-size: allow-keywords` is supported (the element opts in);
    * elsewhere block-size flips discretely mid-animation and the fade carries the reveal.
+   * The clip rides in the keyframes so it exists only while the height moves: a branch clipped
+   * at rest cuts whatever its first and last rows paint outside their box — a focus ring, a drop line.
    */
   @keyframes tree-disclose {
     from {
       opacity: 0;
       block-size: 0;
+      overflow-y: clip;
     }
     to {
       opacity: 1;
       block-size: auto;
+      overflow-y: clip;
     }
   }
   --animate-tree-disclose: tree-disclose 200ms ease-out;
@@ -96,10 +100,12 @@
     from {
       opacity: 1;
       block-size: auto;
+      overflow-y: clip;
     }
     to {
       opacity: 0;
       block-size: 0;
+      overflow-y: clip;
     }
   }
   /* `forwards` holds the collapsed frame until the model close lands and the machine hides the content. */

@@ -23,6 +23,8 @@ export const translations = [
         'console.tab.label': 'Console',
         'logs.tab.label': 'Logs',
         'debug-panel.title': 'Debug',
+        'debug-panel.empty.label': 'Select a tool',
+        'debug-panel.tree.label': 'Debug tools',
         'debug-port-status.running.label': 'Agent debug port is open — show debug panel',
         'console.clear.label': 'Clear log',
         'console.copy.label': 'Copy last result',

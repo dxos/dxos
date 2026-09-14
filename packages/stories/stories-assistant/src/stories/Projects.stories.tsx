@@ -11,7 +11,9 @@ import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 
 import { SpaceTemplateToolbar, StoryRole } from '../modules/index.ts';
+import { applyStagedProfileImport } from '../modules/profile-archive.ts';
 import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing/index.ts';
+import { isPersistent } from '../testing/persistence.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',
@@ -85,8 +87,6 @@ const storyOptions = {
         Collection.Collection,
         Text.Text,
         Mailbox.Mailbox,
-        // The mailbox and every feed trigger spec resolve `Feed`; unregistered, feed-backed reads
-        // come up empty.
         Feed.Feed,
         TagIndex.TagIndex,
         Sandbox.Sandbox,
@@ -99,9 +99,19 @@ const storyOptions = {
 /**
  * Persistent storage for the story a human drives: the spaces the templates create — and the
  * conversations held in them — survive a reload, so switching back to a template reopens its work
- * rather than scaffolding it again.
+ * rather than scaffolding it again. The toolbar's checkbox turns it off; the function form reads
+ * the choice at mount, which is when the client boots.
  */
-const persistentDecorators = createDecorators({ ...storyOptions, config: config.persistent });
+const persistentDecorators = createDecorators(() => ({
+  ...storyOptions,
+  config: isPersistent() ? config.persistent : config.remote,
+  // A profile imported from the toolbar lands here: plugins resolve before the client starts, which
+  // is the only moment no worker holds the database open.
+  lazyPlugins: async () => {
+    await applyStagedProfileImport();
+    return storyOptions.lazyPlugins();
+  },
+}));
 
 /** Ephemeral, for the play test: a fixture that outlives the run would make the next one lie. */
 const decorators = createDecorators(storyOptions);

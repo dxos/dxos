@@ -573,6 +573,25 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * automerge-repo's `findWithProgress` does not re-issue a parked DocumentQuery; repo-wide,
+   * `shareConfigChanged` clears `all-failed` entries and the heal backoff, then re-syncs.
+   */
+  kickStalledSync(): void {
+    this._repo.shareConfigChanged();
+  }
+
+  /**
+   * Re-drives one document's Subduction sync round, re-arming its heal loop.
+   *
+   * {@link kickStalledSync} only revives `all-failed`/`no-peers` entries, so it cannot move a
+   * sedimentree Subduction already considers settled — which is the state a document sits in when
+   * its heads stay behind the sync server with no round in flight.
+   */
+  resyncDocument(documentId: DocumentId): void {
+    this._repo.resyncSubduction(documentId);
+  }
+
+  /**
    * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
    * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
    *

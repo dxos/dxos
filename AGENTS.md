@@ -245,6 +245,9 @@ Universal rules. Deeper conventions live in skills — see the pointers below.
   dynamic `import()` and browser callback APIs (wrap the latter with `Effect.async`). Use
   `Effect.sleep`/`Effect.gen` instead of `setTimeout`/`async` orchestration. (Exception:
   tests that need real macrotask turns across runtimes — TestClock virtualizes `Effect.sleep`.)
+- Relative imports carry the real source extension: `from './module.ts'`, `from './dir/index.ts'`
+  (never extensionless, never a `.js` projection) — `tsc` rewrites them on emit via
+  `rewriteRelativeImportExtensions`. Enforced by `import/extensions` in `.oxlintrc.json`.
 - Import order, blank line between groups:
   builtin → external → @dxos → internal → parent → sibling.
 - Prefer named exports; avoid default exports. Use barrel imports.

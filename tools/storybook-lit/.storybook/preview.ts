@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/web-components-vite';
 
-import { withLayout } from './theme';
+import { withLayout } from './theme.ts';
 
 /**
  * Configure Storybook rendering.

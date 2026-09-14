@@ -48,8 +48,13 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // A chat delegating nothing has no subject; the schema cannot say so (see the operation's
         // input), so the invariant is where an empty list stops.
         invariant(taskRefs.length > 0, 'Expected at least one task to delegate.');
-        const tasks = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
+        const requested = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
         const { db } = yield* Database.Service;
+
+        // Idempotent over re-invocation: a task the agent already holds is skipped rather than
+        // handed to a second session, and a list of nothing else stops here the way an empty one does.
+        const tasks = requested.filter((task) => !Task.isAgentWorking(task));
+        invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
         // than loose in the space. Walked from the tasks rather than taken as input: the list the
@@ -209,10 +214,21 @@ const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, proj
   const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
   // Registry refs rather than database clones: the ECHO resolver spans the registry, as
-  // `CreateChat` does for the default set.
-  const skills = DELEGATION_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
-  const objects = project ? [Ref.make(project)] : [];
+  // `CreateChat` does for the default set. The project's instructions name the skills and context
+  // its work needs (a studio project's storyboard verbs, say); the subject binding only renders
+  // their text, so those refs are bound too.
+  const bindings = project ? yield* projectBindings(project) : { skills: [], objects: [] };
+  const skills = [...DELEGATION_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))), ...bindings.skills];
+  const objects = project ? [Ref.make(project), ...bindings.objects] : [];
   yield* Effect.promise(() => binder.use((binder: AiContext.Binder) => binder.bind({ skills, objects })));
+});
+
+/** `Project.contextBindings` needs the instructions ref resolved, which a fresh load guarantees. */
+const projectBindings = Effect.fnUntraced(function* (project: Project.Project) {
+  if (project.instructions) {
+    yield* Database.load(project.instructions);
+  }
+  return Project.contextBindings(project);
 });
 
 export default handler;

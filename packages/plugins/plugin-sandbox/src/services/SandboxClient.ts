@@ -36,6 +36,25 @@ export const FileEntry = Schema.Struct({
 });
 export type FileEntry = Schema.Schema.Type<typeof FileEntry>;
 
+/**
+ * Wire encoding of a file's `content`: `utf-8` carries text verbatim, `base64` carries bytes. The
+ * service picks one per file from its MIME type when the caller names none.
+ */
+export const FileEncoding = Schema.Literals(['utf-8', 'base64']);
+export type FileEncoding = Schema.Schema.Type<typeof FileEncoding>;
+
+/**
+ * A file read from the sandbox. `encoding`, `mimeType` and `size` are what the service reports about
+ * the file; an older service sends `content` alone, which is then utf-8 text.
+ */
+export const ReadFileResult = Schema.Struct({
+  content: Schema.String,
+  encoding: Schema.optional(FileEncoding),
+  mimeType: Schema.optional(Schema.String),
+  size: Schema.optional(Schema.Number),
+});
+export type ReadFileResult = Schema.Schema.Type<typeof ReadFileResult>;
+
 export type ExecRequest = {
   command: string;
   cwd?: string;
@@ -133,15 +152,42 @@ export class SandboxClient {
     );
   }
 
-  readFile(spaceId: string, sandboxId: string, path: string): RequestEffect<string> {
+  /**
+   * Reads a file. Without `encoding` the service chooses per file — text as `utf-8`, anything else
+   * as `base64` — and reports its choice in the result; see {@link readFileBytes} for the decoded form.
+   */
+  readFile(
+    spaceId: string,
+    sandboxId: string,
+    path: string,
+    options?: { encoding?: FileEncoding },
+  ): RequestEffect<ReadFileResult> {
     return this.#send(
       HttpClientRequest.get(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/files`)).pipe(
-        HttpClientRequest.setUrlParams({ path }),
+        HttpClientRequest.setUrlParams({ path, ...(options?.encoding ? { encoding: options.encoding } : {}) }),
       ),
       undefined,
-      Schema.Struct({ content: Schema.String }),
+      ReadFileResult,
       METADATA_TIMEOUT,
-    ).pipe(Effect.map((body) => body.content));
+    );
+  }
+
+  /**
+   * Reads a file as bytes plus its MIME type. Text arrives utf-8 and is re-encoded; binary arrives
+   * base64 and is decoded — so an image round-trips byte for byte. The type is the service's own
+   * detection, never guessed from the path: a `.png` holding something else must not be served as one.
+   */
+  readFileBytes(spaceId: string, sandboxId: string, path: string): RequestEffect<{ bytes: Uint8Array; type: string }> {
+    return this.readFile(spaceId, sandboxId, path).pipe(
+      Effect.flatMap(({ content, encoding, mimeType }) =>
+        Effect.map(
+          encoding === 'base64'
+            ? Schema.decodeUnknownEffect(Schema.Uint8ArrayFromBase64)(content)
+            : Effect.succeed(new TextEncoder().encode(content)),
+          (bytes) => ({ bytes, type: mimeType ?? (encoding === 'base64' ? 'application/octet-stream' : 'text/plain') }),
+        ),
+      ),
+    );
   }
 
   writeFile(spaceId: string, sandboxId: string, path: string, content: string): RequestEffect<void> {

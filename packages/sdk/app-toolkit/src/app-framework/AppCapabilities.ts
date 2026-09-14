@@ -32,6 +32,7 @@ import type * as Translations$ from '../app/Translations.ts';
 import type * as AppSettings from '../types/AppSettings.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as ObservabilityMapping$ from './ObservabilityMapping.ts';
+import type * as TourModule from './Tour.ts';
 
 export const LAYOUT_CAPABILITY_ID = 'org.dxos.app-framework.capability.layout';
 
@@ -472,3 +473,19 @@ export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
 export const ObservabilityMapping = Capability$.make<ObservabilityMapping[]>()(
   'org.dxos.app-toolkit.capability.observabilityMapping',
 );
+
+export type Tour = TourModule.Definition;
+
+/**
+ * A guided tour.
+ * @category Capability
+ */
+export const Tour = Capability$.make<Tour>()('org.dxos.app-toolkit.capability.tour');
+
+export type TourFragment = TourModule.Fragment;
+
+/**
+ * Steps contributed into whichever tour is running, by the plugin that owns the feature they explain.
+ * @category Capability
+ */
+export const TourFragment = Capability$.make<TourFragment>()('org.dxos.app-toolkit.capability.tourFragment');

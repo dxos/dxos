@@ -126,7 +126,7 @@ export const AssistantTestLayer = (
     options.provider ?? (options.aiServicePreset === 'ollama' ? Provider.ollama.id : Provider.edge.id);
 
   const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
-  agentOptions.model ??= resolvedModel;
+  agentOptions.defaultModel ??= resolvedModel;
   agentOptions.provider ??= resolvedProvider;
 
   // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but

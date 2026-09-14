@@ -671,8 +671,13 @@ const spanTreeToCommits = (
       builder.addCommit({
         id: `running:${process.pid}`,
         branch: process.pid,
+        // Falls back to the tail of main: a completed request collapses onto main, leaving the
+        // agent's own branch empty, and a parentless spinner draws as a second, disconnected root.
         parents: builder.computeParents(
-          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+          CommitSelector.firstOf(
+            CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+            CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last())),
+          ),
         ),
         icon: ICONS.agentRequestRunning.icon,
         level: ICONS.agentRequestRunning.level,

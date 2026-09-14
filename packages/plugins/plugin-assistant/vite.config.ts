@@ -19,6 +19,7 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
+    'session-timeline': 'src/session-timeline/index.ts',
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
     'AssistantEvents': 'src/types/AssistantEvents.ts',
