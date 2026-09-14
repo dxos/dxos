@@ -36,9 +36,15 @@ describe('causeToError', () => {
   });
 
   test('drops effect runtime frames but keeps the location of the thunk that threw', async ({ expect }) => {
-    const defects = [
+    const throwing = [
       Effect.sync(() => {
         throw new Error('defect');
+      }),
+      Effect.try({
+        try: () => {
+          throw new Error('failure');
+        },
+        catch: (error) => error,
       }),
       // `map` calls the thunk through an anonymous runtime callback, which carries no `~effect/` name and stays.
       Effect.succeed(1).pipe(
@@ -47,10 +53,10 @@ describe('causeToError', () => {
         }),
       ),
     ];
-    for (const defect of defects) {
-      const error = await failWith(defect);
+    for (const effect of throwing) {
+      const error = await failWith(effect);
       const [, thunkFrame] = error.stack!.split('\n');
-      expect(thunkFrame).to.match(/^ {4}at \S*errors\.test\.ts:\d+:\d+$/);
+      expect(thunkFrame).to.match(/^ {4}at (?:\S+ \()?\S*errors\.test\.ts:\d+:\d+\)?$/);
       expect(error.stack).not.to.match(/~effect\/|FiberImpl/);
     }
   });

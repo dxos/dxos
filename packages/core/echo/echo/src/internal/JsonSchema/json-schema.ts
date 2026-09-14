@@ -179,17 +179,20 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
   }
   // Recursive: `Schema.optional` is not idempotent in v4, so an already-optional field made optional
   // again nests as `(T | undefined) | undefined` and one pass would leave the inner union behind.
-  return defined.length === 1
-    ? SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {})
-    : new SchemaAST.Union(
-        defined.map(stripUndefinedMember),
-        ast.mode,
-        ast.annotations,
-        ast.checks,
-        ast.encoding,
-        ast.context,
-        ast.encodingChecks,
-      );
+  if (defined.length === 1) {
+    const member = SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {});
+    // A check written for `T | undefined` still holds for `T`.
+    return ast.checks ? Schema.make<Schema.Top>(member).check(...ast.checks).ast : member;
+  }
+  return new SchemaAST.Union(
+    defined.map(stripUndefinedMember),
+    ast.mode,
+    ast.annotations,
+    ast.checks,
+    ast.encoding,
+    ast.context,
+    ast.encodingChecks,
+  );
 };
 
 /**
