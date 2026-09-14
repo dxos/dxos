@@ -8,7 +8,7 @@ import * as Template from '@dxos/compute/Template';
 import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { AssignTasks, PlanReminder, UpdateTasks } from './operations/definitions.ts';
+import { AskQuestion, AssignTasks, PlanReminder, UpdateTasks } from './operations/definitions.ts';
 
 const SKILL_KEY = 'org.dxos.skill.planning';
 
@@ -18,7 +18,7 @@ const make = () =>
     name: 'Planning',
     description: 'Plans and tracks complex tasks using artifacts.',
     agentCanEnable: true,
-    tools: Skill.toolDefinitions({ operations: [UpdateTasks, AssignTasks] }),
+    tools: Skill.toolDefinitions({ operations: [UpdateTasks, AssignTasks, AskQuestion] }),
     instructions: Template.make({
       source: trim`
         {{! Planning }}
@@ -34,6 +34,10 @@ const make = () =>
         A task that already exists elsewhere is put on (or taken off) this conversation's
         checklist with assign-tasks, which changes membership only — it never creates, edits or
         deletes a task.
+        When a task cannot proceed until the user decides something, ask with ask-question rather
+        than guessing or stalling: it blocks that task, files the question on it, and ends your
+        involvement until the answer arrives. Ask about one task at a time, offer the answers you
+        think likely, and then finish the turn — you are sent a message when it is answered.
       `,
     }),
     // At the end of every request, remind the agent to keep working while its plan has open tasks.
