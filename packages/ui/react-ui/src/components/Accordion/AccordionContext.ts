@@ -12,7 +12,7 @@ export const ACCORDION_NAME = 'Accordion';
 export const ACCORDION_ITEM_NAME = 'AccordionItem';
 
 type AccordionContext<T extends AccordionItemRecord> = {
-  getId: (item: T) => string;
+  getId(item: T): string;
 };
 
 type AccordionItemContext<T extends AccordionItemRecord> = {
