@@ -7,6 +7,7 @@ import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { Trigger } from '@dxos/async';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -397,16 +398,16 @@ describe('DatabaseImpl', () => {
         // The refusal must not keep the rest of the database's writes from being persisted.
         expect(hostAskedToFlush).toBe(true);
 
-        const failedCreations: LogEntry[] = [];
+        const creationFailed = new Trigger();
         onTestFinished(
           log.addProcessor((_config: LogConfig, entry: LogEntry) => {
             if (entry.message === 'object not bound: its document was not created') {
-              failedCreations.push(entry);
+              creationFailed.wake();
             }
           }),
         );
         db.add(Obj.make(TestSchema.Expando, { name: 'refused before any flush' }));
-        await expect.poll(() => failedCreations.length).toBe(1);
+        await creationFailed.wait();
         await expect(db.flush()).resolves.toBeUndefined();
       });
 
