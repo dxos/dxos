@@ -46,5 +46,6 @@ export type ConnectorAuthAnnotationValue = {
 export const ConnectorAuthAnnotationId = '@dxos/plugin-connector/annotation/ConnectorAuth';
 export const ConnectorAuthAnnotation = Annotation.make<ConnectorAuthAnnotationValue>({
   id: ConnectorAuthAnnotationId,
+  legacyId: true,
   schema: Schema.Any,
 });

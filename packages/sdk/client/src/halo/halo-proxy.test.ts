@@ -6,7 +6,8 @@ import { toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import { type ClientServicesProvider } from '@dxos/client-protocol';
+import { Event } from '@dxos/async';
+import { type ClientServicesProvider, type ClientServicesRpc } from '@dxos/client-protocol';
 import { PublicKey } from '@dxos/keys';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
@@ -25,14 +26,28 @@ import { HaloProxy } from './halo-proxy.ts';
  */
 const recordRecoverIdentity = () => {
   let request: RecoverIdentityRequest | undefined;
-  const serviceProvider = {
-    rpc: {
-      'IdentityService.recoverIdentity': (value: RecoverIdentityRequest) => {
-        request = value;
-        return Effect.succeed({} as Identity);
-      },
+  const rpc: Pick<ClientServicesRpc, 'IdentityService.recoverIdentity'> = {
+    'IdentityService.recoverIdentity': (value: RecoverIdentityRequest) => {
+      request = value;
+      return Effect.succeed({} as Identity);
     },
-  } as unknown as ClientServicesProvider;
+  };
+  // Only `recoverIdentity` is exercised; every other tag throws instead of silently returning `undefined`.
+  const rpcStub = new Proxy(rpc, {
+    get: (target, prop, receiver) =>
+      prop in target
+        ? Reflect.get(target, prop, receiver)
+        : () => {
+            throw new Error(`Unexpected rpc call: ${String(prop)}`);
+          },
+  }) as ClientServicesRpc;
+  const serviceProvider: ClientServicesProvider = {
+    closed: new Event(),
+    rpc: rpcStub,
+    services: {},
+    open: () => Promise.resolve(),
+    close: () => Promise.resolve(),
+  };
 
   return { halo: new HaloProxy(serviceProvider), sent: () => request };
 };

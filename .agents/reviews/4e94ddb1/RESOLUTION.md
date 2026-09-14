@@ -2,7 +2,7 @@
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 4e94ddb1-1 - unresolved - import-as-namespace-is-all-or-nothing - packages/common/crx-protocol/src/Proxy.ts:42:14
+- 4e94ddb1-1 - resolved - import-as-namespace-is-all-or-nothing - packages/common/crx-protocol/src/Proxy.ts:42:14
 - 4e94ddb1-2 - unresolved - namespace-service-layers - packages/common/effect/src/layers.test.ts:18:3
 - 4e94ddb1-3 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.browser.test.ts:44:7
 - 4e94ddb1-4 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:59:7
@@ -14,8 +14,8 @@
 - 4e94ddb1-10 - resolved - no-casts - packages/common/test-utils/src/claude-agent.ts:256:30
 - 4e94ddb1-11 - resolved - no-casts - packages/common/test-utils/src/claude-agent.ts:260:19
 - 4e94ddb1-12 - resolved - no-casts - packages/common/test-utils/src/claude-agent.ts:261:16
-- 4e94ddb1-13 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/agent-runtime/src/agent-service/AgentService.test.ts:25:1
-- 4e94ddb1-14 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/agent-runtime/src/agent-service/AgentService.ts:104:18
+- 4e94ddb1-13 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/agent-runtime/src/agent-service/AgentService.test.ts:25:1
+- 4e94ddb1-14 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/agent-runtime/src/agent-service/AgentService.ts:104:18
 - 4e94ddb1-15 - resolved - no-casts - packages/core/compute/ai/src/AiParser.test.ts:612:13
 - 4e94ddb1-16 - unresolved - no-casts - packages/core/compute/ai/src/resolvers/ChatCompletionsAdapter.test.ts:110:17
 - 4e94ddb1-17 - unresolved - no-casts - packages/core/compute/ai/src/resolvers/ChatCompletionsAdapter.test.ts:195:19
@@ -37,26 +37,26 @@
 - 4e94ddb1-33 - unresolved - no-casts - packages/core/compute/assistant-evals/src/Scorer.ts:186:43
 - 4e94ddb1-34 - unresolved - no-casts - packages/core/compute/assistant-evals/src/Usage.ts:63:44
 - 4e94ddb1-35 - resolved - no-trivial-wrappers-over-official-apis - packages/core/compute/assistant-evals/src/Usage.ts:73:9
-- 4e94ddb1-36 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/skills/agent/operations/definitions.ts:11:1
-- 4e94ddb1-37 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/skills/agent/operations/relay.ts:13:1
-- 4e94ddb1-38 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/supervisor/delegation-strategy.test.ts:13:1
-- 4e94ddb1-39 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/types/McpServer.ts:11:1
-- 4e94ddb1-40 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant/src/request/format.ts:13:1
-- 4e94ddb1-41 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant/src/types/Agent.ts:13:1
-- 4e94ddb1-42 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant/src/types/Chat.ts:15:1
-- 4e94ddb1-43 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute-runtime/src/ProcessHandle.ts:5:1
+- 4e94ddb1-36 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/skills/agent/operations/definitions.ts:11:1
+- 4e94ddb1-37 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/skills/agent/operations/relay.ts:13:1
+- 4e94ddb1-38 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/supervisor/delegation-strategy.test.ts:13:1
+- 4e94ddb1-39 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant-toolkit/src/types/McpServer.ts:11:1
+- 4e94ddb1-40 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant/src/request/format.ts:13:1
+- 4e94ddb1-41 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant/src/types/Agent.ts:13:1
+- 4e94ddb1-42 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/assistant/src/types/Chat.ts:15:1
+- 4e94ddb1-43 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute-runtime/src/ProcessHandle.ts:5:1
 - 4e94ddb1-44 - unresolved - no-casts - packages/core/compute/compute-runtime/src/RemoteProcessHandle.test.ts:154:6
-- 4e94ddb1-45 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute-runtime/src/SwarmTraceSink.ts:9:18
+- 4e94ddb1-45 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute-runtime/src/SwarmTraceSink.ts:9:18
 - 4e94ddb1-46 - unresolved - no-sleep-in-test - packages/core/compute/compute-runtime/src/TriggerMonitor.test.ts:320:11
 - 4e94ddb1-47 - unresolved - namespace-service-layers - packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts:249:3
-- 4e94ddb1-48 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Project.ts:10:1
-- 4e94ddb1-49 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Script.ts:10:1
-- 4e94ddb1-50 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Template.ts:11:1
-- 4e94ddb1-51 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Trigger.ts:14:1
-- 4e94ddb1-52 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/conductor/src/nodes/registry.ts:11:1
-- 4e94ddb1-53 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/edge-compute/src/EdgeProcessControl.ts:5:1
+- 4e94ddb1-48 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Project.ts:10:1
+- 4e94ddb1-49 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Script.ts:10:1
+- 4e94ddb1-50 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Template.ts:11:1
+- 4e94ddb1-51 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Trigger.ts:14:1
+- 4e94ddb1-52 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/conductor/src/nodes/registry.ts:11:1
+- 4e94ddb1-53 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/edge-compute/src/EdgeProcessControl.ts:5:1
 - 4e94ddb1-54 - unresolved - declare-optional-services-with-noop-layers - packages/core/compute/edge-compute/src/EdgeProcessManager.ts:90:7
-- 4e94ddb1-55 - unresolved - import-as-namespace-is-all-or-nothing - packages/core/compute/functions-runtime-cloudflare/src/wrap-handler-for-cloudflare.ts:9:1
+- 4e94ddb1-55 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/functions-runtime-cloudflare/src/wrap-handler-for-cloudflare.ts:9:1
 - 4e94ddb1-56 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/link/src/AccessToken.ts:10:1
 - 4e94ddb1-57 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/link/src/Connection.ts:10:1
 - 4e94ddb1-58 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/link/src/Cursor.ts:14:1

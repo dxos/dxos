@@ -101,13 +101,41 @@ describe('ChatCompletionsLanguageModel', () => {
   }
 });
 
+/** One `tool_calls` entry in a captured OpenAI/Ollama chat-completions request body. */
+interface WireToolCall {
+  readonly id: string;
+  readonly type: 'function';
+  readonly function: { readonly name: string; readonly arguments: string | Record<string, unknown> };
+}
+
+/** One message in a captured OpenAI/Ollama chat-completions request body. */
+interface WireMessage {
+  readonly role: 'system' | 'user' | 'assistant' | 'tool';
+  readonly content?: string | null;
+  readonly reasoning_content?: string;
+  readonly tool_calls?: WireToolCall[];
+}
+
+/** The request body the adapter sends, as much of it as these tests assert against. */
+interface WireRequestBody {
+  readonly model: string;
+  readonly messages: WireMessage[];
+}
+
+/** The lone assistant message in a captured request body — every caller here expects exactly one. */
+const assistantMessage = (body: WireRequestBody): WireMessage => {
+  const message = body.messages.find((message) => message.role === 'assistant');
+  invariant(message, 'expected an assistant message in the captured request body');
+  return message;
+};
+
 /**
  * Captures the request body the adapter sends, so the wire shape can be asserted without a live
  * server (the suites above are `manual` and need one).
  */
 const captureRequestBody = (
   apiFormat: ChatCompletionsAdapter.ApiFormat,
-  capture: (body: any) => void,
+  capture: (body: WireRequestBody) => void,
   provider?: string,
 ) => {
   const stub = HttpClient.make((request) =>
