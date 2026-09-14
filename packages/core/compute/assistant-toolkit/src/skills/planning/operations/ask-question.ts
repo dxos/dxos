@@ -44,6 +44,26 @@ export default AskQuestion.pipe(
         `;
       }
 
+      // A retried tool call must not file a second question: the reader would have two to answer
+      // where only the first resumes anything cleanly, and the second answer would wake the same
+      // chat again. Checked against the task's own artifacts, which is where the first one landed.
+      const artifacts = yield* Effect.forEach(task.artifacts ?? [], (ref) =>
+        Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+      );
+      const pending = artifacts.find(
+        (artifact) => artifact && Obj.instanceOf(Question.Question, artifact) && !Question.isAnswered(artifact),
+      );
+      if (pending) {
+        return trim`
+          "${task.title}" already has an unanswered question, so nothing was filed. Wait for it to be
+          answered rather than asking again.
+
+          <checklist>
+          ${yield* Chat.formatChecklist(chat)}
+          </checklist>
+        `;
+      }
+
       // Parented to the task, so a question dies with the work it was about rather than outliving
       // it as an orphan nobody can place.
       const question = db.add(

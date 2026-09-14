@@ -113,6 +113,51 @@ describe('AskQuestion', () => {
   );
 
   it.effect(
+    'refuses a second question while the first is unanswered',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { chat, invoke } = yield* setupChat;
+        yield* invoke(UpdateTasks, { tasks: [{ title: 'Draft the reply', status: 'started' }] });
+        yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'What is our refund window?' });
+
+        // A retried tool call: the reader must not end up with two questions on one task.
+        const result = yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'Asking again?' });
+        yield* Database.flush();
+
+        const questions = yield* loadQuestions;
+        expect(questions.map(({ text }) => text)).toEqual(['What is our refund window?']);
+        expect(String(result)).toContain('already has an unanswered question');
+        const [task] = yield* Chat.loadTasks(chat);
+        expect(task.artifacts?.length).toBe(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'asks again once the first question has been answered',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { invoke } = yield* setupChat;
+        yield* invoke(UpdateTasks, { tasks: [{ title: 'Draft the reply', status: 'started' }] });
+        yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'First?' });
+        const [first] = yield* loadQuestions;
+        Question.answer(first, '30 days');
+        yield* Database.flush();
+
+        yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'Second?' });
+        yield* Database.flush();
+
+        const questions = yield* loadQuestions;
+        expect(questions.map(({ text }) => text).sort()).toEqual(['First?', 'Second?']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'traces the question alongside the status change it caused',
     Effect.fnUntraced(
       function* ({ expect }) {

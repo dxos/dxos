@@ -38,12 +38,17 @@ const prompts: Prompt[] = [];
  * question of interest is what the operation asks for, not what a model does with it. Placed first
  * in the merge, which is where resolution stops.
  */
+/** Set by a test to make the stubbed resume fail, exercising the handler's recovery arm. */
+let resumeFails = false;
+
 const StubRunPrompt = OperationHandlerSet.make(
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(({ chat, prompt, disposition }) =>
-      Effect.sync(() => {
-        prompts.push({ chat: chat?.id, prompt, disposition });
-      }),
+      resumeFails
+        ? Effect.die(new Error('no agent host'))
+        : Effect.sync(() => {
+            prompts.push({ chat: chat?.id, prompt, disposition });
+          }),
     ),
   ),
 );
@@ -121,6 +126,34 @@ describe('AnswerQuestion', () => {
         expect(prompts[0].prompt).not.toContain('30 days');
 
         // The task stays blocked: only the agent knows whether the answer cleared what it was on.
+        expect(task.status).toBe('blocked');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'keeps the answer when the agent cannot be reached, and says the resume failed',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        prompts.length = 0;
+        resumeFails = true;
+        const { question, task } = yield* setup;
+
+        const { accepted, resumed } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
+          question,
+          answer: '30 days',
+        });
+        yield* Database.flush();
+        resumeFails = false;
+
+        // The reader answered; a host that cannot reach the agent must not take that back.
+        expect(accepted).toBe(true);
+        expect(resumed).toBe(false);
+        expect(question.selectedAnswer).toBe('30 days');
+        expect(yield* readEvents(Trace.QuestionAnswered)).toHaveLength(1);
+        // Left blocked, which is a state a person can see and retry from.
         expect(task.status).toBe('blocked');
       },
       Effect.provide(TestLayer),

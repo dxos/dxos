@@ -24,15 +24,13 @@ export const AnswerOption = Schema.Struct({
 export type AnswerOption = Schema.Schema.Type<typeof AnswerOption>;
 
 /**
- * A question an agent put to a person, durable and attached to the task it is blocking.
+ * A question an agent put to a person, attached to the task it blocks.
  *
- * It is an object rather than a message because it outlives the turn that asked it: the task it
- * blocks points at it as an artifact, a reader may answer it hours later from the task rather than
- * from the conversation, and the answer has to be readable by the agent that resumes. A question
- * held in the thread alone would be none of those things.
+ * An object rather than a message because it outlives the turn that asked it: the task points at it
+ * as an artifact, and the agent that resumes reads the answer back off it.
  *
  * `options` are a convenience, never a constraint — a surface rendering this MUST also accept
- * free-form text, since the whole point of asking is that the asker did not know the answer.
+ * free-form text, since the point of asking is that the asker did not know.
  */
 export class Question extends Type.makeObject<Question>(DXN.make('org.dxos.type.question', '0.1.0'))(
   Schema.Struct({
@@ -46,8 +44,8 @@ export class Question extends Type.makeObject<Question>(DXN.make('org.dxos.type.
     options: Schema.optional(Schema.Array(AnswerOption).annotate({ title: 'Options' })),
 
     /**
-     * The task this question blocks. Required by construction rather than by schema: a question
-     * with nothing to unblock has no one to answer it and nothing to resume.
+     * The task this question blocks. Optional because a question can outlive its task, and because
+     * a caller outside the planning tool may have none — readers must handle its absence.
      */
     task: Schema.optional(Ref.Ref(Task.Task).annotate({ title: 'Task' })),
 

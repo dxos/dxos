@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import * as Chat from '@dxos/assistant/Chat';
@@ -65,9 +66,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.AnswerQuestion> =
       }
 
       // The answer is already durable, so a host that cannot reach the agent must not take it back:
-      // the reader answered, and re-asking them because the wake failed would be the worse outcome.
-      // The question stays answered and the task stays blocked, which is a state a person can see
-      // and retry from.
+      // re-asking the reader because the wake failed is the worse outcome. Interruption still
+      // propagates — converting it to `resumed: false` would defeat cancellation of this operation.
       const resumed = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
         chat,
         disposition: 'synthetic',
@@ -75,10 +75,15 @@ const handler: Operation.WithHandler<typeof AssistantOperation.AnswerQuestion> =
       }).pipe(
         Effect.as(true),
         Effect.catchCause((cause) =>
-          Effect.sync(() => {
-            log.warn('question answered but the conversation could not be resumed', { question: question.id, cause });
-            return false;
-          }),
+          Cause.hasInterruptsOnly(cause)
+            ? Effect.failCause(cause)
+            : Effect.sync(() => {
+                log.warn('question answered but the conversation could not be resumed', {
+                  question: question.id,
+                  cause,
+                });
+                return false;
+              }),
         ),
       );
 

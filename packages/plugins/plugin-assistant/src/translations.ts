@@ -176,6 +176,8 @@ export const translations: Resource[] = [
         'question-answer.label': 'Your answer',
         'question-answer.placeholder': 'Type an answer…',
         'question-submit.label': 'Answer',
+        'question-failed.message': 'That answer could not be saved. Try again.',
+        'question-stranded.message': 'Answer saved, but the assistant could not be resumed.',
 
         'plugin-prompt.title': 'Enable {{plugin}}',
         'plugin-prompt.description': 'This action needs the {{plugin}} plugin. Enable it to continue.',

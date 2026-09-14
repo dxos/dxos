@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EntityId } from '@dxos/keys';
 import { Question } from '@dxos/types';
 
 import { QuestionCard } from '../QuestionCard/QuestionCard.tsx';
@@ -21,13 +22,17 @@ export type QuestionSurfaceProps = {
 /**
  * Renders a question inline in the conversation from the id the agent emitted.
  *
- * The id is looked up rather than carried as a payload: the card must show the live object — an
- * answer given here, or from the task, has to be the same answer everywhere — and a model-written
- * payload could not be trusted to be the question's current state in any case.
+ * The id is looked up rather than carried as a payload, so the card shows the live object: an
+ * answer given here and one given from the task have to be the same answer.
  */
 export const QuestionSurface = ({ question: id }: QuestionSurfaceProps) => {
   const space = useActiveSpace();
-  const [object] = useQuery(id ? space?.db : undefined, Filter.id(id ?? ''));
+  // Validated before it reaches `Filter.id`, which asserts on its arguments: this id is written by
+  // a model, so a truncated or hallucinated one is the expected case, and an unguarded filter
+  // would throw during render inside the transcript rather than render nothing.
+  const valid = id !== undefined && EntityId.isValid(id) ? id : undefined;
+  const filter = useMemo(() => (valid ? Filter.id(valid) : Filter.nothing()), [valid]);
+  const [object] = useQuery(valid ? space?.db : undefined, filter);
   if (!object || !Obj.instanceOf(Question.Question, object)) {
     return null;
   }

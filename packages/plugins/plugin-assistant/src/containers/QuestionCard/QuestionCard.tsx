@@ -8,6 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { log } from '@dxos/log';
 import { Button, Field, Flex, Icon, useTranslation } from '@dxos/react-ui';
 import { Question } from '@dxos/types';
 
@@ -33,6 +34,10 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
   const [question] = useObject(subject);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  // What the write actually did, so the card can say when the answer landed but the agent did not
+  // wake — a checkmark over a task that stays blocked forever is the one outcome with no signal.
+  const [failed, setFailed] = useState(false);
+  const [stranded, setStranded] = useState(false);
 
   const submit = useCallback(
     async (answer: string) => {
@@ -43,8 +48,24 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
         return;
       }
       setBusy(true);
+      setFailed(false);
       try {
-        await invokePromise(AssistantOperation.AnswerQuestion, { question: subject, answer }, { spaceId });
+        const result = await invokePromise(
+          AssistantOperation.AnswerQuestion,
+          { question: subject, answer },
+          { spaceId },
+        );
+        // Rejection is not the only failure: the operation reports a refused write and an
+        // unreachable agent in its result, and dropping those leaves the reader with no signal.
+        if (result.error || !result.data?.accepted) {
+          log.warn('question was not answered', { question: subject.id, error: result.error });
+          setFailed(true);
+        } else {
+          setStranded(!result.data.resumed);
+        }
+      } catch (err) {
+        log.catch(err);
+        setFailed(true);
       } finally {
         setBusy(false);
       }
@@ -69,10 +90,8 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
   const answered = Question.isAnswered(question);
 
   return (
-    // The card is rendered in two places that size it oppositely: a chat column, which hands it a
-    // definite width to fill, and a preview popover, which sizes to its content. `w-full` alone is
-    // indefinite in the popover, so the wrapping text collapses to one character per line — the
-    // `min-w` floor is what makes it a card there, and `max-w-full` keeps it inside the column here.
+    // A popover sizes to its content, so `w-full` is indefinite there and the text would collapse
+    // to one character per line; the `min-w` floor is what makes it a card.
     <Flex
       role='group'
       column
@@ -89,10 +108,17 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
       </Flex>
 
       {answered ? (
-        <Flex gap='sm' align='start' classNames='w-full min-w-0' data-testid='question-card.answer'>
-          <Icon icon='ph--check-circle--regular' size={4} classNames='shrink-0 text-subdued mt-0.5' />
-          <p className='text-sm grow min-w-0 break-words'>{question.selectedAnswer}</p>
-        </Flex>
+        <>
+          <Flex gap='sm' align='start' classNames='w-full min-w-0' data-testid='question-card.answer'>
+            <Icon icon='ph--check-circle--regular' size={4} classNames='shrink-0 text-subdued mt-0.5' />
+            <p className='text-sm grow min-w-0 break-words'>{question.selectedAnswer}</p>
+          </Flex>
+          {stranded && (
+            <p className='text-sm text-warning break-words' data-testid='question-card.stranded'>
+              {t('question-stranded.message')}
+            </p>
+          )}
+        </>
       ) : (
         <>
           {question.options?.map((option) => (
@@ -106,9 +132,8 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
               data-testid='question-card.option'
               onClick={() => void submit(option.title)}
             >
-              {/* `div`, not `span`: `Button` carries `[&_span]:truncate`, so every span inside one is
-                  single-line by design — correct for a label, wrong for a suggested answer, which is
-                  a sentence. Changing the element sidesteps that rule instead of out-specifying it. */}
+              {/* `div`, not `span`: `Button` carries `[&_span]:truncate`, and a suggested answer is a
+                  sentence rather than a label. */}
               <Flex column classNames='grow min-w-0 text-start'>
                 <div className='text-sm break-words'>{option.title}</div>
                 {option.description && <div className='text-xs text-subdued break-words'>{option.description}</div>}
@@ -126,6 +151,11 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
               onKeyDown={handleKeyDown}
             />
           </Field.Root>
+          {failed && (
+            <p className='text-sm text-error break-words' data-testid='question-card.error'>
+              {t('question-failed.message')}
+            </p>
+          )}
           <Flex justify='end'>
             <Button
               variant='primary'

@@ -735,20 +735,17 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
  * split the row into several arrow-key stops, and a hover card would fire while the pointer crosses
  * the row on its way somewhere else.
  *
- * A {@link Question.Question} is the exception, and opens on hover as well. Every other artifact is
- * something the task PRODUCED — a destination, which is why opening one is a deliberate click. A
- * question is the opposite: it is why the task is stopped, and it is waiting on the reader. Making
- * them click to find that out buries the one artifact that is asking for them. `useCardHover`'s
- * grace period answers the objection above, which is how the assignee tag already does this.
+ * A {@link Question.Question} also opens on hover: it is not something the task produced but the
+ * reason it is stopped, so it should not need a click to find. `useCardHover`'s grace period
+ * answers the objection above. No tab stop is added — that half of the objection still stands.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   const tagRef = useRef<HTMLSpanElement>(null);
   const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
   const question = Obj.instanceOf(Question.Question, artifact);
-  // Keyed on the URI string, not the object: the artifacts come from a live query that hands back
-  // new identities on every reactive tick, and `useCardHover` cancels its pending timer whenever
-  // `open` changes — so an object dependency here means a re-render during the hover delay silently
-  // swallows the hover. The chat beside this list streams, so that is every hover.
+  // Keyed on the URI string, not the object: `useCardHover` cancels its timer whenever `open`
+  // changes, and the live query re-identifies the artifact on every tick, so an object dependency
+  // means any re-render inside the hover delay swallows the hover.
   const uri = Obj.getURI(artifact);
   const openCard = useCallback(() => {
     const trigger = tagRef.current;
@@ -771,13 +768,8 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
       role='button'
       classNames='cursor-pointer'
       onClick={handleClick}
-      // Focus as well as hover, so a keyboard or touch reader reaches the question too; both are
-      // inert for a non-question artifact, which keeps its single tab stop and its click-only card.
-      tabIndex={question ? 0 : undefined}
       onPointerEnter={question ? startHover : undefined}
       onPointerLeave={question ? cancelHover : undefined}
-      onFocus={question ? startHover : undefined}
-      onBlur={question ? cancelHover : undefined}
     >
       {label}
     </Tag>
