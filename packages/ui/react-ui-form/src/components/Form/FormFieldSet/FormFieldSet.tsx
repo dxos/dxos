@@ -18,7 +18,7 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks/index.ts';
-import { formTheme } from '../Form.theme';
+import { formTheme } from '../Form.theme.ts';
 import { FormFieldHeader } from '../FormField/index.ts';
 import { FormFieldSetDepthContext, useFormFieldSetDepth } from './FormFieldSetContext.ts';
 

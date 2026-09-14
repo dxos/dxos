@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { encodeExecCommand } from './exec-command';
+import { encodeExecCommand } from './exec-command.ts';
 
 describe('encodeExecCommand', () => {
   test('a single-line command is sent as it is', () => {

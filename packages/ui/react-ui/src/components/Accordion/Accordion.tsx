@@ -13,8 +13,8 @@ import React, {
 
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
-import { Icon } from '../Icon';
+import { useThemeContext } from '../../hooks/index.ts';
+import { Icon } from '../Icon/index.ts';
 import {
   ACCORDION_ITEM_NAME,
   AccordionItemProvider,
