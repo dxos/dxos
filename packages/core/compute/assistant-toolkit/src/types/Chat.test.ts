@@ -11,7 +11,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
@@ -56,11 +56,38 @@ describe('Chat', () => {
         expect(Object.keys(Chat.fields).sort()).toEqual([
           'feed',
           'instructions',
+          'model',
           'name',
           'remote',
           'tasks',
           'viewType',
         ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'model is held as a ref whose URI is the model DXN, and clears back to unset',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat;
+        expect(Chat.getModel(chat)).toBeUndefined();
+
+        const model = DXN.make('com.anthropic.model.claude-sonnet-5.default');
+        Chat.setModel(chat, model);
+        yield* Database.flush();
+        expect(chat.model?.uri).toBe(model);
+        expect(Chat.getModel(chat)).toBe(model);
+
+        // Survives a round trip through the database: the ref carries no target, only the DXN.
+        const [reloaded] = yield* Database.query(Filter.type(Chat.Chat)).run;
+        expect(Chat.getModel(reloaded)).toBe(model);
+
+        Chat.setModel(chat, undefined);
+        yield* Database.flush();
+        expect(Chat.getModel(chat)).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

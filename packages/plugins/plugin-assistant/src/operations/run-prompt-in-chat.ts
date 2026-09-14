@@ -49,8 +49,12 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
           yield* Effect.promise(() => db.flush());
         }
         const preset = yield* chatPreset;
+        // As the chat's own UI does before its first request: the process reads the model off the
+        // chat, so a chat without one is stamped with the model its picker would show.
+        if (!chat.model && preset) {
+          Chat.setModel(chat, preset.model);
+        }
         const session = yield* getSession(chat, {
-          model: preset?.model,
           provider: preset?.provider,
           location: chat.remote ? 'edge' : 'local',
         });

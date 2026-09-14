@@ -39,11 +39,11 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const stateAtom = useCapability(AssistantCapabilities.State);
   const runtime = useChatServices({ id: space?.id });
   const settings = useAtomCapability(AssistantCapabilities.Settings);
-  const { preset, ...presetProps } = usePresets(settings);
 
   // In-memory backing chat (not yet added to the space). `nonce` forces a fresh chat after submit.
   const [chat, setChat] = useState<ChatType.Chat>();
   const [nonce, setNonce] = useState(0);
+  const { preset, ...presetProps } = usePresets(settings, chat);
   useEffect(() => {
     if (!space) {
       setChat(undefined);
