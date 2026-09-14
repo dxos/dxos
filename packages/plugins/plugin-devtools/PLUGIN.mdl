@@ -4,7 +4,7 @@ name: DevtoolsPlugin
 version: 0.1.0
 ---
 
-Developer inspector plugin for `DXOS` Composer — structured devtools panels for Client/HALO/ECHO/Mesh/EDGE subsystems, an app-graph inspector, and a tools explorer. Debugging utilities (object generation, wireframe overlays, per-object inspection, stats) live in the sibling `@dxos/plugin-debug`.
+Developer inspector plugin for `DXOS` Composer — structured devtools panels for Client/HALO/ECHO/Mesh/EDGE subsystems, an app-graph inspector, and a tools explorer. The tree attaches to the hidden `root/debug` app-graph category (`AppNodeMatcher.whenDebugGroup`) and is reached only through the floating debug panel that `@dxos/plugin-debug` renders from the status bar — never the main navtree, the deck, or a URL. Debugging utilities (object generation, wireframe overlays, per-object inspection, stats) live in the sibling `@dxos/plugin-debug`.
 
 ## Extensions
 
@@ -174,12 +174,14 @@ No first-party operations are defined by DebugPlugin. The plugin invokes `SpaceO
 feat F-1: Devtools Graph Node
 
   req F-1.1:
-    when: DebugPlugin is loaded
-    then: a "Devtools" node appears pinned at the end of each root and space in the nav graph
+    when: DevtoolsPlugin is loaded
+    then: a "DevTools" branch (`root/debug/devtools`) appears under the hidden `root/debug` category, listed in the floating debug panel's sidebar after Console and Logs
 
-  req F-1.2: The Devtools node contains sub-trees for Client, HALO, ECHO, Mesh, and EDGE categories.
-  req F-1.3: An app-graph sub-node renders DebugGraph rooted at the current space or root.
+  req F-1.2: The DevTools branch contains sub-trees for Client, HALO, ECHO, MESH, and EDGE categories, plus App Graph, SDK Explorer, and CLI pages.
+  req F-1.3: An app-graph sub-node renders DebugGraph rooted at the graph root.
   req F-1.4: A tools-explorer sub-node renders ToolsExplorer connected to the MCP introspect service.
+  req F-1.5: No devtools node declares a URL binding; selecting one renders its article in the panel and leaves `window.location` unchanged.
+  req F-1.6: A space-scoped inspector resolves the active workspace's space at render time; no space travels in node data.
 ```
 
 ```mdl
@@ -216,8 +218,8 @@ feat F-4: Devtools Overview Companion
 feat F-5: Space Data Generator
 
   req F-5.1:
-    when: user navigates to the debug node under a space
-    then: SpaceGenerator is rendered as the article
+    when: user selects Debug → Generate objects in the debug panel
+    then: SpaceGenerator is rendered as the panel's article, bound to the active workspace's space
 
   req F-5.2:
     when: user triggers object generation
@@ -263,12 +265,13 @@ feat F-8: Global Dev Utilities
 ## Acceptance
 
 ```mdl
-scenario T-1: Devtools node appears in nav graph
-  given: Composer loaded with DebugPlugin enabled
-  when: user opens the navigation tree
+scenario T-1: Devtools tree appears in the debug panel
+  given: Composer loaded with DevtoolsPlugin and DebugPlugin enabled
+  when: user opens the debug panel from the status bar
   then:
-    - "Devtools" node is visible pinned at the end of the root
-    - sub-nodes Client, HALO, ECHO, Mesh, EDGE are present
+    - the sidebar lists Console, Logs, DevTools, Debug
+    - expanding DevTools shows App Graph, SDK Explorer, CLI, Client, HALO, ECHO, MESH, EDGE
+    - the main navtree's SYSTEM group shows only Database
 ```
 
 ```mdl
@@ -293,7 +296,7 @@ scenario T-3: Wireframe overlay toggle
 ```mdl
 scenario T-4: Space object generation
   given: a space with an empty collection is active
-  when: user opens the debug space node and generates 10 objects
+  when: user opens Debug → Generate objects in the debug panel and generates 10 objects
   then:
     - 10 new objects appear in the active collection
     - DebugStatus shows "running" while generation is in progress
@@ -330,11 +333,12 @@ test QA-1: Open the Devtools node and inspect an object
     - plugin-devtools is enabled (dev-only default; see above)
     - doc1: a Document already exists in the space
   steps:
-    - name: Open the Devtools node
-      do: In the navtree, click the "Devtools" node pinned at the end of the root.
-      invoke: org.dxos.operation.appToolkit.open { subject: ["root/devtools"] }
-      expect: the Devtools overview opens, listing Client, HALO, ECHO, Mesh, and EDGE sub-trees
-      note: NO deterministic assert on sub-tree contents — this is a static tree, verify visually.
+    - name: Open the DevTools tree in the debug panel
+      do: Click the status-bar debug button (terminal icon), then expand "DevTools" in the panel's sidebar and open Client → Config.
+      expect: the sidebar shows Client, HALO, ECHO, MESH, and EDGE sub-trees and the Config JSON renders in the panel; `window.location` is unchanged
+      note: |
+        NO `invoke` — devtools nodes have no URL binding and never open in the deck, so
+        `appToolkit.open` does not reach them. Human-only step; an agent run reports it unverified.
     - name: Open the Debug companion on an object
       do: Click "$given.doc1" in the navtree, then select the "Debug" companion tab.
       invoke: org.dxos.operation.appToolkit.updateCompanion { open: true, variant: "debug" }

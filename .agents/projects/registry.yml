@@ -14,8 +14,8 @@ projects:
     summary: 'DebugPanel becomes a graph application: a hidden root/debug category rendered by a navtree inside the floating panel (never the main navtree or the deck), console/logs as nodes, devtools/debug trees moved off the System group; phase 2 splits devtools into global vs per-space attachments.'
     tasks: .agents/projects/plugin-debug/TASKS.md
     design: packages/plugins/plugin-debug/docs/DESIGN.md
-    prs: []
-    resume: 'Design approved (root/debug hidden group; console/logs as nodes; panel-only, no URL bindings; useGraphTreeModel extracted to plugin-graph). Branch claude/plugin-higgsfield-generation-7ee65d, PR #13087 open with the interim devtools URL bindings that phase 1 removes. NEXT: write the plan, execute phase 1.'
+    prs: [13087]
+    resume: 'PHASE 1 DONE on branch claude/plugin-higgsfield-generation-7ee65d, carried by PR #13087 (which supersedes its interim URL-bindings description). Landed: GraphPath.GroupTypes.debug + AppNodeMatcher.whenDebugGroup (app-toolkit); plugin-debug contributes the hidden root/debug category with console/logs nodes and the Debug → Generate objects branch; useGraphTreeModel in @dxos/plugin-graph/hooks (plugin-navtree wraps it); DebugPanel = { Root, Sidebar, Main } under a Splitter inside the FloatingPanel, view state { nodeId, open, position, size } in localStorage; devtools tree attaches to root/debug, URL bindings removed, generator reads useActiveSpace(). Verified in Composer 2026-09-14: SYSTEM group shows only Database; panel sidebar Console/Logs/DevTools/Debug; console output survives switching to Logs; Client → Config JSON and Generate objects render, + adds an object to the active space; pathname unchanged, no "no URL binding" console errors; selection + open branches restored after reload (the window itself reopens from the status bar). PLUGIN.mdl for both plugins, dx.config descriptions and README updated. NEXT: phase 2 — make root/debug the single devtools attachment (drop the root-matched duplicate and the whenAny(whenRoot, …) match) and route the ECHO inspectors through the same active-space hook.'
   - name: plugin-studio
     status: active
     user: burdon
