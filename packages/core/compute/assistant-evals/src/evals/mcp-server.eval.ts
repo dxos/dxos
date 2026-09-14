@@ -32,15 +32,20 @@ import * as Scorer from '../Scorer.ts';
 // satisfy a prompt without ever reaching the surface, and the run would prove nothing about it.
 //
 // `DX_EVAL_MCP_TARGET` picks the surface: `local` (the in-process host, the default), `local-edge`
-// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Only `local` can be graded from
-// the database — a deployed worker serves its own data plane, which this process neither seeds nor
-// reads — so a remote run drops the write stages and scores what a client can see from outside:
-// discovery through the server, and per-tool latency.
+// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Against `dev` the harness
+// brings its own identity: it replicates the space it seeds to dev EDGE and mints the worker's grant
+// itself (`McpAuth`), so the run is graded from the database exactly as a local one is — every write
+// the agent makes through the deployed worker comes back by replication. A worker reached with a
+// hand-minted `DX_EVAL_MCP_TOKEN` serves a space this process cannot see, so that run drops the
+// write stages and scores what a client can see from outside: discovery, and per-tool latency.
 //
 
 const TARGET = McpTarget.fromEnv();
 
 const REMOTE = !McpTarget.isLocal(TARGET);
+
+/** Whether the run can be graded from the database (see {@link McpTarget.mode}). */
+const GRADED = McpTarget.mode(TARGET) !== 'token';
 
 /**
  * The calls the latency report is built from.
@@ -207,12 +212,12 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
 ];
 
 /** Names and descriptions only; the marks come from the run, through `output.scores`. */
-const SCORERS = REMOTE ? remoteScorers(false) : scorers(NOTHING_STAGED);
+const SCORERS = GRADED ? scorers(NOTHING_STAGED) : remoteScorers(false);
 
 /**
- * A deployed worker, driven from the outside: no seed, no database check, one discovery turn and a
- * latency report. It is what remains measurable when the space the agent acts on is not this
- * process's.
+ * A deployed worker over a space this process cannot see, driven from the outside: no seed, no
+ * database check, one discovery turn and a latency report. It is what remains measurable when the
+ * space the agent acts on is not this process's.
  */
 const remoteTask = () =>
   runClaudeEval({ skills: [], target: TARGET }, async ({ spaceId, send, latency, score }) => {
@@ -324,6 +329,6 @@ const localTask = () =>
 
 evalite(`MCP server (${TARGET}) — Claude Code drives the projected surface`, {
   data: [{ input: null }],
-  task: REMOTE ? remoteTask : localTask,
+  task: GRADED ? localTask : remoteTask,
   scorers: Scorer.toEvalite(SCORERS),
 });

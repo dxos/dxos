@@ -13,10 +13,13 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import { type Client, Config } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { Database, Tag, type Type } from '@dxos/echo';
+import { createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -27,9 +30,13 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
 import { registerSkills, startMcpHost } from './mcp-host.ts';
+import * as McpAuth from './McpAuth.ts';
 import * as McpLatency from './McpLatency.ts';
 import * as McpTarget from './McpTarget.ts';
 import * as Observe from './Observe.ts';
@@ -125,10 +132,78 @@ export type ClaudeHarness = {
 const remoteSpaceId = (): SpaceId => {
   const spaceId = McpTarget.spaceId();
   if (spaceId == null) {
-    throw new Error('DX_EVAL_SPACE_ID is required for a deployed MCP target; the harness space does not exist there.');
+    throw new Error(
+      'DX_EVAL_SPACE_ID is required for a deployed MCP target reached with DX_EVAL_MCP_TOKEN; ' +
+        'the worker serves its own data plane and cannot see the space the harness created.',
+    );
   }
   return spaceId;
 };
+
+/**
+ * A client against a real EDGE, configured as `dx`'s dev profile is: replication on, so the space
+ * this process seeds is the space the deployed worker serves.
+ */
+const edgeConfig = (url: string): Config =>
+  new Config({
+    version: 1,
+    runtime: {
+      services: { edge: { url } },
+      client: { edgeFeatures: { subductionReplicator: true, feedReplicator: true, signaling: true, agents: true } },
+    },
+  });
+
+/** How long a space may take to converge with EDGE before the run is declared stuck. */
+const SYNC_TIMEOUT = 90_000;
+
+/** Whether this process and the EDGE peer hold the same documents at the same heads. */
+const inSyncWithEdge = async (space: Space): Promise<boolean> => {
+  const { peers } = await space.db.getAutomergeSyncState();
+  const edge = peers?.find((peer) => isEdgePeerId(peer.peerId, space.id));
+  return edge != null && edge.missingOnLocal === 0 && edge.missingOnRemote === 0 && edge.differentDocuments === 0;
+};
+
+/**
+ * Blocks until the space has converged with EDGE.
+ *
+ * Two consecutive in-sync readings a beat apart, not one: a write the worker committed a moment ago
+ * is still announcing itself when the first reading is taken, and a single reading would let a query
+ * grade the space before the agent's work has arrived in it.
+ */
+const waitForEdge = async (space: Space): Promise<void> => {
+  const deadline = Date.now() + SYNC_TIMEOUT;
+  let streak = 0;
+  while (streak < 2) {
+    if (Date.now() > deadline) {
+      throw new Error(`Space ${space.id} did not converge with EDGE within ${SYNC_TIMEOUT}ms.`);
+    }
+    streak = (await inSyncWithEdge(space)) ? streak + 1 : 0;
+    await EffectEx.runPromise(Effect.sleep('500 millis'));
+  }
+};
+
+/** Puts the harness's space on EDGE, where the deployed worker reads it. */
+const replicateToEdge = async (client: Client, spaceId: SpaceId): Promise<Space> => {
+  const space = client.spaces.get(spaceId);
+  if (space == null) {
+    throw new Error(`Space ${spaceId} is not open in the harness client.`);
+  }
+  await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+  return space;
+};
+
+/**
+ * Mints the deployed dev worker's bearer for the identity this run created, over the space it
+ * replicated. The worker's grant carries the space list, so the agent's session sees exactly the
+ * one space the scorers will read.
+ */
+const provisionGrant = async (mcpUrl: string, identity: Identity, spaceId: SpaceId): Promise<string> =>
+  McpAuth.devGrant({
+    mcpUrl,
+    identityKey: requirePublicKey(identity.identityKey).toHex(),
+    haloSpaceId: await createIdFromSpaceKey(requirePublicKey(identity.spaceKey)),
+    spaceIds: [spaceId],
+  });
 
 const count = (value: unknown): number => (typeof value === 'number' ? value : 0);
 
@@ -193,7 +268,10 @@ export const runClaudeEval = async <T>(
   // The endpoint doubles as the switch: a target with one is dialed, and only the in-process host
   // has none until its listener is bound.
   const remoteUrl = McpTarget.url(target);
-  const headers = McpTarget.headers(target);
+  const mode = McpTarget.mode(target);
+  // A provisioned run replaces this with the grant it mints once its identity exists.
+  let headers = McpTarget.headers(target);
+  const edgeUrl = mode === 'provisioned' ? McpTarget.edgeUrl(target) : undefined;
   if (API_KEY.length === 0) {
     throw new Error('DX_ANTHROPIC_API_KEY is not set; the MCP eval spends real tokens and cannot run without it.');
   }
@@ -202,7 +280,10 @@ export const runClaudeEval = async <T>(
   const workdir = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-mcp-eval-'));
   const app = await createComposerTestApp({
     plugins: [
-      ClientPlugin.make({ types: [Tag.Tag, ...(options.types ?? [])] }),
+      ClientPlugin.make({
+        types: [Tag.Tag, ...(options.types ?? [])],
+        ...(edgeUrl != null ? { config: edgeConfig(edgeUrl) } : {}),
+      }),
       // The assistant plugin is here for the operations, not for a model: plugins that contribute
       // the verbs this server projects (`plugin-projects`) declare it, and without it their
       // operation handlers never register. The agent itself is the `claude` subprocess below.
@@ -219,15 +300,23 @@ export const runClaudeEval = async <T>(
   const run = Observe.start(experiment);
   const link: Usage.Link = { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name };
   try {
-    const { defaultSpace } = await EffectEx.runAndForwardErrors(initializeIdentity(app.get(ClientCapabilities.Client)));
-    // A deployed worker serves its own data plane, so the space the harness just created does not
-    // exist there and the scenario has to be pointed at one that does.
-    const spaceId = remoteUrl != null ? remoteSpaceId() : defaultSpace.id;
+    const client = app.get(ClientCapabilities.Client);
+    const { identity, defaultSpace } = await EffectEx.runAndForwardErrors(initializeIdentity(client));
+    // A deployed worker serves its own data plane: a provisioned run replicates the space it just
+    // created there, and a token run has to be pointed at one that already exists.
+    const spaceId = mode === 'token' ? remoteSpaceId() : defaultSpace.id;
+    const edgeSpace = mode === 'provisioned' ? await replicateToEdge(client, spaceId) : undefined;
 
-    const query = <D>(
+    // Against EDGE the agent's writes arrive by replication, so a query first waits for the space to
+    // catch up — otherwise it grades the space as it was before the turn.
+    const query = async <D>(
       effect: Effect.Effect<D, unknown, Database.Service | Capabilities.ProcessManagerRuntimeServices>,
-    ): Promise<D> =>
-      app.runPromise(effect.pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))));
+    ): Promise<D> => {
+      if (edgeSpace != null) {
+        await waitForEdge(edgeSpace);
+      }
+      return app.runPromise(effect.pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))));
+    };
 
     // The turns only, summed: the scaffold before them, the queries between them and the scoring
     // after are the harness's time, not the agent's.
@@ -268,11 +357,16 @@ export const runClaudeEval = async <T>(
               }).pipe(Scope.provide(scope)),
             );
 
-      // Seeding a deployed worker's space from here would write to the harness's own database
-      // instead — a different space than the agent is about to read, which is worse than no seed.
-      if (options.seed && remoteUrl == null) {
+      // Seeding a token run's space from here would write to the harness's own database instead — a
+      // different space than the agent is about to read, which is worse than no seed.
+      if (options.seed && mode !== 'token') {
         await query(options.seed({ spaceId }));
         await query(Database.flush());
+      }
+      if (edgeSpace != null && remoteUrl != null) {
+        // The seed has to be on EDGE before the agent's first read, and the grant names the space.
+        await waitForEdge(edgeSpace);
+        headers = McpTarget.headers(target, await provisionGrant(remoteUrl, identity, spaceId));
       }
 
       agent = ClaudeAgent.start({

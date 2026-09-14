@@ -26,28 +26,34 @@ The tasks come from the `evalite` moon tag (`.moon/tasks/tag-evalite.yml`); the 
 `src/evals/mcp-server.eval.ts` drives the projected MCP surface. `DX_EVAL_MCP_TARGET` picks which
 one:
 
-| Target       | Endpoint                          | Graded on                     |
-| ------------ | --------------------------------- | ----------------------------- |
-| `local`      | in-process host (`src/mcp-host.ts`) | the database + latency        |
-| `local-edge` | `http://127.0.0.1:8791/mcp`       | discovery + latency           |
-| `dev`        | `https://mcp.dev.dxos.network/mcp` | discovery + latency           |
-| `main`       | `https://mcp.preview.dxos.network/mcp` | discovery + latency      |
-| `prod`       | `https://mcp.dxos.network/mcp`    | discovery + latency           |
+| Target       | Endpoint                               | Identity                    | Graded on              |
+| ------------ | -------------------------------------- | --------------------------- | ---------------------- |
+| `local`      | in-process host (`src/mcp-host.ts`)    | the harness's own           | the database + latency |
+| `dev`        | `https://mcp.dev.dxos.network/mcp`     | created by the run, on EDGE | the database + latency |
+| `local-edge` | `http://127.0.0.1:8791/mcp`            | `DX_EVAL_MCP_TOKEN`         | discovery + latency    |
+| `main`       | `https://mcp.preview.dxos.network/mcp` | `DX_EVAL_MCP_TOKEN`         | discovery + latency    |
+| `prod`       | `https://mcp.dxos.network/mcp`         | `DX_EVAL_MCP_TOKEN`         | discovery + latency    |
 
-Only `local` is graded from the database: a deployed `mcp-space-service` worker serves its own data
-plane, which this process neither seeds nor reads.
+Against `dev` the run is a real client: the harness creates an identity, replicates the space it
+seeds to dev EDGE, and mints the worker's grant itself through the identity-key form the dev worker
+serves on `/authorize?dev_form=1` (`src/McpAuth.ts` — the OAuth grant a real MCP client performs,
+with the passkey ceremony replaced by the form a headless client can complete). Every write the
+`claude` subprocess makes through the deployed worker comes back by replication, so the run is
+graded from the database exactly as a local one is. The other deployed workers serve a space this
+process cannot see, so a run against them drops the write stages and scores discovery and latency.
 
 ```bash
-moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts                  # in-process host
-DX_EVAL_MCP_TARGET=dev DX_EVAL_MCP_TOKEN=... DX_EVAL_SPACE_ID=... \
-  moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts               # deployed dev worker
+moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts                        # in-process host
+DX_EVAL_MCP_TARGET=dev moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts # deployed dev worker
+DX_EVAL_MCP_TARGET=prod DX_EVAL_MCP_TOKEN=... DX_EVAL_SPACE_ID=... \
+  moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts                      # an existing session
 ```
 
-- `DX_EVAL_MCP_TOKEN` — bearer token for a deployed endpoint (it is OAuth-gated, and an eval cannot
-  complete a passkey ceremony).
-- `DX_EVAL_SPACE_ID` — the space a remote run acts on.
+- `DX_EVAL_MCP_TOKEN` — bearer token for a deployed endpoint whose grant the run cannot mint. Set
+  on `dev`, it wins over the run's own identity.
+- `DX_EVAL_SPACE_ID` — the space a token run acts on.
 - `DX_EVAL_MCP_URL` — override the endpoint of a non-`local` target; `local` is always the
-  in-process host.
+  in-process host. `DX_EVAL_EDGE_URL` likewise overrides the EDGE a `dev` run registers against.
 - `DX_EVAL_MCP_LATENCY_BUDGET_MS` — p95 ceiling for the `tool-latency` scorer (500 local, 3000
   remote).
 

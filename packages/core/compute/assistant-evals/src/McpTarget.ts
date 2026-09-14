@@ -49,8 +49,44 @@ export const fromEnv = (value: string | undefined = process.env.DX_EVAL_MCP_TARG
   return alias as Target;
 };
 
+/**
+ * The EDGE deployment behind a target, for a run that brings its own identity and space.
+ *
+ * Only `dev` has one: it is the one worker whose `/authorize` serves the identity-key form
+ * (`McpAuth.devGrant`), and the one EDGE a throwaway identity may be registered against.
+ */
+const EDGE_URLS: Partial<Record<Target, string>> = {
+  dev: 'https://dev.dxos.network',
+};
+
 /** True for the in-process host, the one target whose writes a scorer can read back. */
 export const isLocal = (target: Target): boolean => target === 'local';
+
+/**
+ * How a run comes by its identity and space.
+ *
+ * - `local`: the in-process host over the harness's own database.
+ * - `provisioned`: a deployed worker whose EDGE the harness replicates its own space to, minting the
+ *   grant itself — the same database is on both ends, so the run is graded like a local one.
+ * - `token`: a deployed worker reached with a hand-minted `DX_EVAL_MCP_TOKEN` over a space this
+ *   process cannot see; only discovery and latency are measurable.
+ *
+ * A token, when given, wins: it is the only way to reach `main`/`prod`, and on `dev` it says the
+ * caller wants a specific existing session rather than a fresh one.
+ */
+export type Mode = 'local' | 'provisioned' | 'token';
+
+export const mode = (target: Target): Mode => {
+  if (isLocal(target)) {
+    return 'local';
+  }
+  const token = process.env.DX_EVAL_MCP_TOKEN;
+  return (token == null || token.length === 0) && edgeUrl(target) != null ? 'provisioned' : 'token';
+};
+
+/** The EDGE a `provisioned` run registers against; `DX_EVAL_EDGE_URL` overrides it. */
+export const edgeUrl = (target: Target): string | undefined =>
+  isLocal(target) ? undefined : (process.env.DX_EVAL_EDGE_URL ?? EDGE_URLS[target]);
 
 /** The endpoint to dial, or undefined for the in-process host, whose URL is only known once bound. */
 export const url = (target: Target): string | undefined =>
@@ -59,12 +95,12 @@ export const url = (target: Target): string | undefined =>
 /**
  * Credentials for a deployed endpoint.
  *
- * The deployed surface is OAuth-gated, and an eval cannot complete a passkey ceremony: the token is
- * minted by hand and handed over in `DX_EVAL_MCP_TOKEN`. Without it a remote run gets 401s, which is
- * a legible failure rather than a silent one.
+ * The deployed surface is OAuth-gated, and an eval cannot complete a passkey ceremony: on `dev` the
+ * harness mints its own grant (`McpAuth.devGrant`), and everywhere else the token is minted by hand
+ * and handed over in `DX_EVAL_MCP_TOKEN`. Without either a remote run gets 401s, which is a legible
+ * failure rather than a silent one.
  */
-export const headers = (target: Target): Record<string, string> | undefined => {
-  const token = process.env.DX_EVAL_MCP_TOKEN;
+export const headers = (target: Target, token = process.env.DX_EVAL_MCP_TOKEN): Record<string, string> | undefined => {
   if (isLocal(target) || token == null || token.length === 0) {
     return undefined;
   }
@@ -72,7 +108,7 @@ export const headers = (target: Target): Record<string, string> | undefined => {
   // A bearer over plain HTTP puts the token on the wire in cleartext, and `local-edge` and
   // `DX_EVAL_MCP_URL` both make that reachable by accident.
   if (endpoint == null || !endpoint.startsWith('https:')) {
-    throw new Error(`DX_EVAL_MCP_TOKEN is set for a non-HTTPS endpoint (${endpoint ?? 'none'}); refusing to send it.`);
+    throw new Error(`An MCP bearer is set for a non-HTTPS endpoint (${endpoint ?? 'none'}); refusing to send it.`);
   }
   return { Authorization: `Bearer ${token}` };
 };
