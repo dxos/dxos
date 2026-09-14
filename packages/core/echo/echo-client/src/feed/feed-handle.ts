@@ -185,7 +185,10 @@ export class FeedHandle {
    */
   #subscriptionGeneration = 0;
 
-  /** A retry is scheduled. Not a handle: `scheduleTask` cancels itself when the context disposes. */
+  /**
+   * A retry is scheduled; only the scheduled task clears it, so at most one retry is outstanding.
+   * Not a handle: `scheduleTask` cancels itself when the context disposes.
+   */
   #appendRetryPending = false;
   #appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
   /** The error that closed the RPC endpoint, once one has; this handle can never append again. */
@@ -263,6 +266,8 @@ export class FeedHandle {
       // never-sent local state over every inbound block for the life of the handle.
       for (const { core, token } of batch) {
         core.revertCapture(token);
+        // Still unsent, so `dispose` counts it with the other writes the closed endpoint lost.
+        this.#dirtyCores.add(core);
       }
       this.updated.emit();
       // The write did not land and this handle can never send it, so resolving would report a
@@ -403,17 +408,15 @@ export class FeedHandle {
         );
       } catch (err) {
         this.#onAppendFailed(err, batch.slice(i));
+        // A closed endpoint never retries, so the write is lost and the caller must hear it.
+        if (isEndpointClosedError(err)) {
+          throw err;
+        }
         return;
       }
     }
     this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
-    // `#appendRetryPending` is cleared by the scheduled task alone, so at most one retry is ever
-    // outstanding. Clearing it here would let the next failure schedule a second while the first
-    // is still armed, and a flapping endpoint would accumulate both timers and their dispose
-    // callbacks. An already-armed retry firing after a success only triggers the scheduler, which
-    // does nothing once no core is dirty.
-    // Cleared only here: `#onAppendFailed` now retries, so a transient failure must not leave the
-    // feed reporting an error once a later append has gone through.
+    // A later successful send clears the error a retried failure left.
     this._error = null;
   }
 
@@ -427,13 +430,11 @@ export class FeedHandle {
 
     for (const { core, token } of batch) {
       core.revertCapture(token);
-      if (!endpointClosed) {
-        this.#dirtyCores.add(core);
-      }
+      this.#dirtyCores.add(core);
     }
 
     if (endpointClosed) {
-      this.#endpointClosed = err as Error;
+      this.#endpointClosed = err;
       log.verbose('feed append abandoned; rpc endpoint closed', {
         feedId: this._feedId,
         pending: this.#dirtyCores.size,
@@ -484,6 +485,11 @@ export class FeedHandle {
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
+    } catch (err) {
+      // `#onAppendFailed` already recorded a closed endpoint in `error`; anything else is unexpected.
+      if (!isEndpointClosedError(err)) {
+        throw err;
+      }
     } finally {
       this.#inFlight.delete(sendPromise);
     }
@@ -806,13 +812,16 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
 
 const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
 
-const isEndpointClosedError = (err: unknown): boolean => {
-  const seen = new Set<unknown>();
-  for (let cause = err; cause != null && !seen.has(cause); cause = (cause as { cause?: unknown }).cause) {
+/** Whether `err` is, or is caused through a chain of errors by, a closed rpc endpoint. */
+const isEndpointClosedError = (err: unknown): err is Error => {
+  const seen = new Set<Error>();
+  let cause = err;
+  while (cause instanceof Error && !seen.has(cause)) {
     if (cause instanceof RpcClosedError) {
       return true;
     }
     seen.add(cause);
+    cause = cause.cause;
   }
   return false;
 };

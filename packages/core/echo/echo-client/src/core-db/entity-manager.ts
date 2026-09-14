@@ -193,6 +193,8 @@ export class EntityManager implements IDatabaseBinding {
   );
 
   private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
+  /** Creations the host refused, by object id; the next flush reports them, since those objects never persist. */
+  private readonly _refusedDocumentCreations = new Map<string, Error>();
 
   // ── Update scheduling ────────────────────────────────────────────────────
   private _objectsForNextDbUpdate = new Set<string>();
@@ -759,6 +761,13 @@ export class EntityManager implements IDatabaseBinding {
 
     if (updates) {
       await this._updateScheduler.runBlocking();
+    }
+
+    // Reported last, so a refusal never keeps the database's other pending writes from the host.
+    const [refusal] = this._refusedDocumentCreations.values();
+    this._refusedDocumentCreations.clear();
+    if (refusal !== undefined) {
+      throw refusal;
     }
   }
 
@@ -1522,7 +1531,8 @@ export class EntityManager implements IDatabaseBinding {
         });
       })
       .catch((err) => {
-        log.warn('object not bound: its document was not created', { objectId, err });
+        log.error('object not bound: its document was not created', { objectId, err });
+        this._refusedDocumentCreations.set(objectId, err);
       })
       .finally(() => {
         this._pendingDocumentCreations.delete(objectId);

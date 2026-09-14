@@ -14,6 +14,7 @@ import { Database, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dx
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID, PublicKey } from '@dxos/keys';
+import { type LogConfig, type LogEntry, log } from '@dxos/log';
 import { FeedProtocol, RpcClosedError, makeInProcessClient } from '@dxos/protocols';
 import { FeedService } from '@dxos/protocols/rpc';
 
@@ -370,6 +371,45 @@ describe('Feed', () => {
         RpcClosedError,
       );
       expect(callCount).toBe(1);
+    });
+
+    test('append rejects once the rpc endpoint closes, and dispose counts only the writes it lost', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let insertCalls = 0;
+      const closingHandlers: FeedService.Handlers = {
+        ...peer.host.feedService,
+        'FeedService.insertIntoFeed': (...args) =>
+          insertCalls++ === 0
+            ? peer.host.feedService['FeedService.insertIntoFeed'](...args)
+            : Effect.fail(new RpcClosedError()),
+      };
+      db._setFeedService(await makeFeedClient(closingHandlers));
+
+      const lostCounts: unknown[] = [];
+      onTestFinished(
+        log.addProcessor((_config: LogConfig, entry: LogEntry) => {
+          if (entry.message === 'feed handle disposed with writes its closed endpoint could not send') {
+            lostCounts.push(entry.computedContext?.pending);
+          }
+        }),
+      );
+
+      const feed = db.add(Feed.make({ name: 'closing' }));
+      // 16 objects span two 15-object append chunks: the first commits, the second meets the closed endpoint.
+      const people = Array.from({ length: 16 }, (_, i) => Obj.make(TestSchema.Person, { name: `person-${i}` }));
+      await expect(db.appendToFeed(feed, people)).rejects.toThrow(RpcClosedError);
+      // Refused up front, since the handle can never send again.
+      await expect(db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })])).rejects.toThrow(
+        RpcClosedError,
+      );
+
+      await db.evictFeedHandle(feed);
+      // The lost chunk's one object and the refused append; the committed chunk is not counted.
+      expect(lostCounts).toEqual([2]);
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {
