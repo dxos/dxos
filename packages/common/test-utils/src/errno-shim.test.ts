@@ -87,6 +87,16 @@ const CRASH_PROBE_SOURCE = `__attribute__((destructor)) static void crash(void) 
 }
 `;
 
+/** Preloaded destructor, run once the shim is initialized: a breakpoint, which on x86_64 resumes after the trap. */
+const TRAP_PROBE_SOURCE = `__attribute__((destructor)) static void crash(void) {
+#if defined(__x86_64__)
+  __asm__("int3");
+#else
+  __builtin_trap();
+#endif
+}
+`;
+
 const runProbe = (preload: string[]): string =>
   spawnSync('/bin/true', { env: { LD_PRELOAD: preload.join(':') }, encoding: 'utf8' }).stderr.trim();
 
@@ -125,5 +135,19 @@ describe.runIf(errnoShimSupported())('errno shim', () => {
     expect(result.signal).toBe('SIGSEGV');
     expect(result.stderr).toMatch(/dx-crash-report pid=\d+ signal=11 code=\d+ addr=0x0\n/);
     expect(result.stderr).toContain('crash-probe.so(');
+  });
+
+  test('a breakpoint that resumes after the trap still ends the process', ({ expect }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'errno-shim-probe-'));
+    onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+    const probe = join(dir, 'trap-probe.so');
+    compileSharedObject(TRAP_PROBE_SOURCE, probe);
+
+    const result = spawnSync('/bin/true', {
+      env: { LD_PRELOAD: [buildErrnoShim(dir), probe].join(':') },
+      encoding: 'utf8',
+    });
+    expect(result.signal).toBe('SIGTRAP');
+    expect(result.stderr).toMatch(/dx-crash-report pid=\d+ signal=5 /);
   });
 });

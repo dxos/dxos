@@ -60,6 +60,7 @@ extern void backtrace_symbols_fd(void *const *buffer, int size, int fd);
 extern long write(int fd, const void *buffer, unsigned long count);
 extern int getpid(void);
 extern int raise(int signal);
+extern unsigned alarm(unsigned seconds);
 
 static void write_text(const char *text) {
   unsigned long length = 0;
@@ -79,10 +80,15 @@ static void write_number(unsigned long value, unsigned base) {
   write(2, digits + index, sizeof digits - index);
 }
 
-/* Prints the signal, fault address and native backtrace to stderr, then lets the default action end the process. */
+/* Prints the signal, fault address and native backtrace to stderr, then ends the process with that signal. */
 static void report_crash(int signal, void *info, void *context) {
   (void)context;
   struct crash_siginfo *details = info;
+  /* Defaults first: a second fault, or an unwinder stuck on a lock another thread holds, still ends the process. */
+  struct glibc_sigaction fallback = {0};
+  next_sigaction(signal, &fallback, 0);
+  next_sigaction(14, &fallback, 0);
+  alarm(5);
   write_text("dx-crash-report pid=");
   write_number((unsigned long)getpid(), 10);
   write_text(" signal=");
@@ -92,8 +98,8 @@ static void report_crash(int signal, void *info, void *context) {
     write_text("-");
   }
   write_number((unsigned long)(details->code < 0 ? -(long)details->code : details->code), 10);
-  /* Only a fault the kernel raised (code > 0) carries an address. */
-  if (details->code > 0) {
+  /* Only a fault the kernel attributes to an address (0 < code < SI_KERNEL) carries one. */
+  if (details->code > 0 && details->code < 128) {
     write_text(" addr=0x");
     write_number((unsigned long)details->addr, 16);
   }
@@ -101,12 +107,8 @@ static void report_crash(int signal, void *info, void *context) {
   void *frames[64];
   int count = backtrace(frames, 64);
   backtrace_symbols_fd(frames, count, 2);
-  struct glibc_sigaction fallback = {0};
-  next_sigaction(signal, &fallback, 0);
-  /* A fault re-runs on return; a sent signal (code <= 0) has to be raised again. */
-  if (details->code <= 0) {
-    raise(signal);
-  }
+  /* Pending until return, so a breakpoint that resumes after the trap still ends the process. */
+  raise(signal);
 }
 
 /* Installed ahead of the process's own handlers, which report it as their previous handler and chain to it. */
