@@ -508,6 +508,18 @@ export class ClientServicesHost {
 
       this.#handlers = {
         SystemService: this.#systemService,
+        IdentityService: resolved.identityService,
+        ContactsService: resolved.contactsService,
+        InvitationsService: resolved.invitationsService,
+        DevicesService: resolved.devicesService,
+        SpacesService: resolved.spacesService,
+        DataService: resolved.dataService,
+        QueryService: resolved.queryService,
+        FeedService: resolved.feedService,
+        NetworkService: resolved.networkService,
+        LoggingService: resolved.loggingService,
+        DevtoolsHost: resolved.devtoolsHost,
+        EdgeAgentService: resolved.edgeAgentService,
       };
 
       await this._openStack(ctx);
