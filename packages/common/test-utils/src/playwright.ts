@@ -97,9 +97,10 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
           details: { package: packageDirName, workerIndex, parallelIndex: process.env.TEST_PARALLEL_INDEX },
         })
       : undefined;
-  // Workaround: x86_64 Linux WebKit raises spurious wasm traps in Automerge ("access to a null reference",
-  // "Out of bounds memory access"); oven-sh/bun#26366 is a similar x64 JSC wasm OSR crash that disabling OSR avoids.
-  const avoidWasmOsr = process.platform === 'linux' && process.arch === 'x64';
+  // Workaround: x86_64 Linux WebKit's wasm in-place interpreter resumes with a corrupted locals base or wasm PC,
+  // crashing the page or raising spurious traps in Automerge; wasm then runs only in the JIT tiers, without OSR
+  // between them.
+  const avoidWasmInterpreter = process.platform === 'linux' && process.arch === 'x64';
   const errnoShim =
     errnoShimSupported() && (browser === 'all' || browser === 'webkit')
       ? buildErrnoShim(join(workspaceRoot, 'node_modules/.cache/dxos-test-utils'))
@@ -137,7 +138,7 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
         launchOptions: {
           // Replaces the browser's whole environment rather than extending it.
           env: {
-            ...(avoidWasmOsr ? { JSC_useWasmOSR: 'false' } : {}),
+            ...(avoidWasmInterpreter ? { JSC_useWasmIPInt: 'false', JSC_useWasmOSR: 'false' } : {}),
             ...definedEnv(),
             ...(errnoShim ? { LD_PRELOAD: [errnoShim, process.env.LD_PRELOAD].filter(Boolean).join(':') } : {}),
             ...(webkitRtcEvents ? { [WEBKIT_RTC_EVENTS_FILE_ENV]: webkitRtcEvents.fifoPath } : {}),
