@@ -75,6 +75,8 @@
     "eslint/no-useless-escape": "off",
     "eslint/no-useless-rename": "off",
     "eslint/require-yield": "off",
+    "import/default": "off",
+    "import/export": "off",
     "import/extensions": [
       "error",
       "always",
@@ -84,6 +86,8 @@
         "pathGroupOverrides": [{ "pattern": "@dxos*[tT]heme", "action": "ignore" }]
       }
     ],
+    "import/named": "off",
+    "import/namespace": "off",
     "import-x-js/order": "off",
     "jest/expect-expect": "off",
     "jest/no-conditional-expect": "off",
