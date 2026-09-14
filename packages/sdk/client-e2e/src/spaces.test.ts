@@ -5,7 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, latch } from '@dxos/async';
+import { Trigger, TriggerState, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -28,7 +28,7 @@ import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { toPublicKey, unpackJson } from '@dxos/protocols/buf';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
@@ -137,28 +137,35 @@ describe('Spaces', () => {
     });
 
     const hello = new Trigger();
-    {
-      space2.listen('hello', (message) => {
-        expect(message.channelId).to.include('hello');
-        expect(message.payload).to.deep.contain({ data: 'Hello, world!' });
-        hello.wake();
-      });
-      await space1.postMessage('hello', { data: 'Hello, world!' });
-    }
+    space2.listen('hello', (message) => {
+      expect(message.channelId).to.include('hello');
+      expect(unpackJson(message.payload)).to.deep.contain({ data: 'Hello, world!' });
+      hello.wake();
+    });
 
     const goodbye = new Trigger();
-    {
-      space2.listen('goodbye', (message) => {
-        expect(message.channelId).to.include('goodbye');
-        expect(message.payload).to.deep.contain({ data: 'Goodbye' });
-        goodbye.wake();
-      });
-      await space1.postMessage('goodbye', { data: 'Goodbye' });
-    }
+    space2.listen('goodbye', (message) => {
+      expect(message.channelId).to.include('goodbye');
+      expect(unpackJson(message.payload)).to.deep.contain({ data: 'Goodbye' });
+      goodbye.wake();
+    });
 
-    // Guards against a hang, so it is generous: two peers replicating is not a latency assertion, and
-    // both 200ms and 2s were under the round trip's own cost on a loaded runner.
-    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 30_000);
+    // Gossip is fire-and-forget and `listen` gives no signal for when the peer's subscription is
+    // live, so a single post can land before the listener exists; re-post until it is observed.
+    // The outer bound is generous: it guards against a hang, not latency.
+    const postUntilReceived = async (received: Trigger, post: () => Promise<void>) => {
+      while (received.state !== TriggerState.RESOLVED) {
+        await post();
+        await received.wait({ timeout: 500 }).catch(() => {});
+      }
+    };
+    await asyncTimeout(
+      Promise.all([
+        postUntilReceived(hello, () => space1.postMessage('hello', { data: 'Hello, world!' })),
+        postUntilReceived(goodbye, () => space1.postMessage('goodbye', { data: 'Goodbye' })),
+      ]),
+      30_000,
+    );
   });
 
   // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.

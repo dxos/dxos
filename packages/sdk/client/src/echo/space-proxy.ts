@@ -570,6 +570,8 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: this.key, channel }),
       {
         onData: (message) => callback(message),
+        // A throwing callback ends the stream; surface it rather than dropping every later message silently.
+        onError: (err) => log.warn('listen stream failed', { channel, err }),
       },
     );
     return async () => cleanup();
