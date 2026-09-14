@@ -41,6 +41,15 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
 
     /**
+     * The model this conversation runs on, selected in the chat rather than globally so it survives a
+     * remount and travels with the chat. Held as a ref whose URI is the model's DXN: there is no ECHO
+     * object behind it yet, so the ref is a stable handle rather than something that resolves. Unset
+     * means the agent's default.
+     */
+    // TODO(dmaretskyi): Register `Model` in the registry so this ref resolves to a catalog object.
+    model: Schema.optional(Ref.Ref(Obj.Unknown).pipe(FormInputAnnotation.set(false))),
+
+    /**
      * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
      * chat may work on a task that belongs somewhere else — a project's task set delegates one here
      * — and an owning field re-parents every resolved member on each update of the chat, which
