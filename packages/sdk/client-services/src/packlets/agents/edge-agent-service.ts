@@ -3,10 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
-import { type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
@@ -17,13 +19,14 @@ import {
   type QueryEdgeStatusResponse,
   QueryEdgeStatusResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type EdgeAgentService } from '@dxos/protocols/rpc';
+import { EdgeAgentService } from '@dxos/protocols/rpc';
 
+import { ClientServicesHostService } from '../services/service-host.ts';
 import { type EdgeAgentManager } from './edge-agent-manager.ts';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
 export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
-  'constructor'(
+  constructor(
     private readonly _agentManagerProvider: () => Promise<EdgeAgentManager>,
     private readonly _edgeConnection?: EdgeConnection,
   ) {}
@@ -80,3 +83,12 @@ const mapStatus = (agentStatus: EdgeAgentStatus | undefined): QueryAgentStatusRe
       return QueryAgentStatusResponse_AgentStatus.UNKNOWN;
   }
 };
+
+export const EdgeAgentServiceLayer: Layer.Layer<EdgeAgentService.Tag, never, ClientServicesHostService> = Layer.effect(
+  EdgeAgentService.Tag,
+  Effect.gen(function* () {
+    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
+    const host = yield* ClientServicesHostService;
+    return new EdgeAgentServiceImpl(() => host.whenEdgeAgentManagerReady(), edgeConnection);
+  }),
+);

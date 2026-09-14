@@ -5,6 +5,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
@@ -18,7 +19,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type EchoHost } from '@dxos/echo-host';
+import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { writeMessages } from '@dxos/feed-store';
@@ -37,23 +38,21 @@ import {
 import { buf, fromPublicKey, fromTimeframe, requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
+  type ContactAdmission,
+  ContactAdmissionSchema,
   type CreateEpochResponse,
   CreateEpochResponseSchema,
+  IdentitySchema,
   type JoinSpaceResponse,
   JoinSpaceResponseSchema,
   type QuerySpacesResponse,
   QuerySpacesResponseSchema,
   type Space,
-  SpaceSchema,
-} from '@dxos/protocols/buf/dxos/client/services_pb';
-import {
-  type ContactAdmission,
-  ContactAdmissionSchema,
-  IdentitySchema,
-  Space_PipelineStateSchema,
   type SpaceMember,
-  SpaceMember_PresenceState,
   SpaceMemberSchema,
+  SpaceMember_PresenceState,
+  SpaceSchema,
+  Space_PipelineStateSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
@@ -61,7 +60,8 @@ import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
-import { type IdentityManager } from '../identity/index.ts';
+import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
+import { ClientServicesHostService } from '../services/service-host.ts';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
@@ -70,14 +70,14 @@ import {
   readSerializedSpaceArchive,
   writeSerializedSpaceArchive,
 } from '../space-export/index.ts';
-import { type SpaceManager } from '../space/index.ts';
+import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager } from './data-space-manager.ts';
 import { type DataSpace } from './data-space.ts';
 
 /** Reads the space as the buf message the service returns. */
 
 export class SpacesServiceImpl implements SpacesService.Handlers {
-  'constructor'(
+  constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _echoHost: EchoHost,
@@ -463,7 +463,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
    * {@link EntityStructure} entries; feed messages are appended to the appropriate feed
    * via {@link EchoHost.feedService}.
    */
-  private async '_hydrateSpaceFromSerialized'(
+  private async _hydrateSpaceFromSerialized(
     space: DataSpace,
     serialized: ReturnType<typeof readSerializedSpaceArchive>,
   ): Promise<void> {
@@ -506,7 +506,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     }
   }
 
-  private async '_joinByAdmission'(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
+  private async _joinByAdmission(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
     invariant(credential, 'Admission carries no credential.');
     const assertion = getCredentialAssertion(credential);
     invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
@@ -528,7 +528,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     return buf.create(JoinSpaceResponseSchema, { space: await this._serializeSpace(dataSpace) });
   }
 
-  private async '_serializeSpace'(space: DataSpace): Promise<Space> {
+  private async _serializeSpace(space: DataSpace): Promise<Space> {
     const lastEpoch = space.automergeSpaceState.lastEpoch?.credential;
     return buf.create(SpaceSchema, {
       id: space.id,
@@ -575,7 +575,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  private '_requireIdentity'() {
+  private _requireIdentity() {
     if (!this._identityManager.identity) {
       throw new IdentityNotInitializedError({
         message: 'This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo',
@@ -584,7 +584,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     return this._identityManager.identity;
   }
 
-  private async '_updateMetrics'(): Promise<void> {
+  private async _updateMetrics(): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const identity = this._identityManager.identity?.identityKey.truncate();
     if (identity) {
@@ -594,6 +594,21 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     }
   }
 }
+
+export const SpacesServiceLayer: Layer.Layer<
+  SpacesService.Tag,
+  never,
+  IdentityManagerService | SpaceManagerService | EchoHostService | ClientServicesHostService
+> = Layer.effect(
+  SpacesService.Tag,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    const spaceManager = yield* SpaceManagerService;
+    const echoHost = yield* EchoHostService;
+    const host = yield* ClientServicesHostService;
+    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () => host.whenDataSpaceManagerReady());
+  }),
+);
 
 // Add `user-channel` prefix to the channel name, so that it doesn't collide with the internal channels.
 const getChannelId = (channel: string): string => `user-channel/${channel}`;

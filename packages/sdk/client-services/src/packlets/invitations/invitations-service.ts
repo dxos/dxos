@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
@@ -15,19 +16,19 @@ import {
   QueryInvitationsResponse_Type,
   QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type InvitationsService } from '@dxos/protocols/rpc';
+import { InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { type InvitationsManager } from './invitations-manager.ts';
+import { InvitationsManagerService, type InvitationsManager } from './invitations-manager.ts';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
 export class InvitationsServiceImpl implements InvitationsService.Handlers {
-  'constructor'(private readonly _invitationsManager: InvitationsManager) {}
+  constructor(private readonly _invitationsManager: InvitationsManager) {}
 
   // TODO(burdon): Guest/host label.
-  'getLoggingContext'() {
+  getLoggingContext() {
     return {
       // deviceKey: this._identityManager.identity?.deviceKey
     };
@@ -173,3 +174,8 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
     });
   }
 }
+
+export const InvitationsServiceLayer = Layer.effect(
+  InvitationsService.Tag,
+  Effect.map(InvitationsManagerService, (invitationsManager) => new InvitationsServiceImpl(invitationsManager)),
+);

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
@@ -17,15 +18,16 @@ import {
   ContactBookSchema,
   ContactSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type ContactsService } from '@dxos/protocols/rpc';
+import { ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type SpaceManager } from '../space/index.ts';
+import { ClientServicesHostService } from '../services/service-host.ts';
+import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager } from '../spaces/index.ts';
-import { type IdentityManager } from './identity-manager.ts';
+import { type IdentityManager, IdentityManagerService } from './identity-manager.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
-  'constructor'(
+  constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _dataSpaceManagerProvider: () => Promise<DataSpaceManager>,
@@ -100,3 +102,13 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
     return buf.create(ContactBookSchema, { contacts: [...contacts.values()] });
   }
 }
+
+export const ContactsServiceLayer = Layer.effect(
+  ContactsService.Tag,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    const spaceManager = yield* SpaceManagerService;
+    const host = yield* ClientServicesHostService;
+    return new ContactsServiceImpl(identityManager, spaceManager, () => host.whenDataSpaceManagerReady());
+  }),
+);

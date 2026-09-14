@@ -4,10 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 
 import { EchoHostService } from '@dxos/echo-host';
-import { EdgeConnectionService } from '@dxos/edge-client';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
@@ -24,15 +22,15 @@ import {
   SpacesService,
 } from '@dxos/protocols/rpc';
 
-import { EdgeAgentServiceImpl } from '../agents/index.ts';
-import { DevicesServiceImpl } from '../devices/index.ts';
-import { ContactsServiceImpl } from '../identity/contacts-service.ts';
+import { EdgeAgentServiceLayer } from '../agents/edge-agent-service.ts';
+import { DevicesServiceLayer } from '../devices/devices-service.ts';
+import { ContactsServiceLayer } from '../identity/contacts-service.ts';
 import { EdgeIdentityRecoveryManagerService } from '../identity/identity-recovery-manager.ts';
-import { IdentityManagerService, IdentityServiceImpl } from '../identity/index.ts';
-import { InvitationsManagerService, InvitationsServiceImpl } from '../invitations/index.ts';
-import { NetworkServiceImpl } from '../network/index.ts';
+import { IdentityManagerService, IdentityServiceLayer } from '../identity/index.ts';
+import { InvitationsManagerService, InvitationsServiceLayer } from '../invitations/index.ts';
+import { NetworkServiceLayer } from '../network/network-service.ts';
 import { SpaceManagerService } from '../space/index.ts';
-import { SpacesServiceImpl } from '../spaces/index.ts';
+import { SpacesServiceLayer } from '../spaces/spaces-service.ts';
 import { ClientServicesHostService } from './service-host.ts';
 
 //
@@ -57,90 +55,8 @@ export type ClientServicesRpcContext =
   | QueryService.Tag
   | FeedService.Tag;
 
-// Identity creation is a lifecycle sequence and profile broadcast iterates live spaces, so both
-// remain orchestrator responsibilities resolved from {@link ClientServicesHostService}.
-// The impl is a {@link Resource}; its open/close lifecycle is bound to the layer scope.
-const identityServiceLayer = Layer.effect(
-  IdentityService.Tag,
-  Effect.gen(function* () {
-    const identityManager = yield* IdentityManagerService;
-    const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
-    const keyring = yield* KeyringApiService;
-    const host = yield* ClientServicesHostService;
-    const service = new IdentityServiceImpl(
-      identityManager,
-      recoveryManager,
-      keyring,
-      async (params, ctx) => {
-        const identity = await host.createIdentity(params, ctx);
-        await host.initialized.wait();
-        return identity;
-      },
-      (profile) => host.broadcastProfileUpdate(profile),
-    );
-    yield* Effect.acquireRelease(
-      Effect.promise(() => service.open()),
-      () => Effect.promise(() => service.close()),
-    );
-    return service;
-  }),
-);
-
-const contactsServiceLayer = Layer.effect(
-  ContactsService.Tag,
-  Effect.gen(function* () {
-    const identityManager = yield* IdentityManagerService;
-    const spaceManager = yield* SpaceManagerService;
-    const host = yield* ClientServicesHostService;
-    return new ContactsServiceImpl(identityManager, spaceManager, () => host.whenDataSpaceManagerReady());
-  }),
-);
-
-const invitationsServiceLayer = Layer.effect(
-  InvitationsService.Tag,
-  Effect.map(InvitationsManagerService, (invitationsManager) => new InvitationsServiceImpl(invitationsManager)),
-);
-
-const devicesServiceLayer = Layer.effect(
-  DevicesService.Tag,
-  Effect.gen(function* () {
-    const identityManager = yield* IdentityManagerService;
-    // Edge connection is absent in the non-edge stack, so resolve it optionally.
-    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
-    return new DevicesServiceImpl(identityManager, edgeConnection);
-  }),
-);
-
-const spacesServiceLayer = Layer.effect(
-  SpacesService.Tag,
-  Effect.gen(function* () {
-    const identityManager = yield* IdentityManagerService;
-    const spaceManager = yield* SpaceManagerService;
-    const echoHost = yield* EchoHostService;
-    const host = yield* ClientServicesHostService;
-    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () => host.whenDataSpaceManagerReady());
-  }),
-);
-
-const networkServiceLayer = Layer.effect(
-  NetworkService.Tag,
-  Effect.gen(function* () {
-    const networkManager = yield* SwarmNetworkManagerService;
-    const signalManager = yield* SignalManagerService;
-    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
-    return new NetworkServiceImpl(networkManager, signalManager, edgeConnection);
-  }),
-);
-
-const edgeAgentServiceLayer = Layer.effect(
-  EdgeAgentService.Tag,
-  Effect.gen(function* () {
-    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
-    const host = yield* ClientServicesHostService;
-    return new EdgeAgentServiceImpl(() => host.whenEdgeAgentManagerReady(), edgeConnection);
-  }),
-);
-
+// The Data/Query/Feed services are thin projections of {@link EchoHostService} properties rather
+// than package-local ServiceImpl classes, so their layers stay here as trivial maps.
 const dataServiceLayer = Layer.effect(
   DataService.Tag,
   Effect.map(EchoHostService, (echoHost) => echoHost.dataService),
@@ -173,13 +89,13 @@ export const ClientServicesRpcLayer: Layer.Layer<
   | SignalManagerService
   | ClientServicesHostService
 > = Layer.mergeAll(
-  identityServiceLayer,
-  contactsServiceLayer,
-  invitationsServiceLayer,
-  devicesServiceLayer,
-  spacesServiceLayer,
-  networkServiceLayer,
-  edgeAgentServiceLayer,
+  IdentityServiceLayer,
+  ContactsServiceLayer,
+  InvitationsServiceLayer,
+  DevicesServiceLayer,
+  SpacesServiceLayer,
+  NetworkServiceLayer,
+  EdgeAgentServiceLayer,
   dataServiceLayer,
   queryServiceLayer,
   feedServiceLayer,

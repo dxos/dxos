@@ -3,15 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
-import { type EdgeConnection } from '@dxos/edge-client';
+import { EdgeConnectionService, type EdgeConnection } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
-import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
-import { type SwarmNetworkManager } from '@dxos/network-manager';
+import { SignalManagerService, type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
+import { SwarmNetworkManagerService, type SwarmNetworkManager } from '@dxos/network-manager';
 import { buf } from '@dxos/protocols/buf';
-import { type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { NetworkStatusSchema, type NetworkStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type JoinRequest,
@@ -19,10 +21,10 @@ import {
   type Message,
   type QueryRequest,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
-import { type NetworkService } from '@dxos/protocols/rpc';
+import { NetworkService } from '@dxos/protocols/rpc';
 
 export class NetworkServiceImpl implements NetworkService.Handlers {
-  'constructor'(
+  constructor(
     private readonly networkManager: SwarmNetworkManager,
     private readonly signalManager: SignalManager,
     private readonly edgeConnection?: EdgeConnection,
@@ -144,3 +146,17 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 }
+
+export const NetworkServiceLayer: Layer.Layer<
+  NetworkService.Tag,
+  never,
+  SwarmNetworkManagerService | SignalManagerService
+> = Layer.effect(
+  NetworkService.Tag,
+  Effect.gen(function* () {
+    const networkManager = yield* SwarmNetworkManagerService;
+    const signalManager = yield* SignalManagerService;
+    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
+    return new NetworkServiceImpl(networkManager, signalManager, edgeConnection);
+  }),
+);
