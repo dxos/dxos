@@ -183,11 +183,11 @@ const assertEdgeConnected = async (client: Client): Promise<void> => {
   }
   throw new Error(
     'The harness client is not connected to EDGE, so the space it seeds cannot reach the deployed worker. ' +
-      'Two prerequisites, and neither is a fault in this eval: the client reaches EDGE over a WebSocket ' +
-      '(an egress proxy that forbids upgrades — the Claude Code sandbox among them — blocks it outright), ' +
-      'and the identity needs an account on that EDGE (a fresh one gets ' +
-      '`identity_not_associated_with_account`). Run it where both hold, or point the eval at an existing ' +
-      'session with DX_EVAL_MCP_TOKEN and DX_EVAL_SPACE_ID.',
+      'The usual cause is not the transport but authorization: the WebSocket upgrade route admits a ' +
+      'chained HALO identity only when it is bound to an account on that EDGE, so an identity this run ' +
+      'just created is refused with `identity_not_associated_with_account` (hub-protocol `edgeAuth`; the ' +
+      'waiver is for ephemeral bootstrap presentations, which this is not). Provision the identity, or ' +
+      'point the eval at an existing session with DX_EVAL_MCP_TOKEN and DX_EVAL_SPACE_ID.',
   );
 };
 
