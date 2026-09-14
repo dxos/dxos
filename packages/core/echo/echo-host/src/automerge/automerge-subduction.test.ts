@@ -371,8 +371,9 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     const result = await subductionA.syncWithAllPeers(sid, true);
     expect(result.entries().length).toBeGreaterThan(0);
 
-    const blobsOnB = await subductionB.getBlobs(sid);
-    expect(blobsOnB).toHaveLength(1);
+    // Propagation is a best-effort send that does not block on peer acks, so the
+    // push is still in flight when `syncWithAllPeers` resolves.
+    await expect.poll(() => subductionB.getBlobs(sid).then((blobs) => blobs.length)).toBe(1);
   }, 10_000);
 
   test('syncs between two subduction instances using connectTransport', async ({ expect }) => {
@@ -396,9 +397,8 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
 
     await subductionA.syncWithAllPeers(sid, false);
 
-    const blobsOnB = await subductionB.getBlobs(sid);
-    expect(blobsOnB).toHaveLength(1);
-    expect(blobsOnB[0]).toEqual(new Uint8Array([4, 5, 6]));
+    await expect.poll(() => subductionB.getBlobs(sid).then((blobs) => blobs.length)).toBe(1);
+    expect((await subductionB.getBlobs(sid))[0]).toEqual(new Uint8Array([4, 5, 6]));
   }, 10_000);
 
   test('full sync exchanges all sedimentrees between peers', async ({ expect }) => {
@@ -420,18 +420,17 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
 
     // Commits are added after connecting: a sedimentree present before
     // `addConnection` is not picked up by a later full sync, so seed both
-    // sides on the live connection. A single `fullSyncWithAllPeers` then
-    // exchanges fingerprints bidirectionally — each peer ends up with both.
+    // sides on the live connection. A full sync pushes the caller's own trees
+    // but does not pull the peer's, so each side runs its own.
     await subductionA.addCommit(sidA, commitIdOf(5), [], new Uint8Array([10, 20]));
     await subductionB.addCommit(sidB, commitIdOf(6), [], new Uint8Array([30, 40]));
     await subductionA.fullSyncWithAllPeers();
+    await subductionB.fullSyncWithAllPeers();
 
-    const blobsAonB = await subductionB.getBlobs(sidA);
-    const blobsBonA = await subductionA.getBlobs(sidB);
-    expect(blobsAonB).toHaveLength(1);
-    expect(blobsAonB[0]).toEqual(new Uint8Array([10, 20]));
-    expect(blobsBonA).toHaveLength(1);
-    expect(blobsBonA[0]).toEqual(new Uint8Array([30, 40]));
+    await expect.poll(() => subductionB.getBlobs(sidA).then((blobs) => blobs.length)).toBe(1);
+    await expect.poll(() => subductionA.getBlobs(sidB).then((blobs) => blobs.length)).toBe(1);
+    expect((await subductionB.getBlobs(sidA))[0]).toEqual(new Uint8Array([10, 20]));
+    expect((await subductionA.getBlobs(sidB))[0]).toEqual(new Uint8Array([30, 40]));
   }, 10_000);
 
   // After B drops handshake state and rehydrates from durable storage, does
@@ -458,6 +457,9 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
       await subB.addConnection(authB);
 
       const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
+      // `addCommit` broadcasts only to peers subscribed to the sedimentree, so B
+      // subscribes before A writes.
+      await subB.syncWithAllPeers(sid, true);
       await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
       await expect.poll(() => subB.getBlobs(sid).then((bs) => bs.length), { timeout: 5_000 }).toEqual(1);
 
