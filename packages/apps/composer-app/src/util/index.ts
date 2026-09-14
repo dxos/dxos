@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './boot-reports.ts';
 export * from './config.ts';
 export * from './constants.ts';
 export * from './dev-rss-banner.ts';

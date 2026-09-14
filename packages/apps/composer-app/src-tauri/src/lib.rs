@@ -14,6 +14,8 @@ mod xattr_cmd;
 mod menubar;
 #[cfg(target_os = "macos")]
 mod spotlight;
+#[cfg(desktop)]
+mod web_process;
 
 #[cfg(desktop)]
 use oauth::OAuthServerState;
@@ -56,6 +58,9 @@ fn port_available(port: u16) -> bool {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(desktop)]
+    web_process::mark_host_start();
+
     // `tauri.conf.json` is compiled in, so the identifier here is the one `.github/actions/cn-config`
     // rewrote for this channel — the only thing a running build knows about which channel it is.
     let context = tauri::generate_context!();
@@ -85,7 +90,14 @@ pub fn run() {
     let builder = if port_taken {
         builder
     } else {
-        builder.plugin(tauri_plugin_localhost::Builder::new(localhost_port).build())
+        builder.plugin(
+            tauri_plugin_localhost::Builder::new(localhost_port)
+                // `no-cache` still lets WebKit store the page, and a crash reload serves it stale (an older
+                // build whose chunks this binary answers with index.html). No validators are sent, so no
+                // load reuses the cache today.
+                .on_request(|_request, response| response.add_header("Cache-Control", "no-store"))
+                .build(),
+        )
     };
 
     // Only include updater plugin for non-mobile targets.
@@ -170,6 +182,7 @@ pub fn run() {
         xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
+        web_process::take_web_process_terminations,
     ]);
 
     #[cfg(mobile)]
@@ -195,12 +208,17 @@ pub fn run() {
     // whatever the scheduling policy, so a hidden main window waits for focus rather than rebooting
     // into that pressure; on macOS 13, where `background_throttling` below is ignored, the hidden
     // reload would also run suspended.
+    //
+    // Recovery navigates to the current URL rather than calling `reload()`: WebKit runs a reload of a
+    // terminated process as a back/forward load that accepts stale cached HTML.
     #[cfg(target_os = "macos")]
     let builder = builder.on_web_content_process_terminate(|webview| {
         let window = webview.window();
         let visible = window.is_visible().unwrap_or(true) && !window.is_minimized().unwrap_or(false);
+        log::warn!("web process terminated ({}, visible={visible})", webview.label());
+        web_process::record(visible);
         if webview.label() != MAIN_WINDOW_LABEL || visible {
-            if let Err(error) = webview.reload() {
+            if let Err(error) = webview.url().and_then(|url| webview.navigate(url)) {
                 log::error!("reload after web process termination failed ({}): {error}", webview.label());
             }
         } else {
@@ -211,14 +229,20 @@ pub fn run() {
 
     builder
         .setup(move |app| {
-            // Initialize logging in debug mode.
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
+            // Release builds log too, since the host sees failures the page cannot report. The default 40 KB
+            // single file would lose the failed session's record as soon as the app restarts.
+            app.handle().plugin(
+                tauri_plugin_log::Builder::default()
+                    .level(log::LevelFilter::Info)
+                    .max_file_size(5_000_000)
+                    .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(3))
+                    .build(),
+            )?;
+            let default_panic_hook = std::panic::take_hook();
+            std::panic::set_hook(Box::new(move |info| {
+                log::error!("panic: {info}");
+                default_panic_hook(info);
+            }));
 
             // Desktop: create window pointing at localhost plugin (production) or Vite dev server (dev).
             // SharedWorker requires HTTP origin, so desktop uses External URL.
@@ -294,7 +318,7 @@ pub fn run() {
                         if matches!(event, tauri::WindowEvent::Focused(true))
                             && RELOAD_ON_FOCUS.swap(false, std::sync::atomic::Ordering::SeqCst)
                         {
-                            if let Err(error) = window.reload() {
+                            if let Err(error) = window.url().and_then(|url| window.navigate(url)) {
                                 log::error!("deferred reload after web process termination failed: {error}");
                             }
                         }

@@ -59,6 +59,7 @@ import {
   initializeObservability,
   isFalse,
   isTrue,
+  reportPreviousBootFailures,
   runStorageResetMigration,
   setSafeModeUrl,
   setupConfig,
@@ -408,6 +409,7 @@ const main = async () => {
         return;
       }
       captureStartup('composer.startup', 'ready');
+      void observability.then((obs) => reportPreviousBootFailures(obs, isTauri)).catch((error) => log.catch(error));
     },
     { once: true },
   );

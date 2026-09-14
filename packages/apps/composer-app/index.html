@@ -38,6 +38,44 @@
     <script>
       (window.litIssuedWarnings ??= new Set()).add('dev-mode');
     </script>
+
+    <!--
+      A boot asset that fails to load (e.g. stale HTML naming another build's chunks) is recorded, and
+      the page re-navigates once so a normal load replaces the HTML. `util/boot-reports.ts` reports the
+      record after the next successful boot. Only acts while the boot loader is up.
+    -->
+    <script>
+      window.addEventListener(
+        'error',
+        (event) => {
+          const target = event.target;
+          const href =
+            target instanceof HTMLScriptElement
+              ? target.src
+              : target instanceof HTMLLinkElement && target.rel === 'stylesheet'
+                ? target.href
+                : '';
+          if (!href || !document.getElementById('boot-loader')) {
+            return;
+          }
+          const url = new URL(href);
+          if (url.origin !== location.origin || !url.pathname.startsWith('/assets/')) {
+            return;
+          }
+          try {
+            const key = 'dxos.composer.boot-asset-failure';
+            const attempts = (JSON.parse(localStorage.getItem(key) ?? 'null')?.attempts ?? 0) + 1;
+            localStorage.setItem(key, JSON.stringify({ url: href, page: location.href, at: Date.now(), attempts }));
+            if (attempts === 1) {
+              location.replace(location.href);
+            }
+          } catch {
+            // Storage unavailable: nothing to record, and no loop guard to reload behind.
+          }
+        },
+        true,
+      );
+    </script>
   </head>
   <body>
     <div id="root" class="contents"></div>
