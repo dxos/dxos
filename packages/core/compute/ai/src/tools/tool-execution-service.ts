@@ -23,17 +23,19 @@ export class ToolExecutionService extends Context.Service<
   }
 >()('@dxos/ai/ToolExecutionService') {}
 
-export const layerEmpty = Layer.succeed(ToolExecutionService, {
-  // `toolkit.tools` covers every tool, while `HandlersFrom<Tools>` only requires entries for
-  // tools that need a handler — a filtered mapped type `toolkit.of`'s generic `Tools` can't
-  // verify against a runtime-built record, so the shape is asserted once at its source.
-  handlersFor: <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
-    toolkit.of(
-      Record.map(toolkit.tools, (tool, name) =>
-        Effect.fail(new AiToolNotFoundError(name)),
-      ) as unknown as Toolkit.HandlersFrom<Tools>,
-    ),
-});
+export namespace ToolExecutionService {
+  export const layerEmpty = Layer.succeed(ToolExecutionService, {
+    // `toolkit.tools` covers every tool, while `HandlersFrom<Tools>` only requires entries for
+    // tools that need a handler — a filtered mapped type `toolkit.of`'s generic `Tools` can't
+    // verify against a runtime-built record, so the shape is asserted once at its source.
+    handlersFor: <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
+      toolkit.of(
+        Record.map(toolkit.tools, (tool, name) =>
+          Effect.fail(new AiToolNotFoundError(name)),
+        ) as unknown as Toolkit.HandlersFrom<Tools>,
+      ),
+  });
 
-export const handlersFor = <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
-  ToolExecutionService.use((service) => Effect.succeed(service.handlersFor(toolkit)));
+  export const handlersFor = <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
+    ToolExecutionService.use((service) => Effect.succeed(service.handlersFor(toolkit)));
+}
