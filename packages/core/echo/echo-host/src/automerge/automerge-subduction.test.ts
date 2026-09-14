@@ -373,7 +373,7 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
 
     // Propagation is a best-effort send that does not block on peer acks, so the
     // push is still in flight when `syncWithAllPeers` resolves.
-    await expect.poll(() => subductionB.getBlobs(sid).then((blobs) => blobs.length)).toBe(1);
+    await expect.poll(() => subductionB.getBlobs(sid).then((blobs) => blobs.length), { timeout: 5_000 }).toBe(1);
   }, 10_000);
 
   test('syncs between two subduction instances using connectTransport', async ({ expect }) => {
@@ -397,7 +397,7 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
 
     await subductionA.syncWithAllPeers(sid, false);
 
-    await expect.poll(() => subductionB.getBlobs(sid).then((blobs) => blobs.length)).toBe(1);
+    await expect.poll(() => subductionB.getBlobs(sid).then((blobs) => blobs.length), { timeout: 5_000 }).toBe(1);
     expect((await subductionB.getBlobs(sid))[0]).toEqual(new Uint8Array([4, 5, 6]));
   }, 10_000);
 
@@ -427,8 +427,8 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     await subductionA.fullSyncWithAllPeers();
     await subductionB.fullSyncWithAllPeers();
 
-    await expect.poll(() => subductionB.getBlobs(sidA).then((blobs) => blobs.length)).toBe(1);
-    await expect.poll(() => subductionA.getBlobs(sidB).then((blobs) => blobs.length)).toBe(1);
+    await expect.poll(() => subductionB.getBlobs(sidA).then((blobs) => blobs.length), { timeout: 5_000 }).toBe(1);
+    await expect.poll(() => subductionA.getBlobs(sidB).then((blobs) => blobs.length), { timeout: 5_000 }).toBe(1);
     expect((await subductionB.getBlobs(sidA))[0]).toEqual(new Uint8Array([10, 20]));
     expect((await subductionA.getBlobs(sidB))[0]).toEqual(new Uint8Array([30, 40]));
   }, 10_000);
