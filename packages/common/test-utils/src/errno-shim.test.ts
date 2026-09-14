@@ -80,9 +80,9 @@ __attribute__((constructor)) static void mix(void) {
 }
 `;
 
-/** Preloaded destructor, run once the shim is initialized: writes through a null pointer. */
+/** Preloaded destructor, run once the shim is initialized: writes to an unmapped address no compiler treats as null. */
 const CRASH_PROBE_SOURCE = `__attribute__((destructor)) static void crash(void) {
-  int *volatile pointer = 0;
+  int *volatile pointer = (int *)16;
   *pointer = 1;
 }
 `;
@@ -133,7 +133,7 @@ describe.runIf(errnoShimSupported())('errno shim', () => {
       encoding: 'utf8',
     });
     expect(result.signal).toBe('SIGSEGV');
-    expect(result.stderr).toMatch(/dx-crash-report pid=\d+ signal=11 code=\d+ addr=0x0\n/);
+    expect(result.stderr).toMatch(/dx-crash-report pid=\d+ signal=11 code=\d+ addr=0x10\n/);
     expect(result.stderr).toContain('crash-probe.so(');
   });
 
