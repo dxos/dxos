@@ -25,7 +25,12 @@ import { ComplexSet } from '@dxos/util';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol.ts';
 import { FullyConnectedTopology } from '../topology/index.ts';
-import { createRtcTransportFactory } from '../transport/index.ts';
+import {
+  MemoryTransport,
+  TRANSPORT_CONNECTION_TIMEOUT,
+  type TransportFactory,
+  createRtcTransportFactory,
+} from '../transport/index.ts';
 import { ConnectionLimiter } from './connection-limiter.ts';
 import { ConnectionState } from './connection.ts';
 import { Swarm } from './swarm.ts';
@@ -38,46 +43,48 @@ type TestPeer = {
   signalManager: SignalManager;
 };
 
+const context = new MemorySignalManagerContext();
+
+const setupSwarm = async ({
+  topic = PublicKey.random(),
+  peer = create(PeerSchema, { peerKey: PublicKey.random().toHex() }),
+  connectionLimiter = new ConnectionLimiter(),
+  signalManager = new MemorySignalManager(context),
+  initiationDelay = 100,
+  transportFactory = createRtcTransportFactory(),
+}: {
+  topic?: PublicKey;
+  peer?: PeerInfo;
+  connectionLimiter?: ConnectionLimiter;
+  signalManager?: SignalManager;
+  initiationDelay?: number;
+  transportFactory?: TransportFactory;
+}): Promise<TestPeer> => {
+  const protocol = new TestWireProtocol();
+  const swarm = new Swarm(
+    topic,
+    peer,
+    new FullyConnectedTopology(),
+    protocol.factory,
+    new Messenger({ signalManager }),
+    transportFactory,
+    undefined,
+    connectionLimiter,
+    initiationDelay,
+  );
+
+  onTestFinished(async () => {
+    await swarm.destroy();
+    await signalManager.close();
+  });
+
+  await swarm.open();
+
+  return { swarm, protocol, topic, peer, signalManager };
+};
+
 // Segfault in node-datachannel.
 describe.skip('Swarm', () => {
-  const context = new MemorySignalManagerContext();
-
-  const setupSwarm = async ({
-    topic = PublicKey.random(),
-    peer = create(PeerSchema, { peerKey: PublicKey.random().toHex() }),
-    connectionLimiter = new ConnectionLimiter(),
-    signalManager = new MemorySignalManager(context),
-    initiationDelay = 100,
-  }: {
-    topic?: PublicKey;
-    peer?: PeerInfo;
-    connectionLimiter?: ConnectionLimiter;
-    signalManager?: SignalManager;
-    initiationDelay?: number;
-  }): Promise<TestPeer> => {
-    const protocol = new TestWireProtocol();
-    const swarm = new Swarm(
-      topic,
-      peer,
-      new FullyConnectedTopology(),
-      protocol.factory,
-      new Messenger({ signalManager }),
-      createRtcTransportFactory(),
-      undefined,
-      connectionLimiter,
-      initiationDelay,
-    );
-
-    onTestFinished(async () => {
-      await swarm.destroy();
-      await signalManager.close();
-    });
-
-    await swarm.open();
-
-    return { swarm, protocol, topic, peer, signalManager };
-  };
-
   test('connects two peers in a swarm', async () => {
     const topic = PublicKey.random();
 
@@ -209,6 +216,38 @@ describe.skip('Swarm', () => {
     await Promise.all([connected1, connected2]);
   });
 });
+
+describe('Swarm over a memory transport', () => {
+  test(
+    'a session one peer fails before connecting is retried without waiting out the transport timeout',
+    { timeout: TRANSPORT_CONNECTION_TIMEOUT },
+    async () => {
+      const topic = PublicKey.random();
+      let failed = false;
+      const transportFactory: TransportFactory = {
+        createTransport: (options) => {
+          if (options.initiator || failed) {
+            return new MemoryTransport(options);
+          }
+          failed = true;
+          return new FailingTransport(options);
+        },
+      };
+
+      const peer1 = await setupSwarm({ topic, transportFactory });
+      const peer2 = await setupSwarm({ topic, transportFactory });
+      await connectSwarms(peer1, peer2);
+      expect(failed).toBe(true);
+    },
+  );
+});
+
+/** Fails on its first signal, as a WebRTC answerer does when it cannot apply the remote offer. */
+class FailingTransport extends MemoryTransport {
+  override async onSignal(): Promise<void> {
+    this.errors.raise(new Error('Remote offer could not be applied.'));
+  }
+}
 
 const peerAvailable = (topic: PublicKey, peer: PeerInfo): SwarmEvent =>
   create(SwarmEventSchema, {

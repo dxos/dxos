@@ -151,6 +151,9 @@ export class Teleport {
     log('open');
     this._setExtension('dxos.mesh.teleport.control', this._control);
     await this._openExtension('dxos.mesh.teleport.control');
+    if (this._aborting || this._destroying) {
+      throw new Error('Teleport closed while opening.');
+    }
     this._open = true;
     this._muxer.setSessionId(sessionId);
   }
