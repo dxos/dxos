@@ -11,6 +11,7 @@ import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 
 import { SpaceTemplateToolbar, StoryRole } from '../modules/index.ts';
+import { applyStagedProfileImport } from '../modules/profile-archive.ts';
 import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing/index.ts';
 import { isPersistent } from '../testing/persistence.ts';
 
@@ -104,6 +105,12 @@ const storyOptions = {
 const persistentDecorators = createDecorators(() => ({
   ...storyOptions,
   config: isPersistent() ? config.persistent : config.remote,
+  // A profile imported from the toolbar lands here: plugins resolve before the client starts, which
+  // is the only moment no worker holds the database open.
+  lazyPlugins: async () => {
+    await applyStagedProfileImport();
+    return storyOptions.lazyPlugins();
+  },
 }));
 
 /** Ephemeral, for the play test: a fixture that outlives the run would make the next one lie. */

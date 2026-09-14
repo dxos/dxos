@@ -19,7 +19,7 @@ import { Field, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 
 import { isPersistent, setPersistent } from '../testing/persistence.ts';
 import { VOYAGE_SPACE_ID } from '../testing/voyage-space.ts';
-import { exportProfileArchive, importProfileArchive, pickProfileArchive } from './profile-archive.ts';
+import { exportProfileArchive, pickProfileArchive, stageProfileImport } from './profile-archive.ts';
 
 /**
  * Story chrome: a picker over the contributed space templates
@@ -170,21 +170,20 @@ const ProfileControls = () => {
     }
   }, []);
 
-  /** The client is torn down first so nothing writes the pool while it is being replaced. */
+  /** Staged and applied on reload, before the client starts: the running worker holds the pool open. */
   const handleImport = useCallback(async () => {
     const bytes = await pickProfileArchive();
     if (!bytes) {
       return;
     }
     try {
-      await client.destroy();
-      await importProfileArchive(bytes);
+      await stageProfileImport(bytes);
     } catch (error) {
       log.catch(error);
       return;
     }
     window.location.reload();
-  }, [client]);
+  }, []);
 
   /** Takes effect on reload: the client has already booted with the previous choice. */
   const handlePersistentChange = useCallback((checked: boolean | 'indeterminate') => {
@@ -211,7 +210,8 @@ const ProfileControls = () => {
         icon='ph--upload-simple--regular'
         iconOnly
         label='Import profile (.dxprofile)'
-        disabled={!persistent}
+        // TODO(dmaretskyi): Import does not restore a working profile yet; re-enable once it does.
+        disabled
         onClick={() => void handleImport()}
       />
       <Field.Checkbox checked={persistent} onCheckedChange={handlePersistentChange}>
