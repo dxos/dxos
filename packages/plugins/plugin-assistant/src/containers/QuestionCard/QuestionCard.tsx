@@ -69,25 +69,29 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
   const answered = Question.isAnswered(question);
 
   return (
+    // The card is rendered in two places that size it oppositely: a chat column, which hands it a
+    // definite width to fill, and a preview popover, which sizes to its content. `w-full` alone is
+    // indefinite in the popover, so the wrapping text collapses to one character per line — the
+    // `min-w` floor is what makes it a card there, and `max-w-full` keeps it inside the column here.
     <Flex
       role='group'
       column
       gap='sm'
-      classNames='my-2 p-3 border border-subdued-separator rounded-sm'
+      classNames='w-full min-w-[18rem] max-w-full my-2 p-3 border border-subdued-separator rounded-sm'
       data-testid='question-card'
     >
-      <Flex gap='sm' align='start'>
+      <Flex gap='sm' align='start' classNames='w-full min-w-0'>
         <Icon icon='ph--question--regular' size={5} classNames='shrink-0 text-subdued mt-0.5' />
-        <Flex column classNames='min-w-0'>
-          <p className='text-sm font-medium'>{question.text}</p>
-          {question.context && <p className='text-sm text-subdued'>{question.context}</p>}
+        <Flex column classNames='grow min-w-0'>
+          <p className='text-sm font-medium break-words'>{question.text}</p>
+          {question.context && <p className='text-sm text-subdued break-words'>{question.context}</p>}
         </Flex>
       </Flex>
 
       {answered ? (
-        <Flex gap='sm' align='center' data-testid='question-card.answer'>
-          <Icon icon='ph--check-circle--regular' size={4} classNames='shrink-0 text-subdued' />
-          <p className='text-sm'>{question.selectedAnswer}</p>
+        <Flex gap='sm' align='start' classNames='w-full min-w-0' data-testid='question-card.answer'>
+          <Icon icon='ph--check-circle--regular' size={4} classNames='shrink-0 text-subdued mt-0.5' />
+          <p className='text-sm grow min-w-0 break-words'>{question.selectedAnswer}</p>
         </Flex>
       ) : (
         <>
@@ -96,13 +100,15 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
               key={option.title}
               variant='default'
               disabled={busy}
-              classNames='justify-start text-start'
+              // `h-auto`: an option is a sentence, not a label, so the button grows to the text
+              // rather than clipping it to one row's height.
+              classNames='w-full min-w-0 h-auto py-2 justify-start text-start whitespace-normal'
               data-testid='question-card.option'
               onClick={() => void submit(option.title)}
             >
-              <Flex column classNames='min-w-0'>
-                <span className='text-sm truncate'>{option.title}</span>
-                {option.description && <span className='text-xs text-subdued truncate'>{option.description}</span>}
+              <Flex column classNames='grow min-w-0 text-start'>
+                <span className='text-sm break-words'>{option.title}</span>
+                {option.description && <span className='text-xs text-subdued break-words'>{option.description}</span>}
               </Flex>
             </Button>
           ))}

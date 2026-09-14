@@ -42,7 +42,9 @@ const TASKS: { title: string; description: string }[] = [
     description: trim`
       Acme asked for a refund on order #4471, placed 45 days ago. Our published refund window is not
       recorded anywhere in this project, and neither is whether we make exceptions for enterprise
-      accounts. Draft the reply once you know which applies.
+      accounts — nobody has written either down, so there is nothing here to look them up in.
+      Done means: the reply to Acme is drafted in this conversation, and it states the decision that
+      actually applies. Do not invent the policy.
     `,
   },
   {
