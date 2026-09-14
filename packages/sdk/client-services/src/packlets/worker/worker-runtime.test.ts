@@ -26,7 +26,7 @@ describe('WorkerRuntime', () => {
     });
     onTestFinished(() => EffectEx.runPromise(runtime.stop()));
 
-    expect(await Effect.runPromise(Effect.flip(runtime.start()))).toBe(error);
+    expect(await EffectEx.runPromise(Effect.flip(runtime.start()))).toBe(error);
   });
 
   test('a storage migration failure fails start without signalling stop or closing storage under the host', async () => {
@@ -48,7 +48,7 @@ describe('WorkerRuntime', () => {
       sqliteLayer,
     });
 
-    const error = await Effect.runPromise(Effect.flip(runtime.start()));
+    const error = await EffectEx.runPromise(Effect.flip(runtime.start()));
     let rootCause: unknown = error;
     while (rootCause instanceof Error && rootCause.cause instanceof Error) {
       rootCause = rootCause.cause;
