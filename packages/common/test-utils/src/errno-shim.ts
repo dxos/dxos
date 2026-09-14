@@ -104,7 +104,10 @@ int sigaction(int signal, const struct glibc_sigaction *action, struct glibc_sig
 export const errnoShimSupported = (): boolean =>
   process.platform === 'linux' && (process.arch === 'x64' || process.arch === 'arm64');
 
-/** Compiles {@link ERRNO_SHIM_SOURCE} into `cacheDir` once per source, compiler invocation and architecture, and returns its path. */
+/**
+ * Compiles {@link ERRNO_SHIM_SOURCE} into `cacheDir` once per source, compiler invocation and architecture,
+ * and returns its path.
+ */
 export const buildErrnoShim = (cacheDir: string): string => {
   const hash = createHash('sha256')
     .update(JSON.stringify([ERRNO_SHIM_SOURCE, compiler(), COMPILE_ARGS, LINK_ARGS]))
@@ -128,7 +131,7 @@ export const buildErrnoShim = (cacheDir: string): string => {
   return output;
 };
 
-/** Compiler arguments ahead of the output path, which is followed by the source on stdin and then {@link LINK_ARGS}. */
+/** Compiler arguments ahead of the output path, which the stdin source and {@link LINK_ARGS} follow. */
 const COMPILE_ARGS = ['-shared', '-fPIC', '-O2', '-x', 'c', '-o'];
 const LINK_ARGS = ['-ldl'];
 

@@ -594,11 +594,8 @@ const showingCompanionsFor = (canvasElement: HTMLElement): string[] => [
   ),
 ];
 
-// Companions are per-plank state: every plank whose companion is open renders it beside that plank, and
-// attention plays no part in what is laid out. Planks 1 and 3 start open here, plank 2 closed. (This
-// replaces the follows-attention model, whose re-anchoring resized tiles on attention traffic and let
-// the engine silently shift the deck's scroll.)
-// A reveal that leaves focus where it is brings the plank forward without focusing it; a plain reveal focuses it.
+// A reveal that leaves focus where it is brings the plank forward without focusing it; a plain reveal
+// focuses it.
 export const RevealWithoutFocus: Story = {
   tags: ['test'],
   args: { count: 6, revealControls: true },
@@ -623,6 +620,10 @@ export const RevealWithoutFocus: Story = {
   },
 };
 
+// Companions are per-plank state: every plank whose companion is open renders it beside that plank, and
+// attention plays no part in what is laid out. Planks 1 and 3 start open here, plank 2 closed. (This
+// replaces the follows-attention model, whose re-anchoring resized tiles on attention traffic and let
+// the engine silently shift the deck's scroll.)
 export const CompanionPerPlank: Story = {
   tags: ['test'],
   args: { count: 3, companionPlanks: [1, 3] },

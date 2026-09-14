@@ -226,18 +226,14 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // from `anchors` + `state.current`, both reactive, involves no timing.
   const currentThreadId = currentObjectId(state.current);
 
-  // Attention (a thread taking focus): record it as current and bring the plank into view without taking
-  // focus from the thread, and leave the anchored content alone — focus lands on a thread for reasons the
-  // reader did not ask for (a draft autofocusing, a reply being focused), and moving the document caret
-  // there would retarget the comment they create next.
+  // Attention (a thread taking focus) records it as current and brings its plank into view without taking
+  // focus from the thread; the anchored content is left alone, since focus lands there unasked.
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const threadId = Obj.getURI(thread);
-      // Recorded unconditionally, revealed only on a change: skipping the write leaves the selection
-      // on a stale spelling, so a freshly persisted comment never shows the marker. A direct write,
-      // never an invocation: attention is passive (a re-render restoring focus, a draft
-      // autofocusing), and applied at event time it loses to any later intent — which is the point.
+      // Recorded unconditionally, so a freshly persisted comment's new spelling shows the marker. A reveal
+      // re-scrolls the deck, so only a newly current thread asks for one.
       const sameThread = currentObjectId(state.current) === thread.id;
       registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
       if (sameThread) {

@@ -92,7 +92,8 @@ export const CommentThread = ({
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
-  // Activating reveals the thread in the anchored document; operating the thread's own controls is not that gesture.
+  // Activating reveals the thread in the anchored document; operating the thread's own controls is not
+  // that gesture.
   const handleContentClickCapture = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
       if (event.target instanceof Element && event.target.closest('button')) {

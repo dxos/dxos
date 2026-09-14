@@ -68,9 +68,8 @@ test.describe('Comments tests', () => {
 
     const editedText = 'Edited';
 
-    // Edit mode autofocuses the message editor; wait for that rather than clicking, since a click
-    // inside the thread is the "reveal in the document" gesture and moves focus elsewhere. Keys stay
-    // page-level because clearing the text stops `message`'s hasText filter from matching.
+    // Edit mode autofocuses the message editor, so wait for that. Keys stay page-level because clearing
+    // the text stops `message`'s hasText filter from matching.
     await expect(messageTextbox).toBeFocused();
     await host.page.keyboard.press('ControlOrMeta+A');
     await host.page.keyboard.press('Backspace');
