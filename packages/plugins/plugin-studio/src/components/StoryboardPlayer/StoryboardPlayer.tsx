@@ -4,9 +4,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { MediaPlayer, Panel, type ThemedClassName, composableProps } from '@dxos/react-ui';
+import { MediaPlayer, Panel, type ThemedClassName, Toolbar, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -41,6 +40,7 @@ export const StoryboardPlayer = ({
   attendableId,
   onClose,
 }: StoryboardPlayerProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const clip = clips[index];
@@ -60,67 +60,6 @@ export const StoryboardPlayer = ({
     return () => clearTimeout(timer);
   }, [clip, isVideo, advance, stillMs]);
 
-  const menuActions = useMenuBuilder(
-    (): ActionGraphProps =>
-      MenuBuilder.make()
-        .action(
-          'previous',
-          {
-            label: ['previous-frame.label', { ns: meta.profile.key }],
-            icon: 'ph--caret-left--regular',
-            disposition: 'toolbar',
-            disabled: index === 0,
-          },
-          () => setIndex((current) => Math.max(0, current - 1)),
-        )
-        .action(
-          'position',
-          {
-            variant: 'custom',
-            label: ['play.label', { ns: meta.profile.key }],
-            render: () => (
-              <span className='tabular-nums'>
-                {index + 1} / {clips.length}
-              </span>
-            ),
-          },
-          () => {},
-        )
-        .action(
-          'next',
-          {
-            label: ['next-frame.label', { ns: meta.profile.key }],
-            icon: 'ph--caret-right--regular',
-            disposition: 'toolbar',
-            disabled: index + 1 >= clips.length,
-          },
-          advance,
-        )
-        .separator('gap')
-        .action(
-          'title',
-          {
-            variant: 'custom',
-            label: ['play.label', { ns: meta.profile.key }],
-            render: () => <span className='truncate'>{clip?.name}</span>,
-          },
-          () => {},
-        )
-        .separator('gap')
-        .action(
-          'close',
-          {
-            label: ['close.label', { ns: meta.profile.key }],
-            icon: 'ph--x--regular',
-            disposition: 'toolbar',
-            disabled: !onClose,
-          },
-          () => onClose?.(),
-        )
-        .build(),
-    [index, clips.length, clip?.name, advance, onClose],
-  );
-
   // Opening the player unmounts whatever control opened it, which drops focus to the body; the
   // toolbar takes it back so the plank stays attended (attention follows focus into an attendable)
   // and the transport is a key away. The attendable attributes mark the panel as that attention's
@@ -137,13 +76,44 @@ export const StoryboardPlayer = ({
   return (
     <Panel.Root {...composableProps({ classNames }, attentionAttributes)}>
       <Panel.Toolbar asChild>
-        <ActionToolbar
-          {...menuActions}
-          attendableId={attendableId}
-          ref={toolbarRef}
-          tabIndex={-1}
-          classNames='outline-none'
-        />
+        <Toolbar.Root ref={toolbarRef} tabIndex={-1} classNames='outline-none'>
+          {/* Laid out by hand — nav + position, the title centred, close — as one grid child rather
+              than a grid on the root: the root brackets its children with focus sentinels, which
+              would take the first and last cells. */}
+          <div className='grow grid grid-cols-[auto_1fr_auto] items-center gap-1'>
+            <div className='flex items-center gap-1'>
+              <Toolbar.IconButton
+                iconOnly
+                icon='ph--caret-left--regular'
+                density='sm'
+                label={t('previous-frame.label')}
+                disabled={index === 0}
+                onClick={() => setIndex((current) => Math.max(0, current - 1))}
+              />
+              <span className='tabular-nums whitespace-nowrap'>
+                {index + 1} / {clips.length}
+              </span>
+              <Toolbar.IconButton
+                iconOnly
+                icon='ph--caret-right--regular'
+                density='sm'
+                label={t('next-frame.label')}
+                disabled={index + 1 >= clips.length}
+                onClick={advance}
+              />
+            </div>
+            <span className='min-w-0 truncate text-center'>{clip.name}</span>
+            <div className='flex justify-end'>
+              <Toolbar.IconButton
+                iconOnly
+                icon='ph--x--regular'
+                label={t('close.label')}
+                disabled={!onClose}
+                onClick={() => onClose?.()}
+              />
+            </div>
+          </div>
+        </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
         {/* Keyed by clip so the element remounts and autoplays the next source. */}
