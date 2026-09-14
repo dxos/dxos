@@ -40,11 +40,11 @@ const DebugPanelDrawerContent = () => {
   const { mode, setMode } = useDebugPanelContext();
   const { invokePromise } = useOperationInvoker();
 
-  // The drawer closes first so the floating window (opened by the status bar on the mode change)
-  // does not open over it.
+  // Floating asks the drawer to close so the window the status bar opens on the mode change does
+  // not stay over it; docking keeps it open.
   const handleModeChange = useCallback(
     (next: DebugPanelMode) => {
-      void invokePromise(LayoutOperation.UpdateDrawer, { state: 'closed' });
+      void invokePromise(LayoutOperation.UpdateDrawer, { state: next === 'floating' ? 'closed' : 'open' });
       setMode(next);
     },
     [invokePromise, setMode],

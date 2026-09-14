@@ -35,13 +35,16 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
       (2026-09-14 on 5180: opens at 24rem with `main` padding-block-end 384px and the plank's bottom edge
       on the drawer's top; drag to 32rem persists across reload; float/dock keep Console selected;
       fullscreen hides and restores it; sidebar collapse moves inset-inline-start 350px → 72px).
-- [ ] Escape closes the drawer like the floating window (design §5; not in any task — final fix wave).
+- [x] Escape closes the drawer like the floating window (design §5; final fix wave: `Main.Drawer` closes on an
+      unclaimed Escape on its region, `DrawerEscape` story).
 - [ ] `PLUGIN.mdl` (plugin-debug, plugin-deck) describe the docked panel — done on the branch; PR #13095
       body still needs its "Docked drawer" section.
 
 ## Follow-ups
 
 - [ ] `plugin-devtools` `SpaceListSurface`/`SpaceInfoSurface` (`DevtoolsSurfaces.tsx` ~40, ~51) still call `LayoutOperation.Open` with a dotted id (`Devtools.Echo.Space`) that was never a graph path — should `select` in the debug panel instead.
+- [ ] Cross-tab: a `mode` change synced through the `storage` event opens/closes the floating window in other tabs (`DebugPanelStatus` mode-edge effect); deck drawer state is per tab.
+- [ ] `update-drawer.test.ts` activates `DeckPlugin` headlessly; `UrlHandler` logs `window is not defined` — move to the browser project or contribute only the state module.
 
 ## Devtools panels (observed 2026-09-14)
 

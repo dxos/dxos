@@ -449,13 +449,25 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
     const { tx } = useThemeContext();
     const {
       drawerState,
+      setDrawerState,
       drawerHeight,
       setDrawerHeight,
       onDrawerHeightChangeEnd,
       navigationSidebarState,
       complementarySidebarState,
     } = useMainContext(MAIN_DRAWER_NAME);
-    const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '3');
+    // Escape closes the drawer like the floating window it stands in for, unless a child already claimed it.
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Escape' && !event.defaultPrevented) {
+          event.preventDefault();
+          setDrawerState('closed');
+        }
+        props.onKeyDown?.(event);
+      },
+      [setDrawerState, props.onKeyDown],
+    );
+    const { ref: moverRef, ...mover } = useLandmarkMover(handleKeyDown, '3');
     const composedRef = useComposedRefs<HTMLDivElement>(forwardedRef, moverRef);
 
     // Pointer drag on the top edge: rem = px / root font size, clamped. The drag carries its own
@@ -494,9 +506,29 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
           event.currentTarget.releasePointerCapture(event.pointerId);
         }
-        onDrawerHeightChangeEnd?.(drag.height);
+        // A click that never moved has nothing new to persist.
+        if (drag.height !== drag.startHeight) {
+          onDrawerHeightChangeEnd?.(drag.height);
+        }
       },
       [onDrawerHeightChangeEnd],
+    );
+    // Keyboard resize steps a rem at a time and persists each step, there being no drag to end.
+    const handleHandleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLButtonElement>) => {
+        const delta = event.key === 'ArrowUp' ? 1 : event.key === 'ArrowDown' ? -1 : 0;
+        if (delta === 0) {
+          return;
+        }
+
+        event.preventDefault();
+        const next = Math.min(maxHeight, Math.max(minHeight, drawerHeight + delta));
+        if (next !== drawerHeight) {
+          setDrawerHeight(next);
+          onDrawerHeightChangeEnd?.(next);
+        }
+      },
+      [drawerHeight, setDrawerHeight, onDrawerHeightChangeEnd, minHeight, maxHeight],
     );
 
     if (drawerState !== 'open') {
@@ -517,8 +549,14 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
       >
         <button
           type='button'
+          role='separator'
           aria-label={t('drawer.resize.label')}
+          aria-orientation='horizontal'
+          aria-valuenow={drawerHeight}
+          aria-valuemin={minHeight}
+          aria-valuemax={maxHeight}
           className={tx('main.drawerHandle', {})}
+          onKeyDown={handleHandleKeyDown}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

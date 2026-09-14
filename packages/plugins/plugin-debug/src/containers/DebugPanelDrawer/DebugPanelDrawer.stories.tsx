@@ -3,76 +3,20 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import React, { useSyncExternalStore } from 'react';
+import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as Operation from '@dxos/compute/Operation';
-import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { DXN } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
-import { type DrawerState, Main } from '@dxos/react-ui';
+import { Main } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
 import * as DebugPlugin from '../../DebugPlugin.ts';
-import { StubToolsPlugin } from '../../testing/index.ts';
+import { StubDrawerPlugin, StubToolsPlugin, setDrawerState, useDrawerState } from '../../testing/index.ts';
 import { type DebugPanelViewState, debugPanelAspect } from '../DebugPanel/index.ts';
 import { DebugPanelDrawer, type DebugPanelDrawerProps } from './DebugPanelDrawer.tsx';
-
-//
-// Drawer state, as the deck would own it: the stub handler below writes it and the frame reads it.
-//
-
-let drawerState: DrawerState = 'open';
-const listeners = new Set<() => void>();
-
-const setDrawerState = (next: DrawerState) => {
-  drawerState = next;
-  listeners.forEach((listener) => listener());
-};
-
-const useDrawerState = () =>
-  useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    () => drawerState,
-  );
-
-/** Stands in for the deck's layout handler, so the panel's close and float controls move the frame's drawer. */
-const StubDrawerPlugin = Plugin.define(
-  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.debug.story.stubDrawer'), name: 'Drawer (stub)' }),
-).pipe(
-  Plugin.addModule(
-    Capability.inlineModule('stub-drawer-operations', { provides: [Capabilities.OperationHandler] }, () =>
-      Effect.succeed([
-        Capability.contribute(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LayoutOperation.UpdateDrawer, ({ state }) =>
-              Effect.sync(() => {
-                if (state === 'toggle') {
-                  setDrawerState(drawerState === 'open' ? 'closed' : 'open');
-                } else if (state) {
-                  setDrawerState(state);
-                }
-              }),
-            ),
-          ),
-        ),
-      ]),
-    ),
-  ),
-  Plugin.make,
-);
 
 /** The deck's frame with the drawer open, as `DeckContent` hosts the surface. */
 const Render = (props: DebugPanelDrawerProps) => {

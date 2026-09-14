@@ -68,12 +68,20 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     [updateState],
   );
 
+  // A close mid-drag drops the drag's mirror with it, or the next open would start at a stale height.
   const handleDrawerStateChange = useCallback(
     (next: NonNullable<typeof drawerState>) => {
       updateState((state) => ({ ...state, drawerState: next }));
+      setLiveHeight(undefined);
     },
     [updateState],
   );
+  const effectiveDrawerState = fullscreen ? 'closed' : (drawerState ?? 'closed');
+  useEffect(() => {
+    if (effectiveDrawerState !== 'open') {
+      setLiveHeight(undefined);
+    }
+  }, [effectiveDrawerState]);
 
   // Persist only at drag end; every intermediate move would otherwise write the KVS store.
   const handleDrawerHeightChangeEnd = useCallback(
@@ -88,7 +96,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     <Main.Root
       navigationSidebarState={fullscreen ? 'closed' : sidebarState}
       complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
-      drawerState={fullscreen ? 'closed' : (drawerState ?? 'closed')}
+      drawerState={effectiveDrawerState}
       drawerHeight={liveHeight ?? drawerHeight ?? DRAWER_DEFAULT_HEIGHT}
       onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
       onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
