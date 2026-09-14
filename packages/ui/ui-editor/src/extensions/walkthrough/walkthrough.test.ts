@@ -179,6 +179,64 @@ describe('walkthroughOutline', () => {
     expect(tests.added).to.eq(0);
   });
 
+  test('sums every chunk under a heading, counting each exactly once', () => {
+    const outline = walkthroughOutline(
+      createState(
+        [
+          '## Section',
+          '',
+          '```diff file=src/a.ts',
+          '@@ -1,1 +1,2 @@',
+          ' keep();',
+          '+one();',
+          '```',
+          '',
+          'Prose between them.',
+          '',
+          '```diff file=src/b.ts',
+          '@@ -1,2 +1,2 @@',
+          ' keep();',
+          '-old();',
+          '+new();',
+          '```',
+          '',
+        ].join('\n'),
+      ),
+    );
+
+    expect(outline).to.have.length(1);
+    // Two additions across two chunks, one removal — the section's own total, not a file's.
+    expect(outline[0].added).to.eq(2);
+    expect(outline[0].removed).to.eq(1);
+    expect(outline[0].files).to.deep.eq(['a.ts', 'b.ts']);
+  });
+
+  test('lists a file once however many chunks name it', () => {
+    const outline = walkthroughOutline(
+      createState(
+        [
+          '## Section',
+          '',
+          '```diff file=src/a.ts lines=1-2',
+          '@@ -1,1 +1,2 @@',
+          ' keep();',
+          '+one();',
+          '```',
+          '',
+          '```diff file=src/a.ts lines=90-91',
+          '@@ -90,1 +90,2 @@',
+          ' keep();',
+          '+two();',
+          '```',
+          '',
+        ].join('\n'),
+      ),
+    );
+
+    expect(outline[0].files).to.deep.eq(['a.ts']);
+    expect(outline[0].added).to.eq(2);
+  });
+
   test('gives a diff above the first heading a lead section', () => {
     const outline = walkthroughOutline(
       createState(['```diff file=src/a.ts', '@@ -1,1 +1,1 @@', '+a;', '```', ''].join('\n')),
