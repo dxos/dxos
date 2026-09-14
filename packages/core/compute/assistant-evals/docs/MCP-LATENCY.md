@@ -314,6 +314,29 @@ the 10s session-lost sweep happened to trigger the next pass. The client's sync 
 heads against the last `collection-state` it received, so it read "in sync" until then.
 `addCommits` now arms a near-term alarm when sessions are live (36/36 replicator tests pass).
 
+### Where the remaining ~2s per `invokeOperation` goes — measured
+
+Per-phase logs on a warm operation-service isolate, `space.queryObjects` (three probe calls):
+
+| Phase                                          | ms        | where                          |
+| ---------------------------------------------- | --------- | ------------------------------ |
+| context build (`getSpaceMeta` + clients)       | 219–367   | operation-service → db-service |
+| `db.open()` = root-document `getDocuments`     | 199–644   | operation-service → db-service |
+| `execQuery`                                    | 46–65     | operation-service → db-service |
+| object `getDocuments` (4 documents)            | 44–47     | operation-service → db-service |
+| trace drain                                    | 5–408     | operation-service              |
+| **db-service's own share of a `getDocuments`** | **15–25** | init hop 8–14 + read hop 6–13  |
+
+So the invocation is four sequential RPCs to db-service, and the first one or two of them cost
+200–650ms while the later, identical ones cost ~45ms — the service-binding hop, not db-service
+work (which is ~20ms per call, Durable Object included). The cold-isolate case adds the
+`operation-service` registry build and the `mcp-space-service` handler build on top.
+
+Not pursued in this pass. Candidates, in order: issue the root-document fetch concurrently with the
+context build (its id is known from `getSpaceMeta`); find what makes the first RPCs of an
+invocation slow (RPC session setup, or placement); and drop the `stub.init` hop from
+`getDocuments` (~10ms each, three per invocation).
+
 ### Also corrected in this pass
 
 - **"Dev spans record 0, prod records real durations"** — see the first correction above.
