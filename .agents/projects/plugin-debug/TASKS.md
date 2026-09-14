@@ -37,8 +37,8 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
       fullscreen hides and restores it; sidebar collapse moves inset-inline-start 350px → 72px).
 - [x] Escape closes the drawer like the floating window (design §5; final fix wave: `Main.Drawer` closes on an
       unclaimed Escape on its region, `DrawerEscape` story).
-- [ ] `PLUGIN.mdl` (plugin-debug, plugin-deck) describe the docked panel — done on the branch; PR #13095
-      body still needs its "Docked drawer" section.
+- [x] `PLUGIN.mdl` (plugin-debug, plugin-deck) describe the docked panel; PR #13095 body carries the
+      "Docked drawer" section.
 
 ## Follow-ups
 
@@ -55,6 +55,6 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 - [ ] The `@dxos/devtools` panels hard-code every string (no `useTranslation` anywhere under
       `packages/devtools/devtools/src/panels`): add a `@dxos/devtools` translations resource,
       register it from plugin-devtools, and route the ~30 panels' labels through `t()`.
-- [ ] Decide the overlap between DevTools → Client → Logging (client-services log stream via
+- [ ] Decide the overlap between DevTools → Client → Logs (client-services log stream via
       `LoggingService.queryLogs`, level/filter, download) and Debug → Logs (react-ui-debug
       `Logger` over the in-page log buffer with per-file levels, recording, persistence).
