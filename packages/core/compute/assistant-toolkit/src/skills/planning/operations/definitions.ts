@@ -11,6 +11,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Task } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import INSTRUCTIONS from './update-tasks.md?raw';
 

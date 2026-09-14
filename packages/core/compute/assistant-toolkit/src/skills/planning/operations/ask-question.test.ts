@@ -60,7 +60,7 @@ describe('AskQuestion', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { chat, invoke } = yield* setupChat;
-        yield* invoke(UpdateTasks, { tasks: [{ title: 'Draft the reply', status: 'started' }] });
+        yield* invoke(UpdateTasks, { changes: [{ create: true, title: 'Draft the reply', status: 'started' }] });
 
         const result = yield* invoke(AskQuestion, {
           task: 'Draft the reply',
@@ -97,7 +97,7 @@ describe('AskQuestion', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { chat, invoke } = yield* setupChat;
-        yield* invoke(UpdateTasks, { tasks: [{ title: 'Draft the reply', status: 'started' }] });
+        yield* invoke(UpdateTasks, { changes: [{ create: true, title: 'Draft the reply', status: 'started' }] });
 
         const result = yield* invoke(AskQuestion, { task: 'Some other task', question: 'Anything?' });
         yield* Database.flush();
@@ -117,7 +117,7 @@ describe('AskQuestion', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { chat, invoke } = yield* setupChat;
-        yield* invoke(UpdateTasks, { tasks: [{ title: 'Draft the reply', status: 'started' }] });
+        yield* invoke(UpdateTasks, { changes: [{ create: true, title: 'Draft the reply', status: 'started' }] });
         yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'What is our refund window?' });
 
         // A retried tool call: the reader must not end up with two questions on one task.
@@ -140,7 +140,7 @@ describe('AskQuestion', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { invoke } = yield* setupChat;
-        yield* invoke(UpdateTasks, { tasks: [{ title: 'Draft the reply', status: 'started' }] });
+        yield* invoke(UpdateTasks, { changes: [{ create: true, title: 'Draft the reply', status: 'started' }] });
         yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'First?' });
         const [first] = yield* loadQuestions;
         Question.answer(first, '30 days');
@@ -162,7 +162,7 @@ describe('AskQuestion', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { chat, invoke } = yield* setupChat;
-        yield* invoke(UpdateTasks, { tasks: [{ title: 'Draft the reply', status: 'started' }] });
+        yield* invoke(UpdateTasks, { changes: [{ create: true, title: 'Draft the reply', status: 'started' }] });
         yield* invoke(AskQuestion, {
           task: 'Draft the reply',
           question: 'What is our refund window?',
