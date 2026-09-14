@@ -179,22 +179,35 @@ const assertEdgeConnected = async (client: Client): Promise<void> => {
   if (service == null) {
     throw new Error('The harness client exposes no EdgeAgentService; `runtime.client.edgeFeatures` is not configured.');
   }
-  const response = await asyncTimeout(
-    Stream.first(service.queryEdgeStatus()),
-    EDGE_STATUS_TIMEOUT,
-    new Error(`EDGE reported no status within ${EDGE_STATUS_TIMEOUT}ms.`),
-  );
-  if (response?.status?.state === EdgeStatus_ConnectionState.CONNECTED) {
-    return;
+  // Waited for rather than sampled: the first status is the connection attempt made before the
+  // account bind, which EDGE refused, and the reconnect that follows the bind is what counts.
+  const status = service.queryEdgeStatus();
+  const connected = new Promise<void>((resolve, reject) => {
+    status.subscribe(
+      (response) => {
+        if (response.status?.state === EdgeStatus_ConnectionState.CONNECTED) {
+          resolve();
+        }
+      },
+      (error) => (error ? reject(error) : undefined),
+    );
+  });
+  try {
+    await asyncTimeout(
+      connected,
+      EDGE_STATUS_TIMEOUT,
+      new Error(
+        'The harness client is not connected to EDGE, so the space it seeds cannot reach the deployed worker. ' +
+          'The usual cause is not the transport but authorization: the WebSocket upgrade route admits a ' +
+          'chained HALO identity only when it is bound to an account on that EDGE, so an identity this run ' +
+          'just created is refused with `identity_not_associated_with_account` (hub-protocol `edgeAuth`; the ' +
+          'waiver is for ephemeral bootstrap presentations, which this is not). Provision the identity, or ' +
+          'point the eval at an existing session with DX_EVAL_MCP_TOKEN and DX_EVAL_SPACE_ID.',
+      ),
+    );
+  } finally {
+    await status.close();
   }
-  throw new Error(
-    'The harness client is not connected to EDGE, so the space it seeds cannot reach the deployed worker. ' +
-      'The usual cause is not the transport but authorization: the WebSocket upgrade route admits a ' +
-      'chained HALO identity only when it is bound to an account on that EDGE, so an identity this run ' +
-      'just created is refused with `identity_not_associated_with_account` (hub-protocol `edgeAuth`; the ' +
-      'waiver is for ephemeral bootstrap presentations, which this is not). Provision the identity, or ' +
-      'point the eval at an existing session with DX_EVAL_MCP_TOKEN and DX_EVAL_SPACE_ID.',
-  );
 };
 
 /** How long the account bind may take to become readable by EDGE's agent service. */
