@@ -6,16 +6,6 @@ import { describe, expect, test } from 'vitest';
 
 import { SYSTEM_PROMPT, buildPrompt, promptOmissions } from './prompt.ts';
 
-const file = (path: string, lines: number) =>
-  [
-    `diff --git a/${path} b/${path}`,
-    `--- a/${path}`,
-    `+++ b/${path}`,
-    `@@ -1,1 +1,${lines + 1} @@`,
-    ' keep();',
-    ...Array.from({ length: lines }, (_, index) => `+line ${index};`),
-  ].join('\n');
-
 const INPUT = {
   owner: 'dxos',
   repo: 'dxos',
@@ -74,3 +64,15 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).to.contain('file AFTER the change');
   });
 });
+
+// A declaration rather than an arrow: the fixture above calls it at module evaluation.
+function file(path: string, lines: number): string {
+  return [
+    `diff --git a/${path} b/${path}`,
+    `--- a/${path}`,
+    `+++ b/${path}`,
+    `@@ -1,1 +1,${lines + 1} @@`,
+    ' keep();',
+    ...Array.from({ length: lines }, (_, index) => `+line ${index};`),
+  ].join('\n');
+}

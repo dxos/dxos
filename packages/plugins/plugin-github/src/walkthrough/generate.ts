@@ -118,9 +118,31 @@ export const findWalkthrough = (
   Database.query(Filter.type(Walkthrough.Walkthrough, { pullRequest: Ref.make(pullRequest) })).run.pipe(
     // Filtered by the ref rather than by loading every walkthrough and comparing: a space holds one
     // per reviewed pull request, which is not a handful.
-    Effect.map((walkthroughs) => walkthroughs[0]),
+    Effect.map(newestWalkthrough),
     Effect.orDie,
   );
+
+/**
+ * The newest of however many were written, ties broken by id.
+ *
+ * Two generations racing on one pull request both see none and both add: the check and the write
+ * are separate steps, and ECHO has neither a uniqueness constraint nor an atomic upsert to close
+ * that. Picking deterministically makes the duplicate inert instead — every reader converges on the
+ * same object, and the next regeneration updates that one in place rather than forking again.
+ */
+const newestWalkthrough = (walkthroughs: readonly Walkthrough.Walkthrough[]): Walkthrough.Walkthrough | undefined =>
+  walkthroughs.reduce<Walkthrough.Walkthrough | undefined>((newest, walkthrough) => {
+    if (!newest) {
+      return walkthrough;
+    }
+    const left = walkthrough.generatedAt ?? '';
+    const right = newest.generatedAt ?? '';
+    if (left !== right) {
+      return left > right ? walkthrough : newest;
+    }
+
+    return walkthrough.id > newest.id ? walkthrough : newest;
+  }, undefined);
 
 /** Replaces the body in place where one exists, so links to the walkthrough survive regeneration. */
 const upsert = (

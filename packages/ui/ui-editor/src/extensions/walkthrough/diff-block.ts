@@ -136,7 +136,12 @@ class DiffBlockWidget extends WidgetType {
   }
 
   override eq(other: this): boolean {
-    return this.#source === other.#source && this.#options.layout === other.#options.layout;
+    // `highlight` too: a widget reused across a change of it would keep the colour it was built with.
+    return (
+      this.#source === other.#source &&
+      this.#options.layout === other.#options.layout &&
+      this.#options.highlight === other.#options.highlight
+    );
   }
 
   override get estimatedHeight(): number {

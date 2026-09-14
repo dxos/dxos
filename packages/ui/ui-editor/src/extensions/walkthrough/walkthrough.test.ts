@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 import { createMarkdownExtensions } from '../language/index.ts';
 import { type DiffLayout, diffBlocks } from './diff-block.ts';
-import { walkthroughOutline } from './sidebar.ts';
+import { walkthroughOutline, walkthroughSidebar } from './sidebar.ts';
 
 const DOC = [
   '# Walkthrough',
@@ -35,37 +35,6 @@ const DOC = [
   '```',
   '',
 ].join('\n');
-
-const createState = (doc: string) =>
-  EditorState.create({ doc, extensions: [createMarkdownExtensions(), diffBlocks()] });
-
-/** Every block-replacing widget decoration the view would render. */
-const blockWidgets = (view: EditorView): { from: number; to: number; widget: WidgetType }[] => {
-  const found: { from: number; to: number; widget: WidgetType }[] = [];
-  for (const source of view.state.facet(EditorView.decorations)) {
-    // Only the widget field replaces whole blocks; the markdown decorations are marks and lines.
-    const set = typeof source === 'function' ? source(view) : source;
-    const cursor = set.iter();
-    while (cursor.value) {
-      const { block, widget } = cursor.value.spec ?? {};
-      if (block && widget) {
-        found.push({ from: cursor.from, to: cursor.to, widget });
-      }
-      cursor.next();
-    }
-  }
-
-  return found;
-};
-
-/** The block decorations the editor would render, as `[from, to]` pairs. */
-const replacedRanges = (doc: string): [number, number][] => {
-  const view = new EditorView({ state: createState(doc) });
-  const ranges = blockWidgets(view).map(({ from, to }): [number, number] => [from, to]);
-  view.destroy();
-
-  return ranges;
-};
 
 describe('diffBlocks', () => {
   test('replaces a diff fence with one block widget', () => {
@@ -237,6 +206,19 @@ describe('walkthroughOutline', () => {
     expect(outline[0].added).to.eq(2);
   });
 
+  test('drops the closing markers of a closed ATX heading', () => {
+    const outline = walkthroughOutline(createState(['## Harness wiring ##', '', 'Prose.', ''].join('\n')));
+
+    expect(outline[0].title).to.eq('Harness wiring');
+  });
+
+  test('keeps a hash the title itself ends with', () => {
+    // Only whitespace-separated markers close a heading, so a language named `C#` survives.
+    const outline = walkthroughOutline(createState(['## Porting to C#', '', 'Prose.', ''].join('\n')));
+
+    expect(outline[0].title).to.eq('Porting to C#');
+  });
+
   test('gives a diff above the first heading a lead section', () => {
     const outline = walkthroughOutline(
       createState(['```diff file=src/a.ts', '@@ -1,1 +1,1 @@', '+a;', '```', ''].join('\n')),
@@ -247,3 +229,55 @@ describe('walkthroughOutline', () => {
     expect(outline[0].files).to.deep.eq(['a.ts']);
   });
 });
+
+describe('walkthroughSidebar', () => {
+  test('names every rail button, including in the stats variant that hides its text', () => {
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: DOC,
+        extensions: [createMarkdownExtensions(), diffBlocks(), walkthroughSidebar({ variant: 'stats' })],
+      }),
+    });
+
+    const rail = view.dom.querySelector('.cm-walkthrough-sidebar');
+    invariant(rail);
+    const labels = Array.from(rail.querySelectorAll('button')).map((row) => row.getAttribute('aria-label'));
+    view.destroy();
+
+    expect(labels.length).to.be.greaterThan(0);
+    expect(labels.every((label) => label && label.length > 0)).to.eq(true);
+    expect(labels[0]).to.eq('Walkthrough');
+    expect(labels[1]).to.eq('Harness wiring — harness.ts — +1 -1');
+  });
+});
+
+const createState = (doc: string) =>
+  EditorState.create({ doc, extensions: [createMarkdownExtensions(), diffBlocks()] });
+
+/** Every block-replacing widget decoration the view would render. */
+const blockWidgets = (view: EditorView): { from: number; to: number; widget: WidgetType }[] => {
+  const found: { from: number; to: number; widget: WidgetType }[] = [];
+  for (const source of view.state.facet(EditorView.decorations)) {
+    // Only the widget field replaces whole blocks; the markdown decorations are marks and lines.
+    const set = typeof source === 'function' ? source(view) : source;
+    const cursor = set.iter();
+    while (cursor.value) {
+      const { block, widget } = cursor.value.spec ?? {};
+      if (block && widget) {
+        found.push({ from: cursor.from, to: cursor.to, widget });
+      }
+      cursor.next();
+    }
+  }
+
+  return found;
+};
+
+/** The block decorations the editor would render, as `[from, to]` pairs. */
+const replacedRanges = (doc: string): [number, number][] => {
+  const view = new EditorView({ state: createState(doc) });
+  const ranges = blockWidgets(view).map(({ from, to }): [number, number] => [from, to]);
+  view.destroy();
+
+  return ranges;
+};

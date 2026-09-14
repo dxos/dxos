@@ -9,7 +9,9 @@ export type PullRequestRef = {
   number: number;
 };
 
-const PULL_URL = /^https?:\/\/(?:www\.)?github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/;
+// `[^/?#]`, and a delimiter after the number: an unanchored tail would read a query string as part
+// of the repository name, and `…/pull/12x` as pull request 12.
+const PULL_URL = /^https?:\/\/(?:www\.)?github\.com\/([^/?#]+)\/([^/?#]+)\/pull\/(\d+)(?:[/?#]|$)/;
 
 /** Reads `https://github.com/owner/repo/pull/123`, with or without a trailing path. */
 export const parsePullRequestUrl = (url: string): PullRequestRef | undefined => {

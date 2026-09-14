@@ -43,6 +43,8 @@ export const walkthroughOutline = (state: EditorState): WalkthroughEntry[] => {
           .sliceDoc(node.from, node.to)
           .replace(/^#+\s*/, '')
           .split('\n')[0]
+          // A closed ATX heading (`## Wiring ##`) ends with markers that are syntax, not title.
+          .replace(/\s+#+\s*$/, '')
           .trim();
         entries.push({ from: node.from, level, title: text, files: [], added: 0, removed: 0 });
         return false;
@@ -174,6 +176,10 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
             removed.textContent = `-${entry.removed}`;
           }
 
+          // The `stats` variant hides the title and the file names, and a section with no counts
+          // then leaves the button with no text at all; name it from the outline either way.
+          row.setAttribute('aria-label', entryLabel(entry));
+
           this.#rail.appendChild(row);
           return row;
         });
@@ -215,6 +221,18 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
   ),
   walkthroughSidebarTheme,
 ];
+
+/** Accessible name for a rail button, from the outline rather than from whatever the variant shows. */
+const entryLabel = (entry: WalkthroughEntry): string => {
+  const parts = [entry.title || 'Untitled section'];
+  if (entry.files.length > 0) {
+    parts.push(entry.files.join(', '));
+  }
+  if (entry.added > 0 || entry.removed > 0) {
+    parts.push(`+${entry.added} -${entry.removed}`);
+  }
+  return parts.join(' — ');
+};
 
 /** Whether the rail would render the same rows, so an unchanged outline does not rebuild it. */
 const sameOutline = (left: WalkthroughEntry[], right: WalkthroughEntry[]): boolean =>

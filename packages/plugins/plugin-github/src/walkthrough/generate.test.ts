@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
-import { Database, Filter } from '@dxos/echo';
+import { Database, Filter, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { PullRequest } from '@dxos/types';
@@ -141,6 +141,34 @@ describe('generateWalkthrough', () => {
 
     const stored = await db.query(Filter.type(Walkthrough.Walkthrough)).run();
     expect(stored.length).to.eq(1);
+  });
+
+  test('resolves a duplicate written by a racing generation to the newest', async () => {
+    const { db, pullRequest, run } = await setup();
+    // Two generations racing both see none and both add; the reader has to converge on one of them.
+    const older = db.add(
+      Walkthrough.make({
+        pullRequest: Ref.make(pullRequest),
+        body: 'older',
+        commit: 'sha-1',
+        generatedAt: '2026-09-14T09:00:00.000Z',
+      }),
+    );
+    const newer = db.add(
+      Walkthrough.make({
+        pullRequest: Ref.make(pullRequest),
+        body: 'newer',
+        commit: 'sha-1',
+        generatedAt: '2026-09-14T10:00:00.000Z',
+      }),
+    );
+    await db.flush();
+
+    const result = await run();
+
+    expect(result.generated).to.eq(false);
+    expect(result.walkthrough.id).to.eq(newer.id);
+    expect(result.walkthrough.id).not.to.eq(older.id);
   });
 
   test('reports its phases and ends on the completion sentinel', async () => {

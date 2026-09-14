@@ -9,9 +9,6 @@ import { PullRequest } from '@dxos/types';
 
 import * as Walkthrough from './Walkthrough.ts';
 
-const makePullRequest = () =>
-  PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 13082, title: 'A change', state: 'open' });
-
 describe('Walkthrough', () => {
   test('holds the body, the commit and a ref to the pull request', () => {
     const pullRequest = makePullRequest();
@@ -59,3 +56,6 @@ describe('Walkthrough', () => {
     expect(Obj.getTypename(walkthrough)).to.eq('org.dxos.type.walkthrough');
   });
 });
+
+const makePullRequest = () =>
+  PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 13082, title: 'A change', state: 'open' });
