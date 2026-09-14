@@ -13,8 +13,8 @@ const isRefLike = (value: unknown): value is { uri: { toString(): string } } =>
 /**
  * Snapshot a value to create a new reference for atom change-detection and React dependency tracking.
  * Objects and arrays are shallow-copied (a fresh reference each read, so an in-place mutation is
- * observed); primitives and refs are returned as-is (so they dedupe via `!==`). Shared by the
- * object-property and annotation atom families.
+ * observed); primitives are returned as-is (so they dedupe via `!==`) and refs are too, since they
+ * dedupe by URI in {@link snapshotEquals}. Shared by the object-property and annotation atom families.
  */
 export const snapshotForComparison = <V>(value: V): V => {
   if (Array.isArray(value)) {
@@ -32,10 +32,10 @@ export const snapshotForComparison = <V>(value: V): V => {
 };
 
 // Refs compare by URI: `RefImpl` mints a fresh wrapper on every property read, so `Object.is` never
-// matches two reads of the same element.
-const elementEquals = (a: unknown, b: unknown): boolean => {
-  if (isRefLike(a) && isRefLike(b)) {
-    return a.uri.toString() === b.uri.toString();
+// matches two reads of the same ref.
+const valueEquals = (a: unknown, b: unknown): boolean => {
+  if (isRefLike(a) || isRefLike(b)) {
+    return isRefLike(a) && isRefLike(b) && a.uri.toString() === b.uri.toString();
   }
   // Records before `Object.is`: the snapshot shallow-copies the array, so a record element mutated in
   // place is the same reference on both sides and would otherwise read as unchanged.
@@ -55,15 +55,9 @@ const elementEquals = (a: unknown, b: unknown): boolean => {
  */
 export const snapshotEquals = (value: unknown, snapshot: unknown): boolean => {
   if (Array.isArray(value) && Array.isArray(snapshot)) {
-    return value.length === snapshot.length && value.every((item, index) => elementEquals(item, snapshot[index]));
+    return value.length === snapshot.length && value.every((item, index) => valueEquals(item, snapshot[index]));
   }
-  // A ref field held directly (not inside an array) compares by URI for the same reason an element
-  // does: `RefImpl` mints a fresh wrapper on every read, so identity never matches.
-  if (isRefLike(value) || isRefLike(snapshot)) {
-    return isRefLike(value) && isRefLike(snapshot) && value.uri.toString() === snapshot.uri.toString();
-  }
-  if (isRecord(value) || isRecord(snapshot)) {
-    return false;
-  }
-  return Object.is(value, snapshot);
+  // A ref held directly compares exactly as one inside an array does, so both go through `valueEquals`
+  // — two ladders would drift and reintroduce the asymmetry that left a ref field always unequal.
+  return valueEquals(value, snapshot);
 };
