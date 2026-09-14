@@ -84,9 +84,15 @@ export const mode = (target: Target): Mode => {
   return (token == null || token.length === 0) && edgeUrl(target) != null ? 'provisioned' : 'token';
 };
 
-/** The EDGE a `provisioned` run registers against; `DX_EVAL_EDGE_URL` overrides it. */
+/**
+ * The EDGE a `provisioned` run registers against; `DX_EVAL_EDGE_URL` overrides it.
+ *
+ * `dev` alone, override included: provisioning ends in a grant minted through the identity-key form,
+ * which no other worker serves, so pointing another target at an EDGE would only move the failure to
+ * the `/authorize` that refuses the form.
+ */
 export const edgeUrl = (target: Target): string | undefined =>
-  isLocal(target) ? undefined : (process.env.DX_EVAL_EDGE_URL ?? EDGE_URLS[target]);
+  target === 'dev' ? (process.env.DX_EVAL_EDGE_URL ?? EDGE_URLS[target]) : undefined;
 
 /** The endpoint to dial, or undefined for the in-process host, whose URL is only known once bound. */
 export const url = (target: Target): string | undefined =>

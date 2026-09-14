@@ -34,6 +34,24 @@ const expectStatus = async (response: Response, status: number, step: string): P
   }
 };
 
+/** Loopback, where a cleartext hop never leaves the machine — a local worker and this module's tests. */
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', '[::1]', 'localhost']);
+
+/**
+ * The origin to run the grant against, refusing one that would carry the token in cleartext.
+ *
+ * Checked here rather than where the bearer is later attached to a request: the grant *itself*
+ * transports the token, in the `/token` response, so a transport rejected only afterwards has
+ * already published it to anything on the path.
+ */
+const grantOrigin = (mcpUrl: string): string => {
+  const url = new URL(mcpUrl);
+  if (url.protocol !== 'https:' && !LOOPBACK_HOSTS.has(url.hostname)) {
+    throw new Error(`MCP dev grant: refusing to mint a token over ${url.protocol}//${url.host}; use HTTPS.`);
+  }
+  return url.origin;
+};
+
 /**
  * Mints a bearer for a deployed dev worker without a browser, through the identity-key form the
  * worker serves on `/authorize?dev_form=1` when `DX_ENABLE_DEV_IDENTITY_FORM` is set — dev only, by
@@ -48,7 +66,7 @@ const expectStatus = async (response: Response, status: number, step: string): P
  * identity and space and states them here, and the worker serves whatever is replicated to it.
  */
 export const devGrant = async ({ mcpUrl, identityKey, haloSpaceId, spaceIds }: GrantOptions): Promise<string> => {
-  const origin = new URL(mcpUrl).origin;
+  const origin = grantOrigin(mcpUrl);
 
   const registration = await fetch(`${origin}/register`, {
     method: 'POST',

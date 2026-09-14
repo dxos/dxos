@@ -39,6 +39,17 @@ describe('McpTarget', () => {
       expect(McpTarget.mode('prod')).to.equal('token');
       expect(McpTarget.edgeUrl('prod')).to.be.undefined;
 
+      // Not even under the override: the grant these targets would need does not exist.
+      process.env.DX_EVAL_EDGE_URL = 'https://edge.example';
+      try {
+        expect(McpTarget.edgeUrl('prod')).to.be.undefined;
+        expect(McpTarget.mode('prod')).to.equal('token');
+        expect(McpTarget.mode('local-edge')).to.equal('token');
+        expect(McpTarget.edgeUrl('dev')).to.equal('https://edge.example');
+      } finally {
+        delete process.env.DX_EVAL_EDGE_URL;
+      }
+
       process.env.DX_EVAL_MCP_TOKEN = 'minted-by-hand';
       expect(McpTarget.mode('dev')).to.equal('token');
       expect(McpTarget.headers('dev')).to.deep.equal({ Authorization: 'Bearer minted-by-hand' });

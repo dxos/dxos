@@ -30,7 +30,7 @@ one:
 | ------------ | -------------------------------------- | --------------------------- | ---------------------- |
 | `local`      | in-process host (`src/mcp-host.ts`)    | the harness's own           | the database + latency |
 | `dev`        | `https://mcp.dev.dxos.network/mcp`     | created by the run, on EDGE | the database + latency |
-| `local-edge` | `http://127.0.0.1:8791/mcp`            | `DX_EVAL_MCP_TOKEN`         | discovery + latency    |
+| `local-edge` | `http://127.0.0.1:8791/mcp`            | `DX_EVAL_MCP_TOKEN` (†)     | discovery + latency    |
 | `main`       | `https://mcp.preview.dxos.network/mcp` | `DX_EVAL_MCP_TOKEN`         | discovery + latency    |
 | `prod`       | `https://mcp.dxos.network/mcp`         | `DX_EVAL_MCP_TOKEN`         | discovery + latency    |
 
@@ -49,9 +49,14 @@ DX_EVAL_MCP_TARGET=prod DX_EVAL_MCP_TOKEN=... DX_EVAL_SPACE_ID=... \
   moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts                      # an existing session
 ```
 
+(†) `local-edge` points at `wrangler dev` over plain HTTP, and a bearer is never put on a cleartext
+non-loopback wire, so a token run against it needs `DX_EVAL_MCP_URL` naming the worker behind a TLS
+terminator (a tunnel) — otherwise it is reachable only for what the endpoint serves unauthenticated.
+
 - `DX_EVAL_MCP_TOKEN` — bearer token for a deployed endpoint whose grant the run cannot mint. Set
   on `dev`, it wins over the run's own identity.
-- `DX_EVAL_SPACE_ID` — the space a token run acts on.
+- `DX_EVAL_SPACE_ID` — the space a token run acts on; **required** for one, since the worker serves
+  a data plane this process cannot see and there is nothing to fall back to.
 - `DX_EVAL_MCP_URL` — override the endpoint of a non-`local` target; `local` is always the
   in-process host. `DX_EVAL_EDGE_URL` likewise overrides the EDGE a `dev` run registers against.
 - `DX_EVAL_MCP_LATENCY_BUDGET_MS` — p95 ceiling for the `tool-latency` scorer (500 local, 3000

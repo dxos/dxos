@@ -108,6 +108,20 @@ describe('McpAuth', () => {
     expect(seen.exchange?.get('client_id')).to.equal('client-1');
   });
 
+  test('refuses to mint over a cleartext transport, before the first request', async ({ expect }) => {
+    // The `/token` response carries the bearer, so a transport rejected after the grant has already
+    // published it. Loopback is exempt — that hop never leaves the machine, and is what this suite
+    // and a local worker use.
+    await expect(
+      McpAuth.devGrant({
+        mcpUrl: 'http://mcp.example.test/mcp',
+        identityKey: 'ab'.repeat(32),
+        haloSpaceId: 'BHALO',
+        spaceIds: [],
+      }),
+    ).rejects.toThrow(/refusing to mint a token over http:/);
+  });
+
   test('a worker that answers with the passkey redirect is a legible failure', async ({ expect }) => {
     // Same fake, form withheld: `dev_form` is what the fake keys on, so a grant without it is what a
     // worker with the form disabled answers.
