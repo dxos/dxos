@@ -1136,6 +1136,22 @@ describe('ProcessOperationInvoker', () => {
       expect(Result.getOrUndefined(Exit.findDefect(output))).toEqual('Test Error');
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'an invocation still running at shutdown is interrupted, not a defect',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
+      SlowChildGate.completeDeferred = yield* Deferred.make<void>();
+      const fiber = yield* invoker.invokeFiber(SlowChild, { value: 1 });
+      // The handler is mid-flight when the app goes away.
+      yield* Queue.take(SlowChildGate.taskSignal);
+      yield* manager.shutdown();
+      const output = yield* fiber.await;
+      expect(Exit.isFailure(output) && Cause.hasInterruptsOnly(output.cause)).toEqual(true);
+    }, Effect.provide(TestLayer)),
+  );
 });
 
 //
