@@ -528,39 +528,6 @@ export class AppManager {
     await expect(item).toHaveAttribute('aria-selected', 'true');
   }
 
-  /** The scope toggle group in a settings panel's heading: one item per scope, the active one pressed. */
-  getSettingsScopeToggle(scope: 'synced' | 'local'): Locator {
-    return this.page.getByTestId(`settingsScope.${scope}`);
-  }
-
-  /** Takes the open settings panel off the account. */
-  async useSettingsForThisDeviceOnly(): Promise<void> {
-    const local = this.getSettingsScopeToggle('local');
-    await expect(local).toBeVisible();
-    await local.click();
-    await expect(local).toHaveAttribute('data-state', 'on');
-  }
-
-  /**
-   * Rejoins the account for the open settings panel, keeping the account's values. The confirmation
-   * only appears when the two sides differ, so the dialog is dismissed only if it opened.
-   */
-  async rejoinAccountSettings(): Promise<void> {
-    await this.getSettingsScopeToggle('synced').click();
-    const keepShared = this.page.getByTestId('settingsScope.keepShared');
-    if (await keepShared.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await keepShared.click();
-    }
-    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
-  }
-
-  /** Rejoins the account but publishes this device's values to it, from the conflict dialog. */
-  async rejoinAccountSettingsKeepingLocal(): Promise<void> {
-    await this.getSettingsScopeToggle('synced').click();
-    await this.page.getByTestId('settingsScope.keepLocal').click();
-    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
-  }
-
   /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */
   getDevPluginUrlInput(): Locator {
     return this.page.getByTestId('registrySettings.devPluginUrl');
