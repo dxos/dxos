@@ -6,11 +6,11 @@ import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
-import { type Event } from '@dxos/async';
+import { Event, MulticastObservable } from '@dxos/async';
 import { type Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
-import { type Platform } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { log } from '@dxos/log';
+import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
@@ -20,40 +20,64 @@ import { getPlatform } from '../services/platform.ts';
 
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;
-  statusUpdate: Event<void>;
-  getCurrentStatus: () => SystemStatus;
   getDiagnostics: () => Promise<Partial<Diagnostics['services']>>;
-  onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
-  onReset: () => MaybePromise<void>;
+  /** Closes the host if it is open; the first step of a reset. */
+  close: () => Promise<void>;
+  /** Wipes persisted storage so the next open starts fresh; the second step of a reset. */
+  wipeStorage: () => Promise<void>;
+  /** Runs once storage is wiped; the embedder typically reloads. */
+  onReset?: () => MaybePromise<void>;
 };
 
+/**
+ * The one client service that exists while the host is closed: it reports and drives the host's
+ * status and performs a reset. The host pushes its status in via {@link setStatus}.
+ */
 export class SystemServiceImpl implements SystemService.Handlers {
-  private readonly '_config'?: SystemServiceOptions['config'];
-  private readonly '_statusUpdate': SystemServiceOptions['statusUpdate'];
-  private readonly '_getCurrentStatus': SystemServiceOptions['getCurrentStatus'];
-  private readonly '_onUpdateStatus': SystemServiceOptions['onUpdateStatus'];
-  private readonly '_onReset': SystemServiceOptions['onReset'];
-  private readonly '_getDiagnostics': SystemServiceOptions['getDiagnostics'];
+  /** A client asked for the host to become this status; the host decides what to do about it. */
+  readonly 'statusRequested' = new Event<SystemStatus>();
 
-  'constructor'({
-    config,
-    statusUpdate,
-    getDiagnostics,
-    onUpdateStatus,
-    getCurrentStatus,
-    onReset,
-  }: SystemServiceOptions) {
-    this._config = config;
-    this._statusUpdate = statusUpdate;
-    this._getCurrentStatus = getCurrentStatus;
-    this._getDiagnostics = getDiagnostics;
-    this._onUpdateStatus = onUpdateStatus;
-    this._onReset = onReset;
+  readonly #statusChanged = new Event<SystemStatus>();
+  readonly #status = MulticastObservable.from(this.#statusChanged, SystemStatus.INACTIVE);
+  readonly #options: SystemServiceOptions;
+  #resetting = false;
+
+  'constructor'(options: SystemServiceOptions) {
+    this.#options = options;
+  }
+
+  get 'status'(): SystemStatus {
+    return this.#status.get();
+  }
+
+  /**
+   * Reports the host's status to subscribers. Ignored once a reset is under way: that status is
+   * final because the app reloads.
+   */
+  'setStatus'(status: SystemStatus): void {
+    if (this.#resetting) {
+      return;
+    }
+    this.#statusChanged.emit(status);
+  }
+
+  /**
+   * Closes the host, wipes its storage, and tells the embedder. Reports inactive first so the app
+   * falls back at once, and that status is never cleared because the app reloads.
+   */
+  async 'reset'(): Promise<void> {
+    log.info('resetting...');
+    this.#resetting = true;
+    this.#statusChanged.emit(SystemStatus.INACTIVE);
+    await this.#options.close();
+    await this.#options.wipeStorage();
+    log.info('reset');
+    await this.#options.onReset?.();
   }
 
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
     return Effect.tryPromise({
-      try: async () => (await this._config?.())?.values ?? create(ConfigSchema, {}),
+      try: async () => (await this.#options.config?.())?.values ?? create(ConfigSchema, {}),
       catch: (error) => error as Error,
     });
   }
@@ -67,7 +91,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
   > {
     return Effect.tryPromise({
       try: async () => {
-        const diagnostics = await this._getDiagnostics();
+        const diagnostics = await this.#options.getDiagnostics();
         return {
           timestamp: new Date(),
           diagnostics: JSON.parse(
@@ -93,12 +117,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
   }
 
   ['SystemService.updateStatus']({ status }: SystemService.UpdateStatusRequest): Effect.Effect<void, Error> {
-    return Effect.tryPromise({
-      try: async () => {
-        await this._onUpdateStatus(status);
-      },
-      catch: (error) => error as Error,
-    });
+    return Effect.sync(() => this.statusRequested.emit(status));
   }
 
   // TODO(burdon): Standardize interval option in stream request?
@@ -107,25 +126,19 @@ export class SystemServiceImpl implements SystemService.Handlers {
     Error
   > {
     return EffectEx.streamFromEmitter<SystemService.QueryStatusResponse, Error>((emit) => {
-      const update = () => {
-        void emit.single({ status: this._getCurrentStatus() });
-      };
-
-      update();
-      const unsubscribe = this._statusUpdate.on(() => update());
-      const i = setInterval(update, interval);
+      const subscription = this.#status.subscribe((status) => void emit.single({ status }));
+      // Clients treat a silent stream as a dead worker, so the current status is repeated.
+      const heartbeat = setInterval(() => void emit.single({ status: this.#status.get() }), interval);
       return Effect.sync(() => {
-        clearInterval(i);
-        unsubscribe();
+        clearInterval(heartbeat);
+        subscription.unsubscribe();
       });
     });
   }
 
   ['SystemService.reset'](): Effect.Effect<void, Error> {
     return Effect.tryPromise({
-      try: async () => {
-        await this._onReset();
-      },
+      try: () => this.reset(),
       catch: (error) => error as Error,
     });
   }

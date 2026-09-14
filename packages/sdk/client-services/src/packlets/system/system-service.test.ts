@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
@@ -19,34 +19,26 @@ import { SystemServiceImpl } from './system-service.ts';
 describe('SystemService', () => {
   let systemService: SystemServiceImpl;
   let config: Config;
-  let statusUpdate: Event<void>;
-  let currentStatus: SystemStatus;
-  let updateStatus: Trigger<SystemStatus>;
+  let statusRequested: Trigger<SystemStatus>;
   let reset: Trigger<boolean>;
-
-  const changeStatus = (status: SystemStatus) => {
-    currentStatus = status;
-    statusUpdate.emit();
-  };
 
   beforeEach(() => {
     config = new Config({ runtime: { client: { log: { filter: 'system-service:debug' } } } });
-    statusUpdate = new Event<void>();
-    currentStatus = SystemStatus.ACTIVE;
-    updateStatus = new Trigger<SystemStatus>();
+    statusRequested = new Trigger<SystemStatus>();
     reset = new Trigger<boolean>();
 
     systemService = new SystemServiceImpl({
       config: () => config,
-      statusUpdate,
-      getCurrentStatus: () => currentStatus,
       getDiagnostics: async () => ({}),
-      onUpdateStatus: (status) => {
-        updateStatus.wake(status);
-      },
+      close: async () => {},
+      wipeStorage: async () => {},
       onReset: () => {
         reset.wake(true);
       },
+    });
+    systemService.setStatus(SystemStatus.ACTIVE);
+    systemService.statusRequested.on((status) => {
+      statusRequested.wake(status);
     });
   });
 
@@ -54,9 +46,9 @@ describe('SystemService', () => {
     expect(await EffectEx.runPromise(systemService['SystemService.getConfig']())).to.deep.equal(config.values);
   });
 
-  test('updateStatus triggers callback', async () => {
+  test('updateStatus emits the requested status', async () => {
     await EffectEx.runPromise(systemService['SystemService.updateStatus']({ status: SystemStatus.INACTIVE }));
-    const result = await updateStatus.wait();
+    const result = await statusRequested.wait();
     expect(result).to.equal(SystemStatus.INACTIVE);
   });
 
@@ -84,15 +76,18 @@ describe('SystemService', () => {
 
     // Wait for the initial emission so the status subscription is active before mutating.
     await first.wait();
-    changeStatus(SystemStatus.INACTIVE);
-    changeStatus(SystemStatus.ACTIVE);
+    systemService.setStatus(SystemStatus.INACTIVE);
+    systemService.setStatus(SystemStatus.ACTIVE);
     await done.wait();
     expect(statuses).to.deep.equal([SystemStatus.ACTIVE, SystemStatus.INACTIVE, SystemStatus.ACTIVE]);
   });
 
-  test('reset triggers callback', async () => {
+  test('reset closes, wipes, reports inactive and notifies', async () => {
     await EffectEx.runPromise(systemService['SystemService.reset']());
-    const result = await reset.wait();
-    expect(result).to.be.true;
+    expect(await reset.wait()).to.be.true;
+    expect(systemService.status).to.equal(SystemStatus.INACTIVE);
+    // The status is final once a reset is under way.
+    systemService.setStatus(SystemStatus.ACTIVE);
+    expect(systemService.status).to.equal(SystemStatus.INACTIVE);
   });
 });

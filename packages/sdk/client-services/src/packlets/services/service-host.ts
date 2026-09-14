@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { Event, synchronized } from '@dxos/async';
+import { synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesHandlers,
@@ -74,7 +74,6 @@ import {
   type InvitationsManager,
   InvitationsManagerService,
 } from '../invitations/index.ts';
-import { Lock, type ResourceLock } from '../locks/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
@@ -106,7 +105,6 @@ export type ClientServicesHostProps = {
   transportFactory?: TransportFactory;
   signalManager?: SignalManager;
   connectionLog?: boolean;
-  lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
   /**
    * Start edge networking as soon as the stack is open. Set `false` when the embedder drives it via
@@ -145,12 +143,10 @@ export type ServiceContext = ClientServicesHost;
  * done. Teardown is runtime disposal, which runs the layer finalizers in reverse build order.
  */
 export class ClientServicesHost {
-  readonly #resourceLock?: ResourceLock;
   // Effect-rpc handlers served over each connection, resolved from the Layer stack on open and reset
   // to the host-local set on close. Held directly (no separate registry indirection).
   #handlers: Partial<ClientServicesHandlers>;
   readonly #systemService: SystemServiceImpl;
-  readonly #statusUpdate = new Event<void>();
 
   #config?: Config;
   #signalManager?: SignalManager;
@@ -171,7 +167,6 @@ export class ClientServicesHost {
 
   #opening = false;
   #open = false;
-  #resetting = false;
 
   // Stack components, resolved from the layer runtime on open. Present after `open` starts.
   #ctx?: Context;
@@ -197,8 +192,6 @@ export class ClientServicesHost {
     config,
     transportFactory,
     signalManager,
-    // TODO(wittjosiah): Turn this on by default.
-    lockKey,
     callbacks,
     autoConnect = true,
     runtime,
@@ -213,25 +206,9 @@ export class ClientServicesHost {
       this.initialize({ config, transportFactory, signalManager });
     }
 
-    if (lockKey) {
-      // Stays outside the stack: the lock decides whether to build the runtime at all, and releasing
-      // it is what tears the runtime down, so no layer inside it can own the lock.
-      this.#resourceLock = new Lock({
-        lockKey,
-        onAcquire: () => {
-          if (!this.#opening) {
-            void this.open(new Context());
-          }
-        },
-        onRelease: () => this.close(Context.default()),
-      });
-    }
-
     // TODO(wittjosiah): If config is not defined here, system service will always have undefined config.
     this.#systemService = new SystemServiceImpl({
       config: () => this.#config,
-      statusUpdate: this.#statusUpdate,
-      getCurrentStatus: () => (this.isOpen && !this.#resetting ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
       getDiagnostics: async () => {
         // Bridge the host Handlers to the proto services surface that diagnostics collection consumes.
         const scope = Effect.runSync(Scope.make());
@@ -245,16 +222,9 @@ export class ClientServicesHost {
           await EffectEx.runPromise(Scope.close(scope, Exit.void));
         }
       },
-      onUpdateStatus: async (status: SystemStatus) => {
-        if (!this.isOpen && status === SystemStatus.ACTIVE) {
-          await this.#resourceLock?.acquire();
-        } else if (this.isOpen && status === SystemStatus.INACTIVE) {
-          await this.#resourceLock?.release();
-        }
-      },
-      onReset: async () => {
-        await this.reset();
-      },
+      close: () => this.close(),
+      wipeStorage: () => RuntimeProvider.runPromise(this.#runtime)(wipeSqliteStorage),
+      onReset: () => callbacks?.onReset?.(),
     });
 
     this.#diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this.#systemService);
@@ -410,9 +380,7 @@ export class ClientServicesHost {
 
     this.#opening = true;
     this.#ctx = ctx;
-    log('opening...', { lockKey: this.#resourceLock?.lockKey });
-
-    await this.#resourceLock?.acquire();
+    log('opening...');
 
     // Build a single runtime from the component layer stack plus the client RPC handlers.
     const stackLayer = ClientServicesRpcLayer.pipe(
@@ -525,7 +493,7 @@ export class ClientServicesHost {
 
     this.#opening = false;
     this.#open = true;
-    this.#statusUpdate.emit();
+    this.#systemService.setStatus(SystemStatus.ACTIVE);
     const deviceKey = this.#identityManager?.identity?.deviceKey;
     log('opened', { deviceKey });
   }
@@ -557,23 +525,15 @@ export class ClientServicesHost {
     this.#handlers = { SystemService: this.#systemService };
     await this.#disposeStack();
     this.#open = false;
-    this.#statusUpdate.emit();
+    this.#systemService.setStatus(SystemStatus.INACTIVE);
     log('closed', { deviceKey });
   }
 
+  /**
+   * Closes the host and wipes its storage; the system service owns the sequence.
+   */
   async reset(): Promise<void> {
-    log.info('resetting...');
-    // Emit this status update immediately so app returns to fallback.
-    // This state is never cleared because the app reloads.
-    this.#resetting = true;
-    this.#statusUpdate.emit();
-    if (this.#open) {
-      await this.close();
-    }
-    // Wipe all SQLite tables so next open starts fresh.
-    await RuntimeProvider.runPromise(this.#runtime)(wipeSqliteStorage);
-    log.info('reset');
-    await this.#callbacks?.onReset?.();
+    await this.#systemService.reset();
   }
 
   //
