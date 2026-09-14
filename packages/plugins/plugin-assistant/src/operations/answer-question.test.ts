@@ -91,13 +91,14 @@ describe('AnswerQuestion', () => {
         prompts.length = 0;
         const { chat, task, question } = yield* setup;
 
-        const { accepted } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
+        const { accepted, resumed } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
           question,
           answer: '30 days',
         });
         yield* Database.flush();
 
         expect(accepted).toBe(true);
+        expect(resumed).toBe(true);
         expect(question.selectedAnswer).toBe('30 days');
         expect(Question.isAnswered(question)).toBe(true);
 
@@ -175,13 +176,15 @@ describe('AnswerQuestion', () => {
         const question = yield* Database.add(Question.make({ text: 'Which one?' }));
         yield* Database.flush();
 
-        const { accepted } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
+        const { accepted, resumed } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
           question,
           answer: 'The first',
         });
         yield* Database.flush();
 
         expect(accepted).toBe(true);
+        // Nothing to wake, which is not a failure — the record is the point.
+        expect(resumed).toBe(false);
         expect(question.selectedAnswer).toBe('The first');
         expect(prompts).toEqual([]);
       },

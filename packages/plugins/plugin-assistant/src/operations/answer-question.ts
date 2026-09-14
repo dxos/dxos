@@ -8,6 +8,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, type Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Question, type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -44,7 +45,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.AnswerQuestion> =
       // An answered question is left alone rather than overwritten: the agent has already been
       // resumed on the first answer, and a second would resume it against a decision it never saw.
       if (Question.isAnswered(question) || !Question.answer(question, answer)) {
-        return { accepted: false };
+        return { accepted: false, resumed: false };
       }
 
       const task = yield* tryLoad(question.task);
@@ -60,16 +61,28 @@ const handler: Operation.WithHandler<typeof AssistantOperation.AnswerQuestion> =
       // the record is the point; there is simply nobody to wake.
       const chat = yield* tryLoad(question.conversation);
       if (!chat || !Obj.instanceOf(Chat.Chat, chat)) {
-        return { accepted: true };
+        return { accepted: true, resumed: false };
       }
 
-      yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
+      // The answer is already durable, so a host that cannot reach the agent must not take it back:
+      // the reader answered, and re-asking them because the wake failed would be the worse outcome.
+      // The question stays answered and the task stays blocked, which is a state a person can see
+      // and retry from.
+      const resumed = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
         chat,
         disposition: 'synthetic',
         prompt: resumePrompt({ question, task }),
-      });
+      }).pipe(
+        Effect.as(true),
+        Effect.catchCause((cause) =>
+          Effect.sync(() => {
+            log.warn('question answered but the conversation could not be resumed', { question: question.id, cause });
+            return false;
+          }),
+        ),
+      );
 
-      return { accepted: true };
+      return { accepted: true, resumed };
     }),
   ),
 );

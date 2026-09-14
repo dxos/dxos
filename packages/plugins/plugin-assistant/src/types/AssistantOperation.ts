@@ -186,6 +186,13 @@ export const AnswerQuestion = Operation.make({
   output: Schema.Struct({
     /** False when the answer was blank, or the question was already answered — nothing was written. */
     accepted: Schema.Boolean,
+    /**
+     * Whether the asking conversation was woken. False for a question with no conversation, and for
+     * one whose agent could not be reached — reported separately from `accepted` because the answer
+     * is durable either way, and a caller that conflated the two would either lose the record or
+     * show a resumed agent that is still sitting blocked.
+     */
+    resumed: Schema.Boolean,
   }),
 }).pipe(Operation.mutation('write'));
 
