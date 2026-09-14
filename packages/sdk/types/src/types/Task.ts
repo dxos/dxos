@@ -300,7 +300,8 @@ const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): bool
     a.email === b.email &&
     a.identityDid === b.identityDid &&
     a.role === b.role &&
-    refEntityId(a.contact) === refEntityId(b.contact)
+    refEntityId(a.contact) === refEntityId(b.contact) &&
+    refEntityId(a.subject) === refEntityId(b.subject)
   );
 };
 
