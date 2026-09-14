@@ -93,12 +93,24 @@ describe('Tooltip', () => {
     const placement = () =>
       document.querySelector('[data-scope="tooltip"][data-part="content"]')?.getAttribute('data-placement');
 
-    fireEvent.pointerMove(first, { pointerType: 'mouse' });
-    await waitFor(() => expect(placement()).toEqual('right'));
+    // `fireEvent` flushes React updates inside `act` before the machine's queued event runs, which would hide a
+    // placement rendered too late; native dispatch keeps the browser's ordering.
+    const reactGlobal = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+    const actEnvironment = reactGlobal.IS_REACT_ACT_ENVIRONMENT;
+    reactGlobal.IS_REACT_ACT_ENVIRONMENT = false;
+    try {
+      const pointer = (element: HTMLElement, type: string) =>
+        element.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'mouse' }));
 
-    fireEvent.pointerLeave(first);
-    fireEvent.pointerMove(second, { pointerType: 'mouse' });
-    await waitFor(() => expect(placement()).toEqual('left'));
+      pointer(first, 'pointermove');
+      await waitFor(() => expect(placement()).toEqual('right'));
+
+      pointer(first, 'pointerout');
+      pointer(second, 'pointermove');
+      await waitFor(() => expect(placement()).toEqual('left'));
+    } finally {
+      reactGlobal.IS_REACT_ACT_ENVIRONMENT = actEnvironment;
+    }
   });
 
   test('clicking another trigger switches to its side', async ({ expect }) => {
