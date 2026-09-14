@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { AgentService } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -141,7 +141,10 @@ export const RunPromptInChat = Operation.make({
   },
   services: [Capability.Service, Database.Service, AgentService],
   input: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    chat: Schema.optional(Type.getSchema(Chat.Chat)),
+    // The object whose companion chat should run the prompt — the way to name a companion chat that
+    // has not been persisted yet, which a caller outside the page (an agent) cannot hold.
+    companionTo: Schema.optional(Obj.Unknown),
     prompt: Schema.String,
   }),
   output: Schema.Void,

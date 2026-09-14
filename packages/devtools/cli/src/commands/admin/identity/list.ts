@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { type LegacyListActiveIdentitiesResponse, type ListActiveIdentitiesResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 type IdentityItem =
   | ListActiveIdentitiesResponse['identities'][number]

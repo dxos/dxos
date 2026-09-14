@@ -10,9 +10,9 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, Repo, TaskSet } from '@dxos/types';
 
-import * as Instructions from './Instructions';
-import * as Routine from './Routine';
-import * as Skill from './Skill';
+import * as Instructions from './Instructions.ts';
+import * as Routine from './Routine.ts';
+import * as Skill from './Skill.ts';
 
 /** Work-stream lifecycle state; what done means lives on the task set's milestones. */
 export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
@@ -39,6 +39,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     ),
 
     /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
+    // TODO(burdon): Change to Collection?
     artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
 
     /** Routines the project owns, in order, parented so they cascade-delete with it. */
@@ -58,11 +59,12 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
      * mirrors a repository adopts its synced task set AND names it here, while a project whose
      * tasks are local can still reference the repository its issues are filed against.
      */
+    // TODO(burdon): Change to array? Move into taskSet?
     repo: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'sky' }),
     // Only the project skill: filing created objects into `artifacts` is what a project-scoped
     // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so
     // the type does not depend on the plugin that owns the skill.
@@ -101,7 +103,7 @@ export const make = (
 /** Adds a routine to the project as an owned child; `SetParent` on the field cascades it. */
 export const addRoutine = (project: Project, routine: Routine.Routine): void => {
   Obj.update(project, (project) => {
-    project.routines = [...project.routines, Ref.make(routine)];
+    project.routines.push(Ref.make(routine));
   });
 };
 

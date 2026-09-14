@@ -6,8 +6,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, test } from 'vitest';
 
-import { formatSymbolRef, parseRef } from '../refs';
-import { type Introspector, createIntrospector } from './introspector';
+import { formatSymbolRef, parseRef } from '../refs.ts';
+import { type Introspector, createIntrospector } from './introspector.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = join(__dirname, '..', '__fixtures__');

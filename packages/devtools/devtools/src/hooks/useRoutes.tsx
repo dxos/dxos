@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 import { useNavigate, useRoutes as useRouterRoutes } from 'react-router-dom';
 
-import { RootContainer } from '../containers';
+import { RootContainer } from '../containers/index.ts';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -30,7 +30,7 @@ import {
   SwarmPanel,
   TestingPanel,
   WorkflowPanel,
-} from '../panels';
+} from '../panels/index.ts';
 
 export const namespace = 'devtools';
 

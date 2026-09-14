@@ -8,8 +8,8 @@ import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Icon, type IconProps } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { type RandomShape } from './rng-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { type RandomShape } from './rng-def.ts';
 
 const icons = [
   'ph--dice-one--regular',

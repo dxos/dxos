@@ -11,6 +11,10 @@ export default defineConfig({
     // pulling in Vite itself — the CLI registers the same set in bun's module registry.
     'vite-plugin/packages': 'src/vite-plugin/packages.ts',
     'index': 'src/index.ts',
+    // The `dx-plugin` bin — the plugin-authoring CLI shipped with the package so out-of-repo
+    // plugin authors run the same toolchain; in-repo, the composer-plugin tag's `prebuild`
+    // depends on it.
+    'plugin-cli': 'src/plugin-cli/main.ts',
     'core/activation-event': 'src/core/activation-event.ts',
     'common/activation-events': 'src/common/activation-events.ts',
     'common/capabilities': 'src/common/capabilities.ts',
@@ -28,7 +32,6 @@ export default defineConfig({
     'core/plugin-asset-cache': 'src/core/plugin-asset-cache.ts',
     'core/plugin-manifest': 'src/core/plugin-manifest.ts',
     'core/registry': 'src/core/registry.ts',
-    'common/optimistic': 'src/common/optimistic.ts',
     'common/Role': 'src/common/Role.ts',
     'plugin-process-manager/history/undo-mapping': 'src/plugin-process-manager/history/undo-mapping.ts',
     'plugin-process-manager/history/undo-registry': 'src/plugin-process-manager/history/undo-registry.ts',

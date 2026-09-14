@@ -32,7 +32,7 @@ export const findOrCreateDocumentArtifact = (project: Project.Project, name: str
     }
     const document = db.add(Markdown.make({ name }));
     Obj.update(project, (project) => {
-      project.artifacts = [...project.artifacts, Ref.make(document)];
+      project.artifacts.push(Ref.make(document));
     });
     return document;
   });
@@ -64,12 +64,19 @@ export const upsertTask = (
     }
     invariant(project.taskSet, 'Project has no task set.');
     const taskSet = yield* Database.load(project.taskSet);
-    const task = db.add(Obj.make(Task.Task, { title, description, status: 'todo', [Obj.Meta]: { keys: [key] } }));
+    const task = db.add(
+      Obj.make(Task.Task, {
+        [Obj.Parent]: taskSet,
+        title,
+        description,
+        status: 'todo',
+        [Obj.Meta]: { keys: [key] },
+      }),
+    );
     // Membership and order are the set's `tasks` array; the parent edge rides along for cascade.
     Obj.update(taskSet, (taskSet) => {
-      taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+      taskSet.tasks.push(Ref.make(task));
     });
-    Obj.setParent(task, taskSet);
     return true;
   });
 

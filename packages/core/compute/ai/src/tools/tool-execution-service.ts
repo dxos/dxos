@@ -9,7 +9,7 @@ import * as Record from 'effect/Record';
 import type * as Tool from 'effect/unstable/ai/Tool';
 import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { AiToolNotFoundError } from '../errors';
+import { AiToolNotFoundError } from '../errors.ts';
 
 /**
  * Provides handlers for tools.

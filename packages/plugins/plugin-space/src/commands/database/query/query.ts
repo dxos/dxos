@@ -12,7 +12,7 @@ import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { printObject } from '../util';
+import { printObject } from '../util.ts';
 
 export const handler = ({ typename }: { typename: Option.Option<string> }) =>
   Effect.gen(function* () {

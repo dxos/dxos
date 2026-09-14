@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
 import { type Context as DxosContext } from '@dxos/context';
@@ -11,6 +13,7 @@ import {
   ProfileStateMachine,
   createCredentialSignerWithChain,
   createCredentialSignerWithKey,
+  credentialPayload,
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { type EdgeConnection } from '@dxos/edge-client';
@@ -18,22 +21,24 @@ import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
-  AdmittedFeed,
+  AdmittedFeed_Designation,
+  AdmittedFeedSchema,
+  AuthorizedDeviceSchema,
   type Credential,
   type DeviceProfileDocument,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DeviceAdmissionRequest } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type Space } from '../space';
-import { EdgeFeedReplicator } from '../spaces';
-import { TrustedKeySetAuthVerifier } from './authenticator';
+import { type Space } from '../space/index.ts';
+import { EdgeFeedReplicator } from '../spaces/index.ts';
+import { TrustedKeySetAuthVerifier } from './authenticator.ts';
 
 export type IdentityProps = {
   did: IdentityDid;
@@ -209,7 +214,10 @@ export class Identity {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
   }
 
-  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest): Promise<Credential> {
+  async admitDevice(request: DeviceAdmissionRequest): Promise<Credential> {
+    const deviceKey = requirePublicKey(request.deviceKey);
+    const controlFeedKey = requirePublicKey(request.controlFeedKey);
+    const dataFeedKey = requirePublicKey(request.dataFeedKey);
     log('Admitting device:', {
       identityKey: this.identityKey,
       hostDevice: this.deviceKey,
@@ -220,11 +228,10 @@ export class Identity {
     const signer = this.getIdentityCredentialSigner();
     const deviceCredential = await signer.createCredential({
       subject: deviceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        'identityKey': this.identityKey,
-        deviceKey,
-      },
+      assertion: create(AuthorizedDeviceSchema, {
+        identityKey: fromPublicKey(this.identityKey),
+        deviceKey: fromPublicKey(deviceKey),
+      }),
     });
     await writeMessages(
       this.controlPipeline.writer,
@@ -232,25 +239,23 @@ export class Identity {
         deviceCredential,
         await signer.createCredential({
           subject: controlFeedKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            'spaceKey': this.haloSpaceKey,
-            deviceKey,
-            'identityKey': this.identityKey,
-            'designation': AdmittedFeed.Designation.CONTROL,
-          },
+          assertion: create(AdmittedFeedSchema, {
+            spaceKey: fromPublicKey(this.haloSpaceKey),
+            deviceKey: fromPublicKey(deviceKey),
+            identityKey: fromPublicKey(this.identityKey),
+            designation: AdmittedFeed_Designation.CONTROL,
+          }),
         }),
         await signer.createCredential({
           subject: dataFeedKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            'spaceKey': this.haloSpaceKey,
-            deviceKey,
-            'identityKey': this.identityKey,
-            'designation': AdmittedFeed.Designation.DATA,
-          },
+          assertion: create(AdmittedFeedSchema, {
+            spaceKey: fromPublicKey(this.haloSpaceKey),
+            deviceKey: fromPublicKey(deviceKey),
+            identityKey: fromPublicKey(this.identityKey),
+            designation: AdmittedFeed_Designation.DATA,
+          }),
         }),
-      ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),
+      ].map(credentialPayload),
     );
 
     return deviceCredential;

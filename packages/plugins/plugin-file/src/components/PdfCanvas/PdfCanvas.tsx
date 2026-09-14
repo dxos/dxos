@@ -4,7 +4,6 @@
 
 import './text-layer.css';
 
-import { composeRefs } from '@radix-ui/react-compose-refs';
 // The `legacy` build, not the default one: the default calls `Map.prototype.getOrInsertComputed`,
 // which is new enough that the Chromium the storybook tests run in throws on it. Legacy targets a
 // wider baseline and is the variant pdf.js publishes for exactly this.
@@ -13,11 +12,11 @@ import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, composeRefs, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search';
+import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search.ts';
 
 /**
  * pdf.js, loaded on first use rather than on import.
@@ -551,7 +550,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
 
     if (error) {
       return (
-        <div {...composableProps(props, { classNames: 'h-full w-full overflow-auto' })} ref={forwardedRef}>
+        <div {...composableProps(props, { classNames: 'dx-fill overflow-auto' })} ref={forwardedRef}>
           <div role='alert' className='p-4 text-sm text-error-text'>
             {t('pdf-error.message')}
           </div>
@@ -580,7 +579,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         data-pdf-canvas=''
         {...composableProps(props, {
           classNames: [
-            'h-full w-full bg-deck select-text',
+            'dx-fill bg-deck select-text',
             single ? 'overflow-hidden grid place-items-center' : 'overflow-auto',
           ],
         })}

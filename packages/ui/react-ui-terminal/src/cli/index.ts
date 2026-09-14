@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as XtermConsole from './console';
-export * as XtermContext from './context';
-export * as XtermStdio from './stdio';
-export * as XtermTerminal from './terminal';
+export * as XtermConsole from './console.ts';
+export * as XtermContext from './context.ts';
+export * as XtermStdio from './stdio.ts';
+export * as XtermTerminal from './terminal.ts';
 
-export * from './bridge';
-export * from './input';
-export * from './line-editor';
-export * from './shell';
-export * from './tokenize';
+export * from './bridge.ts';
+export * from './input.ts';
+export * from './line-editor.ts';
+export * from './shell.ts';
+export * from './tokenize.ts';

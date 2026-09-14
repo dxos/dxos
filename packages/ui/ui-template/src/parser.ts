@@ -16,7 +16,7 @@
 //   on-x="key"       an event bound to an operation key — the only outbound edge
 //
 
-import { type Binding, type Node, type Tag, checkBindings, validate } from './model';
+import { type Binding, type Node, type Tag, checkBindings, validate } from './model.ts';
 
 export class TemplateParseError extends Error {
   readonly _tag = 'TemplateParseError';

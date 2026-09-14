@@ -1,0 +1,36 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`layout quality (dagre) > soft metrics 1`] = `
+{
+  "bends": 2,
+  "crossings": 0,
+}
+`;
+
+exports[`layout quality (elk) > soft metrics 1`] = `
+{
+  "bends": 3,
+  "crossings": 0,
+}
+`;
+
+exports[`layout quality (grid) > soft metrics 1`] = `
+{
+  "bends": 3,
+  "crossings": 0,
+}
+`;
+
+exports[`layout quality (rules) > soft metrics 1`] = `
+{
+  "bends": 6,
+  "crossings": 0,
+}
+`;
+
+exports[`layout quality (search) > soft metrics 1`] = `
+{
+  "bends": 2,
+  "crossings": 0,
+}
+`;

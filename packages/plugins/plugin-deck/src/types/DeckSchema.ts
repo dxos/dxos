@@ -20,11 +20,24 @@ export type ResolvedPart = Part;
 export const PlankSizing = Schema.Record(Schema.String, Schema.mutableKey(Schema.Number));
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
-export const DeckState = Schema.Struct({
+/**
+ * What is open in a workspace. Derived from the URL, which is the record of it, so this is never
+ * persisted and never written by hand — {@link applyActive} is its only writer.
+ */
+export const OpenDeck = Schema.Struct({
   /** Item IDs of planks currently active. A singleton list renders fullbleed; 2+ render as a sliding deck. */
   active: Schema.mutable(Schema.Array(Schema.String)),
-  /** Item IDs of planks that have been closed; used for state persistence and reopening. */
+  /** Item IDs of planks that have been closed; broadcast so peers clear this identity's presence. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
+  /** Each open plank's URL segment, by plank id; the key its per-plank preferences hang off. */
+  segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
+});
+export type OpenDeck = Schema.Schema.Type<typeof OpenDeck>;
+
+export const defaultOpenDeck: OpenDeck = { active: [], inactive: [] };
+
+/** A workspace's persisted deck preferences: how its planks look, not which ones are open. */
+export const StoredDeck = Schema.Struct({
   /**
    * Absolute widths in rem, keyed by item id — a plank keeps its width wherever it sits. The companion's
    * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
@@ -45,7 +58,10 @@ export const DeckState = Schema.Struct({
    */
   plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
 });
-export type DeckState = Schema.Schema.Type<typeof DeckState>;
+export type StoredDeck = Schema.Schema.Type<typeof StoredDeck>;
+
+/** A workspace's deck as everything reads it: its preferences, plus what the URL says is open. */
+export type DeckState = StoredDeck & OpenDeck;
 
 /**
  * Deck key for the "no workspace resolved yet" sentinel — the initial `activeDeck` of a fresh profile,
@@ -54,9 +70,7 @@ export type DeckState = Schema.Schema.Type<typeof DeckState>;
  */
 export const DEFAULT_DECK_ID = 'default';
 
-export const defaultDeck: DeckState = {
-  active: [],
-  inactive: [],
+export const defaultDeck: StoredDeck = {
   plankSizing: {},
   companionPlanks: [],
   plankNames: {},
@@ -95,7 +109,7 @@ export const StoredDeckState = Schema.Struct({
   activeDeck: Schema.String,
   previousDeck: Schema.String,
   decks: Schema.mutableKey(
-    Schema.Record(Schema.String, Schema.mutableKey(DeckState.mapFields(Struct.map(Schema.mutableKey)))),
+    Schema.Record(Schema.String, Schema.mutableKey(StoredDeck.mapFields(Struct.map(Schema.mutableKey)))),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
@@ -148,10 +162,10 @@ export const EphemeralDeckState = Schema.Struct({
   /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
   expose: Schema.optional(Schema.Boolean),
   /**
-   * Planks a URL restore could not resolve, by item ID. Separates "gave up" from "still loading",
-   * which an absent node cannot express on its own. Transient — resolvability is not a deck fact.
+   * What is open, by workspace. The URL only records the workspace you are in, so the others are
+   * remembered for as long as the session lasts and no longer.
    */
-  unresolved: Schema.optional(Schema.Array(Schema.String)),
+  open: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(OpenDeck))),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
   dialogBlockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),

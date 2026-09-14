@@ -11,7 +11,7 @@ import { DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { type EntityMeta } from '@dxos/index-core';
 import { EntityId, SpaceId, URI } from '@dxos/keys';
 
-import { ConvergenceKeyMerger, type ConvergenceKeyMergerDeps } from './convergence-key-merge';
+import { ConvergenceKeyMerger, type ConvergenceKeyMergerDeps } from './convergence-key-merge.ts';
 
 const KEY = 'example.com/thing/main';
 const SPACE_ID = SpaceId.random();

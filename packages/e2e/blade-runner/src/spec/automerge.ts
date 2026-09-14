@@ -7,9 +7,9 @@ import { mean, std } from 'mathjs';
 
 import { PublicKey } from '@dxos/keys';
 
-import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { AutomergeReplicant, type StorageAdaptorKind } from '../replicants/automerge-replicant';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { AutomergeReplicant, type StorageAdaptorKind } from '../replicants/automerge-replicant.ts';
 
 export type AutomergeTestSpec = {
   platform: Platform;

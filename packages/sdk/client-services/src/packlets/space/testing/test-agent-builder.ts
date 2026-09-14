@@ -2,23 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Context } from '@dxos/context';
-import { CredentialGenerator } from '@dxos/credentials';
+import { CredentialGenerator, credentialPayload } from '@dxos/credentials';
 import { type FeedStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { MetadataStore } from '../../metadata';
-import { TestFeedBuilder } from '../../pipeline/testing';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../index';
+import { MetadataStore } from '../../metadata/index.ts';
+import { TestFeedBuilder } from '../../pipeline/testing/index.ts';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../index.ts';
 
 export type NetworkManagerProvider = () => SwarmNetworkManager;
 
@@ -120,7 +124,9 @@ export class TestAgent {
     }
 
     this._networkManager = this._networkManagerProvider();
-    this._networkManager.setPeerInfo({ peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() });
+    this._networkManager.setPeerInfo(
+      create(PeerSchema, { peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() }),
+    );
 
     return this._networkManager;
   }
@@ -155,12 +161,12 @@ export class TestAgent {
       sparse: true,
     });
 
-    const metadata: SpaceMetadata = {
-      key: spaceKey,
-      genesisFeedKey: genesisKey,
-      controlFeedKey: controlFeed.key,
-      dataFeedKey: dataFeed.key,
-    };
+    const metadata: SpaceMetadata = create(SpaceMetadataSchema, {
+      key: fromPublicKey(spaceKey),
+      genesisFeedKey: fromPublicKey(genesisKey),
+      controlFeedKey: fromPublicKey(controlFeed.key),
+      dataFeedKey: fromPublicKey(dataFeed.key),
+    });
     if (saveMetadata) {
       await this.metadataStore.addSpace(metadata);
     }
@@ -231,14 +237,12 @@ export class TestAgent {
     const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
     const credentials = [
       ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed_Designation.DATA),
       await generator.createEpochCredential(space.key),
     ];
 
     for (const credential of credentials) {
-      await space.controlPipeline.writer.write({
-        credential: { credential },
-      });
+      await space.controlPipeline.writer.write(credentialPayload(credential));
     }
   }
 }

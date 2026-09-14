@@ -27,7 +27,7 @@ import { MobileNavBar } from '#components';
 import { useMobileNavbarActions } from '#hooks';
 import { translations } from '#translations';
 
-import { Home } from './Home';
+import { Home } from './Home.tsx';
 
 /**
  * A root with one node per disposition Home used to mix together (workspace, user-account, pin-end)

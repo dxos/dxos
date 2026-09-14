@@ -291,7 +291,7 @@ worker holds an OAuth-derived identity, not a HALO verifiable presentation.
 ## The edge CORS proxy — where it does and does not apply
 
 `proxyFetchLegacy` (`core/mesh/edge-client/src/cors-proxy.ts`) routes through
-`cors.dxos.network`, implemented at `edge/packages/services/cors-proxy/src/main.ts`. It strips
+`<edge>/cors-proxy`, implemented at `edge/packages/services/cors-proxy/src/main.ts`. It strips
 `host` from the forwarded request (`main.ts:23`) and supports overriding browser-privileged headers
 via an `x-cors-proxy-` prefix, which is how the client relocates `Authorization`
 (`cors-proxy.ts:15-22`).
@@ -309,7 +309,7 @@ Three separate questions, three different answers:
    Direct `fetch` behind the extracted SSRF guard.
 2. **`plugin-s3`'s browser data path — do not proxy either, despite the temptation.** It would
    remove the bucket-CORS requirement entirely, which is the single biggest operational friction in
-   the plugin. But `cors.dxos.network` is an **open** proxy (`origin: '*'`, any target host), so
+   the plugin. But the CORS proxy is **open** (`origin: '*'`, any target host), so
    every signed request and every uploaded byte of a customer's file would pass through it. The
    client comment marks it TEMPORARY pending an authenticated `/proxy/*` route on edge — and no such
    route exists yet (no `/proxy` in `edge/src/api.ts`). Revisit if that route ships; routing

@@ -2,12 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { type Signer } from '@dxos/crypto';
 import { type PublicKey } from '@dxos/keys';
-import { type Chain, type Presentation, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromDate, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  type Chain,
+  type Presentation,
+  PresentationSchema,
+  type Proof,
+  ProofSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { SIGNATURE_TYPE_ED25519 } from '../credentials';
-import { getPresentationProofPayload } from './signing';
+import { SIGNATURE_TYPE_ED25519 } from '../credentials/index.ts';
+import { getPresentationProofPayload } from './signing.ts';
 
 // TODO(burdon): Rename createPresentation?
 export const signPresentation = async ({
@@ -23,22 +32,22 @@ export const signPresentation = async ({
   chain?: Chain;
   nonce?: Uint8Array;
 }): Promise<Presentation> => {
-  const proof: Proof = {
+  const proof: Proof = create(ProofSchema, {
     type: SIGNATURE_TYPE_ED25519,
     value: new Uint8Array(),
-    creationDate: new Date(),
-    signer: signerKey,
+    creationDate: fromDate(new Date()),
+    signer: fromPublicKey(signerKey),
     nonce,
-  };
+  });
 
-  const signedPayload = getPresentationProofPayload(presentation.credentials ?? [], proof);
+  const signedPayload = getPresentationProofPayload(presentation.credentials, proof);
   proof.value = await signer.sign(signerKey, signedPayload);
   if (chain) {
     proof.chain = chain;
   }
 
-  return {
+  return create(PresentationSchema, {
     credentials: presentation.credentials,
-    proofs: [...(presentation.proofs ?? []), proof],
-  };
+    proofs: [...presentation.proofs, proof],
+  });
 };

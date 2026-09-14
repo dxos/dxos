@@ -10,8 +10,8 @@ import { Form } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Splitter } from '../Splitter';
-import { MultiSelectList } from './MultiSelectList';
+import { Splitter } from '../Splitter.tsx';
+import { MultiSelectList } from './MultiSelectList.tsx';
 
 //
 // SPIKE stories for the zag probe: the custom multi-select machine driving a list, and the stock
@@ -69,7 +69,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
           <Form.Actions />
         </Form.Content>
       </Form.Viewport>
@@ -80,15 +80,15 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
 
   if (splitter) {
     return (
-      <div className='flex grow min-h-0 dx-base-surface'>
+      <div className='flex dx-grow dx-base-surface'>
         <Splitter orientation='vertical' panes={[list, detail]} />
       </div>
     );
   }
 
   return (
-    <div className='flex flex-col w-96 min-h-0 dx-base-surface divide-y divide-separator border-e border-separator'>
-      <div className='flex flex-col grow min-h-0'>{list}</div>
+    <div className='flex flex-col dx-grow dx-base-surface divide-y divide-separator border-e border-separator'>
+      <div className='flex flex-col dx-grow'>{list}</div>
       <div className='p-2 text-xs font-mono text-description'>
         {selection.size > 0 ? [...selection].join(', ') : 'Nothing selected.'}
       </div>
@@ -99,7 +99,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/ui-template/MultiSelect',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen', classNames: 'w-96' })],
   parameters: { layout: 'fullscreen', translations: formTranslations },
 };
 

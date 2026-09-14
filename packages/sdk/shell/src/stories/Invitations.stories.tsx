@@ -2,25 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
+import { type Space, SpaceMember_PresenceState, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { ButtonGroup, Clipboard, IconButton } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { IdentityListItem } from '../components';
-import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
-import { translations } from '../translations';
-import { SpaceListItem } from './SpaceListItem';
+import { IdentityListItem } from '../components/index.ts';
+import { IdentityPanel, JoinPanel, SpacePanel } from '../panels/index.ts';
+import { translations } from '../translations.ts';
+import { SpaceListItem } from './SpaceListItem.tsx';
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
 
@@ -37,7 +39,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 
         invitation.subscribe((invitation) => {
           const invitationCode = InvitationEncoder.encode(invitation);
-          if (invitation.state === Invitation.State.CONNECTING) {
+          if (invitation.state === Invitation_State.CONNECTING) {
             log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           }
         });
@@ -128,7 +130,7 @@ const Invitations = () => {
 
       invitation.subscribe((invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
-        if (invitation.state === Invitation.State.CONNECTING) {
+        if (invitation.state === Invitation_State.CONNECTING) {
           log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
         }
       });
@@ -143,7 +145,9 @@ const Invitations = () => {
         icon='ph--plus--regular'
         label='Create Identity'
         iconOnly
-        onClick={() => client.halo.createIdentity({ displayName: random.person.firstName() })}
+        onClick={() =>
+          client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: random.person.firstName() }))
+        }
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       />
@@ -201,7 +205,14 @@ const Invitations = () => {
         {identity ? (
           <Listbox.Root>
             <Listbox.Content aria-label='Identity'>
-              <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+              <IdentityListItem
+                identity={identity}
+                presence={
+                  networkStatus === ConnectionState.ONLINE
+                    ? SpaceMember_PresenceState.ONLINE
+                    : SpaceMember_PresenceState.OFFLINE
+                }
+              />
             </Listbox.Content>
           </Listbox.Root>
         ) : (

@@ -11,9 +11,9 @@ import {
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
+  type ActionToolbarProps,
   type MenuAction,
-  MenuRootProps,
   createGapSeparator,
   createMenuAction,
   createMenuItemGroup,
@@ -110,7 +110,7 @@ const createTableToolbarActions = ({
     };
   });
 
-export type TableToolbarProps = Pick<MenuRootProps, 'attendableId'> &
+export type TableToolbarProps = Pick<ActionToolbarProps, 'attendableId'> &
   TableToolbarState & {
     onAdd?: () => void;
     onSave?: () => void;
@@ -135,11 +135,7 @@ export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
     const menuActions = useMenuActions(actionsCreator);
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />
     );
   },
 );

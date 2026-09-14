@@ -5,6 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Tracer from 'effect/Tracer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import type { TestContext } from 'vitest';
 
@@ -106,3 +107,18 @@ export namespace TestHelpers {
 export class TestContextService extends Context.Service<TestContextService, TestContext>()(
   '@dxos/effect/TestContextService',
 ) {}
+
+/**
+ * A tracer that records every span it opens into `spans`, delegating the span itself to the default
+ * tracer, so a test can assert on names, attributes, and parents without an exporter.
+ */
+export const makeRecordingTracer = (spans: Tracer.Span[]): Tracer.Tracer => {
+  const base = Effect.runSync(Effect.tracer);
+  return Tracer.make({
+    span: (options) => {
+      const span = base.span(options);
+      spans.push(span);
+      return span;
+    },
+  });
+};

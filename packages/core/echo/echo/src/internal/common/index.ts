@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './api';
-export * from './proxy';
-export * from './types';
-export * from './merge';
+export * from './api/index.ts';
+export * from './proxy/index.ts';
+export * from './types/index.ts';
+export * from './merge.ts';

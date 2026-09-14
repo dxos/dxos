@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
-import * as internal from './internal';
-import * as objInternal from './internal/Obj';
-import type * as Ref from './Ref';
-import type * as Relation from './Relation';
-import type * as Tag from './Tag';
-import * as Type from './Type';
+import * as internal from './internal/index.ts';
+import * as objInternal from './internal/Obj/index.ts';
+import type * as Ref from './Ref.ts';
+import type * as Relation from './Relation.ts';
+import type * as Tag from './Tag.ts';
+import * as Type from './Type.ts';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;

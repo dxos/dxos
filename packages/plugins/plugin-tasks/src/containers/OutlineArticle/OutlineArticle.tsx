@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -13,11 +12,13 @@ import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
 import { meta } from '#meta';
+
+import { useMarkdownExtensions } from '../../hooks/index.ts';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline> & {
   /**
@@ -30,13 +31,6 @@ export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outl
    * toolbar, and a second one inside its section reads as a nested editor.
    */
   toolbar?: boolean;
-  /**
-   * Where a click on a promoted item's link goes when the embedder owns a task surface of its own
-   * (a project shows the task on its Tasks tab). Unset, the outline swaps itself for the task form.
-   */
-  onSelectTask?: (task: Task.Task) => void;
-  /** Editor extensions contributed by the host (e.g. plugin-github's `#123` decoration). */
-  extensions?: Extension[];
 };
 
 export const OutlineArticle = ({
@@ -45,8 +39,6 @@ export const OutlineArticle = ({
   subject: outline,
   taskSet,
   toolbar = true,
-  onSelectTask,
-  extensions,
 }: OutlineArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
@@ -77,16 +69,9 @@ export const OutlineArticle = ({
   );
 
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
-
-  // The link resolves asynchronously, so the hand-off waits for the target rather than the click,
-  // and clears the selection so the outline stays put instead of swapping to the task form.
-  useEffect(() => {
-    if (task && onSelectTask) {
-      setSelected(undefined);
-      onSelectTask(task);
-    }
-  }, [task, onSelectTask]);
   const handleBack = useCallback(() => setSelected(undefined), []);
+
+  const extensions = useMarkdownExtensions(outline);
 
   // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
   // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
@@ -149,22 +134,16 @@ export const OutlineArticle = ({
     return builder.build();
   }, [t, handleConvertCurrent, taskSet, convertible]);
 
-  // `!onSelectTask`: with an embedder taking the task, the form must not paint for the frame
-  // between the target resolving and the effect above clearing the selection.
-  if (task && !onSelectTask) {
+  if (task) {
     return (
-      <Menu.Root {...taskActions} attendableId={attendableId}>
-        <Panel.Root role={role}>
-          <Panel.Toolbar>
-            <Menu.Toolbar classNames='dx-document'>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-          <Panel.Content>
-            <TaskForm task={task} classNames='dx-document' />
-          </Panel.Content>
-        </Panel.Root>
-      </Menu.Root>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
+        </Panel.Toolbar>
+        <Panel.Content>
+          <TaskForm task={task} classNames='dx-document' />
+        </Panel.Content>
+      </Panel.Root>
     );
   }
 
@@ -181,20 +160,16 @@ export const OutlineArticle = ({
           resolveLinkLabel={resolveLinkLabel}
           extensions={extensions}
         >
-          <Menu.Root {...outlineActions} attendableId={attendableId}>
-            <Panel.Root role={role}>
-              <Show when={toolbar}>
-                <Panel.Toolbar>
-                  <Menu.Toolbar classNames='dx-document'>
-                    <Menu.Items />
-                  </Menu.Toolbar>
-                </Panel.Toolbar>
-              </Show>
-              <Panel.Content asChild>
-                <Outline.Content classNames='dx-document' />
-              </Panel.Content>
-            </Panel.Root>
-          </Menu.Root>
+          <Panel.Root role={role}>
+            <Show when={toolbar}>
+              <Panel.Toolbar asChild>
+                <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
+              </Panel.Toolbar>
+            </Show>
+            <Panel.Content asChild>
+              <Outline.Content classNames='dx-document' />
+            </Panel.Content>
+          </Panel.Root>
         </Outline.Root>
       )}
     </Show>
@@ -208,7 +183,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {
-      Obj.update(task, () => {
+      Obj.update(task, (task) => {
         for (const path of Object.keys(changed).filter((path) => changed[path])) {
           if (SchemaEx.isJsonPath(path)) {
             Obj.setValue(task, SchemaEx.splitJsonPath(path), values[path]);
@@ -223,7 +198,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
     <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
       <Form.Viewport classNames={classNames} scroll>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

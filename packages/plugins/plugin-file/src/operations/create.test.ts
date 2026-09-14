@@ -17,7 +17,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
 
-import { FileTooLargeError, UnsupportedFileTypeError } from './create';
+import { FileTooLargeError, UnsupportedFileTypeError } from './create.ts';
 
 describe('FileOperation.Create', () => {
   test('uploads a small PNG to the default (inline) backend', async ({ expect }) => {

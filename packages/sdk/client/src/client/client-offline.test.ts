@@ -9,7 +9,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
-import { Client } from './client';
+import { Client } from './client.ts';
 
 // An offline client must never reach isomorphic-ws either (node sockets bypass globalThis.WebSocket).
 vi.mock('isomorphic-ws', () => ({

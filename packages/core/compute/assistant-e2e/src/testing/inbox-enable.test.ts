@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, agentTestTimeout } from '../harness';
+import { agentTest, agentTestTimeout } from '../harness.ts';
 
 // Must stay at module scope: primes the test PRNG; agentTest pins a per-test seed from the test name.
 Obj.ID.dangerouslyDisableRandomness();

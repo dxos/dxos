@@ -22,10 +22,10 @@
    * Level      Dark   Light  Roles
    *   sunken   n-950  0.905  deck gaps, wells, scrim base, L0/R0 outer rails
    *   chrome   n-925  0.935  sidebars, topbar, statusbar, L1/R1 sidebars
-   *   base     n-900  0.980  document canvas, attention zone
-   *   raised   n-850  0.990  cards, side panels
-   *   overlay  n-800  0.995  dialogs, sheets, drawers
-   *   popup    n-775  1.000  popover, menu, toast, tooltip
+   *   base     n-900  0.980  document canvas, attention zone, cards
+   *   raised   n-850  0.990  dialogs, sheets, drawers, side panels
+   *   overlay  n-800  0.995  (explicit elevation 4 only)
+   *   popup    n-775  1.000  popover, menu, select, toast, tooltip
    *
    * Toolbars, groups and inputs are deliberately NOT levels: they are aspects derived from
    * whichever surface hosts them (see "Aspects" below), so a toolbar in a card and a toolbar on the
@@ -84,17 +84,15 @@
   --color-attention-surface: var(--dx-surface-base);
   --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
 
+  /* Cards sit on the canvas's own level and dialogs one above it: each a step darker than the
+     level its name suggests, so the ladder's top stays for popups and explicit elevations. */
+  --color-card-surface: var(--dx-surface-base);
+
   /**
    * Level: raised
    */
 
-  --color-card-surface: var(--dx-surface-raised);
-
-  /**
-   * Level: overlay
-   */
-
-  --color-modal-surface: var(--dx-surface-overlay);
+  --color-modal-surface: var(--dx-surface-raised);
 
   /**
    * Level: popup

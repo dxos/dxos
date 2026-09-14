@@ -59,6 +59,11 @@
       "types": "./dist/types/src/plugin.d.ts",
       "default": "./dist/lib/plugin.mjs"
     },
+    "#session-timeline": {
+      "source": "./src/session-timeline/index.ts",
+      "types": "./dist/types/src/session-timeline/index.d.ts",
+      "default": "./dist/lib/session-timeline.mjs"
+    },
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
@@ -217,6 +222,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
@@ -239,6 +245,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -258,6 +265,7 @@
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui-assistant": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -269,7 +277,6 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/react-ui-transcription": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -281,7 +288,6 @@
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

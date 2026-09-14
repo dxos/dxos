@@ -1,0 +1,481 @@
+---
+id: org.dxos.app.composer
+name: Composer
+version: 0.1.0
+---
+
+The Composer application: the plugins `packages/apps/composer-app` assembles, and the journeys
+through the running app that cross plugin boundaries. A plugin's own contract lives in its
+`PLUGIN.mdl`; this document holds what no single plugin owns — for now its `## QA` section, the
+app-level test suites a Routine runs. The navigation and presentation structure (`node`, `deck`,
+`plank`, `surface` per `org.dxos.spec.app`) is to follow.
+
+## Extensions
+
+| Term    | URI                       |
+| ------- | ------------------------- |
+| `test`  | `org.dxos.mdl.test@1.0`   |
+| `step`  | `org.dxos.mdl.step@1.0`   |
+| `suite` | `org.dxos.mdl.suite@1.0`  |
+
+The dialect is [`packages/reflect/deus/lang/qa.mdl`](../../../reflect/deus/lang/qa.mdl); the runner
+is the `composer-qa` skill, through `/dxos:qa`.
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and one operation the agent
+invokes (`invoke`); `expect` is the criterion both judge, and `assert` checks it against
+`$snapshot`, the debug snapshot taken after the step, or against a query operation. Every test
+owns its fixture (`given` + `before`) and its teardown (`after`), so the suites below are
+order-independent.
+
+Conventions shared by every test here:
+
+- `$runId` is the run's id and `$start` its start time in milliseconds; every snapshot takes
+  `since: $start`, so `errors` is this run's errors so far. Artifacts carry `QA:` and `$runId`.
+- `given` binds `defaultSpace` — the space flagged `default` in the snapshot — for the `after` step
+  that returns the workspace to it: a deleted space stays the workspace until another is chosen,
+  and the app shows "You don't have this workspace" meanwhile.
+- The debug plugin must be active (`composer.snapshot` exists). If not:
+  `org.dxos.operation.registry.enablePlugins { ids: ["org.dxos.plugin.debug"] }`, then retry.
+- A `QA:` space left by an earlier run means that run's `after` did not finish. Run it
+  (`--stage=after`) or remove the space by hand; never proceed on someone else's artifacts.
+
+```mdl
+test QA-1: Spaces and documents
+  desc: The smallest journey through the app — a space, three documents, one deletion, and what survives.
+  actors: both
+  status: passing           # 2026-09-10, smoke run 3
+  given:
+    - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
+    - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
+    - `$snapshot.errors` is empty
+    - `dxos` is defined on the port — it is mounted at the end of `client.initialize()`, after the page reports mounted
+  steps:
+    - name: Create a space
+      do: In the navtree, open the space list's +, name the space "QA: Basics $runId" and create it.
+      invoke: org.dxos.operation.space.create { name: "QA: Basics $runId" }
+      capture: space
+      expect: the space exists and is ready
+      assert: return $snapshot.spaces.some((s) => s.id === $space.id && s.state === 'SPACE_READY')
+      note: |
+        The result's `id` is the space id. The dialog also switches the navtree to the new space;
+        the operation only creates, which is why the next step exists.
+    - name: Switch to it
+      do: (no gesture — the create dialog already switched the navtree to the new space)
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$space.id" }
+      expect: the navtree shows the new, empty space
+      assert: return $snapshot.layout.workspace === `root/${$space.id}`
+    - name: Create Doc 1
+      do: With the new space selected, click + on the space and choose Document. Name it "QA: Doc 1".
+      invoke: org.dxos.operation.markdown.create { name: "QA: Doc 1", content: "# QA: Doc 1\n\nCreated by the basics suite, run $runId.\n" }
+      space: $space.id
+      capture: doc1
+      expect: "QA: Doc 1" appears under the space's collection in the navtree
+      assert: return typeof $doc1.id === 'string' && $doc1.id.startsWith('echo://') && $stepErrors.length === 0
+      note: The result's `id` is a URI, `echo://<spaceId>/<objectId>`; later steps name the object through it.
+    - name: Create Doc 2
+      do: Repeat for "QA: Doc 2".
+      invoke: org.dxos.operation.markdown.create { name: "QA: Doc 2", content: "# QA: Doc 2\n\nCreated by the basics suite, run $runId.\n" }
+      space: $space.id
+      capture: doc2
+      expect: "QA: Doc 2" appears below "QA: Doc 1"
+      assert: return typeof $doc2.id === 'string' && $stepErrors.length === 0
+    - name: Create Doc 3
+      do: Repeat for "QA: Doc 3".
+      invoke: org.dxos.operation.markdown.create { name: "QA: Doc 3", content: "# QA: Doc 3\n\nCreated by the basics suite, run $runId.\n" }
+      space: $space.id
+      capture: doc3
+      expect: the navtree lists exactly the three documents under the space
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
+        const labels = rows.results.map((o) => o.label).sort();
+        return labels.join('|') === 'QA: Doc 1|QA: Doc 2|QA: Doc 3';
+      note: |
+        `queryObjects` returns `{ results: [{ dxn, typename, label }] }` — the rows are under `results`,
+        the name under `label`, and `dxn` is the same `echo://` URI `markdown.create` returned.
+    - name: Open Doc 2
+      id: open
+      do: Click "QA: Doc 2" in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$space.id/content/collections/$doc2.objectId"] }
+      expect: one plank shows the "QA: Doc 2" heading in the editor and the navtree row is selected
+      assert: |
+        const path = `root/${$space.id}/content/collections/${$doc2.objectId}`;
+        return $snapshot.layout.active.includes(path) &&
+          $snapshot.planks.some((p) => p.label === 'QA: Doc 2' && p.subject?.typename === 'org.dxos.type.document');
+    - name: Delete Doc 2
+      id: delete
+      do: Open the ⋮ menu on "QA: Doc 2" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($doc2.id)] }
+      expect: a "Document deleted" toast with Close and Undo appears, the plank closes, and no error is logged
+      assert: |
+        const path = `root/${$space.id}/content/collections/${$doc2.objectId}`;
+        const toast = $snapshot.toasts.find((t) => t.title === 'Document deleted');
+        return !!toast && toast.actions.includes('Undo') && !$snapshot.layout.active.includes(path) &&
+          $stepErrors.length === 0;
+      note: |
+        The result is `{ objects, parentCollection, indices, wasActive }`; `wasActive` holds the navigation
+        path of the plank that was open. This step is where a toast rendered
+        outside a provider once threw `Tooltip.Trigger must be used within Tooltip` — the `errors`
+        check is the point of the step, not a formality.
+    - name: The rest survive
+      do: Reload the page and open the space again.
+      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.document" }
+      space: $space.id
+      expect: exactly "QA: Doc 1" and "QA: Doc 3" remain
+      assert: |
+        const labels = $result.results.map((o) => o.label).sort();
+        return labels.join('|') === 'QA: Doc 1|QA: Doc 3';
+      note: An agent cannot reload without losing the port, so it judges from the database.
+  after:
+    - name: Remove the remaining documents
+      do: Delete "QA: Doc 1" and "QA: Doc 3" from their ⋮ menus.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($doc1.id), Obj($doc3.id)] }
+      expect: the space's collection is empty and an "Objects deleted" toast with Undo appears
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
+        return rows.results.length === 0 && $snapshot.toasts.some((t) => t.title === 'Objects deleted');
+    - name: Delete the space
+      do: Open the space's settings and delete the space.
+      invoke: org.dxos.operation.space.delete { space: Space($space.id) }
+      expect: the space leaves the space list
+      assert: return !$snapshot.spaces.some((s) => s.id === $space.id)
+      note: |
+        Judge by identity: the snapshot hides the name of a space that is not SPACE_READY, so a name
+        check passes against a space that is merely closed. This step found the defect that two smoke
+        runs then confirmed — the tombstone was written before `space.close()`, so any failure leaving
+        the swarm stranded the space as SPACE_CLOSED with the retry a no-op — fixed in
+        `DataSpaceManager._tombstoneSpace`, which now completes the deletion whatever the teardown
+        does. A space still listed here is that regression, not the environment.
+    - name: Return to the default space
+      do: Pick the default space in the space list.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
+      expect: no "QA:" space remains, the workspace is the default space, and no error is logged
+      assert: |
+        return !$snapshot.spaces.some((s) => s.id === $space.id || s.name?.startsWith('QA:')) &&
+          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
+```
+
+```mdl
+test QA-2: Rename, undo and a second space
+  desc: Rename through the update operation, delete and undo from the toast, and switch between two spaces.
+  actors: both
+  status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 2 (which passed 2026-09-07)
+  given:
+    - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
+    - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
+    - `$snapshot.errors` is empty
+  before:
+    - name: Create a space
+      do: Create a space "QA: Undo $runId"; the navtree switches to it.
+      invoke: org.dxos.operation.space.create { name: "QA: Undo $runId" }
+      capture: space
+      expect: the space exists and is ready
+      assert: return $snapshot.spaces.some((s) => s.id === $space.id && s.state === 'SPACE_READY')
+    - name: Switch to it
+      do: (the dialog did this)
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$space.id" }
+      expect: the navtree shows the new space
+      assert: return $snapshot.layout.workspace === `root/${$space.id}`
+    - name: Create a note
+      do: Create a document "QA: Note" in it.
+      invoke: org.dxos.operation.markdown.create { name: "QA: Note", content: "# QA: Note\n\nRun $runId.\n" }
+      space: $space.id
+      capture: note
+      expect: "QA: Note" is listed under the space
+      assert: return typeof $note.id === 'string' && $note.id.startsWith('echo://')
+  steps:
+    - name: Rename the document
+      do: Open the ⋮ menu on "QA: Note", choose Rename, enter "QA: Note (renamed)".
+      invoke: org.dxos.operation.space.updateObject { object: Ref($note.id), properties: { name: "QA: Note (renamed)" } }
+      space: $space.id
+      expect: the navtree row reads "QA: Note (renamed)"
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
+        const labels = rows.results.map((o) => o.label);
+        return labels.length === 1 && labels[0] === 'QA: Note (renamed)';
+      note: |
+        The menu's own operation (`space.renameObject`) only opens the rename dialog; `updateObject`
+        is what the dialog commits.
+    - name: Open the document
+      do: Click the document in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$space.id/content/collections/$note.objectId"] }
+      expect: the document opens in a plank
+      assert: return $snapshot.layout.active.includes(`root/${$space.id}/content/collections/${$note.objectId}`)
+    - name: Delete it
+      do: Delete it from its ⋮ menu.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($note.id)] }
+      expect: the "Document deleted" toast shows and no plank is active
+      assert: |
+        return $snapshot.toasts.some((t) => t.title === 'Document deleted') &&
+          !$snapshot.layout.active.includes(`root/${$space.id}/content/collections/${$note.objectId}`);
+    - name: Undo
+      id: undo
+      do: Click Undo in the "Document deleted" toast.
+      invoke: org.dxos.operation.debug.revertLast {}
+      expect: the document is listed again and reopens in its plank; no error is logged
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
+        return $result.undone === true && rows.results.length === 1 &&
+          $snapshot.layout.active.includes(`root/${$space.id}/content/collections/${$note.objectId}`) &&
+          $stepErrors.length === 0;
+      note: |
+        Clicking Undo also dismisses the toast; the operation bypasses the toast, so for the agent
+        it stays until it times out. The restore reopens what was open.
+    - name: Create a second space
+      do: Create a space "QA: Undo B $runId"; the navtree switches to it and shows no documents.
+      invoke: org.dxos.operation.space.create { name: "QA: Undo B $runId" }
+      capture: spaceB
+      expect: both "QA:" spaces are listed and ready
+      assert: return $snapshot.spaces.filter((s) => s.name?.startsWith('QA: Undo') && s.state === 'SPACE_READY').length === 2
+    - name: Switch to it
+      do: (the dialog did this)
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$spaceB.id" }
+      expect: the workspace is the second space
+      assert: return $snapshot.layout.workspace === `root/${$spaceB.id}`
+    - name: It is empty
+      do: Look at the navtree.
+      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.document" }
+      space: $spaceB.id
+      expect: no documents
+      assert: return $result.results.length === 0
+    - name: Switch back
+      do: Pick "QA: Undo $runId" from the space list.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$space.id" }
+      expect: the first space is the workspace again and its document is still listed
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
+        return $snapshot.layout.workspace === `root/${$space.id}` && rows.results.length === 1;
+  after:
+    - name: Remove the document
+      do: Delete the document from its ⋮ menu.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($note.id)] }
+      expect: the collection is empty
+    - name: Delete the first space
+      do: Delete "QA: Undo $runId" from its settings.
+      invoke: org.dxos.operation.space.delete { space: Space($space.id) }
+      expect: it leaves the space list
+    - name: Delete the second space
+      do: Delete "QA: Undo B $runId" from its settings.
+      invoke: org.dxos.operation.space.delete { space: Space($spaceB.id) }
+      expect: it leaves the space list
+    - name: Return to the default space
+      do: Pick the default space.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
+      expect: no "QA:" space remains, the workspace is the default space, no error is logged
+      assert: |
+        return !$snapshot.spaces.some((s) => s.name?.startsWith('QA:')) &&
+          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
+```
+
+```mdl
+test QA-3: Comments
+  desc: Create, reply to, resolve, reopen and delete a comment thread on a document; the agent reads the threads off `planks[].comments`.
+  actors: both
+  covers: [review:F-1]
+  status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 3 (which passed 2026-09-07)
+  given:
+    - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
+    - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
+    - `$snapshot.errors` is empty
+  before:
+    - name: Create a space
+      do: Create a space "QA: Comments $runId".
+      invoke: org.dxos.operation.space.create { name: "QA: Comments $runId" }
+      capture: space
+      expect: the space exists and is ready
+      assert: return $snapshot.spaces.some((s) => s.id === $space.id && s.state === 'SPACE_READY')
+    - name: Switch to it
+      do: (the dialog did this)
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$space.id" }
+      expect: the navtree shows the new space
+    - name: Create the draft
+      do: Create a document "QA: Draft" whose first line reads "Comments go here."
+      invoke: org.dxos.operation.markdown.create { name: "QA: Draft", content: "# QA: Draft\n\nComments go here.\n" }
+      space: $space.id
+      capture: doc
+      expect: "QA: Draft" is listed
+    - name: Open it
+      do: Click "QA: Draft".
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$space.id/content/collections/$doc.objectId"] }
+      expect: the editor shows the draft
+      assert: return $snapshot.planks.some((p) => p.label === 'QA: Draft')
+  steps:
+    - name: Create a comment
+      do: Select the words "Comments go here" in the editor, click Comment in the toolbar, type "First comment" and send it. The comments companion opens with the thread.
+      invoke: org.dxos.operation.review.create { subject: Obj($doc.id), range: { from: 12, to: 28 }, text: "First comment", sender: { name: "QA" } }
+      capture: thread
+      expect: the plank has one active thread with one message "First comment" from QA, anchored to the selection
+      assert: |
+        const plank = $snapshot.planks.find((p) => p.label === 'QA: Draft');
+        const t = plank?.comments?.[0];
+        return plank.comments.length === 1 && t.status === 'active' && t.messages.length === 1 &&
+          t.messages[0].text === 'First comment' && t.messages[0].sender === 'QA' && !!t.anchor &&
+          $stepErrors.length === 0;
+      note: |
+        `range` is the selection's character offsets, which the operation turns into the editor's
+        cursor anchor; a first `text` submits the thread, as the send button does. The result
+        carries `threadId` and `anchorId`.
+    - name: Reply
+      do: Type "Second comment" into the thread's reply box and send.
+      invoke: org.dxos.operation.review.addMessage { subject: Obj($doc.id), anchor: Obj("echo://$space.id/$thread.anchorId"), sender: { name: "QA" }, text: "Second comment" }
+      capture: reply
+      expect: the thread has two messages, "First comment" then "Second comment"
+      assert: |
+        const t = $snapshot.planks.find((p) => p.label === 'QA: Draft')?.comments?.[0];
+        return t?.messages.map((m) => m.text).join('|') === 'First comment|Second comment';
+    - name: Resolve
+      do: Click the thread's Resolve control.
+      invoke: org.dxos.operation.review.setResolved { thread: Obj("echo://$space.id/$thread.threadId"), resolved: true }
+      expect: the thread moves to the resolved state
+      assert: return $snapshot.planks.find((p) => p.label === 'QA: Draft')?.comments?.[0]?.status === 'resolved'
+    - name: Reopen
+      do: Click it again.
+      invoke: org.dxos.operation.review.setResolved { thread: Obj("echo://$space.id/$thread.threadId"), resolved: false }
+      expect: the thread is active again
+      assert: return $snapshot.planks.find((p) => p.label === 'QA: Draft')?.comments?.[0]?.status === 'active'
+    - name: Delete the reply
+      do: Open the second message's menu and choose Delete.
+      invoke: org.dxos.operation.review.deleteMessage { subject: Obj($doc.id), anchor: Obj("echo://$space.id/$thread.anchorId"), messageId: $reply.snapshot.planks.find((p) => p.label === 'QA: Draft').comments[0].messages[1].id }
+      expect: the thread has one message again, "First comment"; a "Comment deleted" toast may show; no error
+      assert: |
+        const t = $snapshot.planks.find((p) => p.label === 'QA: Draft')?.comments?.[0];
+        return t?.messages.length === 1 && t.messages[0].text === 'First comment' && $stepErrors.length === 0;
+      note: |
+        `addMessage` does not return the message, so its id is read from the Reply step's snapshot
+        (`$reply.snapshot`, the state after that step) — the thread's second message.
+    - name: Delete the thread
+      do: Open the thread's menu and choose Delete.
+      invoke: org.dxos.operation.review.delete { subject: Obj($doc.id), anchor: Obj("echo://$space.id/$thread.anchorId") }
+      expect: the plank has no comments and no error is logged
+      assert: |
+        const plank = $snapshot.planks.find((p) => p.label === 'QA: Draft');
+        return (plank?.comments?.length ?? 0) === 0 && $stepErrors.length === 0;
+  after:
+    - name: Remove the draft
+      do: Delete "QA: Draft" from its ⋮ menu.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($doc.id)] }
+      expect: the collection is empty
+    - name: Delete the space
+      do: Delete the space from its settings.
+      invoke: org.dxos.operation.space.delete { space: Space($space.id) }
+      expect: it leaves the space list
+    - name: Return to the default space
+      do: Pick the default space.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
+      expect: no "QA:" space remains, the workspace is the default space, no error is logged
+      assert: |
+        return !$snapshot.spaces.some((s) => s.name?.startsWith('QA:')) &&
+          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
+```
+
+```mdl
+test QA-4: The assistant edits the document
+  desc: Ask the document's assistant to translate one paragraph in place; needs an AI provider the app can reach (the assistant settings' provider, EDGE by default).
+  actors: both
+  covers: [assistant:F-1]
+  status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 4 (which passed 2026-09-07)
+  given:
+    - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
+    - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
+    - an AI provider is configured; without one the prompt step reports `blocked`, not failed
+  before:
+    - name: Create a space
+      do: Create a space "QA: Assistant $runId".
+      invoke: org.dxos.operation.space.create { name: "QA: Assistant $runId" }
+      capture: space
+      expect: the space exists and is ready
+      assert: return $snapshot.spaces.some((s) => s.id === $space.id && s.state === 'SPACE_READY')
+    - name: Switch to it
+      do: (the dialog did this)
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$space.id" }
+      expect: the navtree shows the new space
+    - name: Create the essay
+      do: Create a document "QA: Essay" with three short English paragraphs, the second about the weather.
+      invoke: org.dxos.operation.markdown.create { name: "QA: Essay", content: "# QA: Essay\n\nThe first paragraph stays in English.\n\nThe second paragraph is about the weather. It is sunny today and the sky is blue.\n\nThe third paragraph also stays in English.\n" }
+      space: $space.id
+      capture: doc
+      expect: "QA: Essay" is listed
+    - name: Open it
+      do: Click "QA: Essay".
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$space.id/content/collections/$doc.objectId"] }
+      expect: the editor shows the essay
+      assert: return $snapshot.planks.some((p) => p.label === 'QA: Essay')
+  steps:
+    - name: Open the document's assistant
+      do: Click the assistant companion on the document plank. A chat bound to the document opens beside it.
+      invoke: org.dxos.operation.assistant.ensureCompanionChat { companionTo: Obj($doc.id) }
+      space: $space.id
+      capture: chat
+      expect: a companion chat exists for the document (`persisted: false` until its first message); no error
+      assert: return !!$result && $stepErrors.length === 0
+    - name: Translate the second paragraph in place
+      id: translate
+      do: |
+        In the chat, send: "Translate the second paragraph of this document into French, in place.
+        Leave the other paragraphs unchanged." Wait for the reply; the editor updates the paragraph.
+      invoke: org.dxos.operation.assistant.runPromptInChat { companionTo: Obj($doc.id), prompt: "Translate the second paragraph of this document into French, in place. Leave the other paragraphs unchanged." }
+      space: $space.id
+      expect: the first and third paragraphs are verbatim, the second is French (mentions "soleil" or "ciel", no longer "sunny"); no error
+      assert: |
+        const text = $snapshot.planks.find((p) => p.label === 'QA: Essay')?.subject?.text ?? '';
+        return text.includes('The first paragraph stays in English.') &&
+          text.includes('The third paragraph also stays in English.') &&
+          /soleil|ciel/i.test(text) && !text.includes('sunny') && $stepErrors.length === 0;
+      note: |
+        `companionTo` names the document's own chat, which is not in the database until its first
+        message, so an id cannot name it. The reply is asynchronous: keep taking snapshots until the
+        plank's `subject.text` changes, up to two minutes, before evaluating the assert. A provider
+        error on the invoke means `blocked`, with the error text.
+  after:
+    - name: Remove the essay
+      do: Delete "QA: Essay" from its ⋮ menu.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($doc.id)] }
+      expect: the document and its companion chat (its child) are gone
+    - name: Delete the space
+      do: Delete the space from its settings.
+      invoke: org.dxos.operation.space.delete { space: Space($space.id) }
+      expect: it leaves the space list
+    - name: Return to the default space
+      do: Pick the default space.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
+      expect: no "QA:" space remains, the workspace is the default space, no error is logged
+      assert: |
+        return !$snapshot.spaces.some((s) => s.name?.startsWith('QA:')) &&
+          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
+```
+
+## Suites
+
+```mdl
+suite smoke: Boots, one space, three documents, one deletion
+  desc: The five-minute check — QA-1 alone. Tagged for every scheduled run.
+  tags: [smoke, nightly]
+  tests: [QA-1]
+```
+
+```mdl
+suite basics: The app-level journeys
+  desc: Spaces, documents, rename, undo and comments. No AI provider needed.
+  tags: [nightly]
+  tests: [QA-1, QA-2, QA-3]
+```
+
+```mdl
+suite assistant: Journeys that need an AI provider
+  desc: Runs only where the assistant settings name a reachable provider; otherwise reports blocked.
+  tags: [ai]
+  tests: [QA-4]
+```
+
+```mdl
+suite editor: The markdown plugin's own contract, run at app level
+  desc: The plugin tests already verified through the port, so the nightly run covers a plugin as well as the app.
+  tags: [nightly]
+  tests: [markdown:QA-1, markdown:QA-2]
+```

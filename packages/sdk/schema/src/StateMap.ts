@@ -10,6 +10,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
+import { shallowEqual } from '@dxos/util';
 
 /**
  * A per-object state side-map: a standalone object holding a `Record<objectId, S>` with small
@@ -50,15 +51,6 @@ export interface Accessor<S extends object> {
   /** Removes an object's entry. */
   remove(id: EntityId): void;
 }
-
-const shallowEqual = (a: Record<string, unknown>, b: Record<string, unknown>): boolean => {
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-  return keysA.every((key) => a[key] === b[key]);
-};
 
 type SliceKey = readonly [StateMap, EntityId];
 

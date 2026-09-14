@@ -15,8 +15,8 @@ import { File } from '@dxos/types';
 
 import { Sandbox, SandboxOperation } from '#types';
 
-import { SandboxHandlers } from '../skills/functions';
-import SandboxSkill from '../skills/sandbox-skill';
+import { SandboxHandlers } from '../skills/functions/index.ts';
+import SandboxSkill from '../skills/sandbox-skill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

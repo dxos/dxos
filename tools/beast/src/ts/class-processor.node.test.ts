@@ -5,7 +5,7 @@
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { ClassProcessor } from './class-processor';
+import { ClassProcessor } from './class-processor.ts';
 
 describe.skip('Code analysis', () => {
   test.skip('traverses echo-client', () => {

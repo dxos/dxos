@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-import { ClientProvider, type ClientProviderProps } from '../client';
-import { ClientStory } from './context';
+import { ClientProvider, type ClientProviderProps } from '../client/index.ts';
+import { ClientStory } from './context.tsx';
 
 type InitializeProps = {
   createIdentity?: boolean;
@@ -167,7 +167,7 @@ export const withMultiClientProvider = ({
     }, []);
 
     return (
-      <div className='absolute inset-0 grid grid-flow-col auto-cols-fr gap-4 overflow-hidden'>
+      <div className='dx-fullscreen grid grid-flow-col auto-cols-fr gap-4 overflow-hidden'>
         {clients.map((client, index) => (
           <ClientProvider
             key={index}

@@ -4,13 +4,20 @@
 
 // @import-as-namespace
 
-import { type Step as BaseStep } from 'react-joyride';
-
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import type { TourStepPlacement } from '@dxos/react-ui';
 
-/** A {@link react-joyride} Step plus an optional `before` hook fired right before the step renders. */
-export type Step = BaseStep & {
-  before?: (capabilities: CapabilityManager.CapabilityManager) => void;
+/** One stop of the welcome tour: a target on the page, what to say beside it, and a hook run before it shows. */
+export type Step = {
+  /** Defaults to the step's one-based position. */
+  id?: string;
+  /** A selector, or a function resolving the element; the tour waits for it to appear. */
+  target: string | (() => HTMLElement | null);
+  title: string;
+  description: string;
+  placement?: TourStepPlacement;
+  /** Runs before the step shows and may bring the target into being (open a sidebar); awaited. */
+  before?: (capabilities: CapabilityManager.CapabilityManager) => void | Promise<void>;
 };
 
 /** Shape of the React context exposed to consumers of the welcome tour. */

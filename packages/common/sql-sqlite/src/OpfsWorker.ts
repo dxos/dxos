@@ -27,7 +27,7 @@ import {
   type SqliteSynchronous,
   applyOpfsPragmas,
   checkpointWal,
-} from './internal/opfs-pragmas';
+} from './internal/opfs-pragmas.ts';
 
 /** @internal */
 type OpfsWorkerMessage =

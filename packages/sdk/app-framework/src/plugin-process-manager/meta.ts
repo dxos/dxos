@@ -4,7 +4,7 @@
 
 import { DXN } from '@dxos/keys';
 
-import { Plugin } from '../core';
+import { Plugin } from '../core/index.ts';
 
 export const meta = Plugin.makeMeta({
   key: DXN.make('org.dxos.plugin.processManager'),

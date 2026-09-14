@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction } from '@dxos/ui-types';
 
-import { mainPaddingTransitions } from './constants';
+import { mainPaddingTransitions } from './constants.ts';
 
 const padding = 'dx-main-content-padding';
 
@@ -31,8 +31,12 @@ const sidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
 
 const overlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
 
+const swipeArea: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+  mx('dx-drawer__swipe-area', 'dx-main-swipe-area', ...etc);
+
 export const mainTheme = {
   content,
   sidebar,
   overlay,
+  swipeArea,
 };

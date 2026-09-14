@@ -12,7 +12,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSession } from './util';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSession } from './util.ts';
 
 /**
  * `dx registry verify` — publishes a `org.dxos.experimental.publisher.verification`

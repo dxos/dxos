@@ -51,7 +51,7 @@ export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }:
         <iframe
           src={url}
           title={name ?? 'Attachment'}
-          className={mx('w-full h-full min-h-96 border-0', classNames)}
+          className={mx('dx-fill min-h-96 border-0', classNames)}
           // No `allow-scripts`: a PDF never needs it, and withholding it means a malicious document
           // cannot reach the embedding app.
           sandbox=''
@@ -76,7 +76,7 @@ export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }:
         <iframe
           src={url}
           title={name ?? 'Attachment'}
-          className={mx('w-full h-full min-h-96 border-0 bg-baseSurface', classNames)}
+          className={mx('dx-fill min-h-96 border-0 bg-baseSurface', classNames)}
           sandbox=''
           data-testid='attachment.text'
         />

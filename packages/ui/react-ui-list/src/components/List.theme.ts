@@ -10,33 +10,16 @@ import { tv } from '@dxos/ui-theme';
  * Each slot function accepts an optional `{ class: ... }` override for per-instance merging.
  *
  * Structural pattern shared across list components:
- * - viewport: ScrollArea wrapper (`dx-container`)
+ * - viewport: ScrollArea wrapper (`dx-expand`)
  * - content:  flex-col item container
  * - item:     base row (interactive affordances come from dx-hover / dx-selected / dx-current)
  */
 const listStyles = tv({
   slots: {
     //
-    // Accordion
-    //
-    accordionItem: 'overflow-hidden',
-    // Row trigger: spans the full width and pins the trailing caret to the inline-end edge.
-    accordionTrigger:
-      'group flex items-start justify-between gap-trim-sm p-trim-sm dx-focus-ring-inset w-full text-start',
-    // Leading / trailing icon wrappers: fixed height so they sit on the centerline of the first
-    // content line even when the header spans multiple lines.
-    accordionTriggerIcon: 'flex items-center h-(--dx-control-sm) shrink-0',
-    accordionTriggerContent: 'min-w-0 flex-1',
-    // Interactive controls that sit beside the trigger; matches its vertical padding.
-    accordionTrailing: 'flex items-center h-(--dx-control-sm) shrink-0 my-trim-sm me-trim-sm',
-    // Slide animations are driven by Radix Accordion's data-state attribute.
-    accordionBody: 'overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down',
-    accordionBodyContent: 'p-trim-sm',
-
-    //
     // Listbox
     //
-    listboxViewport: 'dx-container',
+    listboxViewport: 'dx-expand',
     listboxContent: 'flex flex-col',
     // `dx-selected` pairs with `aria-selected="true"` set per-option (see
     // `ui-theme/src/css/components/state.md`). `outline-none` removes the native focus
@@ -49,7 +32,7 @@ const listStyles = tv({
     //
     // OrderedList
     //
-    orderedListViewport: 'dx-container',
+    orderedListViewport: 'dx-expand',
     orderedListContent: 'flex flex-col',
     // `dx-current` enables `aria-current` row styling (not listbox/option semantics).
     orderedListItem: 'relative dx-current',
@@ -73,7 +56,7 @@ const listStyles = tv({
     //
     // `m-form-chrome mb-0` mirrors the rest of the form-chrome padding convention.
     comboboxInput: 'm-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]',
-    comboboxList: 'py-form-chrome',
+    comboboxList: 'p-form-chrome',
     // Trigger value / placeholder text — grows and truncates; subdued when placeholder.
     comboboxTriggerText: 'font-normal text-start flex-1 min-w-0 truncate me-trim-sm',
     // Item row adds flex layout; `dx-hover`/`dx-selected` and padding come from `Picker.Item`.

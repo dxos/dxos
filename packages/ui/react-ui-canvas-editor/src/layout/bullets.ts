@@ -7,8 +7,8 @@ import { type Selection, easeLinear, interpolate, select } from 'd3';
 import * as GraphEdge from '@dxos/graph/GraphEdge';
 import { isTruthy } from '@dxos/util';
 
-import { DATA_SHAPE_ID, getShapeElements } from '../components';
-import type { CanvasGraphModel } from '../types';
+import { DATA_SHAPE_ID, getShapeElements } from '../components/index.ts';
+import type { CanvasGraphModel } from '../types/index.ts';
 
 /**
  * Retrieve paths and edges.

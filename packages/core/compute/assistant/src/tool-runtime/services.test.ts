@@ -21,7 +21,7 @@ import {
   isHandlerLike,
   makeToolResolverFromOperations,
   projectFunctionToTool,
-} from './services';
+} from './services.ts';
 
 describe('createStructFieldsFromSchema', () => {
   const SPACE = SpaceId.random();

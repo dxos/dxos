@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { BitField } from './bitfield';
+import { BitField } from './bitfield.ts';
 
 describe('bitfield', () => {
   test('set/get', () => {

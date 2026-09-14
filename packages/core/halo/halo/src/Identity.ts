@@ -13,10 +13,10 @@ import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { IdentityDid, SpaceId } from '@dxos/keys';
-import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type IdentityError } from './errors';
-import * as Invitation from './Invitation';
+import { type IdentityError } from './errors.ts';
+import * as Invitation from './Invitation.ts';
 
 /**
  * Device kind (platform / host class). Replaces the legacy protobuf `DeviceType` enum;

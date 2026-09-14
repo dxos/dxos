@@ -13,6 +13,7 @@ import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
+import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
 import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
@@ -34,6 +35,7 @@ import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
 import * as HeyGenPlugin from '@dxos/plugin-heygen/HeyGenPlugin';
+import * as HiggsfieldPlugin from '@dxos/plugin-higgsfield/HiggsfieldPlugin';
 import * as IbkrPlugin from '@dxos/plugin-ibkr/IbkrPlugin';
 import * as IdeogramPlugin from '@dxos/plugin-ideogram/IdeogramPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
@@ -85,9 +87,9 @@ import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
 import * as ZenPlugin from '@dxos/plugin-zen/ZenPlugin';
 import { isTruthy } from '@dxos/util';
 
-import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 
-export type { PluginConfig, State } from './plugin-defs.core';
+export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local).
@@ -109,15 +111,14 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     JmapPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
+    ProjectsPlugin.meta.profile.key,
+    TasksPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
-    // Connector-only, so defaulting it on adds no surface — it just puts DeepSeek in the
-    // Connections service list for anyone who has a key.
-    DeepSeekPlugin.meta.profile.key,
 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
@@ -137,10 +138,12 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       DebugPlugin.meta.profile.key,
+      DeepSeekPlugin.meta.profile.key,
       DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       HeyGenPlugin.meta.profile.key,
+      HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
@@ -157,7 +160,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
-      TasksPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
@@ -182,11 +184,11 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     AssistantPlugin.make(),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
-    BrainPlugin.make(),
     CallsPlugin.make(),
     ChessPlugin.make(),
     ChessComPlugin.make(),
     ClaudePlugin.make(),
+    CloudflarePlugin.make(),
     CodePlugin.make(),
     CommercePlugin.make(),
     // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
@@ -200,19 +202,14 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     DevtoolsPlugin.make(),
     DiscordPlugin.make(),
     DoctorPlugin.make(),
-    DuffelPlugin.make(),
     ExcalidrawPlugin.make(),
     ExplorerPlugin.make(),
     GamePlugin.make(),
     GooglePlugin.make(),
-    HeyGenPlugin.make(),
-    IbkrPlugin.make(),
-    IdeogramPlugin.make(),
     IllustratorPlugin.make(),
     InboxPlugin.make(),
     JmapPlugin.make(),
     KanbanPlugin.make(),
-    LaMetricPlugin.make(),
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
@@ -223,7 +220,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
     // plugin-native's host integration.
     isTauri && !isMobile && !isPopover && FileSystemPlugin.make(),
-    OsrmPlugin.make(),
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
@@ -236,8 +232,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     StackPlugin.make(),
-    StreamDeckPlugin.make(),
-    StudioPlugin.make(),
     TablePlugin.make(),
     TasksPlugin.make(),
     ThreadPlugin.make(),
@@ -258,16 +252,26 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
 const experimental: Plugin.Plugin[] = [
   BloggerPlugin.make(),
   BlueskyPlugin.make(),
+  BrainPlugin.make(),
+  DuffelPlugin.make(),
   FilePlugin.make(),
   FreeqPlugin.make(),
   GitHubPlugin.make(),
+  HeyGenPlugin.make(),
+  HiggsfieldPlugin.make(),
+  IbkrPlugin.make(),
+  IdeogramPlugin.make(),
   IrohBeaconPlugin.make(),
+  LaMetricPlugin.make(),
   LinearPlugin.make(),
   LingoPlugin.make(),
+  OsrmPlugin.make(),
   S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
   SpacetimePlugin.make(),
+  StreamDeckPlugin.make(),
+  StudioPlugin.make(),
   TerraPlugin.make(),
   TrelloPlugin.make(),
   TripPlugin.make(),

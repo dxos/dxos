@@ -11,11 +11,11 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 export const Connector = Capability.lazyModule(
   'Connector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
 
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });

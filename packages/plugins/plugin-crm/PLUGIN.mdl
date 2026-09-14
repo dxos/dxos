@@ -30,12 +30,12 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `skill` | `org.dxos.mdl.skill@1.0`   |
 | `op@1.1`    | `org.dxos.mdl.op@1.1`      |
-| `flow`      | `org.dxos.mdl.flow@1.0`    |
+| `test`      | `org.dxos.mdl.test@1.0`    |
 
 ## Types
 
@@ -399,7 +399,7 @@ feat F-9: CRM Navigation Section
 ## Acceptance
 
 ```mdl
-test T-1: ProcessMailbox — gated extraction over the fixture mailbox
+scenario T-1: ProcessMailbox — gated extraction over the fixture mailbox
   given: a Mailbox whose feed carries the three email fixtures with distinct timestamps, and
          Organizations seeded for the two corporate .example domains
   when: ProcessMailbox({ mailbox }) is invoked
@@ -411,7 +411,7 @@ test T-1: ProcessMailbox — gated extraction over the fixture mailbox
 ```
 
 ```mdl
-test T-2: ProcessMailbox — idempotent and incremental
+scenario T-2: ProcessMailbox — idempotent and incremental
   given: the state after T-1
   when: ProcessMailbox is re-invoked, then two new messages (one repeat sender, one new sender at a
         known Organization) are appended and it is invoked again
@@ -421,7 +421,7 @@ test T-2: ProcessMailbox — idempotent and incremental
 ```
 
 ```mdl
-test T-3: ProcessMailbox — research chain
+scenario T-3: ProcessMailbox — research chain
   given: the fixture mailbox from T-1
   when: ProcessMailbox({ mailbox, research: true }) is invoked twice
   then:
@@ -430,7 +430,7 @@ test T-3: ProcessMailbox — research chain
 ```
 
 ```mdl
-test T-4: Full-loop playground — corporate short signature (tuning)
+scenario T-4: Full-loop playground — corporate short signature (tuning)
   given: a space with the corporate-short email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
   when: the CRM skill is invoked with the Message ref
   then:
@@ -443,7 +443,7 @@ test T-4: Full-loop playground — corporate short signature (tuning)
 ```
 
 ```mdl
-test T-5: Full-loop playground — free-mail personal contact
+scenario T-5: Full-loop playground — free-mail personal contact
   given: a space with the freemail-personal email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
   when: the CRM skill is invoked with the Message ref
   then:
@@ -454,7 +454,7 @@ test T-5: Full-loop playground — free-mail personal contact
 ```
 
 ```mdl
-test T-6: Full-loop playground — corporate rich signature
+scenario T-6: Full-loop playground — corporate rich signature
   given: a space with the corporate-rich-signature email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
   when: the CRM skill is invoked with the Message ref
   then:
@@ -466,7 +466,7 @@ test T-6: Full-loop playground — corporate rich signature
 ```
 
 ```mdl
-test T-7: attachImage — success path
+scenario T-7: attachImage — success path
   given: imageServiceUrl is configured; the mock image service returns { url: "https://images.dxos.org/abc" };
          a Person exists with no image
   when: attachImage({ subject: personRef, url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon" }) is called
@@ -477,7 +477,7 @@ test T-7: attachImage — success path
 ```
 
 ```mdl
-test T-8: attachImage — config missing
+scenario T-8: attachImage — config missing
   given: imageServiceUrl is not configured in @dxos/config
   when: attachImage({ subject: personRef, url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon" }) is called
   then:
@@ -487,7 +487,7 @@ test T-8: attachImage — config missing
 ```
 
 ```mdl
-test T-9: Graduation — assistant-e2e suite
+scenario T-9: Graduation — assistant-e2e suite
   given: stable memoized fixtures in packages/core/assistant-e2e/src/testing/crm/fixtures/
   when: CI runs the assistant-e2e test suite
   then:
@@ -571,8 +571,8 @@ Three layers:
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-crm is a library-layer plugin with no UI surfaces (see the document intro) — every step is
 driven through the skill's operations, so a "human" run means a person asking the assistant to do
@@ -580,7 +580,7 @@ these things in chat, not a navtree gesture. `actors: agent` below reflects that
 real `invoke`.
 
 ```mdl
-flow QA-1: Research a Person end to end
+test QA-1: Research a Person end to end
   desc: The core CRM round-trip — create a Person, scaffold and link its Profile, read it back.
   actors: agent
   covers: [F-1.4, F-4.1, F-5.1, F-5.2, T-4]
@@ -588,8 +588,8 @@ flow QA-1: Research a Person end to end
   given:
     - an identity exists
     - space: a space is open
-    - no Person named "QA Contact" exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no Person named "QA Contact" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Create the Person
       do: Ask the assistant to add a new contact named "QA Contact" with email "qa.contact@example.com".
       invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Contact", emails: ["qa.contact@example.com"] } }
@@ -621,7 +621,7 @@ flow QA-1: Research a Person end to end
 ```
 
 ```mdl
-flow QA-2: Attach an image to a Person
+test QA-2: Attach an image to a Person
   desc: The image-attachment path — a candidate URL is downloaded, re-hosted, and written to `image`.
   actors: agent
   covers: [F-6.1, F-6.2, T-7]
@@ -629,11 +629,11 @@ flow QA-2: Attach an image to a Person
   given:
     - an identity exists
     - space: a space is open
-    - imageServiceUrl is configured for the runtime — otherwise this flow's test step returns
+    - imageServiceUrl is configured for the runtime — otherwise this test's test step returns
       ConfigMissing and should be re-run once configured, not treated as a defect
-    - no Person named "QA Avatar Contact" exists — ABORT rather than reusing one this flow did not
+    - no Person named "QA Avatar Contact" exists — ABORT rather than reusing one this test did not
       create
-  test:
+  steps:
     - name: Create the Person
       do: Ask the assistant to add a new contact named "QA Avatar Contact".
       invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Avatar Contact" } }

@@ -17,8 +17,8 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { TRELLO_API_BASE } from '../constants';
-import { InvalidTrelloAccessTokenError } from '../errors';
+import { TRELLO_API_BASE } from '../constants.ts';
+import { InvalidTrelloAccessTokenError } from '../errors.ts';
 
 /**
  * Trello API credentials. The `key` is the user's API key; `token` is the

@@ -15,8 +15,8 @@ import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type MakeOptional, type Specialize } from '@dxos/util';
 
-import * as GraphEdge from './GraphEdge';
-import * as GraphNode from './GraphNode';
+import * as GraphEdge from './GraphEdge.ts';
+import * as GraphNode from './GraphNode.ts';
 
 /**
  * Serialized graph; the shape persisted by ECHO types and returned by the model's snapshot.
@@ -36,8 +36,13 @@ export type Data<Node extends GraphNode.Any, Edge extends GraphEdge.Any> = Speci
 
 /**
  * Optional function to wrap mutations (e.g., for ECHO objects that require Obj.update).
+ *
+ * It receives the callback and must invoke it with the WRITABLE mirror. For an ECHO-backed graph,
+ * writability travels with the reference — the mirror captured when the model was constructed is
+ * read-only — so the provider maps the object its transaction hands over to the mirror within it:
+ * `(fn) => Obj.update(root, (root) => fn(root.graph))`.
  */
-export type GraphChangeFunction = (fn: () => void) => void;
+export type GraphChangeFunction<Mirror = any> = (fn: (mirror: Mirror) => void) => void;
 
 /**
  * Node slot in the working graph. `value` is none for a placeholder — a node an edge references
@@ -1063,12 +1068,13 @@ export abstract class AbstractGraphModel<
   }
 
   #mirrorMutate(fn: (mirror: Partial<Data<Node, Edge>>) => void): void {
-    const mirror = this.#mirror;
-    if (!mirror || !this.#change) {
+    if (!this.#mirror || !this.#change) {
       return;
     }
 
-    this.#change(() => fn(mirror));
+    // The mirror comes from the change, never from `#mirror`: that reference was captured at
+    // construction and is read-only, so writing through it throws.
+    this.#change((mirror) => fn(mirror));
   }
 }
 

@@ -14,11 +14,11 @@ import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
 import { trim } from '@dxos/util';
 
-import { DISCORD_SOURCE } from '../constants';
-import { StoreError } from '../errors';
-import { MessageStore } from '../stores';
-import { type DetectOptions, type TopicSegment, detectTopics, salientTokens } from '../topics/detect-topics';
-import { Topic } from '../types';
+import { DISCORD_SOURCE } from '../constants.ts';
+import { StoreError } from '../errors.ts';
+import { MessageStore } from '../stores/index.ts';
+import { type DetectOptions, type TopicSegment, detectTopics, salientTokens } from '../topics/detect-topics.ts';
+import { Topic } from '../types/index.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 

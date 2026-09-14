@@ -10,7 +10,7 @@ import { Panel } from '@dxos/react-ui';
 
 import { PresentationShell, RevealPlayer } from '#components';
 
-import { useExitPresenter } from '../../useExitPresenter';
+import { useExitPresenter } from '../../useExitPresenter.ts';
 
 export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Document>;
 

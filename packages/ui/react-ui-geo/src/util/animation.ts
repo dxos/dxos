@@ -5,7 +5,7 @@
 import { type GeoProjection, geoDistance } from 'd3';
 import versor from 'versor';
 
-import { type Vector } from '../hooks/context';
+import { type Vector } from '../hooks/context.ts';
 
 /**
  * Duration scaled by great-circle distance between two geo positions.

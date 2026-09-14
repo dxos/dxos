@@ -9,9 +9,9 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { extendedMarkdown } from './extended-markdown';
-import { type XmlWidgetRegistry } from './xml-tags';
-import { nodeToJson } from './xml-util';
+import { extendedMarkdown } from './extended-markdown.ts';
+import { type XmlWidgetRegistry } from './xml-tags.ts';
+import { nodeToJson } from './xml-util.ts';
 
 const testRegistry = {
   prompt: { block: true },

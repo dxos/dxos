@@ -9,11 +9,10 @@
 // The two contexts (Input / Item) are split so items don't re-render on
 // every keystroke and the input doesn't re-render on every (un)register.
 
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
-  type ElementType,
   type KeyboardEvent,
   type PropsWithChildren,
   type MouseEvent as ReactMouseEvent,
@@ -29,7 +28,7 @@ import React, {
 import {
   type Density,
   type Elevation,
-  Input,
+  Field,
   type ThemedClassName,
   composableProps,
   slottable,
@@ -37,13 +36,13 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { listTheme } from '../List.theme';
+import { listTheme } from '../List.theme.ts';
 import {
   PickerInputContextProvider,
   PickerItemContextProvider,
   usePickerInputContext,
   usePickerItemContext,
-} from './context';
+} from './context.ts';
 
 const styles = listTheme.styles();
 
@@ -277,8 +276,8 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
     // Only force-control when `value` is provided; otherwise leave the
     // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           {...props}
           autoFocus={autoFocus && !hasIosKeyboard}
           {...(value !== undefined && { value })}
@@ -286,7 +285,7 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
           onKeyDown={handleKeyDown}
           ref={forwardedRef}
         />
-      </Input.Root>
+      </Field.Root>
     );
   },
 );
@@ -343,10 +342,9 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
       event.preventDefault();
     }, []);
 
-    const Comp: ElementType = asChild ? Slot : 'div';
-
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...composableProps<HTMLDivElement>(props, {
           classNames: styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed') }),
           role: 'option',
@@ -370,7 +368,7 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
         onClick={handleClick}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { IBKR_CONNECTOR_ID, IBKR_SOURCE } from '../constants';
-import { createIbkrConnectorEntry } from './connector';
+import { IBKR_CONNECTOR_ID, IBKR_SOURCE } from '../constants.ts';
+import { createIbkrConnectorEntry } from './connector.ts';
 
 describe('IBKR connector', () => {
   test('onSubmit maps token→AccessToken.token and queryId→AccessToken.account', ({ expect }) =>

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { groupThreads, promptFor, threadSubject } from './summarize-mailbox';
+import { groupThreads, promptFor, threadSubject } from './summarize-mailbox.ts';
 
 const makeMessage = ({
   minutes,

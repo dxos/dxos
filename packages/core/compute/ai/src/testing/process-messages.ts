@@ -15,11 +15,11 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import * as AiParser from '../AiParser';
-import * as AiPreprocessor from '../AiPreprocessor';
-import type { PromptPreprocessingError } from '../errors';
-import { callTools, getToolCalls } from '../tools';
-import { TestingToolkit, testingLayer } from './toolkit';
+import * as AiParser from '../AiParser.ts';
+import * as AiPreprocessor from '../AiPreprocessor.ts';
+import type { PromptPreprocessingError } from '../errors.ts';
+import { callTools, getToolCalls } from '../tools/index.ts';
+import { TestingToolkit, testingLayer } from './toolkit.ts';
 
 // TODO(dmaretskyi): What is the right stopping condition?
 export const hasToolCall = Effect.fn(function* (chat: Chat.Service) {

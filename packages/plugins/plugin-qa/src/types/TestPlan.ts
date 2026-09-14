@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as TestCase from './TestCase';
+import * as TestCase from './TestCase.ts';
 
 /** Root object and the surface the UI opens: the ordered cases, plus the feed of executions. */
 export class TestPlan extends Type.makeObject<TestPlan>(DXN.make('org.dxos.type.qa.testPlan', '0.1.0'))(

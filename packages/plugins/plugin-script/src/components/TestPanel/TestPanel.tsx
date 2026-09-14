@@ -5,7 +5,7 @@
 import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Grid, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Avatar, Field, Grid, Icon, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -115,8 +115,8 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
         <MessageThread ref={scrollerRef} state={state} history={history} />
         {/* TODO(burdon): Replace with Form based on the function's input schema. */}
         <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               ref={inputRef}
               autoFocus
               placeholder={t('function-request.placeholder')}
@@ -124,7 +124,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
               onChange={(ev) => setInput(ev.target.value)}
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
             />
-          </Input.Root>
+          </Field.Root>
           <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
           <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
         </Toolbar.Root>

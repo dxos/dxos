@@ -34,7 +34,7 @@ export {
   getTypeIdentifierAnnotation,
   setDescriptionWithSchema,
   setLabelWithSchema,
-} from './internal/Annotation';
+} from './internal/Annotation/index.ts';
 
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -43,9 +43,9 @@ import * as Types from 'effect/Types';
 
 import { SchemaAST } from '@dxos/effect';
 
-import * as Entity from './Entity';
-import * as internalAnnotations from './internal/Annotation';
-import * as annotationAtoms from './internal/Annotation/atoms';
+import * as Entity from './Entity.ts';
+import * as annotationAtoms from './internal/Annotation/atoms.ts';
+import * as internalAnnotations from './internal/Annotation/index.ts';
 
 export const TypeId = '~@dxos/echo/Annotation' as const;
 export type TypeId = typeof TypeId;

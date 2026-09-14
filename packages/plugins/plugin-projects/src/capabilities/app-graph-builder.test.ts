@@ -23,7 +23,7 @@ import {
   createProjectActionExtension,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
-} from './app-graph-builder';
+} from './app-graph-builder.ts';
 
 describe('project app graph builder', () => {
   test('contributes create-chat to a project node, for the navtree row', async ({ expect }) => {

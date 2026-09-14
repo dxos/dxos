@@ -10,7 +10,7 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { getHashHue } from '@dxos/ui-theme';
 
-import { ResearchInputQueue } from '../testing/schema';
+import { ResearchInputQueue } from '../testing/schema.ts';
 
 export const ResearchInputModule = () => {
   const space = useActiveSpace();

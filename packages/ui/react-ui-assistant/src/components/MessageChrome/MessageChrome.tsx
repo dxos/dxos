@@ -2,17 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
-import { formatTime } from './format-time';
+import { translationKey } from '../../translations.ts';
+import { formatTime } from './format-time.ts';
 
 //
 // Context

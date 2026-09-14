@@ -12,7 +12,7 @@ import { objectStructureToJson } from '@dxos/echo/internal';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { log } from '@dxos/log';
 
-import { type AutomergeHost } from '../automerge';
+import { type AutomergeHost } from '../automerge/index.ts';
 
 const HEADS_DELIMITER = '|';
 

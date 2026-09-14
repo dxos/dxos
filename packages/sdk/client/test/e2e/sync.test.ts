@@ -12,7 +12,7 @@ import type { SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 // pnpm vitest run --tagsFilter=sync-e2e sync.test.ts
 describe('sync', { timeout: 120_000, retry: 0, tags: ['sync-e2e'] }, async () => {

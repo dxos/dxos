@@ -53,15 +53,15 @@ import {
   CollectionSynchronizer,
   diffCollectionStateForPeer,
   subsetRemoteToLocal,
-} from './collection-synchronizer';
-import { type DocumentLease, DocumentLeaseRegistry } from './document-lease';
-import { type EchoDataMonitor } from './echo-data-monitor';
-import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
-import { type HandleQueryState, getHandleState } from './handle-state';
-import { tryGetSpaceIdFromCollectionId } from './space-collection';
-import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter';
+} from './collection-synchronizer.ts';
+import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
+import { type EchoDataMonitor } from './echo-data-monitor.ts';
+import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
+import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
+import { type HandleQueryState, getHandleState } from './handle-state.ts';
+import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
+import { SqliteHeadsStore } from './sqlite-heads-store.ts';
+import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -570,6 +570,25 @@ export class AutomergeHost extends Resource {
   async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.removeReplicator(replicator);
+  }
+
+  /**
+   * automerge-repo's `findWithProgress` does not re-issue a parked DocumentQuery; repo-wide,
+   * `shareConfigChanged` clears `all-failed` entries and the heal backoff, then re-syncs.
+   */
+  kickStalledSync(): void {
+    this._repo.shareConfigChanged();
+  }
+
+  /**
+   * Re-drives one document's Subduction sync round, re-arming its heal loop.
+   *
+   * {@link kickStalledSync} only revives `all-failed`/`no-peers` entries, so it cannot move a
+   * sedimentree Subduction already considers settled — which is the state a document sits in when
+   * its heads stay behind the sync server with no round in flight.
+   */
+  resyncDocument(documentId: DocumentId): void {
+    this._repo.resyncSubduction(documentId);
   }
 
   /**

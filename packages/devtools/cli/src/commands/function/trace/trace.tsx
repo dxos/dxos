@@ -20,10 +20,10 @@ import { Database, Feed, Filter, type Key } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { App, render } from '../../../components';
-import { theme } from '../../../theme';
-import { createLogBuffer, triggerRuntimeLayer } from '../../../util';
-import { Trace } from './components/Trace';
+import { App, render } from '../../../components/index.ts';
+import { theme } from '../../../theme.ts';
+import { createLogBuffer, triggerRuntimeLayer } from '../../../util/index.ts';
+import { Trace } from './components/Trace.tsx';
 
 // Defines the custom `trace` command for edge functions.
 export const trace = Command.make(

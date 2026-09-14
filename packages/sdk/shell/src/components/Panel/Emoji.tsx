@@ -34,5 +34,5 @@ export const Emoji = ({ text, className }: { text?: string; className?: string }
  */
 export const Centered = (props: PropsWithChildren) => {
   const { children } = props;
-  return <div className='absolute inset-0 flex items-center justify-center'>{children}</div>;
+  return <div className='dx-fullscreen flex items-center justify-center'>{children}</div>;
 };

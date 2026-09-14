@@ -11,9 +11,9 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 
-import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 
-export type { PluginConfig, State } from './plugin-defs.core';
+export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
  * Curated set `composer.space` (and every iOS build) ships. Selection is build-time — swapping this
@@ -21,7 +21,7 @@ export type { PluginConfig, State } from './plugin-defs.core';
  * enters the bundle.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
-  ...getCorePlugins({ ...config, isExtensible: false }),
+  ...getCorePlugins({ ...config, externalPlugins: false }),
   // `Agent` and `Sequence` are unfinished, so the curated set does not offer creating them.
   AssistantPlugin.make({ experimentalTypes: false }),
   MarkdownPlugin.make(),
@@ -32,7 +32,4 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   TranscriptionPlugin.make(),
 ];
 
-/**
- * Derived from {@link getPlugins} rather than listed again: with no registry, bundled == enabled.
- */
 export const getDefaults = (config: PluginConfig): string[] => getPlugins(config).map(({ meta }) => meta.profile.key);

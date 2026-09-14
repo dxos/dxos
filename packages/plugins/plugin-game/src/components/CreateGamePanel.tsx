@@ -82,7 +82,7 @@ export const CreateGamePanel = ({ target, onCreateObject, variants: variantsProp
           Column.Center to align with the dialog title rather than nesting another Column.Root. */}
       <Column.Center>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
           <Form.Submit />
         </Form.Content>
       </Column.Center>

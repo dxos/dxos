@@ -5,9 +5,10 @@
 import type * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 
+import type * as Chat from '@dxos/assistant/Chat';
 import { type ProcessManager } from '@dxos/compute-runtime';
 import type * as Process from '@dxos/compute/Process';
-import { type Database, type Feed } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 
 /**
  * A unit of work the supervisor delegates to a linked child process. `spawn` is an existential over
@@ -43,11 +44,11 @@ export type StrategyServices = Database.Service;
 export interface DelegationStrategy {
   /**
    * Called after each agent turn. Returns delegations for outstanding work not already in flight.
-   * @param feed - The conversation feed (identifies which agent/plan to reconcile).
+   * @param chat - The conversation the agent runs on (identifies which checklist to reconcile).
    * @param activeIds - Ids of delegations already running, so reconcile does not double-spawn.
    */
   readonly reconcile: (
-    feed: Feed.Feed,
+    chat: Chat.Chat,
     activeIds: ReadonlySet<string>,
   ) => Effect.Effect<readonly Delegation[], never, StrategyServices>;
 
@@ -56,7 +57,7 @@ export interface DelegationStrategy {
    * update the plan task status and append a message to the conversation feed).
    */
   readonly onComplete: (
-    feed: Feed.Feed,
+    chat: Chat.Chat,
     id: string,
     exit: Exit.Exit<unknown>,
   ) => Effect.Effect<void, never, StrategyServices>;

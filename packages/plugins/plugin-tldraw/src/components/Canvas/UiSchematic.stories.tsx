@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { applyCommands } from '#model';
 import { Tldraw } from '#types';
 
-import { CanvasComponent } from './Canvas';
+import { CanvasComponent } from './Canvas.tsx';
 
 // MOSAIC (Model-Oriented System for Adaptive Interface Composition) phase-1 spike: a schema
 // compiles to a low-fidelity form schematic — ASCII on the left, the same drawing on the canvas.
@@ -49,7 +49,7 @@ const DefaultStory = () => {
   });
 
   return (
-    <div className='grid grid-cols-[20rem_1fr] w-full h-full'>
+    <div className='grid grid-cols-[20rem_1fr] dx-fill'>
       <pre className='overflow-auto p-4 text-xs border-ie border-separator'>{ascii}</pre>
       <Panel.Root>
         <Panel.Content asChild>

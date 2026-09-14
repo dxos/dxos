@@ -7,24 +7,62 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Chat from '@dxos/assistant/Chat';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
-import { Database } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { AssistantCapabilities, AssistantOperation } from '#types';
+import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
-import { defaultPreset } from '../processor';
+import { ChatNotSpecifiedError } from '../errors.ts';
+import { defaultPreset, providerForModel } from '../processor/index.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ chat, prompt }) {
-        const feed = yield* Database.load(chat.feed);
+      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt }) {
+        // Activation first: the state and session providers this reads come from lazy modules that
+        // otherwise activate only once the assistant UI has been opened, so a caller arriving through
+        // an operation alone (an agent) would find them missing.
+        const pluginManager = yield* Effect.serviceOption(Plugin.Service);
+        yield* Option.match(pluginManager, {
+          onNone: () => Effect.void,
+          onSome: (manager) => manager.activate(AssistantEvents.Start),
+        });
+        const companion =
+          chatProp === undefined && companionTo !== undefined
+            ? yield* Operation.invoke(AssistantOperation.EnsureCompanionChat, { companionTo })
+            : undefined;
+        const chat = chatProp ?? companion?.chat;
+        if (chat === undefined) {
+          return yield* Effect.fail(new ChatNotSpecifiedError());
+        }
+        // As the companion's own submit does: a transient chat is persisted under its subject before
+        // the first request, so the agent process can resolve a durable conversation feed and space.
+        const db = companionTo !== undefined ? Obj.getDatabase(companionTo) : undefined;
+        if (companionTo !== undefined && db && !Obj.getDatabase(chat)) {
+          Chat.linkCompanion({ chat, subject: companionTo });
+          yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
+          yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo, chat });
+          yield* Effect.promise(() => db.flush());
+        }
         const preset = yield* chatPreset;
-        const session = yield* getSession(feed, {
-          model: preset?.model,
-          provider: preset?.provider,
-          instructions: chat.instructions,
+        // As the chat's own UI does before its first request: the process reads the model off the
+        // chat, so a chat without one is stamped with the model its picker would show.
+        if (!chat.model && preset) {
+          Obj.update(chat, (chat) => {
+            chat.model = Ref.fromURI(preset.model);
+          });
+        }
+        // The model is the chat's, so the provider has to be the one that serves THAT model rather
+        // than whichever the settings now name — a chat outlives a provider change.
+        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? preset?.model;
+        const session = yield* getSession(chat, {
+          provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
+          location: chat.remote ? 'edge' : 'local',
         });
         yield* session.submitPrompt(prompt);
       }),

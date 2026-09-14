@@ -12,9 +12,9 @@ import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { SystemServiceImpl } from './system-service';
+import { SystemServiceImpl } from './system-service.ts';
 
 describe('SystemService', () => {
   let systemService: SystemServiceImpl;

@@ -9,11 +9,11 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { FileSystemCapabilities } from '#types';
 
-import { readComposerConfig, writeComposerConfig } from '../../util';
+import { readComposerConfig, writeComposerConfig } from '../../util.ts';
 
 const FILE_SYSTEM_MIRROR_TAG = 'org.dxos.space.fileSystemMirror';
 

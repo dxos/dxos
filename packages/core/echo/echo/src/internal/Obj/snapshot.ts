@@ -19,9 +19,9 @@ import {
   SnapshotKindId,
   TypeEntityId,
   TypeId,
-} from '../common/types';
-import { SCALAR_META_FIELDS } from '../common/types/meta';
-import { MetaId } from '../common/types/model-symbols';
+} from '../common/types/index.ts';
+import { SCALAR_META_FIELDS } from '../common/types/meta.ts';
+import { MetaId } from '../common/types/model-symbols.ts';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.

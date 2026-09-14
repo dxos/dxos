@@ -13,9 +13,9 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../hooks';
-import { listTheme } from '../List.theme';
-import { type ListItemRecord, OrderedListProvider, useOrderedListContext } from './OrderedListContext';
+import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../hooks/index.ts';
+import { listTheme } from '../List.theme.ts';
+import { type ListItemRecord, OrderedListProvider, useOrderedListContext } from './OrderedListContext.ts';
 
 const styles = listTheme.styles();
 
@@ -36,6 +36,12 @@ export type OrderedListRootProps<T extends ListItemRecord> = ThemedClassName<{
    */
   getId?: (item: T) => string;
   onMove?: (fromIndex: number, toIndex: number) => void;
+  /**
+   * The native drag preview: `'clone'` snapshots the row itself, a renderer draws something else
+   * for the item. Without either the browser snapshots the row in place, which in a scrolling
+   * column can take the preceding siblings along.
+   */
+  dragPreview?: 'clone' | ((item: T) => ReactNode);
   readonly?: boolean;
   /**
    * Keyboard grammar. `list` (default) leaves the rows themselves unfocusable, so arrows move among
@@ -59,7 +65,7 @@ const noopMove = () => {};
  *
  * - `useReorderList` — drag-and-drop reorder via pragmatic-dnd.
  * - `useListDisclosure` (single mode) — single-expand state machine.
- * - `useListNavigation` (list mode) — Tabster keyboard nav across items.
+ * - `useListNavigation` (list mode) — roving-tabindex keyboard nav across items.
  *
  * Owns the drag-handle / delete / expand-caret chrome plus expand state. Renders no DOM
  * itself; `OrderedListContent` is the container.
@@ -68,6 +74,7 @@ export const OrderedListRoot = <T extends ListItemRecord>({
   items,
   getId = defaultGetId,
   onMove = noopMove,
+  dragPreview,
   readonly,
   navigationMode = 'list',
   expandedId,
@@ -79,6 +86,7 @@ export const OrderedListRoot = <T extends ListItemRecord>({
     items,
     getId,
     onMove,
+    dragPreview,
     readonly,
   });
 
@@ -111,7 +119,7 @@ export const OrderedListRoot = <T extends ListItemRecord>({
 
 /**
  * Container for the list. Applies the navigation aspect's `containerProps` so role,
- * aria-orientation, Tabster attributes, and focus-on-entry are wired in one place.
+ * aria-orientation, focus-group attributes, and focus-on-entry are wired in one place.
  */
 export const OrderedListContent = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
   const { navigation } = useOrderedListContext('OrderedList.Content');

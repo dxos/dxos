@@ -18,7 +18,7 @@ import { type EntityMeta, type Referrer } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { mergeCandidates } from './merge-core';
+import { mergeCandidates } from './merge-core.ts';
 
 /**
  * The document surface a merge needs — structurally satisfied by the host's `DocumentLease`

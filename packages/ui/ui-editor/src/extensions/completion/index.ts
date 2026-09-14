@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './autocomplete';
-export * from './match';
-export * from './mention';
-export * from './placeholder';
-export * from './typeahead';
+export * from './autocomplete.ts';
+export * from './match.ts';
+export * from './mention.ts';
+export * from './placeholder.ts';
+export * from './typeahead.ts';

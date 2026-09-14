@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 
 import { ConnectorSpec } from '#types';
 
-import * as Binding from '../../Binding';
-import { SyncRoutineMissingError } from '../../errors';
+import * as Binding from '../../Binding.ts';
+import { SyncRoutineMissingError } from '../../errors.ts';
 
 /**
  * Run the first sync for a connection whose initial sync targets were just bound, so a new

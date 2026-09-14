@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RefTypeId } from '../Ref/ref';
+import { RefTypeId } from '../Ref/ref.ts';
 
 /**
  * Snapshot a value to create a new reference for atom change-detection and React dependency tracking.

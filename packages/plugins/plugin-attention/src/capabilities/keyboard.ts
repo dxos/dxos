@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
+import { nestHotkeyScope, setHotkeyScope } from '@dxos/react-focus/store';
 
 import { AttentionCapabilities } from '#types';
 
@@ -15,8 +15,9 @@ export default Capability.makeModule(
 
     const unsubscribe = attention.subscribeCurrent((current) => {
       const id = current[0];
-      // Nested under graph root so plank context inherits root-level bindings (e.g. global search).
-      Keyboard.singleton.setCurrentContext(nestKeyboardContext(id));
+      // Nested under the graph root so a plank's scope also activates root-level bindings
+      // (e.g. global search).
+      setHotkeyScope(nestHotkeyScope(id));
     });
 
     yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));

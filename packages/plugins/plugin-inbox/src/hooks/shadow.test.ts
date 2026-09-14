@@ -9,7 +9,7 @@ import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
-import { SHADOW_KEY_SOURCE, findShadowObject, reanchorShadowObject } from './shadow';
+import { SHADOW_KEY_SOURCE, findShadowObject, reanchorShadowObject } from './shadow.ts';
 
 // Minimal writable type to exercise the shadow helpers without depending on a specific app schema.
 const Note = Type.makeObject(DXN.make('example.org.test.note', '0.1.0'))(

@@ -7,6 +7,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
+import { log } from '@dxos/log';
+
 /**
  * Print observability banner once per installation.
  */
@@ -16,12 +18,16 @@ export const showObservabilityBanner = async (configDir: string, bannercb: (inpu
     return;
   }
   bannercb(
-    'Basic observability data will be sent to the DXOS team in order to improve the product. This includes \
-    performance metrics, error logs, and usage data. No personally identifiable information, other than your \
-    public key, is included with this data and no private data ever leaves your devices. To disable sending \
-    observability data, set the environment variable DX_DISABLE_OBSERVABILITY=true.',
+    [
+      'Basic observability data will be sent to the DXOS team in order to improve the product.',
+      'This includes performance metrics, error logs, and usage data. No personally identifiable',
+      'information, other than your public key, is included with this data and no private data',
+      'ever leaves your devices. To disable sending observability data, set the environment',
+      'variable DX_DISABLE_OBSERVABILITY=true.',
+    ].join(' '),
   );
 
+  await mkdir(configDir, { recursive: true });
   await writeFile(path, '', 'utf-8');
 };
 
@@ -29,8 +35,27 @@ export const showObservabilityBanner = async (configDir: string, bannercb: (inpu
  * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
  */
 export const isObservabilityDisabled = async (configDir: string): Promise<boolean> => {
-  const observabilityState = await getObservabilityState(configDir);
-  return observabilityState.disabled;
+  try {
+    const observabilityState = await getObservabilityState(configDir);
+    return observabilityState.disabled;
+  } catch (err) {
+    log.catch('Failed to check if observability is disabled, assuming it is', err);
+    return true;
+  }
+};
+
+/**
+ * Stable per-installation id, minted on first read.
+ *
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
+export const getInstallationId = async (configDir: string): Promise<string | undefined> => {
+  try {
+    return (await getObservabilityState(configDir)).installationId;
+  } catch (err) {
+    log.catch('Failed to read the installation id', err);
+    return undefined;
+  }
 };
 
 /**
@@ -41,6 +66,30 @@ export const isObservabilityDisabled = async (configDir: string): Promise<boolea
 export const storeObservabilityDisabled = async (configDir: string, value: boolean) => {
   const observabilityState = await getObservabilityState(configDir);
   observabilityState.disabled = value;
+  await writeFile(join(configDir, 'observability.yml'), yaml.dump(observabilityState), 'utf-8');
+};
+
+/**
+ * The identity this installation has already been aliased to, so the transition from the
+ * installation id is recorded once rather than on every run.
+ *
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
+export const getAliasedDid = async (configDir: string): Promise<string | undefined> => {
+  try {
+    return (await getObservabilityState(configDir)).aliasedDid;
+  } catch (err) {
+    log.catch('Failed to read the aliased identity', err);
+    return undefined;
+  }
+};
+
+/**
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
+export const storeAliasedDid = async (configDir: string, did: string) => {
+  const observabilityState = await getObservabilityState(configDir);
+  observabilityState.aliasedDid = did;
   await writeFile(join(configDir, 'observability.yml'), yaml.dump(observabilityState), 'utf-8');
 };
 
@@ -85,6 +134,7 @@ export type PersistentObservabilityState = {
   installationId: string;
   disabled: boolean;
   group?: string;
+  aliasedDid?: string;
 };
 
 // create initial state and write to file, using environment variables to override defaults.

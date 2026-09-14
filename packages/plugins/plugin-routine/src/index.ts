@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as RoutinePlugin from './RoutinePlugin';
+export * as RoutinePlugin from './RoutinePlugin.ts';
 export * from '#meta';
-export * from './paths';
+export * from './paths.ts';
 export * from '#types';
-export * from './util';
+export * from './util/index.ts';

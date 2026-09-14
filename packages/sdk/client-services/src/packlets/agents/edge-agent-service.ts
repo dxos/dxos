@@ -9,14 +9,17 @@ import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { EdgeAgentStatus } from '@dxos/protocols';
+import { buf } from '@dxos/protocols/buf';
 import {
-  EdgeStatus,
-  QueryAgentStatusResponse,
+  type QueryAgentStatusResponse,
+  QueryAgentStatusResponse_AgentStatus,
+  QueryAgentStatusResponseSchema,
   type QueryEdgeStatusResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+  QueryEdgeStatusResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type EdgeAgentService } from '@dxos/protocols/rpc';
 
-import { type EdgeAgentManager } from './edge-agent-manager';
+import { type EdgeAgentManager } from './edge-agent-manager.ts';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
 export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
@@ -30,17 +33,7 @@ export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
     return EffectEx.streamFromEmitter<QueryEdgeStatusResponse, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
-        void emit.single({
-          status: this._edgeConnection?.status ?? {
-            state: EdgeStatus.ConnectionState.NOT_CONNECTED,
-            rtt: 0,
-            uptime: 0,
-            rateBytesUp: 0,
-            rateBytesDown: 0,
-            messagesSent: 0,
-            messagesReceived: 0,
-          },
-        });
+        void emit.single(buf.create(QueryEdgeStatusResponseSchema, { status: this._edgeConnection?.status }));
       };
 
       this._edgeConnection?.statusChanged.on(ctx, update);
@@ -60,11 +53,13 @@ export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
   ['EdgeAgentService.queryAgentStatus'](): EffectStream.Stream<QueryAgentStatusResponse, Error> {
     return EffectEx.streamFromEmitter<QueryAgentStatusResponse, Error>((emit) => {
       const ctx = Context.default();
-      void emit.single({ status: QueryAgentStatusResponse.AgentStatus.UNKNOWN });
+      void emit.single(
+        buf.create(QueryAgentStatusResponseSchema, { status: QueryAgentStatusResponse_AgentStatus.UNKNOWN }),
+      );
       void this._agentManagerProvider().then((agentManager) => {
-        void emit.single({ status: mapStatus(agentManager.agentStatus) });
+        void emit.single(buf.create(QueryAgentStatusResponseSchema, { status: mapStatus(agentManager.agentStatus) }));
         agentManager.agentStatusChanged.on(ctx, (newStatus) => {
-          void emit.single({ status: mapStatus(newStatus) });
+          void emit.single(buf.create(QueryAgentStatusResponseSchema, { status: mapStatus(newStatus) }));
         });
       });
 
@@ -73,15 +68,15 @@ export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
   }
 }
 
-const mapStatus = (agentStatus: EdgeAgentStatus | undefined): QueryAgentStatusResponse.AgentStatus => {
+const mapStatus = (agentStatus: EdgeAgentStatus | undefined): QueryAgentStatusResponse_AgentStatus => {
   switch (agentStatus) {
     case EdgeAgentStatus.ACTIVE:
-      return QueryAgentStatusResponse.AgentStatus.ACTIVE;
+      return QueryAgentStatusResponse_AgentStatus.ACTIVE;
     case EdgeAgentStatus.INACTIVE:
-      return QueryAgentStatusResponse.AgentStatus.INACTIVE;
+      return QueryAgentStatusResponse_AgentStatus.INACTIVE;
     case EdgeAgentStatus.NOT_FOUND:
-      return QueryAgentStatusResponse.AgentStatus.NOT_FOUND;
+      return QueryAgentStatusResponse_AgentStatus.NOT_FOUND;
     case undefined:
-      return QueryAgentStatusResponse.AgentStatus.UNKNOWN;
+      return QueryAgentStatusResponse_AgentStatus.UNKNOWN;
   }
 };

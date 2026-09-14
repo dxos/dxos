@@ -11,6 +11,8 @@ export default defineConfig({
     plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
+    PreviewCapabilities: 'src/types/PreviewCapabilities.ts',
+    types: 'src/types/index.ts',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',
   },

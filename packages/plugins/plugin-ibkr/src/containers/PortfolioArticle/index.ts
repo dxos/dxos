@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { PortfolioArticle as default } from './PortfolioArticle';
+export { PortfolioArticle as default } from './PortfolioArticle.tsx';

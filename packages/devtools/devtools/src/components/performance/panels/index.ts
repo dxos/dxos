@@ -4,21 +4,21 @@
 
 import { type ComponentType, lazy } from 'react';
 
-import { type CustomPanelProps } from '../Panel';
+import { type CustomPanelProps } from '../Panel.tsx';
 
-export * from './Database';
-export * from './EdgePanel';
-export * from './MemoryPanel';
-export * from './NetworkPanel';
-export * from './PerformancePanel';
-export * from './QueriesPanel';
-export * from './RawQueriesPanel';
-export * from './SurfaceProfilerPanel';
-export * from './SwarmTracePanel';
-export * from './SyncStatus';
+export * from './Database/index.ts';
+export * from './EdgePanel.tsx';
+export * from './MemoryPanel.tsx';
+export * from './NetworkPanel.tsx';
+export * from './PerformancePanel.tsx';
+export * from './QueriesPanel.tsx';
+export * from './RawQueriesPanel.tsx';
+export * from './SurfaceProfilerPanel.tsx';
+export * from './SwarmTracePanel.tsx';
+export * from './SyncStatus/index.ts';
 
 /**
  * chart.js and its streaming/luxon adapters (~250 KB) are only needed by this panel, so it loads
  * when rendered rather than with the devtools barrel.
  */
-export const TimeSeries: ComponentType<CustomPanelProps<{}>> = lazy(() => import('./TimeSeries'));
+export const TimeSeries: ComponentType<CustomPanelProps<{}>> = lazy(() => import('./TimeSeries.tsx'));

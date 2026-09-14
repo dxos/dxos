@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Root';
+export * from './Root.tsx';

@@ -24,8 +24,8 @@ import { Message } from '@dxos/types';
 
 import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
-import extractMailboxHandler from './extract-mailbox';
-import extractMessageHandler from './extract-message';
+import extractMailboxHandler from './extract-mailbox.ts';
+import extractMessageHandler from './extract-message.ts';
 
 const EXTRACTOR_ID = 'test-extractor';
 

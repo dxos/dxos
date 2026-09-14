@@ -18,7 +18,7 @@ export const SetAlarm = Operation.make({
       Schedule an alarm to wake yourself up in the future.
       Provide exactly one of "in" (a duration from now) or "at" (an absolute time).
       When the alarm fires you will receive a prompt and can continue working.
-      Setting a new alarm replaces any previously scheduled one.
+      Several alarms may be pending at once; each fires independently.
     `,
   },
   input: Schema.Struct({

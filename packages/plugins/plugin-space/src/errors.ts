@@ -21,3 +21,12 @@ export class SpaceNotReadyError extends BaseError.extend(
   'SpaceNotReadyError',
   'Timed out waiting for the space to finish initializing.',
 ) {}
+
+/** A create names a template whose capability is not contributed — usually deactivated while the dialog stayed open. */
+export class TemplateNotFoundError extends BaseError.extend(
+  'TemplateNotFoundError',
+  'No space template is registered under that id.',
+) {}
+
+/** The space was created and initialized, but the template failed to write its content into it. */
+export class TemplateApplyError extends BaseError.extend('TemplateApplyError', 'Failed to apply the space template.') {}

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as Organization from './Organization';
+import * as Organization from './Organization.ts';
 
 /**
  * A source-code repository. Host-agnostic: which service it lives on is provenance, carried by

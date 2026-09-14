@@ -10,7 +10,7 @@ import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-host';
 import { createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { openAndClose } from '@dxos/test-utils';
 
-import { DocHandleProxy } from './doc-handle-proxy';
+import { DocHandleProxy } from './doc-handle-proxy.ts';
 
 describe('DocHandleProxy', () => {
   test('get update from handle', async () => {

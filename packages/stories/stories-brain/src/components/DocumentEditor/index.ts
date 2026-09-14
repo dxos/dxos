@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './DocumentEditor';
+export * from './DocumentEditor.tsx';

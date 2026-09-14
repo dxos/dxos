@@ -6,10 +6,10 @@ import { LogLevel, log } from '@dxos/log';
 import { createFileProcessor } from '@dxos/log/file-processor';
 import { isNode } from '@dxos/util';
 
-import { ReplicantEnvImpl, ReplicantRegistry } from '../env';
-import { DEFAULT_REDIS_OPTIONS } from '../redis';
-import { type RunProps } from './run-process';
-import { type ReplicantProps } from './spec';
+import { ReplicantEnvImpl, ReplicantRegistry } from '../env/index.ts';
+import { DEFAULT_REDIS_OPTIONS } from '../redis/index.ts';
+import { type RunProps } from './run-process.ts';
+import { type ReplicantProps } from './spec.ts';
 
 /**
  * Entry point for process running in agent mode.

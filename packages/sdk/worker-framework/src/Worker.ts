@@ -14,7 +14,7 @@ import { Trigger } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import * as WorkerProtocol from './WorkerProtocol';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 // A single MessagePort multiplexes every request by id, so allow effectively-unbounded concurrent
 // requests over the one worker rather than the pool default of 1 (which lets one open stream block

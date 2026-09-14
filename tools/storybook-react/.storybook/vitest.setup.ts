@@ -5,7 +5,7 @@
 import { setProjectAnnotations } from '@storybook/react-vite';
 import { afterEach, beforeAll, beforeEach } from 'vitest';
 
-import * as preview from './preview';
+import * as preview from './preview.ts';
 
 /**
  * https://storybook.js.org/docs/api/portable-stories/portable-stories-vitest#setprojectannotations

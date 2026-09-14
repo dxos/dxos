@@ -14,10 +14,10 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { DXN } from '@dxos/keys';
 
-import * as AiModelResolver from './AiModelResolver';
-import * as AiService from './AiService';
-import { AiModelNotAvailableError } from './errors';
-import * as LMStudioResolver from './resolvers/lmstudio/LMStudioResolver';
+import * as AiModelResolver from './AiModelResolver.ts';
+import * as AiService from './AiService.ts';
+import { AiModelNotAvailableError } from './errors.ts';
+import * as LMStudioResolver from './resolvers/lmstudio/LMStudioResolver.ts';
 
 const SONNET = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
 const GEMMA = DXN.make('com.google.model.gemma-3-27b.default');

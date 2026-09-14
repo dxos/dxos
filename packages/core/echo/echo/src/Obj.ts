@@ -18,15 +18,15 @@ import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import type * as Database from './Database';
-import * as Entity from './Entity';
-import * as Error from './Error';
-import * as internal from './internal';
-import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
-import * as objInternal from './internal/Obj';
-import * as Ref from './Ref';
-import type * as Tag from './Tag';
-import * as Type from './Type';
+import type * as Database from './Database.ts';
+import * as Entity from './Entity.ts';
+import * as Error from './Error.ts';
+import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils.ts';
+import * as internal from './internal/index.ts';
+import * as objInternal from './internal/Obj/index.ts';
+import * as Ref from './Ref.ts';
+import type * as Tag from './Tag.ts';
+import * as Type from './Type.ts';
 
 /**
  * Base type for all ECHO objects.
@@ -522,7 +522,7 @@ export const snapshotOf: {
   return check(args[1]);
 }) as any;
 
-export type { GetURIOptions } from './internal';
+export type { GetURIOptions } from './internal/index.ts';
 
 // TODO(dmaretskyi): Allow returning undefined.
 /**
@@ -944,8 +944,13 @@ export type JSON = internal.ObjectJSON;
  * Converts object to its JSON representation.
  * Accepts both reactive objects and snapshots.
  *
- * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
+ * `JSON.stringify(obj)` gives the same result for an in-memory object, which shares this serializer.
+ * A database-backed object carries its own `toJSON`, which reads the document rather than the target
+ * and still differs in two ways: it omits `@uri`, and it leaves `Uint8Array` values unencoded.
+ * Prefer this function where the two must agree.
  */
+// TODO(dmaretskyi): Unify with the echo-handler serializer (`echo-prototypes.ts`) so the divergence
+//   above goes away; changes what `JSON.stringify` emits for every database object.
 export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectToJSON(entity);
 
 /**

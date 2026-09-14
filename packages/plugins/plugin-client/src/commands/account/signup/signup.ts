@@ -32,7 +32,7 @@ import {
   METHOD_ALIASES,
   hubClient,
   methodOption,
-} from '../util';
+} from '../util.ts';
 
 type SignupMethod = 'email' | typeof ATMOSPHERE_METHOD;
 

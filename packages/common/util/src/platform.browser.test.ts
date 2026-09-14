@@ -4,7 +4,7 @@
 
 import { expect, test } from 'vitest';
 
-import { isNode } from './platform';
+import { isNode } from './platform.ts';
 
 test('knows when running in node', () => {
   expect(isNode()).to.be.false;

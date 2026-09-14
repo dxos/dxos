@@ -18,8 +18,8 @@ import { describe, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 
-import { layerProtocolRpcPortServer, makeProtocolRpcPortClient } from './effect-rpc';
-import { createLinkedPorts } from './testing';
+import { layerProtocolRpcPortServer, makeProtocolRpcPortClient } from './effect-rpc.ts';
+import { createLinkedPorts } from './testing.ts';
 
 class TestRpcs extends RpcGroup.make(
   Rpc.make('echo', {

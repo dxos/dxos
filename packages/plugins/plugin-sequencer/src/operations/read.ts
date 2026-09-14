@@ -9,8 +9,8 @@ import { Database } from '@dxos/echo';
 
 import { ScoreOperation } from '#types';
 
-import { formatLeadSheet } from '../util/lead-sheet';
-import { scoreToLeadSheet } from '../util/score-leadsheet';
+import { formatLeadSheet } from '../util/lead-sheet.ts';
+import { scoreToLeadSheet } from '../util/score-leadsheet.ts';
 
 export default ScoreOperation.Read.pipe(
   Operation.withHandler(

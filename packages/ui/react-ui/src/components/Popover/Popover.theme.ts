@@ -1,22 +1,29 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-import { mx, surfaceShadow, surfaceZIndex } from '@dxos/ui-theme';
-import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
+import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
+import { type ComponentFunction, type Elevation, type Surface, type Theme } from '@dxos/ui-types';
 
 export type PopoverStyleProps = Partial<{
   constrainBlock: boolean;
   constrainInline: boolean;
   elevation: Elevation;
+  /** An explicit level, from `Content elevation`; the popover then paints it instead of `popup`. */
+  surface: Surface;
 }>;
 
-// No `overflow-hidden` here: Radix positions `Popover.Arrow` as a child of the content, straddling
-// its edge, so clipping the content clipped every arrow in the app. Clipping belongs to the
-// viewport, which is the box that scrolls and carries the rounded corners.
-const content: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
+/**
+ * The floating element. The machine positions it with an inline `z-index: var(--z-index)`, which
+ * outranks any `z-*` class, so the layer is handed over through the variable.
+ */
+const positioner: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
+  mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
+
+const content: ComponentFunction<PopoverStyleProps> = ({ elevation, surface }, ...etc) =>
   mx(
-    'dx-popover-surface border-2 border-separator rounded-sm',
+    !surface && 'dx-popover-surface',
+    'border-2 border-separator rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     'dx-focus-ring',
@@ -27,17 +34,30 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
   mx(
     // Always clipped: with the content no longer clipping (see above), the viewport is what keeps a
     // square-cornered child inside the surface's rounded corners.
-    'grid grid-rows-[1fr] min-h-0 min-w-popover-min-width overflow-hidden',
-    constrainBlock && 'max-h-(--radix-popover-content-available-height)',
-    constrainBlock &&
-      'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
-    constrainInline && 'max-w-(--radix-popover-content-available-width)',
+    'grid grid-rows-[1fr] min-w-popover-min-width overflow-hidden',
+    // `--available-*` are set by the machine on the positioner, so they reach here by inheritance.
+    constrainBlock && 'max-h-[min(var(--available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
+    constrainInline && 'max-w-(--available-width)',
     ...etc,
   );
 
-const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
+/**
+ * Zag's arrow is a square straddling the content's edge, rotated so its top-left corner points
+ * outward. Painted in the surface colour with the border on those two edges, its inner half covers
+ * the content's border and the outline appears to bend around the tip. The content's backdrop
+ * filter makes it the arrow's containing block, whose padding box starts inside the border, so
+ * `positioning.css` moves the arrow outward by `--arrow-inset`, the border width, to meet the
+ * border's outer edge.
+ */
+const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
+  mx(
+    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:2px]',
+    '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t-2 [&>[data-part=arrow-tip]]:border-l-2',
+    ...etc,
+  );
 
 export const popoverTheme: Theme<PopoverStyleProps> = {
+  positioner,
   content,
   viewport,
   arrow,

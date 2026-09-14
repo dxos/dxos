@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './UserAccountAvatar';
+export * from './UserAccountAvatar.tsx';

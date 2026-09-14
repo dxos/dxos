@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { identity } from './identity';
+import { identity } from './identity.ts';
 
 /**
  * Response passes applied to outgoing JSON-RPC messages.

@@ -10,7 +10,7 @@ import { TaskSet } from '@dxos/types';
 
 import { LinearOperation } from '#types';
 
-import { LINEAR_SOURCE } from '../constants';
+import { LINEAR_SOURCE } from '../constants.ts';
 
 const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 

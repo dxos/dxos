@@ -9,9 +9,9 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { type TerraConfigValues } from '../engine';
-import { type Domain, type NavCell, type NavGrid, buildNavGrid, domainCandidates, toGeo } from '../sim';
-import * as TerraObject from './TerraObject';
+import { type TerraConfigValues } from '../engine/index.ts';
+import { type Domain, type NavCell, type NavGrid, buildNavGrid, domainCandidates, toGeo } from '../sim/index.ts';
+import * as TerraObject from './TerraObject.ts';
 
 /** Deterministic parameters for a Terra world. All fields optional so a bare seed works. */
 export const TerraConfig = Schema.Struct({

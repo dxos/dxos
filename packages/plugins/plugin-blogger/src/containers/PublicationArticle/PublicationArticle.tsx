@@ -17,7 +17,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PostCard } from '#components';
 import { meta } from '#meta';
@@ -191,17 +191,15 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   );
 
   return (
-    <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
+    <>
       <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <Menu.Toolbar classNames='dx-document'>
-            <Menu.Items />
-          </Menu.Toolbar>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
-            <div className='dx-container'>
+            <div className='dx-expand'>
               {mode === 'gallery' ? (
                 <Masonry.Root Tile={PostTile}>
                   <Masonry.Content>
@@ -236,7 +234,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           </AlertDialog.Content>
         </AlertDialog.Overlay>
       </AlertDialog.Root>
-    </Menu.Root>
+    </>
   );
 };
 

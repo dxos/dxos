@@ -37,7 +37,7 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
+    "@dxos/react-hooks": "workspace:*",
     "date-fns": "catalog:",
     "react-resize-detector": "catalog:",
     "react-virtualized": "catalog:"

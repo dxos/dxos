@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import * as ExtractedQuestionStore from './ExtractedQuestionStore';
+import * as ExtractedQuestionStore from './ExtractedQuestionStore.ts';
 
 const question = (
   over: Partial<ExtractedQuestionStore.ExtractedQuestion> = {},

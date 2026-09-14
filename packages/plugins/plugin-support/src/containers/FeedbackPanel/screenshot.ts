@@ -143,7 +143,7 @@ export const captureScreenshot = async (target: HTMLElement = document.body): Pr
  */
 export const uploadScreenshot = async (blob: Blob, serviceUrl: string | undefined): Promise<string | undefined> => {
   if (!serviceUrl) {
-    log('image service is not configured (runtime.services.edgeServices: image); skipping screenshot upload');
+    log('image service is not configured (runtime.services.edge.url); skipping screenshot upload');
     return undefined;
   }
 

@@ -6,7 +6,7 @@
 
 import { Buffer } from 'buffer/';
 
-import { process } from './process';
+import { process } from './process.js';
 
 const global = globalThis;
 

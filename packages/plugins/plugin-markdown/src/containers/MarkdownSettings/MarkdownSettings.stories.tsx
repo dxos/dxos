@@ -12,7 +12,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Markdown } from '#types';
 
-import { MarkdownSettings } from './MarkdownSettings';
+import { MarkdownSettings } from './MarkdownSettings.tsx';
 
 type StoryArgs = {
   settings: Markdown.Settings;

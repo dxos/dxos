@@ -16,7 +16,7 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/edge-compute';
 
-import { printInvokeResult } from './util';
+import { printInvokeResult } from './util.ts';
 
 export const invoke = Command.make(
   'invoke',

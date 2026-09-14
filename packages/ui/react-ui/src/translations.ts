@@ -15,6 +15,10 @@ export const translations = [
         'toolbar-close.label': 'Close',
         'toolbar-delete.label': 'Delete',
 
+        'floating-panel.minimize.label': 'Minimize',
+        'floating-panel.maximize.label': 'Maximize',
+        'floating-panel.restore.label': 'Restore',
+
         'system-button.star.label': 'Star',
         'system-button.unstar.label': 'Unstar',
         'system-button.bookmark.label': 'Bookmark',

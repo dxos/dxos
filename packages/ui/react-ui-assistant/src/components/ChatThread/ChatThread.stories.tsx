@@ -6,16 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
 import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '@dxos/react-ui-feed/debug';
 import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { translations } from '../../translations';
-import { type ChatThreadEvent, type ChatView } from '../../types';
-import { ChatThread, type ChatThreadController } from './ChatThread';
+import { translations } from '../../translations.ts';
+import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { ChatThread, type ChatThreadController } from './ChatThread.tsx';
 
 /**
  * The canonical assistant thread: `ChatThread` end to end — the view-typed renderer, the real
@@ -147,10 +147,10 @@ const DefaultStory = ({
             </Toolbar.Root>
           </Panel.Toolbar>
 
-          <Panel.Content classNames='dx-container flex flex-col'>
-            <div className='dx-container relative'>
+          <Panel.Content classNames='flex flex-col'>
+            <div className='dx-expand relative'>
               <PromptOutline model={model} />
-              <ChatThread.Viewport classNames='absolute inset-0' padding />
+              <ChatThread.Viewport classNames='dx-fullscreen' padding />
               {debug && <Probes model={model} />}
             </div>
             <PromptInput busy={busy} prompt={prompt} setPrompt={setPrompt} onSubmit={(prompt) => void answer(prompt)} />
@@ -185,15 +185,15 @@ const PromptInput = ({
 
   return (
     <div className='p-2'>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           placeholder={busy ? 'Answering…' : 'Ask something…'}
           value={prompt}
           data-testid='assistant.prompt'
           onChange={(event) => setPrompt(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && submit()}
         />
-      </Input.Root>
+      </Field.Root>
     </div>
   );
 };

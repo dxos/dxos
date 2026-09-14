@@ -16,7 +16,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
-// import { createConfig as createTestConfig } from '../../../vitest.base.config';
+// import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 
 // @ts-ignore
 import packageJson from './package.json';

@@ -9,8 +9,8 @@ import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
-import { findBlocks, moveBlocksSpec, replaceBlocksSpec } from './blocks';
-import { blockSelectionField } from './selection';
+import { findBlocks, moveBlocksSpec, replaceBlocksSpec } from './blocks.ts';
+import { blockSelectionField } from './selection.ts';
 
 const extensions = [markdown({ base: markdownLanguage }), blockSelectionField];
 

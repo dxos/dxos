@@ -19,8 +19,8 @@ import { Branch, Version } from '@dxos/versioning';
 
 import { useMarkdownEditorBinding } from '#hooks';
 
-import { suggestionGroups } from '../hooks/suggestion-sources';
-import { type ReviewScenario, type ScenarioStep } from './scenarios';
+import { suggestionGroups } from '../hooks/suggestion-sources.ts';
+import { type ReviewScenario, type ScenarioStep } from './scenarios.ts';
 
 type Harness = ReturnType<typeof useMarkdownEditorBinding>;
 
@@ -51,8 +51,8 @@ export const runScenarioHeadless = async (
   for (const suggestion of scenario.setup.suggestions ?? []) {
     const branch = await Branch.suggestion(doc, root, suggestion.creator);
     const binding = await Branch.bind(doc, branch);
-    Obj.update(binding.object, () => {
-      EchoText.update(binding.object, 'content', suggestion.content);
+    Obj.update(binding.object, (object) => {
+      EchoText.update(object, 'content', suggestion.content);
     });
     binding.dispose();
   }

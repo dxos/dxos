@@ -22,9 +22,9 @@ import {
   type KanbanCardProps,
   type KanbanColumnProps,
   useKanbanBoard,
-} from './context';
-import { KanbanCard } from './KanbanCard';
-import { KanbanColumn } from './KanbanColumn';
+} from './context.ts';
+import { KanbanCard } from './KanbanCard.tsx';
+import { KanbanColumn } from './KanbanColumn.tsx';
 
 // TODO(burdon): Rename Kanban.
 

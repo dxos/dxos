@@ -45,8 +45,8 @@ const handler: Operation.WithHandler<typeof CodeOperation.HelloWorld> = CodeOper
       const file = SourceFile.make({ path: HELLO_PATH, content: HELLO_CONTENT });
       const added = yield* Database.add(file);
       Obj.update(code, (code) => {
-        const next = [...(code.files ?? []), Ref.make(added)];
-        (code as Obj.Mutable<typeof code>).files = next;
+        code.files ??= [];
+        code.files.push(Ref.make(added));
       });
       yield* Database.flush();
       return { path: HELLO_PATH, created: true };

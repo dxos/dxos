@@ -8,7 +8,7 @@ import { type Label } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { type EditorToolbarState } from './types';
+import { type EditorToolbarState } from './types.ts';
 
 /**
  * One entry in the editor's view-mode dropdown. A built-in entry references an {@link EditorViewMode}

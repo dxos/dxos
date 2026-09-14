@@ -35,7 +35,7 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
   return (
     <div className='m-8 relative flex grow justify-center'>
       <RiveComponent />
-      <div className='z-1 absolute inset-0' style={{ background: 'radial-gradient(transparent, black)' }} />
+      <div className='z-1 dx-fullscreen' style={{ background: 'radial-gradient(transparent, black)' }} />
     </div>
   );
 };
@@ -64,14 +64,14 @@ const DefaultStory = () => {
       {false && (
         <div className='flex absolute left-0 right-0 top-[120px] h-[320px] align-center'>
           <div
-            className='z-1 absolute inset-0 w-[800px] m-auto'
+            className='z-1 dx-fullscreen w-[800px] m-auto'
             style={{
               background: 'radial-gradient(ellipse 200% 100% at center, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0) 50%)',
             }}
           />
           <div
             className={mx(
-              'z-2 absolute inset-0 items-center w-[720px] m-auto p-2',
+              'z-2 dx-fullscreen items-center w-[720px] m-auto p-2',
               'text-white text-[60px] leading-tight text-center font-thin',
             )}
           >

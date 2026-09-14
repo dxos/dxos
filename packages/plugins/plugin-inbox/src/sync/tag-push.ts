@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TagsByMessage } from './tag-diff';
+import { type TagsByMessage } from './tag-diff.ts';
 
 /**
  * The pure half of the tag-push phase: turning a run's observed state into the three sides

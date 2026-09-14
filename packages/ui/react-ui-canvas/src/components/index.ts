@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Canvas';
-export * from './CellGrid';
-export * from './FPS';
-export * from './Grid';
+export * from './Canvas/index.ts';
+export * from './CellGrid/index.ts';
+export * from './FPS.tsx';
+export * from './Grid/index.ts';

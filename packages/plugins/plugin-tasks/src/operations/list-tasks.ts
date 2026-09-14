@@ -10,7 +10,7 @@ import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
-import { InvalidOperationInput } from '../errors';
+import { InvalidOperationInput } from '../errors.ts';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;

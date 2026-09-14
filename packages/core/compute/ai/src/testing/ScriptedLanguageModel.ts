@@ -12,8 +12,9 @@ import * as AiError from 'effect/unstable/ai/AiError';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
 import * as Response from 'effect/unstable/ai/Response';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
-import * as AiService from '../AiService';
+import * as AiService from '../AiService.ts';
 
 //
 // A deterministic, offline `LanguageModel` whose output is scripted rather than generated.
@@ -49,7 +50,19 @@ export type ScriptedPart =
  * provider error (exercises the loop's error propagation).
  */
 export type ScriptedTurn =
-  | { readonly parts: readonly ScriptedPart[]; readonly finishReason?: Response.FinishReason }
+  | {
+      readonly parts: readonly ScriptedPart[];
+      readonly finishReason?: Response.FinishReason;
+      /**
+       * Emit every `tool-params-end` at the end of the turn instead of after the call it closes,
+       * so a second call opens while the first is still open. The OpenAI dialect (DeepSeek, LM
+       * Studio) carries no per-call terminator on the wire — an adapter has to synthesize one, and
+       * one that synthesizes them all at `finish_reason` produces exactly this. Scripts it so a
+       * consumer tracking a single open tool call is tested against the shape rather than only
+       * against well-nested Anthropic output.
+       */
+      readonly deferToolEnds?: boolean;
+    }
   | { readonly fail: AiError.AiError };
 
 /** Scripts a text fragment. */
@@ -58,6 +71,9 @@ export const text = (content: string): ScriptedPart => ({ _tag: 'text', text: co
 /**
  * Scripts a tool call. `name` must match a tool registered on the toolkit under test; `input` is
  * serialized as the tool arguments. Supply `id` to assert against a specific tool-call id.
+ *
+ * `input` may be a function, called when the turn is emitted: a script is fixed before the session
+ * starts, so an argument naming an object the session creates (a ref, an id) only exists by then.
  */
 export const toolCall = (name: string, input: unknown, id?: string): ScriptedPart => ({
   _tag: 'toolCall',
@@ -67,6 +83,10 @@ export const toolCall = (name: string, input: unknown, id?: string): ScriptedPar
 });
 
 const isFailure = (turn: ScriptedTurn): turn is { readonly fail: AiError.AiError } => 'fail' in turn;
+
+/** Tool arguments are JSON, so a function can only be a deferred input. */
+const resolveInput = (part: { readonly input: unknown }): unknown =>
+  typeof part.input === 'function' ? part.input() : part.input;
 
 /**
  * The request a routing predicate inspects: the flattened system prompt, the concatenated text
@@ -148,8 +168,10 @@ const encodeStreamTurn = (
   parts: readonly ScriptedPart[],
   turnIndex: number,
   reason: Response.FinishReason,
+  { deferToolEnds = false }: { deferToolEnds?: boolean } = {},
 ): Response.StreamPartEncoded[] => {
   const out: Response.StreamPartEncoded[] = [responseMetadata(turnIndex)];
+  const deferred: Response.StreamPartEncoded[] = [];
   parts.forEach((part, partIndex) => {
     if (part._tag === 'text') {
       const id = `text_${turnIndex}_${partIndex}`;
@@ -159,13 +181,21 @@ const encodeStreamTurn = (
     } else {
       const id = toolCallId(part, turnIndex, partIndex);
       out.push({ type: 'tool-params-start', id, name: part.name });
-      out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(part.input) });
-      out.push({ type: 'tool-params-end', id });
+      out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(resolveInput(part)) });
+      (deferToolEnds ? deferred : out).push({ type: 'tool-params-end', id });
     }
   });
+  out.push(...deferred);
   out.push(finishPart(reason));
   return out;
 };
+
+const annotate = (span: LanguageModel.ProviderOptions['span']): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    system: 'scripted',
+    operation: { name: 'chat' },
+    request: { model: 'scripted' },
+  });
 
 /** Encodes a turn as the aggregated parts a non-streaming `generateText` would return. */
 const encodeTurn = (
@@ -178,7 +208,12 @@ const encodeTurn = (
     if (part._tag === 'text') {
       out.push({ type: 'text', text: part.text });
     } else {
-      out.push({ type: 'tool-call', id: toolCallId(part, turnIndex, partIndex), name: part.name, params: part.input });
+      out.push({
+        type: 'tool-call',
+        id: toolCallId(part, turnIndex, partIndex),
+        name: part.name,
+        params: resolveInput(part),
+      });
     }
   });
   out.push(finishPart(reason));
@@ -242,6 +277,7 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
     return yield* LanguageModel.make({
       generateText: (options) =>
         Effect.gen(function* () {
+          annotate(options.span);
           const { index, turn } = yield* nextTurn(options.prompt);
           if (isFailure(turn)) {
             return yield* Effect.fail(turn.fail);
@@ -251,12 +287,15 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
       streamText: (options) =>
         Stream.unwrap(
           Effect.gen(function* () {
+            annotate(options.span);
             const { index, turn } = yield* nextTurn(options.prompt);
             if (isFailure(turn)) {
               return Stream.fail(turn.fail);
             }
             return Stream.fromIterable(
-              encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts)),
+              encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts), {
+                deferToolEnds: turn.deferToolEnds,
+              }),
             );
           }),
         ),

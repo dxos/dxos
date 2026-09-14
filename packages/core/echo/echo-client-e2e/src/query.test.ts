@@ -44,7 +44,7 @@ const getFeedUriOrThrow = (feed: Feed.Feed): EID.EID => {
 };
 
 // Tag ids are the URIs of Tag objects; meta stores them as refs.
-const tags = ['echo:/TAGRED', 'echo:/TAGGREEN', 'echo:/TAGBLUE'];
+const tags = ['echo:///TAGRED', 'echo:///TAGGREEN', 'echo:///TAGBLUE'];
 const tagRefs = tags.map((uri) => Ref.fromURI(URI.make(uri)));
 
 Obj.make(TestSchema.Expando, { foo: 100 });
@@ -2178,8 +2178,8 @@ describe('Query', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
-      const important = 'echo:/TAGIMPORTANT';
-      const investor = 'echo:/TAGINVESTOR';
+      const important = 'echo:///TAGIMPORTANT';
+      const investor = 'echo:///TAGINVESTOR';
       const importantRef = Ref.fromURI(URI.make(important));
       const investorRef = Ref.fromURI(URI.make(investor));
 

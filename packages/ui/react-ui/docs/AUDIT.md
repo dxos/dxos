@@ -11,7 +11,7 @@ props each one carries, and groups them into the layout patterns a layout primit
 The premise is the golden rule in the [`composer-ui`](../../../.agents/skills/composer-ui/SKILL.md)
 skill — _"never introduce a wrapper `<div>` for styling"_ — which had no primitive worth pointing at
 for the two most common cases: a row of things with a gap, and a column of things with a gap.
-`Flex` and `Grid` did exist under [`src/primitives/`](./src/primitives), but `Flex` carried only
+`Flex` and `Grid` did exist under [`src/layout/`](./src/primitives), but `Flex` carried only
 `column` and `grow`, so it could not express a gap, an alignment, or a justification — the three
 things every wrapper in this corpus actually needed — and it had six consumers repo-wide. `Panel`,
 `Column`, `Card`, `Toolbar`, and `ScrollArea` cover the _named_ shells; generic one-axis composition
@@ -494,7 +494,7 @@ third (`display='contents'`) or the conversion loses a capability.
 
 ## 5. The `Flex` primitive
 
-[`src/primitives/Flex/Flex.tsx`](./src/primitives/Flex/Flex.tsx). Pre-existing (`column`, `grow`);
+[`src/layout/Flex/Flex.tsx`](./src/layout/Flex/Flex.tsx). Pre-existing (`column`, `grow`);
 P1–P3 added `gap`, `align`, `justify`, `wrap`, and `center`. It is `slottable`, so `asChild`,
 `classNames`, and `ref` forwarding were already there.
 
@@ -534,7 +534,7 @@ semantic aliases are kept distinct from their numeric equivalents so form spacin
 without touching every stack.
 
 The union, and the `Align`/`Justify` unions, live in
-[`src/primitives/layout.ts`](./src/primitives/layout.ts) so `Grid` can adopt them unchanged in P4.
+[`src/layout/layout.ts`](./src/layout/layout.ts) so `Grid` can adopt them unchanged in P4.
 
 Deliberate non-features:
 
@@ -614,7 +614,7 @@ times in containers, on elements the codemod did not touch — a `Text`/`Grid` p
 
 ## 9. `Grid`, extended
 
-[`src/primitives/Grid/Grid.tsx`](./src/primitives/Grid/Grid.tsx). Was `cols`/`rows` as counts only —
+[`src/layout/Grid/Grid.tsx`](./src/layout/Grid/Grid.tsx). Was `cols`/`rows` as counts only —
 `repeat(n, 1fr)` — which no P4 site can use, hence its single consumer. Now:
 
 | Added                       | Why                                                                                       |

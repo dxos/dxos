@@ -17,9 +17,9 @@ import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { type Space } from '@dxos/react-client/echo';
 
-import { type CrawlAction, type CrawlOptions, CrawlPanel, initialOptions } from '../components';
-import { CrawlerStores } from '../testing';
-import { useFactsStory } from './context';
+import { type CrawlAction, type CrawlOptions, CrawlPanel, initialOptions } from '../components/index.ts';
+import { CrawlerStores } from '../testing/index.ts';
+import { useFactsStory } from './context.ts';
 
 /**
  * LEFT (top): the crawl controls. Runs the Discord pipeline over the {@link CrawlerStores} runtime,

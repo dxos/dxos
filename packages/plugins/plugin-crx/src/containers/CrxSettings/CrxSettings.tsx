@@ -12,7 +12,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { pingExtension } from '../../util';
+import { pingExtension } from '../../util/index.ts';
 
 type TestState =
   | { kind: 'idle' }
@@ -55,11 +55,11 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key} description={t('settings.description')}>
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key} description={t('settings.description')}>
+            <Form.Fields />
+          </Form.FieldSet>
 
-          <Form.Section title={t('test.title')}>
+          <Form.FieldSet label={t('test.title')}>
             <Flex gap='sm'>
               <IconButton
                 disabled={test.kind === 'pending'}
@@ -86,7 +86,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                 </span>
               </Flex>
             </Flex>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

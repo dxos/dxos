@@ -6,7 +6,7 @@ import { createMemo, createSignal } from 'solid-js';
 
 import { type ControlProps, type LatLngLiteral, Map, type MapController, useMapZoomHandler } from '@dxos/solid-ui-geo';
 
-import { type GeoControlProps } from '../types';
+import { type GeoControlProps } from '../types.ts';
 
 export type MapControlProps = GeoControlProps & {
   onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;

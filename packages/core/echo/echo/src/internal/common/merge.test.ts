@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type EntityId } from '@dxos/keys';
 
-import { resolveMergeRedirect } from './merge';
+import { resolveMergeRedirect } from './merge.ts';
 
 // Ids are compared lexicographically, so fixed ULID-shaped literals keep the ordering readable:
 // `idA < idB < idC`.

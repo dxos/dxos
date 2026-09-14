@@ -28,18 +28,18 @@ import { type Messenger } from '@dxos/protocols';
 import { type ChromaticPalette, type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
-import { baseTheme, createFontTheme, editorGutter } from '../../styles';
-import { automerge } from '../collab/automerge';
-import { SpaceAwarenessProvider, awareness } from '../collab/awareness';
-import { focus } from '../state/focus';
-import { scrollPastEnd } from '../streaming/scrolling';
+import { baseTheme, createFontTheme, editorGutter } from '../../styles/index.ts';
+import { automerge } from '../collab/automerge/index.ts';
+import { SpaceAwarenessProvider, awareness } from '../collab/awareness/index.ts';
+import { focus } from '../state/focus.ts';
+import { scrollPastEnd } from '../streaming/scrolling/index.ts';
 
 //
 // Basic
 //
 
 /**
- * Enable tabbing into editor (required for tabster to work).
+ * Enable tabbing into editor (required for focus-group navigation to reach it).
  */
 export const tabbable = EditorView.contentAttributes.of({ tabindex: '0' });
 
@@ -215,7 +215,7 @@ export type ThemeExtensionsOptions = {
 
 export const grow: ThemeExtensionsOptions['slots'] = {
   editor: {
-    className: 'w-full h-full',
+    className: 'dx-fill',
   },
 } as const;
 

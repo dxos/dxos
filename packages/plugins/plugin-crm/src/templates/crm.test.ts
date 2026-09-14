@@ -16,7 +16,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 
 import { CrmOperation } from '#types';
 
-import { crm } from './crm';
+import { crm } from './crm.ts';
 
 const dbLayer = TestDatabaseLayer({
   types: [Routine.Routine, Trigger.Trigger, Mailbox.Mailbox, Feed.Feed],

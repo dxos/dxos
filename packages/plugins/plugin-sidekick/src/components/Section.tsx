@@ -10,7 +10,7 @@ export type SectionProps = PropsWithChildren<{
 
 /**
  * Plain titled section used by the sidekick surfaces. These are display panels, not forms,
- * so they deliberately avoid `Form.Section` (which requires a surrounding `Form` context).
+ * so they deliberately avoid `Form.FieldSet` (which requires a surrounding `Form` context).
  */
 export const Section = ({ title, children }: SectionProps) => (
   <div className='flex flex-col py-form-section-gap first:pt-0'>

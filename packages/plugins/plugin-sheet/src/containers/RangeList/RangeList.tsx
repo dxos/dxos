@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { Banner, Flex, Input, useTranslation } from '@dxos/react-ui';
+import { Banner, Field, Flex, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -33,9 +33,9 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
   );
   return (
     <>
-      <Input.Root>
-        <Input.Label>{t('range-list.heading')}</Input.Label>
-      </Input.Root>
+      <Field.Root>
+        <Field.Label>{t('range-list.heading')}</Field.Label>
+      </Field.Root>
       {sheet.ranges.length === 0 ? (
         <Banner.Root>
           <Banner.Content>

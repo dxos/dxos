@@ -5,9 +5,10 @@
 import { type FeedBlock, type FeedBlockSelector } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { toTimeframe } from '@dxos/protocols/buf';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 
-import { type TimeframeClock } from './timeframe-clock';
+import { type TimeframeClock } from './timeframe-clock.ts';
 
 /**
  * The MessageSelector makes sure that we read in a trusted order.
@@ -24,7 +25,7 @@ export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlock
       } = messages[i];
       invariant(timeframe);
 
-      if (!timeframeClock.hasGaps(timeframe)) {
+      if (!timeframeClock.hasGaps(toTimeframe(timeframe))) {
         return i;
       }
     }

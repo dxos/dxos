@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { defaultRenderer, messageText, searchFeed, sliceFeed } from './feed-model';
+import { defaultRenderer, messageText, searchFeed, sliceFeed } from './feed-model.ts';
 
 const makeMessage = (text: string, mimeType?: string) =>
   Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text, ...(mimeType ? { mimeType } : {}) }] });

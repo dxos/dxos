@@ -17,8 +17,8 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
 
-import { FileReadError, FileTooLargeError, UnsupportedFileTypeError } from './create';
-import { MAX_INLINE_SOURCE_BYTES } from './create-from-source';
+import { MAX_INLINE_SOURCE_BYTES } from './create-from-source.ts';
+import { FileReadError, FileTooLargeError, UnsupportedFileTypeError } from './create.ts';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 

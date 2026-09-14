@@ -30,7 +30,7 @@ import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/rea
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
   graphActions,
@@ -52,17 +52,17 @@ import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { POPOVER_SAVE_FILTER } from '../../constants';
-import { messageMatchesQuery } from '../../util';
-import { InitializeMailbox } from './InitializeMailbox';
+import { POPOVER_SAVE_FILTER } from '../../constants.ts';
+import { messageMatchesQuery } from '../../util/index.ts';
+import { InitializeMailbox } from './InitializeMailbox.tsx';
 import {
   buildMailboxSelection,
   buildSystemTagSelection,
   buildThreadSemiJoin,
   getFilterTagUris,
   getSearchText,
-} from './mailbox-search';
-import { MailboxFilter } from './MailboxFilter';
+} from './mailbox-search.ts';
+import { MailboxFilter } from './MailboxFilter.tsx';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -442,13 +442,9 @@ export const MailboxArticle = ({
   return (
     <Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
-        <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+        </Panel.Toolbar>
       </ElevationProvider>
       <Panel.Content>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>

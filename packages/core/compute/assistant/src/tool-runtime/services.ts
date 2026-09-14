@@ -22,7 +22,7 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { RefFromLLM } from '../util';
+import { RefFromLLM } from '../util/index.ts';
 
 export const makeToolResolverFromOperations = <R = never>({
   toolkit: extraToolkit = OpaqueToolkit.empty,

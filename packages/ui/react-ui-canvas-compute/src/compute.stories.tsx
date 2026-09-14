@@ -25,12 +25,12 @@ import { Form } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { DiagnosticOverlay } from './components';
-import { ComputeShapeLayout } from './compute-layout';
-import { type ComputeGraphController, createComputeGraphController } from './graph';
-import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks';
-import { computeShapes } from './registry';
-import { type ComputeShape } from './shapes';
+import { DiagnosticOverlay } from './components/index.ts';
+import { ComputeShapeLayout } from './compute-layout.ts';
+import { type ComputeGraphController, createComputeGraphController } from './graph/index.ts';
+import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks/index.ts';
+import { computeShapes } from './registry.ts';
+import { type ComputeShape } from './shapes/index.ts';
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -42,7 +42,7 @@ import {
   createLogicCircuit,
   createTemplateCircuit,
   createTransformCircuit,
-} from './testing';
+} from './testing/index.ts';
 
 // TODO(burdon): Replace ServiceContainer.
 
@@ -124,7 +124,7 @@ const DefaultStory = ({
   }
 
   return (
-    <div className='grid grid-cols-[1fr_360px] h-full w-full'>
+    <div className='grid grid-cols-[1fr_360px] dx-fill'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root<ComputeShape>
@@ -161,7 +161,6 @@ const DefaultStory = ({
                       </Select.Item>
                     ))}
                   </Select.Viewport>
-                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
@@ -173,7 +172,7 @@ const DefaultStory = ({
               <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>
                 <Form.Viewport>
                   <Form.Content>
-                    <Form.FieldSet />
+                    <Form.Fields />
                     <Form.Actions />
                   </Form.Content>
                 </Form.Viewport>

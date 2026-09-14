@@ -21,9 +21,9 @@ import {
   mapAst,
   retainContext,
   visit,
-} from './internal/ast';
-import { type JsonPath, type JsonProp } from './internal/json-path';
-import * as SchemaAST from './internal/schema-ast';
+} from './internal/ast.ts';
+import { type JsonPath, type JsonProp } from './internal/json-path.ts';
+import * as SchemaAST from './internal/schema-ast.ts';
 
 const ZipCode = Schema.String.pipe(
   Schema.check(

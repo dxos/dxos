@@ -8,7 +8,7 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { type EntityId } from '@dxos/keys';
 
-import { type MergeCandidate, mergeCandidates } from './merge-core';
+import { type MergeCandidate, mergeCandidates } from './merge-core.ts';
 
 // Ids are compared lexicographically, so fixed ULID-shaped literals keep the ordering readable:
 // `idA < idB < idC`.

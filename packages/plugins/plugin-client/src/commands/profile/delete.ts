@@ -12,7 +12,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig, print } from '@dxos/cli-util';
 import { DX_CONFIG, getProfileConfigPath } from '@dxos/client-protocol';
 
-import { printProfileDeleted } from './util';
+import { printProfileDeleted } from './util.ts';
 
 export const del = Command.make(
   'delete',

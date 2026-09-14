@@ -5,11 +5,10 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getSyncSummary, useFeedSyncState, useSyncState } from '@dxos/react-client/echo';
-import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
-import { Accordion } from '@dxos/react-ui-list';
+import { Accordion, Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 
-import { type Stats, removeEmpty } from '../../hooks';
-import { Panel } from './Panel';
+import { type Stats, removeEmpty } from '../../hooks/index.ts';
+import { Panel } from './Panel.tsx';
 import {
   DatabasePanel,
   EdgePanel,
@@ -24,7 +23,7 @@ import {
   type SurfaceProfilerStats,
   SwarmTracePanel,
   SyncStatusPanel,
-} from './panels';
+} from './panels/index.ts';
 
 const LOCAL_STORAGE_KEY = 'org.dxos.plugin.debug.panels';
 

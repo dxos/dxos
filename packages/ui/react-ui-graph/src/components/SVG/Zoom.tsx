@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, memo, useMemo } from 'react';
 
-import { type ZoomExtent, useZoom } from '../../hooks';
+import { type ZoomExtent, useZoom } from '../../hooks/index.ts';
 
 export type ZoomProps = {
   extent?: ZoomExtent;

@@ -15,7 +15,7 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { mermaid } from './mermaid-extension';
+import { mermaid } from './mermaid-extension.ts';
 
 type StoryArgs = {
   text?: string;

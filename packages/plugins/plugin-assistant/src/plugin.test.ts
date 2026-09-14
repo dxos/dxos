@@ -33,8 +33,8 @@ import { meta } from '#meta';
 import { AssistantPlugin } from '#plugin';
 import { AssistantEvents, AssistantOperation } from '#types';
 
-import { AssistantSkill } from './skills/assistant';
-import { PluginManagerSkill } from './skills/plugin-manager';
+import { AssistantSkill } from './skills/assistant/index.ts';
+import { PluginManagerSkill } from './skills/plugin-manager/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

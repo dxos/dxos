@@ -10,7 +10,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import { type SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/convergence-key-intents';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/convergence-key-intents/index.ts';
 
 /**
  * Durable write-ahead intents for convergence-key merging.

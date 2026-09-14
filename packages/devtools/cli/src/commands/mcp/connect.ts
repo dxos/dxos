@@ -12,8 +12,9 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { BaseError } from '@dxos/errors';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
-import { authorize, initialize, saveSession } from './client';
+import { authorize, initialize, saveSession } from './client.ts';
 
 class McpConnectError extends BaseError.extend('McpConnectError', 'MCP connect failed') {}
 
@@ -54,7 +55,7 @@ export const connect = Command.make(
       try: () =>
         authorize({
           serverUrl: url,
-          identityKey: identity.identityKey.toHex(),
+          identityKey: requirePublicKey(identity.identityKey).toHex(),
           spaceIds,
           haloSpaceId: Option.getOrUndefined(haloSpaceId),
         }),

@@ -7,7 +7,7 @@ import React from 'react';
 import { Avatar, type AvatarStatus, type Size } from '@dxos/react-ui';
 import { hexToFallback } from '@dxos/util';
 
-import { L0ItemActiveTabIndicator } from '../Sidebar';
+import { L0ItemActiveTabIndicator } from '../Sidebar/index.ts';
 
 export type UserAccountAvatarProps = {
   size?: Size;

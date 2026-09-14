@@ -5,7 +5,7 @@
 import type { Credential } from '@dxos/client/halo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 export const useCredentials = (): Credential[] => {
   const client = useClient();

@@ -13,9 +13,9 @@ import { ATTR_META } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, URI } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref';
-import { type EntityPropPath, EscapedPropPath, chunkArray } from '../utils';
-import type { Index, IndexerObject } from './interface';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref/index.ts';
+import { type EntityPropPath, EscapedPropPath, chunkArray } from '../utils.ts';
+import type { Index, IndexerObject } from './interface.ts';
 
 /**
  * Normalizes a reference URI so every spelling of the same target shares one index key: an echo

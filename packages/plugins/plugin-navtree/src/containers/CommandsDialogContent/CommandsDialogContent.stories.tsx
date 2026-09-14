@@ -14,7 +14,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { NavTreePlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { CommandsDialogContent } from './CommandsDialogContent';
+import { CommandsDialogContent } from './CommandsDialogContent.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>

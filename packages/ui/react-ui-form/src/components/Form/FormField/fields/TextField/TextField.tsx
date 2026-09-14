@@ -4,37 +4,40 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type TextInputProps } from '@dxos/react-ui';
+import { Field, type InputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormStaticValue } from '../../FormField.tsx';
+import { presentationFor } from '../../presentation.tsx';
 
 export const TextField = ({
   type,
+  format,
   readonly,
   placeholder,
+  presentation,
+  getValue,
   onBlur,
   onValueChange,
-  ...props
 }: FormFieldRendererProps<string>) => {
-  const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
+  const value = getValue() ?? '';
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={value} format={format} />;
+  }
 
   return (
-    <FormRow<string> readonly={readonly} {...props}>
-      {({ value = '' }) => (
-        <Input.TextInput
-          noAutoFill
-          disabled={!!readonly}
-          placeholder={placeholder}
-          value={value}
-          onBlur={onBlur}
-          onChange={handleChange}
-        />
-      )}
-    </FormRow>
+    <Field.Input
+      noAutoFill
+      disabled={!!readonly}
+      placeholder={placeholder}
+      value={value}
+      onBlur={onBlur}
+      onChange={handleChange}
+    />
   );
 };

@@ -10,7 +10,7 @@ import { Card } from '@dxos/react-ui';
 
 import { Bookmark } from '#types';
 
-import { useImageLoads } from '../useImageLoads';
+import { useImageLoads } from '../useImageLoads.ts';
 
 export type BookmarkCardProps = AppSurface.ObjectCardProps<Bookmark.Bookmark>;
 

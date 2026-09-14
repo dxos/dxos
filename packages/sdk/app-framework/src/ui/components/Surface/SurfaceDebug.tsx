@@ -18,8 +18,8 @@ import { createRoot } from 'react-dom/client';
 import { addEventListener, combine } from '@dxos/async';
 import { mx } from '@dxos/ui-theme';
 
-import { type SurfaceContext } from './context';
-import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceMetrics';
+import { type SurfaceContext } from './context.ts';
+import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceMetrics.ts';
 
 declare global {
   interface Window {
@@ -309,7 +309,7 @@ const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }
     >
       {expand ? (
         <div
-          className='absolute inset-0 border-2 border-rose-500 border-dotted overflow-auto pointer-events-auto'
+          className='dx-fullscreen border-2 border-rose-500 border-dotted overflow-auto pointer-events-auto'
           onPointerDown={(ev) => ev.stopPropagation()}
           onClick={(ev) => {
             ev.stopPropagation();

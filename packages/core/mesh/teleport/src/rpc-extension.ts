@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
-import { type ExtensionContext, type TeleportExtension } from './teleport';
+import { type ExtensionContext, type TeleportExtension } from './teleport.ts';
 
 export abstract class RpcExtension<Client, Server> implements TeleportExtension {
   // TODO(dmaretskyi): Type optionally.

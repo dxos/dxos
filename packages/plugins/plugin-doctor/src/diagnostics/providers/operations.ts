@@ -12,8 +12,8 @@ import { Database, Filter, Obj, Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { getReadySpaces } from '../helpers';
-import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
+import { getReadySpaces } from '../helpers.ts';
+import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
 /**
  * Services known to be available to operations at invocation time.

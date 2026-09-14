@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import type { Headers, Viewport } from '../state/types';
-import { cellWidth } from '../state/viewport';
+import type { Headers, Viewport } from '../state/types.ts';
+import { cellWidth } from '../state/viewport.ts';
 
 export type RulerProps = {
   viewport: Viewport;

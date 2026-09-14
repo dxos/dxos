@@ -24,7 +24,7 @@ import { Text } from '@dxos/schema';
 import { createScript } from '#testing';
 import { translations } from '#translations';
 
-import { ScriptProperties } from './ScriptProperties';
+import { ScriptProperties } from './ScriptProperties.tsx';
 
 type StoryArgs = {};
 

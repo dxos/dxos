@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
@@ -10,21 +11,19 @@ import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { toDate, toPublicKey, toTimeframe } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type NetworkStatus, type NetworkStatus_Signal } from '@dxos/protocols/buf/dxos/client/services_pb';
 // Value imports come straight from protocols: reaching them through the `@dxos/client` barrels
 // puts echo-client (and wa-sqlite, automerge-repo with it) in the app's eager boot graph.
-import {
-  ConnectionState,
-  DeviceKind,
-  type NetworkStatus,
-  Platform,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Platform, Platform_PLATFORM_TYPE } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EpochSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type DataProvider } from '../observability';
-import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag';
-import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
-import { SyncEpisodeTracker } from './sync-episodes';
-import { subscribeSyncSummary } from './sync-state';
+import * as Observability from '../Observability.ts';
+import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory.ts';
+import { SyncEpisodeTracker } from './sync-episodes.ts';
+import { subscribeSyncSummary } from './sync-state.ts';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
@@ -44,7 +43,7 @@ const SECONDS = { unit: 's' } as const;
 //  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
 //  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
 /** Subscribes to identity and device changes and sets observability tags accordingly. */
-export const identityProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const identityProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
     clientServices.IdentityService!.queryIdentity().subscribe((idqr) => {
@@ -67,15 +66,41 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
         return;
       }
 
-      observability.setTags({ deviceKey: thisDevice.deviceKey.truncate() });
+      observability.setTags({ deviceKey: toPublicKey(thisDevice.deviceKey)?.truncate() ?? '' });
       if (thisDevice.profile?.label) {
         observability.setTags({ deviceProfile: thisDevice.profile.label });
       }
     });
   });
 
+/**
+ * What {@link identityManagerProvider} reads: the host-side identity manager, in a realm that has no
+ * client proxy to subscribe through.
+ */
+export type IdentitySource = {
+  readonly identity: { readonly did: string } | undefined;
+  readonly stateUpdate: { on(listener: () => void): unknown };
+};
+
+/**
+ * Tags every span and log of a realm with the identity, read from the services host itself. For the
+ * dedicated worker, whose tracer and tags are its own: the tab's {@link identityProvider} only tags
+ * the tab. Tags only — the tab already identifies the user with the analytics backend.
+ */
+export const identityManagerProvider = (identityManager: IdentitySource): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const apply = () => {
+      const did = identityManager.identity?.did;
+      if (did) {
+        observability.setTags({ did });
+      }
+    };
+    identityManager.stateUpdate.on(apply);
+    apply();
+  });
+
 /** Periodically publishes network connection and buffer metrics. */
-export const networkMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const networkMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     let lastNetworkStatus: NetworkStatus | undefined;
@@ -84,7 +109,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
     const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
     updateSignalMetrics.on(ctx, async () => {
       log('send signal metrics');
-      (lastNetworkStatus?.signaling as NetworkStatus.Signal[])?.forEach(({ server, state }) => {
+      (lastNetworkStatus?.signaling as NetworkStatus_Signal[])?.forEach(({ server, state }) => {
         observability.metrics.gauge('dxos.client.network.signal.connectionState', state, { server });
       });
 
@@ -135,7 +160,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes platform and heap memory metrics. */
-export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     log('runtimeMetricsProvider: requesting platform from SystemService');
@@ -144,7 +169,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
     invariant(platform, 'platform is required');
 
     observability.setTags({
-      platformType: Platform.PLATFORM_TYPE[platform.type as number].toLowerCase(),
+      platformType: Platform_PLATFORM_TYPE[platform.type].toLowerCase(),
       platform: platform.platform,
       arch: platform.arch,
       runtime: platform.runtime,
@@ -163,12 +188,19 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
     // The platform reading is an RPC and cross-realm memory waits for a GC, so both are sampled on
     // their own cadence and the gauges read the latest sample.
     let platformMemory: Platform['memory'];
+
+    // The platform reports memory as a `google.protobuf.Struct`, so a gauge reading a byte count
+    // has to check the JSON value rather than assume it is numeric.
+    const memoryNumber = (key: string): number | undefined => {
+      const value = platformMemory?.[key];
+      return typeof value === 'number' ? value : undefined;
+    };
     let crossRealmMemory: CrossRealmMemory | undefined;
 
     const servicesGauges = [
-      ['dxos.client.services.runtime.heapUsed', () => platformMemory?.heapUsed],
-      ['dxos.client.services.runtime.heapTotal', () => platformMemory?.heapTotal],
-      ['dxos.client.services.runtime.rss', () => platformMemory?.rss],
+      ['dxos.client.services.runtime.heapUsed', () => memoryNumber('heapUsed')],
+      ['dxos.client.services.runtime.heapTotal', () => memoryNumber('heapTotal')],
+      ['dxos.client.services.runtime.rss', () => memoryNumber('rss')],
     ] as const;
     for (const [name, read] of servicesGauges) {
       ctx.onDispose(observability.metrics.observe(name, read, undefined, BYTES));
@@ -212,7 +244,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes space membership, object count, and pipeline progress metrics. */
-export const spacesMetricsProvider = (client: Client): DataProvider =>
+export const spacesMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     // Pipeline subscriptions only; the gauges below read the live space list at collection time.
@@ -290,7 +322,7 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
   });
 
 /** Publishes the document backlog folded across every space. */
-export const documentsMetricsProvider = (client: Client): DataProvider =>
+export const documentsMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const { summary } = subscribeSyncSummary(client, ctx);
@@ -326,107 +358,12 @@ export const documentsMetricsProvider = (client: Client): DataProvider =>
   });
 
 /**
- * Publishes how long this realm's event loop was blocked.
- *
- * Reports peak lag per export window, tagged only by the `dxos.process.type` resource attribute —
- * so the same provider distinguishes the tab from the shared and dedicated workers without any
- * per-realm wiring.
- */
-export const eventLoopLagProvider = (): DataProvider =>
-  Effect.fn(function* (observability) {
-    const ctx = new Context();
-    const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
-
-    scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
-
-    // Belt to the tracker's braces. The clamp inside `sample` is what actually guarantees a frozen
-    // tab is not reported as lag — checking visibility when the probe fires cannot, since a frozen
-    // timer does not fire until the tab is visible again. This listener additionally drops the
-    // reference timestamp the moment visibility changes, so a gap under the clamp is discarded too.
-    const doc = (globalThis as { document?: EventTarget & { visibilityState?: string } }).document;
-    if (doc) {
-      const onVisibilityChange = () => lag.suspend();
-      doc.addEventListener('visibilitychange', onVisibilityChange);
-      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onVisibilityChange));
-    }
-
-    // #region DEBUG
-    // [DEBUG H-suspend] Dual-clock suspension probe, shipped temporarily to confirm the
-    // native-app freeze diagnosis in the wild — WKWebView's WebContent process suspended while
-    // the window sits hidden — before the fix lands. Remove together with the Rust host
-    // heartbeat in composer-app's src-tauri/lib.rs. Runs in every realm (tab + workers); logs
-    // only on a wake after a ≥15s execution gap and on visibility transitions, so steady state
-    // is silent. Reading a gap line in a downloaded bundle:
-    //   - wallDeltaMs ≈ monoDeltaMs → the realm did not run while both clocks did ⇒ process
-    //     suspension (a 2026-08-29 dev soak showed multi-hour WebContent freezes this way,
-    //     with the Rust host heartbeat clean throughout).
-    //   - wallDeltaMs >> monoDeltaMs → the machine slept; not an app fault.
-    const DEBUG_PROBE_INTERVAL_MS = 5_000;
-    const DEBUG_GAP_MS = 15_000;
-    let debugLastWall = Date.now();
-    let debugLastMono = performance.now();
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        const wall = Date.now();
-        const mono = performance.now();
-        const wallDeltaMs = Math.round(wall - debugLastWall);
-        const monoDeltaMs = Math.round(mono - debugLastMono);
-        debugLastWall = wall;
-        debugLastMono = mono;
-        if (wallDeltaMs > DEBUG_GAP_MS || monoDeltaMs > DEBUG_GAP_MS) {
-          log.info('[DEBUG H-suspend] js wake after gap', {
-            wallDeltaMs,
-            monoDeltaMs,
-            // Portion of the gap the monotonic clock did not tick — the asleep share.
-            sleptMs: wallDeltaMs - monoDeltaMs,
-            visibility: doc?.visibilityState ?? 'no-document',
-            hasFocus: (doc as { hasFocus?: () => boolean } | undefined)?.hasFocus?.() ?? null,
-          });
-        }
-      },
-      DEBUG_PROBE_INTERVAL_MS,
-    );
-    if (doc) {
-      // The production listener above only drops the lag reference; this one records the
-      // transition itself, so the bundle shows whether WebKit ever marked the page hidden.
-      const onDebugVisibility = () =>
-        log.info('[DEBUG H-suspend] visibilitychange', { visibility: doc.visibilityState });
-      doc.addEventListener('visibilitychange', onDebugVisibility);
-      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onDebugVisibility));
-      // Page lifecycle freeze/resume — Chromium-only events today, registered anyway so a WebKit
-      // release that adds them shows up rather than silently discriminating nothing.
-      const onDebugFreeze = () => log.info('[DEBUG H-suspend] page freeze');
-      const onDebugResume = () => log.info('[DEBUG H-suspend] page resume');
-      doc.addEventListener('freeze', onDebugFreeze);
-      doc.addEventListener('resume', onDebugResume);
-      ctx.onDispose(() => {
-        doc.removeEventListener('freeze', onDebugFreeze);
-        doc.removeEventListener('resume', onDebugResume);
-      });
-    }
-    // #endregion DEBUG
-
-    // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
-    // idempotent getter — see EventLoopLagTracker.
-    scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);
-
-    ctx.onDispose(
-      observability.metrics.observe('dxos.client.runtime.eventLoop.lag', () => lag.peakMs / 1_000, undefined, SECONDS),
-    );
-
-    return async () => {
-      await ctx.dispose();
-    };
-  });
-
-/**
  * Publishes how long a client takes to sync, and how long it has been stuck.
  *
  * Both are needed. `episode.duration` records only when a backlog clears, so a client that never
  * finishes syncing contributes nothing to it — `stalled.duration` is what makes that client visible.
  */
-export const syncMetricsProvider = (client: Client): DataProvider =>
+export const syncMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const episodes = new SyncEpisodeTracker();
@@ -475,16 +412,19 @@ const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false
     // TODO(burdon): Factor out.
     // TODO(burdon): Agent needs to restart before `ready` is available.
     const { open, ready } = space.internal.data.metrics ?? {};
-    const startup = open && ready && ready.getTime() - open.getTime();
+    const openedAt = toDate(open);
+    const readyAt = toDate(ready);
+    const startup = openedAt && readyAt && readyAt.getTime() - openedAt.getTime();
 
     // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
     // const host = client.services.services.DevtoolsHost!;
     const pipeline = space.internal.data.pipeline;
-    const startDataMutations = pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0;
-    const epoch = pipeline?.currentEpoch?.subject.assertion.number;
-    // const appliedEpoch = pipeline?.appliedEpoch?.subject.assertion.number;
-    const currentDataMutations = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
-    const totalDataMutations = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
+    const assertion = pipeline?.currentEpoch?.subject?.assertion;
+    const currentEpoch = assertion && anyUnpack(assertion, EpochSchema);
+    const startDataMutations = toTimeframe(currentEpoch?.timeframe).totalMessages();
+    const epoch = currentEpoch?.number;
+    const currentDataMutations = toTimeframe(pipeline?.currentDataTimeframe).totalMessages();
+    const totalDataMutations = toTimeframe(pipeline?.targetDataTimeframe).totalMessages();
 
     return {
       // TODO(nf): truncate keys for DD?

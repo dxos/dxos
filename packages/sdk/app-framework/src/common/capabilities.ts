@@ -25,13 +25,13 @@ import * as ServiceResolver$ from '@dxos/compute/ServiceResolver';
 import * as Trace$ from '@dxos/compute/Trace';
 import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 
-import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
+import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core/index.ts';
 import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,
   UndoRegistry as UndoRegistry$,
-} from '../plugin-process-manager';
-import type { Surface } from '../ui';
+} from '../plugin-process-manager/index.ts';
+import type { Surface } from '../ui/index.ts';
 
 /**
  * @category Capability
@@ -243,6 +243,15 @@ export const ManagedRuntime = Capability$.makeSingleton<ManagedRuntime>()(
 
 export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHandlerSet>()(
   'org.dxos.app-framework.capability.operationHandler',
+);
+
+/**
+ * Merged, contribution-ordered view over all {@link OperationHandler} contributions — the same
+ * set the operation invoker resolves against. Provided by ProcessManagerPlugin.
+ * @category Capability
+ */
+export const OperationHandlers = Capability$.makeSingleton<OperationHandlerSet.OperationHandlerSet>()(
+  'org.dxos.app-framework.capability.operationHandlers',
 );
 
 export type UndoMapping = UndoMapping$.UndoMapping;

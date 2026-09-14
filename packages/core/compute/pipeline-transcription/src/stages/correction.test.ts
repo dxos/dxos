@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { correctText } from './correction';
+import { correctText } from './correction.ts';
 
 describe('correctText', () => {
   test('capitalizes and adds terminal punctuation', ({ expect }) => {

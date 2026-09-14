@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './Canvas';
-export * from './Editor';
-export * from './KeyboardContainer';
-export * from './TextBox';
-export * from './Toolbar';
-export * from './UI';
+export * from './Canvas/index.ts';
+export * from './Editor/index.ts';
+export * from './KeyboardContainer.tsx';
+export * from './TextBox/index.ts';
+export * from './Toolbar/index.ts';
+export * from './UI/index.ts';
 
-export * from './anchors';
-export type * from './defs';
-export * from './styles';
+export * from './anchors.ts';
+export type * from './defs.ts';
+export * from './styles.tsx';

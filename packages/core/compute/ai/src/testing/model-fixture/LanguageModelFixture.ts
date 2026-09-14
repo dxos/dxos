@@ -26,8 +26,8 @@ import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
-import * as AiService from '../../AiService';
-import { withoutToolCallParsing } from '../../util';
+import * as AiService from '../../AiService.ts';
+import { withoutToolCallParsing } from '../../util/index.ts';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
@@ -125,6 +125,15 @@ export const ISO_TIMESTAMP_PATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}
 export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
 
 /**
+ * Matches the whole `<result pid=N>` opening tag the agent wraps a redelivered tool result in. The
+ * pid is assigned by the process manager at spawn, so it differs between the run that recorded a
+ * conversation and any replay of it. The full tag is matched (rather than the bare number) because
+ * canonicalization substitutes the matched token everywhere it appears.
+ * @example <result pid=9>
+ */
+export const RESULT_PID_PATTERN = /<result pid=\d+>/;
+
+/**
  * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
  * deterministic id generation only holds the id sequence stable while the surrounding allocation
  * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids —
@@ -133,6 +142,7 @@ export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
  * token. Opt a fixture layer out by passing `dynamicValuePatterns: []`.
  */
 export const DEFAULT_DYNAMIC_VALUE_PATTERNS: readonly RegExp[] = [
+  RESULT_PID_PATTERN,
   SPACE_ID_PATTERN,
   ENTITY_ID_PATTERN,
   UUID_PATTERN,
@@ -264,8 +274,38 @@ const remapStoredResponse = (
     }
   }
 
-  return replaceTokens(storedResponse, mapping) as readonly unknown[];
+  // Coalesced first: a provider streams arguments in small chunks that split an id across deltas,
+  // and a token replaced per string never matches a split one.
+  return replaceTokens(
+    mapping.size > 0 ? coalesceDeltas(storedResponse) : storedResponse,
+    mapping,
+  ) as readonly unknown[];
 };
+
+const DELTA_TYPES = new Set(['text-delta', 'reasoning-delta', 'tool-params-delta']);
+
+/** Merges consecutive stream deltas of one part into a single delta; consumers concatenate them anyway. */
+const coalesceDeltas = (response: readonly unknown[]): unknown[] => {
+  const merged: unknown[] = [];
+  for (const part of response) {
+    const previous = merged.at(-1);
+    if (isDelta(part) && isDelta(previous) && previous.type === part.type && previous.id === part.id) {
+      merged[merged.length - 1] = { ...previous, delta: previous.delta + part.delta };
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged;
+};
+
+const isDelta = (part: unknown): part is { type: string; id: string; delta: string } =>
+  typeof part === 'object' &&
+  part !== null &&
+  'type' in part &&
+  typeof part.type === 'string' &&
+  DELTA_TYPES.has(part.type) &&
+  'delta' in part &&
+  typeof part.delta === 'string';
 
 /**
  * Internal seams exposed for unit testing the dynamic-value matching/substitution logic.

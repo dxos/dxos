@@ -36,9 +36,9 @@ export const DefaultSettings = ({ subject }: DefaultSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={title ?? subject.prefix}>
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet label={title ?? subject.prefix}>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

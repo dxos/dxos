@@ -2,16 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromDate, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  AuthorizedDeviceSchema,
+  ChainSchema,
+  PresentationSchema,
+  ProofSchema,
+  ServiceAccessSchema,
+  SpaceMember_Role,
+  SpaceMemberSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { createCredential } from '../credentials';
-import { signPresentation } from './presentation';
-import { verifyPresentation, verifyPresentationSignature } from './verifier';
+import { chainCredentialOf, createCredential, proofOf } from '../credentials/index.ts';
+import { signPresentation } from './presentation.ts';
+import { verifyPresentation, verifyPresentationSignature } from './verifier.ts';
 
 describe('presentation verifier', () => {
   describe('chain', () => {
@@ -22,33 +32,31 @@ describe('presentation verifier', () => {
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device),
+          }),
           subject: device,
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer,
         signer: keyring,
         subject: identity,
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: device,
         chain,
@@ -65,34 +73,32 @@ describe('presentation verifier', () => {
       const device = await keyring.createKey();
 
       const serviceAccessCredential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.ServiceAccess',
-          'serverName': 'hub.dxos.network',
-          'serverKey': serviceProvider,
-          'identityKey': identity,
-          'capabilities': ['beta'],
-        },
+        assertion: create(ServiceAccessSchema, {
+          serverName: 'hub.dxos.network',
+          serverKey: fromPublicKey(serviceProvider),
+          identityKey: fromPublicKey(identity),
+          capabilities: ['beta'],
+        }),
         subject: identity,
         issuer: serviceProvider,
         signer: keyring,
       });
 
       const deviceAuthorization = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          'deviceKey': device,
-          'identityKey': identity,
-        },
+        assertion: create(AuthorizedDeviceSchema, {
+          identityKey: fromPublicKey(identity),
+          deviceKey: fromPublicKey(device),
+        }),
         subject: device,
         issuer: identity,
         signer: keyring,
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [serviceAccessCredential] },
+        presentation: create(PresentationSchema, { credentials: [serviceAccessCredential] }),
         signer: keyring,
         signerKey: device,
-        chain: { credential: deviceAuthorization },
+        chain: create(ChainSchema, { credential: deviceAuthorization }),
         nonce: randomBytes(32),
       });
 
@@ -106,27 +112,25 @@ describe('presentation verifier', () => {
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device),
+          }),
           subject: device,
           issuer: identity,
           signer: keyring,
           parentCredentialIds: [],
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer,
         signer: keyring,
         subject: identity,
@@ -134,7 +138,7 @@ describe('presentation verifier', () => {
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: device,
         chain,
@@ -151,26 +155,24 @@ describe('presentation verifier', () => {
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device),
+          }),
           subject: device,
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -179,13 +181,19 @@ describe('presentation verifier', () => {
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: device,
-        chain: {
-          ...chain,
-          credential: { ...chain.credential, proof: { ...chain.credential.proof, signer: PublicKey.random() } as any },
-        },
+        // Re-signed by a key the chain does not authorize.
+        chain: create(ChainSchema, {
+          credential: {
+            ...chainCredentialOf(credential),
+            proof: {
+              ...proofOf(chainCredentialOf(credential)),
+              signer: fromPublicKey(PublicKey.random()),
+            },
+          },
+        }),
 
         nonce: randomBytes(32),
       });
@@ -202,19 +210,18 @@ describe('presentation verifier', () => {
       const subject = PublicKey.random();
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: signingKey,
         signer: keyring,
         subject,
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: signingKey,
         nonce: randomBytes(32),
@@ -230,26 +237,28 @@ describe('presentation verifier', () => {
       const subject = PublicKey.random();
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: signingKey,
         signer: keyring,
         subject,
       });
 
       const presentation = await signPresentation({
-        presentation: { credentials: [credential] },
+        presentation: create(PresentationSchema, { credentials: [credential] }),
         signer: keyring,
         signerKey: signingKey,
         nonce: randomBytes(32),
       });
 
       expect(
-        await verifyPresentationSignature(presentation, { ...presentation.proofs![0], creationDate: new Date(0) }),
+        await verifyPresentationSignature(
+          presentation,
+          create(ProofSchema, { ...presentation.proofs[0], creationDate: fromDate(new Date(0)) }),
+        ),
       ).to.deep.contain({
         kind: 'fail',
       });

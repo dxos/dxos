@@ -9,8 +9,8 @@ import { expect, waitFor } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { Html, type HtmlSrcResolver } from './Html';
-import { Compare, SampleFrame, SANDBOX_SAMPLES, findShadowHost } from './testing';
+import { Html, type HtmlSrcResolver } from './Html.tsx';
+import { Compare, SampleFrame, SANDBOX_SAMPLES, findShadowHost } from './testing.tsx';
 
 //
 // The sandbox on its own — no dialect. Everything here is behaviour `Html` guarantees to any caller:

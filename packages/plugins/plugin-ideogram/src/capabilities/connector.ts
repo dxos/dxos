@@ -10,7 +10,7 @@ import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_SOURCE } from '../constants';
+import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_SOURCE } from '../constants.ts';
 
 const IdeogramTokenForm = Schema.Struct({
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({

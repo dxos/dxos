@@ -13,8 +13,8 @@ import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
 
-import { meta } from '../../meta';
-import { parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from '../../services';
+import { meta } from '../../meta.ts';
+import { parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from '../../services/index.ts';
 
 export type PortfolioReportDetailProps = Pick<
   AppSurface.ObjectArticleProps<Ibkr.Report, {}, Ibkr.Portfolio>,

@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { type RenderAck } from './types';
+import { type RenderAck } from './types.ts';
 
 type Listener = (message: unknown, sender: { tab?: { url?: string }; url?: string }) => undefined | Promise<RenderAck>;
 
@@ -35,13 +35,13 @@ const renderUrlMock = vi.fn<(api: unknown, request: { id: string }) => Promise<R
   finalUrl: 'https://example.com/final',
 }));
 
-vi.mock('./render', () => ({
+vi.mock('./render.ts', () => ({
   renderUrl: (api: unknown, request: { id: string }) => renderUrlMock(api, request),
 }));
 
 // Imported after the mocks are registered.
-const { installSearchProxy } = await import('./handler');
-const { RENDER_MESSAGE_TYPE } = await import('./types');
+const { installSearchProxy } = await import('./handler.ts');
+const { RENDER_MESSAGE_TYPE } = await import('./types.ts');
 
 const COMPOSER_URL = 'http://localhost:5173/';
 

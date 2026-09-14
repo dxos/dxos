@@ -17,8 +17,8 @@ import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues }
 
 import { meta } from '#meta';
 
-import { wireTriggers } from '../../util';
-import { InstructionsEditor } from '../InstructionsEditor';
+import { wireTriggers } from '../../util/index.ts';
+import { InstructionsEditor } from '../InstructionsEditor/index.ts';
 import {
   TriggerForm,
   type TriggerFormInput,
@@ -27,7 +27,7 @@ import {
   applyTriggerValues,
   triggerFieldMap,
   triggerFormValues,
-} from '../TriggerEditor';
+} from '../TriggerEditor/index.ts';
 
 //
 // Schema — one composite form over the routine's editable surface. The general fields are picked from the
@@ -239,7 +239,7 @@ const RoutineFormImpl = ({
     >
       <Form.Viewport scroll {...composableProps(props)} ref={forwardedRef}>
         <Form.Content>
-          <Form.FieldSet schema={GeneralForm} />
+          <Form.Fields schema={GeneralForm} />
 
           <Section title={t('actions.title')}>
             <ActionSection db={db} routine={routine} readonly={readonly} />
@@ -292,7 +292,7 @@ const ActionSection = ({
 
   return (
     <div className='flex flex-col'>
-      <Form.FieldSet path={ACTION_PATH} schema={ActionForm} />
+      <Form.Fields path={ACTION_PATH} schema={ActionForm} />
       {kind === 'instructions' && instructions ? (
         <InstructionsEditor db={db} instructions={instructions} readonly={readonly} />
       ) : null}

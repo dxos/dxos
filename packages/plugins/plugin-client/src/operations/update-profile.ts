@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 
-import { UpdateProfile } from './definitions';
+import { UpdateProfile } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof UpdateProfile> = UpdateProfile.pipe(
   Operation.withHandler(

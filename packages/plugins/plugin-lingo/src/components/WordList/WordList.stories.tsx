@@ -9,8 +9,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { makeTestDeck } from '../../testing';
-import { WordList } from './WordList';
+import { makeTestDeck } from '../../testing.ts';
+import { WordList } from './WordList.tsx';
 
 const WordListStory = () => {
   const { words } = useMemo(() => makeTestDeck(), []);

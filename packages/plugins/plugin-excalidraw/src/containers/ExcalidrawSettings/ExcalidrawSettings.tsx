@@ -25,9 +25,9 @@ export const ExcalidrawSettings = ({ subject }: ExcalidrawSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name}>
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet label={meta.profile.name}>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

@@ -5,7 +5,7 @@
 import { type Identity } from '@dxos/client/halo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 /**
  * Hook returning DXOS identity object.

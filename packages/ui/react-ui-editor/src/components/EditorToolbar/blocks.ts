@@ -9,7 +9,7 @@ import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeb
 
 import { translationKey } from '#translations';
 
-import { type EditorToolbarState } from './types';
+import { type EditorToolbarState } from './types.ts';
 
 const blockTypes = {
   blockquote: 'ph--quotes--regular',

@@ -16,7 +16,7 @@ import { DX_CONFIG, getProfileConfigPath } from '@dxos/client-protocol';
 import { EDGE_URLS } from '@dxos/config';
 import { trim } from '@dxos/util';
 
-import { printProfileCreated } from './util';
+import { printProfileCreated } from './util.ts';
 
 // `edgeFeatures` must match Composer's defaults (see composer-app/dx.yml): without
 // `signaling: true` the client silently falls back to an isolated in-memory signal manager and

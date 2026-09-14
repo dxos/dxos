@@ -5,12 +5,20 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { PreviewEvents } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -19,9 +27,31 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { Milestone, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
+import { TasksCapabilities } from '#types';
 
-import * as TasksPlugin from '../../TasksPlugin';
-import { TaskSetArticle } from './TaskSetArticle';
+import * as TasksPlugin from '../../TasksPlugin.ts';
+import { TaskSetArticle } from './TaskSetArticle.tsx';
+
+/**
+ * Stands in for plugin-projects' `delegate-to-chat` contribution — plugin-tasks cannot depend on it
+ * (the dependency runs the other way), and what the article gates the checkbox on is that SOME
+ * plugin contributed an action, not which one.
+ */
+const StoryTaskActionPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.tasks.story.taskAction'), name: 'Story Task Action' }),
+).pipe(
+  Plugin.addModule({
+    id: 'task-action',
+    provides: [TasksCapabilities.TaskAction],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(TasksCapabilities.TaskAction, [
+          { id: 'story-action', label: 'Story action', icon: 'ph--sparkle--regular', createInvocations: () => [] },
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
 
 /** Kept so a play function can mutate the source objects and assert the article follows. */
 let seeded: { space: Space; taskSet: TaskSet.TaskSet; roasting: Milestone.Milestone } | undefined;
@@ -44,6 +74,7 @@ const seedTaskSet = (space: Space) => {
     },
     {
       title: 'Finalize roast curve',
+      description: 'Curve tracked in [#13007](https://github.com/dxos/dxos/pull/13007).',
       status: 'started',
       priority: 'high',
       assignee: { contact: Ref.make(kai) },
@@ -75,12 +106,12 @@ const seedTaskSet = (space: Space) => {
   for (const props of seed) {
     const task = space.db.add(Task.make(props));
     Obj.update(set, (set) => {
-      set.tasks = [...set.tasks, Ref.make(task)];
+      set.tasks.push(Ref.make(task));
     });
   }
   for (const milestone of [roasting, launch]) {
     Obj.update(set, (set) => {
-      set.milestones = [...set.milestones, Ref.make(milestone)];
+      set.milestones.push(Ref.make(milestone));
     });
   }
 
@@ -96,7 +127,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='dx-container w-full h-full'>
+    <div className='dx-expand'>
       <TaskSetArticle role='article' subject={taskSet} attendableId='story' />
     </div>
   );
@@ -128,7 +159,16 @@ const meta = {
         // The plugin itself, so its OperationHandler module contributes the task verbs —
         // without it every invoke (move included) dies with NoHandlerError.
         TasksPlugin.make(),
+        StoryTaskActionPlugin(),
+        // Contributes the editor extensions the description field takes (`#123` decoration and
+        // link chips) and the resolver behind a chip's hover card; PreviewPlugin owns the popover
+        // and the storybook layout renders it. Both activate on start events fired here at setup;
+        // the fixture source answers the resolver without the network.
+        GitHubPlugin.make(),
+        PreviewPlugin.make(),
+        FixtureLinkSourcePlugin(),
       ],
+      setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
   ],
   parameters: {
@@ -143,6 +183,76 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * A description is edited with the extensions other plugins contribute: selecting the task whose
+ * description links a pull request opens it in the edit pane, where plugin-github's matcher has
+ * turned the URL into an anchor chip, and the row shows the same chip through the contributed
+ * resolver's match. Hovering a chip resolves it through the plugin's link resolver, and the popover
+ * shows the pull request's card.
+ */
+export const DescriptionLinks: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 }));
+    // Two chips carrying the URL: the row's (a React markdown renderer, which sets `eid` as a
+    // property) and the edit pane's (CodeMirror, which sets it as an attribute).
+    const url = 'https://github.com/dxos/dxos/pull/13007';
+    const chips = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('dx-anchor')).filter(
+        (anchor) => anchor.getAttribute('eid') === url || ('eid' in anchor && anchor.eid === url),
+      );
+    await waitFor(() => expect(chips()).toHaveLength(2), { timeout: 10_000 });
+
+    await userEvent.hover(chips()[0]);
+    await waitFor(() => expect(document.querySelector('[data-id="pullRequestCard"]')).toBeTruthy(), {
+      timeout: 10_000,
+    });
+    await expect(
+      within(document.body).findByText('Open on GitHub', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
+ * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
+ *
+ * The set lives in `react-ui-attention` view state under the task set's own id, so the article
+ * neither owns it nor holds a copy — which is what lets an embedding toolbar read the same set.
+ */
+export const Checkboxes: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    const boxes = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.checkbox"]'));
+    await waitFor(() => expect(boxes().length).toBeGreaterThan(1), { timeout: 10_000 });
+
+    await userEvent.click(boxes()[0]);
+    await waitFor(() => expect(boxes()[0]).toHaveAttribute('data-state', 'checked'), { timeout: 10_000 });
+
+    // A set, not a single selection.
+    await userEvent.click(boxes()[1]);
+    await waitFor(() => expect(boxes()[1]).toHaveAttribute('data-state', 'checked'), { timeout: 10_000 });
+    await expect(boxes()[0]).toHaveAttribute('data-state', 'checked');
+
+    // Selection only: the row's status control is untouched, which is what completes a task.
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    await expect(TaskSet.resolveTasks(context.taskSet).map((task) => task.status)).toEqual([
+      'done',
+      'started',
+      'started',
+      'todo',
+      'todo',
+      'cancelled',
+    ]);
+  },
+};
 
 /**
  * The set resolves into one flat list and stays live afterwards — each mutation below is the one
@@ -172,7 +282,7 @@ export const Behavior: Story = {
       Task.make({ title: 'Order sample bags', status: 'todo', milestone: Ref.make(roasting) }),
     );
     Obj.update(taskSet, (taskSet) => {
-      taskSet.tasks = [...taskSet.tasks, Ref.make(added)];
+      taskSet.tasks.push(Ref.make(added));
     });
     await expect(canvas.findByText('Order sample bags', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
@@ -189,7 +299,9 @@ export const Behavior: Story = {
       cuppings.parentTask = Ref.make(label);
     });
     await flushRender();
-    await expect(canvas.getByText('Schedule cuppings').closest('[role="option"]')).toHaveAttribute('aria-level', '2');
+    // `treeitem`, not `option`: the list renders through `Tree` now, and `aria-level` sits on the
+    // branch wrapper the row is nested in (see react-ui-list/docs/TREE.md §10).
+    await expect(canvas.getByText('Schedule cuppings').closest('[role="treeitem"]')).toHaveAttribute('aria-level', '2');
 
     // Updates — removal: an array splice alone does not unlist a task (membership is the parent
     // edge) — deleting it does.

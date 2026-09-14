@@ -14,16 +14,16 @@ import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Database from './Database';
-import type * as Entity from './Entity';
-import type * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import * as Scope from './Scope';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Database from './Database.ts';
+import type * as Entity from './Entity.ts';
+import type * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import * as Scope from './Scope.ts';
+import * as Type from './Type.ts';
 
 /**
  * Runtime schema for a Feed object.
@@ -252,7 +252,7 @@ export const append = (
         return db.appendToFeed(feed, items);
       }),
     ),
-  ).pipe(Effect.withSpan('Feed.append'));
+  ).pipe(Effect.withSpan('Feed.append'), Database.withSpaceId);
 
 /**
  * Removes items from a feed.
@@ -276,7 +276,7 @@ export const remove = (
         ),
       ),
     ),
-  ).pipe(Effect.withSpan('Feed.remove'));
+  ).pipe(Effect.withSpan('Feed.remove'), Database.withSpaceId);
 
 //
 // Lineage (soft fork)
@@ -483,6 +483,7 @@ export const query: {
 export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.syncFeed(feed, options)))).pipe(
     Effect.withSpan('Feed.sync'),
+    Database.withSpaceId,
   );
 
 /**
@@ -496,6 +497,7 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
 export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.getFeedSyncState(feed)))).pipe(
     Effect.withSpan('Feed.getSyncState'),
+    Database.withSpaceId,
   );
 
 /**

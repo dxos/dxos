@@ -19,11 +19,6 @@
       "types": "./dist/types/src/capabilities/index.d.ts",
       "default": "./dist/lib/capabilities.mjs"
     },
-    "#components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/components.mjs"
-    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -61,16 +56,13 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-studio": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

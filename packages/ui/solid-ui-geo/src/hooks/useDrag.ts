@@ -5,8 +5,8 @@
 import { select } from 'd3';
 import { createEffect, onCleanup } from 'solid-js';
 
-import { type GlobeController } from '../components';
-import { geoInertiaDrag } from '../util';
+import { type GlobeController } from '../components/index.ts';
+import { geoInertiaDrag } from '../util/index.ts';
 
 export type GlobeDragEvent = {
   type: 'start' | 'move' | 'end';

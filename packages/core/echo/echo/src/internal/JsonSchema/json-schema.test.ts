@@ -10,8 +10,8 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { TestSchema, prepareAstForCompare } from '../../testing';
-import * as Type from '../../Type';
+import { TestSchema, prepareAstForCompare } from '../../testing/index.ts';
+import * as Type from '../../Type.ts';
 import {
   FieldLookupAnnotationId,
   GeneratorAnnotation,
@@ -19,14 +19,19 @@ import {
   PropertyMeta,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../Annotation';
-import { EntityKind } from '../common/types';
-import { EchoObjectSchema } from '../Entity';
-import { Email, FormatAnnotation, TypeFormat } from '../Format';
-import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../JsonSchema';
-import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref';
-import { TypeSchema } from '../Type';
-import { toEffectSchema, toJsonSchema } from './json-schema';
+} from '../Annotation/index.ts';
+import { EntityKind } from '../common/types/index.ts';
+import { EchoObjectSchema } from '../Entity/index.ts';
+import { Email, FormatAnnotation, TypeFormat } from '../Format/index.ts';
+import {
+  JsonSchemaType,
+  getNormalizedEchoAnnotations,
+  getSchemaProperty,
+  setSchemaProperty,
+} from '../JsonSchema/index.ts';
+import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref/index.ts';
+import { TypeSchema } from '../Type/index.ts';
+import { toEffectSchema, toJsonSchema } from './json-schema.ts';
 
 const EXAMPLE_NAMESPACE = '@example';
 

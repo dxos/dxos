@@ -7,9 +7,9 @@ import { type Accessor, For, createEffect, useContext } from 'solid-js';
 import { type AiService } from '@dxos/ai';
 import { DXN } from '@dxos/keys';
 
-import { AppContext } from '../../../components';
-import { theme } from '../../../theme';
-import { useSpinner } from '../hooks';
+import { AppContext } from '../../../components/index.ts';
+import { theme } from '../../../theme.ts';
+import { useSpinner } from '../hooks/index.ts';
 
 export type StatusBarProps = {
   model: DXN.DXN;

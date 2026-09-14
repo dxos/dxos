@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database } from '@dxos/echo';
-
-import * as Chat from './types/Chat';
 
 /**
  * A deterministic prompt shortcut: a leading `/command args` line runs an operation directly, with

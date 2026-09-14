@@ -6,9 +6,9 @@ import { selection as d3Selection, geoDistance, geoInterpolate, geoPath } from '
 import { type Accessor, type Setter, createEffect, createSignal, onCleanup } from 'solid-js';
 import versor from 'versor';
 
-import type { GlobeController } from '../components';
-import { type LatLngLiteral } from '../types';
-import { type StyleSet, geoToPosition, positionToRotation } from '../util';
+import type { GlobeController } from '../components/index.ts';
+import { type LatLngLiteral } from '../types.ts';
+import { type StyleSet, geoToPosition, positionToRotation } from '../util/index.ts';
 
 const TRANSITION_NAME = 'globe-tour';
 

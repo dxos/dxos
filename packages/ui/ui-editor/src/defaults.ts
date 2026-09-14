@@ -4,14 +4,14 @@
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ThemeExtensionsOptions } from './extensions';
+import { type ThemeExtensionsOptions } from './extensions/index.ts';
 
 export const editorClassNames = (role?: string) =>
   mx(
     'dx-attention-surface data-[toolbar=disabled]:pt-2 dx-focus-ring-inset',
     role === 'org.dxos.role.section'
       ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24'
-      : 'dx-container overflow-hidden',
+      : 'dx-expand overflow-hidden',
   );
 
 export const documentSlots: ThemeExtensionsOptions['slots'] = {

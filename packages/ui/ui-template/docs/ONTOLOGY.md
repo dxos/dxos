@@ -71,7 +71,7 @@ chrome and slots, an `Arrangement` owns where its children sit.
 | `collection`        | **Collection**        | Ordered view over a set of items, with selection and keyboard traversal.                      | `react-ui-list › Listbox`, `OrderedList`, `Tree`, `Treegrid`, `Accordion`, `MasterDetail`; `react-ui-table › Table`; `react-ui-grid › Grid`                                                                                                           | Scroll, Form, DnD       |
 | `form`              | **Form**              | Schema-driven editing of a whole object; layout derived from a projection, not hand-authored. | `react-ui-form › Form`, `ObjectForm`, `FieldEditor`, `ViewEditor`, `ObjectProperties`, `ObjectTree`; `react-ui-components › QueryForm`                                                                                                                | Container, Control      |
 | `command`           | **Command surface**   | Presents actions. Carries no behaviour itself — every item resolves to an operation.          | `react-ui › Toolbar`, `Menu`; `react-ui-menu › Menu`, `DropdownMenu`, `ToolbarMenu`, `builder.ts` (`MenuBuilder`)                                                                                                                                     | Container, Collection   |
-| `navigation`        | **Navigation**        | Moves between places rather than acting on the current one.                                   | `react-ui › Breadcrumb`, `Stepper`, `Main.NavigationSidebar`; `react-ui-tabs › Tabs`; `react-ui-components › NumericTabs`; `react-ui-list › Tree` (navtree)                                                                                           | Container, Overlay      |
+| `navigation`        | **Navigation**        | Moves between places rather than acting on the current one.                                   | `react-ui › Breadcrumb`, `Steps`, `Main.NavigationSidebar`; `react-ui-tabs › Tabs`; `react-ui-components › NumericTabs`; `react-ui-list › Tree` (navtree)                                                                                             | Container, Overlay      |
 | `overlay`           | **Overlay**           | Escapes the layout: positioned against an anchor or the viewport, above everything.           | `react-ui › Dialog`, `Popover`, `Tooltip`, `Toast`; `react-ui-chat › ChatDialog`                                                                                                                                                                      | Anchoring, Elevation    |
 | `text_surface`      | **Text surface**      | A document. Owns a text model, a cursor, and its own keymap.                                  | `react-ui-editor › Editor`; `react-ui-markdown › MarkdownView`, `MarkdownStream`; `react-ui-syntax-highlighter › SyntaxHighlighter`, `JsonHighlighter`; `react-ui-terminal › Terminal`; `react-ui-components › TextBlock`, `HtmlViewer`               | Container, Command      |
 | `spatial_surface`   | **Spatial surface**   | A coordinate space. Children have positions in that space, not in document flow.              | `react-ui-canvas › Canvas`, `CellGrid`, `Grid`; `react-ui-canvas-editor › Editor`; `react-ui-diagram › Diagram`; `react-ui-graph › Graph`, `Mesh`, `Tree`; `react-ui-geo › Globe`, `Map`; `react-ui-gameboard › Gameboard`, `Chessboard`              | Container, Selection    |
@@ -221,7 +221,7 @@ component that fits nowhere means the taxonomy is short a row. Findings follow t
 |                               | `Skeleton`              | `display`           |
 |                               | `Slider`                | `control`           |
 |                               | `Splitter`              | `layout`            |
-|                               | `Stepper`               | `navigation`        |
+|                               | `Steps`                 | `navigation`        |
 |                               | `Tag`                   | `display`           |
 |                               | `TextCrawl`             | `display`           |
 |                               | `ThemeProvider *`       | `provider`          |
@@ -358,7 +358,7 @@ component that fits nowhere means the taxonomy is short a row. Findings follow t
 |                               | `SyntaxHighlighter`     | `text_surface`      |
 | `react-ui-table`              | `Table`                 | `collection`        |
 |                               | `TableCellEditor`       | `control`           |
-| `react-ui-tabs`               | `Tabs`                  | `navigation`        |
+| `react-ui` (`Tabs`)           | `Tabs`                  | `navigation`        |
 | `react-ui-task`               | `TaskList`              | `collection`        |
 | `react-ui-terminal`           | `Terminal`              | `text_surface`      |
 | `react-ui-thread`             | `Message`               | `conversation`      |

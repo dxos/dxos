@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -540,7 +540,7 @@ feat F-8: Presence and Sync Status
 ## Acceptance
 
 ```mdl
-test T-1: Create and open a space
+scenario T-1: Create and open a space
   given: no spaces exist
   when: op:SpaceOperation.Create runs with name "Acme"
   then:
@@ -549,7 +549,7 @@ test T-1: Create and open a space
 ```
 
 ```mdl
-test T-2: Join space via invitation
+scenario T-2: Join space via invitation
   given: an invitation URL has been generated for an existing space
   when: op:SpaceOperation.Join runs with the invitation code
   then:
@@ -558,7 +558,7 @@ test T-2: Join space via invitation
 ```
 
 ```mdl
-test T-3: Add and remove object with undo
+scenario T-3: Add and remove object with undo
   given: a Collection in an active space
   when: op:SpaceOperation.AddObject adds object X, then op:SpaceOperation.RemoveObjects removes it
   then:
@@ -567,7 +567,7 @@ test T-3: Add and remove object with undo
 ```
 
 ```mdl
-test T-4: Export and import space
+scenario T-4: Export and import space
   given: a space containing 5 objects
   when: op:SpaceOperation.ExportSpace runs, then op:SpaceOperation.ImportSpace loads the archive
   then:
@@ -576,7 +576,7 @@ test T-4: Export and import space
 ```
 
 ```mdl
-test T-5: Schema registration
+scenario T-5: Schema registration
   given: an active space with no custom schemas
   when: op:SpaceOperation.AddSchema runs with a new schema definition
   then:
@@ -585,7 +585,7 @@ test T-5: Schema registration
 ```
 
 ```mdl
-test T-6: View field delete and restore
+scenario T-6: View field delete and restore
   given: a View with fields ["name", "email", "phone"]
   when: op:SpaceOperation.DeleteField removes "email", then op:SpaceOperation.RestoreField restores it
   then:
@@ -597,19 +597,19 @@ test T-6: View field delete and restore
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a space, add and remove an object
+test QA-1: Create a space, add and remove an object
   desc: The core space round-trip — create a space, add an object to it, remove it with undo data.
   actors: agent
   covers: [F-1.1, F-3.1, T-1, T-3]
   status: unverified
   given:
     - an identity exists
-    - no space named "QA Space" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no space named "QA Space" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the space
       do: Click "New space" in the sidebar and name it "QA Space".
       invoke: [op:SpaceOperation.Create] { name: "QA Space" }
@@ -653,7 +653,7 @@ flow QA-1: Create a space, add and remove an object
 ```
 
 ```mdl
-flow QA-2: Register a schema and add a typed relation
+test QA-2: Register a schema and add a typed relation
   desc: Schema-registry and relation round-trip — the machinery plugin-table/plugin-kanban build on.
   actors: agent
   covers: [F-4.1, T-5]
@@ -662,12 +662,12 @@ flow QA-2: Register a schema and add a typed relation
     - an identity exists
     - space: a space is open
     - no schema typename "example.org/type/QaThing" is already registered in the space — ABORT
-      rather than reusing a registration this flow did not create
+      rather than reusing a registration this test did not create
     - schema: a runtime `Schema.Struct` for typename "example.org/type/QaThing" to register
     - relationSchema: a runtime relation schema (source/target typed) to link `a` and `b` with
     - a: an object already in the space, the relation's source
     - b: an object already in the space, the relation's target
-  test:
+  steps:
     - name: Register the schema
       do: Open Settings -> Schema for the space and register a new type, or create an object of a
         new type from the type picker, which registers it implicitly.
@@ -683,7 +683,7 @@ flow QA-2: Register a schema and add a typed relation
       assert: return !!$result.relation;
   after:
     - name: No teardown
-      do: Schema registrations are not removed by this flow — they are lightweight and harmless
+      do: Schema registrations are not removed by this test — they are lightweight and harmless
         to leave in a scratch space.
       expect: the space still opens cleanly and the registered schemas remain listed
 ```
@@ -714,8 +714,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

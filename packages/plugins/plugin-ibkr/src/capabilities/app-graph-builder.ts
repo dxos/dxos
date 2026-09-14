@@ -16,7 +16,7 @@ import { Selection } from '@dxos/react-ui-attention/types';
 
 import { Ibkr } from '#types';
 
-import { meta } from '../meta';
+import { meta } from '../meta.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

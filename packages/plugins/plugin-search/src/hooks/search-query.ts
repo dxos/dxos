@@ -7,7 +7,7 @@ import { type URI } from '@dxos/keys';
 import { type SearchResult } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
-import { mapObjectToTextFields } from './sync';
+import { mapObjectToTextFields } from './sync.ts';
 
 /** Fallback for a type that declares no `IconAnnotation` — the same one the nav tree and cards use. */
 const DEFAULT_ICON = 'ph--circle-dashed--regular';

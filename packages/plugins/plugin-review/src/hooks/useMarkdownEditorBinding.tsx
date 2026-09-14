@@ -16,10 +16,10 @@ import { type SuggestionSource, changeBarGutter, type suggestionsOverlay } from 
 
 import { SuggestionSourcesProvider, VersionToolbar } from '#components';
 
-import { applyViewModeSelection } from './review-lifecycle';
-import { useReviewExtensions } from './useReviewExtensions';
-import { useVersionedEditor } from './useVersionedEditor';
-import { useVersioning } from './useVersioning';
+import { applyViewModeSelection } from './review-lifecycle.ts';
+import { useReviewExtensions } from './useReviewExtensions.ts';
+import { useVersionedEditor } from './useVersionedEditor.ts';
+import { useVersioning } from './useVersioning.ts';
 
 // The compare/diff overlay is swapped in and out through a compartment so toggling Compare
 // reconfigures the live editor rather than remounting it (which would rebind automerge and lose

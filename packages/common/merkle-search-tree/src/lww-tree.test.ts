@@ -6,9 +6,9 @@ import { test } from 'vitest';
 
 import { range } from '@dxos/util';
 
-import type { ActorID } from './common';
-import { LWWTree, type LWWTreeSyncMessage, initLWWTreeSyncState } from './lww-tree';
-import { randomKey } from './testing';
+import type { ActorID } from './common.ts';
+import { LWWTree, type LWWTreeSyncMessage, initLWWTreeSyncState } from './lww-tree.ts';
+import { randomKey } from './testing.ts';
 
 test('basic', async ({ expect }) => {
   const peer1: LWWTree<string> = await LWWTree.new({ actor: 'peer1' as ActorID });

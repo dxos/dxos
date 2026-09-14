@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as DeckSchema from './DeckSchema';
+import * as DeckSchema from './DeckSchema.ts';
 
 const makeState = (partial: Partial<DeckSchema.StoredDeckState> = {}): DeckSchema.StoredDeckState => ({
   sidebarState: 'expanded',

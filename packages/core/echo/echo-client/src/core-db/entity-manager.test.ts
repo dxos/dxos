@@ -11,10 +11,10 @@ import { DXN, EntityId, PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { getObjectCore } from '../echo-handler';
-import { type DatabaseImpl } from '../proxy-db';
-import { EchoTestBuilder, createTmpPath } from '../testing';
+import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
+import { getObjectCore } from '../echo-handler/index.ts';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 
 describe('DatabaseImpl', () => {
   describe('space fragmentation', () => {

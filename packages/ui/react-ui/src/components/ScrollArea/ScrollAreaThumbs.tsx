@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis } from '@dxos/ui-types';
 
-import { type ScrollbarDensity } from './scrollbar';
+import { type ScrollbarDensity } from './scrollbar.ts';
 
 /** Smallest rendered thumb so it stays grabbable on very long content. */
 const MIN_THUMB = 24;

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
 
-import * as Subscription from './Subscription';
+import * as Subscription from './Subscription.ts';
 
 // Structural gates (regex / URL format), used as form-field validation and to short-circuit the network
 // effects on obviously-malformed input. Handle existence is verified implicitly by the publication lookup

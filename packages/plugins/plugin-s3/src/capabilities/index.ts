@@ -12,7 +12,7 @@ import * as FileEvents from '@dxos/plugin-file/FileEvents';
 export const Connector = Capability.lazyModule(
   'Connector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
 
 export const BlobBackend = Capability.lazyModule(
@@ -24,5 +24,5 @@ export const BlobBackend = Capability.lazyModule(
     // ever fire an own-start event for it.
     activatesOn: FileEvents.Start,
   },
-  () => import('./blob-backend'),
+  () => import('./blob-backend.ts'),
 );

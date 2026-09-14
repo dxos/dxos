@@ -4,11 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as Entity from './Entity';
-import * as Obj from './Obj';
-import * as Relation from './Relation';
-import { TestSchema } from './testing';
-import * as Type from './Type';
+import * as Entity from './Entity.ts';
+import * as Obj from './Obj.ts';
+import * as Relation from './Relation.ts';
+import { TestSchema } from './testing/index.ts';
+import * as Type from './Type.ts';
 
 const makeObject = () =>
   Obj.make(TestSchema.Person, {

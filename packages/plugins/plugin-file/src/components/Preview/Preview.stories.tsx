@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import pdfUrl from '../../../fixtures/test.pdf?url';
-import { Preview } from './Preview';
+import { Preview } from './Preview.tsx';
 
 /** A 4×3 PNG of three coloured rows. Generated and verified to decode — see the Image story. */
 const PNG_URL =

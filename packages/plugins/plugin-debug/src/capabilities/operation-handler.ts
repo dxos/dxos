@@ -19,5 +19,6 @@ export default Capability.makeModule(
 // Console sugar for the snapshot operation (see app-framework/docs/INTROSPECTION.md §3.1).
 const setupDevtools = () => {
   const composer = (globalThis.composer ??= {});
-  composer.snapshot = () => composer.invoke?.('org.dxos.operation.debug.snapshot', {});
+  // `input` passes through, so a caller can scope the error window (`{ since }`).
+  composer.snapshot = (input: { since?: number } = {}) => composer.invoke?.('org.dxos.operation.debug.snapshot', input);
 };

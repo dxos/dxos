@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 
-import * as WorkerProtocol from '../WorkerProtocol';
+import * as WorkerProtocol from '../WorkerProtocol.ts';
 
 /**
  * Coordinator for single-client mode (e.g. Tauri / single-window).

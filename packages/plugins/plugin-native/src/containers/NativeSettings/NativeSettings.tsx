@@ -61,11 +61,11 @@ export const NativeSettings = () => {
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row label={t('settings.updates.label')} description={description}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+            <Form.Field standalone label={t('settings.updates.label')} description={description}>
               {button}
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

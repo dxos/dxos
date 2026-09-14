@@ -11,8 +11,8 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type JsonPath, type JsonProp } from './json-path';
-import * as Compat from './schema-ast';
+import { type JsonPath, type JsonProp } from './json-path.ts';
+import * as Compat from './schema-ast.ts';
 
 /** Annotation keys are strings in v4 (they were symbols in v3). */
 export type AnnotationKey = string;

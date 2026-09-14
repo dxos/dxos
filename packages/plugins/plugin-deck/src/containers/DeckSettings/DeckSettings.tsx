@@ -22,20 +22,20 @@ export const DeckSettings = ({ subject }: DeckSettingsProps) => {
 
   return (
     <Form.Root
-      variant='settings'
       schema={Settings.Settings}
       values={settings}
+      variant='settings'
       onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.FieldSet
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+            <Form.Fields
               filter={(properties) =>
                 isSocket ? properties.filter((property) => property.name !== 'enableNativeRedirect') : properties
               }
             />
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

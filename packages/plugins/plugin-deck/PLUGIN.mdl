@@ -18,11 +18,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `op@1.1`    | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -591,7 +591,7 @@ feat F-8: Flat Navigation (breadcrumbs)
 ## Acceptance
 
 ```mdl
-test T-1: Open subject beside an active plank
+scenario T-1: Open subject beside an active plank
   given: deck has planks A and B active (tiling presentation, desktop)
   when: Open({ subject: ['C'], disposition: 'add' }) is dispatched
   then:
@@ -602,7 +602,7 @@ test T-1: Open subject beside an active plank
 ```
 
 ```mdl
-test T-2: Open with pivot insertion
+scenario T-2: Open with pivot insertion
   given: deck has planks [A, B, C] active
   when: Open({ subject: ['D'], disposition: 'add', pivotId: 'A' }) is dispatched
   then:
@@ -611,7 +611,7 @@ test T-2: Open with pivot insertion
 ```
 
 ```mdl
-test T-3: Open already-visible subject
+scenario T-3: Open already-visible subject
   given: deck has plank A active
   when: Open({ subject: ['A'] }) is dispatched
   then:
@@ -620,7 +620,7 @@ test T-3: Open already-visible subject
 ```
 
 ```mdl
-test T-4: Enter fullscreen
+scenario T-4: Enter fullscreen
   given: deck has planks [A, B] active
   when: AdjustPlank({ id: 'A', type: 'fullscreen' }) is dispatched
   then:
@@ -630,7 +630,7 @@ test T-4: Enter fullscreen
 ```
 
 ```mdl
-test T-5: Exit fullscreen
+scenario T-5: Exit fullscreen
   given: EphemeralDeckState.fullscreen is 'A'
   when: AdjustPlank({ id: 'A', type: 'fullscreen' }) is dispatched
   then:
@@ -639,7 +639,7 @@ test T-5: Exit fullscreen
 ```
 
 ```mdl
-test T-6: Close plank
+scenario T-6: Close plank
   given: deck has planks [A, B, C] active; B has attention
   when: Close({ subject: ['B'] }) is dispatched
   then:
@@ -649,7 +649,7 @@ test T-6: Close plank
 ```
 
 ```mdl
-test T-7: Toast is shown and dismissed
+scenario T-7: Toast is shown and dismissed
   given: no toasts are in the queue
   when: AddToast({ title: 'Saved', duration: 3000 }) is dispatched
   then:
@@ -658,7 +658,7 @@ test T-7: Toast is shown and dismissed
 ```
 
 ```mdl
-test T-8: Two planks render tiling with a persisted split ratio
+scenario T-8: Two planks render tiling with a persisted split ratio
   given: deck has plank A active (fullbleed presentation, desktop)
   when: Open({ subject: ['B'], disposition: 'add' }) is dispatched and the user drags the divider
   then:
@@ -668,7 +668,7 @@ test T-8: Two planks render tiling with a persisted split ratio
 ```
 
 ```mdl
-test T-9: Sliding plank folds to a spine
+scenario T-9: Sliding plank folds to a spine
   given: deck has planks [A, B, C] active (sliding presentation, desktop)
   when: user scrolls until plank A's visible sliver is narrower than the fold threshold
   then:
@@ -677,7 +677,7 @@ test T-9: Sliding plank folds to a spine
 ```
 
 ```mdl
-test T-10: Desktop nav-tree click navigates solo
+scenario T-10: Desktop nav-tree click navigates solo
   tags: [F-7]
   given: deck has planks [A, B, C] active (desktop)
   when: user plain-clicks item D in the nav tree
@@ -687,7 +687,7 @@ test T-10: Desktop nav-tree click navigates solo
 ```
 
 ```mdl
-test T-11: Desktop modifier-click appends
+scenario T-11: Desktop modifier-click appends
   tags: [F-7]
   given: deck has planks [A, B] active (desktop)
   when: user modifier-clicks item C in the nav tree
@@ -695,7 +695,7 @@ test T-11: Desktop modifier-click appends
     - active deck becomes [A, B, C]
     - plank C is scrolled into view and attended
 
-test T-11a: Card navigation always adds beside the card's plank (add)
+scenario T-11a: Card navigation always adds beside the card's plank (add)
   tags: [F-7]
   given: a card navigation dispatches Open({ subject: ['C'], disposition: 'add', pivotId: 'A' })
          (pivotId is the plank the card is rendered within, resolved via Attention.getRootAttendableId)
@@ -706,7 +706,7 @@ test T-11a: Card navigation always adds beside the card's plank (add)
   then:
     - active deck becomes [A, C, B] (added beside its plank A, regardless of what is attended)
 
-test T-11b: In-plank inline reference follows the deck (auto)
+scenario T-11b: In-plank inline reference follows the deck (auto)
   tags: [F-7]
   given: an inline reference dispatches Open({ subject: ['C'], disposition: 'auto', pivotId: 'A' })
   when: the deck is solo [A]
@@ -718,7 +718,7 @@ test T-11b: In-plank inline reference follows the deck (auto)
 ```
 
 ```mdl
-test T-12: Mobile branch from mid-stack pops forward
+scenario T-12: Mobile branch from mid-stack pops forward
   tags: [F-7, proposed]
   given: deck has planks [A, B, C] active (mobile), B is the current plank
   when: user navigates to D from B
@@ -728,7 +728,7 @@ test T-12: Mobile branch from mid-stack pops forward
 ```
 
 ```mdl
-test T-13: Attention follows scroll with hysteresis
+scenario T-13: Attention follows scroll with hysteresis
   tags: [F-7]
   given: deck has planks [A, B, C] active (sliding presentation, desktop), A is attended
   when: user scrolls until plank A folds to a spine
@@ -738,7 +738,7 @@ test T-13: Attention follows scroll with hysteresis
 ```
 
 ```mdl
-test T-14: Flatten renders the current plank with breadcrumbs
+scenario T-14: Flatten renders the current plank with breadcrumbs
   tags: [F-8]
   given: the flatten setting is on and the active stack is [A, B, C]
   when: the deck renders
@@ -748,7 +748,7 @@ test T-14: Flatten renders the current plank with breadcrumbs
 ```
 
 ```mdl
-test T-15: Breadcrumb click goes back
+scenario T-15: Breadcrumb click goes back
   tags: [F-8]
   given: the flatten setting is on and the active stack is [A, B, C], C rendered
   when: the user clicks the breadcrumb for A
@@ -759,13 +759,13 @@ test T-15: Breadcrumb click goes back
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-deck is core layout infrastructure — it ships with every profile and is never toggled off.
 
 ```mdl
-flow QA-1: Open, resize, and close a second plank
+test QA-1: Open, resize, and close a second plank
   desc: The core deck round-trip — open a document beside an existing plank, resize the tiling split, close it.
   actors: agent
   covers: [F-1.1, F-1.6, F-3.1, T-1]
@@ -775,7 +775,7 @@ flow QA-1: Open, resize, and close a second plank
     - space: a space is open
     - collection: a collection in that space, to create into
     - doc1: a Markdown document named "QA Deck Doc 1" already exists and is open as the sole plank
-  test:
+  steps:
     - name: Create a second document
       do: In the navtree, click + on a collection and choose Markdown. Name it "QA Deck Doc 2".
       invoke: org.dxos.operation.markdown.createDraft { name: "QA Deck Doc 2", content: "# QA Deck Doc 2\n" }
@@ -813,7 +813,7 @@ flow QA-1: Open, resize, and close a second plank
 ```
 
 ```mdl
-flow QA-2: Sidebar and companion toggles
+test QA-2: Sidebar and companion toggles
   desc: The chrome operations outside the deck itself — sidebar visibility and the companion pane.
   actors: agent
   covers: [F-3.1, F-3.2]
@@ -821,7 +821,7 @@ flow QA-2: Sidebar and companion toggles
   given:
     - an identity exists
     - space: a space is open
-  test:
+  steps:
     - name: Collapse the sidebar
       do: Click the sidebar toggle in the top-left corner.
       invoke: [op:UpdateSidebar] { state: "collapsed" }
@@ -870,8 +870,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

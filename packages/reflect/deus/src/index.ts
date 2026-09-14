@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './extension';
+export * from './extension/index.ts';

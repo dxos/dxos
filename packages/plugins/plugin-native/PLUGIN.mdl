@@ -17,10 +17,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -171,7 +171,7 @@ feat F-3: Ollama Sidecar
 ## Acceptance
 
 ```mdl
-test T-1: Spotlight open dispatches LayoutOperation.Open
+scenario T-1: Spotlight open dispatches LayoutOperation.Open
   given: Composer is running and SpotlightListener is active
   when: a spotlight:invoke Tauri event arrives with operation = 'open' and payload { spaceId: 'abc' }
   then:
@@ -180,7 +180,7 @@ test T-1: Spotlight open dispatches LayoutOperation.Open
 ```
 
 ```mdl
-test T-2: Unknown spotlight operation is silently dropped
+scenario T-2: Unknown spotlight operation is silently dropped
   given: SpotlightListener is active
   when: a spotlight:invoke event arrives with operation = 'foobar'
   then:
@@ -189,7 +189,7 @@ test T-2: Unknown spotlight operation is silently dropped
 ```
 
 ```mdl
-test T-3: Update check transitions status atom
+scenario T-3: Update check transitions status atom
   given: Updater module is active on a supported platform
   when: CheckForUpdate is called
   then:
@@ -199,7 +199,7 @@ test T-3: Update check transitions status atom
 ```
 
 ```mdl
-test T-4: Failed update check transitions to failed status
+scenario T-4: Failed update check transitions to failed status
   given: Updater module is active
   when: the Tauri updater plugin throws an error during check
   then:
@@ -208,7 +208,7 @@ test T-4: Failed update check transitions to failed status
 ```
 
 ```mdl
-test T-5: Dev-server build disables updater
+scenario T-5: Dev-server build disables updater
   given: the app is served on a port outside TAURI_LOCALHOST_PORTS
   when: the Updater module activates
   then:
@@ -220,11 +220,11 @@ test T-5: Dev-server build disables updater
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Check for an OTA update
+test QA-1: Check for an OTA update
   desc: |
     The plugin contributes no runtime operation — `CheckForUpdate`, `InstallUpdate`, and
     `RelaunchApp` are direct calls into the Tauri updater/shell plugins from native-only code
@@ -239,7 +239,7 @@ flow QA-1: Check for an OTA update
   given:
     - a Tauri desktop build of Composer is installed and running (macOS, Linux, or Windows)
     - an OTA update is actually available for the running version
-  test:
+  steps:
     - name: Check for an update
       do: Open Settings → App, and click "Check for updates" (or wait for the hourly background check).
       expect: the status line transitions checking → available, showing the new version string
@@ -255,7 +255,7 @@ flow QA-1: Check for an OTA update
       blocked: Same as the previous step — `InstallUpdate`/`RelaunchApp` are native-only and have no operation key.
   after:
     - name: (nothing to undo)
-      do: No fixture was created; an update, once installed, cannot be un-installed by this flow.
+      do: No fixture was created; an update, once installed, cannot be un-installed by this test.
       expect: n/a
 ```
 
@@ -288,8 +288,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

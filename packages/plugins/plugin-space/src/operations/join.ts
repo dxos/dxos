@@ -11,9 +11,9 @@ import { HaloServicesLayer } from '@dxos/plugin-client';
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
-import { JOIN_DIALOG } from '../constants';
-import type { JoinDialogProps } from '../containers/JoinDialog';
-import { NoIdentityError } from '../errors';
+import { JOIN_DIALOG } from '../constants.ts';
+import type { JoinDialogProps } from '../containers/JoinDialog/index.ts';
+import { NoIdentityError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(
   Operation.withHandler(

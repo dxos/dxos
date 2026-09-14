@@ -15,7 +15,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Ibkr } from '#types';
 
-import { PortfolioProperties } from './PortfolioProperties';
+import { PortfolioProperties } from './PortfolioProperties.tsx';
 
 const DefaultStory = () => {
   const { space } = useClientStory();

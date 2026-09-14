@@ -16,7 +16,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { WelcomeDismissedAnnotation } from '../../annotations';
+import { WelcomeDismissedAnnotation } from '../../annotations.ts';
 
 export type SupportSettingsProps = AppSurface.SettingsData;
 
@@ -55,14 +55,14 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
             {onShowWelcome && (
-              <Form.Row label={t('show-welcome.label')}>
+              <Form.Field standalone label={t('show-welcome.label')}>
                 <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
-              </Form.Row>
+              </Form.Field>
             )}
-            <Form.FieldSet />
-          </Form.Section>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

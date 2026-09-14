@@ -8,7 +8,7 @@ import type { Space } from '@dxos/client/echo';
 import type { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { JsonView } from '../../../components';
+import { JsonView } from '../../../components/index.ts';
 
 interface DatabaseStatsInfoProps {
   space: Space;

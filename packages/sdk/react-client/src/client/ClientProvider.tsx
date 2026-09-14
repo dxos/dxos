@@ -17,8 +17,8 @@ import { log } from '@dxos/log';
 import { useAsyncEffect, useControlledState } from '@dxos/react-hooks';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
-import { printBanner } from '../banner';
-import { ClientContext, type ClientContextProps } from './context';
+import { printBanner } from '../banner.ts';
+import { ClientContext, type ClientContextProps } from './context.ts';
 
 /**
  * Properties for the ClientProvider.

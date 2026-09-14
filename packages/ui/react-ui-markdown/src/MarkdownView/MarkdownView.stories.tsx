@@ -8,7 +8,7 @@ import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { MarkdownView } from './MarkdownView';
+import { MarkdownView } from './MarkdownView.tsx';
 
 random.seed(0);
 

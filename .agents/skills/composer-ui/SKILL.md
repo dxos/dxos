@@ -181,7 +181,7 @@ When you do need a box — inside `ScrollArea.Viewport`, between `Panel` parts, 
 already give you one — reach for these before writing `<div className='flex …'>`. All take `asChild`, so
 the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra DOM node.
 `Flex`/`Grid`/`Container` live in
-[`packages/ui/react-ui/src/primitives/`](../../../packages/ui/react-ui/src/primitives) (not
+[`packages/ui/react-ui/src/layout/`](../../../packages/ui/react-ui/src/layout) (not
 `components/`); `Column` is in `components/Column`.
 
 - **`Flex`** — `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`. `grow` is
@@ -195,7 +195,8 @@ the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra 
 - **`Column`** — the gutter grid: three tracks (leading gutter / content / trailing gutter) sized by
   `--gutter`. This is what aligns icons, controls, and scrollbars to the same vertical rules across
   every surface, so use it instead of hand-padding a content column.
-- **`Container`** — a bare `dx-container` (fill + clip) box, for when the only job is to fill and clip.
+- **`Container`** — a bare `dx-expand` box, for when the only job is to fill the parent. Add
+  `overflow-hidden` yourself if a clip is also wanted; it is no longer implied.
 
 ```tsx
 <Flex column gap='sm'>…</Flex>
@@ -216,7 +217,7 @@ body and pulls the scrollbar inboard. Nest with `subgrid` when a `Column` (or `C
 3-track grid and must inherit its rules rather than invent new ones.
 
 **`gap` takes ramp steps, not Tailwind numbers.** `xs | sm | md | lg | xl | 2xl | form | form-section`
-([`primitives/layout.ts`](../../../packages/ui/react-ui/src/primitives/layout.ts)) — a `gap-2` literal is
+([`layout/layout.ts`](../../../packages/ui/react-ui/src/layout/layout.ts)) — a `gap-2` literal is
 precisely the drift the prop exists to prevent. `Flex` grows **no** padding or colour props on purpose
 (components own their spacing); everything else goes through `classNames`. There is no implicit `align`:
 row-centering is common, but defaulting it would silently restyle consumers relying on CSS `stretch`.
@@ -347,26 +348,35 @@ Never hand-roll native `<input>` / `<textarea>` / `<select>` in a plugin — the
 `Form` from `@dxos/react-ui-form`, which renders themed inputs from the Effect Schema (strings, numbers,
 booleans, enums via `Schema.Literal`/`Format`, nested `Schema.Struct`, `Schema.Array`, `Schema.Record`).
 
-**`Form` is composed — `Form.Root` renders nothing on its own.** The fields come from `Form.FieldSet` (or
-`Form.Layout`), nested inside the standard Radix wrapper pair: `Form.Viewport` (outer) → `Form.Content`
-(inner), which own scroll and padding (so, like List/Stack, don't pad them yourself):
+**`Form` is composed — `Form.Root` renders nothing on its own.** Three parts map one for one onto
+`react-ui`'s `Field` and `Fieldset`: `Form.Field` is a field (one row), `Form.FieldSet` is a
+`<fieldset>` (a titled group, chrome by depth), and `Form.Fields` walks the schema and renders no
+element. They nest inside the standard wrapper pair `Form.Viewport` (outer) → `Form.Content` (inner),
+which own scroll and padding (so, like List/Stack, don't pad them yourself):
 
 ```tsx
 <Form.Root schema={Type.getSchema(Foo)} values={obj} autoSave onSave={handleSave}>
   <Form.Viewport>
     <Form.Content>
-      <Form.Section label='…' description='…' /> {/* optional grouping */}
-      <Form.FieldSet /> {/* fields, generated from the schema */}
+      <Form.FieldSet label='…' description='…'>
+        <Form.Fields /> {/* one Form.Field per schema property */}
+      </Form.FieldSet>
       <Form.Actions /> {/* Save/Cancel — omit when autoSave */}
     </Form.Content>
   </Form.Viewport>
 </Form.Root>
 ```
 
-- **`Form.FieldSet`** is driven _entirely_ by the schema and its annotations — fields, order, labels,
-  visibility. Hide a field with `FormInputAnnotation.set(false)`; there's no manual field markup.
-- **`Form.Layout template={…}`** is the alternative to `FieldSet`: a custom layout DSL for arranging
-  fields (grouping, columns, ordering) when the default schema order isn't enough.
+- **`Form.Fields`** is driven _entirely_ by the schema and its annotations — fields, order, labels,
+  visibility; `path`, `include`, `exclude`, `sort` narrow it. Hide a field with
+  `FormInputAnnotation.set(false)`. The simplest form is `<Form.Root schema={schema} values={values}><Form.Fields /></Form.Root>`.
+- **`Form.Field`** is the leaf and always a real field. `<Form.Field path='hue' />` is bound: label,
+  description, value and error come from the schema, and the dispatcher picks the control; put a
+  child in it for a custom control (read the binding with `useFormField()`). A hand-written row is
+  `<Form.Field label description><Field.Switch … /></Form.Field>`: the row's label names the control.
+  A row holding a button or a readout says `standalone`.
+- **`Form.Layout template={…}`** is the alternative to `Form.Fields`: a custom layout DSL for
+  arranging fields (columns, ordering) when the default schema order isn't enough.
 
 **Save model — the form never mutates `values`; the parent applies the change.** Pick a mode:
 
@@ -443,7 +453,7 @@ export const FooCard = forwardRef<HTMLDivElement, FooCardProps>(({ subject, curr
 ));
 ```
 
-For authoring brand-new composite primitives (Radix-style `Foo.Root`/`Foo.Content` with `slottable()` /
+For authoring brand-new composite primitives (`Foo.Root`/`Foo.Content` with `slottable()` /
 `composableProps`), see [[composite-components]].
 
 ## Attention & density

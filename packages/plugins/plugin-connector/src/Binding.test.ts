@@ -34,9 +34,9 @@ import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
 
-import * as Binding from './Binding';
-import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync';
-import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors';
+import * as Binding from './Binding.ts';
+import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync.ts';
+import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors.ts';
 /**
  * The binding namespace: pairing an object with the feed a connection syncs into it, the account that
  * gates a resume, the schedule that drives it, and what a disconnect leaves behind.

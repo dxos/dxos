@@ -6,7 +6,7 @@ import { asyncBufferFromUrl, parquetMetadataAsync, parquetReadObjects } from 'hy
 
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { type ParquetRow } from './parquet';
+import { type ParquetRow } from './parquet.ts';
 
 // Maps rows from the Enron email dataset (see the dataset's `dataset_info` schema) onto ECHO Messages.
 

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export { useMobileLayout } from './MobileLayoutContext';
+export { useMobileLayout } from './MobileLayoutContext.ts';
 
-export * from './MobileAppBar';
-export * from './MobileLayout';
-export * from './MobileNavBar';
+export * from './MobileAppBar.tsx';
+export * from './MobileLayout.tsx';
+export * from './MobileNavBar.tsx';

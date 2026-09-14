@@ -17,8 +17,8 @@ import { trim } from '@dxos/util';
 
 import { TripOperation } from '#types';
 
-import { TRIP_SKILL_KEY } from '../skills';
-import { buildTripFromEvents } from './events-to-segments';
+import { TRIP_SKILL_KEY } from '../skills/index.ts';
+import { buildTripFromEvents } from './events-to-segments.ts';
 
 export default TripOperation.CreateTripFromEvents.pipe(
   Operation.withHandler(

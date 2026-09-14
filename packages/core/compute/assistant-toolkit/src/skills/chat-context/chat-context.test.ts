@@ -13,8 +13,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 
-import { ChatContextHandlers } from './operations';
-import ChatContextSkill from './skill';
+import { ChatContextHandlers } from './operations/index.ts';
+import ChatContextSkill from './skill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

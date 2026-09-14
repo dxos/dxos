@@ -15,9 +15,9 @@ import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/sche
 
 import { AtprotoPublication } from '#types';
 
-import { computePublishedValues } from './field-values';
-import { computeStatus, deriveDisplayStatus, publishObject, unpublishObject } from './publish';
-import * as AtprotoRepo from './services/AtprotoRepo';
+import { computePublishedValues } from './field-values.ts';
+import { computeStatus, deriveDisplayStatus, publishObject, unpublishObject } from './publish.ts';
+import * as AtprotoRepo from './services/AtprotoRepo.ts';
 
 // A minimal atproto-annotated type. Its lens projects only the public `text` field, exercising the
 // generic publish machinery without depending on a specific content plugin.

@@ -25,8 +25,37 @@ const canonicalStringify = (value: unknown): string => {
   return JSON.stringify(sortKeys(value));
 };
 
-const canonicalJsonOf = (json: Record<string, unknown>): string =>
-  canonicalStringify(EchoFeedCodec.stripQueuePosition(json));
+/**
+ * 128-bit non-cryptographic digest (cyrb128) of a string. Four independently-seeded 32-bit lanes
+ * mixed and avalanched, rendered as 32 hex chars.
+ */
+const cyrb128 = (input: string): string => {
+  let h1 = 1779033703;
+  let h2 = 3144134277;
+  let h3 = 1013904242;
+  let h4 = 2773480762;
+  for (let i = 0; i < input.length; i++) {
+    const code = input.charCodeAt(i);
+    h1 = h2 ^ Math.imul(h1 ^ code, 597399067);
+    h2 = h3 ^ Math.imul(h2 ^ code, 2869860233);
+    h3 = h4 ^ Math.imul(h3 ^ code, 951274213);
+    h4 = h1 ^ Math.imul(h4 ^ code, 2716044179);
+  }
+  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+  const lanes = [(h1 ^ h2 ^ h3 ^ h4) >>> 0, (h2 ^ h1) >>> 0, (h3 ^ h1) >>> 0, (h4 ^ h1) >>> 0];
+  return lanes.map((lane) => lane.toString(16).padStart(8, '0')).join('');
+};
+
+/**
+ * Digest of the entity's canonical (position-stripped) JSON. Reconciliation only ever compares
+ * states for equality, so retaining the digest instead of the JSON keeps per-object overhead O(1)
+ * rather than O(document size) — mail payloads run to hundreds of KB each.
+ */
+const canonicalDigestOf = (json: Record<string, unknown>): string =>
+  cyrb128(canonicalStringify(EchoFeedCodec.stripQueuePosition(json)));
 
 const positionOf = (entity: Entity.Unknown): number | undefined => {
   const key = Entity.getKeys(entity, FeedProtocol.KEY_QUEUE_POSITION).at(0);
@@ -48,8 +77,8 @@ const positionOf = (entity: Entity.Unknown): number | undefined => {
  * coalesce to a single append (the latest combined state), so only ONE state is ever pending — we
  * never queue intermittent states.
  *
- * Reconciliation is a small state machine over a single `#state` (the latest known canonical JSON)
- * and a version (`KEY_QUEUE_POSITION`) baseline:
+ * Reconciliation is a small state machine over a single `#state` (a digest of the latest known
+ * canonical JSON) and a version (`KEY_QUEUE_POSITION`) baseline:
  *
  *   Obj.update → dirty (local, unappended) → appended (awaiting echo) → roundtripped (came back)
  *
@@ -78,8 +107,9 @@ export class FeedObjectCore {
   #unsubscribe: (() => void) | undefined;
 
   /**
-   * Canonical (position-stripped) JSON of the entity's current known state — the single source of
-   * truth for reconciliation comparisons (updated on capture and on applied remote reads).
+   * Digest of the canonical (position-stripped) JSON of the entity's current known state — the
+   * single source of truth for reconciliation comparisons (updated on capture and on applied remote
+   * reads). A digest rather than the JSON because every use is an equality test.
    */
   #state: string;
 
@@ -90,7 +120,7 @@ export class FeedObjectCore {
   #version: number | undefined;
 
   /**
-   * Canonical JSON of the state captured for append and awaiting its echo (roundtrip). A single
+   * Digest of the state captured for append and awaiting its echo (roundtrip). A single
    * slot, not a list: appends coalesce to the latest combined state, so at most one write is in
    * flight; a later capture simply replaces it. `undefined` once roundtripped.
    */
@@ -98,7 +128,7 @@ export class FeedObjectCore {
 
   constructor(entity: Entity.Unknown, onDirty: (core: FeedObjectCore) => void) {
     this.entity = entity;
-    this.#state = canonicalJsonOf(Entity.toJSON(entity) as Record<string, unknown>);
+    this.#state = canonicalDigestOf(Entity.toJSON(entity) as Record<string, unknown>);
     this.#version = positionOf(entity);
     this.#unsubscribe = Entity.subscribe(entity, () => {
       if (this.#applyingRemote || this.#deleted) {
@@ -117,11 +147,11 @@ export class FeedObjectCore {
    */
   captureForAppend(): { json: Record<string, unknown>; token: string } {
     const json = Entity.toJSON(this.entity) as Record<string, unknown>;
-    const canonical = canonicalJsonOf(json);
-    this.#pendingAppend = canonical;
-    this.#state = canonical;
+    const digest = canonicalDigestOf(json);
+    this.#pendingAppend = digest;
+    this.#state = digest;
     this.#dirty = false;
-    return { json, token: canonical };
+    return { json, token: digest };
   }
 
   /**
@@ -147,14 +177,14 @@ export class FeedObjectCore {
       return;
     }
 
-    const inboundCanonical = canonicalJsonOf(inboundJson);
+    const inboundDigest = canonicalDigestOf(inboundJson);
     const inboundPosition = positionOf(decoded);
 
     if (this.#pendingAppend !== undefined) {
-      if (inboundCanonical === this.#pendingAppend) {
+      if (inboundDigest === this.#pendingAppend) {
         // Our own append roundtripped: adopt its version and stop preferring local.
         this.#pendingAppend = undefined;
-        this.#state = inboundCanonical;
+        this.#state = inboundDigest;
         this.#version = inboundPosition ?? this.#version;
         this.#mergeQueuePosition(decoded);
         return;
@@ -165,14 +195,14 @@ export class FeedObjectCore {
       if (this.#strictlyNewer(inboundPosition)) {
         this.#pendingAppend = undefined;
         this.#applyRemote(decoded);
-        this.#state = inboundCanonical;
+        this.#state = inboundDigest;
         this.#version = inboundPosition;
       }
       return;
     }
 
     // Clean (no local change, nothing pending).
-    if (inboundCanonical === this.#state) {
+    if (inboundDigest === this.#state) {
       // No content change — a repeated poll; keep the position baseline in sync.
       this.#mergeQueuePosition(decoded);
       if (inboundPosition !== undefined) {
@@ -184,7 +214,7 @@ export class FeedObjectCore {
     // (out-of-order) stale read.
     if (!this.#strictlyOlder(inboundPosition)) {
       this.#applyRemote(decoded);
-      this.#state = inboundCanonical;
+      this.#state = inboundDigest;
       this.#version = inboundPosition ?? this.#version;
     }
   }

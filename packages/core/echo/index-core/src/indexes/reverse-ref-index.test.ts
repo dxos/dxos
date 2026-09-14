@@ -12,9 +12,9 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { EntityMetaIndex } from './entity-meta-index';
-import type { IndexerObject } from './interface';
-import { ReverseRefIndex } from './reverse-ref-index';
+import { EntityMetaIndex } from './entity-meta-index.ts';
+import type { IndexerObject } from './interface.ts';
+import { ReverseRefIndex } from './reverse-ref-index.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_EXAMPLE = DXN.make('com.example.type.example', '0.1.0');

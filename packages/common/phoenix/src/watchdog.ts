@@ -10,7 +10,7 @@ import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils';
+import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils.ts';
 
 export type ProcessInfo = WatchDogProps & {
   pid?: number;

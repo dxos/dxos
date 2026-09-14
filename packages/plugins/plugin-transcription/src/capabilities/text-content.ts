@@ -10,7 +10,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { Message, Transcript } from '@dxos/types';
 
-import { renderByline } from '../util';
+import { renderByline } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

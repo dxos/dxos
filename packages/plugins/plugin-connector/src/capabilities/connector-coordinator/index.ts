@@ -22,5 +22,5 @@ export const Coordinator = Capability.lazyModule(
     ],
     provides: [ConnectorCoordination.ConnectorCoordinator],
   },
-  () => import('./connector-coordinator'),
+  () => import('./connector-coordinator.ts'),
 );

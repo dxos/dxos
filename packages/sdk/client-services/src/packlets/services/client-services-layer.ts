@@ -24,16 +24,16 @@ import {
   SpacesService,
 } from '@dxos/protocols/rpc';
 
-import { EdgeAgentServiceImpl } from '../agents';
-import { DevicesServiceImpl } from '../devices';
-import { IdentityManagerService, IdentityServiceImpl } from '../identity';
-import { ContactsServiceImpl } from '../identity/contacts-service';
-import { EdgeIdentityRecoveryManagerService } from '../identity/identity-recovery-manager';
-import { InvitationsManagerService, InvitationsServiceImpl } from '../invitations';
-import { NetworkServiceImpl } from '../network';
-import { SpaceManagerService } from '../space';
-import { SpacesServiceImpl } from '../spaces';
-import { ClientServicesHostService } from './service-host';
+import { EdgeAgentServiceImpl } from '../agents/index.ts';
+import { DevicesServiceImpl } from '../devices/index.ts';
+import { ContactsServiceImpl } from '../identity/contacts-service.ts';
+import { EdgeIdentityRecoveryManagerService } from '../identity/identity-recovery-manager.ts';
+import { IdentityManagerService, IdentityServiceImpl } from '../identity/index.ts';
+import { InvitationsManagerService, InvitationsServiceImpl } from '../invitations/index.ts';
+import { NetworkServiceImpl } from '../network/index.ts';
+import { SpaceManagerService } from '../space/index.ts';
+import { SpacesServiceImpl } from '../spaces/index.ts';
+import { ClientServicesHostService } from './service-host.ts';
 
 //
 // Each client RPC service handler is exposed as an individual Effect service tag. Handlers depend

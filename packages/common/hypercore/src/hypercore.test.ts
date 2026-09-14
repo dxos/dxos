@@ -6,18 +6,17 @@ import { type AbstractValueEncoding } from 'hypercore';
 import { promisify } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
-import { type Codec } from '@dxos/codec-protobuf';
 import { createKeyPair } from '@dxos/crypto';
 
-import { createCodecEncoding } from './crypto';
-import { HypercoreFactory } from './hypercore-factory';
+import { type ValueCodec, createCodecEncoding } from './crypto.ts';
+import { HypercoreFactory } from './hypercore-factory.ts';
 
 type TestItem = {
   key: string;
   value: string;
 };
 
-const codec: Codec<TestItem> = {
+const codec: ValueCodec<TestItem> = {
   encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),
   decode: (buffer: Uint8Array) => JSON.parse(buffer.toString()),
 };

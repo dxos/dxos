@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -275,7 +275,7 @@ feat F-7: Anchor Navigation
 ## Acceptance
 
 ```mdl
-test T-1: Create sheet and enter a value
+scenario T-1: Create sheet and enter a value
   given: a new Sheet is created in a space
   when: user types "42" into cell A1
   then:
@@ -284,7 +284,7 @@ test T-1: Create sheet and enter a value
 ```
 
 ```mdl
-test T-2: Formula evaluation
+scenario T-2: Formula evaluation
   given: A1 = 10, A2 = 20
   when: user enters "=A1+A2" in A3
   then:
@@ -293,7 +293,7 @@ test T-2: Formula evaluation
 ```
 
 ```mdl
-test T-3: Insert and drop row
+scenario T-3: Insert and drop row
   given: a Sheet with values in rows 1 and 2
   when: op:insertAxis runs with axis=row, index=1
   then:
@@ -307,7 +307,7 @@ test T-3: Insert and drop row
 ```
 
 ```mdl
-test T-4: Range formatting
+scenario T-4: Range formatting
   given: a Sheet open in SheetArticle
   when: user applies "highlight" style to range B2:C4
   then:
@@ -316,7 +316,7 @@ test T-4: Range formatting
 ```
 
 ```mdl
-test T-5: Real-time collaboration
+scenario T-5: Real-time collaboration
   given: two peers have the same Sheet open
   when: peer A sets cell D5 to "hello"
   then:
@@ -324,7 +324,7 @@ test T-5: Real-time collaboration
 ```
 
 ```mdl
-test T-6: Scroll to anchor
+scenario T-6: Scroll to anchor
   given: a SheetArticle is mounted with attendableId "sheet-1"
   when: op:scrollToAnchor runs with subject="sheet-1", cursor="E10"
   then:
@@ -336,11 +336,11 @@ test T-6: Scroll to anchor
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a sheet, set values, evaluate a formula, read back
+test QA-1: Create a sheet, set values, evaluate a formula, read back
   desc: The core spreadsheet round-trip — create, set cells (including a formula), read the
     evaluated result back.
   actors: agent
@@ -350,9 +350,9 @@ flow QA-1: Create a sheet, set values, evaluate a formula, read back
     - an identity exists
     - space: a space is open
     - root: the space's root collection — [op:create] takes no target and files the Sheet
-      there via `CollectionModel.add`, so the flow cannot choose a different one
-    - no Sheet named "QA Sheet" exists — ABORT rather than reusing one this flow did not create
-  test:
+      there via `CollectionModel.add`, so the test cannot choose a different one
+    - no Sheet named "QA Sheet" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Create the sheet
       do: In the navtree, click + on a collection and choose Sheet. Name it "QA Sheet".
       invoke: [op:create] { name: "QA Sheet" }
@@ -424,8 +424,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

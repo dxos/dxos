@@ -18,8 +18,8 @@ import {
   useRegistryPluginProvider,
   useRemotePluginIds,
   useVersionPicker,
-} from '../../hooks';
-import { getPluginPath } from '../../paths';
+} from '../../hooks/index.ts';
+import { getPluginPath } from '../../paths.ts';
 
 export type PluginArticleProps = { subject: Plugin.Plugin };
 

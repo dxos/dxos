@@ -8,10 +8,10 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { Markers, useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
-import { useEditorContext } from '../../hooks';
-import { type CanvasBoard } from '../../types';
-import { ShapeComponent, type ShapeComponentProps } from './Shape';
-import { DEFS_ID, MARKER_PREFIX } from './shape-defs';
+import { useEditorContext } from '../../hooks/index.ts';
+import { type CanvasBoard } from '../../types/index.ts';
+import { DEFS_ID, MARKER_PREFIX } from './shape-defs.ts';
+import { ShapeComponent, type ShapeComponentProps } from './Shape.tsx';
 
 export type ShapesProps = ThemedClassName<{ layout: CanvasBoard.Layout }> & HTMLAttributes<HTMLDivElement>;
 

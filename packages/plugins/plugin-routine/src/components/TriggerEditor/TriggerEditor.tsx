@@ -10,14 +10,14 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { wireTriggers } from '../../util';
+import { wireTriggers } from '../../util/index.ts';
 import {
   FrequencyDefaults,
   Schedule,
@@ -26,8 +26,8 @@ import {
   cronToSchedule,
   scheduleToCron,
   toCron,
-} from '../Schedule';
-import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
+} from '../Schedule/index.ts';
+import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector.tsx';
 
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
@@ -314,9 +314,9 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
       {kind ? (
         <>
           <div className='flex items-center'>
-            <Input.Root>
-              <Input.Label classNames='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</Input.Label>
-            </Input.Root>
+            <Field.Root>
+              <Field.Label classNames='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
+            </Field.Root>
             {!readonly && (
               <IconButton
                 variant='ghost'
@@ -328,10 +328,10 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
               />
             )}
           </div>
-          <Form.FieldSet path={TRIGGER_PATH} schema={TriggerForm} classNames='px-2' />
+          <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
         </>
       ) : (
-        <Form.FieldSet path={TRIGGER_PATH} schema={TriggerForm} />
+        <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
       )}
 
       {/* Currently, email triggers have no configuration; surface an explanatory note instead of an empty body. */}

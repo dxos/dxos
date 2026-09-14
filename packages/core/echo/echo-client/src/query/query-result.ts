@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
-import { getObjectCore, isEchoObject } from '../echo-handler';
-import { type QueryContext, type SourceEntry } from './query-context';
+import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
+import { type QueryContext, type SourceEntry } from './query-context.ts';
 
 /**
  * True when any part of the query asks for deleted entities.

@@ -138,6 +138,26 @@ const optimizeDepsInclude = [
  */
 const watchIgnored = ['**/dist/**', '**/out/**', '**/.moon/**', '**/temp/**', '**/.playwright-mcp/**'];
 
+/**
+ * Watcher options for the dev server.
+ *
+ * `useFsEvents: false` is the load-bearing one. Vite inlines a patched chokidar 3 into its own
+ * bundle, and chokidar 3's fsevents backend fans every raw event out over one `Set` of listeners
+ * per watched tree, each listener re-building `resolvedPath + sep` and running `indexOf` on the
+ * event path. Vite registers one listener per file it transforms from outside `root`, and serving
+ * every `@dxos/**` package from source puts tens of thousands of files there — measured at 17k
+ * listeners on a single tree, ~1.3ms of main-thread time per raw event, and ~4s of blocked event
+ * loop for one `moon run <pkg>:build`. `watchIgnored` cannot help: chokidar consults it only when
+ * registering a watch, never on the raw-event path. The `fs.watch` backend has no such fan-out.
+ *
+ * This only changes macOS: chokidar's fsevents backend does not exist elsewhere, so Linux (CI, the
+ * e2e config) already runs the `fs.watch` path this selects.
+ *
+ * `usePolling: false` is not redundant — chokidar 3 turns polling ON by default on macOS whenever
+ * `useFsEvents` is false, which would be far worse than what it replaces.
+ */
+const watchOptions = { ignored: watchIgnored, useFsEvents: false, usePolling: false };
+
 // Minimal structural view of a Babel AST node for a dependency-free traversal.
 type AstNode = { type: string } & Record<string, unknown>;
 
@@ -363,7 +383,7 @@ export const createConfig = ({
           },
           // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it
           // in run mode only, so interactive `storybook dev` (local + e2e) and `vitest watch` keep HMR.
-          ...(isVitestRun ? { watch: null } : { watch: { ignored: watchIgnored } }),
+          ...(isVitestRun ? { watch: null } : { watch: watchOptions }),
         },
         optimizeDeps: {
           // WASM modules.

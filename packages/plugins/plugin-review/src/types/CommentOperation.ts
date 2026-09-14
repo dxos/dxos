@@ -26,11 +26,22 @@ export const Create = Operation.make({
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     anchor: Schema.optional(Schema.String),
+    // Character offsets into a markdown document's text, converted to the cursor anchor the editor
+    // uses; a caller without an editor (an agent) cannot mint cursors itself.
+    range: Schema.optional(Schema.Struct({ from: Schema.Number, to: Schema.Number })),
     subject: Obj.Unknown,
+    // A first message submits the thread at once, as the composer's send does; without it the thread
+    // stays a draft in the companion, which only the UI can reach.
+    text: Schema.optional(Schema.String),
+    sender: Schema.optional(Actor.Actor),
     /** Branch the comment pertains to (a branch-review comment); undefined = main/unbranched. */
     branch: Schema.optional(Schema.String),
   }),
-  output: Schema.Void,
+  output: Schema.Struct({
+    threadId: Schema.String,
+    // The persisted relation's id when a first message was given, otherwise the draft's.
+    anchorId: Schema.String,
+  }),
 });
 
 export const DeleteOutput = Schema.Struct({
@@ -121,7 +132,7 @@ export const DeleteMessage = Operation.make({
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
     subject: Obj.Unknown,
-    messageId: Schema.String,
+    message: Ref.Ref(Message.Message),
   }),
   output: DeleteMessageOutput,
 });

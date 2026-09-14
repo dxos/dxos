@@ -188,14 +188,53 @@ const lazyImportedEntry = (dir: string): string[] => {
 };
 
 /**
- * Read a repeated `--flag=value` build argument out of a workspace's moon task definition. Packages
- * with a browser build declare their entry points and the packages bundled into them there, and
- * neither is visible in the import graph.
+ * Read a workspace's `vite.config.ts`. A library build declares its entry points and the packages
+ * inlined into it there, and neither is visible in the import graph. (These used to be
+ * `--entryPoint=` / `--bundlePackage=` arguments on the moon build task.)
  */
-const moonBuildArgs = (dir: string, flag: string): string[] => {
-  const manifest = globSync(`${dir}/moon.yml`).map((file) => readFileSync(file, 'utf8'))[0];
-  return [...(manifest ?? '').matchAll(new RegExp(`--${flag}=([^'"\\s]+)`, 'g'))].map(([, value]) => value);
+const viteConfig = (dir: string): string =>
+  globSync(`${dir}/vite.config.ts`).map((file) => readFileSync(file, 'utf8'))[0] ?? '';
+
+/**
+ * The balanced `{...}` or quoted string that follows `<key>:`, or '' when the key is absent.
+ * Scanning the whole config instead would sweep in paths that are not entry points — an app's
+ * `src/main.tsx`, a CRX's `src/background.ts` — and silently mark them reachable for knip.
+ */
+const configProperty = (source: string, key: string): string => {
+  const start = source.search(new RegExp(`\\b${key}\\s*:`));
+  if (start === -1) {
+    return '';
+  }
+  const rest = source.slice(source.indexOf(':', start) + 1).trimStart();
+  if (!rest.startsWith('{') && !rest.startsWith('[')) {
+    // A plain `entry: 'src/index.ts'`.
+    return rest.slice(0, rest.indexOf(',') + 1 || rest.indexOf('\n'));
+  }
+  const open = rest[0];
+  const close = open === '{' ? '}' : ']';
+  let depth = 0;
+  for (let index = 0; index < rest.length; index++) {
+    if (rest[index] === open) {
+      depth++;
+    } else if (rest[index] === close && --depth === 0) {
+      return rest.slice(0, index + 1);
+    }
+  }
+  return '';
 };
+
+/** Source paths named as `defineConfig({ entry })` values. */
+const viteEntryPoints = (dir: string): string[] => [
+  ...new Set(
+    [...configProperty(viteConfig(dir), 'entry').matchAll(/'(src\/[\w./-]+\.(?:tsx?|jsx?|mjs|cjs|css))'/g)].map(
+      ([, path]) => path,
+    ),
+  ),
+];
+
+/** Package names listed in `defineConfig({ bundle })`. */
+const viteBundledPackages = (dir: string): string[] =>
+  [...configProperty(viteConfig(dir), 'bundle').matchAll(/'([^']+)'/g)].map(([, name]) => name);
 
 /**
  * Dependencies a moon task runs as a command rather than imports. The command is the package's
@@ -267,12 +306,12 @@ const typeOnlyDependencies = (dir: string, names: string[]): string[] => {
 };
 
 /**
- * A `--bundlePackage` is inlined into the workspace's own build, so esbuild resolves that package's
- * requires against this workspace. Its dependencies therefore have to be declared here too, even
- * though nothing in the workspace imports them.
+ * A `bundle` entry is inlined into the workspace's own build, so the bundler resolves that
+ * package's requires against this workspace. Its dependencies therefore have to be declared here
+ * too, even though nothing in the workspace imports them.
  */
 const bundledDependencies = (dir: string): string[] =>
-  moonBuildArgs(dir, 'bundlePackage').flatMap((name) => {
+  viteBundledPackages(dir).flatMap((name) => {
     const manifest = globSync(`${dir}/node_modules/${name}/package.json`)[0];
     return [name, ...(manifest ? Object.keys(JSON.parse(readFileSync(manifest, 'utf8')).dependencies ?? {}) : [])];
   });
@@ -329,15 +368,20 @@ for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.j
  * cannot be read off a manifest — only an app bundle surfaces it.
  */
 /**
- * Dependencies knip's `--production` traversal does not credit. It stops short of a file whose only
- * route to an entry point is a barrel's `export *`, so a package whose single use of a dependency
- * sits behind one reads as unused even though the symbol is called at runtime and the build resolves
- * it. Verified per entry by adding a direct import at the package entry, which clears the finding.
+ * Dependencies knip's traversal does not credit. It stops short of a file whose only route to an
+ * entry point is indirect — a barrel's `export *`, or a dynamic `import()` whose specifier carries
+ * an explicit `.ts`/`.tsx` extension (as `rewriteRelativeImportExtensions` requires) — so a package
+ * whose single use of a dependency sits behind one reads as unused even though the symbol is called
+ * at runtime and the build resolves it. Verified per entry by adding a direct import at the package
+ * entry, which clears the finding.
  */
 const TRAVERSAL_MISSED: Record<string, string[]> = {
   // `functions/edge-function.ts` calls `SchemaAST.getPropertySignatures`, and reaches the entry only
   // as `src/index.ts` -> `./functions` -> `./edge-function`.
   'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
+  // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.lazyModule(..., () => import('./Debug.tsx'))` —
+  // an extensioned dynamic import, which knip's traversal does not follow.
+  'packages/sdk/app-toolkit': ['@dxos/react-ui-syntax-highlighter'],
 };
 
 /**
@@ -427,7 +471,7 @@ for (const manifest of globSync(
 
   // What the package itself declares as its entry points. Only these decide whether the whole-source
   // fallback applies — a supplemental reference must never make a package look fully mapped.
-  const entry = [...declared, ...published, ...substitutes, ...moonBuildArgs(dir, 'entryPoint')];
+  const entry = [...declared, ...published, ...substitutes, ...viteEntryPoints(dir)];
 
   // Reached by path from a build config rather than declared, so they extend the entry set without
   // standing in for it.

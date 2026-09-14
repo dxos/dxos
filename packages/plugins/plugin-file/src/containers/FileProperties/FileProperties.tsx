@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Clipboard, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Field, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { File } from '@dxos/types';
 
@@ -72,21 +72,21 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
     // Its own provider: `useClipboard` falls back to a no-op context, so a copy button outside one
     // fails silently rather than visibly.
     <Clipboard.Provider>
-      <Form.Section>
+      <Form.FieldSet>
         {reference && (
-          <Input.Root>
-            <Input.Label>{t('properties.reference.label')}</Input.Label>
+          <Field.Root>
+            <Field.Label>{t('properties.reference.label')}</Field.Label>
             <div className='flex w-full gap-1'>
-              <Input.TextInput readOnly value={reference} classNames='grow' />
+              <Field.Input readOnly value={reference} classNames='grow' />
               <Clipboard.IconButton value={reference} label={t('properties.reference.copy.label')} />
             </div>
-          </Input.Root>
+          </Field.Root>
         )}
         {url && (
-          <Input.Root>
-            <Input.Label>{t('properties.url.label')}</Input.Label>
+          <Field.Root>
+            <Field.Label>{t('properties.url.label')}</Field.Label>
             <div className='flex w-full gap-1'>
-              <Input.TextInput readOnly value={url} classNames='grow' />
+              <Field.Input readOnly value={url} classNames='grow' />
               <Clipboard.IconButton value={url} label={t('properties.url.copy.label')} />
               <IconButton
                 iconOnly
@@ -96,12 +96,10 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
                 onClick={() => void resolve()}
               />
             </div>
-            <Input.DescriptionAndValidation>
-              <Input.Description>{t('properties.url.description')}</Input.Description>
-            </Input.DescriptionAndValidation>
-          </Input.Root>
+            <Field.HelperText>{t('properties.url.description')}</Field.HelperText>
+          </Field.Root>
         )}
-      </Form.Section>
+      </Form.FieldSet>
     </Clipboard.Provider>
   );
 };

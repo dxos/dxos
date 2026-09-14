@@ -18,7 +18,7 @@ import { random } from '@dxos/random';
 import { Column, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Picker } from './Picker';
+import { Picker } from './Picker.tsx';
 
 random.seed(1234);
 

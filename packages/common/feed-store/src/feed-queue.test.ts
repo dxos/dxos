@@ -8,8 +8,8 @@ import { asyncTimeout, latch, sleep, untilError, untilPromise } from '@dxos/asyn
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { FeedQueue } from './feed-queue';
-import { TestItemBuilder } from './testing';
+import { FeedQueue } from './feed-queue.ts';
+import { TestItemBuilder } from './testing/index.ts';
 
 describe('FeedQueue', () => {
   const builder = new TestItemBuilder();

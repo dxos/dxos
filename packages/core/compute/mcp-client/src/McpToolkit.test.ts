@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
-import * as McpToolkit from './McpToolkit';
+import * as McpToolkit from './McpToolkit.ts';
 
 const AiServiceLayer = AiService.model('com.anthropic.model.claude-opus-5.default', { thinking: false }).pipe(
   Layer.provide(

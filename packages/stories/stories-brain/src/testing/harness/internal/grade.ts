@@ -4,10 +4,10 @@
 
 import { trim } from '@dxos/util';
 
-import { parseJsonObject } from '../llm';
-import { type SenderClass, type SenderResult } from '../pipelines/classify-sender';
-import { type TagResult } from '../pipelines/tags';
-import { type Judge, gradeCoverage, gradeFaithfulness } from './judge';
+import { parseJsonObject } from '../llm.ts';
+import { type SenderClass, type SenderResult } from '../pipelines/classify-sender.ts';
+import { type TagResult } from '../pipelines/tags.ts';
+import { type Judge, gradeCoverage, gradeFaithfulness } from './judge.ts';
 
 // Task-specific accuracy graders for the model-ladder experiment. Labeling is scored deterministically
 // against the reference model (haiku) — no LLM judge, so it's cheap and unbiased. Summaries reuse the

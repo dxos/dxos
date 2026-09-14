@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './compute';
-export * from './compute-events';
-export * from './graph';
-export * from './model';
-export * from './schema';
+export * from './compute.ts';
+export * from './compute-events.ts';
+export * from './graph.ts';
+export * from './model.ts';
+export * from './schema.ts';

@@ -11,11 +11,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import * as Trace from '@dxos/compute/Trace';
 import { useSpaces } from '@dxos/react-client/echo';
-import { IconButton, Toolbar } from '@dxos/react-ui';
-import { Accordion } from '@dxos/react-ui-list';
+import { Accordion, IconButton, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { type CustomPanelProps, Panel } from '../Panel';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
 
 /** Cap on retained broadcasts so a long-lived session does not grow the list unbounded. */
 const MAX_MESSAGES = 200;

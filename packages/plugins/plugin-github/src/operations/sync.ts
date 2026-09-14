@@ -19,14 +19,14 @@ import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
-import { GITHUB_SOURCE } from '../constants';
+import { GITHUB_SOURCE } from '../constants.ts';
 import {
   GitHubProjectMissingError,
   GitHubRepoInaccessibleError,
   GitHubRepoUnresolvedError,
   formatGitHubSyncFailure,
-} from '../errors';
-import { GitHubApi } from '../services';
+} from '../errors.ts';
+import { GitHubApi } from '../services/index.ts';
 
 const { mergeField, snapshotField } = ConnectorSync;
 
@@ -169,7 +169,7 @@ export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: T
     });
   }
   Obj.update(container, (container) => {
-    container.tasks = [...container.tasks, Ref.make(task)];
+    container.tasks.push(Ref.make(task));
   });
 });
 
@@ -221,7 +221,7 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
       // Add the GitHub login identity if not already present.
       const ids = existing.identities ?? [];
       if (!ids.some((entry: { value: string }) => entry.value === user.login)) {
-        existing.identities = [...ids, { label: 'github', value: user.login }];
+        (existing.identities ??= []).push({ label: 'github', value: user.login });
       }
     });
     return existing;
@@ -321,7 +321,7 @@ export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
   // Sequence is the `milestones` array; the parent edge only carries deletion cascade.
   if (!taskSet.milestones.some(Ref.hasEntityId(milestone.id))) {
     Obj.update(taskSet, (taskSet) => {
-      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+      taskSet.milestones.push(Ref.make(milestone));
     });
     Obj.setParent(milestone, taskSet);
   }

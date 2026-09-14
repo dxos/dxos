@@ -17,5 +17,5 @@ export const AppGraphBuilder = Capability.lazyModule(
     // pre-init throw is not re-evaluated when initialization lands).
     activatesOn: ClientEvents.Initialized,
   },
-  () => import('./app-graph-builder'),
+  () => import('./app-graph-builder.ts'),
 );

@@ -18,9 +18,9 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type DocumentLease } from '../automerge/document-lease';
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state';
-import { DatabaseRoot } from './database-root';
+import { type DocumentLease } from '../automerge/document-lease.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state/index.ts';
+import { DatabaseRoot } from './database-root.ts';
 
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
 

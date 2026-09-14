@@ -14,8 +14,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { NavTreeNode } from '#types';
 
-import { filterItems } from '../util';
-import { useNavTreeState } from './useNavTreeState';
+import { filterItems } from '../util.ts';
+import { useNavTreeState } from './useNavTreeState.ts';
 
 // TODO(wittjosiah): Move companion/hidden nodes to their own edge categories so this filter is unnecessary.
 const isVisibleChild = (node: AppGraphNode.Node): boolean =>

@@ -3,20 +3,22 @@
 //
 
 import { type PeerId, cbor } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
+import { type SyncMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
+import { PeerInfoSchema, SyncMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorCallbacks,
 } from '@dxos/teleport-extension-automerge-replicator';
 
-import { EchoNetworkAdapter } from './echo-network-adapter';
-import { MeshEchoReplicator } from './mesh-echo-replicator';
+import { EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 
 const PEER_ID = 'peerA' as PeerId;
 const ANOTHER_PEER_ID = 'peerB' as PeerId;
@@ -130,7 +132,7 @@ describe('EchoNetworkAdapter', () => {
           return { sendSyncMessage } as AutomergeReplicator;
         });
         invariant(callbacks);
-        await callbacks.onStartReplication!({ id: peerId }, PublicKey.random());
+        await callbacks.onStartReplication!(create(PeerInfoSchema, { id: peerId }), PublicKey.random());
         return callbacks;
       },
     };
@@ -143,7 +145,6 @@ describe('EchoNetworkAdapter', () => {
     data: payload,
   });
 
-  const encodeSyncPayload = (payload: Uint8Array): SyncMessage => ({
-    payload: cbor.encode(payload),
-  });
+  const encodeSyncPayload = (payload: Uint8Array): SyncMessage =>
+    create(SyncMessageSchema, { payload: cbor.encode(payload) });
 });

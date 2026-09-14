@@ -31,7 +31,13 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/compute/compute"
@@ -58,6 +64,12 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
@@ -68,6 +80,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-testing"

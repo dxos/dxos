@@ -11,9 +11,17 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { LogLevel } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+// UI-free subpath: the root barrel reaches the panel components.
+import { logBuffer } from '@dxos/react-ui-debug/log-buffer';
+import { AnchoredTo, type Message, type Thread } from '@dxos/types';
 
 import { DebugOperation } from '#types';
 
@@ -42,12 +50,48 @@ const summarizeSubject = (data: unknown) => {
       dxn: String(Obj.getURI(data)),
       typename: Obj.getTypename(data),
       name: Obj.getLabel(data),
+      // Bounded by the one open document, so the snapshot stays O(planks).
+      text: Obj.instanceOf(Markdown.Document, data) ? data.content.target?.content : undefined,
     };
   }
   if ('id' in data && typeof data.id === 'string') {
     return { id: data.id };
   }
   return undefined;
+};
+
+/** The comment threads on an object, with their messages loaded — the review companion's view of it. */
+const collectComments = async (subject: unknown) => {
+  if (!Obj.isObject(subject)) {
+    return undefined;
+  }
+  const db = Obj.getDatabase(subject);
+  if (!db) {
+    return undefined;
+  }
+  const anchors: AnchoredTo.AnchoredTo[] = await db
+    .query(Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo))
+    .run();
+  return Promise.all(
+    anchors.map(async (anchor) => {
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      const messages: Message.Message[] = await Promise.all(thread.messages.map((ref) => ref.load()));
+      return {
+        id: thread.id,
+        anchorId: anchor.id,
+        anchor: anchor.anchor,
+        status: thread.status,
+        messages: messages.map((message) => ({
+          id: message.id,
+          sender: message.sender.name ?? message.sender.identityDid,
+          text: message.blocks
+            .map((block) => (block._tag === 'text' ? block.text : undefined))
+            .filter((text): text is string => text !== undefined)
+            .join('\n'),
+        })),
+      };
+    }),
+  );
 };
 
 const OPERATION_DXN = /dxn:[^/]+/;
@@ -92,9 +136,37 @@ const collectSurfaces = () => {
   }));
 };
 
+/** The app's own report of what an operation just did — read the way a user reads it, off the DOM. */
+const collectToasts = () => {
+  if (typeof document === 'undefined') {
+    return [];
+  }
+  return Array.from(document.querySelectorAll('[data-scope="toast"][data-part="root"]')).map((el) => ({
+    title: el.querySelector('[data-part="title"]')?.textContent ?? undefined,
+    description: el.querySelector('[data-part="description"]')?.textContent ?? undefined,
+    actions: Array.from(el.querySelectorAll('button')).map(
+      (button) => button.getAttribute('aria-label') ?? button.textContent ?? '',
+    ),
+  }));
+};
+
+/** Recent error-level entries from the process-wide log buffer, which the plugin starts recording at startup. */
+const collectErrors = (since: number) =>
+  logBuffer
+    .getRows()
+    .filter(({ entry }) => entry.level >= LogLevel.ERROR && entry.timestamp >= since)
+    .map(({ entry }) => ({
+      timestamp: entry.timestamp,
+      message: entry.message,
+      error: entry.computedError,
+      file: entry.meta?.F,
+    }));
+
+const DEFAULT_ERROR_WINDOW_MS = 60_000;
+
 const handler: Operation.WithHandler<typeof DebugOperation.Snapshot> = DebugOperation.Snapshot.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* () {
+    Effect.fnUntraced(function* ({ since }) {
       const manager = yield* Plugin.Service;
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       // Each source is optional: the snapshot degrades per-section rather than failing when a
@@ -103,20 +175,39 @@ const handler: Operation.WithHandler<typeof DebugOperation.Snapshot> = DebugOper
       const graphBuilder = yield* Capability.getOption(AppCapabilities.AppGraph);
       const translator = yield* Capability.getOption(AppCapabilities.Translator);
       const attention = yield* Capability.getOption(AttentionCapabilities.Attention);
+      const client = yield* Capability.getOption(ClientCapabilities.Client);
 
       const translate = makeTranslate(Option.getOrUndefined(translator));
       const layout = Option.getOrUndefined(Option.map(layoutAtom, (atom) => registry.get(atom)));
       const graph = Option.getOrUndefined(Option.map(graphBuilder, (builder) => builder.graph));
 
-      const planks = (layout?.active ?? []).map((id) => {
-        const node = graph ? Option.getOrUndefined(AppGraph.getNode(graph, id)) : undefined;
-        return {
-          id,
-          label: node ? translate(node.properties?.label) : undefined,
-          type: node?.type,
-          subject: node ? summarizeSubject(node.data) : undefined,
-          actions: graph ? collectActions(graph, translate, id) : [],
-        };
+      const planks = yield* Effect.promise(() =>
+        Promise.all(
+          (layout?.active ?? []).map(async (id) => {
+            const node = graph ? Option.getOrUndefined(AppGraph.getNode(graph, id)) : undefined;
+            return {
+              id,
+              label: node ? translate(node.properties?.label) : undefined,
+              type: node?.type,
+              subject: node ? summarizeSubject(node.data) : undefined,
+              actions: graph ? collectActions(graph, translate, id) : [],
+              comments: node ? await collectComments(node.data) : undefined,
+            };
+          }),
+        ),
+      );
+
+      const spaces = Option.match(client, {
+        onNone: () => [],
+        onSome: (client) => {
+          const defaultSpace = AppSpace.getDefaultSpace(client);
+          return client.spaces.get().map((space) => ({
+            id: space.id,
+            name: space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined,
+            state: SpaceState[space.state.get()],
+            default: space === defaultSpace ? true : undefined,
+          }));
+        },
       });
 
       const activeModules = new Set(manager.getActive());
@@ -136,6 +227,9 @@ const handler: Operation.WithHandler<typeof DebugOperation.Snapshot> = DebugOper
         attention: Option.getOrUndefined(attention)?.getCurrent().slice() ?? [],
         planks,
         surfaces: collectSurfaces(),
+        spaces,
+        toasts: collectToasts(),
+        errors: collectErrors(since ?? Date.now() - DEFAULT_ERROR_WINDOW_MS),
         plugins: {
           installed: plugins.length,
           enabled: manager.getEnabled().length,

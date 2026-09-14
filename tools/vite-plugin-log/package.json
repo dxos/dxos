@@ -21,6 +21,10 @@
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     },
+    "./transform": {
+      "types": "./dist/src/transform.d.ts",
+      "default": "./dist/src/transform.js"
+    },
     "./runtime": {
       "types": "./dist/src/runtime.d.ts",
       "default": "./dist/src/runtime.js"

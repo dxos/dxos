@@ -12,7 +12,7 @@
 // downstream of both.
 //
 
-import { type Edge, type Node, type Projection } from '../types';
+import { type Edge, type Node, type Projection } from '../types/index.ts';
 
 /** `A[Label]`, `A(Label)`, `A{Label}`, or a bare `A`. */
 const NODE = /^([A-Za-z0-9_-]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?$/;

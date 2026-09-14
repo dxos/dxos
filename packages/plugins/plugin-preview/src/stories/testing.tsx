@@ -9,8 +9,8 @@ import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 
-import { JsonCard } from '../cards';
-import { omitImage } from './fixtures';
+import { JsonCard } from '../cards/index.ts';
+import { omitImage } from './fixtures.ts';
 
 export type StoryArgs<T extends Obj.Any, P extends {} = {}> = {
   Component: FC<AppSurface.ObjectCardProps<T> & P>;
@@ -31,7 +31,7 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
   return (
-    <div className='h-full w-full grid grid-cols-2 py-16 gap-8'>
+    <div className='dx-fill grid grid-cols-2 py-16 gap-8'>
       {roles.map((role, i) => (
         <div key={i} className='flex h-full justify-center overflow-hidden'>
           <div className='flex flex-col gap-4 w-full items-center'>

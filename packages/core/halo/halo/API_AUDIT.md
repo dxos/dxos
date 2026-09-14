@@ -148,8 +148,8 @@ Shared machinery:
 | API                                                                                                         | Consumers                                                                              |
 | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `InvitationEncoder.encode/decode`                                                                           | 12 sites (plugin-client, plugin-space)                                                 |
-| `Invitation.State` (state-machine polling)                                                                  | 20 sites — CLI `waitForState`, dialog state UIs                                        |
-| `Invitation.Type` (`INTERACTIVE`/`DELEGATED`), `Invitation.AuthMethod` (`SHARED_SECRET`/`KNOWN_PUBLIC_KEY`) | plugin-space share/get-share-link, operation schemas (`Schema.Enums(Invitation.Type)`) |
+| `Invitation_State` (state-machine polling)                                                                  | 20 sites — CLI `waitForState`, dialog state UIs                                        |
+| `Invitation_Type` (`INTERACTIVE`/`DELEGATED`), `Invitation_AuthMethod` (`SHARED_SECRET`/`KNOWN_PUBLIC_KEY`) | plugin-space share/get-share-link, operation schemas (`Schema.Enums(Invitation_Type)`) |
 | `CancellableInvitationObservable` / `AuthenticatingInvitationObservable`                                    | Devices/Members containers, CLI utils                                                  |
 | `hostInvitation` helper                                                                                     | plugin-client `halo share`, plugin-space `space share`                                 |
 | `InvitationResult`                                                                                          | Join dialogs (plugin-client, plugin-space)                                             |
@@ -305,15 +305,15 @@ service. `Invitation` depends on neither `Identity` nor `Space`.
 | Verb / type                                                                       | Replaces                                                                                                                   |
 | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `Invitation.Flow`: `{ events: Stream<InvitationEvent>; id }`                      | `CancellableInvitationObservable`, `AuthenticatingInvitationObservable` (the object `Identity`/`Space` initiation returns) |
-| `Invitation.authenticate(flow, code)`                                             | `observable.authenticate()` / `Invitation.State` polling                                                                   |
+| `Invitation.authenticate(flow, code)`                                             | `observable.authenticate()` / `Invitation_State` polling                                                                   |
 | `Invitation.cancel(flow)`                                                         | `observable.cancel()`                                                                                                      |
-| `Invitation.events(flow)` → `Stream<InvitationEvent>`                             | `Invitation.State` polling, `hostInvitation`/`waitForState` helpers                                                        |
+| `Invitation.events(flow)` → `Stream<InvitationEvent>`                             | `Invitation_State` polling, `hostInvitation`/`waitForState` helpers                                                        |
 | `Space.invitations(id)` / `Identity.invitations` (+ `*Changes`)                   | `useSpaceInvitations` / `useHaloInvitations`                                                                               |
 | `Invitation.code(flow)` / decode at `Identity.join`/`Space.join`                  | `InvitationEncoder`                                                                                                        |
-| Schemas: `InvitationKind`, `AuthMethod`, `Type`, `InvitationEvent` (tagged union) | `Invitation.State/Type/AuthMethod` protobuf enums (also used in operation schemas via `Schema.Enums`)                      |
+| Schemas: `InvitationKind`, `AuthMethod`, `Type`, `InvitationEvent` (tagged union) | `Invitation_State/Type/AuthMethod` protobuf enums (also used in operation schemas via `Schema.Enums`)                      |
 
 Modeling the flow as a `Stream` of tagged events (`connecting` → `readyForAuth(authCode?)` →
-`success(result)` | `cancelled` | `error`) removes every `state >= Invitation.State.X`
+`success(result)` | `cancelled` | `error`) removes every `state >= Invitation_State.X`
 comparison in the dialogs and the CLI's hand-rolled `waitForState`. Under Keyhive the lifecycle
 is unchanged — only what `Identity`/`Space` initiation does behind the flow differs: `share`
 mints an ephemeral invitation key or prekey delegation; `join`/`accept` becomes contact-card
@@ -384,7 +384,7 @@ Suggested sequence:
 4. **`PublicKey` vs DID** — consumers compare `identityKey`/`spaceKey` (`PublicKey`). New
    schemas should standardize on DID / `SpaceId` strings (per this package's types); the
    adapter translates during the transition.
-5. **Enums in operation schemas** — `Schema.Enums(Invitation.Type)` leaks protobuf enums into
+5. **Enums in operation schemas** — `Schema.Enums(Invitation_Type)` leaks protobuf enums into
    operation contracts (`plugin-space/operations/definitions.ts`); these need parallel Effect
    schema literals and a coordinated cut-over.
 6. **Shell UI components** — `SpaceMemberList`/`InvitationList`/`AuthCode` from

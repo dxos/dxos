@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { matchCommands } from './commands';
+import { matchCommands } from './commands.ts';
 
 describe('commands completion', () => {
   test('prefix-matches sentinels', ({ expect }) => {

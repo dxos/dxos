@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './companion-anchor';
-export * from './layoutAppliesTopbar';
-export * from './migrate-persisted-state';
-export * from './navigation-target';
-export * from './resolve-sidebar-state';
-export * from './serialize-deck-url';
-export * from './set-active';
-export * from './upsert-toast';
-export * from './openable-children';
-export * from './resolve-deck-spec';
+export * from './companion-anchor.ts';
+export * from './layout.ts';
+export * from './layoutAppliesTopbar.ts';
+export * from './resolve-sidebar-state.ts';
+export * from './upsert-toast.ts';
+export * from './openable-children.ts';
+export * from './resolve-deck-spec.ts';
+export * from './update-active-deck.ts';

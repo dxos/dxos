@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import {
   authenticateViaChallengeEndpoint,
@@ -12,8 +13,8 @@ import {
   fetchAuthChallengeInfo,
   parseChallengeHeader,
   readAuthChallenge,
-} from './auth-challenge';
-import { type EdgeIdentity } from './edge-identity';
+} from './auth-challenge.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
 
 const CHALLENGE = 'AQAAAZlqjGgAq83vEjRWeJCrze8SNFZ4kA==';
 
@@ -250,7 +251,7 @@ const identity = (onChallenge?: (challenge: Uint8Array) => void): EdgeIdentity =
   identityDid: 'did:halo:test',
   presentCredentials: async ({ challenge }): Promise<Presentation> => {
     onChallenge?.(challenge);
-    return {};
+    return create(PresentationSchema, {});
   },
 });
 

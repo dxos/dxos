@@ -5,7 +5,7 @@
 import { Client } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 
-import { Task } from './schema';
+import { Task } from './schema.ts';
 
 const client = new Client({ types: [Task] });
 

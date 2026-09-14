@@ -12,7 +12,7 @@ import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 import { meta } from '#meta';
 import { Mailbox } from '#types';
 
-import { getMailboxPath } from '../paths';
+import { getMailboxPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import * as MessageStore from './MessageStore';
+import * as MessageStore from './MessageStore.ts';
 
 const message = (id: string, over: Partial<MessageStore.StoredMessage> = {}): MessageStore.StoredMessage => ({
   id,

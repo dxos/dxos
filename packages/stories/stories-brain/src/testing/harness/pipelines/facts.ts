@@ -14,7 +14,7 @@ import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipel
 import { Expando } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
-import { type ModelVariant } from '../models';
+import { type ModelVariant } from '../models.ts';
 
 export type MessageFactsResult = {
   readonly facts: number;

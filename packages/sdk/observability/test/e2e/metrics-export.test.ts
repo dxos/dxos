@@ -6,7 +6,7 @@ import { defaultResource, resourceFromAttributes } from '@opentelemetry/resource
 import { type Server, createServer } from 'node:http';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { OtelMetrics } from '../../src/extensions/otel/metrics';
+import { OtelMetrics } from '../../src/extensions/otel/metrics.ts';
 
 // Smoke test for the metrics export path. Tagged `manual` so it never runs in CI.
 //
@@ -108,8 +108,7 @@ describe('metrics export', { tags: ['manual'], timeout: 60_000 }, () => {
 
   test('every instrument kind reaches the collector', async () => {
     const metrics = new OtelMetrics({
-      endpoint,
-      headers: parseHeaders(process.env.DX_OTEL_HEADERS),
+      destinations: [{ endpoint, headers: parseHeaders(process.env.DX_OTEL_HEADERS) }],
       resource: defaultResource().merge(
         resourceFromAttributes({
           'service.name': 'metrics-smoke',

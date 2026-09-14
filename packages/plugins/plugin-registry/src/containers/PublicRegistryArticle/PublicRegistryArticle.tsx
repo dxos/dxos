@@ -17,8 +17,8 @@ import { composable } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { useAutoTags, useRegistryPlugins, useUpdateAvailableIds } from '../../hooks';
-import { BaseRegistryArticle } from '../BaseRegistryArticle';
+import { useAutoTags, useRegistryPlugins, useUpdateAvailableIds } from '../../hooks/index.ts';
+import { BaseRegistryArticle } from '../BaseRegistryArticle/index.ts';
 
 const sortEntries = (a: Plugin.Meta, b: Plugin.Meta) =>
   (a.profile.name ?? a.profile.key).localeCompare(b.profile.name ?? b.profile.key);

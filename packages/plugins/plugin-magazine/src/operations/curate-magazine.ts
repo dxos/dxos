@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { collectCandidates, partitionByKeepBound } from './util';
+import { collectCandidates, partitionByKeepBound } from './util.ts';
 
 export default FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(

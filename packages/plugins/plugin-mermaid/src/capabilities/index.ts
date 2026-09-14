@@ -15,7 +15,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
-  () => import('./markdown'),
+  () => import('./markdown.ts'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

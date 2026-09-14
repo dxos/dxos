@@ -6,9 +6,9 @@ import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { log } from '@dxos/log';
 
-import { synchronized } from './mutex';
-import { DeferredTask } from './task-scheduling';
-import { sleep } from './timeout';
+import { synchronized } from './mutex.ts';
+import { DeferredTask } from './task-scheduling.ts';
+import { sleep } from './timeout.ts';
 
 const INIT_RESTART_DELAY = 100;
 const DEFAULT_MAX_RESTART_DELAY = 5000;

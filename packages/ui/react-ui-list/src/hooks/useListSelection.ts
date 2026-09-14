@@ -64,8 +64,8 @@ export const useListSelection: {
 
   // Latches whenever the consumer passes the `value` prop key (even as undefined). A controlled
   // single-select consumer (`selectedId: string | undefined`) must be able to clear to undefined
-  // without the row falling back to stale internal state — Radix `useControllableState` (1.1.0)
-  // mishandles that case, so we mirror useListDisclosure's hand-rolled controller here.
+  // without the row falling back to stale internal state — `useControllableState` keys on the
+  // value's presence and mishandles that case, so we mirror useListDisclosure's hand-rolled controller here.
   const wasControlledRef = useRef(Object.prototype.hasOwnProperty.call(opts, 'value'));
   if (Object.prototype.hasOwnProperty.call(opts, 'value')) {
     wasControlledRef.current = true;

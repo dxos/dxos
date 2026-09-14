@@ -15,8 +15,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type ChatEvent } from '../Chat';
-import { ChatActions, type ChatActionsProps } from './ChatActions';
+import { type ChatEvent } from '../Chat/index.ts';
+import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 
 type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'debug' | 'customActions'>;
 
@@ -89,6 +89,21 @@ export const StopReplacesSendWhileProcessing: Story = {
   },
 };
 
+/**
+ * Mid-turn WITH text waiting: the control offers Send, not Stop. A prompt submitted now is queued
+ * behind the running turn, so refusing to send it (or offering only Stop) would strand what the
+ * reader just typed.
+ */
+export const SendWhileProcessingWithText: Story = {
+  args: { processing: true, canSend: true, tasksVisible: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const send = await canvas.findByTestId('assistant.send', {}, { timeout: 10_000 });
+    await expect(send).toHaveAccessibleName('Send');
+    await expect(send).toBeEnabled();
+  },
+};
+
 export const TaskToggleFlips: Story = {
   args: { canSend: true, tasksVisible: true },
   play: async ({ canvasElement, userEvent }) => {
@@ -115,7 +130,7 @@ const plainContributedActions = Atom.make<ActionGraphProps>({
 
 /**
  * Plain contributed items render `Toolbar.*` primitives, which need the roving-focus context from
- * the row's `Menu.Toolbar` — without it this story crashes the way the assistant companion did on
+ * the row's `ActionToolbar` — without it this story crashes the way the assistant companion did on
  * commentable objects.
  */
 export const ContributedPlainAction: Story = {

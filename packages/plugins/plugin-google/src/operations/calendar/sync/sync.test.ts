@@ -14,7 +14,7 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { GoogleCalendar } from '#apis';
 import { GoogleCredentials } from '#services';
 
-import { mapEvent } from '../mapper';
+import { mapEvent } from '../mapper.ts';
 
 const TestLayer = Layer.mergeAll(
   credentialsLayerConfig([

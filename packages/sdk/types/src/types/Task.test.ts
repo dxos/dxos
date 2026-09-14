@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 
-import * as Milestone from './Milestone';
-import * as Task from './Task';
+import * as Milestone from './Milestone.ts';
+import * as Task from './Task.ts';
 
 /**
  * The derived views are the whole point of the flat-array model — hierarchy, milestone grouping,
@@ -294,10 +294,27 @@ describe('mutations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('tells assistant actors apart by subject', () =>
+    Effect.gen(function* () {
+      const session = yield* Database.add(Task.make({ title: 'stands in for a session object' }));
+      const task = yield* Database.add(
+        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { role: 'assistant' } }),
+      );
+      yield* Database.flush();
+
+      // A bare assistant and one naming its session are different owners, so the edit is recorded.
+      const entry = Task.update(task, { assignee: { role: 'assistant', subject: Ref.make(session) } });
+      yield* Database.flush();
+
+      expect(entry?.description).toEqual('Assigned to an agent.');
+      expect(task.assignee?.subject?.target?.id).toEqual(session.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('clears an optional field with null and says so', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(
-        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { name: 'Scout' }, estimate: 3 }),
+        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { name: 'Scout' }, estimate: 'm' }),
       );
       yield* Database.flush();
 
@@ -342,15 +359,13 @@ describe('history', () => {
       // Append-only by convention: an entry records something that happened, so the write adds
       // rather than rewrites.
       Obj.update(task, (task) => {
-        task.history = [
-          ...(task.history ?? []),
-          {
-            date: '2026-08-02T10:30:00.000Z',
-            actor: { name: 'Scout', role: 'assistant' },
-            event: 'updated',
-            description: 'Status changed from todo to done.',
-          },
-        ];
+        task.history ??= [];
+        task.history.push({
+          date: '2026-08-02T10:30:00.000Z',
+          actor: { name: 'Scout', role: 'assistant' },
+          event: 'updated',
+          description: 'Status changed from todo to done.',
+        });
       });
       yield* Database.flush();
 

@@ -5,11 +5,11 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Menu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
-import { type ModalController, type TableModel } from '../../model';
+import { type ModalController, type TableModel } from '../../model/index.ts';
 
 type RowActionsMenuProps = { model: TableModel; modals: ModalController };
 
@@ -21,16 +21,16 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
     return null;
   }
   return (
-    <DropdownMenu.Root modal={false} open={true} onOpenChange={modals.close}>
-      <DropdownMenu.VirtualTrigger virtualRef={modals.trigger} />
-      <DropdownMenu.Content>
-        <DropdownMenu.Viewport>
+    <Menu.Root modal={false} open={true} onOpenChange={modals.close}>
+      <Menu.VirtualTrigger virtualRef={modals.trigger} />
+      <Menu.Content>
+        <Menu.Viewport>
           {/* Custom actions */}
           {model.rowActions?.length > 0 && (
             <>
-              <DropdownMenu.Group>
+              <Menu.Group>
                 {model.rowActions?.map((action) => (
-                  <DropdownMenu.Item
+                  <Menu.Item
                     key={action.id}
                     data-testid={`row-action-${action.id}`}
                     onClick={() => {
@@ -39,21 +39,21 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
                     }}
                   >
                     {toLocalizedString(action.label, t)}
-                  </DropdownMenu.Item>
+                  </Menu.Item>
                 ))}
-              </DropdownMenu.Group>
-              <DropdownMenu.Separator />
+              </Menu.Group>
+              <Menu.Separator />
             </>
           )}
           {/* Default actions */}
           {model.features.dataEditable !== false && (
-            <DropdownMenu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
+            <Menu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
               {t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label')}
-            </DropdownMenu.Item>
+            </Menu.Item>
           )}
-        </DropdownMenu.Viewport>
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+        </Menu.Viewport>
+        <Menu.Arrow />
+      </Menu.Content>
+    </Menu.Root>
   );
 };

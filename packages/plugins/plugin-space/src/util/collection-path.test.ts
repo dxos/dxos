@@ -11,7 +11,7 @@ import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { resolveCollectionObjectPath, walkCollectionChainToRoot } from './collection-path';
+import { resolveCollectionObjectPath, walkCollectionChainToRoot } from './collection-path.ts';
 
 describe('walkCollectionChainToRoot', () => {
   let builder: EchoTestBuilder;

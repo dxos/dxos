@@ -10,9 +10,9 @@ import { Database, Obj } from '@dxos/echo';
 import { getSession, listEvents, toTranscript } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
-import { DEFAULT_TRANSCRIPT_LIMIT } from '../constants';
-import { getApiKey } from '../credentials';
-import { SessionNotLinkedError } from '../errors';
+import { DEFAULT_TRANSCRIPT_LIMIT } from '../constants.ts';
+import { getApiKey } from '../credentials.ts';
+import { SessionNotLinkedError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.GetTranscript> =
   ClaudeAgentOperation.GetTranscript.pipe(

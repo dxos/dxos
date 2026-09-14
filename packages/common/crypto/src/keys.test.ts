@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { createKeyPair, sign, verify } from './keys';
-import { createId, randomBytes } from './random';
+import { createKeyPair, sign, verify } from './keys.ts';
+import { createId, randomBytes } from './random.ts';
 
 test('Create id is unique', () => {
   expect(createId()).not.to.equal(createId());
