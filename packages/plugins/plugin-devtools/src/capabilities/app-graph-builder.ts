@@ -85,7 +85,8 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
             properties: {
               label: ['devtools.label', { ns: meta.profile.key }],
               icon: 'ph--toolbox--regular',
-              position: Position.last,
+              // After the console (0) and logs (1) pages and before Debug (20), whichever plugin registers first.
+              position: 10,
             },
             nodes: [
               AppGraphNode.make({

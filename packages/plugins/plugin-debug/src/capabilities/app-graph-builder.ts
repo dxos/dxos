@@ -90,7 +90,8 @@ export default Capability.makeModule(
               properties: {
                 label: ['debug.label', { ns: meta.profile.key }],
                 icon: 'ph--bug--regular',
-                position: Position.last,
+                // After DevTools (10), whichever plugin registers first.
+                position: 20,
               },
               nodes: [
                 AppGraphNode.make({

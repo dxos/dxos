@@ -210,8 +210,6 @@ feat F-4: Devtools Overview Companion
   req F-4.1:
     when: user opens the "Devtools" deck companion
     then: DevtoolsOverviewContainer renders a categorised link list to all devtools panels
-
-  req F-4.2: Clicking a category link navigates the deck to the corresponding devtools article.
 ```
 
 ```mdl

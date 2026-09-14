@@ -10,14 +10,14 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useGraphTreeModel } from '@dxos/plugin-graph/hooks';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
-import { useManagerOptional } from '@dxos/react-ui-attention';
+import { useManager } from '@dxos/react-ui-attention';
 import { Path, Tree } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { DebugNodes } from '#types';
 
 import { useDebugPanelContext } from './DebugPanelContext.ts';
-import { type DebugPanelViewState, debugPanelAspect } from './view-state.ts';
+import { debugPanelAspect } from './view-state.ts';
 
 const ROOT_PATH = [DebugNodes.DEBUG_ROOT_ID];
 
@@ -34,13 +34,9 @@ export const DebugPanelSidebar = () => {
   const { t } = useTranslation(meta.profile.key);
   const { contextId, nodeId, open, select, setOpen } = useDebugPanelContext();
   const { graph } = useAppGraph();
-  const manager = useManagerOptional();
-  // The model reads state through atoms; the manager's atom for this context is that state, and a
-  // host without a ViewStateProvider (a bare story) gets an in-memory one.
-  const stateAtom = useMemo(
-    () => manager?.atom(debugPanelAspect, contextId) ?? Atom.make<DebugPanelViewState>({ open: [] }),
-    [manager, contextId],
-  );
+  const manager = useManager();
+  // The model reads state through atoms, and the manager's atom for this context is that state.
+  const stateAtom = useMemo(() => manager.atom(debugPanelAspect, contextId), [manager, contextId]);
   const state = useMemo(
     () => ({
       itemOpen: (path: string[]) =>

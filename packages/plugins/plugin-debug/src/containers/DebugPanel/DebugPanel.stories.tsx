@@ -64,21 +64,35 @@ export const Default: Story = {
   args: { contextId: 'debug-panel-story' },
 };
 
-/** Console, then a stub page under the branch: the console's terminal appears, then the page's text. */
+/**
+ * Console, then Logs, then a stub page under the branch, then the console again: the console stays
+ * mounted (hidden) throughout, while the stub page is gone once it is no longer selected.
+ */
 export const Select: Story = {
   args: { contextId: 'debug-panel-story-select' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const tree = await canvas.findByRole('tree', {}, { timeout: 10_000 });
     await userEvent.click(await within(tree).findByText('Console', {}, { timeout: 10_000 }));
-    await expect(await canvas.findByRole('textbox', {}, { timeout: 10_000 })).toBeInTheDocument();
+    const terminal = await canvas.findByRole('textbox', {}, { timeout: 10_000 });
+    await expect(terminal).toBeInTheDocument();
+
+    // The terminal's input is xterm's transparent helper, so visibility is read off the page's show/hide element.
+    await userEvent.click(await within(tree).findByText('Logs', {}, { timeout: 10_000 }));
+    await expect(terminal.closest('[hidden]')).not.toBeNull();
 
     const [page] = STUB_TOOL_PAGES;
     await userEvent.click(await within(tree).findByText('Tools', {}, { timeout: 10_000 }));
     await userEvent.click(await within(tree).findByText(page.label, {}, { timeout: 10_000 }));
-    await expect(await canvas.findByTestId(`stubTool.${page.id}`, {}, { timeout: 10_000 })).toBeVisible();
-    // The console stays mounted behind the page shown.
-    await expect(canvas.getByRole('textbox', { hidden: true })).toBeInTheDocument();
+    const stubPage = await canvas.findByTestId(`stubTool.${page.id}`, {}, { timeout: 10_000 });
+    await expect(stubPage).toBeVisible();
+    // The same console element is still there behind the page shown.
+    await expect(terminal).toBeInTheDocument();
+
+    await userEvent.click(await within(tree).findByText('Console', {}, { timeout: 10_000 }));
+    await expect(terminal.closest('[hidden]')).toBeNull();
+    // A page that is not the console or logs is mounted only while it is selected.
+    await expect(stubPage).not.toBeInTheDocument();
   },
 };
 
