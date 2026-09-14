@@ -192,6 +192,8 @@ export const EphemeralDeckState = Schema.Struct({
   currentUndoId: Schema.optional(Schema.String),
   /** The identifier of a component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(Schema.String),
+  /** Whether that component takes focus once in view; unset means it does. */
+  scrollIntoViewFocus: Schema.optional(Schema.Boolean),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 

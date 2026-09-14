@@ -16,6 +16,7 @@ import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
+import { focusPane } from '../../util/index.ts';
 import { CompanionPlank } from './CompanionPlank.tsx';
 import { PlankControls } from './PlankControls.tsx';
 import { PlankErrorFallback } from './PlankFallback.tsx';
@@ -60,6 +61,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     sigilActions,
     popoverAnchorId,
     scrollIntoView,
+    scrollIntoViewFocus,
     expanded,
     onAction,
     onAdjust,
@@ -85,15 +87,17 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   );
 
   // Newly opened/navigated planks (and a folded plank returned to view by its spine) are flagged via
-  // `scrollIntoView`; focus the pane so it gains attention, then clear the one-shot flag. Scrolling is
-  // owned by the deck viewport, which positions the plank past the pile of spines, so this focus must
-  // not scroll on its own.
+  // `scrollIntoView`; unless the reveal leaves focus where it is, focus the pane so it gains attention, then
+  // clear the one-shot flag. Scrolling is owned by the deck viewport, which positions the plank past the
+  // pile of spines, so this focus must not scroll on its own.
   useEffect(() => {
     if (scrollIntoView === id) {
-      rootRef.current?.focus({ preventScroll: true });
+      if (scrollIntoViewFocus !== false) {
+        focusPane(rootRef.current);
+      }
       onScrollIntoView(undefined);
     }
-  }, [scrollIntoView, id, onScrollIntoView]);
+  }, [scrollIntoView, scrollIntoViewFocus, id, onScrollIntoView]);
 
   // The landmark focus group should move focus to Main on Escape, but something blocks it; handle directly.
   const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
