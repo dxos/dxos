@@ -4257,6 +4257,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../../sdk/config
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../../halo/credentials
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo

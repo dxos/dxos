@@ -19,6 +19,7 @@ import { type Space } from '@dxos/client/echo';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { Database, Tag, type Type } from '@dxos/echo';
 import { createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
@@ -217,8 +218,52 @@ const waitForEdge = async (space: Space): Promise<void> => {
   }
 };
 
+/**
+ * Binds a Hub account to the identity this run created, through the `test+*@dxos.org` hatch.
+ *
+ * `edgeAuth` admits a chained HALO identity on the WebSocket upgrade route only when an account is
+ * bound to it, so a freshly minted eval identity is refused with
+ * `identity_not_associated_with_account` and its space never replicates. This hatch is the
+ * sanctioned way for an ephemeral test identity to get one — open on local, test, dev and preview,
+ * closed on staging and production — and is what the edge repo's own e2e harness uses, so the run
+ * exercises the real auth path rather than stepping around it.
+ *
+ * A fresh address per run: the hatch rebinds an email to the newest identity, so a shared one would
+ * have concurrent runs taking each other's account.
+ */
+const bindTestAccount = async (edgeUrl: string, identity: Identity): Promise<void> => {
+  const identityKey = requirePublicKey(identity.identityKey);
+  const response = await fetch(new URL('/hub/account/login', edgeUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: `test+mcp-eval-${identityKey.toHex().slice(0, 12)}@dxos.org`,
+      identityDid: await createDidFromIdentityKey(identityKey),
+      identityKey: identityKey.toHex(),
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Binding a test account for the run's identity failed: ${response.status} at ${edgeUrl}.`);
+  }
+  // The response shape is uniform so the route cannot be used to enumerate accounts; `admitted` is
+  // the only signal that the hatch ran rather than the waitlist flow.
+  const body = (await response.json()) as { admitted?: boolean };
+  if (body.admitted !== true) {
+    throw new Error(
+      `The test-account hatch is closed on ${edgeUrl}, so the run's identity cannot be bound to an ` +
+        'account and its space cannot replicate. It is closed on staging and production by design.',
+    );
+  }
+};
+
 /** Puts the harness's space on EDGE, where the deployed worker reads it. */
-const replicateToEdge = async (client: Client, spaceId: SpaceId): Promise<Space> => {
+const replicateToEdge = async (
+  client: Client,
+  edgeUrl: string,
+  identity: Identity,
+  spaceId: SpaceId,
+): Promise<Space> => {
+  await bindTestAccount(edgeUrl, identity);
   await assertEdgeConnected(client);
   const space = client.spaces.get(spaceId);
   if (space == null) {
@@ -341,7 +386,8 @@ export const runClaudeEval = async <T>(
     // A deployed worker serves its own data plane: a provisioned run replicates the space it just
     // created there, and a token run has to be pointed at one that already exists.
     const spaceId = mode === 'token' ? remoteSpaceId() : defaultSpace.id;
-    const edgeSpace = mode === 'provisioned' ? await replicateToEdge(client, spaceId) : undefined;
+    const edgeSpace =
+      mode === 'provisioned' && edgeUrl != null ? await replicateToEdge(client, edgeUrl, identity, spaceId) : undefined;
 
     // Against EDGE the agent's writes arrive by replication, so a query first waits for the space to
     // catch up — otherwise it grades the space as it was before the turn.

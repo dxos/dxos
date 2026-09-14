@@ -93,6 +93,9 @@
       "path": "../../echo/echo-protocol"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../../protocols"
     },
     {
