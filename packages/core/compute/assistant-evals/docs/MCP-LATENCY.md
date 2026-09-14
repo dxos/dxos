@@ -280,16 +280,39 @@ document round trips per call). Both are operation-service / db-service work, ne
 
 ### Eval runs on dev (real Claude Code subprocess, fresh identity each run)
 
-| Run | Score | invokeOperation errors | Notes                                                |
-| --- | ----- | ---------------------- | ---------------------------------------------------- |
-| 1   | 43%   | 25 / 25                | before Fix 3: identity refused, nothing replicated   |
-| 2   | 43%   | 25 / 25                | after Fix 3: connected, then the db-service hang     |
-| 3   | 57%   | **0 / 35**             | after the db-service redeploy; `tasks-listed` passes |
+| Run | Score | invokeOperation errors | Notes                                                 |
+| --- | ----- | ---------------------- | ----------------------------------------------------- |
+| 1   | 43%   | 25 / 25                | before Fix 3: identity refused, nothing replicated    |
+| 2   | 43%   | 25 / 25                | after Fix 3: connected, then the db-service hang      |
+| 3   | 57%   | **0 / 35**             | after the db-service redeploy; `tasks-listed` passes  |
+| 4   | 86%   | 0 / 35                 | Fix 4: `tool-latency` and `follow-up-turn-wrote` pass |
+| 5   | 86%   | 0 / 35                 | Fix 5: **every correctness scorer passes**            |
 
-Run 3 latency (client-observed): `queryOperations` p50 1563, `loadSkill` 1530, `tasks.listSessions`
-4554, `projects.get` 4827, `tasks.list` 4881, `space.queryObjects` 5759 (p95 7999) — all before
-Fix 4. Still failing in run 3: `task-completed` and `follow-up-turn-wrote` (the write stages) and
-`tool-latency` (p95 over budget). Run 4, with Fix 4 deployed, is recorded below when it lands.
+Client-observed latency per run (p50 ms; `*` is every invokeOperation sample):
+
+| Run | connect | queryOperations | loadSkill | invokeOperation `*` p50 / p95 |
+| --- | ------- | --------------- | --------- | ----------------------------- |
+| 3   | 14229   | 1563            | 1530      | 4592 / 7999                   |
+| 4   | 1293    | 62              | 46        | 2059 / 2637                   |
+| 5   | 4333    | 58              | 42        | 3360 / 4450                   |
+
+Run 5 ran minutes after the db-service redeploy, which resets every Durable Object, so its
+invocations paid cold loads; its `tool-latency` miss (budget 3000ms p95) is that, not a regression
+in the path — the tool-side numbers (58 / 42ms) are unchanged from run 4.
+
+### Fix 5 — a server-side write reaches a live client at once
+
+Runs 3 and 4 failed `task-completed` while `follow-up-turn-wrote` — which requires the _same_
+write to be visible — passed. The agent's `tasks.update` had succeeded server-side each time
+(transcripts: `status: "done"` returned at 10:44:33 and 10:56:16); the harness's read-back simply
+ran before the write reached its client, though its "in sync with EDGE" check had passed.
+
+Cause: the replicator DO ships the broadcast `addCommit` queues for live sessions only inside an
+alarm-driven pass, and `addCommits` — the DataService write path an operation handler goes through
+— armed no alarm. A connected client learned of a server-side write only when its own traffic or
+the 10s session-lost sweep happened to trigger the next pass. The client's sync state compares its
+heads against the last `collection-state` it received, so it read "in sync" until then.
+`addCommits` now arms a near-term alarm when sessions are live (36/36 replicator tests pass).
 
 ### Also corrected in this pass
 
