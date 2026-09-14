@@ -117,31 +117,6 @@ describe('EDGE Operation.Service', () => {
   });
 });
 
-//
-// Helpers.
-//
-
-// Results cross a Cloudflare RPC boundary in production, so every one carries `Symbol.dispose`.
-const disposable = { [Symbol.dispose]: () => {} };
-
-const makeFunctionsService = (calls: { deploymentId: string; input: unknown }[]): EdgeFunctionEnv.FunctionsService => ({
-  query: async () => Object.assign([], disposable),
-  invoke: async (deploymentId, input) => {
-    calls.push({ deploymentId, input });
-    return { _kind: 'success' as const, data: undefined, ...disposable };
-  },
-});
-
-const scheduleWith = async (
-  op: Operation.Definition<{ readonly value: string }, void>,
-  calls: { deploymentId: string; input: unknown }[],
-) =>
-  EffectEx.runPromise(
-    Effect.flatMap(Operation.Service, (service) => service.schedule(op, { value: 'x' })).pipe(
-      Effect.provide(makeOperationServiceLayer(makeFunctionsService(calls))),
-    ),
-  );
-
 describe('EDGE Hypergraph.Service', () => {
   // The shape `org.dxos.operation.tasks.recordSession` has: declaring `Database.Service` is what
   // marks an operation as acting on one named space, so work fired by a hook whose payload cannot
@@ -169,29 +144,6 @@ describe('EDGE Hypergraph.Service', () => {
       }),
     ),
   );
-
-  /**
-   * A live peer with its host services bridged in-process, the way `createFunctionContext` bridges
-   * the EDGE bindings — so the runtime builds its own client and graph exactly as the worker does.
-   */
-  const openPeer = async () => {
-    const builder = new EchoTestBuilder();
-    await builder.open();
-    onTestFinished(async () => {
-      await builder.close();
-    });
-    const peer = await builder.createPeer();
-    const scope = Effect.runSync(Scope.make());
-    onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-    const services: FunctionProtocol.Context['services'] = await EffectEx.runPromise(
-      Effect.all({
-        dataService: makeInProcessClient(DataService.Rpcs, peer.host.dataService),
-        queryService: makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
-        queueService: makeInProcessClient(FeedService.Rpcs, peer.host.feedService),
-      }).pipe(Effect.provideService(Scope.Scope, scope)),
-    );
-    return { peer, services };
-  };
 
   test('resolves against the graph when the invocation names no space', async ({ expect }) => {
     const { services } = await openPeer();
@@ -226,3 +178,50 @@ describe('EDGE Hypergraph.Service', () => {
     ).rejects.toThrow('Hypergraph not available');
   });
 });
+
+//
+// Helpers.
+//
+// Results cross a Cloudflare RPC boundary in production, so every one carries `Symbol.dispose`.
+const disposable = { [Symbol.dispose]: () => {} };
+
+const makeFunctionsService = (calls: { deploymentId: string; input: unknown }[]): EdgeFunctionEnv.FunctionsService => ({
+  query: async () => Object.assign([], disposable),
+  invoke: async (deploymentId, input) => {
+    calls.push({ deploymentId, input });
+    return { _kind: 'success' as const, data: undefined, ...disposable };
+  },
+});
+
+const scheduleWith = async (
+  op: Operation.Definition<{ readonly value: string }, void>,
+  calls: { deploymentId: string; input: unknown }[],
+) =>
+  EffectEx.runPromise(
+    Effect.flatMap(Operation.Service, (service) => service.schedule(op, { value: 'x' })).pipe(
+      Effect.provide(makeOperationServiceLayer(makeFunctionsService(calls))),
+    ),
+  );
+
+/**
+ * A live peer with its host services bridged in-process, the way `createFunctionContext` bridges
+ * the EDGE bindings — so the runtime builds its own client and graph exactly as the worker does.
+ */
+const openPeer = async () => {
+  const builder = new EchoTestBuilder();
+  await builder.open();
+  onTestFinished(async () => {
+    await builder.close();
+  });
+  const peer = await builder.createPeer();
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const services: FunctionProtocol.Context['services'] = await EffectEx.runPromise(
+    Effect.all({
+      dataService: makeInProcessClient(DataService.Rpcs, peer.host.dataService),
+      queryService: makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
+      queueService: makeInProcessClient(FeedService.Rpcs, peer.host.feedService),
+    }).pipe(Effect.provideService(Scope.Scope, scope)),
+  );
+  return { peer, services };
+};
