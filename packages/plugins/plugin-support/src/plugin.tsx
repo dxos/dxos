@@ -39,9 +39,9 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SupportSettings),
-  Plugin.addModule(Translations),
   Plugin.addModule(Tour),
   Plugin.addModule(TourAutoStart),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

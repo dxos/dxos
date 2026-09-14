@@ -36,10 +36,10 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(TextContent),
+  Plugin.addModule(TourFragment),
   Plugin.addModule(Transcriber),
   Plugin.addModule(TranscriptionDriver),
   Plugin.addModule(TranscriptionSettings),
-  Plugin.addModule(TourFragment),
   Plugin.addModule(Translations),
   Plugin.make,
 );
