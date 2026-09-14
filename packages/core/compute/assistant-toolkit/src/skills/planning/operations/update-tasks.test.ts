@@ -99,6 +99,56 @@ describe('UpdateTasks', () => {
   );
 
   it.effect(
+    'assigns a started task to the conversation agent, and a plain chat to itself',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
+        yield* Database.flush();
+        const agentChat = yield* Agent.loadChat(agent);
+        const chatFeed = agentChat?.feed?.target;
+        invariant(agentChat && chatFeed, 'Agent chat feed not found.');
+        const invoke = (tasks: { title: string; status: 'todo' | 'started' | 'done' }[]) =>
+          Operation.invoke(UpdateTasks, { tasks }).pipe(
+            Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })),
+          );
+
+        // Created started, and moved to started: both land on the agent. A todo stays unassigned.
+        yield* invoke([
+          { title: 'First', status: 'started' },
+          { title: 'Second', status: 'todo' },
+        ]);
+        yield* invoke([
+          { title: 'First', status: 'done' },
+          { title: 'Second', status: 'started' },
+        ]);
+
+        const [first, second] = yield* Chat.loadTasks(agentChat);
+        expect(first?.assignee?.role).toBe('assistant');
+        expect(first?.assignee?.subject?.target?.id).toBe(agent.id);
+        expect(second?.assignee?.subject?.target?.id).toBe(agent.id);
+        // One log line per edit: the assignment rides the status change rather than adding an entry.
+        expect(second?.history?.map(({ description }) => description)).toEqual([
+          'Status changed from todo to started. Assigned to an agent.',
+        ]);
+
+        // A chat with no agent above it is its own session object.
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const runtime = yield* Effect.context<Database.Service>();
+        const binder = new AiContext.Binder({ feed, runtime });
+        yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
+        yield* Operation.invoke(UpdateTasks, { tasks: [{ title: 'Solo', status: 'started' }] }).pipe(
+          Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })),
+        );
+        const [solo] = yield* Chat.loadTasks(chat);
+        expect(solo?.assignee?.subject?.target?.id).toBe(chat.id);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'emits a status trace event for every change, and none for a no-op update',
     Effect.fnUntraced(
       function* ({ expect }) {
