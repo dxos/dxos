@@ -218,7 +218,11 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
     useLayoutEffect(() => register(value, { content, side }), [register, value, content, side]);
 
     // The machine's own trigger handlers, fetched at event time so nothing here subscribes to it.
-    const machine = useCallback(() => apiRef.current?.getTriggerProps({ value }), [apiRef, value]);
+    // Any forwarded event may open or switch the tooltip, so the side is set before each one.
+    const machine = useCallback(() => {
+      setSide(side);
+      return apiRef.current?.getTriggerProps({ value });
+    }, [apiRef, value, side, setSide]);
 
     return (
       <ark.button
@@ -241,7 +245,6 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
           if (event.defaultPrevented) {
             return;
           }
-          setSide(side);
           machine()?.onPointerMove?.(event);
         }}
         onPointerLeave={(event: PointerEvent<HTMLButtonElement>) => {

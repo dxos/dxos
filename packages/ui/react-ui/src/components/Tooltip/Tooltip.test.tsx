@@ -100,6 +100,21 @@ describe('Tooltip', () => {
     fireEvent.pointerMove(second, { pointerType: 'mouse' });
     await waitFor(() => expect(placement()).toEqual('left'));
   });
+
+  test('clicking another trigger switches to its side', async ({ expect }) => {
+    render(<Harness sides={['right', 'left']} />, { wrapper: Wrapper });
+    const [first, second] = screen.getAllByRole('button');
+    const placement = () =>
+      document.querySelector('[data-scope="tooltip"][data-part="content"]')?.getAttribute('data-placement');
+
+    fireEvent.pointerMove(first, { pointerType: 'mouse' });
+    await waitFor(() => expect(placement()).toEqual('right'));
+
+    // A keyboard-activated click reaches the trigger with no pointer move before it.
+    fireEvent.click(second);
+    await waitFor(() => expect(second.getAttribute('aria-describedby')).toBeTruthy());
+    await waitFor(() => expect(placement()).toEqual('left'));
+  });
 });
 
 type HarnessProps = { onRender?: (label: string) => void; describedBy?: string };
