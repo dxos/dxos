@@ -34,7 +34,7 @@ const TestPlugin = Plugin.define(TestPluginMeta).pipe(
 
 const DefaultStory = () => {
   const ticket = useMemo(() => Support.make({ title: 'Example ticket' }), []);
-  return <SupportCompanion companionTo={ticket} />;
+  return <SupportCompanion companionTo={ticket} attendableId='story' />;
 };
 
 const meta = {

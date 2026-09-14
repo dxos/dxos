@@ -4,8 +4,12 @@
 
 import { type ComponentType, lazy } from 'react';
 
+import { type DebugConsoleProps } from './DebugConsole/index.ts';
 import { type DebugPanelStatusProps } from './DebugPanelStatus/index.ts';
 
+export const DebugConsole: ComponentType<DebugConsoleProps> = lazy(() =>
+  import('./DebugConsole/index.ts').then((module) => ({ default: module.DebugConsole })),
+);
 export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel/index.ts'));
 export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings/index.ts'));
 export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel/index.ts'));

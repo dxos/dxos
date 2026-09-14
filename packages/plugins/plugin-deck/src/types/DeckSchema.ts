@@ -8,11 +8,20 @@ import * as Struct from 'effect/Struct';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Translations from '@dxos/app-toolkit/Translations';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
+
+export const selectCompanion = <T extends { id: string }>(
+  companions: readonly T[],
+  preferredVariant?: string,
+): T | undefined =>
+  (preferredVariant
+    ? companions.find((companion) => Attention.getLinkedVariant(companion.id) === preferredVariant)
+    : undefined) ?? companions[0];
 
 export type Part = 'main' | 'complementary';
 export type ResolvedPart = Part;
@@ -43,14 +52,7 @@ export const StoredDeck = Schema.Struct({
    * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
    */
   plankSizing: Schema.mutableKey(PlankSizing),
-  /**
-   * Planks showing their companion, by id. Per plank while the deck slides, so moving between planks
-   * restores what each was left in — a plank you closed the companion on stays closed when you come
-   * back to it, while the one you left it open on reopens it. Under `flatten` only one plank is laid
-   * out at a time and the flag is read deck-wide instead (`isCompanionOpen`), so the pane stays in the
-   * state you left it in as you move between articles.
-   */
-  companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
+  companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
    * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
    * like a browser tab: opening under a name that is already taken replaces its occupant in place.
@@ -72,7 +74,6 @@ export const DEFAULT_DECK_ID = 'default';
 
 export const defaultDeck: StoredDeck = {
   plankSizing: {},
-  companionPlanks: [],
   plankNames: {},
 };
 
@@ -146,7 +147,8 @@ export const getCompanionSelection = (
     return { open, variant: open ? state.complementarySidebarPanel : undefined };
   }
 
-  const open = (state.decks[state.activeDeck]?.companionPlanks.length ?? 0) > 0;
+  const companionPlanks = state.decks[state.activeDeck]?.companionPlanks;
+  const open = companionPlanks === undefined || companionPlanks.length > 0;
   return { open, variant: open ? viewStateVariant : undefined };
 };
 

@@ -12,20 +12,76 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { DebugNodes } from '#types';
 
+/** The hidden category every developer tool hangs off: a root child the main navtree filters out. */
+export const createDebugRootExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'debugRoot',
+    match: GraphNodeMatcher.whenRoot,
+    connector: () =>
+      Effect.succeed([
+        AppGraphNode.make({
+          id: GraphPath.GroupSegments.debug,
+          type: GraphPath.GroupTypes.debug,
+          data: null,
+          properties: {
+            label: ['debug-panel.title', { ns: meta.profile.key }],
+            icon: 'ph--bug--regular',
+            disposition: 'hidden',
+            draggable: false,
+            droppable: false,
+          },
+        }),
+      ]),
+  });
+
+/** The panel's own pages, first in the tree: the console and the log viewer. */
+export const createDebugToolsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'debugTools',
+    match: AppNodeMatcher.whenDebugGroup,
+    connector: () =>
+      Effect.succeed([
+        AppGraphNode.make({
+          id: DebugNodes.nodeId(DebugNodes.Console),
+          type: DebugNodes.Console,
+          data: DebugNodes.Console,
+          properties: {
+            label: ['console.tab.label', { ns: meta.profile.key }],
+            icon: 'ph--terminal-window--regular',
+            // Explicit (not Position.first): -Infinity + 1 collapses back to -Infinity, tying with logs.
+            position: 0,
+          },
+        }),
+        AppGraphNode.make({
+          id: DebugNodes.nodeId(DebugNodes.Logs),
+          type: DebugNodes.Logs,
+          data: DebugNodes.Logs,
+          properties: {
+            label: ['logs.tab.label', { ns: meta.profile.key }],
+            icon: 'ph--list-bullets--regular',
+            position: 1,
+          },
+        }),
+      ]),
+  });
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Top-level Debug node (sibling of DevTools under SYSTEM); only present when a space is active.
+      // The hidden root/debug category and its first-class pages (console, logs).
+      createDebugRootExtension(),
+      createDebugToolsExtension(),
+
+      // Top-level Debug node, under the debug category.
       AppGraphBuilder.createExtension({
         id: 'debug',
-        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
-        connector: (space: Space) =>
+        match: AppNodeMatcher.whenDebugGroup,
+        connector: () =>
           Effect.succeed([
             AppGraphNode.make({
               id: DebugNodes.nodeId(DebugNodes.id),
@@ -34,13 +90,14 @@ export default Capability.makeModule(
               properties: {
                 label: ['debug.label', { ns: meta.profile.key }],
                 icon: 'ph--bug--regular',
-                position: Position.last,
+                // After DevTools (10), whichever plugin registers first.
+                position: 20,
               },
               nodes: [
                 AppGraphNode.make({
                   id: DebugNodes.nodeId(DebugNodes.SpaceType),
                   type: DebugNodes.SpaceType,
-                  data: { space, type: DebugNodes.SpaceType },
+                  data: DebugNodes.SpaceType,
                   properties: {
                     label: ['generate-objects.label', { ns: meta.profile.key }],
                     icon: 'ph--dice-five--regular',

@@ -65,6 +65,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             icon='ph--sliders-horizontal--regular'
             iconOnly
             label={t('context-settings.button')}
+            data-testid='assistant.options'
           />
         </Popover.Trigger>
         <Popover.Portal>
@@ -95,7 +96,12 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
                       icon='ph--plugs-connected--regular'
                       label={t('options.mcp.title')}
                     />
-                    <Tabs.IconButton value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
+                    <Tabs.IconButton
+                      value='model'
+                      icon='ph--cpu--regular'
+                      label={t('options.chat-model.title')}
+                      data-testid='assistant.options.model'
+                    />
                     <Tabs.IconButton
                       value='environment'
                       icon='ph--hard-drives--regular'
@@ -216,7 +222,7 @@ const ModelsPanel = ({
   return (
     <div className='dx-expand flex flex-col'>
       <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-        <Listbox.Content aria-label={t('options.chat-model.title')}>
+        <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
             <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
               <Listbox.ItemLabel>{label}</Listbox.ItemLabel>

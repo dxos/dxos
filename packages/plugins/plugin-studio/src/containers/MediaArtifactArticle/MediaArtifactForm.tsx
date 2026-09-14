@@ -146,6 +146,7 @@ export const MediaArtifactForm = ({
     if (!db) {
       return;
     }
+
     setGenerating(true);
     try {
       await invokePromise(
