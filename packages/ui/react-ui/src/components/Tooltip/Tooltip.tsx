@@ -126,6 +126,16 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
 
   const active = tooltip.triggerValue ? registry.current.get(tooltip.triggerValue) : undefined;
 
+  // The open trigger's side can change without an event to forward, so reposition in place.
+  const activeSide = active?.side ?? 'top';
+  useEffect(() => {
+    if (open && placementRef.current !== activeSide) {
+      placementRef.current = activeSide;
+      setPlacement(activeSide);
+      apiRef.current?.reposition({ placement: activeSide });
+    }
+  }, [open, activeSide]);
+
   const stateAttribute: TooltipStateAttribute = open ? 'delayed-open' : 'closed';
 
   // Applied to the element rather than rendered by `Tooltip.Trigger`, which reads only the stable

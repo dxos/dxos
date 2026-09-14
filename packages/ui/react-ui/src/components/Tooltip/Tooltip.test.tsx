@@ -113,6 +113,19 @@ describe('Tooltip', () => {
     }
   });
 
+  test('the open tooltip follows a change to its trigger side', async ({ expect }) => {
+    const { rerender } = render(<Harness sides={['right', 'left']} />, { wrapper: Wrapper });
+    const [first] = screen.getAllByRole('button');
+    const placement = () =>
+      document.querySelector('[data-scope="tooltip"][data-part="content"]')?.getAttribute('data-placement');
+
+    fireEvent.pointerMove(first, { pointerType: 'mouse' });
+    await waitFor(() => expect(placement()).toEqual('right'));
+
+    rerender(<Harness sides={['bottom', 'left']} />);
+    await waitFor(() => expect(placement()).toEqual('bottom'));
+  });
+
   test('clicking another trigger switches to its side', async ({ expect }) => {
     render(<Harness sides={['right', 'left']} />, { wrapper: Wrapper });
     const [first, second] = screen.getAllByRole('button');
