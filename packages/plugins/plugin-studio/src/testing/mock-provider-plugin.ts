@@ -16,7 +16,9 @@ export const MOCK_PROVIDER_ID = 'mock';
 // The prompt is required and multi-line, as the real providers declare it, so the story exercises
 // the same Generate gating and the same textarea.
 const MockRequestSchema = Schema.Struct({
-  prompt: Schema.NonEmptyString.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text)).annotate({ title: 'Prompt' }),
+  prompt: Schema.NonEmptyString.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown)).annotate({
+    title: 'Prompt',
+  }),
   style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
   aspectRatio: Schema.optional(Schema.String.annotate({ title: 'Aspect ratio' })),
 });

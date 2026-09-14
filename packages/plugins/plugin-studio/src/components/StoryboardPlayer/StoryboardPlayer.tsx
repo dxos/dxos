@@ -115,11 +115,11 @@ export const StoryboardPlayer = ({
           </div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Content classNames='bg-scrim-surface'>
         {/* Keyed by clip so the element remounts and autoplays the next source. */}
         <MediaPlayer
           key={clip.id}
-          classNames='dx-expand'
+          classNames='dx-expand bg-black'
           src={clip.src}
           kind={isVideo ? 'video' : undefined}
           fit='contain'

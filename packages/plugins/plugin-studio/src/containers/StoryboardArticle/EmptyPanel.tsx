@@ -42,7 +42,7 @@ export const EmptyPanel = ({ label, attendableId, play }: EmptyPanelProps) => {
       <Panel.Toolbar asChild>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Content classNames='bg-scrim-surface'>
         <Empty classNames='h-full' label={label} />
       </Panel.Content>
     </Panel.Root>

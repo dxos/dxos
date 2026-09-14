@@ -177,7 +177,7 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId, play
       <Panel.Toolbar asChild>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Content classNames='bg-scrim-surface'>
         {selected === 'all' ? (
           <VariantGallery
             variants={galleryItems}

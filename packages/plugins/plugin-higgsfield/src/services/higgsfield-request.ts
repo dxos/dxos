@@ -12,7 +12,7 @@ const model = Schema.NonEmptyString.annotate({
 });
 
 const prompt = Schema.NonEmptyString.pipe(
-  Format.FormatAnnotation.set(Format.TypeFormat.Text),
+  Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
   Schema.annotate({ title: 'Prompt' }),
 );
 

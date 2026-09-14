@@ -39,7 +39,8 @@ export const make = (): Skill.Skill =>
         Method:
         1. Turn the brief into a narrative of N beats (three when unspecified): an establishing shot
            that sets the scene, one or more beats that develop it, and a resolution. Give each beat a
-           short title, a one-sentence director's note, and a concrete visual prompt (subject,
+           short title (plain words, never a number or ordinal — the storyboard numbers its frames
+           by position), a one-sentence director's note, and a concrete visual prompt (subject,
            setting, camera, motion for video, mood). Prompts must stand alone — the generator sees
            nothing but the prompt.
         2. Call list-providers to learn which provider serves the kind you need and which config keys
