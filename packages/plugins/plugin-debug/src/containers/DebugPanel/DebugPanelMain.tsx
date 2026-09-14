@@ -25,10 +25,11 @@ export const DebugPanelMain = () => {
   const { graph } = useAppGraph();
   const [visited, setVisited] = useState<string[]>([]);
   useEffect(() => {
-    if (nodeId && !visited.includes(nodeId)) {
-      setVisited((prev) => [...prev, nodeId]);
+    if (nodeId) {
+      // Guarded in the updater: StrictMode runs the effect twice on mount, and two appends would mount the page twice.
+      setVisited((prev) => (prev.includes(nodeId) ? prev : [...prev, nodeId]));
     }
-  }, [nodeId, visited]);
+  }, [nodeId]);
 
   if (!nodeId) {
     return <Empty label={t('debug-panel.empty.label')} />;

@@ -3,7 +3,7 @@
 //
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -21,10 +21,18 @@ import { type DebugPanelViewState, debugPanelAspect } from './view-state.ts';
 
 const ROOT_PATH = [DebugNodes.DEBUG_ROOT_ID];
 
+/** The node and every ancestor under the debug root, so each level's connector runs. */
+const lineage = (nodeId: string): string[] => {
+  const segments = nodeId.split('/');
+  return segments
+    .map((_, index) => segments.slice(0, index + 1).join('/'))
+    .filter((id) => id.startsWith(DebugNodes.DEBUG_ROOT_ID));
+};
+
 /** The tree over the hidden `root/debug` category: every developer tool, selected here and shown in `Main`. */
 export const DebugPanelSidebar = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { contextId, open, select, setOpen } = useDebugPanelContext();
+  const { contextId, nodeId, open, select, setOpen } = useDebugPanelContext();
   const { graph } = useAppGraph();
   const manager = useManagerOptional();
   // The model reads state through atoms; the manager's atom for this context is that state, and a
@@ -44,8 +52,18 @@ export const DebugPanelSidebar = () => {
   );
   const model = useGraphTreeModel(DebugNodes.DEBUG_ROOT_ID, state);
 
+  // Persisted state names nodes whose children come from connectors that only run on expansion, so
+  // without this an open branch restores empty and a nested selection restores to a blank page.
+  const restoredRef = useRef({ open, nodeId });
   useEffect(() => {
     AppGraph.expandSync(graph, DebugNodes.DEBUG_ROOT_ID, 'child');
+    const { open, nodeId } = restoredRef.current;
+    for (const key of open) {
+      AppGraph.expandSync(graph, Path.last(key), 'child');
+    }
+    for (const id of nodeId ? lineage(nodeId) : []) {
+      AppGraph.expandSync(graph, id, 'child');
+    }
   }, [graph]);
 
   const handleOpenChange = useCallback(
@@ -66,6 +84,7 @@ export const DebugPanelSidebar = () => {
         return;
       }
       select(item.id);
+      AppGraph.expandSync(graph, item.id, 'child');
     },
     [graph, open, select, setOpen],
   );

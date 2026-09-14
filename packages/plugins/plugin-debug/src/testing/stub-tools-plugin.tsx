@@ -15,8 +15,11 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DXN } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 export const STUB_TOOLS_BRANCH = 'tools';
+
+const STUB_TOOLS_TYPE = 'stub-tools';
 
 /** Node data (and article text) of the stub pages, so a play test can select one and read it back. */
 export const STUB_TOOL_PAGES = [
@@ -28,18 +31,29 @@ const stubGraphBuilder = Capability.inlineModule(
   'stub-tools-graph',
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {
-    const extension = yield* AppGraphBuilder.createExtension({
-      id: 'stubTools',
-      match: AppNodeMatcher.whenDebugGroup,
-      connector: () =>
-        Effect.succeed([
-          AppGraphNode.make({
-            id: STUB_TOOLS_BRANCH,
-            type: 'stub-tools',
-            data: null,
-            // A branch before its children are loaded, so the row shows its chevron on first paint.
-            properties: { label: 'Tools', icon: 'ph--wrench--regular', role: 'branch', position: 2 },
-            nodes: STUB_TOOL_PAGES.map((page, index) =>
+    const extensions = yield* Effect.all([
+      AppGraphBuilder.createExtension({
+        id: 'stubTools',
+        match: AppNodeMatcher.whenDebugGroup,
+        connector: () =>
+          Effect.succeed([
+            AppGraphNode.make({
+              id: STUB_TOOLS_BRANCH,
+              type: STUB_TOOLS_TYPE,
+              data: null,
+              // A branch before its children are loaded, so the row shows its chevron on first paint.
+              properties: { label: 'Tools', icon: 'ph--wrench--regular', role: 'branch', position: 2 },
+            }),
+          ]),
+      }),
+      // The pages hang off the branch by a connector of their own, as a real tool plugin's do, so
+      // they only exist once the branch is expanded — the case a restored selection has to survive.
+      AppGraphBuilder.createExtension({
+        id: 'stubToolPages',
+        match: GraphNodeMatcher.whenNodeType(STUB_TOOLS_TYPE),
+        connector: () =>
+          Effect.succeed(
+            STUB_TOOL_PAGES.map((page, index) =>
               AppGraphNode.make({
                 id: page.id,
                 type: 'stub-tool',
@@ -47,10 +61,10 @@ const stubGraphBuilder = Capability.inlineModule(
                 properties: { label: page.label, icon: 'ph--flask--regular', position: index },
               }),
             ),
-          }),
-        ]),
-    });
-    return [Capability.contribute(AppCapabilities.AppGraphBuilder, extension)];
+          ),
+      }),
+    ]);
+    return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat())];
   }),
 );
 
