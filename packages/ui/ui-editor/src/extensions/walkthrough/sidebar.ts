@@ -18,6 +18,27 @@ const HEADINGS: Record<string, number> = {
   SetextHeading2: 2,
 };
 
+/**
+ * A heading's text without its markers.
+ *
+ * Only an ATX heading has them: CommonMark closes one with a run of `#` that is either preceded by
+ * a space or is all that remains, and that run is syntax. An ATX heading ending in `C#` keeps its
+ * hash, since no space separates it from the word. The gate on the node name is what makes the
+ * setext entries in `HEADINGS` safe — a setext heading's line is literal — even though the markdown
+ * configuration here currently parses one as a paragraph instead.
+ */
+const headingTitle = (node: string, text: string): string => {
+  const line = text.split('\n')[0];
+  if (!node.startsWith('ATXHeading')) {
+    return line.trim();
+  }
+
+  return line
+    .replace(/^#+\s*/, '')
+    .replace(/(?:\s+|^)#+\s*$/, '')
+    .trim();
+};
+
 export type WalkthroughEntry = {
   /** Document position the entry scrolls to. */
   from: number;
@@ -39,14 +60,8 @@ export const walkthroughOutline = (state: EditorState): WalkthroughEntry[] => {
     enter: (node) => {
       const level = HEADINGS[node.name];
       if (level) {
-        const text = state
-          .sliceDoc(node.from, node.to)
-          .replace(/^#+\s*/, '')
-          .split('\n')[0]
-          // A closed ATX heading (`## Wiring ##`) ends with markers that are syntax, not title.
-          .replace(/\s+#+\s*$/, '')
-          .trim();
-        entries.push({ from: node.from, level, title: text, files: [], added: 0, removed: 0 });
+        const title = headingTitle(node.name, state.sliceDoc(node.from, node.to));
+        entries.push({ from: node.from, level, title, files: [], added: 0, removed: 0 });
         return false;
       }
 
@@ -228,8 +243,12 @@ const entryLabel = (entry: WalkthroughEntry): string => {
   if (entry.files.length > 0) {
     parts.push(entry.files.join(', '));
   }
-  if (entry.added > 0 || entry.removed > 0) {
-    parts.push(`+${entry.added} -${entry.removed}`);
+  // Built the way the row is, so a section with no removals is not announced as `-0`.
+  const counts = [entry.added > 0 ? `+${entry.added}` : undefined, entry.removed > 0 ? `-${entry.removed}` : undefined]
+    .filter((count) => count !== undefined)
+    .join(' ');
+  if (counts.length > 0) {
+    parts.push(counts);
   }
   return parts.join(' — ');
 };

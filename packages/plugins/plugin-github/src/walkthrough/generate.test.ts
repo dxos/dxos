@@ -171,6 +171,34 @@ describe('generateWalkthrough', () => {
     expect(result.walkthrough.id).not.to.eq(older.id);
   });
 
+  test('orders duplicates by the instant, not by the spelling of the timestamp', async () => {
+    const { db, pullRequest, run } = await setup();
+    // `generatedAt` is an unvalidated date-time: as strings `+02:00` sorts above `Z`, as instants
+    // 08:00Z is the older of the two.
+    const offset = db.add(
+      Walkthrough.make({
+        pullRequest: Ref.make(pullRequest),
+        body: 'offset',
+        commit: 'sha-1',
+        generatedAt: '2026-09-14T10:00:00+02:00',
+      }),
+    );
+    const utc = db.add(
+      Walkthrough.make({
+        pullRequest: Ref.make(pullRequest),
+        body: 'utc',
+        commit: 'sha-1',
+        generatedAt: '2026-09-14T09:00:00.000Z',
+      }),
+    );
+    await db.flush();
+
+    const result = await run();
+
+    expect(result.walkthrough.id).to.eq(utc.id);
+    expect(result.walkthrough.id).not.to.eq(offset.id);
+  });
+
   test('reports its phases and ends on the completion sentinel', async () => {
     const { run, phases } = await setup();
     await run();

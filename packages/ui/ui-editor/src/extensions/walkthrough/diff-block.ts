@@ -115,6 +115,12 @@ const createDiffMatcher = (options: DiffBlocksOptions): WidgetMatcher => ({
 /** Where a rendered code cell gets its highlighted content from once the language resolves. */
 type PendingCell = { element: HTMLElement; side: 'before' | 'after'; index: number };
 
+/** What a widget renders as before the observer has measured it; `auto` starts split. */
+const initialLayout = (layout?: DiffLayout): 'split' | 'inline' => (layout === 'inline' ? 'inline' : 'split');
+
+/** Highlighting is on unless it was turned off, so absent and `true` are the same configuration. */
+const highlighted = (options: DiffBlocksOptions): boolean => options.highlight !== false;
+
 class DiffBlockWidget extends WidgetType {
   /** Cleared on destroy so a language that resolves after the widget is gone writes nothing. */
   #alive = true;
@@ -132,15 +138,18 @@ class DiffBlockWidget extends WidgetType {
     this.#diff = diff;
     this.#source = source;
     this.#options = options;
-    this.#layout = options.layout === 'auto' || options.layout === undefined ? 'split' : options.layout;
+    this.#layout = initialLayout(options.layout);
   }
 
   override eq(other: this): boolean {
-    // `highlight` too: a widget reused across a change of it would keep the colour it was built with.
+    // Normalized rather than compared raw, and `highlight` included: `auto` and an absent layout
+    // both start as `split`, and an absent `highlight` means on, so a widget configured either way
+    // renders identically. Comparing raw would tear one down and lose the collapse the reader
+    // toggled and the width the observer measured.
     return (
       this.#source === other.#source &&
-      this.#options.layout === other.#options.layout &&
-      this.#options.highlight === other.#options.highlight
+      initialLayout(this.#options.layout) === initialLayout(other.#options.layout) &&
+      highlighted(this.#options) === highlighted(other.#options)
     );
   }
 
@@ -294,7 +303,7 @@ class DiffBlockWidget extends WidgetType {
       }
     }
 
-    if (this.#options.highlight !== false && this.#diff.language) {
+    if (highlighted(this.#options) && this.#diff.language) {
       void this.#highlight(this.#diff.language, before, after, pending);
     }
   }

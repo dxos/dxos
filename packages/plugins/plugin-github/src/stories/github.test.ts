@@ -37,6 +37,25 @@ describe('parsePullRequestUrl', () => {
 
   test('rejects a number the path continues through', () => {
     expect(parsePullRequestUrl('https://github.com/dxos/dxos/pull/13082x')).to.eq(undefined);
+    expect(parsePullRequestUrl('https://github.com/dxos/dxos/pull/13082-old')).to.eq(undefined);
+  });
+
+  test('reads a URL copied out of prose, with its punctuation attached', () => {
+    for (const trailing of ['.', ',', ')', ']', '>']) {
+      expect(parsePullRequestUrl(`https://github.com/dxos/dxos/pull/13082${trailing}`)).to.deep.eq({
+        owner: 'dxos',
+        repo: 'dxos',
+        number: 13082,
+      });
+    }
+  });
+
+  test('ignores the case of the host', () => {
+    expect(parsePullRequestUrl('https://GitHub.com/dxos/dxos/pull/13082')).to.deep.eq({
+      owner: 'dxos',
+      repo: 'dxos',
+      number: 13082,
+    });
   });
 
   test('rejects anything that is not a pull request URL', () => {

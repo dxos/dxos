@@ -127,22 +127,34 @@ export const findWalkthrough = (
  *
  * Two generations racing on one pull request both see none and both add: the check and the write
  * are separate steps, and ECHO has neither a uniqueness constraint nor an atomic upsert to close
- * that. Picking deterministically makes the duplicate inert instead — every reader converges on the
- * same object, and the next regeneration updates that one in place rather than forking again.
+ * that. Picking deterministically makes the duplicate inert instead — every reader lands on the
+ * same object, and the next regeneration updates that one in place rather than forking again. The
+ * loser stays in the space; removing it from a read path would delete another client's object.
  */
 const newestWalkthrough = (walkthroughs: readonly Walkthrough.Walkthrough[]): Walkthrough.Walkthrough | undefined =>
   walkthroughs.reduce<Walkthrough.Walkthrough | undefined>((newest, walkthrough) => {
     if (!newest) {
       return walkthrough;
     }
-    const left = walkthrough.generatedAt ?? '';
-    const right = newest.generatedAt ?? '';
+    const left = generatedTime(walkthrough);
+    const right = generatedTime(newest);
     if (left !== right) {
       return left > right ? walkthrough : newest;
     }
 
+    // The id is a ULID, so it is fixed width and orders the same on every peer.
     return walkthrough.id > newest.id ? walkthrough : newest;
   }, undefined);
+
+/**
+ * Parsed rather than compared as a string: `generatedAt` is an unvalidated date-time, so a value
+ * written by anything but this code can carry an offset (`+02:00`) that sorts against a `Z` value
+ * the wrong way round. An unparseable or absent one sorts oldest.
+ */
+const generatedTime = (walkthrough: Walkthrough.Walkthrough): number => {
+  const parsed = Date.parse(walkthrough.generatedAt ?? '');
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+};
 
 /** Replaces the body in place where one exists, so links to the walkthrough survive regeneration. */
 const upsert = (

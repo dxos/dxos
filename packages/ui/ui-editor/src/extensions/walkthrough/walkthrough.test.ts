@@ -212,6 +212,12 @@ describe('walkthroughOutline', () => {
     expect(outline[0].title).to.eq('Harness wiring');
   });
 
+  test('reads a heading that is only a closing sequence as untitled', () => {
+    const outline = walkthroughOutline(createState(['### ###', '', 'Prose.', ''].join('\n')));
+
+    expect(outline[0].title).to.eq('');
+  });
+
   test('keeps a hash the title itself ends with', () => {
     // Only whitespace-separated markers close a heading, so a language named `C#` survives.
     const outline = walkthroughOutline(createState(['## Porting to C#', '', 'Prose.', ''].join('\n')));
@@ -227,6 +233,26 @@ describe('walkthroughOutline', () => {
     expect(outline).to.have.length(1);
     expect(outline[0].title).to.eq('');
     expect(outline[0].files).to.deep.eq(['a.ts']);
+  });
+});
+
+describe('DiffBlockWidget equality', () => {
+  test('reuses a widget across configurations that render the same', () => {
+    const source = ['```diff file=src/a.ts', '@@ -1,1 +1,2 @@', ' keep();', '+one();', '```'].join('\n');
+    const widget = (options: Parameters<typeof diffBlocks>[0]) => {
+      const view = new EditorView({
+        state: EditorState.create({ doc: source, extensions: [createMarkdownExtensions(), diffBlocks(options)] }),
+      });
+      const [found] = blockWidgets(view);
+      view.destroy();
+      invariant(found);
+      return found.widget;
+    };
+
+    // `auto` and an absent layout both start split, and an absent `highlight` means on.
+    expect(widget({}).eq(widget({ layout: 'auto', highlight: true }))).to.eq(true);
+    expect(widget({}).eq(widget({ layout: 'inline' }))).to.eq(false);
+    expect(widget({}).eq(widget({ highlight: false }))).to.eq(false);
   });
 });
 
@@ -248,6 +274,32 @@ describe('walkthroughSidebar', () => {
     expect(labels.every((label) => label && label.length > 0)).to.eq(true);
     expect(labels[0]).to.eq('Walkthrough');
     expect(labels[1]).to.eq('Harness wiring — harness.ts — +1 -1');
+  });
+
+  test('leaves a count the row does not show out of the name', () => {
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: [
+          '## Additions only',
+          '',
+          '```diff file=src/a.ts',
+          '@@ -1,1 +1,2 @@',
+          ' keep();',
+          '+one();',
+          '```',
+          '',
+        ].join('\n'),
+        extensions: [createMarkdownExtensions(), diffBlocks(), walkthroughSidebar()],
+      }),
+    });
+
+    const rail = view.dom.querySelector('.cm-walkthrough-sidebar');
+    invariant(rail);
+    const label = rail.querySelector('button')?.getAttribute('aria-label');
+    view.destroy();
+
+    // The row renders `+1` alone, so `-0` would be announced to a reader who cannot see it.
+    expect(label).to.eq('Additions only — a.ts — +1');
   });
 });
 
