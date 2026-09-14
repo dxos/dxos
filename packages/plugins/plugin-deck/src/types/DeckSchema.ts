@@ -107,6 +107,10 @@ export const StoredDeckState = Schema.Struct({
    * {@link getCompanionSelection} for the platform-correct read.
    */
   complementarySidebarPanel: Schema.optional(Schema.String),
+  /** Openness of the bottom drawer; optional so state persisted before it existed still decodes. */
+  drawerState: Schema.optional(Schema.Literals(['open', 'closed'])),
+  /** Drawer height in rem; absent falls back to the react-ui default. */
+  drawerHeight: Schema.optional(Schema.Number),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
   decks: Schema.mutableKey(

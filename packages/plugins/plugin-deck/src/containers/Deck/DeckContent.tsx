@@ -4,10 +4,13 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect } from 'react';
 
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Main } from '@dxos/react-ui';
+import { DRAWER_DEFAULT_HEIGHT, Main, useTranslation } from '@dxos/react-ui';
 
 import { useBreakpoints } from '#hooks';
+import { meta } from '#meta';
 
 import { layoutAppliesTopbar } from '../../util/index.ts';
 import { ComplementarySidebar, Sidebar } from '../Sidebar/index.ts';
@@ -20,11 +23,19 @@ export type DeckContentProps = PropsWithChildren;
 
 export const DeckContent = ({ children }: DeckContentProps) => {
   const {
-    state: { sidebarState, complementarySidebarState, complementarySidebarPanel, fullscreen },
+    state: {
+      sidebarState,
+      complementarySidebarState,
+      complementarySidebarPanel,
+      drawerState,
+      drawerHeight,
+      fullscreen,
+    },
     deck: { active },
     updateState,
     pluginManager,
   } = useDeckContext(DECK_CONTENT_NAME);
+  const { t } = useTranslation(meta.profile.key);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
 
@@ -55,15 +66,37 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     [updateState],
   );
 
+  const handleDrawerStateChange = useCallback(
+    (next: NonNullable<typeof drawerState>) => {
+      updateState((state) => ({ ...state, drawerState: next }));
+    },
+    [updateState],
+  );
+
+  // Persist only at drag end; every intermediate move would otherwise write the KVS store.
+  const handleDrawerHeightChangeEnd = useCallback(
+    (next: number) => {
+      updateState((state) => ({ ...state, drawerHeight: next }));
+    },
+    [updateState],
+  );
+
   return (
     <Main.Root
       navigationSidebarState={fullscreen ? 'closed' : sidebarState}
       complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
+      drawerState={fullscreen ? 'closed' : (drawerState ?? 'closed')}
+      drawerHeight={drawerHeight ?? DRAWER_DEFAULT_HEIGHT}
       onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
       onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
+      onDrawerStateChange={handleDrawerStateChange}
+      onDrawerHeightChangeEnd={handleDrawerHeightChangeEnd}
     >
       <Sidebar />
       <ComplementarySidebar current={complementarySidebarPanel} />
+      <Main.Drawer label={t('drawer.label')}>
+        <Surface.Surface type={AppSurface.Drawer} limit={1} />
+      </Main.Drawer>
       <Main.Overlay />
       {children}
       {topbar && <Banner variant='topbar' />}
