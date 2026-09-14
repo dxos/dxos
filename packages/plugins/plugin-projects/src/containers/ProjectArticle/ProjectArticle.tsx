@@ -32,6 +32,8 @@ import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
+import { getProjectChatPath } from '../../paths.ts';
+
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
 // and the field types are re-attached here.
@@ -120,6 +122,23 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     onDelegated: handleDelegated,
     onTogglePipeline: togglePipeline,
   });
+
+  // A session lane on the chart is the way into its chat. The project's own path helper, not the
+  // navigation resolver: the resolver answers with the assistant's Chats section, which lists only
+  // unparented chats, so that path names a node the deck cannot render.
+  const handleSelectChat = useCallback(
+    (chat: Chat.Chat) => {
+      if (!db) {
+        return;
+      }
+      void invokePromise(LayoutOperation.Open, {
+        subject: [getProjectChatPath(db.spaceId, subject.id, chat.id)],
+        pivotId: attendableId,
+        navigation: 'immediate',
+      });
+    },
+    [invokePromise, db, subject.id, attendableId],
+  );
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -264,7 +283,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Splitter.Panel>
               <Splitter.Handle />
               <Splitter.Panel position='end'>
-                {space && <ProjectPipeline space={space} project={subject} tasks={tasks} />}
+                {space && (
+                  <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
+                )}
               </Splitter.Panel>
             </Splitter.Root>
           )}
