@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -25,7 +25,14 @@ export const FrameVariants = ({ frame, attendableId }: FrameVariantsProps) => {
   const [snapshot] = useObject(frame);
   const artifact = useResolveRef(snapshot ? frame.artifact : undefined);
   if (!artifact) {
-    return <Empty classNames='h-full' label={t('frame-empty.message')} />;
+    return (
+      <Panel.Root>
+        <Panel.Toolbar />
+        <Panel.Content>
+          <Empty classNames='h-full' label={t('frame-empty.message')} />
+        </Panel.Content>
+      </Panel.Root>
+    );
   }
   return <MediaArtifactVariants artifact={artifact} attendableId={attendableId} />;
 };

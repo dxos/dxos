@@ -173,26 +173,21 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      {playing ? (
-        <Panel.Content>
-          <StoryboardPlayer clips={clips} onClose={() => setPlaying(false)} />
-        </Panel.Content>
-      ) : frames.length === 0 ? (
-        <Panel.Content>
-          <Empty classNames='h-full' label={t('storyboard-empty.message')} />
-        </Panel.Content>
-      ) : (
-        // Master/detail: the stack opens at a navtree sidebar's width so previews read at that
-        // scale, and the handle lets the reader trade it against the article.
-        <Panel.Content asChild>
-          <Splitter.Root orientation='horizontal' anchor='start' resizable defaultSize={STACK_SIZE} minSize={8}>
-            <Splitter.Panel position='start'>
-              <ScrollArea.Root>
-                <ScrollArea.Viewport>
+    // The splitter is the article: the stack (with the storyboard's toolbar) opens at a navtree
+    // sidebar's width so previews read at that scale, and the handle lets the reader trade it
+    // against the main panel — the selected frame's variants, or the storyboard playing.
+    <Splitter.Root role={role} orientation='horizontal' anchor='start' resizable defaultSize={STACK_SIZE} minSize={8}>
+      <Splitter.Panel position='start'>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <ActionToolbar {...menuActions} attendableId={attendableId} />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
+                {frames.length === 0 ? (
+                  <Empty classNames='h-full' label={t('storyboard-empty.message')} />
+                ) : (
                   <FrameStack<Frame.Frame>
                     items={frames}
                     selectedId={selectedFrame?.id}
@@ -201,19 +196,33 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
                   >
                     {(frame, index) => <FrameThumbnail frame={frame} index={index} />}
                   </FrameStack>
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Splitter.Panel>
-            <Splitter.Handle />
-            <Splitter.Panel position='end'>
-              {selectedFrame && (
-                <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId} />
-              )}
-            </Splitter.Panel>
-          </Splitter.Root>
-        </Panel.Content>
-      )}
-    </Panel.Root>
+                )}
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Content>
+        </Panel.Root>
+      </Splitter.Panel>
+      <Splitter.Handle />
+      <Splitter.Panel position='end'>
+        {playing ? (
+          <Panel.Root>
+            <Panel.Toolbar />
+            <Panel.Content>
+              <StoryboardPlayer clips={clips} onClose={() => setPlaying(false)} />
+            </Panel.Content>
+          </Panel.Root>
+        ) : selectedFrame ? (
+          <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId} />
+        ) : (
+          <Panel.Root>
+            <Panel.Toolbar />
+            <Panel.Content>
+              <Empty classNames='h-full' label={t('storyboard-empty.message')} />
+            </Panel.Content>
+          </Panel.Root>
+        )}
+      </Splitter.Panel>
+    </Splitter.Root>
   );
 };
 
