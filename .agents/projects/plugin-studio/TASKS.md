@@ -67,9 +67,9 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 
 ### Observed 2026-09-14 (Composer, studio session)
 
-- [ ] Frame companion **Generate** loses its spinning state when navigating away and back, though the
-      job is still visible in the active-processes panel — derive the busy state from the artifact's
-      pending variant (`jobId`) / the process, not from component state.
+- [x] Frame companion **Generate** loses its spinning state when navigating away and back — busy now
+      also reads the op's progress monitor (`<plugin>/<artifactId>`), and the resume effect waits
+      while that op still runs instead of starting a second poll on the same job.
 - [ ] Chat tools accordion ("Ran 13 commands") has no border.
 - [ ] Chat tools accordion header row: the title is not vertically centred (`items-center`).
 - [ ] The Help companion for a Project article shows the Inbox text ("A unified inbox for managing
