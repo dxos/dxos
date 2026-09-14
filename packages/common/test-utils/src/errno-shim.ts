@@ -61,6 +61,10 @@ extern long write(int fd, const void *buffer, unsigned long count);
 extern int getpid(void);
 extern int raise(int signal);
 extern unsigned alarm(unsigned seconds);
+extern int pause(void);
+
+/* Set by the first thread to report, so a second crashing thread waits for the process to end instead. */
+static volatile int reporting;
 
 static void write_text(const char *text) {
   unsigned long length = 0;
@@ -84,6 +88,11 @@ static void write_number(unsigned long value, unsigned base) {
 static void report_crash(int signal, void *info, void *context) {
   (void)context;
   struct crash_siginfo *details = info;
+  if (!__sync_bool_compare_and_swap(&reporting, 0, 1)) {
+    for (;;) {
+      pause();
+    }
+  }
   /* Defaults first: a second fault, or an unwinder stuck on a lock another thread holds, still ends the process. */
   struct glibc_sigaction fallback = {0};
   next_sigaction(signal, &fallback, 0);
