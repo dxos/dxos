@@ -23,21 +23,6 @@ const BERLIN_FORECAST = {
   hourly: { time: ['2026-05-20T15:00'], temperature_2m: [14.6], relative_humidity_2m: [61], wind_speed_10m: [9.1] },
 };
 
-/** A server whose upstream is canned, recording the URL it was asked for. */
-const withServer = <A, E, R>(
-  body: (server: { url: string; initializations: () => number; fetched: string[] }) => Effect.Effect<A, E, R>,
-) =>
-  Effect.gen(function* () {
-    const fetched: string[] = [];
-    const server = yield* startWorkerSpecServer({
-      fetchForecast: async (url) => {
-        fetched.push(url);
-        return BERLIN_FORECAST;
-      },
-    });
-    return yield* body({ ...server, fetched });
-  }).pipe(Effect.scoped);
-
 // The task text checked against the client the session dials with: `McpToolkit.make` is what
 // `AiSession` connects a skill's servers through, so a Worker written to the text is one the chat can call.
 describe('the weather Worker as the task text specifies it', () => {
@@ -135,3 +120,18 @@ describe('the weather Worker as the task text specifies it', () => {
     );
   });
 });
+
+/** A server whose upstream is canned, recording the URL it was asked for. */
+const withServer = <A, E, R>(
+  body: (server: { url: string; initializations: () => number; fetched: string[] }) => Effect.Effect<A, E, R>,
+) =>
+  Effect.gen(function* () {
+    const fetched: string[] = [];
+    const server = yield* startWorkerSpecServer({
+      fetchForecast: async (url) => {
+        fetched.push(url);
+        return BERLIN_FORECAST;
+      },
+    });
+    return yield* body({ ...server, fetched });
+  }).pipe(Effect.scoped);

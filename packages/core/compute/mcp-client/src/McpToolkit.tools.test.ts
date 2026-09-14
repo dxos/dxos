@@ -28,53 +28,6 @@ const ECHO_TOOL = {
   },
 };
 
-/** An in-process Streamable HTTP server serving `ECHO_TOOL`, one stateless transport per request. */
-const withServer = <A, E, R>(body: (url: string) => Effect.Effect<A, E, R>) =>
-  Effect.gen(function* () {
-    const listener = yield* Effect.acquireRelease(
-      Effect.sync(() =>
-        createServer((request, response) => {
-          void (async () => {
-            const chunks: Buffer[] = [];
-            for await (const chunk of request) {
-              chunks.push(Buffer.from(chunk));
-            }
-            const server = new Server({ name: 'echo', version: '0.0.0' }, { capabilities: { tools: {} } });
-            server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [ECHO_TOOL] }));
-            server.setRequestHandler(CallToolRequestSchema, async ({ params }) => ({
-              content: [{ type: 'text', text: JSON.stringify(params.arguments) }],
-            }));
-            const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-            await server.connect(transport);
-            response.on('close', () => {
-              void transport.close();
-              void server.close();
-            });
-            const raw = Buffer.concat(chunks).toString();
-            await transport.handleRequest(request, response, raw.length > 0 ? JSON.parse(raw) : undefined);
-          })();
-        }),
-      ),
-      (listener) =>
-        Effect.promise(async () => {
-          listener.closeAllConnections();
-          await new Promise<void>((resolve) => listener.close(() => resolve()));
-        }),
-    );
-    const port = yield* Effect.callback<number>((resume) => {
-      listener.once('listening', () => {
-        const address = listener.address();
-        resume(
-          address !== null && typeof address === 'object'
-            ? Effect.succeed(address.port)
-            : Effect.die(new Error('unexpected address')),
-        );
-      });
-      listener.listen(0, '127.0.0.1');
-    });
-    return yield* body(`http://127.0.0.1:${port}/mcp`);
-  }).pipe(Effect.scoped);
-
 describe('McpToolkit tools', () => {
   test('a tool with parameters survives a model turn and carries the server’s schema', async ({ expect }) => {
     await EffectEx.runPromise(
@@ -102,3 +55,53 @@ describe('McpToolkit tools', () => {
     );
   });
 });
+
+/** An in-process Streamable HTTP server serving `ECHO_TOOL`, one stateless transport per request. */
+const withServer = <A, E, R>(body: (url: string) => Effect.Effect<A, E, R>) =>
+  Effect.gen(function* () {
+    const listener = yield* Effect.acquireRelease(
+      Effect.sync(() =>
+        createServer((request, response) => {
+          // A body that is not JSON would otherwise reject with the response left open.
+          (async () => {
+            const chunks: Buffer[] = [];
+            for await (const chunk of request) {
+              chunks.push(Buffer.from(chunk));
+            }
+            const server = new Server({ name: 'echo', version: '0.0.0' }, { capabilities: { tools: {} } });
+            server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [ECHO_TOOL] }));
+            server.setRequestHandler(CallToolRequestSchema, async ({ params }) => ({
+              content: [{ type: 'text', text: JSON.stringify(params.arguments) }],
+            }));
+            const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+            await server.connect(transport);
+            response.on('close', () => {
+              void transport.close();
+              void server.close();
+            });
+            const raw = Buffer.concat(chunks).toString();
+            await transport.handleRequest(request, response, raw.length > 0 ? JSON.parse(raw) : undefined);
+          })().catch(() => response.destroy());
+        }),
+      ),
+      (listener) =>
+        Effect.promise(async () => {
+          // Stop accepting first, then cut what is open, so nothing new arrives while closing.
+          const closed = new Promise<void>((resolve) => listener.close(() => resolve()));
+          listener.closeAllConnections();
+          await closed;
+        }),
+    );
+    const port = yield* Effect.callback<number>((resume) => {
+      listener.once('listening', () => {
+        const address = listener.address();
+        resume(
+          address !== null && typeof address === 'object'
+            ? Effect.succeed(address.port)
+            : Effect.die(new Error('unexpected address')),
+        );
+      });
+      listener.listen(0, '127.0.0.1');
+    });
+    return yield* body(`http://127.0.0.1:${port}/mcp`);
+  }).pipe(Effect.scoped);

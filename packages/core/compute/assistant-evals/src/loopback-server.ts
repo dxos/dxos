@@ -34,10 +34,11 @@ export const listenLoopback = (
       ),
       (listener) =>
         Effect.promise(async () => {
-          // Sockets first: a client holding its connection open would otherwise make `close` wait
-          // for it.
+          // Stop accepting first, then cut what is open: a client holding its connection would
+          // otherwise make `close` wait for it, and a late arrival would keep the port bound.
+          const closed = new Promise<void>((resolve) => listener.close(() => resolve()));
           listener.closeAllConnections();
-          await new Promise<void>((resolve) => listener.close(() => resolve()));
+          await closed;
         }),
     );
 

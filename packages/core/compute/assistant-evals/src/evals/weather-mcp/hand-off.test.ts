@@ -7,33 +7,6 @@ import { describe, test } from 'vitest';
 import { type ToolInvocation } from '../../assertions.ts';
 import { WORKER_URL, evaluateHandOff } from './scenario.ts';
 
-const SERVER = 'https://weather-mcp.example.workers.dev';
-
-/** A configuring write, as the transcript records the Database skill's update tool. */
-const configure = (url: string, at: number, error?: string): ToolInvocation => ({
-  name: 'update_object',
-  operationKey: 'dxn:org.dxos.operation.space.updateObject',
-  input: JSON.stringify({ properties: { mcpServers: [{ name: 'weather', url, protocol: 'http' }] } }),
-  result: {},
-  error,
-  calledAt: at,
-  resultAt: at + 1,
-});
-
-/** A forecast coming back from the server's tool: no operation key, since an MCP tool has none. */
-const forecast = (at: number, overrides: Partial<ToolInvocation> = {}): ToolInvocation => ({
-  name: 'get_weather',
-  input: JSON.stringify({ latitude: 52.52, longitude: 13.41 }),
-  result: '{"current":{"temperature_2m":14.6,"wind_speed_10m":9.1}}',
-  calledAt: at,
-  resultAt: at + 1,
-  ...overrides,
-});
-
-/** A shell command that reached the upstream directly: a forecast, but not through the server. */
-const curl = (at: number): ToolInvocation =>
-  forecast(at, { name: 'exec', operationKey: 'dxn:org.dxos.operation.sandbox.exec' });
-
 // The eval's headline dimension is an ordering fact inside one transcript, pinned here on synthetic
 // transcripts rather than only on a run that takes half an hour to produce one.
 describe('evaluateHandOff', () => {
@@ -70,6 +43,10 @@ describe('evaluateHandOff', () => {
       server: WORKER_URL,
     });
     expect(elsewhere.configured).toBe(false);
+
+    // A tool that merely mentions the servers (a query, a read) is not the write that configures them.
+    const read = { ...configure(SERVER, 10), operationKey: 'dxn:org.dxos.operation.space.getObjects' };
+    expect(evaluateHandOff([read, forecast(20)], { server: WORKER_URL }).configured).toBe(false);
   });
 
   test('the server is whatever the caller names', ({ expect }) => {
@@ -97,3 +74,30 @@ describe('evaluateHandOff', () => {
     expect(empty.called).toBe(false);
   });
 });
+
+const SERVER = 'https://weather-mcp.example.workers.dev';
+
+/** A configuring write, as the transcript records the Database skill's update tool. */
+const configure = (url: string, at: number, error?: string): ToolInvocation => ({
+  name: 'update_object',
+  operationKey: 'dxn:org.dxos.operation.space.updateObject',
+  input: JSON.stringify({ properties: { mcpServers: [{ name: 'weather', url, protocol: 'http' }] } }),
+  result: {},
+  error,
+  calledAt: at,
+  resultAt: at + 1,
+});
+
+/** A forecast coming back from the server's tool: no operation key, since an MCP tool has none. */
+const forecast = (at: number, overrides: Partial<ToolInvocation> = {}): ToolInvocation => ({
+  name: 'get_weather',
+  input: JSON.stringify({ latitude: 52.52, longitude: 13.41 }),
+  result: '{"current":{"temperature_2m":14.6,"wind_speed_10m":9.1}}',
+  calledAt: at,
+  resultAt: at + 1,
+  ...overrides,
+});
+
+/** A shell command that reached the upstream directly: a forecast, but not through the server. */
+const curl = (at: number): ToolInvocation =>
+  forecast(at, { name: 'exec', operationKey: 'dxn:org.dxos.operation.sandbox.exec' });

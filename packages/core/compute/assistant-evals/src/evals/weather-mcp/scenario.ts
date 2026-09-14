@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 
+import { CapabilityNotFoundError } from '@dxos/app-framework';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
@@ -11,9 +13,11 @@ import * as Chat from '@dxos/assistant/Chat';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import * as EchoError from '@dxos/echo/Error';
 import type { SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { WeatherSpace } from '@dxos/plugin-debug/sample';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -62,11 +66,31 @@ export const OPENING_PROMPT = trim`
 export const isWeatherCall = ({ name, operationKey, error, result }: ToolInvocation): boolean =>
   !operationKey && /weather|forecast/i.test(name) && !error && TEMPERATURE.test(JSON.stringify(result ?? ''));
 
-/** The session's own write that put a server at `server` into its configuration. */
+/** The Database skill's update tool, the one write that reaches a skill's `mcpServers`. */
+const UPDATE_OBJECT_KEY = `dxn:${String(SpaceOperation.UpdateObject.meta.key).replace(/^dxn:/, '')}`;
+
+/** The session's own write that put a server at `server` into a skill's `mcpServers`. */
 export const isConfiguration =
   (server: RegExp) =>
-  ({ input, error }: ToolInvocation): boolean =>
-    !error && input.includes('mcpServers') && server.test(input);
+  ({ operationKey, input, error }: ToolInvocation): boolean => {
+    if (error || operationKey !== UPDATE_OBJECT_KEY) {
+      return false;
+    }
+    const servers = parseInput(input)?.properties?.mcpServers;
+    return Array.isArray(servers) && servers.some((entry) => typeof entry?.url === 'string' && server.test(entry.url));
+  };
+
+type UpdatePatch = { properties?: { mcpServers?: { url?: unknown }[] } };
+
+/** The tool's arguments as the transcript stores them; anything unparseable configured nothing. */
+const parseInput = (input: string): UpdatePatch | undefined => {
+  try {
+    const parsed: unknown = JSON.parse(input);
+    return typeof parsed === 'object' && parsed !== null ? (parsed as UpdatePatch) : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 export type HandOff = {
   /** The session wrote a server into the skill's configuration. */
@@ -92,6 +116,9 @@ export const evaluateHandOff = (invocations: readonly ToolInvocation[], options:
   };
 };
 
+/** The template did not seed what the run needs; the message names what is missing. */
+export class SeedError extends Data.TaggedError('SeedError')<{ message: string }> {}
+
 /**
  * Stands the run up on the template: applies the sample space, binds the project's skills to the
  * run's instructions, and files a chat carrying the four steps under the project. Returns what the
@@ -103,25 +130,29 @@ export const seed = ({
 }: {
   spaceId: SpaceId;
   instructions: Instructions.Instructions;
-}): Effect.Effect<SeedResult, unknown, Database.Service | Capabilities.ProcessManagerRuntimeServices> =>
+}): Effect.Effect<
+  SeedResult,
+  SeedError | CapabilityNotFoundError | EchoError.EntityNotFoundError | SampleSpace.SampleSpaceError,
+  Database.Service | Capabilities.ProcessManagerRuntimeServices
+> =>
   Effect.gen(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
     const space = client.spaces.get(spaceId);
     if (!space) {
-      return yield* Effect.fail(new Error(`Space not found: ${spaceId}`));
+      return yield* new SeedError({ message: `Space not found: ${spaceId}` });
     }
     yield* SampleSpace.applyTo(WeatherSpace(), space);
 
     const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
     if (!project?.taskSet || !project.instructions) {
-      return yield* Effect.fail(new Error('The template did not produce the project.'));
+      return yield* new SeedError({ message: 'The template did not produce the project.' });
     }
     const taskSet = yield* Database.load(project.taskSet);
     const steps = (yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref))).filter((candidate) =>
       TASK_TITLES.includes(candidate.title),
     );
     if (steps.length !== TASK_TITLES.length) {
-      return yield* Effect.fail(new Error('The template did not produce the four steps.'));
+      return yield* new SeedError({ message: 'The template did not produce the four steps.' });
     }
 
     // The Weather MCP skill reaches the session through the project's instructions, which a
