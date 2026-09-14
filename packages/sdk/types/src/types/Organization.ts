@@ -58,7 +58,11 @@ const OrganizationSchema = Schema.Struct({
     Schema.optional,
   ),
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
-  image: Schema.String.pipe(Schema.annotate({ title: 'Image' }), Annotation.GeneratorAnnotation.set('image.url'), Schema.optional),
+  image: Schema.String.pipe(
+    Schema.annotate({ title: 'Image' }),
+    Annotation.GeneratorAnnotation.set('image.url'),
+    Schema.optional,
+  ),
   website: Format.URL.pipe(
     Schema.annotate({ title: 'Website' }),
     Annotation.GeneratorAnnotation.set('internet.url'),

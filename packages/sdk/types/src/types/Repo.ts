@@ -17,13 +17,23 @@ import * as Organization from './Organization.ts';
 export class Repo extends Type.makeObject<Repo>(DXN.make('org.dxos.type.repo', '0.1.0'))(
   Schema.Struct({
     /** Repository name without its owner, e.g. `dxos`. */
-    name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Annotation.GeneratorAnnotation.set('company.buzzNoun')),
+    name: Schema.String.pipe(
+      Schema.annotate({ title: 'Name' }),
+      Annotation.GeneratorAnnotation.set('company.buzzNoun'),
+    ),
 
     /** Account the repository belongs to, e.g. `dxos` — an organization or a user login. */
-    owner: Schema.String.pipe(Schema.annotate({ title: 'Owner' }), Annotation.GeneratorAnnotation.set('internet.username')),
+    owner: Schema.String.pipe(
+      Schema.annotate({ title: 'Owner' }),
+      Annotation.GeneratorAnnotation.set('internet.username'),
+    ),
 
     /** Canonical web URL — stored rather than derived, since only the host knows its URL shape. */
-    url: Format.URL.pipe(Schema.annotate({ title: 'URL' }), Annotation.GeneratorAnnotation.set('internet.url'), Schema.optional),
+    url: Format.URL.pipe(
+      Schema.annotate({ title: 'URL' }),
+      Annotation.GeneratorAnnotation.set('internet.url'),
+      Schema.optional,
+    ),
 
     description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
 

@@ -203,7 +203,9 @@ export const runAll = (scorers: readonly Any[]): Effect.Effect<Scores, never, Se
       const exit = yield* Effect.exit(
         scorer.score.pipe(Effect.flatMap((result) => Effect.try(() => normalize(result)))),
       );
-      scores[scorer.name] = Exit.isSuccess(exit) ? { score: exit.value } : { score: 0, error: Cause.pretty(exit.cause) };
+      scores[scorer.name] = Exit.isSuccess(exit)
+        ? { score: exit.value }
+        : { score: 0, error: Cause.pretty(exit.cause) };
     }
     return scores;
   });

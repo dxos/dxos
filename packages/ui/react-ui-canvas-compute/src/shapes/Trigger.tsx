@@ -24,7 +24,10 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
       Obj.update(functionTrigger, (functionTrigger) => {
-        functionTrigger.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Obj.Mutable<Trigger.Spec>;
+        functionTrigger.spec = createTriggerSpec({
+          triggerKind: 'email',
+          spaceId: space?.id,
+        }) as Obj.Mutable<Trigger.Spec>;
       });
     }
   }, [functionTrigger, functionTrigger?.spec]);

@@ -75,7 +75,11 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
  */
 export const loadInstructions = (
   agent: Agent,
-): Effect.Effect<{ text: string; instructions: Instructions.Instructions }, Error.EntityNotFoundError, Database.Service> =>
+): Effect.Effect<
+  { text: string; instructions: Instructions.Instructions },
+  Error.EntityNotFoundError,
+  Database.Service
+> =>
   Effect.gen(function* () {
     const instructions = yield* Database.load(agent.instructions);
     const text = yield* Database.load(instructions.text).pipe(

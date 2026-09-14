@@ -24,7 +24,10 @@ import { SpaceHomeDashboard, type SpaceStatId } from './SpaceHomeDashboard.tsx';
 class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-  }).pipe(Annotation.LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular' })),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular' }),
+  ),
 ) {}
 
 class Note extends Type.makeObject<Note>(DXN.make('org.dxos.type.test.note', '0.1.0'))(

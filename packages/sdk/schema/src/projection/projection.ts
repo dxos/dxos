@@ -244,7 +244,9 @@ export class ProjectionModel {
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
-    const jsonProperty: JsonSchema.JsonSchema = this._baseSchema.properties[field.path] ?? { format: Format.TypeFormat.None };
+    const jsonProperty: JsonSchema.JsonSchema = this._baseSchema.properties[field.path] ?? {
+      format: Format.TypeFormat.None,
+    };
     const { type: schemaType, format: schemaFormat = Format.TypeFormat.None, annotations, ...rest } = jsonProperty;
 
     const unwrappedProperty =

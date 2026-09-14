@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Schema from 'effect/Schema';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, type Obj } from '@dxos/echo';

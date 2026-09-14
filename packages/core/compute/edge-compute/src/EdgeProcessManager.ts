@@ -133,5 +133,8 @@ export const fromClient = (
  * EDGE process manager with no client — empty process tree, no control, no cancel.
  * Used where edge is not configured.
  */
-export const layer: Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> =
-  make();
+export const layer: Layer.Layer<
+  RemoteProcessManager.Service,
+  never,
+  Registry.AtomRegistry | RemoteTraceMonitor.Service
+> = make();

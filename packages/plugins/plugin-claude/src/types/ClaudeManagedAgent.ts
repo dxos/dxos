@@ -67,7 +67,10 @@ export class ClaudeManagedAgent extends Type.makeObject<ClaudeManagedAgent>(
     /** Server-assigned version of the last deploy, used for optimistic concurrency on update. */
     agentVersion: Schema.optional(Schema.Number.annotate({ title: 'Agent version' })),
     status: Status.annotate({ title: 'Status' }),
-  }).pipe(Annotation.LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' })),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' }),
+  ),
 ) {}
 
 /**

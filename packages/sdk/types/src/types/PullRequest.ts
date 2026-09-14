@@ -20,15 +20,24 @@ export type State = Schema.Schema.Type<typeof State>;
 export class PullRequest extends Type.makeObject<PullRequest>(DXN.make('org.dxos.type.pullRequest', '0.1.0'))(
   Schema.Struct({
     /** Account the repository belongs to, e.g. `dxos`. */
-    owner: Schema.String.pipe(Schema.annotate({ title: 'Owner' }), Annotation.GeneratorAnnotation.set('internet.username')),
+    owner: Schema.String.pipe(
+      Schema.annotate({ title: 'Owner' }),
+      Annotation.GeneratorAnnotation.set('internet.username'),
+    ),
 
     /** Repository name without its owner, e.g. `dxos`. */
-    repo: Schema.String.pipe(Schema.annotate({ title: 'Repository' }), Annotation.GeneratorAnnotation.set('company.buzzNoun')),
+    repo: Schema.String.pipe(
+      Schema.annotate({ title: 'Repository' }),
+      Annotation.GeneratorAnnotation.set('company.buzzNoun'),
+    ),
 
     /** Number within the repository, shared with issues, e.g. `123` in `dxos/dxos#123`. */
     number: Schema.Number.pipe(Schema.annotate({ title: 'Number' })),
 
-    title: Schema.String.pipe(Schema.annotate({ title: 'Title' }), Annotation.GeneratorAnnotation.set('lorem.sentence')),
+    title: Schema.String.pipe(
+      Schema.annotate({ title: 'Title' }),
+      Annotation.GeneratorAnnotation.set('lorem.sentence'),
+    ),
 
     /** Canonical web URL — stored rather than derived, since only the host knows its URL shape. */
     url: Format.URL.pipe(Schema.annotate({ title: 'URL' }), Schema.optional),

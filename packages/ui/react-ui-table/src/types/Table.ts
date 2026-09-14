@@ -20,7 +20,10 @@ export class Table extends Type.makeObject<Table>(DXN.make('org.dxos.type.table'
     view: Ref.Ref(View.View).pipe(Annotation.FormInputAnnotation.set(false)),
 
     // TODO(wittjosiah): Key should be JsonPath.
-    sizes: Schema.Record(Schema.String, Schema.Number).pipe(Schema.mutableKey, Annotation.FormInputAnnotation.set(false)),
+    sizes: Schema.Record(Schema.String, Schema.Number).pipe(
+      Schema.mutableKey,
+      Annotation.FormInputAnnotation.set(false),
+    ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     ViewAnnotation.set(['view']),

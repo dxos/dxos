@@ -43,7 +43,9 @@ describe('outliner blocks', () => {
   test('getExtent spans the whole subtree', ({ expect }) => {
     // Item "2" (line 1) owns 2.1, 2.2 (with 2.2.1), and 2.3 — lines 1..5.
     const extent = getExtent(EditorState.create({ doc: DOC, extensions }), { from: getPos(1), to: getPos(1) });
-    expect(EditorState.create({ doc: DOC, extensions }).doc.sliceString(extent.from, extent.to)).to.eq(join(...LINES.slice(1, 6)));
+    expect(EditorState.create({ doc: DOC, extensions }).doc.sliceString(extent.from, extent.to)).to.eq(
+      join(...LINES.slice(1, 6)),
+    );
   });
 
   test('getExtent of a leaf is the item itself', ({ expect }) => {

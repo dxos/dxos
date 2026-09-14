@@ -34,7 +34,10 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
     /** Owned agent instructions (created at the plugin layer; parented by `SetParent`). */
     instructions: Schema.optional(
-      Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set(true), Annotation.FormInlineAnnotation.set(true)),
+      Ref.Ref(Instructions.Instructions).pipe(
+        Annotation.SetParent.set(true),
+        Annotation.FormInlineAnnotation.set(true),
+      ),
     ),
 
     /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */

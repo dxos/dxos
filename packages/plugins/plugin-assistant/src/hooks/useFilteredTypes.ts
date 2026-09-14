@@ -16,7 +16,9 @@ const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
         .list()
         .filter(Type.isType)
         .filter((schema) => Annotation.getTypeAnnotation(Type.getSchema(schema))?.kind !== Entity.Kind.Relation)
-        .filter((schema) => !Annotation.HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false))),
+        .filter(
+          (schema) => !Annotation.HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)),
+        ),
     ),
   );
 

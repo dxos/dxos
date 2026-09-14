@@ -360,15 +360,24 @@ describe('extended-markdown', () => {
 
   test('should handle empty and edge cases', ({ expect }) => {
     const emptyDoc = '';
-    const emptyState = EditorState.create({ doc: emptyDoc, extensions: [extendedMarkdown({ registry: testRegistry })] });
+    const emptyState = EditorState.create({
+      doc: emptyDoc,
+      extensions: [extendedMarkdown({ registry: testRegistry })],
+    });
     expect(emptyState.doc.length).toBe(0);
 
     const onlyPromptDoc = '<prompt>Only prompt content</prompt>';
-    const onlyPromptState = EditorState.create({ doc: onlyPromptDoc, extensions: [extendedMarkdown({ registry: testRegistry })] });
+    const onlyPromptState = EditorState.create({
+      doc: onlyPromptDoc,
+      extensions: [extendedMarkdown({ registry: testRegistry })],
+    });
     expect(onlyPromptState.sliceDoc(0)).toBe(onlyPromptDoc);
 
     const unclosedPromptDoc = '<prompt>Unclosed prompt';
-    const unclosedState = EditorState.create({ doc: unclosedPromptDoc, extensions: [extendedMarkdown({ registry: testRegistry })] });
+    const unclosedState = EditorState.create({
+      doc: unclosedPromptDoc,
+      extensions: [extendedMarkdown({ registry: testRegistry })],
+    });
     expect(unclosedState.sliceDoc(0)).toBe(unclosedPromptDoc);
   });
 });
