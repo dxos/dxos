@@ -200,7 +200,9 @@ export class FunctionContext extends Resource {
   }
 
   override async _open() {
+    const startedAt = Date.now();
     await this.client?.open();
+    const clientOpenedAt = Date.now();
     this.db =
       this.client && this.context.spaceId
         ? this.client.constructDatabase({
@@ -212,6 +214,7 @@ export class FunctionContext extends Resource {
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
+    const rootSetAt = Date.now();
     if (this.db) {
       const db = this.db;
       // Bounded: opening waits for the space's root document from the data service, and a root
@@ -231,6 +234,12 @@ export class FunctionContext extends Resource {
         ),
       );
     }
+    log.info('function context open timing', {
+      spaceId: this.context.spaceId,
+      clientOpenMs: clientOpenedAt - startedAt,
+      setRootMs: rootSetAt - clientOpenedAt,
+      dbOpenMs: Date.now() - rootSetAt,
+    });
 
     // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
     // directly and never passes through that path, so its declared schemas went unregistered and
