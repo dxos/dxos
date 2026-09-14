@@ -16,23 +16,6 @@ import { SandboxClient } from './SandboxClient.ts';
 const PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP4z8DwHwAFAAH/VscvDQAAAABJRU5ErkJggg==';
 const PNG_BYTES = Uint8Array.from(atob(PNG_BASE64), (char) => char.charCodeAt(0));
 
-/** A client whose every request is answered with `body`, recording the URL it was sent to. */
-const stub = (body: unknown) => {
-  const requests: URL[] = [];
-  const layer = Layer.succeed(HttpClient.HttpClient)(
-    HttpClient.make((request, url) => {
-      requests.push(url);
-      return Effect.succeed(
-        HttpClientResponse.fromWeb(
-          request,
-          new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } }),
-        ),
-      );
-    }),
-  );
-  return { requests, layer, client: new SandboxClient('http://localhost:8792', async () => undefined) };
-};
-
 describe('SandboxClient.readFileBytes', () => {
   test('decodes a base64 read to the original bytes and keeps the detected type', async ({ expect }) => {
     const { client, layer } = stub({ content: PNG_BASE64, encoding: 'base64', mimeType: 'image/png', size: 70 });
@@ -80,3 +63,20 @@ describe('SandboxClient.readFileBytes', () => {
     expect(requests[0].searchParams.get('encoding')).toBe('base64');
   });
 });
+
+/** A client whose every request is answered with `body`, recording the URL it was sent to. */
+const stub = (body: unknown) => {
+  const requests: URL[] = [];
+  const layer = Layer.succeed(HttpClient.HttpClient)(
+    HttpClient.make((request, url) => {
+      requests.push(url);
+      return Effect.succeed(
+        HttpClientResponse.fromWeb(
+          request,
+          new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } }),
+        ),
+      );
+    }),
+  );
+  return { requests, layer, client: new SandboxClient('http://localhost:8792', async () => undefined) };
+};
