@@ -40,8 +40,11 @@ appended to the title, models paste them back through title-keyed upserts and du
 ## Skills
 
 - **Planning** (`org.dxos.skill.planning`)
-  - `update-tasks` — title-keyed upsert of durable tasks (status `todo | started | done`); the
-    assistant's own execution path (mark started → work → mark done).
+  - `update-tasks` — a batch of `changes`, each naming an existing task by ref or setting `create`
+    (status `todo | started | done`); the assistant's own execution path (mark started → work →
+    mark done). Assignment moves the chat's checklist and the task's assignee together: `create`,
+    `assign` and `started` assign the task to the conversation's agent, `unassign` clears both. A
+    malformed batch applies nothing.
   - `plan-reminder` — end-of-request hook: while open tasks remain, an ephemeral model check
     decides continue-vs-stop and enqueues a continuation prompt on "continue".
 - **Delegation** (`org.dxos.skill.delegation`)
