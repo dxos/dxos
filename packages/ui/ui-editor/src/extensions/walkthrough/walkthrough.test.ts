@@ -39,21 +39,29 @@ const DOC = [
 const createState = (doc: string) =>
   EditorState.create({ doc, extensions: [createMarkdownExtensions(), diffBlocks()] });
 
-/** The block decorations the editor would render, as `[from, to]` pairs. */
-const replacedRanges = (doc: string): [number, number][] => {
-  const view = new EditorView({ state: createState(doc) });
-  const ranges: [number, number][] = [];
-  // Only the widget field replaces whole blocks; the markdown decorations are marks and lines.
-  view.state.facet(EditorView.decorations).forEach((source) => {
+/** Every block-replacing widget decoration the view would render. */
+const blockWidgets = (view: EditorView): { from: number; to: number; widget: WidgetType }[] => {
+  const found: { from: number; to: number; widget: WidgetType }[] = [];
+  for (const source of view.state.facet(EditorView.decorations)) {
+    // Only the widget field replaces whole blocks; the markdown decorations are marks and lines.
     const set = typeof source === 'function' ? source(view) : source;
-    const cursor = (set as any).iter?.();
-    while (cursor?.value) {
-      if (cursor.value.spec?.block && cursor.value.spec?.widget) {
-        ranges.push([cursor.from, cursor.to]);
+    const cursor = set.iter();
+    while (cursor.value) {
+      const { block, widget } = cursor.value.spec ?? {};
+      if (block && widget) {
+        found.push({ from: cursor.from, to: cursor.to, widget });
       }
       cursor.next();
     }
-  });
+  }
+
+  return found;
+};
+
+/** The block decorations the editor would render, as `[from, to]` pairs. */
+const replacedRanges = (doc: string): [number, number][] => {
+  const view = new EditorView({ state: createState(doc) });
+  const ranges = blockWidgets(view).map(({ from, to }): [number, number] => [from, to]);
   view.destroy();
 
   return ranges;
@@ -100,19 +108,9 @@ describe('DiffBlockWidget', () => {
     const view = new EditorView({
       state: EditorState.create({ doc, extensions: [createMarkdownExtensions(), diffBlocks({ layout })] }),
     });
-    let widget: WidgetType | undefined;
-    view.state.facet(EditorView.decorations).forEach((source) => {
-      const set = typeof source === 'function' ? source(view) : source;
-      const cursor = (set as any).iter?.();
-      while (cursor?.value) {
-        if (cursor.value.spec?.block && cursor.value.spec?.widget) {
-          widget ??= cursor.value.spec.widget;
-        }
-        cursor.next();
-      }
-    });
-    invariant(widget, 'no diff widget');
-    const dom = widget.toDOM(view);
+    const [first] = blockWidgets(view);
+    invariant(first, 'no diff widget');
+    const dom = first.widget.toDOM(view);
     view.destroy();
 
     return dom;
@@ -136,7 +134,9 @@ describe('DiffBlockWidget', () => {
     );
 
     // `children`, not a `>` selector: the test DOM counts nested spans as child matches.
-    const rows = [...dom.querySelector('.cm-diff-grid')!.children];
+    const grid = dom.querySelector('.cm-diff-grid');
+    invariant(grid, 'no grid');
+    const rows = [...grid.children];
     // Four cells per row: number and code for each side.
     expect(rows).to.have.length(8);
     expect(rows[5].classList.contains('cm-diff-filler')).to.eq(true);

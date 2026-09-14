@@ -1,5 +1,5 @@
 ---
-'@dxos/echo': minor
+'@dxos/ui-editor': minor
 ---
 
 Render ```diff fenced blocks as side-by-side diff chunks inside an ordinary markdown document, so a

@@ -19,11 +19,11 @@ export type DiffRow = {
   after?: DiffCell;
 };
 
-/** A `@@` hunk: a contiguous window of the file, with the gap before it that the reader may expand. */
+/** A `@@` hunk: a contiguous window of the file, and the size of the gap skipped before it. */
 export type DiffChunk = {
   /** Trailing context of the `@@` header (the enclosing function, as git emits it). */
   section?: string;
-  /** Lines of the file skipped immediately before this chunk. */
+  /** Lines of the file skipped immediately before this chunk, which the header reports. */
   gap?: number;
   rows: DiffRow[];
 };
@@ -124,7 +124,10 @@ export const parseFenceInfo = (info: string): FenceInfo => {
 };
 
 /** `@@ -12,7 +12,9 @@ section` — counts are optional and default to one line. */
-const HUNK_HEADER = /^@@+\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@+(.*)$/;
+const HUNK_HEADER = /^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@(.*)$/;
+
+/** Metadata git emits before a file's first hunk. */
+const PREAMBLE = /^(index |new file mode |deleted file mode |old mode |new mode |similarity index |rename |copy )/;
 
 /**
  * Parses a unified diff body into rows already paired for the side-by-side layout. Runs of removals
@@ -170,7 +173,11 @@ export const parseDiff = (body: string, info?: FenceInfo): ParsedDiff => {
     chunk = next;
   };
 
-  for (const line of body.split('\n')) {
+  for (const raw of body.split('\n')) {
+    // A diff saved or copied on Windows keeps its carriage returns; they are transport, not content,
+    // and left in place they defeat every anchored match below.
+    const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw;
+
     const header = HUNK_HEADER.exec(line);
     if (header) {
       const [, beforeStart, , afterStart, , section] = header;
@@ -185,25 +192,36 @@ export const parseDiff = (body: string, info?: FenceInfo): ParsedDiff => {
       continue;
     }
 
-    if (/^(diff --git |index |new file mode |deleted file mode |similarity index |rename )/.test(line)) {
-      continue;
-    }
-    if (line.startsWith('+++ ')) {
-      headerFile ??= line.slice(4).replace(/^b\//, '').trim();
-      continue;
-    }
-    if (line.startsWith('--- ') || line.startsWith('\\ No newline')) {
+    // A new file's header ends whatever chunk was open; nothing inside a hunk starts unprefixed.
+    if (line.startsWith('diff --git ')) {
+      flush();
+      chunk = undefined;
       continue;
     }
 
-    // A body with no `@@` header is still a diff; open an implicit chunk on the first content line.
+    // `---`, `+++` and friends are file headers ONLY before the first hunk. Inside one, `--- x` is a
+    // removed line whose text begins `-- `, which every deleted SQL, Lua or Haskell comment does.
     if (!chunk) {
-      if (line.length === 0) {
+      if (line.startsWith('+++ ')) {
+        headerFile ??= line.slice(4).replace(/^b\//, '').trim();
         continue;
       }
+      if (line.startsWith('--- ') || PREAMBLE.test(line) || line.length === 0) {
+        continue;
+      }
+      // A body with no `@@` header is still a diff; open an implicit chunk on the first content line.
       openChunk({ rows: [] });
     }
 
+    // `\ No newline at end of file` annotates the preceding line and is a line of neither version.
+    if (line.startsWith('\\')) {
+      continue;
+    }
+
+    const current = chunk;
+    if (current === undefined) {
+      continue;
+    }
     if (line.startsWith('+')) {
       additions.push({ number: afterLine++, text: line.slice(1) });
       added++;
@@ -213,7 +231,7 @@ export const parseDiff = (body: string, info?: FenceInfo): ParsedDiff => {
     } else {
       flush();
       const text = line.startsWith(' ') ? line.slice(1) : line;
-      chunk!.rows.push({
+      current.rows.push({
         kind: 'context',
         before: { number: beforeLine++, text },
         after: { number: afterLine++, text },

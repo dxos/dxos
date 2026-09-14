@@ -115,6 +115,63 @@ describe('parseDiff', () => {
     expect(diff.chunks[0].gap).to.be.undefined;
   });
 
+  test('reads a diff with carriage returns', () => {
+    const diff = parseDiff(['@@ -10,2 +10,2 @@', ' keep();', '-was();', '+is();'].join('\r\n'));
+
+    expect(diff.chunks).to.have.length(1);
+    expect(diff.chunks[0].rows.map((row) => row.kind)).to.deep.eq(['context', 'changed']);
+    // The carriage return is transport, not part of the line.
+    expect(diff.chunks[0].rows[0].before?.text).to.eq('keep();');
+    expect(diff.chunks[0].rows[1].after?.text).to.eq('is();');
+    expect(diff.chunks[0].rows[0].before?.number).to.eq(10);
+  });
+
+  test('keeps a removed line whose text begins with dashes', () => {
+    // `--- old comment` is a removed SQL comment, not a file header; treating it as one drops the
+    // row AND desyncs the before-side numbering for everything after it.
+    const diff = parseDiff(
+      ['@@ -1,3 +1,3 @@', ' SELECT 1;', '--- old comment', '+-- new comment', ' SELECT 2;'].join('\n'),
+    );
+
+    expect(diff.removed).to.eq(1);
+    expect(diff.added).to.eq(1);
+    const rows = diff.chunks[0].rows;
+    expect(rows.map((row) => row.kind)).to.deep.eq(['context', 'changed', 'context']);
+    expect(rows[1].before?.text).to.eq('-- old comment');
+    expect(rows[2].before?.number).to.eq(3);
+  });
+
+  test('keeps an added line whose text begins with pluses', () => {
+    const diff = parseDiff(['@@ -1,1 +1,2 @@', ' a;', '+++ b;'].join('\n'));
+
+    expect(diff.added).to.eq(1);
+    expect(diff.chunks[0].rows[1].after?.text).to.eq('++ b;');
+  });
+
+  test('starts a new chunk at the next file header', () => {
+    const diff = parseDiff(
+      [
+        'diff --git a/src/a.ts b/src/a.ts',
+        '--- a/src/a.ts',
+        '+++ b/src/a.ts',
+        '@@ -1,1 +1,1 @@',
+        '-a;',
+        '+b;',
+        'diff --git a/src/b.ts b/src/b.ts',
+        '--- a/src/b.ts',
+        '+++ b/src/b.ts',
+        '@@ -5,1 +5,1 @@',
+        '-c;',
+        '+d;',
+      ].join('\n'),
+    );
+
+    expect(diff.chunks).to.have.length(2);
+    expect(diff.chunks[1].rows[0].before?.number).to.eq(5);
+    // Neither file header leaks in as a row.
+    expect(diff.chunks.flatMap((chunk) => chunk.rows)).to.have.length(2);
+  });
+
   test('drops the blank line the fence leaves behind', () => {
     const diff = parseDiff(['@@ -1,1 +1,2 @@', ' a;', '+b;', ''].join('\n'));
     expect(diff.chunks[0].rows).to.have.length(2);

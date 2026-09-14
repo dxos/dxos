@@ -5,6 +5,7 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type Tree } from '@lezer/common';
 
 import { parseDiffFence } from './diff-block.ts';
 
@@ -89,23 +90,31 @@ export type WalkthroughSidebarOptions = {
 export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Extension => [
   ViewPlugin.fromClass(
     class {
+      readonly #view: EditorView;
       readonly #rail: HTMLElement;
-      readonly #onScroll = () => this.#markCurrent();
+      readonly #onScroll = () => this.#scheduleMark();
 
       #entries: WalkthroughEntry[] = [];
       #rows: HTMLElement[] = [];
+      /** The tree the outline was read from, so a background parse advancing it rebuilds the rail. */
+      #tree?: Tree;
+      #frame?: number;
 
-      constructor(private readonly _view: EditorView) {
+      constructor(view: EditorView) {
+        this.#view = view;
         this.#rail = document.createElement('div');
         this.#rail.className = 'cm-walkthrough-sidebar';
         this.#rail.dataset.variant = options.variant ?? 'full';
-        _view.dom.appendChild(this.#rail);
-        _view.scrollDOM.addEventListener('scroll', this.#onScroll, { passive: true });
+        view.dom.appendChild(this.#rail);
+        view.scrollDOM.addEventListener('scroll', this.#onScroll, { passive: true });
         this.#render();
       }
 
       update(update: ViewUpdate): void {
-        if (update.docChanged) {
+        // Not `docChanged` alone: a long document is parsed in the background, so the sections past
+        // the first parse window appear on a later transaction that changes nothing — and a
+        // read-only walkthrough never produces a document change at all.
+        if (update.docChanged || syntaxTree(update.state) !== this.#tree) {
           this.#render();
         } else if (update.viewportChanged || update.geometryChanged) {
           this.#scheduleMark();
@@ -113,20 +122,33 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
       }
 
       destroy(): void {
-        this._view.scrollDOM.removeEventListener('scroll', this.#onScroll);
+        this.#view.scrollDOM.removeEventListener('scroll', this.#onScroll);
+        if (this.#frame !== undefined) {
+          cancelAnimationFrame(this.#frame);
+        }
         this.#rail.remove();
       }
 
       #render(): void {
-        this.#entries = walkthroughOutline(this._view.state);
+        this.#tree = syntaxTree(this.#view.state);
+        const entries = walkthroughOutline(this.#view.state);
+        // The tree advances far more often than the outline changes; rebuilding the DOM every time
+        // would drop the rail's scroll position and restart its transitions.
+        if (sameOutline(entries, this.#entries) && this.#rows.length > 0) {
+          return;
+        }
+
+        this.#entries = entries;
         this.#rail.textContent = '';
-        this.#rows = this.#entries.map((entry) => {
+        // An empty rail still paints a border and still insets the prose by its width.
+        this.#rail.toggleAttribute('data-empty', entries.length === 0);
+        this.#rows = entries.map((entry) => {
           const row = document.createElement('button');
           row.type = 'button';
           row.className = 'cm-walkthrough-entry';
           row.dataset.level = String(entry.level);
           row.addEventListener('click', () => {
-            this._view.dispatch({ effects: EditorView.scrollIntoView(entry.from, { y: 'start', yMargin: 24 }) });
+            this.#view.dispatch({ effects: EditorView.scrollIntoView(entry.from, { y: 'start', yMargin: 24 }) });
           });
 
           const title = row.appendChild(document.createElement('span'));
@@ -159,20 +181,30 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
         this.#scheduleMark();
       }
 
-      /** Layout may not be read during an update, and both callers run inside one. */
+      /**
+       * Coalesced to one frame: a scroll event fires far faster than the rail can usefully change,
+       * and marking reads the height map once per section.
+       */
       #scheduleMark(): void {
-        this._view.requestMeasure({ read: () => this.#markCurrent() });
+        if (this.#frame !== undefined) {
+          return;
+        }
+        this.#frame = requestAnimationFrame(() => {
+          this.#frame = undefined;
+          this.#markCurrent();
+        });
       }
 
       /** The last section whose heading has passed the reading line. */
       #markCurrent(): void {
-        const { top, height } = this._view.scrollDOM.getBoundingClientRect();
-        const line = top + height * (options.threshold ?? 0.25);
+        const { scrollTop, clientHeight } = this.#view.scrollDOM;
+        const line = scrollTop + clientHeight * (options.threshold ?? 0.25);
         let current = -1;
         for (let index = 0; index < this.#entries.length; index++) {
-          // A heading outside the rendered viewport has no coordinates; its neighbours still decide.
-          const coords = this._view.coordsAtPos(this.#entries[index].from);
-          if (coords && coords.top <= line) {
+          // The height map, not `coordsAtPos`: a heading scrolled out of the RENDERED range has no
+          // coordinates, and a long section would then clear the mark rather than keep it.
+          const block = this.#view.lineBlockAt(this.#entries[index].from);
+          if (block.top <= line) {
             current = index;
           }
         }
@@ -183,6 +215,21 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
   ),
   walkthroughSidebarTheme,
 ];
+
+/** Whether the rail would render the same rows, so an unchanged outline does not rebuild it. */
+const sameOutline = (left: WalkthroughEntry[], right: WalkthroughEntry[]): boolean =>
+  left.length === right.length &&
+  left.every((entry, index) => {
+    const other = right[index];
+    return (
+      entry.from === other.from &&
+      entry.title === other.title &&
+      entry.level === other.level &&
+      entry.added === other.added &&
+      entry.removed === other.removed &&
+      entry.files.join() === other.files.join()
+    );
+  });
 
 const walkthroughSidebarTheme = EditorView.theme({
   // The rail is absolutely positioned against the editor, which must therefore be its containing block.
@@ -245,6 +292,10 @@ const walkthroughSidebarTheme = EditorView.theme({
     fontSize: '0.75rem',
     fontVariantNumeric: 'tabular-nums',
   },
+  // Nothing to navigate: the rail neither paints nor insets the prose.
+  '&:has(.cm-walkthrough-sidebar[data-empty])': { '--cm-walkthrough-width': '0px' },
+  '.cm-walkthrough-sidebar[data-empty]': { display: 'none' },
+
   '.cm-walkthrough-added': { color: 'var(--color-cm-diff-add-gutter)' },
   '.cm-walkthrough-removed': { color: 'var(--color-cm-diff-remove-gutter)' },
 

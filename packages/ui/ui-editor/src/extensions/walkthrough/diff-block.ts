@@ -14,12 +14,23 @@ import { diffBlockTheme } from './theme.ts';
 /** The fence language this extension claims. */
 const DIFF_LANGUAGE = 'diff';
 
-/** Below this width the two columns no longer fit side by side and the block renders unified. */
+/**
+ * Below `NARROW_WIDTH` the two columns no longer fit side by side; the block returns to them only
+ * above `WIDE_WIDTH`. The gap is hysteresis: re-rendering changes the block's height, which can
+ * add or remove the scroller's scrollbar and move the measured width back across a single
+ * threshold, leaving the observer flip-flopping.
+ */
 const NARROW_WIDTH = 720;
+const WIDE_WIDTH = 760;
 
-/** Row height assumed before the block mounts, so CodeMirror's viewport estimate is not wild. */
-const ROW_HEIGHT = 21;
-const CHROME_HEIGHT = 38;
+/**
+ * Heights assumed before the block mounts, so CodeMirror's viewport estimate is not wild. Taken
+ * from the theme; a wrapped line still makes this an under-estimate, which is why the block
+ * declares it rather than pinning it.
+ */
+const ROW_HEIGHT = 24;
+const EXPANDER_HEIGHT = 38;
+const CHROME_HEIGHT = 46;
 
 export type DiffLayout = 'split' | 'inline' | 'auto';
 
@@ -110,24 +121,34 @@ class DiffBlockWidget extends WidgetType {
   #observer?: ResizeObserver;
   #layout: 'split' | 'inline';
   #root?: HTMLElement;
+  #view?: EditorView;
+  readonly #diff: ParsedDiff;
+  /** The fence source, so a rebuilt widget over changed text is not reused. */
+  readonly #source: string;
+  readonly #options: DiffBlocksOptions;
 
-  constructor(
-    private readonly _diff: ParsedDiff,
-    /** The fence source, so a rebuilt widget over changed text is not reused. */
-    private readonly _source: string,
-    private readonly _options: DiffBlocksOptions,
-  ) {
+  constructor(diff: ParsedDiff, source: string, options: DiffBlocksOptions) {
     super();
-    this.#layout = _options.layout === 'auto' || _options.layout === undefined ? 'split' : _options.layout;
+    this.#diff = diff;
+    this.#source = source;
+    this.#options = options;
+    this.#layout = options.layout === 'auto' || options.layout === undefined ? 'split' : options.layout;
   }
 
   override eq(other: this): boolean {
-    return this._source === other._source && this._options.layout === other._options.layout;
+    return this.#source === other.#source && this.#options.layout === other.#options.layout;
   }
 
   override get estimatedHeight(): number {
-    const rows = this._diff.chunks.reduce((count, chunk) => count + chunk.rows.length + (chunk.gap ? 1 : 0), 0);
-    return CHROME_HEIGHT + rows * ROW_HEIGHT;
+    const lines = this.#diff.chunks.reduce(
+      (count, chunk) =>
+        count +
+        // The unified layout renders a replaced pair as two lines, not one.
+        chunk.rows.reduce((rows, row) => rows + (this.#layout === 'inline' && row.kind === 'changed' ? 2 : 1), 0),
+      0,
+    );
+    const expanders = this.#diff.chunks.filter((chunk) => chunk.gap).length;
+    return CHROME_HEIGHT + expanders * EXPANDER_HEIGHT + lines * ROW_HEIGHT;
   }
 
   /** The widget owns its interactions (collapse, expanders); the editor should not also act on them. */
@@ -138,9 +159,23 @@ class DiffBlockWidget extends WidgetType {
   override destroy(): void {
     this.#alive = false;
     this.#observer?.disconnect();
+    this.#observer = undefined;
+    this.#view = undefined;
   }
 
-  override toDOM(_view: EditorView): HTMLElement {
+  /**
+   * CodeMirror caches a block widget's height, so collapsing one or reflowing its rows leaves every
+   * position below it mapped against a height that no longer exists.
+   */
+  #remeasure(): void {
+    this.#view?.requestMeasure();
+  }
+
+  override toDOM(view: EditorView): HTMLElement {
+    // A widget may be re-rendered after a destroy; revive it so a resolving language still lands.
+    this.#alive = true;
+    this.#view = view;
+    this.#observer?.disconnect();
     const root = document.createElement('div');
     root.className = 'cm-diff-block';
     this.#root = root;
@@ -150,14 +185,16 @@ class DiffBlockWidget extends WidgetType {
     body.className = 'cm-diff-body';
     this.#renderBody(body);
 
-    if (this._options.layout === 'auto' || this._options.layout === undefined) {
+    if (this.#options.layout === 'auto' || this.#options.layout === undefined) {
       // Measured rather than a container query, because the two layouts are different DOM: a unified
       // row must not repeat a context line once per column.
       this.#observer = new ResizeObserver(([entry]) => {
-        const next = entry.contentRect.width < NARROW_WIDTH ? 'inline' : 'split';
+        const { width } = entry.contentRect;
+        const next = width < NARROW_WIDTH ? 'inline' : width > WIDE_WIDTH ? 'split' : this.#layout;
         if (next !== this.#layout) {
           this.#layout = next;
           this.#renderBody(body);
+          this.#remeasure();
         }
       });
       this.#observer.observe(root);
@@ -167,7 +204,7 @@ class DiffBlockWidget extends WidgetType {
   }
 
   #renderHeader(): HTMLElement {
-    const { file, language, range, added, removed } = this._diff;
+    const { file, language, range, added, removed } = this.#diff;
     const header = document.createElement('div');
     header.className = 'cm-diff-header';
 
@@ -178,8 +215,10 @@ class DiffBlockWidget extends WidgetType {
     toggle.setAttribute('aria-label', 'Collapse');
     toggle.appendChild(caret());
     toggle.addEventListener('click', () => {
-      const collapsed = header.parentElement?.classList.toggle('cm-diff-collapsed');
+      const collapsed = header.parentElement?.classList.toggle('cm-diff-collapsed') ?? false;
       toggle.setAttribute('aria-expanded', String(!collapsed));
+      toggle.setAttribute('aria-label', collapsed ? 'Expand' : 'Collapse');
+      this.#remeasure();
     });
 
     if (file) {
@@ -235,7 +274,7 @@ class DiffBlockWidget extends WidgetType {
     const before: string[] = [];
     const after: string[] = [];
 
-    for (const chunk of this._diff.chunks) {
+    for (const chunk of this.#diff.chunks) {
       if (chunk.gap) {
         body.appendChild(expander(chunk.gap, chunk.section));
       }
@@ -250,8 +289,8 @@ class DiffBlockWidget extends WidgetType {
       }
     }
 
-    if (this._options.highlight !== false && this._diff.language) {
-      void this.#highlight(this._diff.language, before, after, pending);
+    if (this.#options.highlight !== false && this.#diff.language) {
+      void this.#highlight(this.#diff.language, before, after, pending);
     }
   }
 
@@ -293,7 +332,10 @@ class DiffBlockWidget extends WidgetType {
         : [row];
 
     for (const line of lines) {
-      const cell = line.before ?? line.after!;
+      const cell = line.before ?? line.after;
+      if (!cell) {
+        continue;
+      }
       const status = line.kind === 'added' ? 'added' : line.kind === 'removed' ? 'removed' : undefined;
       grid.appendChild(number(line.before?.number, undefined, status));
       grid.appendChild(number(line.after?.number, undefined, status));

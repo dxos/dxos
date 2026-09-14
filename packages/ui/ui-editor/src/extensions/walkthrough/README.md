@@ -51,8 +51,10 @@ the pull request keep pointing at what the code actually renders.
 
 ## Known gaps
 
-- **No trailing expander.** The leading "N lines" row comes from the hunk header's gap; the trailing
-  one needs a file length a walkthrough document does not carry.
+- **The expanders are labels, not controls.** The leading "N lines" row states the gap the hunk
+  header implies, but clicking it does nothing: the surrounding file is not in the document, so
+  there is nothing to expand into. A trailing row is not rendered at all, since its size needs a
+  file length a walkthrough does not carry.
 - **Chunks are atomic**, as every widget from this registry is: the caret steps over a rendered chunk
   rather than into it. The shared widget decoration field rebuilds on document change and not on
   selection, so giving way to the source while the caret is inside would need its own mechanism.
