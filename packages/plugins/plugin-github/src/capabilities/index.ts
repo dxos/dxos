@@ -37,6 +37,7 @@ export const LinkResolver = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.cardContent'],
 });

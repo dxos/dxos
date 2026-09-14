@@ -18,6 +18,12 @@ export class GitHubRepoInaccessibleError extends BaseError.extend(
   'Repository is not accessible to the connection token.',
 ) {}
 
+/** The pull request is not stored: a preview card mints one in memory, and it has no database. */
+export class GitHubPullRequestUnstoredError extends BaseError.extend(
+  'GitHubPullRequestUnstoredError',
+  'Pull request is not stored in a space.',
+) {}
+
 /** The local Project could not be re-resolved after its upsert. */
 export class GitHubProjectMissingError extends BaseError.extend(
   'GitHubProjectMissingError',
