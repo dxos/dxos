@@ -11,6 +11,7 @@ import {
   type FloatingPanelPoint,
   type FloatingPanelSize,
   IconButton,
+  Splitter,
   useTranslation,
 } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
@@ -26,6 +27,9 @@ const MIN_SIZE: FloatingPanelSize = { width: 480, height: 240 };
 
 /** Clear of the status bar the panel opens from. */
 const MARGIN = 8;
+
+/** The tree's opening width (rem): a navtree sidebar's, so tool labels read at the scale they do there. */
+const SIDEBAR_SIZE = 16;
 
 export type DebugPanelStatusProps = {
   /** Injectable for stories/tests; defaults to the page-wide controller. */
@@ -103,13 +107,10 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
       </StatusBar.Item>
       <FloatingPanel.Portal>
         <FloatingPanel.Content>
-          {/* The tab strip lives in the title bar, so the tabs' root spans the header and the body. */}
           <DebugPanel.Root>
             <FloatingPanel.Header classNames='pl-1'>
-              {/* The tabs stand where a title would; the title stays as the window's accessible name. */}
-              <DebugPanel.Tablist />
               <FloatingPanel.DragTrigger>
-                <FloatingPanel.Title classNames='sr-only'>{t('debug-panel.title')}</FloatingPanel.Title>
+                <FloatingPanel.Title>{t('debug-panel.title')}</FloatingPanel.Title>
               </FloatingPanel.DragTrigger>
               {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
               <FloatingPanel.Control>
@@ -119,7 +120,15 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
               </FloatingPanel.Control>
             </FloatingPanel.Header>
             <FloatingPanel.Body classNames='grid'>
-              <DebugPanel.Content />
+              <Splitter.Root orientation='horizontal' anchor='start' resizable defaultSize={SIDEBAR_SIZE} minSize={8}>
+                <Splitter.Panel position='start'>
+                  <DebugPanel.Sidebar />
+                </Splitter.Panel>
+                <Splitter.Handle />
+                <Splitter.Panel position='end'>
+                  <DebugPanel.Main />
+                </Splitter.Panel>
+              </Splitter.Root>
             </FloatingPanel.Body>
           </DebugPanel.Root>
           <FloatingPanel.Resizers />
