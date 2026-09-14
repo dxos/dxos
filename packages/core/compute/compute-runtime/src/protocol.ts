@@ -3,6 +3,7 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -32,6 +33,9 @@ import {
   credentialsLayerFromDatabase,
 } from './services/index.ts';
 
+/** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
+const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
+
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
  * Handlers reach other operations via `Operation.Service` (backed by the EDGE
@@ -41,8 +45,6 @@ export type EdgeFunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
-  // The cross-space counterpart to `Database.Service`, for an operation that must find its own
-  // space rather than be told it.
   | Hypergraph.Service
   | Trace.TraceService
   | Operation.Service
@@ -198,7 +200,9 @@ export class FunctionContext extends Resource {
   }
 
   override async _open() {
+    const startedAt = Date.now();
     await this.client?.open();
+    const clientOpenedAt = Date.now();
     this.db =
       this.client && this.context.spaceId
         ? this.client.constructDatabase({
@@ -210,7 +214,32 @@ export class FunctionContext extends Resource {
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
-    await this.db?.open();
+    const rootSetAt = Date.now();
+    if (this.db) {
+      const db = this.db;
+      // Bounded: opening waits for the space's root document from the data service, and a root
+      // that never arrives otherwise holds the invocation until the Workers runtime kills it as
+      // hung — ~30s with no error naming the space, inherited by every caller up the chain.
+      await EffectEx.runPromise(
+        Effect.tryPromise(() => db.open()).pipe(
+          Effect.timeoutOrElse({
+            duration: SPACE_OPEN_TIMEOUT,
+            orElse: () =>
+              Effect.fail(
+                new FunctionError({
+                  message: `Space ${this.context.spaceId} did not open within ${Duration.toMillis(SPACE_OPEN_TIMEOUT)}ms: its root document is not available on this data plane.`,
+                }),
+              ),
+          }),
+        ),
+      );
+    }
+    log.info('function context open timing', {
+      spaceId: this.context.spaceId,
+      clientOpenMs: clientOpenedAt - startedAt,
+      setRootMs: rootSetAt - clientOpenedAt,
+      dbOpenMs: Date.now() - rootSetAt,
+    });
 
     // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
     // directly and never passes through that path, so its declared schemas went unregistered and
@@ -249,9 +278,6 @@ export class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
-    // The graph alongside the one space's database, because declaring `Database.Service` is what
-    // marks an operation as acting on a named space and work fired by a hook cannot name one.
-    const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
     // A function context has no identity to sign a presentation with, so managed tokens resolve
     // through the space-bound EDGE binding rather than the HTTP endpoint the client uses.
     const accessTokenResolver = this.context.services.accessTokenService
@@ -289,15 +315,22 @@ export class FunctionContext extends Resource {
       ? Layer.succeed(Registry.Service, this.client.graph.registry)
       : Layer.succeed(Registry.Service, makeRegistry());
 
+    // The cross-space handle, alongside the space-scoped `Database.Service`: an operation invoked
+    // by a harness hook is handed a fixed payload with no space id, so it has to find its own space
+    // (`RemoteSessionOperation`). Omitting it failed every such operation at the first service
+    // access with `Service not found: @dxos/echo/Hypergraph/Service` — half of all deployed
+    // `operation.invoke` calls, after ~1.8s of work.
+    const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
+
     return Layer.mergeAll(
       dbLayer,
-      hypergraphLayer,
       credentials,
       operationServiceLayer,
       aiLayer,
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
       registryLayer,
+      hypergraphLayer,
     );
   }
 }

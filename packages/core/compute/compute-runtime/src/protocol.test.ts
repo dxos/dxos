@@ -66,6 +66,29 @@ describe('wrapFunctionHandler', () => {
       }),
     ).rejects.toThrow(InvalidOperationInputError);
   });
+
+  // Regression: the context layer provided `Database.Service` but not the cross-space handle, so
+  // every operation declaring it (the `tasks.*` verbs a harness hook fires, which are handed no
+  // space id) died at the first service access with `Service not found`.
+  test('provides Hypergraph.Service to a handler that declares it', async ({ expect }) => {
+    const ReadsGraph = Operation.make({
+      meta: { key: DXN.make('com.example.operation.readsGraph'), name: 'Reads Graph' },
+      services: [Hypergraph.Service],
+      input: Schema.Struct({}),
+      output: Schema.Struct({ resolved: Schema.Boolean }),
+    }).pipe(
+      Operation.withHandler(() =>
+        Effect.gen(function* () {
+          const service = yield* Hypergraph.Service;
+          return { resolved: service !== undefined };
+        }),
+      ),
+    );
+
+    const result = await wrapFunctionHandler(ReadsGraph).handler({ data: {}, context: { services: {} } });
+
+    expect(result).toEqual({ resolved: true });
+  });
 });
 
 describe('EDGE Operation.Service', () => {

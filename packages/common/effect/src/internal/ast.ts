@@ -381,6 +381,7 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Union': {
@@ -391,6 +392,7 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Arrays': {
@@ -402,6 +404,7 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Suspend': {

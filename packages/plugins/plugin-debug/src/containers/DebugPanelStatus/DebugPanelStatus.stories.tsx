@@ -5,16 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import {
   type DebugPortController,
   type DebugPortStartOptions,
   type DebugPortStatus as DebugPortStatusType,
 } from '@dxos/react-client/devtools';
-import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
+import * as DebugPlugin from '../../DebugPlugin.ts';
+import { StubToolsPlugin } from '../../testing/index.ts';
 import { DebugPanelStatus } from './DebugPanelStatus.tsx';
 
 /**
@@ -49,8 +51,9 @@ const createFakeController = (initial: Partial<DebugPortStatusType> = {}): Debug
 const meta = {
   title: 'plugins/plugin-debug/containers/DebugPanelStatus',
   component: DebugPanelStatus,
-  // The window's console needs the plugin manager, and its tab and placement the view state.
-  decorators: [withPluginManager(), withAttention(), withTheme()],
+  // The window's tree reads the app graph the debug plugin (and the stub) populate; its selection
+  // and placement persist through the attention core plugin's view state.
+  decorators: [withPluginManager({ plugins: [...corePlugins(), DebugPlugin.make(), StubToolsPlugin()] }), withTheme()],
   parameters: { translations },
 } satisfies Meta<typeof DebugPanelStatus>;
 

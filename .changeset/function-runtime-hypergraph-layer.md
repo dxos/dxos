@@ -2,18 +2,13 @@
 '@dxos/compute-runtime': patch
 ---
 
-The EDGE function runtime provides `Hypergraph.Service`. An operation that must find its own space
-rather than be told it declares the graph instead of `Database.Service`, but `FunctionContext`
-provided a layer only for the database — so every such invocation died as
-`Service not found: @dxos/echo/Hypergraph/Service` before its handler ran, which is what
-`org.dxos.operation.tasks.recordSession` had been doing for 100% of its calls in production.
+`Registry.Service` is read off the function context's client graph rather than its database, so the
+registry a handler reaches through `Hypergraph.Service` and the one it resolves directly are the
+same object whether or not the invocation named a space. They already were wherever a database
+exists — `db.graph` _is_ `client.graph` — so this only closes the space-less case, which the
+cross-space handle made reachable.
 
-The graph is the one the function context already opens its databases against, so it holds whichever
-space the invocation named and answers a cross-space lookup with that space's contents; an
-invocation naming no space reaches an empty graph and takes the operation's own "tell me a space"
-path rather than failing. Where no data service is wired at all the runtime falls back to
-`Hypergraph.notAvailable`, which reports the missing graph at the call.
-
-`Registry.Service` is now read off the same client graph, so the registry a handler reaches through
-`Hypergraph.Service` and the one it resolves directly are the same object whether or not a space was
-named (they already were wherever a database existed).
+Adds coverage for that handle over a live peer: an invocation naming no space reaches the graph and
+runs a `from('all-accessible-spaces')` lookup to an empty answer, an invocation naming a space finds
+that space's database on the graph, and a context with no data service reports
+`Hypergraph not available` at the call rather than resolving to nothing.

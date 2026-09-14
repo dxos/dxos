@@ -5,7 +5,14 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { IncidentSpace, PipelineSpace, StockfishSpace, TidepoolSpace, WorkerSpace } from '../sample/index.ts';
+import {
+  IncidentSpace,
+  PipelineSpace,
+  StockfishSpace,
+  TidepoolSpace,
+  WeatherSpace,
+  WorkerSpace,
+} from '../sample/index.ts';
 
 /**
  * The sample spaces this plugin offers. Loaded only once something asks for the list — the content
@@ -39,6 +46,13 @@ export default [
     label: 'Hello Worker',
     description: 'Five tasks from an empty sandbox to a Cloudflare Worker that answers, with no account to start.',
     definition: WorkerSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.weather',
+    label: 'Weather MCP',
+    description:
+      'Four tasks an agent runs alone: a one-tool MCP server over a weather API, deployed to a temporary Worker and called from the chat.',
+    definition: WeatherSpace(),
   }),
   SampleSpace.preset({
     id: 'org.dxos.plugin-debug.sample.incident',

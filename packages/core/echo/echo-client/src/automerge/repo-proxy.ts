@@ -3,10 +3,10 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
 
-import { Event, Trigger, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldToEventLoop } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -15,9 +15,24 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { DocHandleProxy } from './doc-handle-proxy.ts';
+import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
+
+/**
+ * Longest synchronous run of host-update integration before the event loop gets a turn. A first sync
+ * hands the client hundreds of full documents per batch, and loading each one is Automerge work that
+ * would otherwise block input for the whole batch.
+ */
+const INTEGRATE_SLICE_MS = 8;
+
+/**
+ * Batch size from which its documents are integrated as a bulk delivery, whose downstream fan-out
+ * (query re-evaluation, index hydration) is coalesced rather than run per slice. Smaller batches are
+ * the steady state — a peer's edit, the echo of a local write — and stay immediate.
+ */
+const BULK_BATCH_DOCUMENTS = 32;
 
 /**
  * Passes {@link RepoProxy.flush} makes before reporting a batch as unsendable. A failed
@@ -110,6 +125,11 @@ export class RepoProxy extends Resource {
   /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
   private _resubscribeDelay = 0;
 
+  /** Host updates not yet integrated, in arrival order; drained in {@link INTEGRATE_SLICE_MS} slices. */
+  #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
+  #inboxHead = 0;
+  #draining = false;
+
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
 
   constructor(
@@ -169,7 +189,7 @@ export class RepoProxy extends Resource {
       throw new TypeError(`Invalid documentId ${id}`);
     }
 
-    const documentId = interpretAsDocumentId(id);
+    const documentId = toDocumentId(id);
     return this._getOrLoadHandle<T>({ documentId });
   }
 
@@ -483,7 +503,8 @@ export class RepoProxy extends Resource {
     }
   }
 
-  private _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
+  /** @internal */
+  _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
     // The host opens every subscription with an empty batch once it is registered; a real update
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
@@ -493,24 +514,61 @@ export class RepoProxy extends Resource {
       return;
     }
 
+    const bulk = updates.length >= BULK_BATCH_DOCUMENTS;
     for (const update of updates) {
-      const { documentId, mutation, requesting } = update;
-      const handle = this._handles[documentId];
-      if (!handle) {
-        log.warn('Received update for unknown document', { documentId });
-        continue;
-      }
+      this.#inbox.push({ update, bulk });
+    }
+    void this.#drainInbox();
+  }
 
-      // Disk-probe-negative signal from the worker. Mutually exclusive with
-      // `mutation` in practice — the worker sends a transition-only update
-      // first (`requesting: true`, no bytes) and then a regular mutation
-      // update once the network delivers.
-      if (requesting) {
-        handle._markRequesting();
+  /**
+   * Integrates queued updates in arrival order, yielding between slices so the batch's size sets how
+   * long the work takes, not how long the thread is blocked. The first slice runs synchronously.
+   */
+  async #drainInbox(): Promise<void> {
+    if (this.#draining) {
+      return;
+    }
+    this.#draining = true;
+    try {
+      while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
+        const started = performance.now();
+        do {
+          const { update, bulk } = this.#inbox[this.#inboxHead++];
+          this.#integrate(update, bulk);
+        } while (this.#inboxHead < this.#inbox.length && performance.now() - started < INTEGRATE_SLICE_MS);
+        if (this.#inboxHead < this.#inbox.length) {
+          await yieldToEventLoop();
+        }
       }
+    } finally {
+      this.#inbox = [];
+      this.#inboxHead = 0;
+      this.#draining = false;
+    }
+  }
 
-      if (mutation) {
-        handle._integrateHostUpdate(mutation);
+  #integrate({ documentId, mutation, requesting }: DataService.DocumentUpdate, bulk: boolean): void {
+    const handle = this._handles[documentId];
+    if (!handle) {
+      log.warn('Received update for unknown document', { documentId });
+      return;
+    }
+
+    // Disk-probe-negative signal from the worker. Mutually exclusive with
+    // `mutation` in practice — the worker sends a transition-only update
+    // first (`requesting: true`, no bytes) and then a regular mutation
+    // update once the network delivers.
+    if (requesting) {
+      handle._markRequesting();
+    }
+
+    if (mutation) {
+      try {
+        handle._integrateHostUpdate(mutation, { bulk });
+      } catch (err) {
+        // One bad document must not strand every update queued behind it.
+        log.catch(err, { documentId });
       }
     }
   }
