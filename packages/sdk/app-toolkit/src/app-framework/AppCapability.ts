@@ -265,6 +265,32 @@ export const schema = (
   );
 };
 
+/** Module contributing guided tours. */
+export const tour = (
+  tours: AppCapabilities.Tour | ReadonlyArray<AppCapabilities.Tour>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.Tour> = Array.isArray(tours) ? tours : [tours];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour',
+    { provides: [AppCapabilities.Tour], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.Tour, values)]),
+  );
+};
+
+/** Module contributing steps into other plugins' tours. */
+export const tourFragment = (
+  fragments: AppCapabilities.TourFragment | ReadonlyArray<AppCapabilities.TourFragment>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.TourFragment> = Array.isArray(fragments) ? fragments : [fragments];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour-fragment',
+    { provides: [AppCapabilities.TourFragment], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.TourFragment, values)]),
+  );
+};
+
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
 export const pluginAsset = (
   asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>,
