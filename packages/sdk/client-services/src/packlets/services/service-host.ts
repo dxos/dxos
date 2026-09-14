@@ -89,6 +89,12 @@ import { NetworkingEnabled, Opening, StackOpened } from './events.ts';
 import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
 import { type StackReadiness, StackReadinessService } from './stack-readiness.ts';
 
+/**
+ * Everything the host's stack runtime provides: the event bus, the component layers, and the RPC
+ * handler layers.
+ */
+export type ClientServicesStackContext = EffectEvent.Bus | ClientServicesRpcContext | ServiceContextStackContext;
+
 export type ClientServicesHostProps = {
   /**
    * Can be omitted if `initialize` is later called.
@@ -152,10 +158,8 @@ export class ClientServicesHost {
   #edgeConnection?: EdgeConnection = undefined;
   #edgeHttpClient?: EdgeHttpClient = undefined;
 
-  #stackRuntime?: ManagedRuntime.ManagedRuntime<
-    EffectEvent.Bus | ClientServicesRpcContext | ServiceContextStackContext,
-    never
-  >;
+  #stackRuntime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
+  #stackContext?: EffectContext.Context<ClientServicesStackContext>;
   readonly #runtime: RuntimeProvider.RuntimeProvider<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
   >;
@@ -266,12 +270,20 @@ export class ClientServicesHost {
   }
 
   // Self-reference retained for the former `host.context` accessor.
+  // TODO(dmaretskyi): kill this.
   get context(): ClientServicesHost {
     return this;
   }
 
   get services() {
     return this.#handlers;
+  }
+
+  /**
+   * Effect context of the built stack: every component and RPC handler layer. Present while open.
+   */
+  get stack(): EffectContext.Context<ClientServicesStackContext> {
+    return this.#stackContext ?? failUndefined();
   }
 
   get initialized() {
@@ -442,6 +454,7 @@ export class ClientServicesHost {
       Layer.orDie,
     );
     this.#stackRuntime = ManagedRuntime.make(stackLayer);
+    this.#stackContext = await this.#stackRuntime.context();
     const resolved = await this.#stackRuntime.runPromise(
       Effect.all({
         // Components.
@@ -514,6 +527,7 @@ export class ClientServicesHost {
       // below the stack stay untouched since nothing guarantees they were loaded.
       await this.#stackRuntime.dispose();
       this.#stackRuntime = undefined;
+      this.#stackContext = undefined;
       this.#handlers = { SystemService: this.#systemService };
       this.#opening = false;
       throw err;
@@ -633,6 +647,7 @@ export class ClientServicesHost {
     log('closing stack...');
     await this.#stackRuntime?.dispose();
     this.#stackRuntime = undefined;
+    this.#stackContext = undefined;
     await this.#feedStore?.close();
     await this.#metadataStore?.close();
     log('stack closed');
