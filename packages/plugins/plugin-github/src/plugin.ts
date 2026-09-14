@@ -11,6 +11,7 @@ import {
   OperationHandler,
   PluginAsset,
   ReactSurface,
+  Schema,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -22,6 +23,7 @@ export const GitHubPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(Translations),
   Plugin.make,
 );
