@@ -166,7 +166,7 @@ const EDGE_STATUS_TIMEOUT = 30_000;
  * Checked before anything depends on replication, because every downstream symptom of an absent
  * connection is misleading: an unreplicated space reads as an empty one at the worker, so the run
  * would score a real surface against data that never arrived and report the gap as a defect in the
- * server. The two ways this fails are worth naming in the message — neither is a bug in the eval.
+ * server.
  */
 const assertEdgeConnected = async (client: Client): Promise<void> => {
   const service = client.services.services.EdgeAgentService;
