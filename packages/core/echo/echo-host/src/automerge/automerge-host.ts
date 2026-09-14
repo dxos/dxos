@@ -1469,14 +1469,6 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Leases a document until its query settles, which both triggers replication and keeps the
-   * document resident while its bytes are in flight — nothing else holds it until they land.
-   *
-   * Bounded by {@link REPLICATION_LEASE_TIMEOUT} rather than waiting for `'ready'` forever: a peer
-   * can advertise a document it never delivers, and `'unavailable'` is transient here (the query
-   * reports it whenever no source can serve the document *yet*), so it cannot be the release signal.
-   */
-  /**
    * Re-drives the documents this peer is still waiting on.
    *
    * Called when a connection opens, which includes the replacement one a Subduction restart brings
@@ -1495,6 +1487,14 @@ export class AutomergeHost extends Resource {
     }
   }
 
+  /**
+   * Leases a document until its query settles, which both triggers replication and keeps the
+   * document resident while its bytes are in flight — nothing else holds it until they land.
+   *
+   * Bounded by {@link REPLICATION_LEASE_TIMEOUT} rather than waiting for `'ready'` forever: a peer
+   * can advertise a document it never delivers, and `'unavailable'` is transient here (the query
+   * reports it whenever no source can serve the document *yet*), so it cannot be the release signal.
+   */
   private _leaseUntilSettled(documentId: DocumentId): void {
     if (this._replicationLeases.has(documentId)) {
       return;

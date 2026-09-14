@@ -542,11 +542,6 @@ class Slice {
   }
 
   /**
-   * Materialises layer specs needed to satisfy `tags`. Specs whose factories were not
-   * run yet are merged into the slice runtime on demand so unrelated providers (e.g.
-   * conversation-scoped `HarnessService`) do not execute during slice init.
-   */
-  /**
    * Runs {@link init} with the requirements `requirements` produces, once, under this slice's lock.
    */
   initOnce<E>(
@@ -571,6 +566,11 @@ class Slice {
     );
   }
 
+  /**
+   * Materialises layer specs needed to satisfy `tags`. Specs whose factories were not
+   * run yet are merged into the slice runtime on demand so unrelated providers (e.g.
+   * conversation-scoped `HarnessService`) do not execute during slice init.
+   */
   materialize(
     tags: Context.Key<any, any>[],
   ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
