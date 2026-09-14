@@ -4,9 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
+import { ConfigService } from '@dxos/config';
 import { EchoHostService } from '@dxos/echo-host';
 import { type Event } from '@dxos/effect';
+import { FeedStoreService } from '@dxos/feed-store';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
@@ -14,17 +17,21 @@ import {
   ContactsService,
   DataService,
   DevicesService,
+  DevtoolsHost,
   EdgeAgentService,
   FeedService,
   IdentityService,
   InvitationsService,
+  LoggingService,
   NetworkService,
   QueryService,
   SpacesService,
 } from '@dxos/protocols/rpc';
+import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import { EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
 import { DevicesServiceLayer } from '../devices/index.ts';
+import { DevtoolsHostLayer, DevtoolsHostService } from '../devtools/index.ts';
 import { EdgeIdentityRecoveryManagerService } from '../identity/identity-recovery-manager.ts';
 import {
   ContactsServiceLayer,
@@ -33,6 +40,8 @@ import {
   IdentityServiceLayer,
 } from '../identity/index.ts';
 import { InvitationsManagerService, InvitationsServiceLayer } from '../invitations/index.ts';
+import { LoggingServiceLayer } from '../logging/index.ts';
+import { IMetadataStoreService } from '../metadata/index.ts';
 import { NetworkServiceLayer } from '../network/index.ts';
 import { SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerService, SpacesServiceLayer } from '../spaces/index.ts';
@@ -58,7 +67,10 @@ export type ClientServicesRpcContext =
   | EdgeAgentService.Tag
   | DataService.Tag
   | QueryService.Tag
-  | FeedService.Tag;
+  | FeedService.Tag
+  | LoggingService.Tag
+  | DevtoolsHost.Tag
+  | DevtoolsHostService;
 
 // The Data/Query/Feed services are thin projections of {@link EchoHostService} properties rather
 // than package-local ServiceImpl classes, so their layers stay here as trivial maps.
@@ -97,6 +109,11 @@ export const ClientServicesRpcLayer: Layer.Layer<
   | IdentityLifecycleService
   | StackReadinessService
   | Event.Bus
+  | ConfigService
+  | FeedStoreService
+  | IMetadataStoreService
+  | SqlClient.SqlClient
+  | SqlExport.SqlExport
 > = Layer.mergeAll(
   IdentityServiceLayer,
   ContactsServiceLayer,
@@ -108,4 +125,6 @@ export const ClientServicesRpcLayer: Layer.Layer<
   dataServiceLayer,
   queryServiceLayer,
   feedServiceLayer,
+  LoggingServiceLayer,
+  DevtoolsHostLayer,
 );

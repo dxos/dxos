@@ -18,7 +18,7 @@ import {
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { type Config, resolveTelemetryTag } from '@dxos/config';
+import { type Config, ConfigService, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost, EchoHostService } from '@dxos/echo-host';
@@ -52,17 +52,18 @@ import {
   FeedService,
   IdentityService,
   InvitationsService,
+  LoggingService,
   NetworkService,
   QueryService,
   SpacesService,
 } from '@dxos/protocols/rpc';
-import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
-import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools/index.ts';
+import { DevtoolsHostService, type DevtoolsServiceImpl } from '../devtools/index.ts';
 import {
   type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
@@ -87,7 +88,6 @@ import {
   InvitationsManagerService,
 } from '../invitations/index.ts';
 import { Lock, type ResourceLock } from '../locks/index.ts';
-import { LoggingServiceImpl } from '../logging/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
@@ -148,7 +148,6 @@ export class ClientServicesHost {
   // to the host-local set on close. Held directly (no separate registry indirection).
   #handlers: Partial<ClientServicesHandlers>;
   readonly #systemService: SystemServiceImpl;
-  readonly #loggingService: LoggingServiceImpl;
   readonly #statusUpdate = new Event<void>();
 
   #config?: Config;
@@ -194,6 +193,7 @@ export class ClientServicesHost {
   #edgeAgentManager?: EdgeAgentManager;
   #identityLifecycle?: IdentityLifecycle;
   #readiness?: StackReadiness;
+  #devtoolsHost?: DevtoolsServiceImpl;
 
   constructor({
     config,
@@ -216,6 +216,8 @@ export class ClientServicesHost {
     }
 
     if (lockKey) {
+      // Stays outside the stack: the lock decides whether to build the runtime at all, and releasing
+      // it is what tears the runtime down, so no layer inside it can own the lock.
       this.#resourceLock = new Lock({
         lockKey,
         onAcquire: () => {
@@ -258,7 +260,6 @@ export class ClientServicesHost {
     });
 
     this.#diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this.#systemService);
-    this.#loggingService = new LoggingServiceImpl();
 
     this.#handlers = {
       SystemService: this.#systemService,
@@ -347,24 +348,14 @@ export class ClientServicesHost {
    * Debugging util.
    */
   async exportSqliteDatabase(): Promise<Uint8Array> {
-    return await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlExport.SqlExport;
-        return yield* sql.export;
-      }),
-    );
+    return (this.#devtoolsHost ?? failUndefined()).exportSqliteDatabase();
   }
 
   /**
    * Debugging util.
    */
   async runSqliteQuery(query: string, params?: unknown[]): Promise<readonly Record<string, unknown>[]> {
-    return await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        return yield* sql`${sql.unsafe(query, params)}`;
-      }),
-    );
+    return (this.#devtoolsHost ?? failUndefined()).runSqliteQuery(query, params);
   }
 
   /**
@@ -457,8 +448,6 @@ export class ClientServicesHost {
 
     await this.#resourceLock?.acquire();
 
-    await this.#loggingService.open();
-
     // Build a single runtime from the component layer stack plus the client RPC handlers.
     const stackLayer = ClientServicesRpcLayer.pipe(
       Layer.provideMerge(
@@ -471,6 +460,7 @@ export class ClientServicesHost {
       ),
       Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
       Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
+      Layer.provideMerge(Layer.succeed(ConfigService, config)),
       Layer.provideMerge(EffectEvent.busLayer),
       Layer.provideMerge(RuntimeProvider.toLayer(this.#runtime)),
       Layer.orDie,
@@ -503,6 +493,8 @@ export class ClientServicesHost {
         dataService: DataService.Tag,
         queryService: QueryService.Tag,
         feedService: FeedService.Tag,
+        loggingService: LoggingService.Tag,
+        devtoolsHost: DevtoolsHostService,
       }),
     );
 
@@ -519,6 +511,7 @@ export class ClientServicesHost {
     this.#edgeAgentManager = resolved.edgeAgentManager;
     this.#identityLifecycle = resolved.identityLifecycle;
     this.#readiness = resolved.readiness;
+    this.#devtoolsHost = resolved.devtoolsHost;
 
     this.#handlers = {
       SystemService: this.#systemService,
@@ -531,15 +524,8 @@ export class ClientServicesHost {
       QueryService: resolved.queryService,
       FeedService: resolved.feedService,
       NetworkService: resolved.networkService,
-      LoggingService: this.#loggingService,
-      // TODO(burdon): Move to new protobuf definitions.
-      DevtoolsHost: new DevtoolsServiceImpl({
-        events: new DevtoolsHostEvents(),
-        config: this.#config,
-        context: this,
-        exportSqliteDatabase: () => this.exportSqliteDatabase(),
-        runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
-      }),
+      LoggingService: resolved.loggingService,
+      DevtoolsHost: resolved.devtoolsHost,
       EdgeAgentService: resolved.edgeAgentService,
     };
 
@@ -601,7 +587,6 @@ export class ClientServicesHost {
     this.#diagnosticsBroadcastHandler.stop();
     await this.#devtoolsProxy?.close();
     this.#handlers = { SystemService: this.#systemService };
-    await this.#loggingService.close();
     await this.#disposeStack();
     this.#open = false;
     this.#statusUpdate.emit();
