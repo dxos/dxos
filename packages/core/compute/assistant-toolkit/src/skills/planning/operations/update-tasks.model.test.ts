@@ -12,7 +12,7 @@ import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -44,27 +44,29 @@ const TestLayer = AssistantTestLayer({
 const timeout = (base: number) => ({ timeout: LanguageModelFixture.isUpdateEnabled() ? base * 4 : base });
 
 /**
- * `assign-tasks` moves membership only, so both cases start from tasks that exist outside the
- * conversation — the shape the tool exists for (a project's task borrowed by a chat). Resolving a
- * title to a URI belongs to the Database skill, so the prompts name the URI directly.
+ * Both cases start from tasks that exist outside the conversation — a project's task borrowed by a
+ * chat — which is where a title-keyed tool used to duplicate work. Resolving a title to a URI
+ * belongs to the Database skill, so the prompts name the URI directly.
  */
-describe('AssignTasks skill', { tags: ['model-fixture'] }, () => {
+describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
   it.effect(
-    'assigns tasks that already exist to the conversation',
+    'starts an existing task by ref rather than recreating it',
     Effect.fnUntraced(
       function* (_) {
         const { agent, chat } = yield* setupChat();
-        const first = yield* Database.add(Task.make({ title: 'Renew the domain', status: 'todo' }));
-        const second = yield* Database.add(Task.make({ title: 'Rotate the API keys', status: 'todo' }));
+        const existing = yield* Database.add(Task.make({ title: 'Renew the domain', status: 'todo' }));
         yield* Database.flush();
 
-        yield* agent.submitPrompt(
-          `Put these two existing tasks on my checklist: ${Obj.getURI(first)} and ${Obj.getURI(second)}.`,
-        );
+        yield* agent.submitPrompt(`Start working on the existing task ${Obj.getURI(existing)}.`);
         yield* agent.waitForCompletion();
 
         const tasks = yield* Chat.loadTasks(chat);
-        expect(tasks.map((task) => task.title)).toEqual(['Renew the domain', 'Rotate the API keys']);
+        expect(tasks.map((task) => task.id)).toEqual([existing.id]);
+        expect(existing.status).toEqual('started');
+        expect(existing.assignee?.subject?.target?.id).toEqual(chat.id);
+        // No copy was made alongside it.
+        const titled = yield* Database.query(Filter.type(Task.Task, { title: 'Renew the domain' })).run;
+        expect(titled).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -82,8 +84,6 @@ describe('AssignTasks skill', { tags: ['model-fixture'] }, () => {
         Chat.assignTasks(chat, [Ref.make(kept), Ref.make(dropped)]);
         yield* Database.flush();
 
-        // Addressed by URI, not by title: the rendered checklist carries ordinals and titles only,
-        // so the model has no way to reach a task's reference from the conversation alone.
         yield* agent.submitPrompt(
           `Take the task ${Obj.getURI(dropped)} off my checklist — I am not working on it here.`,
         );
@@ -91,7 +91,8 @@ describe('AssignTasks skill', { tags: ['model-fixture'] }, () => {
 
         const tasks = yield* Chat.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual([kept.title]);
-        // Membership-only: whoever else holds the task still has it.
+        expect(dropped.assignee).toBeUndefined();
+        // Unassigning leaves the task for whoever else holds it.
         expect(Obj.isDeleted(dropped)).toBe(false);
       },
       Effect.provide(TestLayer),

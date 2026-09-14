@@ -59,6 +59,24 @@ const captureSpace = async ({ space }: { space: Space }) => {
 // Read directly rather than through the index, which lags objects seeded during activation.
 let storyChat: AssistantChat.Chat | undefined;
 
+/**
+ * The ref envelope of the checklist task titled `title`, resolved when the scripted turn is emitted:
+ * update-tasks addresses tasks by ref, and a task's id only exists once the story seeded or the
+ * session created it.
+ */
+const checklistRef = (title: string) => {
+  const task = storyChat && AssistantChat.resolveTasks(storyChat).find((task) => task.title === title);
+  if (!task) {
+    throw new Error(`No checklist task titled "${title}".`);
+  }
+  return { '/': Obj.getURI(task).toString() };
+};
+
+/** Captures the chat the decorator created, so {@link checklistRef} can read its checklist. */
+const captureChat = async ({ chat }: { chat: AssistantChat.Chat }) => {
+  storyChat = chat;
+};
+
 /** The seeded chat's tasks, else the first queried chat's. */
 const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
   let chat = storyChat;
@@ -89,6 +107,7 @@ const seedProjectTask = async ({
   chat: AssistantChat.Chat;
   binder: AiContext.Binder;
 }) => {
+  storyChat = chat;
   const project = db.add(Project.make({ name: 'Coffee launch' }));
   const taskSet = db.add(TaskSet.make({ [Obj.Parent]: project }));
   Obj.update(project, (project) => {
@@ -432,6 +451,7 @@ export const TestPlanningScripted: Story = {
   decorators: createDecorators({
     skills: [PlanningSkill.key],
     onInit: captureSpace,
+    onChatCreated: captureChat,
     scripted: [
       {
         name: 'chat-name',
@@ -446,23 +466,22 @@ export const TestPlanningScripted: Story = {
             parts: [
               text('Here is the plan.'),
               toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [
-                  { title: 'Source the beans', status: 'started' },
-                  { title: 'Dial in the roast', status: 'todo' },
-                  { title: 'Print the labels', status: 'todo' },
+                changes: [
+                  { create: true, title: 'Source the beans', status: 'started' },
+                  { create: true, title: 'Dial in the roast' },
+                  { create: true, title: 'Print the labels' },
                 ],
               }),
             ],
           },
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [
-                  { title: 'Source the beans', status: 'done' },
-                  { title: 'Dial in the roast', status: 'done' },
-                  { title: 'Print the labels', status: 'done' },
-                ],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: ['Source the beans', 'Dial in the roast', 'Print the labels'].map((title) => ({
+                  task: checklistRef(title),
+                  status: 'done',
+                })),
+              })),
             ],
           },
           { parts: [text('All three steps are done.')] },
@@ -477,7 +496,7 @@ export const TestPlanningScripted: Story = {
     const canvas = within(canvasElement);
     await submitPrompt(canvasElement, 'Plan the launch.');
 
-    // Items are upserted by title, so the three survive the second call rather than duplicating.
+    // The second call addresses the three by ref, so they are completed rather than duplicated.
     const planned = await waitForChecklist((items) => items.length === 3);
     if (planned.map(({ title }) => title).join('|') !== 'Source the beans|Dial in the roast|Print the labels') {
       throw new Error(`Unexpected checklist: ${JSON.stringify(planned)}`);
@@ -586,17 +605,17 @@ export const TestTaskExecutionScripted: Story = {
           {
             parts: [
               text('Starting task 1.'),
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [{ title: EXECUTABLE_TASKS[0].title, status: 'started' }],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: [{ task: checklistRef(EXECUTABLE_TASKS[0].title), status: 'started' }],
+              })),
             ],
           },
           { parts: [toolCall(Operation.toolName(Calculate), { expression: EXECUTABLE_TASKS[0].expression })] },
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [{ title: EXECUTABLE_TASKS[0].title, status: 'done' }],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: [{ task: checklistRef(EXECUTABLE_TASKS[0].title), status: 'done' }],
+              })),
             ],
           },
           { parts: [text('Task 1 complete: 10! = 3628800.')] },
@@ -779,9 +798,9 @@ export const TestProjectTaskDelegationScripted: Story = {
           // the opening prompt deliberately does not restate it.
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [{ title: POEM_TASK_TITLE, status: 'started' }],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: [{ task: checklistRef(POEM_TASK_TITLE), status: 'started' }],
+              })),
             ],
           },
           {
@@ -797,9 +816,9 @@ export const TestProjectTaskDelegationScripted: Story = {
           // the task attachment.
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [{ title: POEM_TASK_TITLE, status: 'done' }],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: [{ task: checklistRef(POEM_TASK_TITLE), status: 'done' }],
+              })),
             ],
           },
           { parts: [text('Wrote the poem.')] },
