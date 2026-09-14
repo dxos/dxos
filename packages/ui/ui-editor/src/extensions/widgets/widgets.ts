@@ -154,10 +154,13 @@ export const widgetResetEffect = StateEffect.define();
  */
 export const widgetRebuildEffect = StateEffect.define();
 
+/** A widget update either replaces the accumulated props outright or derives them from the prior value. */
+type WidgetPropsUpdate = Partial<WidgetProps> | ((prev: Partial<WidgetProps> | undefined) => Partial<WidgetProps>);
+
 /**
  * Update widget.
  */
-export const widgetUpdateEffect = StateEffect.define<{ id: string; value: Partial<WidgetProps> }>();
+export const widgetUpdateEffect = StateEffect.define<{ id: string; value: WidgetPropsUpdate }>();
 
 //
 // Matchers
