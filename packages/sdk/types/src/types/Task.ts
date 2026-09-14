@@ -81,7 +81,7 @@ export const StatusOptions: Option<Status>[] = [
   { id: 'duplicate', title: 'Duplicate', color: 'orange', icon: 'ph--copy--regular' },
   { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
   { id: 'cancelled', title: 'Cancelled', color: 'rose', icon: 'ph--x--regular' },
-  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--x--regular' },
+  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--warning-diamond--regular' },
 ];
 
 /**
@@ -300,7 +300,8 @@ const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): bool
     a.email === b.email &&
     a.identityDid === b.identityDid &&
     a.role === b.role &&
-    refEntityId(a.contact) === refEntityId(b.contact)
+    refEntityId(a.contact) === refEntityId(b.contact) &&
+    refEntityId(a.subject) === refEntityId(b.subject)
   );
 };
 

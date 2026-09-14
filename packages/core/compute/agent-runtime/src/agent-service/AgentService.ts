@@ -94,9 +94,11 @@ export const createSession: (
     );
 
     // The agent process runs on a chat, so the conversation gets one even when the caller only
-    // wanted a bare session.
-    const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-    return yield* getSession(chat, { model: opts?.model, provider: opts?.provider });
+    // wanted a bare session; the model is the chat's own, which is where the process reads it from.
+    const chat = yield* Database.add(
+      Chat.make({ feed: Ref.make(feed), ...(opts?.model ? { model: Ref.fromURI(opts.model) } : {}) }),
+    );
+    return yield* getSession(chat, { provider: opts?.provider });
   },
   Effect.scoped,
 );
@@ -111,9 +113,9 @@ export interface AgentServiceOptions {
   makeTurnProducer?: MakeTurnProducer;
 
   /**
-   * Default model used by sessions that don't specify one explicitly.
+   * Model for a chat that has not selected one (`Chat.model` unset).
    */
-  model?: DXN.DXN;
+  defaultModel?: DXN.DXN;
 
   /**
    * Default provider used to resolve the model for sessions that don't specify one explicitly.
@@ -213,12 +215,12 @@ export const layer = (
       };
 
       // The agent's model and steering instructions are bound to its process at spawn time, so the
-      // cache tracks what each session was created with. Requesting a different model or a repointed
-      // instructions ref for the same feed tears down the old process and spawns a fresh one (see below).
+      // cache tracks what each session was created with. A chat repointed at a different model or
+      // instructions ref tears down the old process and spawns a fresh one (see below).
       const sessionCache = new Map<
         string,
         {
-          model: DXN.DXN | undefined;
+          model: string | undefined;
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
           location: AgentLocation;
@@ -242,11 +244,11 @@ export const layer = (
         return lock;
       };
 
-      const makeExecutable = (model?: DXN.DXN, provider?: DXN.DXN) =>
+      const makeExecutable = (provider?: DXN.DXN) =>
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
           makeTurnProducer: opts?.makeTurnProducer,
-          model: model ?? opts?.model,
+          defaultModel: opts?.defaultModel,
           provider: provider ?? opts?.provider,
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
@@ -285,10 +287,10 @@ export const layer = (
           Effect.suspend(() =>
             lockFor(chat.id).withPermits(1)(
               Effect.gen(function* () {
-                const model = options?.model ?? opts?.model;
                 const provider = options?.provider ?? opts?.provider;
                 // Read off the chat rather than passed in: the process is bound to the chat, so its
-                // steering is whatever the chat points at when the process is spawned.
+                // model and steering are whatever the chat points at when the process is spawned.
+                const model = chat.model?.uri;
                 const instructions = chat.instructions?.uri;
                 const location: AgentLocation = options?.location ?? 'local';
                 const cached = sessionCache.get(chat.id);
@@ -319,11 +321,11 @@ export const layer = (
                 const parsedEchoUri = EID.tryParse(target);
                 const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
                 const agentProcesses = processesFor(options?.location, spaceId);
-                const executable = makeExecutable(model, provider);
+                const executable = makeExecutable(provider);
 
                 // Reuse a still-running process for this feed only when there was no cached session
-                // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
-                // since the process key does not encode the model.
+                // (e.g. after the UI remounted). A process adopted this way re-reads the chat when it
+                // hydrates, so it picks up a model selected while this client was away.
                 const processes = yield* agentProcesses.list({ target, key: executable.key });
                 let activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
 

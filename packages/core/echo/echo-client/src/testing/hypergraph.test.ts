@@ -10,7 +10,7 @@ import { Database, Filter, Hypergraph, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { SpaceId } from '@dxos/keys';
 
-import { TestDatabaseLayer } from './test-database-layer';
+import { TestDatabaseLayer } from './test-database-layer.ts';
 
 // Exercised against a real peer rather than a stand-in graph: the service exists so that work which
 // cannot name a space can still reach one, and only a real graph can be asked whether it holds it.

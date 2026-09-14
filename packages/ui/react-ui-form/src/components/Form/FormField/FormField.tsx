@@ -15,7 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { type FormFieldLabelPlacement, type FormFieldRendererProps, type FormPresentation } from '#types';
 
 import { useFormContext, useFormFieldState } from '../../../hooks/index.ts';
-import { type FormVariant, formTheme } from '../Form.theme';
+import { type FormVariant, formTheme } from '../Form.theme.ts';
 import { resolveLayoutField } from '../FormLayout/resolve-layout-field.ts';
 import { type FormFieldBinding, FormFieldBindingProvider } from './FormFieldContext.ts';
 import { FormFieldDispatch } from './FormFieldDispatch.tsx';

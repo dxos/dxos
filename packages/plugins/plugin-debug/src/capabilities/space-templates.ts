@@ -16,7 +16,7 @@ import { hues, iconValues } from '@dxos/ui-types';
  * must BE an `iconValues` name: the filter drops anything else silently, and a list that shrinks
  * below the number of templates hands two of them the same icon.
  */
-const templateIcons = ['campfire', 'planet', 'users-three', 'rocket-launch', 'graph'].filter((icon) =>
+const templateIcons = ['campfire', 'planet', 'users-three', 'rocket-launch', 'sun', 'graph'].filter((icon) =>
   iconValues.includes(icon),
 );
 

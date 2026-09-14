@@ -14,9 +14,6 @@ const RING_CENTER = 50;
 // Leading-edge marker: a small dot drawn at the arc's head in an unmasked layer.
 const MARKER_RADIUS = 1; // viewBox units → ~3.8px on the 384px disc
 
-/** Sprite the activation row's icons resolve against when the host configures none. */
-const DEFAULT_SPRITE_PATH = '/icons.svg';
-
 /**
  * Read an element's *current animated* translateY (px) from its live transform
  * matrix — the interpolated value mid-transition, not the last-written property.
@@ -50,8 +47,6 @@ export type LoaderProps = {
   markSvg?: string;
   /** A CSS filter over the mark — how a channel recolours the released artwork without its own file. */
   markFilter?: string;
-  /** URL of the icon sprite the activation row resolves `<use href>` against. */
-  spritePath?: string;
 };
 
 /**
@@ -185,7 +180,11 @@ export const Loader: Component<LoaderProps> = (props) => {
           <For each={props.store.lines()}>{(line) => <div class='boot-loader-status-line'>{line.text}</div>}</For>
         </div>
       </div>
-      {/* Activation row: one icon per plugin as it activates, appended monochrome and fading in. Icons resolve against the static sprite, which needs no app bundle. */}
+      {/* The sprite's symbols, inlined so the row's `<use>` references resolve locally: fetched by
+          the store at mount (see `loadSprite`), which is what gets the download in before the
+          row needs it. */}
+      <svg id='boot-loader-sprite' aria-hidden='true' innerHTML={props.store.sprite()} />
+      {/* Activation row: one icon per plugin as it activates, appended monochrome and fading in. */}
       <div id='boot-loader-plugins' aria-hidden='true'>
         {/* Inner track: the flex row, translated as one group to keep its centre on the row's; the
             outer element keeps its vertical placement transform and clips. `--n` is the eased count
@@ -200,7 +199,7 @@ export const Loader: Component<LoaderProps> = (props) => {
               // badge, a hover affordance) without touching either.
               <div class='boot-loader-plugin'>
                 <svg class='boot-loader-plugin-icon' viewBox='0 0 256 256'>
-                  <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
+                  <use href={`#${plugin().icon}`} />
                 </svg>
               </div>
             )}

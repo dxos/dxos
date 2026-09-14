@@ -31,7 +31,7 @@ const plans: { [key: string]: () => Promise<TestPlan<any, any>> } = {
   edgeSync: async () => new (await import('./spec/edge-sync.ts')).EdgeSync(),
   edgeWs: async () => new (await import('./spec/edge-ws.ts')).EdgeWs(),
   automerge: async () => new (await import('./spec/automerge.ts')).AutomergeTestPlan(),
-  // signal: async () => new (await import('./spec/signal')).SignalTestPlan(),
+  // signal: async () => new (await import('./spec/signal.ts')).SignalTestPlan(),
   transport: async () => new (await import('./spec/transport.ts')).TransportTestPlan(),
   query: async () => new (await import('./spec/query.ts')).QueryTestPlan(),
   replication: async () => new (await import('./spec/replication.ts')).ReplicationTestPlan(),

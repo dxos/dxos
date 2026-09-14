@@ -80,32 +80,27 @@ const scorers = (staged: Staged): Scorer.Any[] => [
   Scorer.make({
     name: 'scaffold-visible',
     description: 'The seeded ledger is readable outside the agent before the run starts.',
-    query: Effect.succeed(staged.scaffolded),
-    score: (ok) => ok,
+    score: Effect.succeed(staged.scaffolded),
   }),
   Scorer.make({
     name: 'tasks-listed',
     description: 'The agent read both tasks through the server rather than answering from the prompt.',
-    query: Effect.succeed(staged.listed),
-    score: (ok) => ok,
+    score: Effect.succeed(staged.listed),
   }),
   Scorer.make({
     name: 'read-turn-changed-nothing',
     description: 'The read-only turn left every task as it found it.',
-    query: Effect.succeed(staged.readOnly),
-    score: (ok) => ok,
+    score: Effect.succeed(staged.readOnly),
   }),
   Scorer.make({
     name: 'task-completed',
     description: 'The named task is done in the database, and only that task moved.',
-    query: Effect.succeed(staged.completed),
-    score: (ok) => ok,
+    score: Effect.succeed(staged.completed),
   }),
   Scorer.make({
     name: 'follow-up-turn-wrote',
     description: 'A second turn set the other task started with its description, without rolling the first back.',
-    query: Effect.succeed(staged.started),
-    score: (ok) => ok,
+    score: Effect.succeed(staged.started),
   }),
   Scorer.database({
     name: 'ledger-intact',

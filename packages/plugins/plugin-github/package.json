@@ -93,6 +93,11 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./Walkthrough": {
+      "source": "./src/types/Walkthrough.ts",
+      "types": "./dist/types/src/types/Walkthrough.d.ts",
+      "import": "./dist/lib/Walkthrough.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -106,6 +111,9 @@
       ],
       "GitHubCapabilities": [
         "dist/types/src/types/GitHubCapabilities.d.ts"
+      ],
+      "Walkthrough": [
+        "dist/types/src/types/Walkthrough.d.ts"
       ]
     }
   },
@@ -119,6 +127,7 @@
     "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
