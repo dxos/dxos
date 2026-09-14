@@ -24,7 +24,7 @@ type Seen = {
 const CHALLENGE = Buffer.from('nonce-1').toString('base64');
 const TOKEN = 'dx-api01-' + 'a'.repeat(48);
 
-/** The two endpoints the mint touches, answering as EDGE and the hub behind its `/hub` prefix do. */
+/** The route the mint touches twice, answering as the hub behind EDGE's `/hub` prefix does. */
 const fakeEdge = (seen: Seen): Server =>
   createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', 'http://fake');
@@ -34,9 +34,10 @@ const fakeEdge = (seen: Seen): Server =>
     }
     const body = Buffer.concat(chunks).toString();
 
-    if (url.pathname === '/auth' && request.method === 'GET') {
-      response.writeHead(200, { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify({ data: { challenge: CHALLENGE } }));
+    if (url.pathname === '/hub/api/api-tokens' && request.method === 'POST' && !request.headers.authorization) {
+      // The refusal that carries the challenge, as hub's `edgeAuth` answers a bare request.
+      response.writeHead(401, { 'WWW-Authenticate': `VerifiablePresentation challenge="${CHALLENGE}"` });
+      response.end('Unauthorized');
     } else if (url.pathname === '/hub/api/api-tokens' && request.method === 'POST') {
       seen.authorization = request.headers.authorization;
       seen.body = JSON.parse(body);
@@ -73,7 +74,7 @@ describe('McpAuth', () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
-  test('mints a token with a presentation bound to the challenge EDGE issued', async ({ expect }) => {
+  test('mints a token with a presentation bound to the challenge hub issued', async ({ expect }) => {
     const token = await McpAuth.mintApiToken({ edgeUrl, identity: identityFor(seen), label: 'eval run' });
     expect(token).to.equal(TOKEN);
     expect(seen.signedChallenge).to.equal(CHALLENGE);
@@ -93,17 +94,17 @@ describe('McpAuth', () => {
     expect(untouched.signedChallenge).to.equal(undefined);
   });
 
-  test('an EDGE that issues no challenge is a legible failure', async ({ expect }) => {
+  test('a refusal that carries no challenge is a legible failure', async ({ expect }) => {
     const silent = createServer((_request, response) => {
-      response.writeHead(404);
-      response.end();
+      response.writeHead(401);
+      response.end('Unauthorized');
     });
     await new Promise<void>((resolve) => silent.listen(0, '127.0.0.1', resolve));
     try {
       const port = (silent.address() as AddressInfo).port;
       await expect(
         McpAuth.mintApiToken({ edgeUrl: `http://127.0.0.1:${port}`, identity: identityFor({}) }),
-      ).rejects.toThrow(/issued no challenge/);
+      ).rejects.toThrow(/without issuing a challenge/);
     } finally {
       await new Promise<void>((resolve) => silent.close(() => resolve()));
     }

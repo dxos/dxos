@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type EdgeIdentity, authenticateViaChallengeEndpoint, encodeAuthHeader } from '@dxos/edge-client';
+import { type EdgeIdentity, encodeAuthHeader, handleAuthChallenge, readAuthChallenge } from '@dxos/edge-client';
 
 /** What a token is minted for: the EDGE that holds the identity's account, and the identity itself. */
 export type MintOptions = {
@@ -54,18 +54,23 @@ const mintOrigin = (edgeUrl: string): string => {
  */
 export const mintApiToken = async ({ edgeUrl, identity, label = DEFAULT_LABEL }: MintOptions): Promise<string> => {
   const origin = mintOrigin(edgeUrl);
+  const route = `${origin}/hub/api/api-tokens`;
+  const body = JSON.stringify({ label });
 
-  // Token CRUD is one of the routes that keep anti-replay enforced, so the presentation has to be
-  // bound to a challenge EDGE issued for this very request.
-  const authentication = await authenticateViaChallengeEndpoint(origin, identity);
-  if (authentication == null) {
-    throw new Error(`MCP API token: ${origin}/auth issued no challenge to sign.`);
+  // The challenge comes from the route's own refusal rather than from EDGE's `/auth`: a nonce is an
+  // HMAC under the verifier's key, so only a challenge hub minted is one hub accepts, and token CRUD
+  // keeps anti-replay enforced.
+  const challenged = await fetch(route, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  await expectStatus(challenged, 401, 'challenge request');
+  if ((await readAuthChallenge(challenged)) == null) {
+    throw new Error(`MCP API token: ${route} refused without issuing a challenge to sign.`);
   }
+  const presentation = await handleAuthChallenge(challenged, identity);
 
-  const minted = await fetch(`${origin}/hub/api/api-tokens`, {
+  const minted = await fetch(route, {
     method: 'POST',
-    headers: { 'Authorization': encodeAuthHeader(authentication.presentation), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ label }),
+    headers: { 'Authorization': encodeAuthHeader(presentation), 'Content-Type': 'application/json' },
+    body,
   });
   await expectStatus(minted, 201, 'token mint');
   const { data } = (await minted.json()) as { data?: { token?: string } };
