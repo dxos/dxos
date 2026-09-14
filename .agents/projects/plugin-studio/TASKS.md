@@ -64,3 +64,13 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [ ] Verify a video model path against a real account and set it as the video default.
 - [x] Shared `GenerationService.fieldOptions` → cached combobox (`ProviderOptionsField`); HeyGen migrated, Higgsfield static image list.
 - [ ] Higgsfield model catalogue from the API once it exposes one.
+
+### Observed 2026-09-14 (Composer, studio session)
+
+- [ ] Frame companion **Generate** loses its spinning state when navigating away and back, though the
+      job is still visible in the active-processes panel — derive the busy state from the artifact's
+      pending variant (`jobId`) / the process, not from component state.
+- [ ] Chat tools accordion ("Ran 13 commands") has no border.
+- [ ] Chat tools accordion header row: the title is not vertically centred (`items-center`).
+- [ ] The Help companion for a Project article shows the Inbox text ("A unified inbox for managing
+      email…") — the help surface resolves the wrong plugin for `Project`.
