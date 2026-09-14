@@ -20,6 +20,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
     testing: 'src/testing/index.ts',
+    Dictatable: 'src/types/Dictatable.ts',
     Settings: 'src/types/Settings.ts',
     TranscriptionCapabilities: 'src/types/TranscriptionCapabilities.ts',
     TranscriptionEvents: 'src/types/TranscriptionEvents.ts',

@@ -3,4 +3,4 @@
 //
 
 export * from './TourContext.ts';
-export * from './WelcomeTour.tsx';
+export * from './GuidedTour.tsx';

@@ -23,6 +23,7 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Projects',
+        'project-tour.label': 'Take the project tour',
         'project.label': 'Project',
         'projects.label': 'Projects',
         'instructions.label': 'Instructions',

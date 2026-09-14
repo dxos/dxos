@@ -4,3 +4,4 @@
 
 export * from './useDiscordPresence.ts';
 export * from './useTour.tsx';
+export * from './useTours.ts';

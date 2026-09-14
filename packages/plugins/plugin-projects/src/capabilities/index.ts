@@ -4,6 +4,7 @@
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
@@ -53,6 +54,12 @@ export const Templates = Capability.lazyModule(
     activatesOn: ProjectsEvents.Start,
   },
   () => import('./templates.ts'),
+);
+
+export const Tour = Capability.lazyModule(
+  'Tour',
+  { provides: [AppCapabilities.Tour], environments: [] },
+  () => import('./tour.ts'),
 );
 
 export const Translations = AppCapability.translations(translations);
