@@ -7,6 +7,7 @@ import React from 'react';
 import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { log } from '@dxos/log';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 
@@ -106,9 +107,11 @@ const persistentDecorators = createDecorators(() => ({
   ...storyOptions,
   config: isPersistent() ? config.persistent : config.remote,
   // A profile imported from the toolbar lands here: plugins resolve before the client starts, which
-  // is the only moment no worker holds the database open.
+  // is the only moment this tab has yet to open the database. Never fatal — the harness renders
+  // nothing until `lazyPlugins` resolves, so a rejection here would leave a blank story rather than
+  // one booted on the profile the import did not replace.
   lazyPlugins: async () => {
-    await applyStagedProfileImport();
+    await applyStagedProfileImport().catch((error) => log.error('profile import failed', { error }));
     return storyOptions.lazyPlugins();
   },
 }));

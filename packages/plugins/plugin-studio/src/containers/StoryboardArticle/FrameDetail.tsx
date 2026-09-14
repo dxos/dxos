@@ -33,7 +33,6 @@ export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailP
   // the live object — the surface filter checks the subject's type, which a snapshot fails.
   const [snapshot] = useObject(frame);
   const artifact = useResolveRef(snapshot ? frame.artifact : undefined);
-
   if (!artifact) {
     return (
       <Empty

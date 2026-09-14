@@ -3,5 +3,5 @@
 //
 
 export * from './FeedbackForm/index.ts';
+export * from './GuidedTour/index.ts';
 export * from './Shortcuts/index.ts';
-export * from './WelcomeTour/index.ts';
