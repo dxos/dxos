@@ -79,8 +79,8 @@ export type WorkerRuntimeOptions = {
 export interface WorkerRuntimeService {
   /** The client services host served to connected tabs. */
   readonly host: ClientServicesHost;
-  /** Resolve config, open the services host, and signal readiness. Never fails: startup errors are surfaced to session callers via the readiness gate. */
-  readonly start: () => Effect.Effect<void>;
+  /** Resolve config, open the services host, and signal readiness. Fails with the startup error, which also rejects the readiness gate, after tearing down without `onStop`. */
+  readonly start: () => Effect.Effect<void, Error>;
   /** Tear down sessions' host, dispose the runtime, release the storage lock, and run `onStop`. Idempotent. */
   readonly stop: () => Effect.Effect<void>;
   /** Open a new tab session over the supplied effect-rpc protocols and register it for WebRTC bridging. */
@@ -114,6 +114,8 @@ export const makeWorkerRuntime = ({
   const signalMetadataTags: any = { runtime: 'worker-runtime' };
 
   let stopped = false;
+  // Set when the host's open threw: its half-built stack keeps running on the SQLite runtime and nothing can close it.
+  let hostOpenFailed = false;
   /** Scopes the deferred networking start so a worker torn down mid-grace-period does not dial. */
   const networkingCtx = new Context();
   let sessionForNetworking: WorkerSession | undefined;
@@ -130,25 +132,35 @@ export const makeWorkerRuntime = ({
       .pipe(Layer.orDie),
   );
 
+  // Everything `stop` does except `onStop`, which a failed `start` leaves to its caller.
+  const teardown = async (): Promise<void> => {
+    stopped = true;
+    void networkingCtx.dispose();
+    // Release the lock to notify remote clients that the worker is terminating.
+    releaseLock();
+    try {
+      await clientServices.close(Context.default());
+      if (serviceScope) {
+        await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
+        serviceScope = undefined;
+      }
+    } finally {
+      // Disposed even when host / scope teardown rejects, except under a half-built host whose background
+      // work would fail on closed storage; that storage lasts until the worker exits.
+      if (!hostOpenFailed) {
+        await runtime.dispose();
+      }
+    }
+  };
+
   const stop = (): Effect.Effect<void> =>
     Effect.promise(async () => {
       if (stopped) {
         return;
       }
-      stopped = true;
-      void networkingCtx.dispose();
-      // Release the lock to notify remote clients that the worker is terminating.
-      releaseLock();
-      // Always dispose the SQLite runtime and run onStop, even if host / scope teardown rejects —
-      // otherwise a failed close would leak the runtime and skip the shutdown signal.
       try {
-        await clientServices.close(Context.default());
-        if (serviceScope) {
-          await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
-          serviceScope = undefined;
-        }
+        await teardown();
       } finally {
-        await runtime.dispose();
         await onStop?.();
       }
     });
@@ -185,74 +197,88 @@ export const makeWorkerRuntime = ({
     }
   });
 
-  const start = (): Effect.Effect<void> =>
-    Effect.promise(async () => {
-      log('starting...');
-      try {
-        log('worker-runtime: acquiring storage lock');
-        await acquireLock();
-        log('worker-runtime: storage lock acquired, resolving config');
-        config = await configProvider();
-        log('worker-runtime: config resolved');
-        const observabilityGroup = config.get('runtime.client.observabilityGroup');
-        if (observabilityGroup) {
-          signalMetadataTags.group = observabilityGroup;
+  const start = (): Effect.Effect<void, Error> =>
+    Effect.tryPromise({
+      try: async () => {
+        log('starting...');
+        try {
+          log('worker-runtime: acquiring storage lock');
+          await acquireLock();
+          log('worker-runtime: storage lock acquired, resolving config');
+          config = await configProvider();
+          log('worker-runtime: config resolved');
+          const observabilityGroup = config.get('runtime.client.observabilityGroup');
+          if (observabilityGroup) {
+            signalMetadataTags.group = observabilityGroup;
+          }
+          log('worker-runtime: initializing client services host');
+          clientServices.initialize({
+            config,
+            // Edge signaling is created in the services host from the edge connection; otherwise fall
+            // back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
+            signalManager: config.get('runtime.client.edgeFeatures')?.signaling
+              ? undefined
+              : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+            transportFactory,
+          });
+          log('worker-runtime: client services host initialized, opening');
+
+          await clientServices.open(new Context()).catch((err: unknown) => {
+            hostOpenFailed = true;
+            throw err;
+          });
+          log('worker-runtime: client services host opened, signalling ready');
+          ready.wake(undefined);
+          log('started');
+          // Bridge the host identity/devices Handlers to the effect-rpc client surface in-process.
+          serviceScope = Effect.runSync(Scope.make());
+          const { IdentityService: identityHandlers, DevicesService: devicesHandlers } = clientServices.services;
+          invariant(identityHandlers, 'IdentityService handler not available');
+          invariant(devicesHandlers, 'DevicesService handler not available');
+          const [identityService, devicesService] = await EffectEx.runPromise(
+            Effect.all([
+              makeInProcessClient(IdentityService.Rpcs, identityHandlers),
+              makeInProcessClient(DevicesService.Rpcs, devicesHandlers),
+            ]).pipe(Effect.provideService(Scope.Scope, serviceScope)),
+          );
+          setIdentityTags({
+            identityService,
+            devicesService,
+            setTag: (key: string, value: string) => {
+              signalMetadataTags[key] = value;
+            },
+          });
+
+          // Boot is done: outbound traffic can no longer starve the session handshake the tab is
+          // waiting on. Anchored here rather than inside the host so the gate opens only after the
+          // whole worker start sequence has drained, not just the stack open. The extra grace period
+          // yields the thread so any RPC already queued behind this turn is served before the dial and
+          // its auth-header request start competing for it.
+          log.info('worker-runtime: boot complete, scheduling networking start', {
+            delay: EDGE_NETWORKING_START_DELAY,
+          });
+          scheduleTask(
+            networkingCtx,
+            () => {
+              log('worker-runtime: starting networking');
+              clientServices.startNetworking();
+            },
+            EDGE_NETWORKING_START_DELAY,
+          );
+        } catch (err: any) {
+          ready.wake(err);
+          // No owner holds a runtime whose start failed, so it releases what it opened itself.
+          if (!stopped) {
+            await teardown().catch((teardownError: unknown) => {
+              throw new AggregateError([err, teardownError], 'Worker runtime failed to start and to tear down.', {
+                cause: err,
+              });
+            });
+          }
+          throw err;
         }
-        log('worker-runtime: initializing client services host');
-        clientServices.initialize({
-          config,
-          // Edge signaling is created in the services host from the edge connection; otherwise fall
-          // back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
-          signalManager: config.get('runtime.client.edgeFeatures')?.signaling
-            ? undefined
-            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-          transportFactory,
-        });
-        log('worker-runtime: client services host initialized, opening');
-
-        await clientServices.open(new Context());
-        log('worker-runtime: client services host opened, signalling ready');
-        ready.wake(undefined);
-        log('started');
-        // Bridge the host identity/devices Handlers to the effect-rpc client surface in-process.
-        serviceScope = Effect.runSync(Scope.make());
-        const { IdentityService: identityHandlers, DevicesService: devicesHandlers } = clientServices.services;
-        invariant(identityHandlers, 'IdentityService handler not available');
-        invariant(devicesHandlers, 'DevicesService handler not available');
-        const [identityService, devicesService] = await EffectEx.runPromise(
-          Effect.all([
-            makeInProcessClient(IdentityService.Rpcs, identityHandlers),
-            makeInProcessClient(DevicesService.Rpcs, devicesHandlers),
-          ]).pipe(Effect.provideService(Scope.Scope, serviceScope)),
-        );
-        setIdentityTags({
-          identityService,
-          devicesService,
-          setTag: (key: string, value: string) => {
-            signalMetadataTags[key] = value;
-          },
-        });
-
-        // Boot is done: outbound traffic can no longer starve the session handshake the tab is
-        // waiting on. Anchored here rather than inside the host so the gate opens only after the
-        // whole worker start sequence has drained, not just the stack open. The extra grace period
-        // yields the thread so any RPC already queued behind this turn is served before the dial and
-        // its auth-header request start competing for it.
-        log.info('worker-runtime: boot complete, scheduling networking start', {
-          delay: EDGE_NETWORKING_START_DELAY,
-        });
-        scheduleTask(
-          networkingCtx,
-          () => {
-            log('worker-runtime: starting networking');
-            clientServices.startNetworking();
-          },
-          EDGE_NETWORKING_START_DELAY,
-        );
-      } catch (err: any) {
-        ready.wake(err);
-        log.error('starting', err);
-      }
+      },
+      catch: (err) => (err instanceof Error ? err : new Error(String(err), { cause: err })),
     });
 
   const createSession = ({

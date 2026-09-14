@@ -449,6 +449,8 @@ describe('RepoProxy', () => {
     const count = 300;
     const handles = Array.from({ length: count }, () => clientRepo.create<{ text: string }>());
     await Promise.all(handles.map((handle) => handle.whenReady()));
+    // A host batch arrives only once the host holds the subscription, and an injected one wakes the client as if it did.
+    await clientRepo.flush();
     const payload = 'x'.repeat(4_000);
     const updates = handles.map((handle) => {
       const documentId = handle.documentId;

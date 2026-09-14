@@ -6,13 +6,16 @@
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcMiddleware from 'effect/unstable/rpc/RpcMiddleware';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
+import { log } from '@dxos/log';
 import { RpcTiming } from '@dxos/worker-framework';
 
 export type ServeOptions = {
@@ -35,6 +38,36 @@ const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
 // Merged rpc groups (e.g. ClientServicesRpcs) do not structurally satisfy RpcGroup<Rpc.Any>
 // in @effect/rpc's type parameter; runtime dispatch accepts any RpcGroup instance.
 const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] => group as Parameters<typeof RpcClient.make>[0];
+
+// Server-only: the client never sees this middleware, so it does not change the wire contract.
+class DefectLogMiddleware extends RpcMiddleware.Service<DefectLogMiddleware>()('DxosRpcDefectLogMiddleware') {}
+
+const defectLogLayer = Layer.succeed(DefectLogMiddleware, (handler, { rpc }) =>
+  Effect.tapCause(handler, (cause) =>
+    Cause.hasDies(cause)
+      ? Effect.sync(() => log.error('rpc handler defect', { rpc: rpc._tag, cause: Cause.pretty(cause) }))
+      : Effect.void,
+  ),
+);
+
+const makeServerLayer = <G, H extends Layer.Layer<never, never, never>>(
+  group: G,
+  handlers: H,
+  options: ServeOptions | undefined,
+) => {
+  const timingEnabled = RpcTiming.isEnabled(options?.timing);
+  const timedGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
+  const rpcGroup = asRpcGroup(timedGroup).middleware(DefectLogMiddleware);
+  const handlersLayer = timingEnabled
+    ? Layer.mergeAll(handlers, defectLogLayer, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
+    : Layer.merge(handlers, defectLogLayer);
+  return RpcServer.layer(asRpcGroup(rpcGroup), {
+    disableTracing: options?.disableTracing ?? true,
+    concurrency: options?.concurrency ?? 'unbounded',
+    // A defect fails only its own request; fatal defects fail every request and stream on the connection.
+    disableFatalDefects: true,
+  }).pipe(Layer.provide(handlersLayer));
+};
 
 /**
  * Builds an effect-native RPC client over a caller-supplied {@link RpcClient.Protocol} layer.
@@ -100,18 +133,7 @@ export const serve = <G, H extends Layer.Layer<never, never, never>>(
         return;
       }
 
-      const timingEnabled = RpcTiming.isEnabled(options?.timing);
-      const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
-      // Merge the timing middleware layer into the handler layer (rather than a conditional
-      // `.pipe(...)` element) so the pipeline stays a fixed tuple.
-      const handlersLayer = timingEnabled
-        ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
-        : handlers;
-      const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
-        disableTracing: options?.disableTracing ?? true,
-        concurrency: options?.concurrency ?? 'unbounded',
-      }).pipe(
-        Layer.provide(handlersLayer),
+      const serverLayer = makeServerLayer(group, handlers, options).pipe(
         Layer.provide(
           RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
         ),
@@ -162,15 +184,7 @@ export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>
       }
 
       openPromise = (async () => {
-        const timingEnabled = RpcTiming.isEnabled(options?.timing);
-        const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
-        const handlersLayer = timingEnabled
-          ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
-          : handlers;
-        const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
-          disableTracing: options?.disableTracing ?? true,
-          concurrency: options?.concurrency ?? 'unbounded',
-        }).pipe(Layer.provide(handlersLayer), Layer.provide(protocol), Layer.orDie);
+        const serverLayer = makeServerLayer(group, handlers, options).pipe(Layer.provide(protocol), Layer.orDie);
 
         const current = ManagedRuntime.make(serverLayer);
         try {
