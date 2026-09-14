@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof HelpOperation.StartTour> = HelpOpera
         ...state,
         running: true,
         tourId,
-        seenTours: HelpCapabilities.withSeenTour(state, tourId),
+        seenTours: state.seenTours.includes(tourId) ? state.seenTours : [...state.seenTours, tourId],
       }));
     }),
   ),

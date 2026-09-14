@@ -24,8 +24,7 @@ export const TourAutoStart = () => {
       return;
     }
 
-    const seen = HelpCapabilities.seenTours(state);
-    const unseen = tours.filter((candidate) => candidate.auto && !seen.includes(candidate.id));
+    const unseen = tours.filter((candidate) => candidate.auto && !state.seenTours.includes(candidate.id));
     const [tour] = Tour.matching(unseen, data);
     if (tour) {
       void invokePromise(HelpOperation.StartTour, { tourId: tour.id });

@@ -4,14 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Tour from '@dxos/app-toolkit/Tour';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { HelpCapabilities, HelpOperation } from '#types';
+import { HelpOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof HelpOperation.Start> = HelpOperation.Start.pipe(
   Operation.withHandler(
@@ -23,12 +22,7 @@ const handler: Operation.WithHandler<typeof HelpOperation.Start> = HelpOperation
         return;
       }
 
-      yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({
-        ...state,
-        running: true,
-        tourId: tour.id,
-        seenTours: HelpCapabilities.withSeenTour(state, tour.id),
-      }));
+      yield* Operation.invoke(HelpOperation.StartTour, { tourId: tour.id });
     }),
   ),
 );

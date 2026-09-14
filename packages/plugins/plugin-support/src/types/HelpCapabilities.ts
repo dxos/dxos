@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
@@ -17,16 +18,9 @@ export const StateSchema = Schema.Struct({
   showHints: Schema.Boolean,
   showWelcome: Schema.Boolean,
   tourId: Schema.optional(Schema.String),
-  seenTours: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  seenTours: Schema.mutable(Schema.Array(Schema.String)).pipe(Schema.withDecodingDefaultKey(Effect.succeed([]))),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export type State = Schema.Schema.Type<typeof StateSchema>;
 
 export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${meta.profile.key}.capability.state`);
-
-export const seenTours = (state: State): readonly string[] => state.seenTours ?? [];
-
-export const withSeenTour = (state: State, tourId: string): string[] => {
-  const seen = seenTours(state);
-  return seen.includes(tourId) ? [...seen] : [...seen, tourId];
-};
