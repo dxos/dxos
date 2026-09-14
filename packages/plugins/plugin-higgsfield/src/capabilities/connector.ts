@@ -14,6 +14,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { HIGGSFIELD_CONNECTOR_ID, HIGGSFIELD_SOURCE } from '../constants.ts';
 import { joinCredential } from '../services/higgsfield-credential.ts';
 
+// TODO(burdon): Factor out?
 const HiggsfieldCredentialForm = Schema.Struct({
   keyId: Schema.String.annotate({
     title: 'API key ID',

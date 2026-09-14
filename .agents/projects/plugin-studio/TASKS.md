@@ -73,4 +73,4 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Chat tools accordion ("Ran 13 commands") has no border — frame uses `border-separator`; row hover (`--color-hover-surface-subtle`) lifted 0.02 → 0.035.
 - [x] Chat tools accordion header row: the title is not vertically centred — label centred on the control-tall icon line.
 - [x] The Help companion for a Project article showed the Inbox text — when several plugins register a schema, the one contributing a `CreateObjectEntry` for the typename owns it.
-- [x] Frame companion `model` / `stillModel` comboboxes showed the raw path when closed — `ComboboxField` derives the label of a stored value from the loaded catalogue.
+- [x] Frame companion `model` / `imageModel` comboboxes showed the raw path when closed — `ComboboxField` derives the label of a stored value from the loaded catalogue.
