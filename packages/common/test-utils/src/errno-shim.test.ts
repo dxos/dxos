@@ -77,6 +77,13 @@ __attribute__((constructor)) static void mix(void) {
 }
 `;
 
+/** Preloaded destructor, run once the shim is initialized: writes through a null pointer. */
+const CRASH_PROBE_SOURCE = `__attribute__((destructor)) static void crash(void) {
+  int *volatile pointer = 0;
+  *pointer = 1;
+}
+`;
+
 const runProbe = (preload: string[]): string =>
   spawnSync('/bin/true', { env: { LD_PRELOAD: preload.join(':') }, encoding: 'utf8' }).stderr.trim();
 
@@ -98,5 +105,22 @@ describe.runIf(errnoShimSupported())('errno shim', () => {
     compileSharedObject(RESTORE_PROBE_SOURCE, probe);
 
     expect(runProbe([buildErrnoShim(dir), probe])).toBe('mixed errno=0 runs=1');
+  });
+
+  test('a crash no handler claims reports its signal, address and backtrace, then still kills the process', ({
+    expect,
+  }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'errno-shim-probe-'));
+    onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+    const probe = join(dir, 'crash-probe.so');
+    compileSharedObject(CRASH_PROBE_SOURCE, probe);
+
+    const result = spawnSync('/bin/true', {
+      env: { LD_PRELOAD: [buildErrnoShim(dir), probe].join(':') },
+      encoding: 'utf8',
+    });
+    expect(result.signal).toBe('SIGSEGV');
+    expect(result.stderr).toMatch(/dx-crash-report pid=\d+ signal=11 code=\d+ addr=0x0\n/);
+    expect(result.stderr).toContain('crash-probe.so(');
   });
 });

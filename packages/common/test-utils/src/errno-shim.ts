@@ -10,7 +10,8 @@ import { join } from 'node:path';
 /**
  * Shared object preloaded into Linux WebKit that restores errno around every signal handler installed with `sigaction`:
  * WebKit's thread-suspend handler returns from `sigsuspend` with errno set to EINTR on the thread it interrupted, which
- * fails an errno-checked parse in progress there (ICE candidates, SDP ports, GLib `getauxval`).
+ * fails an errno-checked parse in progress there (ICE candidates, SDP ports, GLib `getauxval`). A crash signal no
+ * handler claims prints `dx-crash-report` with the fault address and a native backtrace to stderr before the process dies.
  * Freestanding, for glibc on x86_64 and aarch64, whose `struct sigaction` share this layout.
  */
 export const ERRNO_SHIM_SOURCE = `#define SA_SIGINFO_FLAG 4
@@ -39,6 +40,88 @@ static volatile int takes_siginfo[SIGNAL_COUNT];
 __attribute__((constructor)) static void resolve_next_sigaction(void) {
   if (!next_sigaction) {
     next_sigaction = (sigaction_fn)dlsym(RTLD_NEXT_HANDLE, "sigaction");
+  }
+}
+
+/* Crash signals the reporter below describes before the process dies. */
+static const int crash_signals[] = {4, 5, 6, 7, 8, 11};
+
+struct crash_siginfo {
+  int signo;
+  int error;
+  int code;
+  int pad;
+  void *addr;
+};
+
+extern int backtrace(void **buffer, int size);
+extern void backtrace_symbols_fd(void *const *buffer, int size, int fd);
+extern long write(int fd, const void *buffer, unsigned long count);
+extern int getpid(void);
+extern int raise(int signal);
+
+static void write_text(const char *text) {
+  unsigned long length = 0;
+  while (text[length]) {
+    length++;
+  }
+  write(2, text, length);
+}
+
+static void write_number(unsigned long value, unsigned base) {
+  char digits[24];
+  int index = sizeof digits;
+  do {
+    digits[--index] = "0123456789abcdef"[value % base];
+    value /= base;
+  } while (value && index > 0);
+  write(2, digits + index, sizeof digits - index);
+}
+
+/* Prints the signal, fault address and native backtrace to stderr, then lets the default action end the process. */
+static void report_crash(int signal, void *info, void *context) {
+  (void)context;
+  struct crash_siginfo *details = info;
+  write_text("dx-crash-report pid=");
+  write_number((unsigned long)getpid(), 10);
+  write_text(" signal=");
+  write_number((unsigned long)signal, 10);
+  write_text(" code=");
+  if (details->code < 0) {
+    write_text("-");
+  }
+  write_number((unsigned long)(details->code < 0 ? -(long)details->code : details->code), 10);
+  /* Only a fault the kernel raised (code > 0) carries an address. */
+  if (details->code > 0) {
+    write_text(" addr=0x");
+    write_number((unsigned long)details->addr, 16);
+  }
+  write_text("\\n");
+  void *frames[64];
+  int count = backtrace(frames, 64);
+  backtrace_symbols_fd(frames, count, 2);
+  struct glibc_sigaction fallback = {0};
+  next_sigaction(signal, &fallback, 0);
+  /* A fault re-runs on return; a sent signal (code <= 0) has to be raised again. */
+  if (details->code <= 0) {
+    raise(signal);
+  }
+}
+
+/* Installed ahead of the process's own handlers, which report it as their previous handler and chain to it. */
+__attribute__((constructor)) static void install_crash_reporter(void) {
+  resolve_next_sigaction();
+  void *frames[1];
+  backtrace(frames, 1);
+  for (unsigned index = 0; index < sizeof crash_signals / sizeof crash_signals[0]; index++) {
+    struct glibc_sigaction current = {0};
+    if (next_sigaction(crash_signals[index], 0, &current) != 0 || current.handler != (void *)0) {
+      continue;
+    }
+    struct glibc_sigaction reporter = {0};
+    reporter.handler = (void *)report_crash;
+    reporter.flags = SA_SIGINFO_FLAG;
+    next_sigaction(crash_signals[index], &reporter, 0);
   }
 }
 
@@ -132,7 +215,7 @@ export const buildErrnoShim = (cacheDir: string): string => {
 };
 
 /** Compiler arguments ahead of the output path, which the stdin source and {@link LINK_ARGS} follow. */
-const COMPILE_ARGS = ['-shared', '-fPIC', '-O2', '-x', 'c', '-o'];
+const COMPILE_ARGS = ['-shared', '-fPIC', '-O2', '-fasynchronous-unwind-tables', '-x', 'c', '-o'];
 const LINK_ARGS = ['-ldl'];
 
 const compiler = (): string => process.env.CC || 'cc';
