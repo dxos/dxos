@@ -291,6 +291,8 @@ document round trips per call). Both are operation-service / db-service work, ne
 | 7   | —     | —                      | API-token auth: mint refused, `invalid_nonce` (Fix 6)      |
 | 8   | 43%   | 35 / 35                | token accepted by hub, worker refused: `no_agent` (Fix 7)  |
 | 9   | 86%   | 0 / 35                 | token flow end to end: **every correctness scorer passes** |
+| 10  | —     | —                      | harness raced the post-bind EDGE reconnect (Fix 8)         |
+| 11  | 100%  | 0 / 35                 | props cached in the worker: **every scorer passes**        |
 
 Client-observed latency per run (p50 ms; `*` is every invokeOperation sample):
 
@@ -301,6 +303,7 @@ Client-observed latency per run (p50 ms; `*` is every invokeOperation sample):
 | 5   | 4333    | 58              | 42        | 3360 / 4450                   |
 | 6   | 3884    | 69              | 49        | 2129 / 2621                   |
 | 9   | 6127    | 434             | 423       | 2632 / 3456                   |
+| 11  | 11183   | 78              | 57        | 2141 / 2564                   |
 
 Run 5 ran minutes after the db-service redeploy, which resets every Durable Object, so its
 invocations paid cold loads; its `tool-latency` miss (budget 3000ms p95) is that, not a regression
@@ -374,4 +377,7 @@ Three things broke on the first real runs, each a fact about the deployed stack 
   49 → 423ms, i.e. the four service-binding round trips (hub verify, two agent-registry lookups,
   `listAgentSpaces`) paid on every request, where an OAuth grant carried the props. The worker now
   caches the resolved props per token for 60s — the window hub's own validation cache already allows
-  a revoked token — which returns the read tools to the run-6 numbers.
+  a revoked token — which returns the read tools to the run-6 numbers (run 11: 78 / 57ms, 7/7).
+- **Fix 8 — the harness sampled EDGE's first status.** That status is the connection attempt made
+  before the account bind, which EDGE refuses; run 10 lost the race with the reconnect that follows
+  the bind and failed before any work began. `assertEdgeConnected` now waits for `CONNECTED`.
