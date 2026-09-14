@@ -3,14 +3,16 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { Database, Obj } from '@dxos/echo';
+import { Annotation, Database, Obj, Ref } from '@dxos/echo';
 import { createKvsStore } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -58,7 +60,20 @@ export default Capability.makeModule(
     }
 
     const space = yield* resolveSettingsSpace(client);
-    const settings = yield* AppSettings.open().pipe(Effect.provide(Database.layer(space.db)));
+    // Named at genesis; a settings space that predates the name is given one here.
+    const settings = yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+      Option.match({
+        onSome: (ref) => Database.load(ref),
+        onNone: () =>
+          Effect.sync(() => {
+            const settings = space.db.add(AppSettings.make());
+            Obj.update(space.properties, (properties) => {
+              Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
+            });
+            return settings;
+          }),
+      }),
+    );
     // This device's pins. One per device, so the key names no device.
     const device = createKvsStore({
       key: 'org.dxos.app-toolkit.settings-scope',

@@ -2,13 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Annotation, Database, Obj, Query, Ref } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 import * as AppSettings from './AppSettings.ts';
@@ -366,34 +362,6 @@ describe('conflictingKeys', () => {
   });
 });
 
-describe('mergeShared', () => {
-  test('adopts what only the loser holds and keeps the winner where both do', ({ expect }) => {
-    const winner: AppSettings.Namespaces = { [NS]: { toolbar: true } };
-    const loser: AppSettings.Namespaces = { [NS]: { toolbar: false, folding: true } };
-
-    AppSettings.mergeShared(winner, loser);
-
-    expect(winner).toEqual({ [NS]: { toolbar: true, folding: true } });
-  });
-
-  test('adopts a namespace the winner has never heard of', ({ expect }) => {
-    const other = 'org.dxos.plugin.chess';
-    const winner: AppSettings.Namespaces = { [NS]: { toolbar: true } };
-
-    AppSettings.mergeShared(winner, { [other]: { hints: true } });
-
-    expect(winner).toEqual({ [NS]: { toolbar: true }, [other]: { hints: true } });
-  });
-
-  test('leaves the loser alone', ({ expect }) => {
-    const loser: AppSettings.Namespaces = { [NS]: { toolbar: false } };
-
-    AppSettings.mergeShared({ [NS]: { toolbar: true } }, loser);
-
-    expect(loser).toEqual({ [NS]: { toolbar: false } });
-  });
-});
-
 describe('pinKey and unpinKey', () => {
   test('pinning changes nothing visible, here or elsewhere', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
@@ -469,11 +437,8 @@ describe('pinKey and unpinKey', () => {
   });
 });
 
-/**
- * The annotation and the merge only misbehave against a real database: `Obj.update` on a proxy is
- * where a detached write shows up, and the annotation lives on a `SpaceProperties` object.
- */
-describe('open', () => {
+/** `Obj.update` on a proxy is where a detached write shows up, so this needs a real database. */
+describe('setValue against a database', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -484,82 +449,15 @@ describe('open', () => {
     await builder.close();
   });
 
-  const database = () => builder.createDatabase({ types: [AppSettings.AppSettings, SpaceProperties] });
-  const open = (db: EchoDatabase) => AppSettings.open().pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
-
-  test('names the object it creates, so the next run finds it rather than making another', async ({ expect }) => {
-    const { db } = await database();
-    const properties = db.add(Obj.make(SpaceProperties, {}));
-    await db.flush();
-
-    const first = await open(db);
-    expect(Annotation.get(properties, AppSettings.AppSettingsAnnotation).pipe(Option.isSome)).toBe(true);
-
-    const second = await open(db);
-    expect(second.id).toBe(first.id);
-  });
-
   test('keeps the first key written to a namespace that did not exist', async ({ expect }) => {
-    const { db } = await database();
-    db.add(Obj.make(SpaceProperties, {}));
+    const { db } = await builder.createDatabase({ types: [AppSettings.AppSettings] });
+    const settings = db.add(AppSettings.make());
     await db.flush();
 
-    const settings = await open(db);
     Obj.update(settings, (settings) => {
       AppSettings.setValue({ shared: settings.shared, local: {} }, NS, 'toolbar', true);
     });
 
-    // `??=` yields the object it assigned rather than the proxy's, so this is `{}` if the record is
-    // not read back — a plain-object test cannot catch it.
     expect(Obj.getSnapshot(settings).shared[NS]).toEqual({ toolbar: true });
-  });
-
-  test('is idempotent, so seeding at genesis and opening later yield one object', async ({ expect }) => {
-    const { db } = await database();
-    db.add(Obj.make(SpaceProperties, {}));
-    await db.flush();
-
-    // Genesis seeds it; every later open is a device reading the name replication delivered.
-    const seeded = await open(db);
-    await open(db);
-    await open(db);
-
-    const objects = await db.query(Query.type(AppSettings.AppSettings)).run();
-    expect(objects.map((object) => object.id)).toEqual([seeded.id]);
-  });
-
-  test('adopts what an object the name does not cover was holding', async ({ expect }) => {
-    const { db } = await database();
-    const properties = db.add(Obj.make(SpaceProperties, {}));
-
-    // What two devices that both created one before replication leave behind.
-    const named = db.add(AppSettings.make());
-    Obj.update(named, (named) => {
-      AppSettings.setValue({ shared: named.shared, local: {} }, NS, 'toolbar', false);
-    });
-    const stray = db.add(AppSettings.make());
-    Obj.update(stray, (stray) => {
-      AppSettings.setValue({ shared: stray.shared, local: {} }, NS, 'folding', true);
-    });
-    Obj.update(properties, (properties) => {
-      Annotation.set(properties, AppSettings.AppSettingsAnnotation, Ref.make(named));
-    });
-    await db.flush();
-
-    const settings = await open(db);
-
-    expect(settings.id).toBe(named.id);
-    // The named object keeps its own value and adopts the one only the stray held.
-    expect(Obj.getSnapshot(settings).shared[NS]).toEqual({ toolbar: false, folding: true });
-  });
-
-  test('converges on the lowest id when nothing is named yet', async ({ expect }) => {
-    const { db } = await database();
-    db.add(Obj.make(SpaceProperties, {}));
-    const objects = [db.add(AppSettings.make()), db.add(AppSettings.make())];
-    const lowest = [...objects].sort((left, right) => left.id.localeCompare(right.id))[0];
-    await db.flush();
-
-    expect((await open(db)).id).toBe(lowest.id);
   });
 });

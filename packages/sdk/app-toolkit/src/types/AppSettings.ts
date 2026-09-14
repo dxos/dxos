@@ -4,12 +4,9 @@
 
 // @import-as-namespace
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Annotation, Database, DXN, Obj, Query, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 
 /** Values for a single settings namespace, keyed by field name. */
 export const Values = Schema.Record(Schema.String, Schema.Any);
@@ -41,41 +38,6 @@ export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos
 
 /** Create an empty settings object. */
 export const make = (): AppSettings => Obj.make(AppSettings, { shared: {} });
-
-/** Names the space's settings object on its `properties`, so every device writes through one. */
-export const AppSettingsAnnotation = Annotation.make({
-  id: 'org.dxos.space.appSettings',
-  schema: Ref.Ref(AppSettings),
-});
-
-/**
- * The space's settings object, named on `properties` on first use.
- *
- * A query cannot settle this alone: it does not subscribe, so two devices that both run before
- * replication each find nothing and each create one. Anything the name does not cover is folded in.
- */
-export const open = Effect.fnUntraced(function* () {
-  const [properties] = yield* Database.query(Query.type(SpaceProperties)).run;
-  const named = properties ? Annotation.get(properties, AppSettingsAnnotation).pipe(Option.getOrUndefined) : undefined;
-
-  const objects = yield* Database.query(Query.type(AppSettings)).run;
-  const settings = named
-    ? yield* Database.load(named)
-    : ([...objects].sort((left, right) => left.id.localeCompare(right.id))[0] ?? (yield* Database.add(make())));
-
-  for (const other of objects.filter((object) => object.id !== settings.id)) {
-    const loser = Obj.getSnapshot(other).shared;
-    Obj.update(settings, (settings) => mergeShared(settings.shared, loser));
-  }
-
-  if (properties && !named) {
-    Obj.update(properties, (properties) => {
-      Annotation.set(properties, AppSettingsAnnotation, Ref.make(settings));
-    });
-  }
-
-  return settings;
-});
 
 /** Create an empty device layer, for the local store's initial value. */
 export const makeDeviceSettings = (): DeviceSettings => ({});
@@ -263,18 +225,6 @@ export const applyResolved = (draft: Draft, namespace: string, before: Values, a
       setValue(draft, namespace, key, after[key]);
     } else if (isSynced(draft, namespace) && !isPinned(draft, namespace, key)) {
       clearValue(draft, namespace, key);
-    }
-  }
-};
-
-/** Fold a loser's values in: a key only it holds is adopted, a key both hold keeps the winner's. */
-export const mergeShared = (winner: Namespaces, loser: Namespaces): void => {
-  for (const [namespace, values] of Object.entries(loser)) {
-    const target = namespaceOf(winner, namespace);
-    for (const [key, value] of Object.entries(values)) {
-      if (!(key in target)) {
-        target[key] = value;
-      }
     }
   }
 };

@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
+import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
@@ -30,9 +30,13 @@ export default Capability.makeModule(
       }
     });
 
-    // Created here for the same reason as the root collection: genesis runs on one device, so every
-    // other receives the object by replication rather than racing to create its own.
-    yield* AppSettings.open().pipe(Effect.provide(Database.layer(settingsSpace.db)));
+    Obj.update(settingsSpace.properties, (properties) => {
+      Annotation.set(
+        properties,
+        AppAnnotation.AppSettingsAnnotation,
+        Ref.make(settingsSpace.db.add(AppSettings.make())),
+      );
+    });
 
     return Capability.contribute(SpaceCapabilities.DefaultSpace, defaultSpace);
   }),
