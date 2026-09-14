@@ -659,6 +659,27 @@ describe('Obj', () => {
       expect(fires).toBe(baseline + 1);
       expect(registry.get(employerAtom)?.uri.toString()).toBe(Ref.make(orgB).uri.toString());
     });
+
+    test('a ref-valued property re-fires when only the inlined target is dropped', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const org = Obj.make(TestSchema.Organization, { name: 'A' });
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [], employer: Ref.make(org) });
+
+      const employerAtom = Obj.atomProperty(obj, 'employer');
+      let fires = 0;
+      registry.subscribe(employerAtom, () => {
+        fires++;
+      });
+      registry.get(employerAtom);
+      const baseline = fires;
+
+      // Same URI, different value: the inlined target is part of the ref's encoded form, so dropping
+      // it is a change the consumer must see rather than one the URI comparison swallows.
+      Obj.update(obj, (obj) => {
+        obj.employer = Ref.make(org).noInline();
+      });
+      expect(fires).toBe(baseline + 1);
+    });
   });
 
   describe('Obj.updateFrom', () => {

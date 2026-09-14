@@ -47,4 +47,14 @@ describe('snapshotForComparison', () => {
     expect(snapshotEquals(makeRef('dxn:model:b'), snapshot)).toBe(false);
     expect(snapshotEquals(undefined, snapshot)).toBe(false);
   });
+
+  test('a ref field also compares by its inlined target', ({ expect }) => {
+    // `{'/': uri}` and `{'/': uri, target}` are different encoded values, so a URI-only comparison
+    // would report no change and leave the consumer holding the stale inline target.
+    const target = { id: 'x' } as any;
+    const inlined = new RefImpl(URI.make('dxn:echo:@:x'), target);
+    expect(snapshotEquals(inlined, snapshotForComparison(inlined.noInline()))).toBe(false);
+    expect(snapshotEquals(inlined.noInline(), snapshotForComparison(inlined))).toBe(false);
+    expect(snapshotEquals(new RefImpl(URI.make('dxn:echo:@:x'), target), snapshotForComparison(inlined))).toBe(true);
+  });
 });

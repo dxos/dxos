@@ -7,14 +7,21 @@ import { RefTypeId } from '../Ref/ref.ts';
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 
-const isRefLike = (value: unknown): value is { uri: { toString(): string } } =>
+type RefLike = {
+  uri: { toString(): string };
+  /** {@link RefImpl._getSavedTarget}; absent on a ref-like that is not a `RefImpl`. */
+  _getSavedTarget?: () => unknown;
+};
+
+const isRefLike = (value: unknown): value is RefLike =>
   value !== null && typeof value === 'object' && RefTypeId in value;
 
 /**
  * Snapshot a value to create a new reference for atom change-detection and React dependency tracking.
  * Objects and arrays are shallow-copied (a fresh reference each read, so an in-place mutation is
  * observed); primitives are returned as-is (so they dedupe via `!==`) and refs are too, since they
- * dedupe by URI in {@link snapshotEquals}. Shared by the object-property and annotation atom families.
+ * dedupe by URI and inlined target in {@link snapshotEquals}. Shared by the object-property and
+ * annotation atom families.
  */
 export const snapshotForComparison = <V>(value: V): V => {
   if (Array.isArray(value)) {
@@ -32,10 +39,19 @@ export const snapshotForComparison = <V>(value: V): V => {
 };
 
 // Refs compare by URI: `RefImpl` mints a fresh wrapper on every property read, so `Object.is` never
-// matches two reads of the same ref.
+// matches two reads of the same ref. The inlined target is part of the ref's encoded value
+// (`{'/': uri, target}` for an object not yet in the database), so `Ref.make(target)` and a
+// `noInline()` of it share a URI without being the same value — comparing the URI alone would
+// swallow that update. The saved target is identity-stable across reads, so it needs no deeper
+// comparison.
 const valueEquals = (a: unknown, b: unknown): boolean => {
   if (isRefLike(a) || isRefLike(b)) {
-    return isRefLike(a) && isRefLike(b) && a.uri.toString() === b.uri.toString();
+    return (
+      isRefLike(a) &&
+      isRefLike(b) &&
+      a.uri.toString() === b.uri.toString() &&
+      a._getSavedTarget?.() === b._getSavedTarget?.()
+    );
   }
   // Records before `Object.is`: the snapshot shallow-copies the array, so a record element mutated in
   // place is the same reference on both sides and would otherwise read as unchanged.
