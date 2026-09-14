@@ -72,7 +72,7 @@ export type WidgetEventHandler<TEvent = unknown> = (event: TEvent) => void;
  */
 export type WidgetProps<TProps = Record<string, unknown>, TContext = unknown> = TProps & {
   _tag: string;
-  view?: EditorView;
+  view?: EditorView | null;
   range: Range;
   children?: ReactNode[];
   context?: TContext;
@@ -344,7 +344,7 @@ const widgetStateMapStateField = StateField.define<WidgetStateMap>({
  * later rebuild from replacing the instance.
  */
 const withCurrentWidgetState = (state: WidgetState): WidgetState => {
-  const view: EditorView | undefined = state.props?.view;
+  const view: EditorView | null | undefined = state.props?.view;
   const widgetState = view?.state.field(widgetStateMapStateField, false)?.[state.id];
   return widgetState ? { ...state, props: { ...state.props, ...widgetState } } : state;
 };

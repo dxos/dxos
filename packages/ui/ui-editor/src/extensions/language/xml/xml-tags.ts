@@ -48,7 +48,7 @@ export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
  * from that element onwards dropped, because the parser splits contents into alternating text and
  * element children. Use {@link getXmlInnerText} where nesting is possible.
  */
-export const getXmlTextChild = (children: any[]): string | null => {
+export const getXmlTextChild = (children: WidgetProps['children']): string | null => {
   const child = children?.[0];
   return typeof child === 'string' ? child : null;
 };
