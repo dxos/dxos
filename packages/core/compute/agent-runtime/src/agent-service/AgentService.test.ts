@@ -22,7 +22,7 @@ import { LanguageModelFixture } from '@dxos/ai/testing';
 import { type HarnessControlRpcs, PartialBlock, SessionLink } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as ComputeAgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -41,7 +41,7 @@ import { ContentBlock, Message, Organization } from '@dxos/types';
 import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
 import * as ResearchService from '../testing/ResearchService.ts';
 import { AGENT_PROCESS_KEY } from './agent-process.ts';
-import * as AgentServiceRuntime from './AgentService.ts';
+import * as AgentService from './AgentService.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -239,7 +239,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     'can answer a question',
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentServiceRuntime.createSession();
+        const session = yield* AgentService.createSession();
         yield* session.submitPrompt('What is the capital of France?');
         yield* session.waitForCompletion();
 
@@ -257,7 +257,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     'tool call',
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentServiceRuntime.createSession({ skills: [ResearchSkill] });
+        const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
         yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
@@ -275,7 +275,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     'can be stopped while waiting for a tool call',
     Effect.fnUntraced(
       function* (_) {
-        let session = yield* AgentServiceRuntime.createSession({ skills: [ResearchSkill] });
+        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
         yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
@@ -292,7 +292,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     'restart during tool call',
     Effect.fnUntraced(
       function* (_) {
-        let session = yield* AgentServiceRuntime.createSession({ skills: [ResearchSkill] });
+        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
         yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
@@ -301,14 +301,14 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
         yield* processManager.startup();
-        yield* AgentService.hydrate();
+        yield* ComputeAgentService.hydrate();
 
         // Hydrate returns immediately; redelivery re-issues the research tool on a fresh child.
         // Drain all queued tasks (orphaned pre-restart + live child).
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeAllTasks();
 
-        session = yield* AgentService.getSession(session.chat);
+        session = yield* ComputeAgentService.getSession(session.chat);
         yield* session.waitForCompletion();
       },
       Effect.provide(TestLayer()),
@@ -321,7 +321,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     'recovers queued tool results after reload',
     Effect.fnUntraced(
       function* (_) {
-        let session = yield* AgentServiceRuntime.createSession({ skills: [ResearchSkill] });
+        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
         yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
@@ -336,16 +336,16 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
         yield* processManager.startup();
-        yield* AgentService.hydrate();
+        yield* ComputeAgentService.hydrate();
 
-        session = yield* AgentService.getSession(session.chat);
+        session = yield* ComputeAgentService.getSession(session.chat);
         yield* session.waitForCompletion();
 
         // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
         // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
         // the side effects of an operation that had already completed.
         expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
-        session = yield* AgentService.getSession(session.chat);
+        session = yield* ComputeAgentService.getSession(session.chat);
 
         // The recovery turn begins when the rehydrated process fires its alarm, which is after
         // `waitForCompletion` settles (that only covers the turn in flight), so poll the feed for the
@@ -370,7 +370,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     'rehydrates an idle session and replays conversation history',
     Effect.fnUntraced(
       function* (_) {
-        let session = yield* AgentServiceRuntime.createSession();
+        let session = yield* AgentService.createSession();
         yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
         yield* session.waitForCompletion();
 
@@ -378,11 +378,11 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
         yield* processManager.startup();
-        yield* AgentService.hydrate();
+        yield* ComputeAgentService.hydrate();
 
         // The rehydrated agent is bound to the same feed, so a follow-up that only makes sense
         // with prior context resolves against the pre-restart turn.
-        session = yield* AgentService.getSession(session.chat);
+        session = yield* ComputeAgentService.getSession(session.chat);
         yield* session.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* session.waitForCompletion();
 
@@ -405,8 +405,8 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
         yield* processManager.startup();
-        yield* AgentService.hydrate();
-        yield* AgentService.hydrate();
+        yield* ComputeAgentService.hydrate();
+        yield* ComputeAgentService.hydrate();
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
@@ -417,7 +417,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentServiceRuntime.createSession({ skills: [ResearchSkill] });
+        const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         const taskDrainer = yield* Effect.gen(function* () {
@@ -469,7 +469,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
           delegationHarness.pending = [{ id: 'task-1', input: 'forty-two' }];
           delegationHarness.completed = [];
 
-          const session = yield* AgentServiceRuntime.createSession();
+          const session = yield* AgentService.createSession();
           yield* session.submitPrompt('What is the capital of France?');
           // Settles on the turn's reply; the delegated child runs in the background (not awaited here).
           yield* session.waitForCompletion();
@@ -503,7 +503,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     Effect.fnUntraced(
       function* (_) {
         // Original conversation.
-        const source = yield* AgentServiceRuntime.createSession();
+        const source = yield* AgentService.createSession();
         yield* source.submitPrompt('What is the capital of France? Reply with just the city name.');
         yield* source.waitForCompletion();
 
@@ -519,7 +519,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         // Fork: a fresh session whose feed links back to the source via a SessionLink (mirrors the
         // ForkChat operation). The forked agent has no messages of its own, so a context-dependent
         // follow-up only resolves if the source history is replayed through the link.
-        const fork = yield* AgentServiceRuntime.createSession();
+        const fork = yield* AgentService.createSession();
         yield* Feed.append(fork.feed, [
           Obj.make(SessionLink.SessionLink, {
             feedRef: Ref.make(source.feed),
@@ -550,7 +550,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
       function* (_) {
         const processManager = yield* ProcessManager.ProcessManagerService;
 
-        const session = yield* AgentServiceRuntime.createSession();
+        const session = yield* AgentService.createSession();
         const target = Obj.getURI(session.chat);
 
         yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
@@ -567,7 +567,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
         // A follow-up turn does not reuse the succeeded process: `getSession` skips terminal handles
         // and spawns a fresh one, which replays conversation history from the feed.
-        const followUp = yield* AgentService.getSession(session.chat);
+        const followUp = yield* ComputeAgentService.getSession(session.chat);
         yield* followUp.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* followUp.waitForCompletion();
 
@@ -593,7 +593,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
 
         // Spawns the agent process (no LLM turn yet) bound to a stamped host marker.
-        const session = yield* AgentServiceRuntime.createSession();
+        const session = yield* AgentService.createSession();
         const target = Obj.getURI(session.chat);
         // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
         // on every call; naming the group restores it.
@@ -636,7 +636,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     Effect.fnUntraced(
       function* (_) {
         pingCount = 0;
-        const session = yield* AgentServiceRuntime.createSession({ skills: [PingSkill] });
+        const session = yield* AgentService.createSession({ skills: [PingSkill] });
         yield* session.submitPrompt('Ping the service and tell me what it returned.');
         yield* session.waitForCompletion();
 
@@ -662,7 +662,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         stallStarted = yield* Deferred.make<void>();
         stallRelease = yield* Deferred.make<void>();
 
-        const session = yield* AgentServiceRuntime.createSession({ skills: [StallSkill] });
+        const session = yield* AgentService.createSession({ skills: [StallSkill] });
         const processManager = yield* ProcessManager.ProcessManagerService;
         const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: AGENT_PROCESS_KEY });
 
@@ -678,7 +678,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
         // Same feed: the user typing again after hitting stop. The stopped handle must not be
         // adopted — neither from the session cache nor by the remount lookup that follows it.
-        const resumed = yield* AgentService.getSession(session.chat);
+        const resumed = yield* ComputeAgentService.getSession(session.chat);
         expect(resumed).not.toBe(session);
 
         yield* resumed.submitPrompt('What is the capital of France? Reply with just the city name.');
@@ -710,9 +710,12 @@ describe('Agent Service (control plane)', () => {
 
         // Both callers start before either writes the session cache, which is what serializing the
         // cache-miss path exists for: unserialized, each would spawn its own process for the chat.
-        const [first, second] = yield* Effect.all([AgentService.getSession(chat), AgentService.getSession(chat)], {
-          concurrency: 'unbounded',
-        });
+        const [first, second] = yield* Effect.all(
+          [ComputeAgentService.getSession(chat), ComputeAgentService.getSession(chat)],
+          {
+            concurrency: 'unbounded',
+          },
+        );
         expect(second).toBe(first);
 
         const processes = yield* processManager.list({ target: Obj.getURI(chat), key: AGENT_PROCESS_KEY });
@@ -736,7 +739,7 @@ describe('Agent Service (control plane)', () => {
         yield* Database.flush();
         const target = Obj.getURI(chat);
 
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* ComputeAgentService.getSession(chat);
         const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
 
         // Spawned but not prompted: live, awaiting input, so not working on a turn.
@@ -768,7 +771,7 @@ describe('Agent Service (control plane)', () => {
         yield* Database.flush();
         const target = Obj.getURI(chat);
 
-        const spawned = yield* AgentService.getSession(chat);
+        const spawned = yield* ComputeAgentService.getSession(chat);
         const [before] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
 
         // Reboot without hydrating: the record survives but no live handle does, so `list` yields
@@ -779,7 +782,7 @@ describe('Agent Service (control plane)', () => {
         yield* processManager.shutdown();
         yield* processManager.startup();
 
-        const session = yield* AgentService.getSession(chat).pipe(Effect.provide(AgentServiceRuntime.layer()));
+        const session = yield* ComputeAgentService.getSession(chat).pipe(Effect.provide(AgentService.layer()));
         expect(session).not.toBe(spawned);
         const [after] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
         expect(String(after.pid)).toBe(String(before.pid));
@@ -817,12 +820,12 @@ describe('Agent Service (control plane)', () => {
         });
 
         // Spawned against the chat, so the process's target is the chat itself.
-        const sessionA = yield* AgentService.getSession(chat);
+        const sessionA = yield* ComputeAgentService.getSession(chat);
         const [handleA] = yield* activePids;
         const pidA = String(handleA.pid);
 
         // Unchanged ref: the cached session (and process) is reused.
-        const sessionAgain = yield* AgentService.getSession(chat);
+        const sessionAgain = yield* ComputeAgentService.getSession(chat);
         expect(sessionAgain).toBe(sessionA);
         expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([pidA]);
 
@@ -831,14 +834,14 @@ describe('Agent Service (control plane)', () => {
           chat.instructions = Ref.make(instructionsB);
         });
         yield* Database.flush();
-        yield* AgentService.getSession(chat);
+        yield* ComputeAgentService.getSession(chat);
         const [handleB] = yield* activePids;
         expect(String(handleB.pid)).not.toBe(pidA);
 
         // Remount path (cache cleared by hydrate): the rediscovered process is reused, since it is
         // bound to the same chat.
-        yield* AgentService.hydrate();
-        const resumed = yield* AgentService.getSession(chat);
+        yield* ComputeAgentService.hydrate();
+        const resumed = yield* ComputeAgentService.getSession(chat);
         expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([String(handleB.pid)]);
 
         yield* resumed.terminate();
@@ -851,7 +854,7 @@ describe('Agent Service (control plane)', () => {
     'traces a turn run through the agent process',
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentServiceRuntime.createSession();
+        const session = yield* AgentService.createSession();
         yield* session.submitPrompt('What is the capital of France?');
         yield* session.waitForCompletion();
 
@@ -887,7 +890,7 @@ describe('Agent Service (control plane)', () => {
         );
         expect(Obj.getMeta(skill).key).toBeUndefined();
 
-        const session = yield* AgentServiceRuntime.createSession({ skills: [skill] });
+        const session = yield* AgentService.createSession({ skills: [skill] });
         yield* session.submitPrompt('What is the codename of the project?');
         yield* session.waitForCompletion();
 
