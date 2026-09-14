@@ -8,13 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Tour from '@dxos/app-toolkit/Tour';
 
-import { DICTATABLE_TYPES } from '../dictatable.ts';
+import { Dictatable } from '#types';
+
 import { steps } from '../tours/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.TourFragment, {
-      matches: Tour.whenTypes(DICTATABLE_TYPES),
+      matches: Tour.whenTypes(Dictatable.types),
       steps,
     }),
   ),

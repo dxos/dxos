@@ -14,12 +14,11 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { Mic } from '#components';
 import { meta } from '#meta';
-
-import { DICTATABLE_TYPES } from '../dictatable.ts';
+import { Dictatable } from '#types';
 
 const whenDictatable = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObjectMatches,
-  GraphNodeMatcher.whenAny(...DICTATABLE_TYPES.map((type) => AppNodeMatcher.whenEchoTypeMatches(type))),
+  GraphNodeMatcher.whenAny(...Dictatable.types.map((type) => AppNodeMatcher.whenEchoTypeMatches(type))),
 );
 
 export default Capability.makeModule(
