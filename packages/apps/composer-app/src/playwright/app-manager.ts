@@ -51,6 +51,7 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Collection: 'org.dxos.type.collection',
   Document: 'org.dxos.type.document',
   Mailbox: 'org.dxos.type.mailbox',
+  Project: 'org.dxos.type.project',
   Table: 'org.dxos.type.table',
 };
 
