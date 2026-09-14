@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 
-import { TourAutoStart, WelcomeTour } from '#components';
+import { WelcomeTour } from '#components';
 import { useTourSteps } from '#hooks';
 import { meta } from '#meta';
 import { HelpCapabilities } from '#types';
@@ -22,18 +22,15 @@ export default Capability.makeModule(() =>
         const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
         const steps = useTourSteps(state.tourId);
         return (
-          <>
-            <TourAutoStart />
-            <WelcomeTour
-              steps={steps}
-              running={state.running && steps.length > 0}
-              onRunningChanged={(newState) => {
-                updateState((s) =>
-                  newState ? { ...s, running: true } : { ...s, running: false, tourId: undefined, showHints: false },
-                );
-              }}
-            />
-          </>
+          <WelcomeTour
+            steps={steps}
+            running={state.running && steps.length > 0}
+            onRunningChanged={(newState) => {
+              updateState((s) =>
+                newState ? { ...s, running: true } : { ...s, running: false, tourId: undefined, showHints: false },
+              );
+            }}
+          />
         );
       },
     }),

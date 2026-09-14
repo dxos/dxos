@@ -17,6 +17,7 @@ import {
   SkillDefinition,
   SupportSettings,
   Tour,
+  TourAutoStart,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -40,6 +41,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(SupportSettings),
   Plugin.addModule(Translations),
   Plugin.addModule(Tour),
+  Plugin.addModule(TourAutoStart),
   Plugin.make,
 );
 

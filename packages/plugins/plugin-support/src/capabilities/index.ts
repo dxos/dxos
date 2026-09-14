@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import type * as TourModule from '@dxos/app-toolkit/Tour';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
@@ -59,4 +62,19 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 export const SupportSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [SupportCapabilities.Settings],
 });
+export const TourAutoStart = Capability.lazyModule(
+  'TourAutoStart',
+  {
+    requires: [
+      AppCapabilities.AppGraph,
+      AttentionCapabilities.Attention,
+      Capabilities.AtomRegistry,
+      Capabilities.OperationInvoker,
+      ClientCapabilities.Client,
+      HelpCapabilities.State,
+    ],
+    provides: [],
+  },
+  () => import('./tour-auto-start.ts'),
+);
 export const Translations = AppCapability.translations(translations);
