@@ -12,18 +12,6 @@ import * as Tour from './Tour.ts';
 
 const Widget = Type.makeObject(DXN.make('com.example.test.Widget', '0.1.0'))(Schema.Struct({ name: Schema.String }));
 
-const group = (name: string): Tour.Step[] => [{ target: name, title: name, description: name }];
-
-const definition = (steps: readonly Tour.Step[], position?: Position.Position): Tour.Definition => ({
-  id: 'tour',
-  label: 'Tour',
-  matches: (data) => (data as any)?.typename === 'org.dxos.type.document',
-  position,
-  steps,
-});
-
-const titles = (steps: readonly Tour.Step[]) => steps.map((step) => step.title);
-
 describe('composeSteps', () => {
   const document = { id: 'a', typename: 'org.dxos.type.document' };
   const matchesDocument: Tour.Matcher = (data) => (data as any)?.typename === 'org.dxos.type.document';
@@ -86,3 +74,15 @@ describe('matchers', () => {
     expect(Tour.whenType(Widget)({ typename: 'org.dxos.type.document' })).toBe(false);
   });
 });
+
+const group = (name: string): Tour.Step[] => [{ target: name, title: name, description: name }];
+
+const definition = (steps: readonly Tour.Step[], position?: Position.Position): Tour.Definition => ({
+  id: 'tour',
+  label: 'Tour',
+  matches: (data) => (data as any)?.typename === 'org.dxos.type.document',
+  position,
+  steps,
+});
+
+const titles = (steps: readonly Tour.Step[]) => steps.map((step) => step.title);

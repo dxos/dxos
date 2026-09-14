@@ -31,17 +31,17 @@ export default Capability.makeModule(
     const stateAtom = yield* HelpCapabilities.State;
     const toursAtom = yield* Capability.atom(AppCapabilities.Tour);
 
-    const attendedAtom = Atom.make<string | undefined>(attention.getCurrent()[0]);
-    const unsubscribeAttention = attention.subscribeCurrent((current) => registry.set(attendedAtom, current[0]));
+    const subjectIdAtom = Atom.make<string | undefined>(attention.getCurrent()[0]);
+    const unsubscribeAttention = attention.subscribeCurrent((current) => registry.set(subjectIdAtom, current[0]));
 
     const nextTourAtom = Atom.make((get) => {
-      const attendedId = get(attendedAtom);
+      const subjectId = get(subjectIdAtom);
       const state = get(stateAtom);
-      if (!attendedId || state.running) {
+      if (!subjectId || state.running) {
         return undefined;
       }
 
-      const data = Option.getOrUndefined(get(graph.node(attendedId)))?.data;
+      const data = Option.getOrUndefined(get(graph.node(subjectId)))?.data;
       if (data === undefined) {
         return undefined;
       }
@@ -54,7 +54,10 @@ export default Capability.makeModule(
       nextTourAtom,
       (tourId) => {
         if (tourId) {
-          void operationInvoker.invokePromise(HelpOperation.StartTour, { tourId, subjectId: registry.get(attendedAtom) });
+          void operationInvoker.invokePromise(HelpOperation.StartTour, {
+            tourId,
+            subjectId: registry.get(subjectIdAtom),
+          });
         }
       },
       { immediate: true },
