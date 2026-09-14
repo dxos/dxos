@@ -13,6 +13,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import { Stream, asyncTimeout } from '@dxos/async';
 import { type Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { FeedTraceSink } from '@dxos/compute-runtime';
@@ -31,7 +32,7 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { requirePublicKey } from '@dxos/protocols/buf';
-import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeStatus_ConnectionState, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
@@ -156,6 +157,40 @@ const edgeConfig = (url: string): Config =>
 /** How long a space may take to converge with EDGE before the run is declared stuck. */
 const SYNC_TIMEOUT = 90_000;
 
+/** How long to wait for the client's first EDGE status before declaring the connection unavailable. */
+const EDGE_STATUS_TIMEOUT = 30_000;
+
+/**
+ * Fails unless the client is actually connected to EDGE.
+ *
+ * Checked before anything depends on replication, because every downstream symptom of an absent
+ * connection is misleading: an unreplicated space reads as an empty one at the worker, so the run
+ * would score a real surface against data that never arrived and report the gap as a defect in the
+ * server. The two ways this fails are worth naming in the message — neither is a bug in the eval.
+ */
+const assertEdgeConnected = async (client: Client): Promise<void> => {
+  const service = client.services.services.EdgeAgentService;
+  if (service == null) {
+    throw new Error('The harness client exposes no EdgeAgentService; `runtime.client.edgeFeatures` is not configured.');
+  }
+  const response = await asyncTimeout(
+    Stream.first(service.queryEdgeStatus()),
+    EDGE_STATUS_TIMEOUT,
+    new Error(`EDGE reported no status within ${EDGE_STATUS_TIMEOUT}ms.`),
+  );
+  if (response?.status?.state === EdgeStatus_ConnectionState.CONNECTED) {
+    return;
+  }
+  throw new Error(
+    'The harness client is not connected to EDGE, so the space it seeds cannot reach the deployed worker. ' +
+      'Two prerequisites, and neither is a fault in this eval: the client reaches EDGE over a WebSocket ' +
+      '(an egress proxy that forbids upgrades — the Claude Code sandbox among them — blocks it outright), ' +
+      'and the identity needs an account on that EDGE (a fresh one gets ' +
+      '`identity_not_associated_with_account`). Run it where both hold, or point the eval at an existing ' +
+      'session with DX_EVAL_MCP_TOKEN and DX_EVAL_SPACE_ID.',
+  );
+};
+
 /** Whether this process and the EDGE peer hold the same documents at the same heads. */
 const inSyncWithEdge = async (space: Space): Promise<boolean> => {
   const { peers } = await space.db.getAutomergeSyncState();
@@ -184,6 +219,7 @@ const waitForEdge = async (space: Space): Promise<void> => {
 
 /** Puts the harness's space on EDGE, where the deployed worker reads it. */
 const replicateToEdge = async (client: Client, spaceId: SpaceId): Promise<Space> => {
+  await assertEdgeConnected(client);
   const space = client.spaces.get(spaceId);
   if (space == null) {
     throw new Error(`Space ${spaceId} is not open in the harness client.`);

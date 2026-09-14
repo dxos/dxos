@@ -4239,6 +4239,9 @@ importers:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../assistant-toolkit
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
