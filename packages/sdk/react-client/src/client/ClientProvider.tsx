@@ -117,8 +117,17 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         return;
       }
 
-      const subscription = client.status.subscribe((status) => setStatus(status));
-      return () => subscription.unsubscribe();
+      const statusSubscription = client.status.subscribe((status) => setStatus(status));
+      // Losing services after initialization is as fatal as failing to initialize.
+      const fatalErrorSubscription = client.fatalError.subscribe((error) => {
+        if (error) {
+          setFailure({ error });
+        }
+      });
+      return () => {
+        statusSubscription.unsubscribe();
+        fatalErrorSubscription.unsubscribe();
+      };
     }, [client]);
 
     // Create and/or initialize client.

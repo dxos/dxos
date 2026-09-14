@@ -5,9 +5,9 @@
 import { create } from '@bufbuild/protobuf';
 import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react';
 import React, { Component, type PropsWithChildren } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger, waitForCondition } from '@dxos/async';
+import { Event, MulticastObservable, Trigger, waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus } from '@dxos/client';
 import { fromHost } from '@dxos/client/local';
 import { log } from '@dxos/log';
@@ -228,5 +228,34 @@ describe('ClientProvider', () => {
 
     await waitFor(() => expect(caught).toBe(failure));
     expect(onInitialized).not.toHaveBeenCalled();
+  });
+
+  test('fatal client error after initialization reaches the error boundary', async () => {
+    const failure = new Error('services lost');
+    const fatalErrorUpdate = new Event<Error | null>();
+    const fatalError = MulticastObservable.from(fatalErrorUpdate, null);
+    class LostClient extends Client {
+      override get fatalError(): MulticastObservable<Error | null> {
+        return fatalError;
+      }
+    }
+
+    const lost = new LostClient({ services: fromHost() });
+    await lost.initialize();
+    onTestFinished(() => lost.destroy());
+
+    let caught: unknown;
+    render(
+      <TestErrorBoundary onError={(error) => (caught = error)}>
+        <ClientProvider client={lost}>
+          <TestComponent />
+        </ClientProvider>
+      </TestErrorBoundary>,
+    );
+    await waitFor(() => expect(screen.queryByText('Hello World')).not.toBeNull());
+
+    act(() => fatalErrorUpdate.emit(failure));
+    await waitFor(() => expect(caught).toBe(failure));
+    expect(screen.queryByText('Hello World')).toBeNull();
   });
 });
