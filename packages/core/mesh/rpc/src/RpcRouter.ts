@@ -126,8 +126,9 @@ export const make: Effect.Effect<Service, never, RpcServer.Protocol | Scope.Scop
   // A request no route claims still gets a properly encoded "unknown tag" defect: an empty group's
   // server produces it without the router hand-rolling the wire format.
   const fallback: Route = { prefix: '', write: () => Effect.void, disconnects: yield* Queue.make<number>() };
+  const fallbackProtocol = yield* makeChildProtocol(fallback);
   yield* RpcServer.make(RpcGroup.make(), { disableTracing: true }).pipe(
-    Effect.provideServiceEffect(RpcServer.Protocol, makeChildProtocol(fallback)),
+    Effect.provideService(RpcServer.Protocol, fallbackProtocol),
     Effect.forkScoped,
   );
 
@@ -176,6 +177,9 @@ export const make: Effect.Effect<Service, never, RpcServer.Protocol | Scope.Scop
       Effect.gen(function* () {
         invariant(!routes.has(prefix), `rpc router: prefix already served: '${prefix}'`);
         const route: Route = { prefix, write: () => Effect.void, disconnects: yield* Queue.make<number>() };
+        // Build the protocol before the route is visible: its writer buffers until the server runs,
+        // whereas the placeholder above would drop a request that arrives first.
+        const protocol = yield* makeChildProtocol(route);
         routes.set(prefix, route);
         yield* Effect.addFinalizer(() =>
           Effect.sync(() => {
@@ -193,7 +197,7 @@ export const make: Effect.Effect<Service, never, RpcServer.Protocol | Scope.Scop
         // interrupts its in-flight requests and removes the route.
         const serverScope = yield* Scope.fork(yield* Effect.scope, 'sequential');
         yield* RpcServer.make(group, options).pipe(
-          Effect.provideServiceEffect(RpcServer.Protocol, makeChildProtocol(route)),
+          Effect.provideService(RpcServer.Protocol, protocol),
           Effect.provideService(Scope.Scope, serverScope),
           Effect.forkIn(serverScope),
         );
