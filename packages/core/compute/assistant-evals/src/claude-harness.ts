@@ -13,7 +13,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { Stream, asyncTimeout } from '@dxos/async';
+import { Stream, asyncTimeout, sleep } from '@dxos/async';
 import { type Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
@@ -34,7 +34,11 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { requirePublicKey } from '@dxos/protocols/buf';
-import { EdgeStatus_ConnectionState, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  EdgeStatus_ConnectionState,
+  type Identity,
+  QueryAgentStatusResponse_AgentStatus,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
@@ -193,6 +197,60 @@ const assertEdgeConnected = async (client: Client): Promise<void> => {
   );
 };
 
+/** How long the account bind may take to become readable by EDGE's agent service. */
+const ACCOUNT_VISIBILITY_TIMEOUT = 90_000;
+
+/** How long the agent may take to report itself active once created. */
+const AGENT_ACTIVE_TIMEOUT = 60_000;
+
+/**
+ * Registers the identity's EDGE agent, which is what the deployed worker serves through: it resolves
+ * a token's HALO space and spaces from the agent registry, so an identity without one is refused.
+ *
+ * The bind writes the account through hub and the agent service reads it back through another
+ * worker, so the first attempt can still miss with `not associated with an account`. Retrying that
+ * one condition is waiting for a write already known to have succeeded; anything else propagates.
+ */
+const createEdgeAgent = async (client: Client): Promise<void> => {
+  const service = client.services.services.EdgeAgentService;
+  if (service == null) {
+    throw new Error('The harness client exposes no EdgeAgentService; `runtime.client.edgeFeatures` is not configured.');
+  }
+  const deadline = Date.now() + ACCOUNT_VISIBILITY_TIMEOUT;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await service.createAgent(undefined, { timeout: 30_000 });
+      break;
+    } catch (err) {
+      const unbound = err instanceof Error && /not associated with an account/i.test(err.message);
+      if (!unbound || Date.now() > deadline) {
+        throw err;
+      }
+      await sleep(2_000);
+    }
+  }
+  const status = service.queryAgentStatus();
+  const active = new Promise<void>((resolve, reject) => {
+    status.subscribe(
+      (response) => {
+        if (response.status === QueryAgentStatusResponse_AgentStatus.ACTIVE) {
+          resolve();
+        }
+      },
+      (error) => (error ? reject(error) : undefined),
+    );
+  });
+  try {
+    await asyncTimeout(
+      active,
+      AGENT_ACTIVE_TIMEOUT,
+      new Error(`The identity's EDGE agent did not report active within ${AGENT_ACTIVE_TIMEOUT}ms.`),
+    );
+  } finally {
+    await status.close();
+  }
+};
+
 /** Whether this process and the EDGE peer hold the same documents at the same heads. */
 const inSyncWithEdge = async (space: Space): Promise<boolean> => {
   const { peers } = await space.db.getAutomergeSyncState();
@@ -266,6 +324,7 @@ const replicateToEdge = async (
 ): Promise<Space> => {
   await bindTestAccount(edgeUrl, identity);
   await assertEdgeConnected(client);
+  await createEdgeAgent(client);
   const space = client.spaces.get(spaceId);
   if (space == null) {
     throw new Error(`Space ${spaceId} is not open in the harness client.`);
