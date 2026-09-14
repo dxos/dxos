@@ -3,9 +3,12 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -28,7 +31,7 @@ import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } fro
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
-import { ObjectCard, ProjectPipeline, useProjectChats } from '#components';
+import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
@@ -62,7 +65,8 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [tab, setTab] = useState<Tab>('overview');
-  const { invokePromise } = useOperationInvoker();
+  const invoker = useOperationInvoker();
+  const { invokePromise } = invoker;
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // The pipeline reads the space's trace feed, which is addressed by space rather than database.
@@ -108,19 +112,31 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
   const handleDelegated = useCallback(() => clearChecked(), [clearChecked]);
 
-  // A session starting is what the chart is for, so a chat newly filed under the project — from the
-  // toolbar, a row's menu, or the agent — brings the pipeline into view. Compared against the count
-  // at mount rather than shown whenever chats exist, so a project with a history of sessions opens
-  // on its ledger and the reader still decides when to look.
-  const chats = useProjectChats(space, subject);
-  const seenChats = useRef(chats.length);
+  // A session starting is what the chart is for, so a delegation run from this app — the toolbar or
+  // a row's menu — brings the pipeline into view. Read off the invoker's own events rather than
+  // inferred from the chat query, which also emits as a project's history hydrates and would open
+  // the chart on every project that has ever had a session.
   useEffect(() => {
-    if (chats.length > seenChats.current) {
-      setTab('tasks');
-      setShowPipeline(true);
-    }
-    seenChats.current = chats.length;
-  }, [chats.length]);
+    const fiber = Effect.runFork(
+      Stream.fromPubSub(invoker.invocations).pipe(
+        Stream.filter(
+          (event) => event.operation.meta.key.toString() === ProjectOperation.DelegateTaskToChat.meta.key.toString(),
+        ),
+        Stream.runForEach((event) =>
+          Effect.sync(() => {
+            const chat: unknown = event.output?.chat;
+            if (Obj.instanceOf(Chat.Chat, chat) && Chat.peekProject(chat)?.id === subject.id) {
+              setTab('tasks');
+              setShowPipeline(true);
+            }
+          }),
+        ),
+      ),
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+  }, [invoker, subject.id]);
 
   const menuActions = useToolbarActions({
     project: subject,
