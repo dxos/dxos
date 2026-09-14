@@ -287,6 +287,7 @@ document round trips per call). Both are operation-service / db-service work, ne
 | 3   | 57%   | **0 / 35**             | after the db-service redeploy; `tasks-listed` passes  |
 | 4   | 86%   | 0 / 35                 | Fix 4: `tool-latency` and `follow-up-turn-wrote` pass |
 | 5   | 86%   | 0 / 35                 | Fix 5: **every correctness scorer passes**            |
+| 6   | 100%  | 0 / 35                 | same code, warm DOs: **every scorer passes**          |
 
 Client-observed latency per run (p50 ms; `*` is every invokeOperation sample):
 
@@ -295,10 +296,13 @@ Client-observed latency per run (p50 ms; `*` is every invokeOperation sample):
 | 3   | 14229   | 1563            | 1530      | 4592 / 7999                   |
 | 4   | 1293    | 62              | 46        | 2059 / 2637                   |
 | 5   | 4333    | 58              | 42        | 3360 / 4450                   |
+| 6   | 3884    | 69              | 49        | 2129 / 2621                   |
 
 Run 5 ran minutes after the db-service redeploy, which resets every Durable Object, so its
 invocations paid cold loads; its `tool-latency` miss (budget 3000ms p95) is that, not a regression
-in the path — the tool-side numbers (58 / 42ms) are unchanged from run 4.
+in the path — the tool-side numbers (58 / 42ms) are unchanged from run 4. Run 6, the same deployed
+code with the Durable Objects warm, confirms it: invokeOperation p50 2129 / p95 2621ms, zero errors,
+and `tool-latency` passes — 7/7 scorers, the first fully green dev run.
 
 ### Fix 5 — a server-side write reaches a live client at once
 
