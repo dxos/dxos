@@ -6,7 +6,7 @@ import { composeStories } from '@storybook/react-vite';
 import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import * as stories from '../Form.stories';
+import * as stories from '../Form.stories.tsx';
 
 const { Default } = composeStories(stories);
 

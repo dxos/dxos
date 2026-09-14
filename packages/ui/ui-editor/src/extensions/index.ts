@@ -14,4 +14,5 @@ export * from './review/index.ts';
 export * from './state/index.ts';
 export * from './streaming/index.ts';
 export * from './structure/index.ts';
+export * from './walkthrough/index.ts';
 export * from './widgets/index.ts';

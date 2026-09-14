@@ -3,10 +3,10 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
 
-import { Event, Trigger, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldToEventLoop } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -15,9 +15,24 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { DocHandleProxy } from './doc-handle-proxy.ts';
+import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
+
+/**
+ * Longest synchronous run of host-update integration before the event loop gets a turn. A first sync
+ * hands the client hundreds of full documents per batch, and loading each one is Automerge work that
+ * would otherwise block input for the whole batch.
+ */
+const INTEGRATE_SLICE_MS = 8;
+
+/**
+ * Batch size from which its documents are integrated as a bulk delivery, whose downstream fan-out
+ * (query re-evaluation, index hydration) is coalesced rather than run per slice. Smaller batches are
+ * the steady state — a peer's edit, the echo of a local write — and stay immediate.
+ */
+const BULK_BATCH_DOCUMENTS = 32;
 
 /**
  * Passes {@link RepoProxy.flush} makes before reporting a batch as unsendable. A failed
@@ -113,6 +128,14 @@ export class RepoProxy extends Resource {
   /** Documents that failed to integrate an update, until their handle rebuilds from the host copy. */
   private readonly _rebuildIds = new Set<string>();
 
+  /** Subscriptions opened so far; each host update carries the one that delivered it. */
+  #subscriptions = 0;
+
+  /** Host updates not yet integrated, in arrival order; drained in {@link INTEGRATE_SLICE_MS} slices. */
+  #inbox: { update: DataService.DocumentUpdate; bulk: boolean; subscription: number }[] = [];
+  #inboxHead = 0;
+  #draining = false;
+
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
 
   constructor(
@@ -172,7 +195,7 @@ export class RepoProxy extends Resource {
       throw new TypeError(`Invalid documentId ${id}`);
     }
 
-    const documentId = interpretAsDocumentId(id);
+    const documentId = toDocumentId(id);
     return this._getOrLoadHandle<T>({ documentId });
   }
 
@@ -294,11 +317,12 @@ export class RepoProxy extends Resource {
     // old trigger holds the scheduler until its RPC timeout.
     this._subscriptionReady.wake();
     this._subscriptionReady.reset();
+    const subscription = ++this.#subscriptions;
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
       this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
       {
-        onData: (updates) => this._receiveUpdate(updates),
+        onData: (updates) => this._receiveUpdate(updates, subscription),
         onError: (error) => this._onSubscriptionDropped(error),
         onClose: () => this._onSubscriptionDropped(),
       },
@@ -491,7 +515,8 @@ export class RepoProxy extends Resource {
     }
   }
 
-  private _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
+  /** @internal */
+  _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates, subscription = this.#subscriptions): void {
     // The host opens every subscription with an empty batch once it is registered; a real update
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
@@ -504,55 +529,89 @@ export class RepoProxy extends Resource {
       return;
     }
 
-    let integrationError: Error | undefined;
+    const bulk = updates.length >= BULK_BATCH_DOCUMENTS;
     for (const update of updates) {
-      const { documentId, mutation, requesting } = update;
-      const handle = this._handles[documentId];
-      if (!handle) {
-        log.warn('Received update for unknown document', { documentId });
-        continue;
-      }
+      this.#inbox.push({ update, bulk, subscription });
+    }
+    void this.#drainInbox();
+  }
 
-      // Disk-probe-negative signal from the worker. Mutually exclusive with
-      // `mutation` in practice — the worker sends a transition-only update
-      // first (`requesting: true`, no bytes) and then a regular mutation
-      // update once the network delivers.
-      if (requesting) {
-        handle._markRequesting();
-      }
-
-      if (mutation) {
-        try {
-          if (handle._isAwaitingRebuild()) {
-            // Until the replacement subscription is in place, updates are increments from the old one.
-            if (this._isReconnecting) {
-              continue;
-            }
-            handle._rebuild(mutation);
-          } else {
-            handle._integrateHostUpdate(mutation);
-          }
-        } catch (error) {
-          // A throw from outside the document, such as a change listener, is not recovered by replacing it.
-          if (!handle._isAwaitingRebuild()) {
-            throw error;
-          }
-          log.error('document could not integrate a host update; rebuilding it from the host copy', {
-            documentId,
-            error,
-          });
-          this._rebuildIds.add(documentId);
-          integrationError ??= error instanceof Error ? error : new Error(String(error));
+  /**
+   * Integrates queued updates in arrival order, yielding between slices so the batch's size sets how
+   * long the work takes, not how long the thread is blocked. The first slice runs synchronously.
+   */
+  async #drainInbox(): Promise<void> {
+    if (this.#draining) {
+      return;
+    }
+    this.#draining = true;
+    try {
+      while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
+        const started = performance.now();
+        do {
+          const { update, bulk, subscription } = this.#inbox[this.#inboxHead++];
+          this.#integrate(update, bulk, subscription);
+        } while (this.#inboxHead < this.#inbox.length && performance.now() - started < INTEGRATE_SLICE_MS);
+        if (this.#inboxHead < this.#inbox.length) {
+          await yieldToEventLoop();
         }
       }
+      if (!this._isRebuildPending()) {
+        this._resubscribeAttempts = 0;
+      }
+    } finally {
+      this.#inbox = [];
+      this.#inboxHead = 0;
+      this.#draining = false;
+    }
+  }
+
+  #integrate(
+    { documentId, mutation, requesting }: DataService.DocumentUpdate,
+    bulk: boolean,
+    subscription: number,
+  ): void {
+    const handle = this._handles[documentId];
+    if (!handle) {
+      log.warn('Received update for unknown document', { documentId });
+      return;
     }
 
-    if (integrationError) {
-      // A replacement subscription starts the host from scratch, so its first update for each document
-      // is the full copy a marked handle rebuilds from.
-      this._onSubscriptionDropped(integrationError);
-    } else if (!this._isRebuildPending()) {
-      this._resubscribeAttempts = 0;
+    // Disk-probe-negative signal from the worker. Mutually exclusive with
+    // `mutation` in practice — the worker sends a transition-only update
+    // first (`requesting: true`, no bytes) and then a regular mutation
+    // update once the network delivers.
+    if (requesting) {
+      handle._markRequesting();
+    }
+
+    if (mutation) {
+      try {
+        if (handle._isAwaitingRebuild()) {
+          // Only the replacement subscription's first update is a full copy; the old one's are increments.
+          if (this._isReconnecting || subscription !== this.#subscriptions) {
+            return;
+          }
+          handle._rebuild(mutation);
+        } else {
+          handle._integrateHostUpdate(mutation, { bulk });
+        }
+      } catch (err) {
+        // A throw from outside the document, such as a change listener, is not recovered by replacing it,
+        // and must not strand the updates queued behind it.
+        if (!handle._isAwaitingRebuild()) {
+          log.catch(err, { documentId });
+          return;
+        }
+        log.error('document could not integrate a host update; rebuilding it from the host copy', {
+          documentId,
+          error: err,
+        });
+        this._rebuildIds.add(documentId);
+        // A replacement subscription starts the host from scratch, so its first update for each document
+        // is the full copy a marked handle rebuilds from.
+        this._onSubscriptionDropped(err instanceof Error ? err : new Error(String(err)));
+      }
     }
   }
 

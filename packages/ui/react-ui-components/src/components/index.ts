@@ -3,6 +3,7 @@
 //
 
 export * from './AnimatedBorder/index.ts';
+export * from './Gantt/index.ts';
 export * from './HtmlViewer/index.ts';
 export * from './Matrix/index.ts';
 export * from './NumericTabs/index.ts';

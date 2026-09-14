@@ -12,7 +12,7 @@ import { RemoteSession } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { RemoteSessionCard } from './RemoteSessionCard';
+import { RemoteSessionCard } from './RemoteSessionCard.tsx';
 
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 

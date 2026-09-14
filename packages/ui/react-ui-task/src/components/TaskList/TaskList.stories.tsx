@@ -104,7 +104,7 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
     const task = Task.make({
       title: `Task ${path.join('.')} — ${random.lorem.words(random.number.int({ min: 2, max: 5 }))}`,
       status: statuses[(path.length + path[path.length - 1]) % statuses.length],
-      description: when(path[path.length - 1] === 2, () => random.lorem.sentence()),
+      description: when(path[path.length - 1] === 2, () => random.lorem.paragraph()),
       estimate: when(path.length === depth, () => random.helpers.arrayElement([...Task.Estimate.literals])),
       ...(parent && { parentTask: Ref.make(parent) }),
     });
@@ -460,6 +460,41 @@ export const TestAgentSpinner: Story = {
         .map((row) => row.querySelector('span.truncate')?.textContent ?? '');
 
     await waitFor(async () => expect(spinning()).toEqual(['Draft launch email']), { timeout: 10_000 });
+  },
+};
+
+/**
+ * A long artifact tag takes at most half the row: the chips cell scrolls what does not fit and the
+ * title truncates instead of collapsing to nothing.
+ */
+export const TestLongArtifactTag: Story = {
+  args: {
+    showGroupLabels: false,
+    seed: () => [
+      Task.make({
+        title: 'Finish the third-party DNS delegation that has blocked ACME automation',
+        status: 'started',
+        assignee: { role: 'assistant' },
+        artifacts: [Ref.make(Task.make({ title: 'Certificate renewal automation — implementation plan' }))],
+      }),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(
+      async () => {
+        const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+        await expect(row).toBeTruthy();
+        return row!;
+      },
+      { timeout: 10_000 },
+    );
+    const title = row.querySelector<HTMLElement>('span.truncate')!;
+    const chips = row.querySelector<HTMLElement>('.col-\\[chips\\]')!;
+    await waitFor(async () => {
+      await expect(chips.getBoundingClientRect().width).toBeLessThanOrEqual(row.getBoundingClientRect().width / 2);
+      await expect(chips.scrollWidth).toBeGreaterThan(chips.clientWidth);
+      await expect(title.getBoundingClientRect().width).toBeGreaterThan(0);
+    });
   },
 };
 

@@ -17,6 +17,7 @@ import { trim } from '@dxos/util';
 import { findObject } from '../assertions.ts';
 import { judge } from '../judge.ts';
 import { createEvalRunner } from '../runner.ts';
+import * as Scorer from '../Scorer.ts';
 
 // Ported from the gated `CRM Mailbox` scenario (../testing/crm-mailbox.test.ts).
 // Grades the DB effect directly instead of the agent's self-reported `completedCriteria`. Existence
@@ -65,6 +66,75 @@ const SEED_EMAIL_INPUT = {
   created: '2026-06-26T12:00:00.000Z',
 };
 
+const PERSON_NAME = 'Vishal Sharma';
+const ORGANIZATION_NAME = 'SigNoz';
+
+const person = Scorer.shared(findObject(Person.Person, (candidate) => candidate.fullName === PERSON_NAME));
+const organization = Scorer.shared(
+  findObject(Organization.Organization, (candidate) => candidate.name === ORGANIZATION_NAME),
+);
+const employerRelation = Scorer.shared(
+  findObject(Employer.Employer, (relation) => {
+    const source = Relation.getSource(relation);
+    const target = Relation.getTarget(relation);
+    return source?.fullName === PERSON_NAME && target?.name === ORGANIZATION_NAME;
+  }),
+);
+const summaryProfile = Scorer.shared(
+  findObject(ProfileOf.ProfileOf, (relation) => {
+    const target = Relation.getTarget(relation);
+    return Obj.instanceOf(Organization.Organization, target) && target.name === ORGANIZATION_NAME;
+  }),
+);
+
+/** The judge's verdict on whether the records the run created match the email it worked from. */
+const accuracyVerdict = Scorer.shared(
+  Effect.gen(function* () {
+    const foundPerson = yield* person;
+    const foundOrganization = yield* organization;
+    const foundRelation = yield* employerRelation;
+    const createdRecords = {
+      person: foundPerson ? { fullName: foundPerson.fullName } : null,
+      organization: foundOrganization ? { name: foundOrganization.name } : null,
+      employerRole: foundRelation?.role ?? null,
+    };
+    return yield* judge(ACCURACY_JUDGE_RUBRIC, JSON.stringify({ sourceEmail: SEED_EMAIL_INPUT, createdRecords }));
+  }),
+);
+
+const SCORERS = [
+  Scorer.make({
+    name: 'person-created',
+    description: `A Person object for ${PERSON_NAME} exists in the database.`,
+    score: person.pipe(Effect.map((person) => !!person)),
+  }),
+  Scorer.make({
+    name: 'organization-created',
+    description: `An Organization object named ${ORGANIZATION_NAME} exists in the database.`,
+    score: organization.pipe(Effect.map((organization) => !!organization)),
+  }),
+  Scorer.make({
+    name: 'employer-relation-created',
+    description: `An Employer relation between ${PERSON_NAME} and ${ORGANIZATION_NAME} exists.`,
+    score: employerRelation.pipe(Effect.map((relation) => !!relation)),
+  }),
+  Scorer.make({
+    name: 'employer-role-correct',
+    description: 'The Employer relation\'s role is "Founding Engineer", stored as a proper schema field.',
+    score: employerRelation.pipe(Effect.map((relation) => relation?.role === 'Founding Engineer')),
+  }),
+  Scorer.make({
+    name: 'summary-document-linked',
+    description: `A Profile Document is linked to the ${ORGANIZATION_NAME} Organization via a ProfileOf relation.`,
+    score: summaryProfile.pipe(Effect.map((profile) => !!profile)),
+  }),
+  Scorer.make({
+    name: 'crm-data-accurate',
+    description: 'An LLM judge confirms the CRM records accurately reflect the source email (not just present).',
+    score: accuracyVerdict.pipe(Effect.map((verdict) => verdict.pass)),
+  }),
+];
+
 const task = createEvalRunner({
   instructions: trim`
     The database starts empty.
@@ -88,82 +158,13 @@ const task = createEvalRunner({
   // Research (web search) + CRM + markdown tool calls chain across several turns; ~95s alone, and
   // the nightly runs it beside the hour-long scenarios.
   timeout: 300_000,
-  dbQuery: () =>
-    Effect.gen(function* () {
-      const person = yield* findObject(Person.Person, (p) => p.fullName === 'Vishal Sharma');
-      const organization = yield* findObject(Organization.Organization, (o) => o.name === 'SigNoz');
-      const employerRelation = yield* findObject(Employer.Employer, (rel) => {
-        const source = Relation.getSource(rel);
-        const target = Relation.getTarget(rel);
-        return source?.fullName === 'Vishal Sharma' && target?.name === 'SigNoz';
-      });
-      const isOrganization = Obj.instanceOf(Organization.Organization);
-      const summaryProfile = yield* findObject(ProfileOf.ProfileOf, (rel) => {
-        const target = Relation.getTarget(rel);
-        return isOrganization(target) && target.name === 'SigNoz';
-      });
-
-      const accuracyVerdict = yield* judge(
-        ACCURACY_JUDGE_RUBRIC,
-        JSON.stringify({
-          sourceEmail: SEED_EMAIL_INPUT,
-          createdRecords: {
-            person: person ? { fullName: person.fullName } : null,
-            organization: organization ? { name: organization.name } : null,
-            employerRole: employerRelation?.role ?? null,
-          },
-        }),
-      );
-
-      return {
-        personExists: !!person,
-        organizationExists: !!organization,
-        employerRelationExists: !!employerRelation,
-        employerRoleCorrect: employerRelation?.role === 'Founding Engineer',
-        summaryDocumentLinked: !!summaryProfile,
-        accuracyVerdict,
-      };
-    }),
+  scored: true,
 });
 
 evalite('CRM Mailbox — processes a mailbox email into CRM profiles and employer relation', {
   data: [{ input: null }],
   task,
-  scorers: [
-    {
-      name: 'person-created',
-      description: 'A Person object for Vishal Sharma exists in the database.',
-      scorer: ({ output }) => (output.dbQuery.personExists ? 1 : 0),
-    },
-    {
-      name: 'organization-created',
-      description: 'An Organization object named SigNoz exists in the database.',
-      scorer: ({ output }) => (output.dbQuery.organizationExists ? 1 : 0),
-    },
-    {
-      name: 'employer-relation-created',
-      description: 'An Employer relation between Vishal Sharma and SigNoz exists.',
-      scorer: ({ output }) => (output.dbQuery.employerRelationExists ? 1 : 0),
-    },
-    {
-      name: 'employer-role-correct',
-      description: 'The Employer relation\'s role is "Founding Engineer", stored as a proper schema field.',
-      scorer: ({ output }) => (output.dbQuery.employerRoleCorrect ? 1 : 0),
-    },
-    {
-      name: 'summary-document-linked',
-      description: 'A Profile Document is linked to the SigNoz Organization via a ProfileOf relation.',
-      scorer: ({ output }) => (output.dbQuery.summaryDocumentLinked ? 1 : 0),
-    },
-    {
-      name: 'crm-data-accurate',
-      description: 'An LLM judge confirms the CRM records accurately reflect the source email (not just present).',
-      scorer: ({ output }) => ({
-        score: output.dbQuery.accuracyVerdict.pass ? 1 : 0,
-        metadata: { reasoning: output.dbQuery.accuracyVerdict.reasoning },
-      }),
-    },
-  ],
+  scorers: Scorer.toEvalite(SCORERS),
 });
 
 // A judge that only ever passes would be worthless as a scorer — this demonstrates it correctly

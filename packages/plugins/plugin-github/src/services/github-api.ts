@@ -25,6 +25,8 @@ type GitHubCredentialsValue = {
 };
 
 const ACCEPT = 'application/vnd.github+json';
+/** Serves a pull request as the unified diff git would produce, rather than as JSON. */
+const DIFF_ACCEPT = 'application/vnd.github.v3.diff';
 const API_VERSION = '2022-11-28';
 const USER_AGENT = '@dxos/plugin-github';
 
@@ -128,8 +130,10 @@ const GitHubPullSchema = Schema.Struct({
   labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),
   additions: Schema.Number.pipe(Schema.optional),
   deletions: Schema.Number.pipe(Schema.optional),
-  base: Schema.Struct({ ref: Schema.String }).pipe(Schema.optional),
-  head: Schema.Struct({ ref: Schema.String }).pipe(Schema.optional),
+  // `sha` pins the commit a derived artefact (a generated walkthrough) describes; `ref` is a branch
+  // name and moves under it.
+  base: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+  head: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
 });
 export type GitHubPull = Schema.Schema.Type<typeof GitHubPullSchema>;
 
@@ -220,10 +224,10 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError
 };
 
 /** Anonymous when the token is empty: a bare `Bearer` header is rejected where no header is rate-limited. */
-const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue) =>
+const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue, accept = ACCEPT) =>
   req.pipe(
     (req) => (creds.token ? HttpClientRequest.setHeader(req, 'Authorization', `Bearer ${creds.token}`) : req),
-    HttpClientRequest.setHeader('Accept', ACCEPT),
+    HttpClientRequest.setHeader('Accept', accept),
     HttpClientRequest.setHeader('X-GitHub-Api-Version', API_VERSION),
     HttpClientRequest.setHeader('User-Agent', USER_AGENT),
   );
@@ -250,6 +254,33 @@ const githubRequest = <T>(build: () => HttpClientRequest.HttpClientRequest, sche
     return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
+        while: shouldRetry,
+      }),
+      Effect.scoped,
+    );
+  });
+
+/**
+ * Fetch a response GitHub serves as text rather than JSON — the `diff` media type, which has no
+ * schema to decode against.
+ *
+ * The timeout is longer than `githubRequest`'s because a diff is the whole change rather than a
+ * summary of it. GitHub answers 406 rather than truncating when a pull request exceeds its own
+ * limits (roughly 300 files or 20k lines), which `filterStatusOk` surfaces as a typed failure.
+ */
+const githubText = (build: () => HttpClientRequest.HttpClientRequest, accept: string): GitHubEffect<string> =>
+  Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
+    const httpClient = yield* HttpClient.HttpClient;
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+      HttpClient.filterStatusOk,
+    );
+    return yield* clientNoTracer.execute(withAuth(build(), creds, accept)).pipe(
+      Effect.flatMap((res) => res.text),
+      Effect.timeout('60 seconds'),
       Effect.retry({
         schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
@@ -425,6 +456,19 @@ export const fetchPullRequest = (owner: string, repo: string, number: number): G
         `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}`,
       ),
     GitHubPullSchema,
+  );
+
+/**
+ * GET /repos/{owner}/{repo}/pulls/{number} as a unified diff — the same bytes `git diff` would
+ * produce, which is what a generated walkthrough splices its chunks from.
+ */
+export const fetchPullRequestDiff = (owner: string, repo: string, number: number): GitHubEffect<string> =>
+  githubText(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}`,
+      ),
+    DIFF_ACCEPT,
   );
 
 /**

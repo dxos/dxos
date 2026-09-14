@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './RemoteSessionCard';
-export { RemoteSessionCard as default } from './RemoteSessionCard';
+export * from './RemoteSessionCard.tsx';
+export { RemoteSessionCard as default } from './RemoteSessionCard.tsx';
