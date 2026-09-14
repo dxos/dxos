@@ -43,9 +43,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/lock-file"
-    },
-    {
       "path": "../../common/log"
     },
     {
