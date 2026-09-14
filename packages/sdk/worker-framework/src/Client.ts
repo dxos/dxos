@@ -175,7 +175,8 @@ export class Connection extends Resource {
 
   readonly #initialConnection = new Trigger<void>();
   #isInitialConnection = true;
-  // Last error the connect task failed with, surfaced by `_open` in place of the bare timeout.
+  // Last error the connect task failed with, surfaced by `_open` in place of the bare timeout; held until a
+  // connection is established.
   #lastConnectError: unknown;
   #lastLeaderError: unknown;
   #leaderPhase: LeaderPhase = 'idle';
@@ -245,12 +246,13 @@ export class Connection extends Resource {
     // One full attempt: wait out the port exchange, then open the connection handle. Derived from
     // `portTimeout` so a caller that widens the port wait widens the boot budget with it.
     const openTimeout = this.#leaderPortTimeout + LOCK_OR_RPC_WAIT_TIMEOUT;
-    await asyncTimeout(
-      this.#initialConnection.wait(),
-      openTimeout,
-      lockOrRpcTimeoutError('establishing initial worker connection', openTimeout),
-    ).catch((error) => {
-      throw withContext(this.#lastConnectError ?? this.#lastLeaderError ?? error, this.#diagnostics);
+    const timeoutError = lockOrRpcTimeoutError('establishing initial worker connection', openTimeout);
+    await asyncTimeout(this.#initialConnection.wait(), openTimeout, timeoutError).catch((error) => {
+      // Only an expired budget reports the failure it outlasted; a rejected connection carries its own cause.
+      throw withContext(
+        error === timeoutError ? (this.#lastConnectError ?? this.#lastLeaderError ?? error) : error,
+        this.#diagnostics,
+      );
     });
     log('worker-connection: initial connection established');
   }
@@ -360,11 +362,27 @@ export class Connection extends Resource {
         if (ctx.disposed) {
           return;
         }
-        if (isAbortError(error)) {
+        // Checked before the steal branch: the worker's error keeps its name, which can be `AbortError`.
+        const startFailure = session?.startFailure;
+        if (!startFailure && isAbortError(error)) {
           // Our exclusive lock was stolen by another tab that judged this leader stale. The lock
           // callback keeps running per spec, so tear down our leader session and re-enter election.
           log.warn('worker-connection: leader lock stolen, tearing down and re-watching', { clientId: this.#clientId });
           this.#watchLeader(ctx);
+          return;
+        }
+        if (startFailure && this.#isInitialConnection) {
+          // A runtime that failed to start ends the initial connection with its error instead of respawning.
+          this.#leaderFailureCount++;
+          this.#leaderPhase = 'session-failed';
+          this.#lastLeaderError = startFailure;
+          log.warn('worker-connection: worker runtime failed to start', {
+            clientId: this.#clientId,
+            error: startFailure,
+          });
+          // A connection whose open failed is never closed, so it stops its own connect task and listeners.
+          await ctx.dispose();
+          this.#initialConnection.throw(startFailure);
           return;
         }
         // The leader session itself failed (e.g. worker init/crash). The lock is released once this
@@ -470,7 +488,6 @@ export class Connection extends Resource {
       const { clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner } = result;
       log('worker-connection: connected to worker', { leaderId, isOwner });
       this.#connectPhase = 'port-received';
-      this.#lastConnectError = undefined;
       // A port proves the coordinator link works, so the steal budget below is about the incumbent
       // rather than this tab.
       this.#stealCount = 0;
@@ -501,6 +518,7 @@ export class Connection extends Resource {
         'opening worker connection handle',
       );
       this.#connectPhase = 'connected';
+      this.#lastConnectError = undefined;
 
       if (this.#isInitialConnection) {
         performance.mark('worker-connection:session-ready');
@@ -603,6 +621,7 @@ class LeaderSession extends Resource {
 
   #worker!: WorkerProtocol.WorkerOrPort;
   #livenessLockKey!: string;
+  #startFailure: Error | undefined;
 
   constructor(
     createWorker: () => WorkerProtocol.WorkerOrPort,
@@ -619,6 +638,11 @@ class LeaderSession extends Resource {
 
   readonly onClose = new Event<Error | undefined>();
 
+  /** The error the worker reported when its runtime failed to start. */
+  get startFailure(): Error | undefined {
+    return this.#startFailure;
+  }
+
   protected override async _open(_ctx: Context): Promise<void> {
     log('leader-session: creating worker');
     this.#worker = this.#createWorker();
@@ -632,6 +656,10 @@ class LeaderSession extends Resource {
           break;
         case 'ready':
           ready.wake(event.data);
+          break;
+        case 'init-failed':
+          this.#startFailure = WorkerProtocol.decodeError(event.data.error);
+          ready.throw(this.#startFailure);
           break;
         case 'session':
           this.#coordinator.sendMessage({
