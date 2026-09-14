@@ -13,15 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#locks-platform": {
-      "source": {
-        "browser": "./src/packlets/locks/browser.ts",
-        "default": "./src/packlets/locks/node.ts"
-      },
-      "types": "./dist/types/src/packlets/locks/node.d.ts",
-      "browser": "./dist/lib/packlets/locks/browser.mjs",
-      "default": "./dist/lib/packlets/locks/node.mjs"
-    },
     "#diagnostics-broadcast": {
       "source": {
         "browser": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
