@@ -517,7 +517,9 @@ export class ClientServicesHost {
           ...this.#runtimeProps,
           edgeFeatures: config.get('runtime.client.edgeFeatures'),
           edgeConnection: this.#edgeConnection,
-          edgeHttpClient: this.#edgeHttpClient,
+          // The host's own client wins; the runtime prop is the fallback for a host configured with
+          // no edge endpoint, which is every test host.
+          edgeHttpClient: this.#edgeHttpClient ?? this.#runtimeProps.edgeHttpClient,
         }),
       ),
       Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
