@@ -4226,10 +4226,16 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../../sdk/app-toolkit
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../mesh/edge-client
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
     devDependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
@@ -4242,6 +4248,12 @@ importers:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../assistant-toolkit
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
@@ -4251,12 +4263,18 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../../sdk/config
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../../halo/credentials
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../echo/echo-client
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../echo/echo-protocol
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -4311,6 +4329,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../../plugins/plugin-testing
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../../ui/react-ui-table
