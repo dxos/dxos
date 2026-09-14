@@ -22,6 +22,7 @@ export const DeckOperationHandlerSet = OperationHandlerSet.lazy([
   LayoutOperation.UpdateCompanion.pipe(Operation.lazyHandler(() => import('./update-companion.ts'))),
   LayoutOperation.UpdateComplementary.pipe(Operation.lazyHandler(() => import('./update-complementary.ts'))),
   LayoutOperation.UpdateDialog.pipe(Operation.lazyHandler(() => import('./update-dialog.ts'))),
+  LayoutOperation.UpdateDrawer.pipe(Operation.lazyHandler(() => import('./update-drawer.ts'))),
   DeckOperation.UpdatePlankSize.pipe(Operation.lazyHandler(() => import('./update-plank-size.ts'))),
   DeckOperation.UpdatePlankSizes.pipe(Operation.lazyHandler(() => import('./update-plank-sizes.ts'))),
   LayoutOperation.UpdatePopover.pipe(Operation.lazyHandler(() => import('./update-popover.ts'))),

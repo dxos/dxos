@@ -209,15 +209,15 @@ const ScrollToBottom = () => {
 
   return (
     <IconButton
-      icon='ph--arrow-down--regular'
-      iconOnly
-      label={t('scroll-to-bottom.label')}
       variant='primary'
-      size={4}
+      icon='ph--arrow-line-down--regular'
+      iconOnly
+      density='sm'
+      label={t('scroll-to-bottom.label')}
       disabled={atEnd}
       aria-hidden={atEnd}
       classNames={[
-        'absolute bottom-2 right-4 z-10 transition-opacity duration-300',
+        'absolute bottom-2 left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300',
         atEnd && 'opacity-0 pointer-events-none',
       ]}
       data-testid='assistant.thread.scroll-to-bottom'
