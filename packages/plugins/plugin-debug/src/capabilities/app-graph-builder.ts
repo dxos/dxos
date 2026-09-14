@@ -24,6 +24,8 @@ export default Capability.makeModule(
       // Top-level Debug node (sibling of DevTools under SYSTEM); only present when a space is active.
       AppGraphBuilder.createExtension({
         id: 'debug',
+        // The pages hang off the container node; the container itself is not addressable.
+        url: { key: 'debug', kind: 'item', path: [GraphPath.GroupSegments.system, DebugNodes.nodeId(DebugNodes.id)] },
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
         connector: (space: Space) =>
           Effect.succeed([
