@@ -2,10 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { TimeoutError } from '@dxos/async';
+import { TimeoutError, Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 
+import { TestBuilder } from '../testing/index.ts';
 import { Client } from './client.ts';
 
 describe('Client.waitUntilInitialized', () => {
@@ -62,6 +67,40 @@ describe('Client.waitUntilInitialized', () => {
     await client.destroy();
     await client.initialize();
     await expect(client.waitUntilInitialized({ timeout: 100 })).resolves.toBeUndefined();
+    await client.destroy();
+  });
+});
+
+describe('Client.fatalError', () => {
+  test('a status stream failure after open is fatal, destroying the client is not', async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    const closing = new Client({ services: testBuilder.createLocalClientServices() });
+    await closing.initialize();
+    await closing.destroy();
+    expect(closing.fatalError.get()).toBeNull();
+
+    const services = testBuilder.createLocalClientServices();
+    await services.open();
+    const system = services.host?.services.SystemService;
+    invariant(system);
+    const lost = new Trigger();
+    const failure = new Error('status stream failed');
+    vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>
+      Stream.make({ status: SystemStatus.ACTIVE }).pipe(
+        Stream.concat(
+          Stream.fromEffect(Effect.promise(() => lost.wait())).pipe(Stream.flatMap(() => Stream.fail(failure))),
+        ),
+      ),
+    );
+
+    const client = new Client({ services });
+    await client.initialize();
+    expect(client.fatalError.get()).toBeNull();
+
+    lost.wake();
+    await expect.poll(() => client.fatalError.get()).toBe(failure);
     await client.destroy();
   });
 });

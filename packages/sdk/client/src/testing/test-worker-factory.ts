@@ -35,6 +35,14 @@ export class TestWorkerFactory extends Resource {
     // start the port, so dispatch it explicitly rather than relying on the host's auto-start.
     messageChannel.port1.start();
 
+    // The client closing its end stands in for `Worker.terminate()`, which an in-thread worker never gets.
+    let terminated = false;
+    let terminate: (() => void) | undefined;
+    messageChannel.port1.addEventListener('close', () => {
+      terminated = true;
+      terminate?.();
+    });
+
     Worker.run({
       endpoint: {
         postMessage: (message, transfer) =>
@@ -59,6 +67,11 @@ export class TestWorkerFactory extends Resource {
             sqliteLayer: sqliteLayerMemory,
           });
           await EffectEx.runPromise(runtime.start());
+          if (terminated) {
+            await EffectEx.runPromise(runtime.stop());
+            requestShutdown();
+          }
+          terminate = requestShutdown;
           this._ctx.onDispose(() => EffectEx.runPromise(runtime.stop()));
 
           return {

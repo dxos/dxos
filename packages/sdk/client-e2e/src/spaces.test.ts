@@ -3,7 +3,7 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
@@ -21,7 +21,7 @@ import {
 } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { Serializer } from '@dxos/echo-client';
+import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
@@ -56,6 +56,15 @@ describe('Spaces', () => {
 
     // Get by key.
     expect(client.spaces.get(space.key) === space).to.be.true;
+  });
+
+  test('create rejects with the error when the space database fails to open', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    const error = new Error('Database open failed.');
+    const openSpy = vi.spyOn(DatabaseImpl.prototype, 'open').mockRejectedValueOnce(error);
+    onTestFinished(() => openSpy.mockRestore());
+
+    await expect(client.spaces.create()).rejects.toBe(error);
   });
 
   // TODO(dmaretskyi): Test suit for different conditions/storages.

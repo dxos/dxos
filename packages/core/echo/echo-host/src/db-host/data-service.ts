@@ -18,6 +18,9 @@ import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId }
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
 
+// Typed failures keep their class, stack and context over `serviceError`; a defect keeps only name and message.
+const toError = (error: unknown): Error => (error instanceof Error ? error : new Error(String(error)));
+
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
@@ -105,102 +108,132 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
-    return Effect.promise(async () => {
-      const synchronizer = this._subscriptions.get(request.subscriptionId);
-      invariant(synchronizer, 'Subscription not found');
+    return Effect.tryPromise({
+      try: async () => {
+        const synchronizer = this._subscriptions.get(request.subscriptionId);
+        invariant(synchronizer, 'Subscription not found');
 
-      if (request.addIds?.length) {
-        await synchronizer.addDocuments(request.addIds as DocumentId[]);
-        // The subscription now holds each document, so the creation lease has nothing left to guard.
-        for (const documentId of request.addIds as DocumentId[]) {
-          this._pendingCreations.get(documentId)?.[Symbol.dispose]();
-          this._pendingCreations.delete(documentId);
+        if (request.addIds?.length) {
+          await synchronizer.addDocuments(request.addIds as DocumentId[]);
+          // The subscription now holds each document, so the creation lease has nothing left to guard.
+          for (const documentId of request.addIds as DocumentId[]) {
+            this._pendingCreations.get(documentId)?.[Symbol.dispose]();
+            this._pendingCreations.delete(documentId);
+          }
         }
-      }
-      if (request.removeIds?.length) {
-        await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
-      }
+        if (request.removeIds?.length) {
+          await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
+        }
+      },
+      catch: toError,
     });
   }
 
   ['DataService.createDocument'](
     request: DataService.CreateDocumentRequest,
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
-    return Effect.promise(async () => {
-      const created = await this._automergeHost.createDoc(request.initialValue);
-      this._pendingCreations.set(created.documentId, created);
-      return { documentId: created.documentId };
+    return Effect.tryPromise({
+      try: async () => {
+        const created = await this._automergeHost.createDoc(request.initialValue);
+        this._pendingCreations.set(created.documentId, created);
+        return { documentId: created.documentId };
+      },
+      catch: toError,
     });
   }
 
   ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
-    return Effect.promise(async () => {
-      if (!request.updates) {
-        return;
-      }
-      const synchronizer = this._subscriptions.get(request.subscriptionId);
-      invariant(synchronizer, 'Subscription not found');
+    return Effect.tryPromise({
+      try: async () => {
+        if (!request.updates) {
+          return;
+        }
+        const synchronizer = this._subscriptions.get(request.subscriptionId);
+        invariant(synchronizer, 'Subscription not found');
 
-      await synchronizer.update(Context.default(), request.updates);
+        await synchronizer.update(Context.default(), request.updates);
+      },
+      catch: toError,
     });
   }
 
   ['DataService.flush'](request: DataService.FlushRequest): Effect.Effect<void, Error> {
-    return Effect.promise(async () => {
-      await this._automergeHost.flush(Context.default(), request);
+    return Effect.tryPromise({
+      try: async () => {
+        await this._automergeHost.flush(Context.default(), request);
+      },
+      catch: toError,
     });
   }
 
   ['DataService.getDocumentHeads'](
     request: DataService.GetDocumentHeadsRequest,
   ): Effect.Effect<DataService.GetDocumentHeadsResponse, Error> {
-    return Effect.promise(async () => {
-      const documentIds = request.documentIds;
-      if (!documentIds) {
-        return { heads: { entries: [] } };
-      }
-      const heads = await this._automergeHost.getHeads(documentIds as DocumentId[]);
-      return {
-        heads: {
-          entries: heads.map((heads, idx) => ({ documentId: documentIds[idx], heads })),
-        },
-      };
+    return Effect.tryPromise({
+      try: async () => {
+        const documentIds = request.documentIds;
+        if (!documentIds) {
+          return { heads: { entries: [] } };
+        }
+        const heads = await this._automergeHost.getHeads(documentIds as DocumentId[]);
+        return {
+          heads: {
+            entries: heads.map((heads, idx) => ({ documentId: documentIds[idx], heads })),
+          },
+        };
+      },
+      catch: toError,
     });
   }
 
   ['DataService.waitUntilHeadsReplicated'](
     request: DataService.WaitUntilHeadsReplicatedRequest,
   ): Effect.Effect<void, Error> {
-    return Effect.promise(async () => {
-      await this._automergeHost.waitUntilHeadsReplicated(Context.default(), request.heads);
+    return Effect.tryPromise({
+      try: async () => {
+        await this._automergeHost.waitUntilHeadsReplicated(Context.default(), request.heads);
+      },
+      catch: toError,
     });
   }
 
   ['DataService.reIndexHeads'](request: DataService.ReIndexHeadsRequest): Effect.Effect<void, Error> {
-    return Effect.promise(async () => {
-      await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
+    return Effect.tryPromise({
+      try: async () => {
+        await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
+      },
+      catch: toError,
     });
   }
 
   ['DataService.updateIndexes'](): Effect.Effect<void, Error> {
-    return Effect.promise(async () => {
-      await this._updateIndexes();
+    return Effect.tryPromise({
+      try: async () => {
+        await this._updateIndexes();
+      },
+      catch: toError,
     });
   }
 
   ['DataService.stats'](request: DataService.DatabaseStatsRequest): Effect.Effect<DataService.DatabaseStats, Error> {
-    return Effect.promise(async () => {
-      invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
-      return this._getSpaceStats(request.spaceId);
+    return Effect.tryPromise({
+      try: async () => {
+        invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
+        return this._getSpaceStats(request.spaceId);
+      },
+      catch: toError,
     });
   }
 
   ['DataService.runGarbageCollection'](
     request: DataService.RunGarbageCollectionRequest,
   ): Effect.Effect<DataService.GarbageCollectionReport, Error> {
-    return Effect.promise(async () => {
-      invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
-      return this._runGarbageCollection(request.spaceId, request);
+    return Effect.tryPromise({
+      try: async () => {
+        invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
+        return this._runGarbageCollection(request.spaceId, request);
+      },
+      catch: toError,
     });
   }
 
