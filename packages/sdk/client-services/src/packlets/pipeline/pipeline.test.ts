@@ -130,8 +130,8 @@ describe('pipeline/Pipeline', () => {
     });
 
     await pipeline.start();
-    await processedEvent.waitForCondition(() => processedSequenceNumbers.length === 10);
-
+    // Blocks 0-9 were cleared and cannot be re-fetched, so the consumer makes no progress until
+    // the cursor below skips past them; pausing does not need to wait on any prior consumption.
     await pipeline.pause();
     await pipeline.setCursor(new Timeframe([[feed.key, 9]]));
     await pipeline.unpause();

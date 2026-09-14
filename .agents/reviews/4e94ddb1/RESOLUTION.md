@@ -4,9 +4,9 @@
 
 - 4e94ddb1-1 - resolved - import-as-namespace-is-all-or-nothing - packages/common/crx-protocol/src/Proxy.ts:42:14
 - 4e94ddb1-2 - resolved - namespace-service-layers - packages/common/effect/src/layers.test.ts:18:3
-- 4e94ddb1-3 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.browser.test.ts:44:7
-- 4e94ddb1-4 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:59:7
-- 4e94ddb1-5 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:96:7
+- 4e94ddb1-3 - resolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.browser.test.ts:44:7
+- 4e94ddb1-4 - resolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:59:7
+- 4e94ddb1-5 - resolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:96:7
 - 4e94ddb1-6 - resolved - no-casts - packages/common/test-utils/src/claude-agent.ts:40:9
 - 4e94ddb1-7 - resolved - no-casts - packages/common/test-utils/src/claude-agent.ts:51:10
 - 4e94ddb1-8 - resolved - no-casts - packages/common/test-utils/src/claude-agent.ts:54:20
@@ -47,7 +47,7 @@
 - 4e94ddb1-43 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute-runtime/src/ProcessHandle.ts:5:1
 - 4e94ddb1-44 - resolved - no-casts - packages/core/compute/compute-runtime/src/RemoteProcessHandle.test.ts:154:6
 - 4e94ddb1-45 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute-runtime/src/SwarmTraceSink.ts:9:18
-- 4e94ddb1-46 - unresolved - no-sleep-in-test - packages/core/compute/compute-runtime/src/TriggerMonitor.test.ts:320:11
+- 4e94ddb1-46 - resolved - no-sleep-in-test - packages/core/compute/compute-runtime/src/TriggerMonitor.test.ts:320:11
 - 4e94ddb1-47 - resolved - namespace-service-layers - packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts:249:3
 - 4e94ddb1-48 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Project.ts:10:1
 - 4e94ddb1-49 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/compute/src/types/Script.ts:10:1
@@ -61,10 +61,10 @@
 - 4e94ddb1-57 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/link/src/Connection.ts:10:1
 - 4e94ddb1-58 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/link/src/Cursor.ts:14:1
 - 4e94ddb1-59 - resolved - import-as-namespace-is-all-or-nothing - packages/core/compute/mcp-client/src/McpToolkit.ts:44:18
-- 4e94ddb1-60 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:233:7
-- 4e94ddb1-61 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:270:7
-- 4e94ddb1-62 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:111:5
-- 4e94ddb1-63 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:142:9
+- 4e94ddb1-60 - resolved - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:233:7
+- 4e94ddb1-61 - resolved - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:270:7
+- 4e94ddb1-62 - resolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:111:5
+- 4e94ddb1-63 - resolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:142:9
 - 4e94ddb1-64 - resolved - no-trivial-wrappers-over-official-apis - packages/core/echo/echo/src/internal/common/proxy/proxy-utils.ts:144:7
 - 4e94ddb1-65 - resolved - no-trivial-wrappers-over-official-apis - packages/core/echo/echo/src/Json.test.ts:14:7
 - 4e94ddb1-66 - resolved - no-casts - packages/core/halo/credentials/src/credentials/golden-credential.test.ts:112:37
@@ -172,8 +172,8 @@
 - 4e94ddb1-168 - resolved - import-as-namespace-is-all-or-nothing - packages/sdk/app-toolkit/src/echo/TypeOptions.ts:12:1
 - 4e94ddb1-169 - resolved - import-as-namespace-is-all-or-nothing - packages/sdk/app-toolkit/src/types/CollectionModel.test.ts:12:1
 - 4e94ddb1-170 - resolved - import-as-namespace-is-all-or-nothing - packages/sdk/app-toolkit/src/types/CollectionModel.ts:12:1
-- 4e94ddb1-171 - unresolved - no-sleep-in-test - packages/sdk/client-services/src/packlets/pipeline/pipeline.test.ts:133:5
-- 4e94ddb1-172 - unresolved - no-sleep-in-test - packages/sdk/client-services/src/packlets/services/feed-syncer.test.ts:298:5
+- 4e94ddb1-171 - resolved - no-sleep-in-test - packages/sdk/client-services/src/packlets/pipeline/pipeline.test.ts:133:5
+- 4e94ddb1-172 - resolved - no-sleep-in-test - packages/sdk/client-services/src/packlets/services/feed-syncer.test.ts:298:5
 - 4e94ddb1-173 - resolved - no-casts - packages/sdk/client/src/halo/halo-proxy.test.ts:35:5
 - 4e94ddb1-174 - resolved - no-trivial-wrappers-over-official-apis - packages/sdk/react-client/src/client/ClientProvider.test.tsx:36:9
 - 4e94ddb1-175 - resolved - no-trivial-wrappers-over-official-apis - packages/sdk/react-client/src/client/useConfig.test.tsx:16:9

@@ -11,7 +11,7 @@ import * as Scope from 'effect/Scope';
 import * as EffectStream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
@@ -26,6 +26,21 @@ import { openAndClose } from '@dxos/test-utils';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
 import { RepoProxy } from './repo-proxy.ts';
+
+/** True once the handle's current heads have been written to the host's on-disk heads store. */
+const documentHeadsPersisted = async <T>(host: AutomergeHost, handle: DocHandleProxy<T>): Promise<boolean> => {
+  const doc = handle.doc();
+  if (!doc || !handle.documentId) {
+    return false;
+  }
+  const currentHeads = A.getHeads(doc);
+  for await (const { documentId, heads } of host.listDocumentHeads()) {
+    if (documentId === handle.documentId && A.equals(heads, currentHeads)) {
+      return true;
+    }
+  }
+  return false;
+};
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {
@@ -230,8 +245,8 @@ describe('RepoProxy', () => {
 
       const text = 'Hello World!';
       const clientHandle = clientRepo.create<{ text: string }>({ text: text });
-      // Wait for the background auto-save to persist the object without an explicit flush.
-      await asyncTimeout(host.documentsSaved.waitFor(() => true), 1000);
+      // Wait for the background auto-save to persist the object's heads without an explicit flush.
+      await waitForCondition({ condition: () => documentHeadsPersisted(host, clientHandle), timeout: 2_000 });
       url = clientHandle.url!;
       await host.close();
       await clientRepo.close();
@@ -268,8 +283,8 @@ describe('RepoProxy', () => {
       await clientRepo.flush();
       clientHandle.change((doc: TestDoc) => (doc.text = text));
       url = clientHandle.url!;
-      // Wait for the background auto-save to persist the mutation without an explicit flush.
-      await asyncTimeout(host.documentsSaved.waitFor(() => true), 1000);
+      // Wait for the background auto-save to persist the mutation's heads without an explicit flush.
+      await waitForCondition({ condition: () => documentHeadsPersisted(host, clientHandle), timeout: 2_000 });
       await host.close();
       await clientRepo.close();
       await dispose();
