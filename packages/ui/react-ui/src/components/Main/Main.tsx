@@ -30,6 +30,8 @@ import { type MainStyleProps } from '../../theme/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 import {
   DRAWER_DEFAULT_HEIGHT,
+  DRAWER_MAX_HEIGHT,
+  DRAWER_MIN_HEIGHT,
   type DrawerState,
   MAIN_NAME,
   MainProvider,
@@ -439,7 +441,10 @@ type Drag = { startY: number; startHeight: number; height: number };
  * height so content reflows above it rather than being covered. Closed, it is not in the DOM.
  */
 const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
-  ({ classNames, children, label, minHeight = 8, maxHeight = 64, ...props }, forwardedRef) => {
+  (
+    { classNames, children, label, minHeight = DRAWER_MIN_HEIGHT, maxHeight = DRAWER_MAX_HEIGHT, ...props },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(translationKey);
     const { tx } = useThemeContext();
     const {
@@ -541,7 +546,7 @@ export const Main = {
   Drawer: MainDrawer,
 };
 
-export { DRAWER_DEFAULT_HEIGHT };
+export { DRAWER_DEFAULT_HEIGHT, DRAWER_MAX_HEIGHT, DRAWER_MIN_HEIGHT };
 
 export type {
   DrawerState,

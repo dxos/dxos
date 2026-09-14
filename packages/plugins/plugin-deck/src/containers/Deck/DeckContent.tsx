@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -36,6 +36,8 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     pluginManager,
   } = useDeckContext(DECK_CONTENT_NAME);
   const { t } = useTranslation(meta.profile.key);
+  // Controlled height would drop every mid-drag move, so the drag is mirrored locally until it ends.
+  const [liveHeight, setLiveHeight] = useState<number>();
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
 
@@ -77,6 +79,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
   const handleDrawerHeightChangeEnd = useCallback(
     (next: number) => {
       updateState((state) => ({ ...state, drawerHeight: next }));
+      setLiveHeight(undefined);
     },
     [updateState],
   );
@@ -86,10 +89,11 @@ export const DeckContent = ({ children }: DeckContentProps) => {
       navigationSidebarState={fullscreen ? 'closed' : sidebarState}
       complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
       drawerState={fullscreen ? 'closed' : (drawerState ?? 'closed')}
-      drawerHeight={drawerHeight ?? DRAWER_DEFAULT_HEIGHT}
+      drawerHeight={liveHeight ?? drawerHeight ?? DRAWER_DEFAULT_HEIGHT}
       onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
       onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
       onDrawerStateChange={handleDrawerStateChange}
+      onDrawerHeightChange={setLiveHeight}
       onDrawerHeightChangeEnd={handleDrawerHeightChangeEnd}
     >
       <Sidebar />

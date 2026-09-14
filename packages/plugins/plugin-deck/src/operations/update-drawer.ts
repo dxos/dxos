@@ -7,12 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
+import { DRAWER_MAX_HEIGHT, DRAWER_MIN_HEIGHT } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '#types';
-
-// Same bounds the react-ui drawer clamps drags to, so an operation cannot persist a height a drag could not reach.
-const MIN_HEIGHT = 8;
-const MAX_HEIGHT = 64;
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateDrawer> = LayoutOperation.UpdateDrawer.pipe(
   Operation.withHandler(
@@ -21,7 +18,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateDrawer> = Layo
       const current = state.drawerState ?? 'closed';
       const nextState = input.state === 'toggle' ? (current === 'open' ? 'closed' : 'open') : (input.state ?? current);
       const nextHeight =
-        input.height === undefined ? state.drawerHeight : Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, input.height));
+        input.height === undefined
+          ? state.drawerHeight
+          : Math.min(DRAWER_MAX_HEIGHT, Math.max(DRAWER_MIN_HEIGHT, input.height));
       if (nextState !== current || nextHeight !== state.drawerHeight) {
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => ({
           ...state,

@@ -80,6 +80,9 @@ export type DrawerState = 'open' | 'closed';
 
 /** Height in rem. */
 export const DRAWER_DEFAULT_HEIGHT = 24;
+/** Drag bounds in rem; exported so operations persisting a height cannot exceed what a drag can reach. */
+export const DRAWER_MIN_HEIGHT = 8;
+export const DRAWER_MAX_HEIGHT = 64;
 
 export type MainContextValue = {
   resizing: boolean;
