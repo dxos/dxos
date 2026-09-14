@@ -13,7 +13,7 @@ export const nodeId = (fullId: string): string => fullId.split('.').at(-1) ?? ''
 
 const debugId = meta.profile.key;
 
-/** Top-level Debug node (sibling of DevTools under the SYSTEM navtree group). */
+/** Top-level Debug node, under the debug category. */
 export const id = `${debugId}.debug`;
 
 /** Discriminator for the space-generator article surface (`node.data.type`). */

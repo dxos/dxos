@@ -11,17 +11,12 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Devtools } from '#types';
-
-/** URL key of every devtools page: `/devtools/<page>` for a top-level page, `/devtools/<group>+<page>` inside one. */
-export const DEVTOOLS_URL_KEY = 'devtools';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -73,18 +68,12 @@ export default Capability.makeModule(
   }),
 );
 
-/** The devtools tree: a container under the system group with one page per tool, grouped by subsystem. */
+/** The devtools tree: a container under the debug category with one page per tool, grouped by subsystem. */
 export const createDevtoolsExtension = (appGraphAtom: Atom<AppCapabilities.AppGraph[]>) =>
   AppGraphBuilder.createExtension({
     id: 'devtools',
-    // The pages hang off the container node under the space's system group; the container itself
-    // (and the root-matched copy, which has no workspace) is not addressable.
-    url: { key: DEVTOOLS_URL_KEY, kind: 'item', path: [GraphPath.GroupSegments.system, Devtools.nodeId(Devtools.id)] },
-    match: GraphNodeMatcher.whenAny(
-      GraphNodeMatcher.whenRoot,
-      AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
-    ),
-    connector: (_nodeOrSpace: AppGraphNode.Node | Space, get) =>
+    match: AppNodeMatcher.whenDebugGroup,
+    connector: (_node, get) =>
       Effect.gen(function* () {
         const [graph] = get(appGraphAtom);
 

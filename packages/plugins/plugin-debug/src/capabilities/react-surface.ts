@@ -11,7 +11,6 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
@@ -26,19 +25,6 @@ import {
   SpaceGeneratorSurface,
   SpaceObjectsSurface,
 } from './DebugSurfaces.tsx';
-
-type SpaceDebug = {
-  type: string;
-  space: Space;
-};
-
-const isSpaceDebug = (data: unknown): data is SpaceDebug =>
-  typeof data === 'object' &&
-  data !== null &&
-  'type' in data &&
-  data.type === DebugNodes.SpaceType &&
-  'space' in data &&
-  isSpace(data.space);
 
 type ReactSurfaceOptions = {
   logStore?: IdbLogStore;
@@ -59,9 +45,9 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        filter: AppSurface.subject(AppSurface.Article, isSpaceDebug),
+        filter: AppSurface.literal(AppSurface.Article, DebugNodes.SpaceType),
         component: SpaceGeneratorSurface,
-        props: ({ role, data: { subject } }) => ({ role, space: subject.space }),
+        props: ({ role }) => ({ role }),
       }),
       Surface.create({
         id: 'wireframe',

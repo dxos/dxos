@@ -12,7 +12,6 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -78,13 +77,11 @@ export default Capability.makeModule(
       createDebugRootExtension(),
       createDebugToolsExtension(),
 
-      // Top-level Debug node (sibling of DevTools under SYSTEM); only present when a space is active.
+      // Top-level Debug node, under the debug category.
       AppGraphBuilder.createExtension({
         id: 'debug',
-        // The pages hang off the container node; the container itself is not addressable.
-        url: { key: 'debug', kind: 'item', path: [GraphPath.GroupSegments.system, DebugNodes.nodeId(DebugNodes.id)] },
-        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
-        connector: (space: Space) =>
+        match: AppNodeMatcher.whenDebugGroup,
+        connector: () =>
           Effect.succeed([
             AppGraphNode.make({
               id: DebugNodes.nodeId(DebugNodes.id),
@@ -99,7 +96,7 @@ export default Capability.makeModule(
                 AppGraphNode.make({
                   id: DebugNodes.nodeId(DebugNodes.SpaceType),
                   type: DebugNodes.SpaceType,
-                  data: { space, type: DebugNodes.SpaceType },
+                  data: DebugNodes.SpaceType,
                   properties: {
                     label: ['generate-objects.label', { ns: meta.profile.key }],
                     icon: 'ph--dice-five--regular',
