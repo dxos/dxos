@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as Frame from './Frame.ts';
 
@@ -20,9 +19,12 @@ import * as Frame from './Frame.ts';
 export class Storyboard extends Type.makeObject<Storyboard>(DXN.make('org.dxos.type.storyboard', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    frames: Schema.Array(Ref.Ref(Frame.Frame)).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    frames: Schema.Array(Ref.Ref(Frame.Frame)).pipe(
+      Annotation.SetParent.set(true),
+      Annotation.FormInputAnnotation.set(false),
+    ),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--film-strip--regular', hue: 'indigo' }),
   ),
 ) {}

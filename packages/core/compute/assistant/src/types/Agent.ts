@@ -9,8 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import { Annotation, Database, DXN, Error, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 
@@ -76,7 +75,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
  */
 export const loadInstructions = (
   agent: Agent,
-): Effect.Effect<{ text: string; instructions: Instructions.Instructions }, EntityNotFoundError, Database.Service> =>
+): Effect.Effect<{ text: string; instructions: Instructions.Instructions }, Error.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const instructions = yield* Database.load(agent.instructions);
     const text = yield* Database.load(instructions.text).pipe(
@@ -192,7 +191,7 @@ export const makeInitialized = (
  * @param agent - The agent whose chat history should be reset. Must have an existing chat.
  * @returns An Effect that resets the chat history.
  */
-export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFoundError, Database.Service> =>
+export const resetChatHistory = (agent: Agent): Effect.Effect<void, Error.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const existingChat = yield* loadChat(agent);
     if (!existingChat) {

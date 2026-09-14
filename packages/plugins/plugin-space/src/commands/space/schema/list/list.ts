@@ -9,8 +9,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
-import { type Key, Type } from '@dxos/echo';
-import { getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, type Key, Type } from '@dxos/echo';
 
 import { createTypenameFilter, mapSchemas, printSchemas } from './util.ts';
 
@@ -30,7 +29,7 @@ export const handler = Effect.fn(function* ({
 
   const schemas = types
     .map((schema) => {
-      const schemaAnnotation = getTypeAnnotation(Type.getSchema(schema));
+      const schemaAnnotation = Annotation.getTypeAnnotation(Type.getSchema(schema));
       return {
         id: Type.getURI(schema).toString(),
         typename: schemaAnnotation?.typename ?? Type.getTypename(schema) ?? '',

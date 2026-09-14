@@ -16,9 +16,18 @@ import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, sp
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, type Error as EchoError, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import {
+  Annotation,
+  Collection,
+  Database,
+  Entity,
+  type Error as EchoError,
+  Filter,
+  Obj,
+  Query,
+  Scope,
+  Type,
+} from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
@@ -101,8 +110,8 @@ const selectTypename = Effect.fn(function* (
   const allTypes = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
     .run;
   const types = allTypes
-    .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
-    .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+    .filter((schema) => !Annotation.HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+    .filter((schema) => Annotation.getTypeAnnotation(Type.getSchema(schema))?.kind !== Entity.Kind.Relation)
     .filter((schema) => !!resolve(Type.getTypename(schema)));
 
   const choices = types.map((schema) => ({

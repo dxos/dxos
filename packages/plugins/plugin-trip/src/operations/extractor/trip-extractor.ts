@@ -392,14 +392,14 @@ const assemble = (
           trip = Trip.make({ name: tripNameFor(earliest), start: earliest.departAt, end: earliest.arriveAt });
           created.push(trip);
         }
+        // Anchor the Booking under the Trip so the dispatcher treats it as a child (no provenance chip).
         booking = Booking.make({
+          [Obj.Parent]: trip,
           provider,
           confirmationCode: payload.confirmationCode,
           source: 'email',
           rawPayload: getBodyText(message),
         });
-        // Anchor the Booking under the Trip so the dispatcher treats it as a child (no provenance chip).
-        Obj.setParent(booking, trip);
         created.push(booking);
       }
 
