@@ -7,12 +7,15 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { IconButton } from '../Button/index.ts';
+import { Button, IconButton } from '../Button/index.ts';
 import { Toolbar } from '../Toolbar/index.ts';
 import { Main, type MainRootProps } from './Main.tsx';
-import { useSidebars } from './MainContext.ts';
+import { useMainContext, useSidebars } from './MainContext.ts';
 
-type StoryMainArgs = Pick<MainRootProps, 'defaultNavigationSidebarState' | 'defaultComplementarySidebarState'>;
+type StoryMainArgs = Pick<
+  MainRootProps,
+  'defaultNavigationSidebarState' | 'defaultComplementarySidebarState' | 'defaultDrawerState'
+>;
 
 const NavigationSidebarToggle = ({ close }: { close?: boolean }) => {
   const { toggleNavigationSidebar } = useSidebars('StoryMain__SidebarToggle');
@@ -38,14 +41,21 @@ const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
   );
 };
 
+const DrawerClose = () => {
+  const { setDrawerState } = useMainContext('StoryMain__DrawerClose');
+  return <Button onClick={() => setDrawerState('closed')}>Close</Button>;
+};
+
 const DefaultStory = ({
   defaultNavigationSidebarState = 'closed',
   defaultComplementarySidebarState = 'closed',
+  defaultDrawerState = 'closed',
 }: StoryMainArgs) => {
   return (
     <Main.Root
       defaultNavigationSidebarState={defaultNavigationSidebarState}
       defaultComplementarySidebarState={defaultComplementarySidebarState}
+      defaultDrawerState={defaultDrawerState}
     >
       <Main.Overlay />
       <Main.NavigationSidebar label='Navigation'>
@@ -62,7 +72,14 @@ const DefaultStory = ({
           <div className='flex items-center grow justify-center'>Main</div>
           <ComplementarySidebarToggle />
         </Toolbar.Root>
+        <div className='h-[200dvh] p-4'>Tall content</div>
       </Main.Content>
+      <Main.Drawer label='Drawer'>
+        <div className='flex items-center gap-2 p-2'>
+          <span className='grow'>Drawer content</span>
+          <DrawerClose />
+        </div>
+      </Main.Drawer>
       <Main.ComplementarySidebar label='Complementary'>
         <Toolbar.Root>
           <ComplementarySidebarToggle close />
@@ -111,6 +128,22 @@ export const TestToggle: Story = {
     await waitFor(async () =>
       expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.getAttribute('data-state')).toBe('closed'),
     );
+  },
+};
+
+/** Open, the drawer is a region the content pads block-end for; closed, it leaves the DOM and the padding. */
+export const Drawer: Story = {
+  args: { defaultDrawerState: 'open' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const content = canvasElement.querySelector<HTMLElement>('main');
+    await expect(content).not.toBeNull();
+    await expect(canvas.getByRole('region', { name: 'Drawer' })).toBeInTheDocument();
+    await expect(canvas.getByText('Drawer content')).toBeInTheDocument();
+    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('384px'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(canvas.queryByRole('region', { name: 'Drawer' })).toBeNull());
+    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('0px'));
   },
 };
 
