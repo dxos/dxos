@@ -198,7 +198,11 @@ export const StoragePanel = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-cols-2 divide-x divide-separator'>
-        <DataTree items={items} onSelect={setSelected} />
+        <ScrollArea.Root thin orientation='all'>
+          <ScrollArea.Viewport>
+            <DataTree items={items} onSelect={setSelected} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
 
         {selectedValue && (
           <ScrollArea.Root thin>

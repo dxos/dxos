@@ -22,3 +22,14 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 ## Follow-ups
 
 - [ ] `plugin-devtools` `SpaceListSurface`/`SpaceInfoSurface` (`DevtoolsSurfaces.tsx` ~40, ~51) still call `LayoutOperation.Open` with a dotted id (`Devtools.Echo.Space`) that was never a graph path — should `select` in the debug panel instead.
+
+## Devtools panels (observed 2026-09-14)
+
+- [x] Storage panel's tree did not scroll; Diagnostics used a bare `JsonView` — Storage tree in a
+      `ScrollArea`, Diagnostics on `Syntax.Root/Filter/Viewport/Code` (JSONPath filter + scroll).
+- [ ] The `@dxos/devtools` panels hard-code every string (no `useTranslation` anywhere under
+      `packages/devtools/devtools/src/panels`): add a `@dxos/devtools` translations resource,
+      register it from plugin-devtools, and route the ~30 panels' labels through `t()`.
+- [ ] Decide the overlap between DevTools → Client → Logging (client-services log stream via
+      `LoggingService.queryLogs`, level/filter, download) and Debug → Logs (react-ui-debug
+      `Logger` over the in-page log buffer with per-file levels, recording, persistence).
