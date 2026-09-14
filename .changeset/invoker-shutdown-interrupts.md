@@ -1,4 +1,8 @@
 ---
+# multiple-changesets: unrelated fixes rode one branch — the session gantt (compute/plugin-assistant), the
+# boot loader's sprite (app-framework), a tree branch's clip (react-ui-list/ui-theme), delegation staying
+# on the ledger (plugin-projects) and the invoker's shutdown exit (compute-runtime); a reader upgrading
+# one package looks up only its own entry.
 '@dxos/compute-runtime': patch
 ---
 
