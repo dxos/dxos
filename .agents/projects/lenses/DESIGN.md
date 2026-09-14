@@ -596,6 +596,34 @@ knows only the old type and writes it directly. Fold-forward is for that case.
    list requires the mechanism to notice a new entity rather than a changed property, and it is the
    most likely reason the bar in §10.1 turns out to be unreachable.
 
+#### Outcomes (M0 complete, 2026-08-02)
+
+Every falsifiable claim above was answered empirically and none broke the §10.1 bar — the
+fold-forward hypothesis stands. The proving suite is
+`echo-client-e2e/src/migration-bench/` (6 files, 22 tests); the full record — the final design,
+the evidence map, and everything ruled out along the way with reasons — is
+[M0-REPORT.md](./M0-REPORT.md). The outcomes, in brief:
+
+- **Single object and chains: solved**, under a mechanically-enforceable constraint set (keep
+  sources; two head-marks + ancestry check; value-compare every write; equal values never
+  conflict; one `Obj.update` per composed fold; per-object markers).
+- **N→N multi-object: same machinery per object**, including guarded cross-object moves.
+- **Fan-in: solved with three declared ingredients** — removal choice, property-collision
+  resolution, and a query-based late-child path — each independently load-bearing.
+- **Fan-out: reduced to object-merging keys** (random object id + derived meta key; passive
+  collapse via the merge engine), with the baseline-aware three-way merge as the loss-only-on-
+  conflict collapse semantics (proposal flowed to PR #12412).
+- **Array fan-out: a define-time precondition + two-step composition** — elements must carry a
+  pre-existing stable id used in the meta key; id-less arrays first run an ordinary stamping
+  migration (random ids; the temporal gate to step 2 carries the correctness).
+- **Conflicts are history-native** — `changeAt` fold-at-heads materializes real CRDT conflicts,
+  reviewable forever from ops alone, with the winner a deterministic policy (user-wins
+  recommended). No app-level shadow records.
+- **Multi-object non-atomicity is a repairable window, not corruption** — effects-as-data write
+  sets + per-step guards make any peer able to complete an interrupted migration.
+- **Epochs: last resort, platform-owned, deliberately history-erasing** — the fold window closes
+  at the boundary as an owned consequence; epoch timing is the window policy (§10.7 q2).
+
 ### 10.4 A migration is a lens
 
 `Migration.fromLens(L)` — the migration's `transform` is `Lens.get`. Small change, and every
@@ -848,6 +876,14 @@ Shared plumbing, so it is built once: their Phase 1 exposes relation-endpoint mu
 (`ObjectCore.setSource`/`setTarget`) for ref rewriting — the same internal API fan-out-to-relation
 writes need here.
 
+**Baseline-aware three-way merge — proposal for PR #12412 (verified).** Their per-field
+winner-preference loses a loser-side unconflicted edit on any field the deterministic transform
+also wrote on the winner (all of them, for migration-minted duplicates). The fix: classify each
+field against the recomputable baseline — take unconflicted loser edits, keep the winner's value
+on genuine conflicts, tombstone (never erase) losers. Loss only where peers actually contradict;
+inspectable and revertible; convergent and idempotent. Evidence and detail: M0-REPORT.md (design
+4 and "Ruled out").
+
 ### 10.6 Convergence between peers
 
 A preference order, not a menu.
@@ -875,9 +911,20 @@ marks itself `effectful`, requires being online, and claims a lease. It cannot r
 partition either blocks it or risks two leaders, so it must be the exception a migration asks for.
 
 **D. Epochs become compaction only, never the migration mechanism.** An epoch is a storage
-optimization, run when convenient; correctness never depends on one. This retires the current failure
-mode directly. Note the interaction with §10.3 claim 2 — compaction rewrites history, so it must not
-destroy the heads fold-forward relies on.
+optimization and a **last resort, avoided as much as possible**; correctness never depends on one. This retires the current failure
+mode directly. Revised in review (2026-08-02, ratified): an epoch deliberately erases history and
+need NOT preserve the heads fold-forward relies on — running one closes the fold-forward window and
+drops live history-native conflicts, as an owned consequence (§10.7 q2 is thereby answered: the
+window is "until the next epoch"). The heads ancestry check is what keeps the boundary safe: a fold
+seeing foreign heads stops instead of re-applying the world. The operational model: epochs are a
+last resort, not routine cadence-driven compaction — owned and executed by the platform, NOT
+exposed as an app-level surface for the foreseeable future — so the fold-forward window is
+long-lived by default and history-native conflicts persist until one actually runs. When a space
+does run one (well-known/announced), a peer offline past it owns whatever
+it can no longer reconcile automatically. Its late writes still merge as raw data (bounded loss:
+manual reconciliation, not disappearance), and the ancestry-check failure doubles as the signal
+apps may consume to notify the user ("changes from before the epoch need review"); consuming that
+signal is the full extent of app involvement.
 
 **And version state moves onto the object.** A space-level scalar cannot say which objects migrated
 and races between peers. `EntityMeta.version` already exists per object and `transform` can already
@@ -891,7 +938,10 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    propagates. Is a half-promoted space acceptable, and for how long?
 2. **How long is the fold-forward window?** Keeping migration heads and un-deleted old properties
    forever is a storage cost. When is it safe to compact, given a peer could always have been offline
-   longer?
+   longer? — **ANSWERED (2026-08-02, ratified): the window is "until the next epoch".** Epochs
+   deliberately erase history; running one closes the fold window and drops live history-native
+   conflicts, as an owned consequence. Epoch timing is the policy knob; the heads ancestry check
+   makes the boundary safe (§10.3 addendum).
 3. **Reverse compatibility window.** How long do we keep old lenses, and what happens when a chain
    grows to several hops?
 4. **Lens versioning** (§8.7) — a lens pins `source` to `typename@version`, and migration is exactly
