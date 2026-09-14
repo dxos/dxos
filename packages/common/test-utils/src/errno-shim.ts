@@ -66,6 +66,16 @@ int sigaction(int signal, const struct glibc_sigaction *action, struct glibc_sig
 
   void *old_handler = handlers[signal];
   int old_siginfo = takes_siginfo[signal];
+  /* A trampoline read back through glibc's internal sigaction, as signal() returns it, keeps the recorded handler. */
+  if (action && action->handler == (void *)trampoline) {
+    struct glibc_sigaction restored = *action;
+    restored.flags |= SA_SIGINFO_FLAG;
+    int result = next_sigaction(signal, &restored, previous);
+    if (result == 0) {
+      unwrap(previous, old_handler, old_siginfo);
+    }
+    return result;
+  }
   if (!action || action->handler == (void *)0 || action->handler == (void *)1) {
     int result = next_sigaction(signal, action, previous);
     if (result == 0) {
@@ -96,7 +106,10 @@ export const errnoShimSupported = (): boolean =>
 
 /** Compiles {@link ERRNO_SHIM_SOURCE} into `cacheDir` once per source and architecture and returns its path. */
 export const buildErrnoShim = (cacheDir: string): string => {
-  const hash = createHash('sha256').update(ERRNO_SHIM_SOURCE).digest('hex').slice(0, 16);
+  const hash = createHash('sha256')
+    .update(JSON.stringify([ERRNO_SHIM_SOURCE, COMPILE_ARGS]))
+    .digest('hex')
+    .slice(0, 16);
   const output = join(cacheDir, `errno-shim-${process.arch}-${hash}.so`);
   if (existsSync(output)) {
     return output;
@@ -115,8 +128,11 @@ export const buildErrnoShim = (cacheDir: string): string => {
   return output;
 };
 
+/** Compiler arguments ahead of the output path, which is followed by the source on stdin and `-ldl`. */
+const COMPILE_ARGS = ['-shared', '-fPIC', '-O2', '-x', 'c', '-o'];
+
 export const compileSharedObject = (source: string, output: string): void => {
-  execFileSync(process.env.CC || 'cc', ['-shared', '-fPIC', '-O2', '-x', 'c', '-o', output, '-', '-ldl'], {
+  execFileSync(process.env.CC || 'cc', [...COMPILE_ARGS, output, '-', '-ldl'], {
     input: source,
     stdio: ['pipe', 'ignore', 'pipe'],
   });

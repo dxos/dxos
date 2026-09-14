@@ -44,6 +44,37 @@ __attribute__((constructor)) static void probe(void) {
 }
 `;
 
+/** Preloaded constructor: restores through `sigaction` the handler glibc's `signal()` reported, then raises it. */
+const RESTORE_PROBE_SOURCE = `struct glibc_sigaction {
+  void *handler;
+  unsigned long mask[16];
+  int flags;
+  void (*restorer)(void);
+};
+extern int sigaction(int signal, const struct glibc_sigaction *action, struct glibc_sigaction *previous);
+extern void *signal(int number, void *handler);
+extern int raise(int number);
+extern int *__errno_location(void);
+extern long write(int fd, const void *buffer, unsigned long count);
+static void clobber(int number) { (void)number; *__errno_location() = 4; }
+static void other(int number) { (void)number; }
+__attribute__((constructor)) static void mix(void) {
+  struct glibc_sigaction action = {0};
+  action.handler = (void *)clobber;
+  sigaction(10, &action, 0);
+  void *reported = signal(10, (void *)other);
+  struct glibc_sigaction restore = {0};
+  restore.handler = reported;
+  sigaction(10, &restore, 0);
+  *__errno_location() = 0;
+  raise(10);
+  char line[] = "mixed errno=?\\n";
+  int error = *__errno_location();
+  line[12] = (char)('0' + (error >= 0 && error <= 9 ? error : 9));
+  write(2, line, sizeof line - 1);
+}
+`;
+
 const runProbe = (preload: string[]): string =>
   spawnSync('/bin/true', { env: { LD_PRELOAD: preload.join(':') }, encoding: 'utf8' }).stderr.trim();
 
@@ -56,5 +87,14 @@ describe.runIf(errnoShimSupported())('errno shim', () => {
 
     expect(runProbe([probe])).toBe('errno=4 handler=1');
     expect(runProbe([buildErrnoShim(dir), probe])).toBe('errno=0 handler=1');
+  });
+
+  test('a handler restored from what signal() reported still runs once', ({ expect }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'errno-shim-probe-'));
+    onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+    const probe = join(dir, 'restore-probe.so');
+    compileSharedObject(RESTORE_PROBE_SOURCE, probe);
+
+    expect(runProbe([buildErrnoShim(dir), probe])).toBe('mixed errno=0');
   });
 });
