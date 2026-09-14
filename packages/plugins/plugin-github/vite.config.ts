@@ -18,6 +18,7 @@ export default defineConfig({
     GitHubCapabilities: 'src/types/GitHubCapabilities.ts',
     GitHubEvents: 'src/types/GitHubEvents.ts',
     GitHubOperation: 'src/types/GitHubOperation.ts',
+    Walkthrough: 'src/types/Walkthrough.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',
