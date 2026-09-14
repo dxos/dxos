@@ -31,5 +31,6 @@ export default defineConfig({
     // the net must clear the longest per-eval timeout in use (60 minutes plus the grading grace, `chess-mcp.eval.ts`) with
     // room for that, not just equal it.
     testTimeout: 66 * 60 * 1_000,
+    maxWorkers: 4,
   },
 });

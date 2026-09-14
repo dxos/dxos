@@ -14,7 +14,7 @@ import { CHANNELS, channelMarkFilter } from '@dxos/brand/channels';
 // eslint-disable-next-line import/no-relative-packages
 import composerIcon from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
 import { Loader } from './Loader.tsx';
-import { createLoaderStore } from './store.ts';
+import { DEFAULT_SPRITE_PATH, createLoaderStore } from './store.ts';
 
 /** How the ring's mark reads: released, as each channel recolours it, or absent. */
 const MARKS: Record<string, { svg?: string; filter?: string } | undefined> = {
@@ -72,6 +72,7 @@ const PLUGINS = [
 export const Default: Story = {
   render: (args) => {
     const store = createLoaderStore('Starting…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
         setTimeout(() => store.pushStatus({ humanized: 'Loading plugins', range: { index: 12, total: 80 } }), 400),
@@ -117,6 +118,7 @@ export const NoMark: Story = {
 export const PluginActivation: Story = {
   render: (args) => {
     const store = createLoaderStore('Activating plugins…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       store.setPlugins(PLUGINS);
       store.setProgress(0.5);
@@ -144,6 +146,7 @@ export const PluginActivation: Story = {
 export const Stalled: Story = {
   render: (args) => {
     const store = createLoaderStore('Starting…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
         setTimeout(() => store.setProgress(0.35), 500),
@@ -165,6 +168,7 @@ export const Stalled: Story = {
 export const StalledThenReady: Story = {
   render: (args) => {
     const store = createLoaderStore('Starting…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
         setTimeout(() => store.stalled(() => console.log('abort pressed')), 1_000),

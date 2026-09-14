@@ -34,6 +34,9 @@ export const ABSOLUTE_CEILING = 90;
 export const PLUGIN_DRAIN_MIN_MS = 200;
 export const PLUGIN_DRAIN_MAX_MS = 400;
 
+/** Sprite the activation row's icons resolve against when the host configures none. */
+export const DEFAULT_SPRITE_PATH = '/icons.svg';
+
 /** A drain delay sampled from `[PLUGIN_DRAIN_MIN_MS, PLUGIN_DRAIN_MAX_MS]`. */
 export const drainDelay = (): number =>
   PLUGIN_DRAIN_MIN_MS + Math.random() * (PLUGIN_DRAIN_MAX_MS - PLUGIN_DRAIN_MIN_MS);
@@ -89,6 +92,8 @@ export type LoaderStore = {
   plugins: Accessor<PluginRow[]>;
   /** The abort handler once startup has stalled, or `undefined` while it is within budget. */
   onAbort: Accessor<(() => void) | undefined>;
+  /** The icon sprite's symbols, as markup for an inline `<svg>`, once {@link LoaderStore.loadSprite} has landed. */
+  sprite: Accessor<string | undefined>;
   /** Whole seconds since the loader appeared. Ticks only while stalled — see {@link LoaderStore.stalled}. */
   elapsedSeconds: Accessor<number>;
   /** Apply a status update (append, or replace-in-place for range ticks). */
@@ -106,6 +111,14 @@ export type LoaderStore = {
    * — activation bursts would otherwise land as one clump. Unregistered and repeated ids are ignored.
    */
   activatePlugin: (id: string) => void;
+  /**
+   * Fetch the icon sprite for the activation row. Called at mount, so the ~200KB download starts
+   * with the page rather than with the first activation: an external `<use href="/icons.svg#…">`
+   * is only requested when its element lands, and on a cold cache that arrives after the row has
+   * filled — or after the loader has gone. Resolves once the sprite is in, or on failure with
+   * {@link LoaderStore.sprite} left unset (the slots then stay empty, as they would anyway).
+   */
+  loadSprite: (url: string) => Promise<void>;
   /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
   stalled: (onAbort: () => void) => void;
   /** Snap to 100%, stop the creep, and enter the dismissing phase. */
@@ -128,6 +141,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
   // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
   const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
+  const [sprite, setSprite] = createSignal<string | undefined>(undefined);
   // Wall-clock from the moment the loader appeared, which is the number the user is actually asking
   // about ("how long has this been going?"). Only ticked once stalled: a healthy boot has no use for
   // a second timer, and the count is meaningless until it is long enough to notice.
@@ -246,6 +260,24 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     startCreep();
   };
 
+  const loadSprite = async (url: string): Promise<void> => {
+    let text: string;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        return;
+      }
+      text = await response.text();
+    } catch {
+      return;
+    }
+    const root = new DOMParser().parseFromString(text, 'image/svg+xml').documentElement;
+    if (root.tagName.toLowerCase() !== 'svg') {
+      return;
+    }
+    setSprite(root.innerHTML);
+  };
+
   const stalled = (handler: () => void): void => {
     if (onAbort()) {
       return;
@@ -281,11 +313,13 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     phase,
     plugins,
     onAbort,
+    sprite,
     elapsedSeconds,
     pushStatus,
     setProgress,
     setPlugins,
     activatePlugin,
+    loadSprite,
     stalled,
     ready,
     dispose,

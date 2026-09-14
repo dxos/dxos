@@ -294,6 +294,23 @@ describe('mutations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('tells assistant actors apart by subject', () =>
+    Effect.gen(function* () {
+      const session = yield* Database.add(Task.make({ title: 'stands in for a session object' }));
+      const task = yield* Database.add(
+        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { role: 'assistant' } }),
+      );
+      yield* Database.flush();
+
+      // A bare assistant and one naming its session are different owners, so the edit is recorded.
+      const entry = Task.update(task, { assignee: { role: 'assistant', subject: Ref.make(session) } });
+      yield* Database.flush();
+
+      expect(entry?.description).toEqual('Assigned to an agent.');
+      expect(task.assignee?.subject?.target?.id).toEqual(session.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('clears an optional field with null and says so', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(

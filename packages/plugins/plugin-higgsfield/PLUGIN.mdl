@@ -1,0 +1,138 @@
+---
+id: org.dxos.plugin.higgsfield
+name: HiggsfieldPlugin
+version: 0.1.0
+---
+
+A **headless** Composer plugin that makes [Higgsfield](https://higgsfield.ai) available as an
+**image** and **video** generation provider for `plugin-studio`. No React/UI surfaces.
+
+## Extensions
+
+| Term   | URI                     |
+| ------ | ----------------------- |
+| `feat` | `org.dxos.mdl.feat@1.0` |
+| `test` | `org.dxos.mdl.test@1.0` |
+
+## Connector
+
+```mdl
+feat HiggsfieldConnector
+  desc: >
+    Contributes a ConnectorEntry via Capability.contribute(Connector, [entry]) on
+    ConnectorEvents.Start (mirrors plugin-heygen / plugin-ideogram).
+  id: org.dxos.plugin.higgsfield.connector
+  source: higgsfield.ai
+  label: Higgsfield
+  credentialForm:
+    schema: HiggsfieldCredentialForm { keyId: string, keySecret: string (password) }
+    onSubmit: >
+      Trim both parts and require both; store Obj.make(AccessToken, { source: "higgsfield.ai",
+      token: "<keyId>:<keySecret>" }) + Obj.make(Connection, { connectorId, accessToken });
+      return { kind: "complete", … }.
+```
+
+## Provider
+
+```mdl
+feat HiggsfieldGenerationService
+  desc: >
+    Contributes two GenerationServices (kinds 'image' and 'video', one shared HiggsfieldProvider)
+    via Capability.contributeAll(StudioCapabilities.GenerationService, services) on
+    StudioEvents.Start. Asynchronous: enqueue → awaitResult (poll). Contract from
+    @dxos/plugin-studio/GenerationService.
+  id: higgsfield
+  kinds: [image, video]
+  contentType: image/jpeg | video/mp4          # per service; the produced media decides the variant mime
+  source: higgsfield.ai
+  requestSchema:
+    image: { model, prompt }
+    video: { model, prompt, imageUrl?, stillModel? }   # DoP animates a still: generated from the prompt unless imageUrl is given
+  fieldOptions:
+    image.model: Soul v2 / Soul (text-to-image)
+    video.model: DoP lite / turbo / standard (image-to-video); video.stillModel: the Soul tiers
+  defaultRequest:
+    image: { model: "higgsfield-ai/soul/v2/standard" }
+    video: { model: "higgsfield-ai/dop/lite", stillModel: "higgsfield-ai/soul/v2/standard" }
+  enqueue:
+    endpoint: POST https://api.higgsfield.ai/<model>   # via edge CORS proxy; header Authorization: Key id:secret
+    body: { prompt } (image) | { prompt, image_url } (video — the still is a synchronous Soul job inside enqueue)
+    returns: { jobId: status_url }   # the animation's status url for video; polled verbatim
+  awaitResult:
+    endpoint: GET {status_url}   # 2s → 10s backoff, 5 min operation deadline, 60s per round trip
+    terminal: completed | failed | nsfw | canceled
+    returns: variants from images[].url (image/jpeg) | video.url (video/mp4) | audio(s) (audio/mpeg)
+    progress: onProgress({ status: Queued | Generating | … })
+  errors:
+    - missing credential → MissingCredential (studio resolves it from the Connector credential first)
+    - blank model path → ProviderFailure
+    - non-2xx submit / 4xx status / failed / nsfw / canceled / timeout → ProviderFailure
+    - 5xx on status → retried
+```
+
+## Dependencies
+
+- `@dxos/plugin-studio` (workspace:\*) — `GenerationService` contract, `StudioCapabilities`, `StudioEvents`.
+- `@dxos/plugin-connector`, `@dxos/link` (AccessToken/Connection), `@dxos/edge-client` (CORS proxy),
+  `@dxos/app-framework`, `@dxos/echo`, `@dxos/log`, `@dxos/util`, `effect`.
+
+## Out of scope (v1)
+
+- Image-to-video / reference-media inputs (file upload flow).
+- Model picker (no public catalog endpoint), cancellation, webhooks.
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-1: Connect Higgsfield and generate an image
+  desc: |
+    Higgsfield is headless — it contributes a Connector credential form and GenerationServices,
+    but owns no UI and no operation of its own. Generation runs entirely through plugin-studio's
+    generic `Generate` operation with `provider: "higgsfield"`.
+  actors: both
+  covers: [HiggsfieldConnector, HiggsfieldGenerationService]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - a Higgsfield Cloud API key id + secret on an account with credits
+    - no Artifact named "QA Soul Image" exists — ABORT rather than reusing one this test did not create
+  steps:
+    - name: Connect Higgsfield
+      do: Open Settings -> Connectors -> Higgsfield, enter the API key ID and secret, and submit.
+      expect: a Connection + AccessToken pair for source "higgsfield.ai" now exists, token "<id>:<secret>"
+      note: |
+        NO `invoke` — credential submission goes through the Connector's `onSubmit` UI callback,
+        not an operation with a runtime key.
+    - name: Create an image Artifact
+      do: In the navtree, click + on a collection and choose Studio Artifact, kind Image. Name it "QA Soul Image".
+      capture: created
+      expect: an Artifact of kind "image" named "QA Soul Image" exists
+      note: |
+        NO `invoke` — `Artifact.make()` is wired through `CreateObjectEntry`; there is no operation
+        key behind object creation itself.
+    - name: Generate with Higgsfield
+      do: In the Artifact's generate panel, pick "Higgsfield" as the provider, leave the model at its default, enter a prompt, and click Generate.
+      invoke: org.dxos.operation.studio.generate { artifact: $created.object, provider: "higgsfield", config: { model: "higgsfield-ai/soul/v2/standard", prompt: "A quiet alpine lake at sunrise" } }
+      capture: generated
+      expect: |
+        the invoke blocks until the request reaches a terminal state (enqueue + awaitResult both
+        run inside the operation), and the filled Variant holds an image/jpeg URL
+      assert: |
+        const artifact = await space.db.load($created.object);
+        const last = await space.db.load(artifact.variants[artifact.variants.length - 1]);
+        return $generated.count >= 1 && last.contentType === 'image/jpeg' && typeof last.url === 'string' && last.url.startsWith('https://');
+      note: Async provider — `enqueue` returns the submit response's status_url, `awaitResult` polls it until 'completed' before the operation returns.
+  after:
+    - name: Delete the Artifact
+      do: Right-click "QA Soul Image" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
+    - name: Disconnect Higgsfield
+      do: In Settings -> Connectors -> Higgsfield, remove the connection.
+      expect: the Connection and its AccessToken are removed
+```

@@ -1,8 +1,8 @@
 .vscode/settings.json @dmaretskyi @wittjosiah
 .prototools @dmaretskyi @wittjosiah
-# What composer.space actually ships. Adding or removing a plugin here changes the production app's
-# surface area and its bundle, so it is always reviewed.
-packages/apps/composer-app/src/plugin-defs.production.tsx @wittjosiah
+# Which plugins each build registers and turns on for a fresh profile. Changing a set changes the
+# app's surface area and its bundle, so every set is reviewed.
+packages/apps/composer-app/src/plugin-defs*.tsx @wittjosiah
 
 # The eager boot graph's ceiling. Raising it accepts startup cost for every user, so the increase
 # has to be motivated in review rather than merged to make a build pass.

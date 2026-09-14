@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Actor, RemoteSession, Task, TaskSet } from '@dxos/types';
 
@@ -48,7 +49,18 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 
       // Through `Task.edit`, so the change and the log entry that explains it land together and a
       // no-op patch records nothing. Milestone stays here: it is set membership, not a field edit.
+      const previousStatus = task.status;
       Task.update(task, { title, description, status, priority, estimate, assignee: sessionAssignee ?? assignee });
+      // The resolved status, not the requested one: a task with reviewers lands in `review`. This is
+      // what cuts an agent session's timeline into per-task segments.
+      if (task.status !== undefined && task.status !== previousStatus) {
+        yield* Trace.write(Trace.TaskStatusChanged, {
+          taskId: task.id,
+          title: task.title,
+          status: task.status,
+          ...(previousStatus ? { previousStatus } : {}),
+        });
+      }
 
       if (milestone !== undefined) {
         Obj.update(task, (task) => {

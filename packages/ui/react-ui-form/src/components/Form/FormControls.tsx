@@ -35,7 +35,7 @@ import {
   useFormHandler,
   useKeyHandler,
 } from '../../hooks/index.ts';
-import { formTheme } from './Form.theme';
+import { formTheme } from './Form.theme.ts';
 import { type FormFieldsProps } from './FormFields/index.ts';
 import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout/index.ts';
 

@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Task } from '@dxos/types';
 
 import * as Trigger from './types/Trigger.ts';
 
@@ -533,6 +534,23 @@ export const OperationOutput = EventType('operation.output', {
     output: Schema.Unknown,
   }),
   isEphemeral: true,
+});
+
+/**
+ * Emitted when a task's status changes — a new task counts as a change from nothing.
+ *
+ * Nothing else in a trace says which task an agent was working on, so these events are what cut a
+ * session's timeline into per-task segments. Every tool that moves a task's status emits one.
+ */
+export const TaskStatusChanged = EventType('task.statusChanged', {
+  schema: Schema.Struct({
+    taskId: Obj.ID,
+    title: Schema.String,
+    status: Task.Status,
+    /** Absent when the task was just created, or held no status before. */
+    previousStatus: Schema.optional(Task.Status),
+  }),
+  isEphemeral: false,
 });
 
 /**
