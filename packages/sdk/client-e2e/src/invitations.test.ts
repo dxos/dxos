@@ -11,12 +11,7 @@ import { afterAll, beforeEach, describe, expect, onTestFinished, test } from 'vi
 
 import { Trigger, chain, waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
-import {
-  type Space,
-  handlersContextFromObject,
-  makeInProcessClientServicesRpc,
-  makeServicesFromRpc,
-} from '@dxos/client-protocol';
+import { type Space, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
 import {
   type DataSpace,
   InvitationsManager,
@@ -745,9 +740,9 @@ const createInvitationsApi = async (
   const scope = Effect.runSync(Scope.make());
   invitationsApiScopes.push(scope);
   const rpc = await EffectEx.runPromise(
-    makeInProcessClientServicesRpc(() =>
-      handlersContextFromObject({ InvitationsService: new InvitationsServiceImpl(manager) }),
-    ).pipe(Scope.provide(scope)),
+    makeInProcessClientServicesRpc(() => ({ InvitationsService: new InvitationsServiceImpl(manager) })).pipe(
+      Scope.provide(scope),
+    ),
   );
   const service = makeServicesFromRpc(rpc, EffectContext.empty()).InvitationsService!;
   return { manager, service, metadata };

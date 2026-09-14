@@ -6,7 +6,6 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import type * as EffectRpc from 'effect/unstable/rpc/Rpc';
@@ -104,40 +103,6 @@ export type ClientServicesHandlers = {
   WorkerService: WorkerService.Handlers;
 };
 
-/**
- * Effect context holding any subset of the handler groups under their rpc tags. A call to a group
- * that is absent fails with a typed error rather than a defect. Typed as `never` because
- * {@link Context.Context} is contravariant in its services, so every wider context is assignable.
- */
-export type ClientServicesHandlersContext = Context.Context<never>;
-
-/** Effect tag of each handler group, keyed by the service name its rpc tags are prefixed with. */
-const HANDLER_TAGS: Record<keyof ClientServicesHandlers, Context.Key<any, any>> = {
-  SystemService: SystemService.Tag,
-  NetworkService: NetworkService.Tag,
-  LoggingService: LoggingService.Tag,
-  IdentityService: IdentityService.Tag,
-  InvitationsService: InvitationsService.Tag,
-  DevicesService: DevicesService.Tag,
-  SpacesService: SpacesService.Tag,
-  DataService: DataService.Tag,
-  QueryService: QueryService.Tag,
-  FeedService: FeedService.Tag,
-  ContactsService: ContactsService.Tag,
-  EdgeAgentService: EdgeAgentService.Tag,
-  DevtoolsHost: DevtoolsHost.Tag,
-  WorkerService: WorkerService.Tag,
-};
-
-/**
- * Wraps handler implementations keyed by service name into a {@link ClientServicesHandlersContext}.
- */
-export const handlersContextFromObject = (handlers: Partial<ClientServicesHandlers>): ClientServicesHandlersContext =>
-  (Object.keys(handlers) as (keyof ClientServicesHandlers)[]).reduce<Context.Context<never>>(
-    (context, key) => (handlers[key] ? Context.add(context, HANDLER_TAGS[key], handlers[key]) : context),
-    Context.empty(),
-  );
-
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
 const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'Void';
@@ -183,7 +148,7 @@ export type ClientRpcServerParams = {
   /**
    * Resolved per call so the served set follows the host lifecycle (services host open/close).
    */
-  services: () => ClientServicesHandlersContext;
+  services: () => Partial<ClientServicesHandlers>;
   /**
    * Awaited before dispatching each request (e.g. worker readiness); a rejection fails the call.
    */
@@ -238,7 +203,7 @@ export type ServeClientServicesOverIFrameOptions = {
   iframe: HTMLIFrameElement;
   origin: string;
   channel?: string;
-  services: () => ClientServicesHandlersContext;
+  services: () => Partial<ClientServicesHandlers>;
 };
 
 /**
@@ -284,9 +249,7 @@ export const makeClientServicesHandlers = ({
     // A missing handler is a TYPED failure, never a throw: the worker-pool client reads a defect as
     // the shared connection crashing and fails every unrelated in-flight call with it.
     const resolve = (): ((payload: unknown) => unknown) | Error => {
-      const service = Option.getOrUndefined(
-        Context.getOption(services(), HANDLER_TAGS[serviceKey as keyof ClientServicesHandlers]),
-      ) as Record<string, (payload: unknown) => unknown> | undefined;
+      const service = services()[serviceKey] as Record<string, (payload: unknown) => unknown> | undefined;
       const handler = service?.[tag];
       if (typeof handler !== 'function') {
         return new Error(`Service handler not available: ${tag}`);
@@ -374,18 +337,18 @@ export const makeClientServicesRpc = (
  * the client surface without a transport.
  */
 export const makeInProcessClientServicesRpc = (
-  services: () => ClientServicesHandlersContext,
+  services: () => Partial<ClientServicesHandlers>,
 ): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
   RpcTest.makeClient(ClientServicesRpcs).pipe(
     Effect.provide(makeClientServicesHandlers({ services })),
   ) as unknown as Effect.Effect<ClientServicesRpc, never, Scope.Scope>;
 
 /**
- * Derives a host {@link ClientServicesHandlersContext} from an effect-native {@link ClientServicesRpc},
- * so a client-side rpc surface can be re-served (e.g. the devtools bridge). Each handler delegates
- * to the corresponding client method.
+ * Derives host {@link ClientServicesHandlers} from an effect-native {@link ClientServicesRpc}, so a
+ * client-side rpc surface can be re-served (e.g. the devtools bridge). Each handler delegates to the
+ * corresponding client method.
  */
-export const makeHandlersFromRpc = (rpc: ClientServicesRpc): ClientServicesHandlersContext => {
+export const makeHandlersFromRpc = (rpc: ClientServicesRpc): Partial<ClientServicesHandlers> => {
   // The rpc client is a flat record keyed by the prefixed tag (`InvitationsService.queryInvitations`),
   // not a per-service object; the handler shape it is being reshaped into *is* nested by service.
   const rpcRecord = rpc as unknown as Record<string, (...args: any[]) => unknown>;
@@ -395,7 +358,7 @@ export const makeHandlersFromRpc = (rpc: ClientServicesRpc): ClientServicesHandl
     const service = (handlers[serviceKey] ??= {});
     service[tag] = (payload: unknown) => rpcRecord[tag](payload);
   }
-  return handlersContextFromObject(handlers as Partial<ClientServicesHandlers>);
+  return handlers as Partial<ClientServicesHandlers>;
 };
 
 /**

@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
@@ -13,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { log, logInfo } from '@dxos/log';
 import { type BufService } from '@dxos/protocols/buf-service';
 import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { WorkerService } from '@dxos/protocols/rpc';
+import { type WorkerService } from '@dxos/protocols/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
 import { type ClientServicesHost } from '../services/index.ts';
@@ -94,8 +93,10 @@ export class WorkerSession {
       }
     };
 
-    const services = () =>
-      EffectContext.add(this._serviceHost.services, WorkerService.Tag, this.#workerServiceHandlers);
+    const services = () => ({
+      ...this._serviceHost.services,
+      WorkerService: this.#workerServiceHandlers,
+    });
 
     this._clientRpc = new ClientRpcServer({
       services,

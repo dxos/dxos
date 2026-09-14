@@ -13,7 +13,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
-  type ClientServicesHandlersContext,
+  type ClientServicesHandlers,
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -36,7 +36,19 @@ import {
 } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService, type TransportFactory } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SystemService } from '@dxos/protocols/rpc';
+import {
+  ContactsService,
+  DataService,
+  DevicesService,
+  EdgeAgentService,
+  FeedService,
+  IdentityService,
+  InvitationsService,
+  LoggingService,
+  NetworkService,
+  QueryService,
+  SpacesService,
+} from '@dxos/protocols/rpc';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
@@ -131,9 +143,9 @@ export type ServiceContext = ClientServicesHost;
  */
 export class ClientServicesHost {
   readonly #resourceLock?: ResourceLock;
-  // Effect-rpc handlers served over each connection: the stack context plus the host-owned system
-  // service while open, the system service alone while closed.
-  #handlers: ClientServicesHandlersContext;
+  // Effect-rpc handlers served over each connection, resolved from the Layer stack on open and reset
+  // to the host-local set on close. Held directly (no separate registry indirection).
+  #handlers: Partial<ClientServicesHandlers>;
   readonly #systemService: SystemServiceImpl;
   readonly #statusUpdate = new Event<void>();
 
@@ -245,7 +257,9 @@ export class ClientServicesHost {
 
     this.#diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this.#systemService);
 
-    this.#handlers = EffectContext.make(SystemService.Tag, this.#systemService);
+    this.#handlers = {
+      SystemService: this.#systemService,
+    };
   }
 
   get isOpen() {
@@ -262,10 +276,7 @@ export class ClientServicesHost {
     return this;
   }
 
-  /**
-   * Effect-rpc handlers to serve, as a context keyed by each service's rpc tag.
-   */
-  get services(): ClientServicesHandlersContext {
+  get services() {
     return this.#handlers;
   }
 
@@ -463,6 +474,18 @@ export class ClientServicesHost {
           identityLifecycle: IdentityLifecycleService,
           readiness: StackReadinessService,
           networkManager: SwarmNetworkManagerService,
+          // Handlers.
+          identityService: IdentityService.Tag,
+          contactsService: ContactsService.Tag,
+          invitationsService: InvitationsService.Tag,
+          devicesService: DevicesService.Tag,
+          spacesService: SpacesService.Tag,
+          networkService: NetworkService.Tag,
+          edgeAgentService: EdgeAgentService.Tag,
+          dataService: DataService.Tag,
+          queryService: QueryService.Tag,
+          feedService: FeedService.Tag,
+          loggingService: LoggingService.Tag,
           devtoolsHost: DevtoolsHostService,
         }),
       );
@@ -483,7 +506,9 @@ export class ClientServicesHost {
       this.#devtoolsHost = resolved.devtoolsHost;
       this.#networkManager = resolved.networkManager;
 
-      this.#handlers = EffectContext.add(this.#stackContext, SystemService.Tag, this.#systemService);
+      this.#handlers = {
+        SystemService: this.#systemService,
+      };
 
       await this._openStack(ctx);
     } catch (err) {
@@ -493,7 +518,7 @@ export class ClientServicesHost {
       await this.#stackRuntime?.dispose();
       this.#stackRuntime = undefined;
       this.#stackContext = undefined;
-      this.#handlers = EffectContext.make(SystemService.Tag, this.#systemService);
+      this.#handlers = { SystemService: this.#systemService };
       this.#opening = false;
       throw err;
     }
@@ -538,7 +563,7 @@ export class ClientServicesHost {
     log('closing...', { deviceKey });
     this.#diagnosticsBroadcastHandler.stop();
     await this.#devtoolsProxy?.close();
-    this.#handlers = EffectContext.make(SystemService.Tag, this.#systemService);
+    this.#handlers = { SystemService: this.#systemService };
     await this.#disposeStack();
     this.#open = false;
     this.#statusUpdate.emit();

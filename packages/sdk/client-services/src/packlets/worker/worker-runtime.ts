@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
@@ -217,10 +216,7 @@ export const makeWorkerRuntime = ({
         log('started');
         // Bridge the host identity/devices Handlers to the effect-rpc client surface in-process.
         serviceScope = Effect.runSync(Scope.make());
-        const identityHandlers = Option.getOrUndefined(
-          Context_.getOption(clientServices.services, IdentityService.Tag),
-        );
-        const devicesHandlers = Option.getOrUndefined(Context_.getOption(clientServices.services, DevicesService.Tag));
+        const { IdentityService: identityHandlers, DevicesService: devicesHandlers } = clientServices.services;
         invariant(identityHandlers, 'IdentityService handler not available');
         invariant(devicesHandlers, 'DevicesService handler not available');
         const [identityService, devicesService] = await EffectEx.runPromise(
