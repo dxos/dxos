@@ -22,8 +22,15 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 
-import { DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
+import { DebugConsole, DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
 import { Settings } from '#types';
+
+//
+// DebugConsoleArticle
+//
+
+/** `react-surface.ts` is a plain `.ts` file, so the JSX for the console page's article surface lives here. */
+export const DebugConsoleArticle = () => <DebugConsole fit />;
 
 //
 // DebugSettings

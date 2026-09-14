@@ -20,6 +20,7 @@ import { DebugNodes, DebugSurface } from '#types';
 
 import { DebugCapabilities } from '../types/Debug.ts';
 import {
+  DebugConsoleArticle,
   DebugSettingsSurface,
   ObjectDebugSurface,
   SpaceGeneratorSurface,
@@ -82,6 +83,16 @@ export default Capability.makeModule(
           object: subject,
           classNames: 'row-span-2 overflow-hidden',
         }),
+      }),
+      Surface.create({
+        id: 'console',
+        filter: AppSurface.literal(AppSurface.Article, DebugNodes.Console),
+        component: DebugConsoleArticle,
+      }),
+      Surface.create({
+        id: 'logsArticle',
+        filter: AppSurface.literal(AppSurface.Article, DebugNodes.Logs),
+        component: LoggerPanel,
       }),
       Surface.create({
         id: 'objectDebug',
