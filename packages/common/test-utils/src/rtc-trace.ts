@@ -7,17 +7,26 @@ export const RTC_TRACE_PREFIX = '[dx-rtc-trace]';
 
 type Details = Record<string, unknown>;
 
+/** The SDP of a description argument, read once when the call starts. */
+type Captured = { sdp?: string };
+
+/** Emits one line for the call being traced; `base` holds only the tracer's own primitives. */
+type Log = (base: Details, describe?: () => Details) => void;
+
 type TracedMethod = {
   name: string;
-  args?: (pc: RTCPeerConnection, args: unknown[]) => Details;
+  args?: (pc: RTCPeerConnection, args: unknown[], captured: Captured) => Details;
   result?: (value: unknown) => Details;
+  /** Re-parses a description the call rejected as unparseable. */
+  reparse?: boolean;
 };
 
 /**
  * Page init script logging each RTCPeerConnection construction, call phase and event through the console.debug
  * captured at install; self-contained because Playwright serializes it into the page.
  *
- * A call logs `start`, then `ret` when its synchronous part returns a pending promise, then `ok` or `err` once.
+ * A call logs `start`, then `ret` when its synchronous part returns a pending promise, then `ok` or `err` once; a remote
+ * description WebKit rejects as unparseable then logs `reparse` lines carrying the failing call's `call`.
  */
 export const installRtcTrace = (prefix: string): void => {
   const marker = Symbol.for('dxos.e2e.rtc-trace');
@@ -35,7 +44,14 @@ export const installRtcTrace = (prefix: string): void => {
   const timeOrigin = perf.timeOrigin;
   const then = Promise.prototype.then;
   const NativePromise = Promise;
+  const NativeDOMException = DOMException;
   const addEventListener = EventTarget.prototype.addEventListener;
+  const schedule = setTimeout;
+  const encoder = new TextEncoder();
+  const proto = Native.prototype;
+  // Captured before wrapping, so a re-parse connection is never traced.
+  const nativeSetRemoteDescription = proto.setRemoteDescription;
+  const nativeClose = proto.close;
 
   /** Keyed weakly so tracing never extends a connection's lifetime. */
   const indices = new WeakMap<object, number>();
@@ -86,18 +102,105 @@ export const installRtcTrace = (prefix: string): void => {
 
   const count = (sdp: string, pattern: RegExp): number => sdp.match(pattern)?.length ?? 0;
 
-  const describeSdp = (description: object): Details => {
-    const sdp = field(description, 'sdp');
-    return typeof sdp === 'string'
-      ? { type: field(description, 'type'), cands: count(sdp, /^a=candidate:/gm), mlines: count(sdp, /^m=/gm) }
-      : { type: field(description, 'type') };
+  /** UTF-16 length, UTF-8 length and FNV-1a-32 of the UTF-8 bytes, and each `m=` line verbatim up to its `\n`. */
+  const describeSdpText = (sdp: string): Details => {
+    const bytes = encoder.encode(sdp);
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < bytes.length; i++) {
+      hash = Math.imul(hash ^ bytes[i], 0x01000193);
+    }
+    return {
+      units: sdp.length,
+      bytes: bytes.length,
+      fnv1a: (hash >>> 0).toString(16).padStart(8, '0'),
+      mText: sdp.match(/^m=[^\n]*/gm) ?? [],
+    };
   };
 
-  const describeDescriptionArg = (_: RTCPeerConnection, [description]: unknown[]): Details =>
-    typeof description === 'object' && description !== null ? describeSdp(description) : { implicit: true };
+  const describeSdp = (description: object, captured?: Captured): Details => {
+    const type = field(description, 'type');
+    const sdp = field(description, 'sdp');
+    if (typeof sdp !== 'string') {
+      return { type };
+    }
+    if (captured) {
+      captured.sdp = sdp;
+    }
+    return { type, cands: count(sdp, /^a=candidate:/gm), mlines: count(sdp, /^m=/gm), ...describeSdpText(sdp) };
+  };
+
+  const describeDescriptionArg = (_: RTCPeerConnection, [description]: unknown[], captured: Captured): Details =>
+    typeof description === 'object' && description !== null ? describeSdp(description, captured) : { implicit: true };
 
   const describeDescriptionResult = (value: unknown): Details =>
     typeof value === 'object' && value !== null ? describeSdp(value) : { result: typeof value };
+
+  /** A copy with its own backing store, which `slice(0)` does not give: engines return the whole string itself. */
+  const rebuild = (text: string): string => {
+    const units: string[] = [];
+    for (let i = 0; i < text.length; i++) {
+      units.push(String.fromCharCode(text.charCodeAt(i)));
+    }
+    return units.join('');
+  };
+
+  /** WebKit parses an answer before checking state, so on a stable connection only a parseable one is InvalidStateError. */
+  const parseOutcome = (err: unknown): string => {
+    const { name } = describeError(err);
+    return name === 'SyntaxError' ? 'unparsed' : name === 'InvalidStateError' ? 'parsed' : 'err';
+  };
+
+  /** Parses each copy in turn as an answer on the stable `probe`, logging each outcome before `probe` closes. */
+  const parseCopies = (log: Log, probe: RTCPeerConnection, sdp: string, copies: string[]): void => {
+    const [copy, ...rest] = copies;
+    if (copy === undefined) {
+      try {
+        apply(nativeClose, probe, []);
+      } catch (err) {
+        log({ outcome: 'closeErr' }, () => describeError(err));
+      }
+      return;
+    }
+    let text = sdp;
+    const settle = (base: Details, describe?: () => Details): void => {
+      log({ copy, ...base }, () => ({ ...(describe ? describe() : {}), ...describeSdpText(text) }));
+      parseCopies(log, probe, sdp, rest);
+    };
+    try {
+      if (copy === 'rebuilt') {
+        text = rebuild(sdp);
+      }
+      apply(then, apply(nativeSetRemoteDescription, probe, [{ type: 'answer', sdp: text }]), [
+        () => settle({ outcome: 'applied' }),
+        (err: unknown) => settle({ outcome: parseOutcome(err) }, () => describeError(err)),
+      ]);
+    } catch (err) {
+      settle({ outcome: 'diagErr' }, () => describeError(err));
+    }
+  };
+
+  /** Re-parses on one connection the app never sees, which an answer in stable state leaves unapplied. */
+  const reparseCopies = (log: Log, sdp: string): void => {
+    let probe: RTCPeerConnection;
+    try {
+      probe = new Native();
+    } catch (err) {
+      log({ outcome: 'diagErr' }, () => describeError(err));
+      return;
+    }
+    parseCopies(log, probe, sdp, ['same', 'rebuilt']);
+  };
+
+  /** Runs one task after WebKit's parse rejection, past any microtask handling of it by the app. */
+  const scheduleReparse = (log: Log, { sdp }: Captured, err: unknown): void => {
+    try {
+      if (sdp !== undefined && err instanceof NativeDOMException && err.name === 'SyntaxError') {
+        apply(schedule, globalThis, [() => reparseCopies(log, sdp), 0]);
+      }
+    } catch (diagErr) {
+      log({ outcome: 'diagErr' }, () => describeError(diagErr));
+    }
+  };
 
   const describeCandidate = (candidate: unknown): Details => {
     if (typeof candidate !== 'object' || candidate === null) {
@@ -138,7 +241,7 @@ export const installRtcTrace = (prefix: string): void => {
     { name: 'createOffer', result: describeDescriptionResult },
     { name: 'createAnswer', result: describeDescriptionResult },
     { name: 'setLocalDescription', args: describeDescriptionArg },
-    { name: 'setRemoteDescription', args: describeDescriptionArg },
+    { name: 'setRemoteDescription', args: describeDescriptionArg, reparse: true },
     {
       name: 'addIceCandidate',
       args: (pc, [candidate]) => ({
@@ -152,8 +255,7 @@ export const installRtcTrace = (prefix: string): void => {
     { name: 'getStats' },
   ];
 
-  const proto = Native.prototype;
-  for (const { name, args: describeArgs, result: describeResult } of methods) {
+  for (const { name, args: describeArgs, result: describeResult, reparse } of methods) {
     const descriptor = Object.getOwnPropertyDescriptor(proto, name);
     const original: unknown = descriptor?.value;
     if (!descriptor || typeof original !== 'function') {
@@ -166,9 +268,10 @@ export const installRtcTrace = (prefix: string): void => {
         const pc = this instanceof Native ? this : undefined;
         const index = pc ? indexOf(pc) : 0;
         const call = ++calls;
+        const captured: Captured = {};
         emit(index, name, { ph: 'start', call }, () => ({
           sig: pc?.signalingState ?? null,
-          ...(pc && describeArgs ? describeArgs(pc, args) : {}),
+          ...(pc && describeArgs ? describeArgs(pc, args, captured) : {}),
         }));
 
         let result: unknown;
@@ -193,6 +296,13 @@ export const installRtcTrace = (prefix: string): void => {
           },
           (err: unknown) => {
             emit(index, name, { ph: 'err', call }, () => describeError(err));
+            if (reparse) {
+              scheduleReparse(
+                (base, describe) => emit(index, name, { ph: 'reparse', call, ...base }, describe),
+                captured,
+                err,
+              );
+            }
             throw err;
           },
         ]);
