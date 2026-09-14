@@ -357,9 +357,10 @@ export class IndexQuerySource implements QuerySource {
         this._hydrationCtx = ctx;
         const results = await this._mapRecords(ctx, queryId, query, Date.now(), records);
 
-        // Dropped if the source closed (or was re-opened with a new query) during hydration.
+        // Dropped if the source closed (or was re-opened with a new query) during hydration; a pass
+        // queued for the new query still runs.
         if (this._hydrationCtx !== ctx) {
-          return;
+          continue;
         }
 
         this._results = results;

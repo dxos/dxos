@@ -1486,7 +1486,8 @@ export class EntityManager implements IDatabaseBinding {
 
   /**
    * Opens handles for queued links a slice at a time. A link bound by another path while queued
-   * (an explicit load, a rebind) is skipped rather than loaded twice.
+   * (an explicit load, a rebind) is skipped rather than loaded twice, and one the root no longer
+   * carries is dropped.
    */
   async #drainQueuedLinkLoads(): Promise<void> {
     if (this.#drainingLinkLoads) {
@@ -1500,7 +1501,11 @@ export class EntityManager implements IDatabaseBinding {
         const started = performance.now();
         for (const [objectId, link] of this.#queuedLinkLoads) {
           this.#queuedLinkLoads.delete(objectId);
-          if (!this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId)) {
+          if (
+            this._spaceRootDocHandle?.doc()?.links?.[objectId]?.toString() === link.toString() &&
+            !this._objectDocumentHandles.has(objectId) &&
+            !this._objectsPendingDocumentLoad.has(objectId)
+          ) {
             this._loadLinkedObjects({ [objectId]: link }, { diskOnly: true });
           }
           if (performance.now() - started >= LINK_LOAD_SLICE_MS) {
@@ -1597,6 +1602,7 @@ export class EntityManager implements IDatabaseBinding {
   private _clearHandleReferences(): string[] {
     const objectsWithHandles = [...this._objectDocumentHandles.keys()];
     this._objectDocumentHandles.clear();
+    this.#queuedLinkLoads.clear();
     this._documentObjects.clear();
     this._spaceRootDocHandle = null;
     return objectsWithHandles;

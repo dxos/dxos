@@ -62,6 +62,8 @@ const startProbe = () => {
   return {
     stop: (): LagReport => {
       clearTimeout(handle);
+      // Entries still queued for delivery are dropped by disconnect().
+      tasks.push(...observer.takeRecords().map((entry) => entry.duration));
       observer.disconnect();
       return {
         longTasks: tasks.length,

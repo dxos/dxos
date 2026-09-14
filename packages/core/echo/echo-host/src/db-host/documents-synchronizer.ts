@@ -20,6 +20,7 @@ const MAX_UPDATE_FREQ = 10; // [updates/sec]
 /**
  * Ceilings on one batch. A first sync can make thousands of documents pending inside one tick, and
  * the client decodes and integrates a batch as one message, so the remainder waits for the next tick.
+ * The byte ceiling is soft: a batch closes after the document that crosses it.
  */
 const MAX_BATCH_BYTES = 1024 * 1024;
 const MAX_BATCH_DOCUMENTS = 500;
