@@ -186,3 +186,115 @@ Without a deferral (tests, hand-built stacks) the drain is awaited exactly as be
 Expected effect on `operation.invoke`: p50 down by ~the `traceFlush` p50 (150ms), p95 by up to its
 p95 (2.3s). To be confirmed against Signoz after the dev deploy — recorded here as a prediction, not
 a measurement.
+
+---
+
+## 2026-09-14 — iterating on dev
+
+### Correction: the server-side percentile table above is biased
+
+**93% of Effect child spans record `duration_nano = 0` in every environment**, production
+included (7d: 870 `http.server POST` spans, 64 with any duration). The Workers clock only advances
+across I/O, so a span whose start and end are not separated by I/O reads as zero-length. The
+"production, server-side" table in §3 was therefore computed over the ~7% of calls slow enough to
+register — the slow tail, not the population. `fetchHandler POST` (the platform's own span around
+the whole request) has real durations everywhere and is the number to trust: **production p50
+2840ms, dev p50 2482ms** (7d), so dev is a valid place to iterate.
+
+The "dev is unobservable" obstacle in §Obstacles was the same effect, misread as dev-specific.
+
+### Fix 3 — the eval's identity gets a Hub account
+
+`edgeAuth` admits a chained HALO identity on the WebSocket upgrade route only when a Hub account is
+bound to it. The repo already has the sanctioned way for an ephemeral test identity to get one —
+`POST /hub/account/login` with a `test+*@dxos.org` address, open on local/test/dev/preview and
+closed on staging/production, used by the edge repo's own e2e harness — and the eval simply never
+called it. `claude-harness.ts` now binds a fresh `test+mcp-eval-<key>@dxos.org` account before
+replicating. The run connects, the grant is minted, Claude Code dispatches real tool calls at dev.
+
+### Finding — every deployed `invokeOperation` hung, and why
+
+First dev run after Fix 3: **43%**, every `invokeOperation` errored after ~6.1s. Signoz:
+
+- operation-service and mcp-space-service both stuck in `EntityManager._loadSpaceRootDocHandle`
+  (`Automerge root doc load timeout … 5,000ms`), then `The Workers runtime canceled this request
+because it detected that your Worker's code had hung`.
+- **db-service's own `DataServiceEntrypoint.getDocuments` was being killed the same way**, so
+  every caller up the chain inherited a ~30s hang instead of an error.
+- The space _had_ replicated: the eval's subduction sessions were live and its replicator DO had
+  sent `collection-state` for 7 documents.
+
+A direct probe against the same space after db-service was redeployed (fresh DO instance, eval
+client gone) succeeded, with `getDocumentsBytes` answering in `initMs 0 / blobsMs 0, found 4/4`.
+So the hang is state-dependent (a live DO instance with an active client session), not missing
+data. It did not recur in the two eval runs since. Not root-caused; what was done about it:
+
+- **`compute-runtime`: `FunctionContext` bounds `db.open()` at 15s** and fails with the space
+  named, so a root that never arrives is an error in seconds rather than a runtime kill after ~30s
+  with no context, propagated to every caller.
+- **db-service logs the document-load path** (`getDocuments` on entry with space and ids; per
+  phase in the DO), so the next occurrence says how far it got. The runtime-cancel log carries
+  nothing.
+
+### Fix 4 — the fixed ~1.3s per MCP request: the handler cache never hit
+
+`routeMs` (logged inside `mcpHandler.fetch`, around the Effect handler) on dev:
+
+| Request                                    | routeMs (dev) | same handler under Miniflare |
+| ------------------------------------------ | ------------- | ---------------------------- |
+| `notifications/initialized` (202, no work) | 1298–1619     | 1–54                         |
+| `GET /mcp` → 405 (trivial route)           | 771–1620      | 1–54                         |
+| `queryOperations`                          | 1169–1554     | —                            |
+
+Disabling the Effect tracer bridge on dev changed nothing (405 p50 1416 → 949, 202 1335 → 1509:
+noise), ruling tracing out. The tell was `opened internal MCP session on this isolate` logging on
+**every request, consecutive ones on the same isolate included** — that line fires only when a
+handler entry has no session, i.e. `getHandler` was building a new handler per request.
+
+Root cause: the cache was a `WeakMap` keyed by the `env` object, and on the deployed worker that
+object is not stable across requests, so the key never hit. Every request rebuilt the handler —
+`listOperations` + `listSkills` RPCs to operation-service, the Effect layer, a synthetic
+`initialize` — and leaked a runtime. Under Miniflare `env` is one object, which is why it never
+showed locally. The cache is now keyed by identity alone (the bindings a handler captures are fixed
+for an isolate's lifetime); tests that swap a binding between requests empty it explicitly.
+
+**Before → after, dev, client-observed from the sandbox** (same probes, same space):
+
+| Probe                               | before                | after               |
+| ----------------------------------- | --------------------- | ------------------- |
+| `connect` (initialize + tools/list) | 5650–14229ms          | **197ms**           |
+| warm 202 / 405 / 415 (no work)      | 850–2500ms            | **40–63ms**         |
+| `queryOperations` p50               | 1536–1563ms           | **75ms**            |
+| `loadSkill` p50                     | 1530ms                | (in the eval below) |
+| `space.queryObjects` p50 / p95      | 4854–5759 / 6233–7999 | **2109 / 3557ms**   |
+
+The first request on a fresh isolate still pays the build (1.8–2.7s); that is now the only time.
+
+### Where the remaining ~2s per `invokeOperation` goes (operation-service phase log, dev)
+
+`space.queryObjects`, two calls: `registry 0ms · context 373–2246ms · handler 2086–2498ms ·
+scope close 0 · drain 10–19ms`. The context build (open an `EchoClient`, construct the database,
+load the root document over `DataService`) is cold-vs-warm; the handler is the query itself
+(`execQuery` on the indexer, then per-object document loads — the db-service log shows 1, 2, 1, 4
+document round trips per call). Both are operation-service / db-service work, next in line.
+
+### Eval runs on dev (real Claude Code subprocess, fresh identity each run)
+
+| Run | Score | invokeOperation errors | Notes                                                |
+| --- | ----- | ---------------------- | ---------------------------------------------------- |
+| 1   | 43%   | 25 / 25                | before Fix 3: identity refused, nothing replicated   |
+| 2   | 43%   | 25 / 25                | after Fix 3: connected, then the db-service hang     |
+| 3   | 57%   | **0 / 35**             | after the db-service redeploy; `tasks-listed` passes |
+
+Run 3 latency (client-observed): `queryOperations` p50 1563, `loadSkill` 1530, `tasks.listSessions`
+4554, `projects.get` 4827, `tasks.list` 4881, `space.queryObjects` 5759 (p95 7999) — all before
+Fix 4. Still failing in run 3: `task-completed` and `follow-up-turn-wrote` (the write stages) and
+`tool-latency` (p95 over budget). Run 4, with Fix 4 deployed, is recorded below when it lands.
+
+### Also corrected in this pass
+
+- **"Dev spans record 0, prod records real durations"** — see the first correction above.
+- **"The sandbox egress proxy adds ~1s per request"** — measured with `curl` opening a new TLS
+  connection each time; a warm connection through the proxy costs ~40ms.
+- **`deploy:dev` in mcp-space-service** now deploys `env.dev`; the empty `--env=` deployed the
+  local config onto the dev sandbox.
