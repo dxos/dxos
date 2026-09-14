@@ -76,6 +76,12 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
+    /**
+     * Used only when the host builds none of its own, which needs a configured edge endpoint. Lets a
+     * test exercise the paths that go through edge -- anchoring a legacy space on a root it mints --
+     * without standing one up.
+     */
+    edgeHttpClient?: EdgeHttpClient;
   };
 
 /**
@@ -152,9 +158,11 @@ export const ServiceContextLayer = (
     Layer.provideMerge(storageLayer),
   );
 
-  // Non-edge: just the core.
+  // Non-edge: just the core -- plus the HTTP client when there is one. The socket and the REST
+  // client are independent capabilities, and the credential paths (anchoring a legacy space on the
+  // root edge mints) need only the latter.
   if (!edgeConnection || !edgeHttpClient) {
-    return core;
+    return edgeHttpClient ? core.pipe(Layer.provideMerge(Layer.succeed(EdgeHttpClientService, edgeHttpClient))) : core;
   }
 
   // Edge: the feed syncer sits above the core for its `EchoHostService` requirement; the edge
