@@ -99,11 +99,17 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
   }, []);
 
   const contentId = useId();
+  const [triggerValue, setTriggerValue] = useState<string | null>(null);
+  const active = triggerValue ? registry.current.get(triggerValue) : undefined;
+  const placement = active?.side ?? 'top';
   const tooltip = useTooltip({
     open,
     onOpenChange: ({ open: next }) => setOpen(next),
+    onTriggerValueChange: ({ value }) => setTriggerValue(value),
     openDelay: delayDuration,
     interactive: !disableHoverableContent,
+    // The machine's auto-update tracking positions from this prop, so it must carry the active side.
+    positioning: { placement },
     // A trigger's DOM id is its value, which is how the machine finds the active one to position at.
     ids: { content: contentId, trigger: (value) => value ?? '' },
   });
@@ -111,8 +117,7 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
   apiRef.current = tooltip;
   activeValueRef.current = tooltip.triggerValue;
 
-  const active = tooltip.triggerValue ? registry.current.get(tooltip.triggerValue) : undefined;
-  const placement = active?.side ?? 'top';
+  // Switching triggers repositions before the new placement prop renders.
   useEffect(() => {
     if (open) {
       tooltip.reposition({ placement });
