@@ -60,16 +60,17 @@ const captureSpace = async ({ space }: { space: Space }) => {
 let storyChat: AssistantChat.Chat | undefined;
 
 /**
- * The ref envelope of the checklist task titled `title`, resolved when the scripted turn is emitted:
+ * The URI of the checklist task titled `title`, resolved when the scripted turn is emitted:
  * update-tasks addresses tasks by ref, and a task's id only exists once the story seeded or the
- * session created it.
+ * session created it. A bare URI, not the `{ '/': uri }` envelope: a ref parameter reaches a tool
+ * as the string the model is shown, and the envelope form fails its decoding.
  */
-const checklistRef = (title: string) => {
+const checklistRef = (title: string): string => {
   const task = storyChat && AssistantChat.resolveTasks(storyChat).find((task) => task.title === title);
   if (!task) {
     throw new Error(`No checklist task titled "${title}".`);
   }
-  return { '/': Obj.getURI(task).toString() };
+  return Obj.getURI(task).toString();
 };
 
 /** Captures the chat the decorator created, so {@link checklistRef} can read its checklist. */
