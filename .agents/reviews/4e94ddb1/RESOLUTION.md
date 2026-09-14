@@ -73,10 +73,10 @@
 - 4e94ddb1-69 - resolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:319:24
 - 4e94ddb1-70 - resolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:320:24
 - 4e94ddb1-71 - resolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:340:70
-- 4e94ddb1-72 - unresolved - no-casts - packages/devtools/cli/src/testing/mcp-session.ts:24:38
-- 4e94ddb1-73 - unresolved - no-casts - packages/devtools/cli/src/testing/mcp-session.ts:97:92
-- 4e94ddb1-74 - unresolved - no-casts - packages/experimental/ner/src/named-entity-recognition.test.ts:51:41
-- 4e94ddb1-75 - unresolved - no-casts - packages/experimental/ner/src/named-entity-recognition.test.ts:53:31
+- 4e94ddb1-72 - resolved - no-casts - packages/devtools/cli/src/testing/mcp-session.ts:24:38
+- 4e94ddb1-73 - resolved - no-casts - packages/devtools/cli/src/testing/mcp-session.ts:97:92
+- 4e94ddb1-74 - resolved - no-casts - packages/experimental/ner/src/named-entity-recognition.test.ts:51:41
+- 4e94ddb1-75 - resolved - no-casts - packages/experimental/ner/src/named-entity-recognition.test.ts:53:31
 - 4e94ddb1-76 - unresolved - no-casts - packages/experimental/ner/src/named-entity-recognition.ts:87:23
 - 4e94ddb1-77 - unresolved - no-casts - packages/experimental/ner/src/named-entity-recognition.ts:89:22
 - 4e94ddb1-78 - unresolved - no-casts - packages/experimental/ner/src/named-entity-recognition.ts:90:21

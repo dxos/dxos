@@ -25,7 +25,7 @@ export interface WidgetNotifier {
    * keep the previously-rendered DOM, so the instance in the decoration set is not the one holding
    * the mounted root.
    */
-  updated(id: string, widgetState: any): void;
+  updated(id: string, widgetState: Partial<WidgetProps>): void;
   /**
    * Drop any mounted widgets whose id is not in `liveIds`. Needed because CM reuses a widget's DOM
    * via `updateDOM` (without calling `destroy`) when a decoration's widget changes in place, so an

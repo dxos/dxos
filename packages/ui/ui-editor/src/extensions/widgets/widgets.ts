@@ -157,18 +157,20 @@ export const widgetRebuildEffect = StateEffect.define();
 /**
  * Update widget.
  */
-export const widgetUpdateEffect = StateEffect.define<{ id: string; value: any }>();
+export const widgetUpdateEffect = StateEffect.define<{ id: string; value: Partial<WidgetProps> }>();
 
 //
 // Matchers
 //
 
-type WidgetStateMap = Record<string, any>;
+/** Widget props updates accumulated by id, merged over a widget's baked props at mount/re-render. */
+type WidgetStateMap = Record<string, Partial<WidgetProps>>;
 
 /** What a matcher sees for one node of the tree walk. */
 export type WidgetMatchContext = {
   state: EditorState;
-  context: any;
+  /** Opaque host-supplied value (theme, callbacks, …); narrowed by the host's own widget code. */
+  context: unknown;
   widgetStateMap: WidgetStateMap;
   notifier: WidgetNotifier;
   /** Per-build scratch counters, for ids that must not depend on document position. */
@@ -292,7 +294,7 @@ export const createWidget = <TProps extends WidgetProps>({
 /**
  * Context state.
  */
-const widgetContextStateField = StateField.define<any>({
+const widgetContextStateField = StateField.define<unknown>({
   create: () => undefined,
   update: (value, tr) => {
     for (const effect of tr.effects) {
@@ -362,7 +364,7 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
       }
       setWidgets?.([...widgets.values()]);
     },
-    updated: (id: string, widgetState: any) => {
+    updated: (id: string, widgetState: Partial<WidgetProps>) => {
       const current = widgets.get(id);
       if (!current || !widgetState) {
         return;
