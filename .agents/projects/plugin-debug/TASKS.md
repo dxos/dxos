@@ -21,16 +21,23 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 
 ## Phase 3: dock the panel as a deck bottom drawer (design §5)
 
-- [ ] `Main.Drawer` in `@dxos/react-ui` (`Main.tsx` + `layout/main.css`): fixed block-end, inline insets
+- [x] `Main.Drawer` in `@dxos/react-ui` (`Main.tsx` + `layout/main.css`): fixed block-end, inline insets
       follow the sidebar states, `--main-drawer-height`, resize handle; `Main.Content` pads block-end
-      when open. Story in `Main.stories.tsx`.
-- [ ] Deck state `drawerState` + persisted height; `LayoutOperation.UpdateDrawer`; `DeckContent` renders
-      `Main.Drawer` hosting `Surface type={DeckRole.Drawer} limit={1}`; fullscreen closes it.
-- [ ] plugin-debug: `debugPanelAspect.mode: 'floating' | 'docked'` (default docked); `DebugPanelStatus`
-      toggles the drawer or opens the floating window by mode; dock/float control in both title bars;
-      `DebugPanel` surface for `DeckRole.Drawer`.
-- [ ] Verify in Composer: toggle from the status bar, resize, planks reflow, float ↔ dock keeps selection,
-      fullscreen hides it, reload restores state; stories for `Main.Drawer` and the docked panel.
+      when open. Story in `Main.stories.tsx`. (`DRAWER_DEFAULT_HEIGHT` 24rem, `MIN` 8, `MAX` 64.)
+- [x] Deck state `drawerState` + persisted height; `LayoutOperation.UpdateDrawer`; `DeckContent` renders
+      `Main.Drawer` hosting `Surface type={AppSurface.Drawer} limit={1}` (`org.dxos.role.drawer`);
+      fullscreen closes it.
+- [x] plugin-debug: `debugPanelAspect.mode: 'floating' | 'docked'` (default docked); `DebugPanelStatus`
+      toggles the drawer or opens the floating window by mode; dock/float control in both title bars
+      (`DebugPanelHeader`); `DebugPanelDrawer` surface for `AppSurface.Drawer`.
+- [x] Verify in Composer: toggle from the status bar, resize, planks reflow, float ↔ dock keeps selection,
+      fullscreen hides it, reload restores state; stories for `Main.Drawer` and the docked panel
+      (2026-09-14 on 5180: opens at 24rem with `main` padding-block-end 384px and the plank's bottom edge
+      on the drawer's top; drag to 32rem persists across reload; float/dock keep Console selected;
+      fullscreen hides and restores it; sidebar collapse moves inset-inline-start 350px → 72px).
+- [ ] Escape closes the drawer like the floating window (design §5; not in any task — final fix wave).
+- [ ] `PLUGIN.mdl` (plugin-debug, plugin-deck) describe the docked panel — done on the branch; PR #13095
+      body still needs its "Docked drawer" section.
 
 ## Follow-ups
 
