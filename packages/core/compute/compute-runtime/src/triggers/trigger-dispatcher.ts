@@ -247,16 +247,18 @@ export class TriggerDispatcher extends Context.Service<
   }
 >()('@dxos/functions/TriggerDispatcher') {}
 
-export const layer = (
-  options: Omit<TriggerDispatcherOptions, 'services'>,
-): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>
-  Layer.effect(
-    TriggerDispatcher,
-    Effect.gen(function* () {
-      const services = yield* EffectEx.contextWithoutParentSpan<TriggerDispatcherServices>();
-      return new TriggerDispatcherImpl({ ...options, services });
-    }),
-  );
+export namespace TriggerDispatcher {
+  export const layer = (
+    options: Omit<TriggerDispatcherOptions, 'services'>,
+  ): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>
+    Layer.effect(
+      TriggerDispatcher,
+      Effect.gen(function* () {
+        const services = yield* EffectEx.contextWithoutParentSpan<TriggerDispatcherServices>();
+        return new TriggerDispatcherImpl({ ...options, services });
+      }),
+    );
+}
 
 const DEFAULT_MAX_CONCURRENCY = 5;
 

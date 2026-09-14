@@ -24,7 +24,7 @@ export class Run extends Context.Service<Run, { readonly durationMillis: number 
  * Per-run memo for the work several scorers share (see {@link shared}). Variants of one eval run
  * concurrently in one process, so the cache is the run's and never the module's.
  */
-export class Memo extends Context.Service<Memo, { readonly cache: Map<unknown, Exit.Exit<any, any>> }>()(
+export class Memo extends Context.Service<Memo, { readonly cache: Map<unknown, Exit.Exit<unknown, unknown>> }>()(
   '@dxos/assistant-evals/Scorer/Memo',
 ) {}
 
@@ -181,7 +181,7 @@ export const closeSession = (id: string): void => {
  * wall clock, and the memo the shared reads of that run agree on.
  */
 export const sessionServices = (run: { durationMillis: number }) => {
-  const cache = new Map<unknown, Exit.Exit<any, any>>();
+  const cache = new Map<unknown, Exit.Exit<unknown, unknown>>();
   return <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, Exclude<R, Run | Memo>> =>
     effect.pipe(
       Effect.provideService(Run, { durationMillis: run.durationMillis }),

@@ -43,7 +43,7 @@ export type AccordionValueProps = {
   onValueChange?: (value: string[]) => void;
 };
 
-const defaultGetId = <T extends AccordionItemRecord>(item: T) => (item as any)?.id;
+const defaultGetId = <T extends AccordionItemRecord>(item: T) => item.id ?? '';
 
 export type AccordionRootProps<T extends AccordionItemRecord> = ThemedClassName<
   {

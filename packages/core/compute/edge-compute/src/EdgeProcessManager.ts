@@ -6,7 +6,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
@@ -80,15 +79,15 @@ const makeManager = (
 const make = (
   getEdgeClient?: () => EdgeHttpClient,
   control?: RemoteProcessManager.Control,
-): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> =>
+): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> =>
   Layer.effect(
     RemoteProcessManager.Service,
     Effect.gen(function* () {
       const registry = yield* Registry.AtomRegistry;
-      // Optional so every construction site keeps its shape: a deployment with no swarm monitor
-      // (local-only, or a test) simply falls back to polling the host's event ring.
-      const remoteTrace = yield* Effect.serviceOption(RemoteTraceMonitor.Service);
-      return makeManager(registry, getEdgeClient, control, Option.getOrUndefined(remoteTrace));
+      // Declared requirement (not `serviceOption`): hosts with no swarm monitor provide
+      // `RemoteTraceMonitor.layerNoop` rather than leaving the tag undeclared.
+      const remoteTrace = yield* RemoteTraceMonitor.Service;
+      return makeManager(registry, getEdgeClient, control, remoteTrace);
     }),
   );
 
@@ -98,7 +97,8 @@ const make = (
  */
 export const fromEdgeClient = (
   edgeClient: EdgeHttpClient,
-): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> => make(() => edgeClient);
+): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> =>
+  make(() => edgeClient);
 
 /**
  * For tests: the full surface over a pre-built process client — a live process tree for `spaceId`,
@@ -106,7 +106,7 @@ export const fromEdgeClient = (
  */
 export const fromEdgeProcessClient = (
   edgeClient: EdgeHttpClient,
-): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> =>
+): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> =>
   make(
     () => edgeClient,
     EdgeProcessControl.make(() => edgeClient),
@@ -122,7 +122,9 @@ export const fromEdgeProcessClient = (
  * failed with "RemoteProcessManager offers no process control" wherever edge was configured. Per-space
  * addressing is not an obstacle — `Control` takes the space on each call, not at construction.
  */
-export const fromClient = (client: Client): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> => {
+export const fromClient = (
+  client: Client,
+): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> => {
   let cached: EdgeHttpClient | undefined;
   return make(() => (cached ??= createEdgeClient(client)), EdgeProcessControl.fromClient(client));
 };
@@ -131,4 +133,5 @@ export const fromClient = (client: Client): Layer.Layer<RemoteProcessManager.Ser
  * EDGE process manager with no client — empty process tree, no control, no cancel.
  * Used where edge is not configured.
  */
-export const layer: Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> = make();
+export const layer: Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> =
+  make();

@@ -316,8 +316,8 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
       const sessions = readSessions();
       expect(sessions).toHaveLength(1);
       // The instructions asked for both, so a session that landed without them followed only half.
-      expect(sessions[0]!.title, 'the agent was told to supply a title').toBeTruthy();
-      expect(sessions[0]!.summary, 'the agent was told to supply a summary').toBeTruthy();
+      expect(sessions[0].title, 'the agent was told to supply a title').toBeTruthy();
+      expect(sessions[0].summary, 'the agent was told to supply a summary').toBeTruthy();
     },
     TEST_TIMEOUT,
   );
@@ -337,7 +337,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
           'org.dxos.operation.tasks.update',
           {
             task: { '/': uri(findTask(tasks, BACKFILL).id) },
-            assignee: { role: 'assistant', subject: { '/': uri(session!.id) } },
+            assignee: { role: 'assistant', subject: { '/': uri(session.id) } },
           },
           spaceId,
         );

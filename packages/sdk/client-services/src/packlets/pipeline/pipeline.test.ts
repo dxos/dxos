@@ -130,7 +130,7 @@ describe('pipeline/Pipeline', () => {
     });
 
     await pipeline.start();
-    await sleep(1000);
+    await processedEvent.waitForCondition(() => processedSequenceNumbers.length === 10);
 
     await pipeline.pause();
     await pipeline.setCursor(new Timeframe([[feed.key, 9]]));

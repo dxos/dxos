@@ -60,7 +60,7 @@ const json = (value: unknown): unknown => {
 
 const fromResponse = (
   model: DXN.DXN,
-  response: ReadonlyArray<Response.AllParts<any>>,
+  response: ReadonlyArray<Response.AnyPart>,
   span: Parameters<Telemetry.SpanTransformer>[0]['span'],
 ): Call | undefined => {
   const finish = response.find((part): part is Response.FinishPart => part.type === 'finish');
