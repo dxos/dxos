@@ -49,18 +49,23 @@ export const DebugPanelSidebar = () => {
   const model = useGraphTreeModel(DebugNodes.DEBUG_ROOT_ID, state);
 
   // Persisted state names nodes whose children come from connectors that only run on expansion, so
-  // without this an open branch restores empty and a nested selection restores to a blank page.
+  // without this an open branch restores empty and a nested selection restores to a blank page. A
+  // pristine panel opens on the console, as it did when the console was its first tab.
   const restoredRef = useRef({ open, nodeId });
   useEffect(() => {
     AppGraph.expandSync(graph, DebugNodes.DEBUG_ROOT_ID, 'child');
     const { open, nodeId } = restoredRef.current;
+    if (!nodeId && open.length === 0) {
+      setOpen(Path.create(DebugNodes.DEBUG_ROOT_ID, contextId, DebugNodes.DEBUG_NODE_ID), true);
+      select(DebugNodes.CONSOLE_NODE_ID);
+    }
     for (const key of open) {
       AppGraph.expandSync(graph, Path.last(key), 'child');
     }
-    for (const id of nodeId ? lineage(nodeId) : []) {
+    for (const id of lineage(nodeId ?? DebugNodes.CONSOLE_NODE_ID)) {
       AppGraph.expandSync(graph, id, 'child');
     }
-  }, [graph]);
+  }, [graph, contextId, select, setOpen]);
 
   const handleOpenChange = useCallback(
     ({ item, path, open }: { item: AppGraphNode.Node; path: string[]; open: boolean }) => {

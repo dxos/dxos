@@ -58,9 +58,9 @@ feat DebugCategory
 
 | Node                        | Type                | Article                    |
 |-----------------------------|---------------------|----------------------------|
-| `root/debug/console`        | `DebugNodes.Console`| Console (agent debug shell)|
-| `root/debug/logs`           | `DebugNodes.Logs`   | Log viewer                 |
-| `root/debug/debug`          | `DebugNodes.id`     | branch (no article)        |
+| `root/debug/debug`          | `DebugNodes.id`     | branch (no article); open with the console selected on a pristine panel |
+| `root/debug/debug/console`  | `DebugNodes.Console`| Console (agent debug shell)|
+| `root/debug/debug/logs`     | `DebugNodes.Logs`   | Log viewer                 |
 | `root/debug/debug/space`    | `DebugNodes.SpaceType` | Generate objects (active space) |
 | `root/debug/devtools/...`   | contributed by `org.dxos.plugin.devtools` | Client / HALO / ECHO / MESH / EDGE inspectors, App Graph, SDK Explorer, CLI |
 

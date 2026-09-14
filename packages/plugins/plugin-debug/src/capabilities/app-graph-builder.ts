@@ -39,33 +39,56 @@ export const createDebugRootExtension = () =>
       ]),
   });
 
-/** The panel's own pages, first in the tree: the console and the log viewer. */
-export const createDebugToolsExtension = () =>
+/** The Debug node: the console and log viewer first (what the panel opened on as tabs), then the generator. */
+export const createDebugExtension = () =>
   AppGraphBuilder.createExtension({
-    id: 'debugTools',
+    id: 'debug',
     match: AppNodeMatcher.whenDebugGroup,
     connector: () =>
       Effect.succeed([
         AppGraphNode.make({
-          id: DebugNodes.nodeId(DebugNodes.Console),
-          type: DebugNodes.Console,
-          data: DebugNodes.Console,
+          id: DebugNodes.nodeId(DebugNodes.id),
+          data: null,
+          type: DebugNodes.id,
           properties: {
-            label: ['console.tab.label', { ns: meta.profile.key }],
-            icon: 'ph--terminal-window--regular',
-            // Explicit (not Position.first): -Infinity + 1 collapses back to -Infinity, tying with logs.
-            position: 0,
+            label: ['debug.label', { ns: meta.profile.key }],
+            icon: 'ph--bug--regular',
+            // After DevTools (10), whichever plugin registers first.
+            position: 20,
           },
-        }),
-        AppGraphNode.make({
-          id: DebugNodes.nodeId(DebugNodes.Logs),
-          type: DebugNodes.Logs,
-          data: DebugNodes.Logs,
-          properties: {
-            label: ['logs.tab.label', { ns: meta.profile.key }],
-            icon: 'ph--list-bullets--regular',
-            position: 1,
-          },
+          nodes: [
+            AppGraphNode.make({
+              id: DebugNodes.nodeId(DebugNodes.Console),
+              type: DebugNodes.Console,
+              data: DebugNodes.Console,
+              properties: {
+                label: ['console.tab.label', { ns: meta.profile.key }],
+                icon: 'ph--terminal-window--regular',
+                // Explicit (not Position.first): -Infinity + 1 collapses back to -Infinity, tying with logs.
+                position: 0,
+              },
+            }),
+            AppGraphNode.make({
+              id: DebugNodes.nodeId(DebugNodes.Logs),
+              type: DebugNodes.Logs,
+              data: DebugNodes.Logs,
+              properties: {
+                label: ['logs.tab.label', { ns: meta.profile.key }],
+                icon: 'ph--list-bullets--regular',
+                position: 1,
+              },
+            }),
+            AppGraphNode.make({
+              id: DebugNodes.nodeId(DebugNodes.SpaceType),
+              type: DebugNodes.SpaceType,
+              data: DebugNodes.SpaceType,
+              properties: {
+                label: ['generate-objects.label', { ns: meta.profile.key }],
+                icon: 'ph--dice-five--regular',
+                position: 2,
+              },
+            }),
+          ],
         }),
       ]),
   });
@@ -73,41 +96,11 @@ export const createDebugToolsExtension = () =>
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // The hidden root/debug category and its first-class pages (console, logs).
+      // The hidden root/debug category.
       createDebugRootExtension(),
-      createDebugToolsExtension(),
 
-      // Top-level Debug node, under the debug category.
-      AppGraphBuilder.createExtension({
-        id: 'debug',
-        match: AppNodeMatcher.whenDebugGroup,
-        connector: () =>
-          Effect.succeed([
-            AppGraphNode.make({
-              id: DebugNodes.nodeId(DebugNodes.id),
-              data: null,
-              type: DebugNodes.id,
-              properties: {
-                label: ['debug.label', { ns: meta.profile.key }],
-                icon: 'ph--bug--regular',
-                // After DevTools (10), whichever plugin registers first.
-                position: 20,
-              },
-              nodes: [
-                AppGraphNode.make({
-                  id: DebugNodes.nodeId(DebugNodes.SpaceType),
-                  type: DebugNodes.SpaceType,
-                  data: DebugNodes.SpaceType,
-                  properties: {
-                    label: ['generate-objects.label', { ns: meta.profile.key }],
-                    icon: 'ph--dice-five--regular',
-                  },
-                }),
-              ],
-            }),
-          ]),
-      }),
-
+      // The Debug node, under the debug category: the panel's own pages, then the generator.
+      createDebugExtension(),
       // Debug object companion.
       AppGraphBuilder.createExtension({
         id: 'debugObject',

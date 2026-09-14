@@ -24,8 +24,9 @@ to the graph root, so each page exists twice (`root/devtools/...` and `root/<spa
   enumeration in the debug tree. A tool that inspects a space (ECHO inspectors, **Generate objects**)
   resolves the **active workspace's** space at render time, as the devtools containers do today
   through the client's spaces and the deck's active workspace.
-- The console and logs become the first two nodes of the tree (`root/debug/console`,
-  `root/debug/logs`), each with an `article` surface; the title-bar tabs go.
+- The console and logs become the first two pages under the Debug node (`root/debug/debug/console`,
+  `root/debug/debug/logs`), each with an `article` surface; the title-bar tabs go. A pristine panel
+  opens the Debug node with the console selected, as the tabs did.
 - Nothing under `root/debug` declares a URL binding. The devtools bindings added in #13087 and the
   `system`-group attachment are removed with the move; devtools pages are reachable only through
   the panel. (The `home` boot-time "no URL binding" log is a deck race and out of scope.)
