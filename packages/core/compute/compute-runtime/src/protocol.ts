@@ -3,6 +3,7 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -31,6 +32,9 @@ import {
   createS3Host,
   credentialsLayerFromDatabase,
 } from './services/index.ts';
+
+/** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
+const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
@@ -208,7 +212,25 @@ export class FunctionContext extends Resource {
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
-    await this.db?.open();
+    if (this.db) {
+      const db = this.db;
+      // Bounded: opening waits for the space's root document from the data service, and a root
+      // that never arrives otherwise holds the invocation until the Workers runtime kills it as
+      // hung — ~30s with no error naming the space, inherited by every caller up the chain.
+      await EffectEx.runPromise(
+        Effect.tryPromise(() => db.open()).pipe(
+          Effect.timeoutOrElse({
+            duration: SPACE_OPEN_TIMEOUT,
+            orElse: () =>
+              Effect.fail(
+                new FunctionError({
+                  message: `Space ${this.context.spaceId} did not open within ${Duration.toMillis(SPACE_OPEN_TIMEOUT)}ms: its root document is not available on this data plane.`,
+                }),
+              ),
+          }),
+        ),
+      );
+    }
 
     // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
     // directly and never passes through that path, so its declared schemas went unregistered and
