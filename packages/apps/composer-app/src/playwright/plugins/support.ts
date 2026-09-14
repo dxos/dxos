@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Page } from '@playwright/test';
+import { type Page, expect } from '@playwright/test';
 
 export const Support = {
   card: (page: Page) => page.getByTestId('helpPlugin.tooltip'),
@@ -29,5 +29,18 @@ export const Support = {
 
   startFromCompanion: async (page: Page) => {
     await page.getByTestId('supportPlugin.startCompanionTour').first().click();
+  },
+
+  /** Steps through a running tour from its first step to Finish, asserting every title on the way. */
+  walk: async (page: Page, titles: readonly string[]) => {
+    for (const [index, title] of titles.entries()) {
+      if (index > 0) {
+        await Support.next(page).click();
+      }
+      await expect(Support.title(page)).toHaveText(title);
+    }
+
+    await Support.finish(page).click();
+    await expect(Support.card(page)).not.toBeVisible();
   },
 };

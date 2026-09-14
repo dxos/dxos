@@ -7,6 +7,11 @@ import { expect, test } from '@playwright/test';
 import { AppManager } from './app-manager.ts';
 import { Support } from './plugins/index.ts';
 
+const GLOBAL_TOUR = ['Sharing', 'Creating content', 'Profile', 'Settings', 'Plugins', 'Companions', 'Feedback'];
+
+// Comments and Dictate are contributed by plugin-review and plugin-transcription.
+const DOCUMENT_TOUR = ['Markdown, formatted as you type', 'Search', 'Modes', 'Comments', 'Dictate'];
+
 test.describe('Tour tests', () => {
   let host: AppManager;
 
@@ -22,17 +27,12 @@ test.describe('Tour tests', () => {
   test('the global tour runs from the Home help companion and advances', async () => {
     await Support.startGlobal(host.page);
 
-    await expect(Support.card(host.page)).toBeVisible();
-    await expect(Support.title(host.page)).toHaveText('Sharing');
-
+    await expect(Support.title(host.page)).toHaveText(GLOBAL_TOUR[0]);
     await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Creating content');
-
+    await expect(Support.title(host.page)).toHaveText(GLOBAL_TOUR[1]);
     await Support.back(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Sharing');
 
-    await Support.close(host.page).click();
-    await expect(Support.card(host.page)).not.toBeVisible();
+    await Support.walk(host.page, GLOBAL_TOUR);
   });
 
   test('a document tour picks up steps contributed by other plugins', async () => {
@@ -43,25 +43,10 @@ test.describe('Tour tests', () => {
 
     await Support.awaitFragments(host.page);
     await Support.startFromCompanion(host.page);
-    await expect(Support.title(host.page)).toHaveText('Markdown, formatted as you type');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Search');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Modes');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Comments');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Dictate');
-
-    await Support.finish(host.page).click();
-    await expect(Support.card(host.page)).not.toBeVisible();
+    await Support.walk(host.page, DOCUMENT_TOUR);
 
     await host.page.reload();
     await Support.startGlobal(host.page);
-    await expect(Support.title(host.page)).toHaveText('Sharing');
+    await Support.walk(host.page, GLOBAL_TOUR);
   });
 });

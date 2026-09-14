@@ -49,10 +49,10 @@ export const steps: Tour.Step[] = [
     title: 'Plugins',
     description: 'Enable plugins.',
   },
-  // TODO(burdon): Open companion.
   {
     before: ensureSidebar,
-    target: '[data-testid="plankHeading.companion"]',
+    // The pane's tabs while it is open, which it is by default; its open control once the reader closes it.
+    target: '[data-testid="deck.companion"] [role="tablist"], [data-testid="plankHeading.companion"]',
     title: 'Companions',
     description: 'View companion surfaces.',
   },
