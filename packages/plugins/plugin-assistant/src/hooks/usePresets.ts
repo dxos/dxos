@@ -7,7 +7,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import * as Chat from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -38,7 +39,8 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
   // same chat, and the stamp the processor writes before the first request.
   const [modelRef] = useObject(chat, 'model');
-  const chatModel = Chat.modelOf(modelRef);
+  // The ref carries the model's DXN as its URI; a ref to anything else is not a model selection.
+  const chatModel = modelRef ? DXN.tryMake(modelRef.uri) : undefined;
 
   // The Ollama manager is the bundled sidecar (desktop only); its presence signals that the
   // `built-in` provider (rather than an external Ollama server) is available.
@@ -117,7 +119,9 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
     (id) => {
       const preset = presets.find((preset) => preset.id === id);
       if (preset && chat) {
-        Chat.setModel(chat, preset.model);
+        Obj.update(chat, (chat) => {
+          chat.model = Ref.fromURI(preset.model);
+        });
       }
     },
     [presets, chat],

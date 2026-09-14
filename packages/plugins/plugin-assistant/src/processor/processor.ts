@@ -26,7 +26,7 @@ import {
   createSystemPrompt,
   formatSystemPrompt,
 } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import { type ServiceNotAvailableError } from '@dxos/compute';
 import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
@@ -514,8 +514,11 @@ export class AiChatProcessor {
         // conversation to run.
         return yield* Effect.die(new Error('Chat processor requires a chat.'));
       }
-      if (!chat.model && this._options.model) {
-        Chat.setModel(chat, this._options.model);
+      const selected = this._options.model;
+      if (!chat.model && selected) {
+        Obj.update(chat, (chat) => {
+          chat.model = Ref.fromURI(selected);
+        });
       }
       return yield* AgentService.getSession(chat, {
         provider: this._options.provider,

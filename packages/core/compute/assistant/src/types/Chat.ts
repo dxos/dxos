@@ -42,9 +42,9 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
 
     /**
      * The model this conversation runs on, selected in the chat rather than globally so it survives a
-     * remount and travels with the chat. Held as a ref whose URI is the model's DXN (see
-     * {@link getModel}): there is no ECHO object behind it yet, so the ref is a stable handle rather
-     * than something that resolves. Unset means the agent's default.
+     * remount and travels with the chat. Held as a ref whose URI is the model's DXN: there is no ECHO
+     * object behind it yet, so the ref is a stable handle rather than something that resolves. Unset
+     * means the agent's default.
      */
     // TODO(dmaretskyi): Register `Model` in the registry so this ref resolves to a catalog object.
     model: Schema.optional(Ref.Ref(Obj.Unknown).pipe(FormInputAnnotation.set(false))),
@@ -198,23 +198,6 @@ export const deleteTask = (
     }
   }
   return subtree;
-};
-
-/**
- * The model DXN a chat's `model` ref points at; `undefined` when the chat has none or the ref does
- * not carry a DXN (a ref to a database object, which a future registry-backed model would be).
- */
-export const modelOf = (ref: Ref.Ref<Obj.Unknown> | undefined): DXN.DXN | undefined =>
-  ref ? DXN.tryMake(ref.uri) : undefined;
-
-/** The model a chat selected, if any. */
-export const getModel = (chat: Pick<Chat, 'model'>): DXN.DXN | undefined => modelOf(chat.model);
-
-/** Points the chat at a model, or clears the selection so the agent's default applies. */
-export const setModel = (chat: Chat, model: DXN.DXN | undefined): void => {
-  Obj.update(chat, (chat) => {
-    chat.model = model ? Ref.fromURI(model) : undefined;
-  });
 };
 
 /** The chat's feed entity id, readable without resolving the ref. */

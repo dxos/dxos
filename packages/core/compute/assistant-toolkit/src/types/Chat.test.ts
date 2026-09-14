@@ -73,21 +73,24 @@ describe('Chat', () => {
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
-        expect(Chat.getModel(chat)).toBeUndefined();
+        expect(chat.model).toBeUndefined();
 
         const model = DXN.make('com.anthropic.model.claude-sonnet-5.default');
-        Chat.setModel(chat, model);
+        Obj.update(chat, (chat) => {
+          chat.model = Ref.fromURI(model);
+        });
         yield* Database.flush();
         expect(chat.model?.uri).toBe(model);
-        expect(Chat.getModel(chat)).toBe(model);
 
         // Survives a round trip through the database: the ref carries no target, only the DXN.
         const [reloaded] = yield* Database.query(Filter.type(Chat.Chat)).run;
-        expect(Chat.getModel(reloaded)).toBe(model);
+        expect(reloaded.model?.uri).toBe(model);
 
-        Chat.setModel(chat, undefined);
+        Obj.update(chat, (chat) => {
+          chat.model = undefined;
+        });
         yield* Database.flush();
-        expect(Chat.getModel(chat)).toBeUndefined();
+        expect(chat.model).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

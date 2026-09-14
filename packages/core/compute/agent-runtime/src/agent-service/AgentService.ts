@@ -113,9 +113,9 @@ export interface AgentServiceOptions {
   makeTurnProducer?: MakeTurnProducer;
 
   /**
-   * Default model for a chat that has not selected one (`Chat.model` unset).
+   * Model for a chat that has not selected one (`Chat.model` unset).
    */
-  model?: DXN.DXN;
+  defaultModel?: DXN.DXN;
 
   /**
    * Default provider used to resolve the model for sessions that don't specify one explicitly.
@@ -248,7 +248,7 @@ export const layer = (
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
           makeTurnProducer: opts?.makeTurnProducer,
-          model: opts?.model,
+          defaultModel: opts?.defaultModel,
           provider: provider ?? opts?.provider,
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
