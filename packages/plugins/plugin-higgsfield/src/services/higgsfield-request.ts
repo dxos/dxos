@@ -21,7 +21,14 @@ const prompt = Schema.NonEmptyString.pipe(
  * is per account, so the path is a free-form field rather than an enum. Studio renders these as a
  * schema-driven form.
  */
-export const HiggsfieldImageConfig = Schema.Struct({ model, prompt });
+/** The API's accepted ratios (its own error lists them); 16:9 is the storyboard's frame shape. */
+export const HIGGSFIELD_ASPECT_RATIOS = ['16:9', '9:16', '4:3', '3:4', '1:1', '2:3', '3:2'] as const;
+export const HIGGSFIELD_DEFAULT_ASPECT_RATIO: HiggsfieldAspectRatio = '16:9';
+
+const aspectRatio = Schema.optional(Schema.Literals(HIGGSFIELD_ASPECT_RATIOS).annotate({ title: 'Aspect ratio' }));
+export type HiggsfieldAspectRatio = (typeof HIGGSFIELD_ASPECT_RATIOS)[number];
+
+export const HiggsfieldImageConfig = Schema.Struct({ model, prompt, aspectRatio });
 export interface HiggsfieldImageConfig extends Schema.Schema.Type<typeof HiggsfieldImageConfig> {}
 
 /**
@@ -32,6 +39,8 @@ export interface HiggsfieldImageConfig extends Schema.Schema.Type<typeof Higgsfi
 export const HiggsfieldVideoConfig = Schema.Struct({
   model,
   prompt,
+  // The animation follows its still's shape, so the ratio is the still's.
+  aspectRatio,
   imageUrl: Schema.optional(
     Schema.String.pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.URL),

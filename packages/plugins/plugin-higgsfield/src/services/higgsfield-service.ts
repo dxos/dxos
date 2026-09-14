@@ -18,6 +18,7 @@ import {
 import { type HiggsfieldOutput, type HiggsfieldRequestStatus } from './higgsfield-provider-types.ts';
 import { type HiggsfieldJob, HiggsfieldProvider } from './higgsfield-provider.ts';
 import {
+  HIGGSFIELD_DEFAULT_ASPECT_RATIO,
   HiggsfieldImageConfig,
   HiggsfieldVideoConfig,
   decodeImageConfig,
@@ -103,13 +104,13 @@ export const makeHiggsfieldImageService = (
   kind: 'image',
   contentType: 'image/jpeg',
   requestSchema: HiggsfieldImageConfig,
-  defaultRequest: { model: HIGGSFIELD_DEFAULT_IMAGE_MODEL },
+  defaultRequest: { model: HIGGSFIELD_DEFAULT_IMAGE_MODEL, aspectRatio: HIGGSFIELD_DEFAULT_ASPECT_RATIO },
   fieldOptions: { model: async () => IMAGE_MODELS },
   // Async so a config decode failure surfaces as a rejection, not a synchronous throw.
   enqueue: async (request, { apiKey, signal }) => {
     const config = decodeImageConfig(request);
     const job = await provider.enqueue(
-      { model: config.model, body: { prompt: config.prompt } },
+      { model: config.model, body: { prompt: config.prompt, aspect_ratio: config.aspectRatio } },
       credentials(apiKey, signal),
     );
     return toJob(job);
@@ -136,7 +137,11 @@ export const makeHiggsfieldVideoService = (
   kind: 'video',
   contentType: 'video/mp4',
   requestSchema: HiggsfieldVideoConfig,
-  defaultRequest: { model: HIGGSFIELD_DEFAULT_VIDEO_MODEL, stillModel: HIGGSFIELD_DEFAULT_STILL_MODEL },
+  defaultRequest: {
+    model: HIGGSFIELD_DEFAULT_VIDEO_MODEL,
+    stillModel: HIGGSFIELD_DEFAULT_STILL_MODEL,
+    aspectRatio: HIGGSFIELD_DEFAULT_ASPECT_RATIO,
+  },
   fieldOptions: { model: async () => VIDEO_MODELS, stillModel: async () => IMAGE_MODELS },
   enqueue: async (request, { apiKey, signal, onProgress }) => {
     const config = decodeVideoConfig(request);
@@ -145,7 +150,10 @@ export const makeHiggsfieldVideoService = (
     if (!imageUrl) {
       onProgress?.({ status: 'Generating still' });
       const still = await provider.enqueue(
-        { model: config.stillModel ?? HIGGSFIELD_DEFAULT_STILL_MODEL, body: { prompt: config.prompt } },
+        {
+          model: config.stillModel ?? HIGGSFIELD_DEFAULT_STILL_MODEL,
+          body: { prompt: config.prompt, aspect_ratio: config.aspectRatio },
+        },
         options,
       );
       const output = await provider.awaitResult(still.statusUrl, options);

@@ -18,7 +18,7 @@ describe('Higgsfield generation services', () => {
     };
     const service = makeHiggsfieldImageService(new HiggsfieldProvider({ fetch: fetchImpl }));
     expect(service.kind).toBe('image');
-    expect(service.defaultRequest).toEqual({ model: HIGGSFIELD_DEFAULT_IMAGE_MODEL });
+    expect(service.defaultRequest).toEqual({ model: HIGGSFIELD_DEFAULT_IMAGE_MODEL, aspectRatio: '16:9' });
 
     const { enqueue } = service;
     expect(enqueue).toBeDefined();
@@ -32,7 +32,8 @@ describe('Higgsfield generation services', () => {
     // The persisted job id is the API's status url, not the request id.
     expect(jobId).toBe('https://status.higgsfield.ai/req-1');
     expect(captured?.url).toContain(`/${HIGGSFIELD_DEFAULT_IMAGE_MODEL}`);
-    expect(captured?.body).toEqual({ prompt: 'hello' });
+    // The frame's shape rides along as the API's `aspect_ratio`.
+    expect(captured?.body).toEqual({ prompt: 'hello', aspect_ratio: '16:9' });
   });
 
   test('video service generates a still, then animates it, and returns the animation job', async ({ expect }) => {

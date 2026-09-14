@@ -20,7 +20,7 @@ const MockRequestSchema = Schema.Struct({
     title: 'Prompt',
   }),
   style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
-  aspectRatio: Schema.optional(Schema.String.annotate({ title: 'Aspect ratio' })),
+  aspectRatio: Schema.optional(Schema.Literals(['16x9', '1x1']).annotate({ title: 'Aspect ratio' })),
 });
 
 /** Non-reversible 32-bit FNV-1a fingerprint of the prompt: the same words give the same picture. */
@@ -33,9 +33,9 @@ const hashPrompt = (value: string): string => {
   return hash.toString(16);
 };
 
-/** A picsum.photos image seeded by the prompt (and the variant index, so a batch differs). */
-export const mockImageUrl = (prompt: string, index = 0, size = 512): string =>
-  `https://picsum.photos/seed/${hashPrompt(`${prompt}#${index}`)}/${size}/${size}`;
+/** A picsum.photos image seeded by the prompt (and the variant index, so a batch differs), 16:9 unless square. */
+export const mockImageUrl = (prompt: string, index = 0, aspectRatio: '16x9' | '1x1' = '16x9'): string =>
+  `https://picsum.photos/seed/${hashPrompt(`${prompt}#${index}`)}/${aspectRatio === '1x1' ? '512/512' : '768/432'}`;
 
 /**
  * A keyless `kind: 'image'` provider for stories: `generate` answers with picsum images seeded by a
@@ -48,14 +48,15 @@ export const mockGenerationService: GenerationService.GenerationService = {
   label: 'Mock',
   contentType: 'image/png',
   requestSchema: MockRequestSchema,
-  defaultRequest: { aspectRatio: '1x1' },
+  defaultRequest: { aspectRatio: '16x9' },
   generate: async (request) => {
     const prompt = typeof request.prompt === 'string' ? request.prompt : '';
+    const aspectRatio = request.aspectRatio === '1x1' ? '1x1' : '16x9';
     const count = request.count ?? 1;
     return {
       variants: Array.from({ length: count }, (_, index) => ({
         contentType: 'image/png',
-        url: mockImageUrl(prompt, index),
+        url: mockImageUrl(prompt, index, aspectRatio),
         generation: { provider: MOCK_PROVIDER_ID, prompt, seed: index },
       })),
     };
