@@ -16,6 +16,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
+import { buildErrnoShim } from './errno-shim.ts';
 import { Lock } from './lock.ts';
 import { RTC_TRACE_PREFIX, installRtcTrace } from './rtc-trace.ts';
 import { WEBKIT_RTC_EVENTS_FILE_ENV, startWebKitRtcEventCapture } from './webkit-rtc-events.ts';
@@ -96,6 +97,8 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
           details: { package: packageDirName, workerIndex, parallelIndex: process.env.TEST_PARALLEL_INDEX },
         })
       : undefined;
+  const errnoShim =
+    process.platform === 'linux' && (browser === 'all' || browser === 'webkit') ? buildErrnoShim() : undefined;
   // In the Claude Code cloud sandbox chromium needs a pinned executable, the egress proxy passed via
   // ARGS (Playwright's `proxy:` option drops its bypass list for non-default contexts), and a TLS 1.2
   // cap (see the cloud-sandbox skill). Gated so real dev/CI runs are never silently downgraded.
@@ -129,10 +132,8 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
         launchOptions: {
           // Replaces the browser's whole environment rather than extending it.
           env: {
-            // WebKit's thread-suspend signal handler does not preserve errno, so a concurrent-GC suspension of the
-            // page's main thread makes errno-checked parses fail (ICE candidates, SDP ports, GLib getauxval).
-            JSC_useConcurrentGC: 'false',
             ...definedEnv(),
+            ...(errnoShim ? { LD_PRELOAD: [errnoShim, process.env.LD_PRELOAD].filter(Boolean).join(':') } : {}),
             ...(webkitRtcEvents ? { [WEBKIT_RTC_EVENTS_FILE_ENV]: webkitRtcEvents.fifoPath } : {}),
           },
         },
