@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
@@ -17,7 +18,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
 
-    const { defaultSpace } = yield* AppSpace.setupIdentitySpaces(client);
+    const { defaultSpace, settingsSpace } = yield* AppSpace.setupIdentitySpaces(client);
     // Boot-waterfall milestone: the default space is usable from here (first-run path).
     performance.mark('milestone:default-space-ready');
 
@@ -27,6 +28,14 @@ export default Capability.makeModule(
       if (Migrations.targetVersion) {
         Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
       }
+    });
+
+    Obj.update(settingsSpace.properties, (properties) => {
+      Annotation.set(
+        properties,
+        AppAnnotation.AppSettingsAnnotation,
+        Ref.make(settingsSpace.db.add(AppSettings.make())),
+      );
     });
 
     return Capability.contribute(SpaceCapabilities.DefaultSpace, defaultSpace);

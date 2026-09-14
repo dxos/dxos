@@ -23,6 +23,7 @@ import { SpaceOperationConfig } from '../operations/helpers.ts';
 import { makeCreateInvitationUrl } from './helpers.ts';
 
 export * from './app-graph-builder/index.ts';
+export * from './settings-sync/index.ts';
 export { makeCreateObjectEntryForDatabaseType } from '../util/index.ts';
 
 export const Commands = AppCapability.commands(() => import('./commands.ts'));
