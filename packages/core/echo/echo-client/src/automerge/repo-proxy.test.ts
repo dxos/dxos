@@ -11,7 +11,7 @@ import * as Scope from 'effect/Scope';
 import * as EffectStream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, sleep, yieldToEventLoop } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
@@ -438,6 +438,48 @@ describe('RepoProxy', () => {
       await expect.poll(async () => handle.doc()?.text1, { timeout: 1000 }).toEqual(text1);
       await expect.poll(async () => handle.doc()?.text2, { timeout: 1000 }).toEqual(text2);
     }
+  });
+
+  test('integrates a large host batch in order, yielding between slices', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    // Enough Automerge loading that one batch cannot fit in a single slice.
+    const count = 300;
+    const handles = Array.from({ length: count }, () => clientRepo.create<{ text: string }>());
+    await Promise.all(handles.map((handle) => handle.whenReady()));
+    const payload = 'x'.repeat(4_000);
+    const updates = handles.map((handle) => {
+      const documentId = handle.documentId;
+      invariant(documentId);
+      return { documentId, mutation: A.save(A.from({ text: payload })) };
+    });
+
+    const integrated: number[] = [];
+    const allIntegrated = new Trigger();
+    handles.forEach((handle, index) =>
+      handle.on('change', () => {
+        integrated.push(index);
+        if (integrated.length === count) {
+          allIntegrated.wake();
+        }
+      }),
+    );
+
+    // A turn of the event loop taken while the batch is still being integrated is the yield.
+    let integratedWhenLoopTurned = -1;
+    void yieldToEventLoop().then(() => {
+      integratedWhenLoopTurned = integrated.length;
+    });
+    clientRepo._receiveUpdate({ updates });
+    expect(integrated.length).toBeGreaterThan(0);
+    expect(integrated.length).toBeLessThan(count);
+
+    await allIntegrated.wait({ timeout: 5_000 });
+    expect(integrated).toEqual(handles.map((_, index) => index));
+    expect(integratedWhenLoopTurned).toBeGreaterThan(0);
+    expect(integratedWhenLoopTurned).toBeLessThan(count);
   });
 
   test('re-subscribes after the host drops the subscription', async () => {
