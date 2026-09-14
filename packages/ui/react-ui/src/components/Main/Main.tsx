@@ -477,6 +477,7 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
       },
       [setDrawerHeight, minHeight, maxHeight],
     );
+    // Also the cancel and lost-capture path: a drag left open would resize on the next bare hover.
     const handlePointerUp = useCallback(
       (event: PointerEvent<HTMLButtonElement>) => {
         const drag = dragRef.current;
@@ -485,7 +486,9 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
         }
 
         dragRef.current = null;
-        event.currentTarget.releasePointerCapture(event.pointerId);
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
         onDrawerHeightChangeEnd?.(drag.height);
       },
       [onDrawerHeightChangeEnd],
@@ -501,7 +504,6 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
         {...props}
         role='region'
         aria-label={toLocalizedString(label, t)}
-        data-state={drawerState}
         data-sidebar-left-state={navigationSidebarState}
         data-sidebar-right-state={complementarySidebarState}
         className={tx('main.drawer', {}, classNames)}
@@ -515,6 +517,8 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onLostPointerCapture={handlePointerUp}
         />
         {children}
       </div>
