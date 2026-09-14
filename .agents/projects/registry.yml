@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-debug
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-14
+    summary: 'DebugPanel becomes a graph application: a hidden root/debug category rendered by a navtree inside the floating panel (never the main navtree or the deck), console/logs as nodes, devtools/debug trees moved off the System group; phase 2 splits devtools into global vs per-space attachments.'
+    tasks: .agents/projects/plugin-debug/TASKS.md
+    design: packages/plugins/plugin-debug/docs/DESIGN.md
+    prs: []
+    resume: 'Design approved (root/debug hidden group; console/logs as nodes; panel-only, no URL bindings; useGraphTreeModel extracted to plugin-graph). Branch claude/plugin-higgsfield-generation-7ee65d, PR #13087 open with the interim devtools URL bindings that phase 1 removes. NEXT: write the plan, execute phase 1.'
   - name: plugin-studio
     status: active
     user: burdon
