@@ -6,6 +6,26 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-debug
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-14
+    summary: 'DebugPanel becomes a graph application: a hidden root/debug category rendered by a navtree inside the floating panel (never the main navtree or the deck), console/logs as nodes, devtools/debug trees moved off the System group; phase 2 splits devtools into global vs per-space attachments.'
+    tasks: .agents/projects/plugin-debug/TASKS.md
+    design: packages/plugins/plugin-debug/docs/DESIGN.md
+    prs: [13087]
+    resume: 'PHASES 1 AND 2 COMPLETE on branch claude/plugin-higgsfield-generation-7ee65d, carried by PR #13087 (which supersedes its interim URL-bindings description); no open follow-up. Landed: GraphPath.GroupTypes.debug + AppNodeMatcher.whenDebugGroup (app-toolkit); plugin-debug contributes the hidden root/debug category with console/logs nodes and the Debug → Generate objects branch; useGraphTreeModel in @dxos/plugin-graph/hooks (plugin-navtree wraps it); DebugPanel = { Root, Sidebar, Main } under a Splitter inside the FloatingPanel, view state { nodeId, open, position, size } in localStorage; the devtools tree attaches ONLY to root/debug (no root-matched duplicate, no whenAny(whenRoot, …)), URL bindings removed, and the space-scoped containers (devtools ECHO inspectors, Generate objects) read useActiveSpace() with no space in node data. Verified in Composer 2026-09-14: SYSTEM group shows only Database; panel sidebar Console/Logs/DevTools/Debug; console output survives switching to Logs; Client → Config JSON and Generate objects render, + adds an object to the active space; pathname unchanged, no "no URL binding" console errors; selection + open branches restored after reload (the window itself reopens from the status bar). PLUGIN.mdl for both plugins, dx.config descriptions and README updated. NEXT: land PR #13087.'
+  - name: plugin-studio
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-13
+    summary: 'Extend plugin-studio with more generation providers; first plugin-higgsfield (Connector + image/video GenerationService against api.higgsfield.ai), modelled on plugin-heygen.'
+    tasks: .agents/projects/plugin-studio/TASKS.md
+    design: .agents/projects/plugin-studio/DESIGN.md
+    prs: []
+    resume: 'PR #13078 open (Check via Depot). Landed on the branch: plugin-higgsfield (image + Soul→DoP video), Studio on Projects (template, no Studio section), Storyboard/Frame + accordion article + player, studio skill + ops, stories-assistant Studio story (scripted passes; live produced real Higgsfield stills/clips twice, then edge disconnects). NEXT: address review, land; follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake).'
   - name: task-visualization
     status: active
     user: burdon

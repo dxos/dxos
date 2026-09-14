@@ -5,8 +5,10 @@
 import { describe, test } from 'vitest';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -80,6 +82,38 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // The delegating identity reviews the result, which is what will send the task to `review`
     // rather than `done` when the work finishes.
     expect(task.reviewers).toHaveLength(1);
+  });
+
+  test('binds the skills the project instructions name, alongside the delegation set', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Studio' }, { spaceId: space.id }),
+    );
+    const instructions = await project.instructions?.tryLoad();
+    const taskSet = await project.taskSet?.tryLoad();
+    invariant(instructions && taskSet, 'Expected the scaffolded instructions and task set.');
+    // A template's skill: the project's tools for the work, which the delegation set cannot know.
+    const studioSkill = Skill.registryURI('org.dxos.skill.studio');
+    Obj.update(instructions, (instructions) => {
+      instructions.skills.push(Ref.fromURI(studioSkill));
+    });
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Make a storyboard', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    const feed = await chat.feed.load();
+    const bindings = await space.db.query(Query.select(Filter.type(AiContext.Binding)).from(feed)).run();
+    const bound = bindings.flatMap((binding) => binding.skills.added.map((ref) => ref.uri));
+    expect(bound).toContain(studioSkill);
+    // The delegation set still comes along, and the shared project skill is bound once.
+    expect(bound).toContain(Skill.registryURI('org.dxos.skill.planning'));
+    expect(bound.filter((uri) => uri === Skill.registryURI('org.dxos.skill.project'))).toHaveLength(1);
   });
 
   test('puts a whole checked set into one chat, in the order given', async ({ expect }) => {

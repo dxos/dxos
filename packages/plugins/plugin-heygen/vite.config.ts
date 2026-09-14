@@ -12,7 +12,6 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
     services: 'src/services/index.ts',
-    components: 'src/components/index.ts',
   },
   jsx: 'react',
   test: { node: true },

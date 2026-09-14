@@ -3,7 +3,7 @@
 //
 
 // NOTE: The `util` module depends on process global.
-import './globals';
+import './globals.js';
 import util from 'util/';
 
 export { callbackify, debuglog, format, inspect, promisify, stripVTControlCharacters } from 'util/';

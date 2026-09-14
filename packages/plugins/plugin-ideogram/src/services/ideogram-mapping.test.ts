@@ -94,7 +94,7 @@ describe('generateWithIdeogram', () => {
     }) as typeof fetch;
 
     const result = await generateWithIdeogram(
-      { prompt: 'a cat', count: 2, aspectRatio: '1x1' },
+      { prompt: 'a cat', count: 2, aspectRatio: 'ASPECT_1_1' },
       Redacted.make('sk-test'),
     );
 
@@ -103,7 +103,7 @@ describe('generateWithIdeogram', () => {
     expect(captured?.url).toContain(new URL(IDEOGRAM_GENERATE_URL).host);
     expect(captured?.url).toContain('/generate');
     expect(captured?.apiKey).toBe('sk-test');
-    expect(captured?.body.image_request).toMatchObject({ prompt: 'a cat', num_images: 2, aspect_ratio: '1x1' });
+    expect(captured?.body.image_request).toMatchObject({ prompt: 'a cat', num_images: 2, aspect_ratio: 'ASPECT_1_1' });
   });
 
   test('throws MissingCredentialError with no api key (no request made)', async ({ expect }) => {

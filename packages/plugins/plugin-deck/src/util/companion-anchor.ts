@@ -27,17 +27,19 @@ export const getRenderedPlanks = (active: readonly string[], flatten: boolean | 
  * once, so each carries its own.
  */
 export const isCompanionOpen = (
-  companionPlanks: readonly string[],
+  companionPlanks: readonly string[] | undefined,
   flatten: boolean | undefined,
   plankId: string | undefined,
-): boolean => (flatten ? companionPlanks.length > 0 : !!plankId && companionPlanks.includes(plankId));
+): boolean =>
+  companionPlanks === undefined ||
+  (flatten ? companionPlanks.length > 0 : !!plankId && companionPlanks.includes(plankId));
 
 /**
  * `companionPlanks` with `plankId` marked open. Flat mode holds a single entry (the flag is deck-wide),
  * stacked mode appends.
  */
 export const openCompanionPlank = (
-  companionPlanks: readonly string[],
+  companionPlanks: readonly string[] | undefined,
   flatten: boolean | undefined,
   plankId: string,
 ): string[] => {
@@ -45,15 +47,17 @@ export const openCompanionPlank = (
     return [plankId];
   }
 
-  return companionPlanks.includes(plankId) ? [...companionPlanks] : [...companionPlanks, plankId];
+  const current = companionPlanks ?? [];
+  return current.includes(plankId) ? [...current] : [...current, plankId];
 };
 
 /** `companionPlanks` with `plankId` marked closed; flat mode closes the deck's companion outright. */
 export const closeCompanionPlank = (
-  companionPlanks: readonly string[],
+  companionPlanks: readonly string[] | undefined,
   flatten: boolean | undefined,
   plankId: string | undefined,
-): string[] => (flatten ? [] : companionPlanks.filter((id) => id !== plankId));
+  rendered: readonly string[] = [],
+): string[] => (flatten ? [] : (companionPlanks ?? rendered).filter((id) => id !== plankId));
 
 /**
  * The open plank attention currently points into, or undefined when it points nowhere in the deck.

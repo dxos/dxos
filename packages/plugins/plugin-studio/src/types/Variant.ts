@@ -12,7 +12,7 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import * as Generation from './Generation.ts';
 
 /**
- * One produced output of an {@link Artifact} — an interchangeable alternative of the primary
+ * One produced output of an {@link MediaArtifact} — an interchangeable alternative of the primary
  * output. Media-agnostic: `contentType` (mime) selects the `VariantRenderer` surface; `content`
  * holds the asset object (a `File` of bytes, a `Text`, …) once materialized, while `url` holds an
  * ephemeral provider URL until then. Generated variants carry `generation` provenance; uploaded or
@@ -45,7 +45,7 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--image--regular', hue: 'indigo' }),
-    // Owned child of an Artifact — hidden from the navtree and object picker (mirrors Instructions).
+    // Owned child of a MediaArtifact — hidden from the navtree and object picker (mirrors Instructions).
     Annotation.HiddenAnnotation.set(true),
   ),
 ) {}

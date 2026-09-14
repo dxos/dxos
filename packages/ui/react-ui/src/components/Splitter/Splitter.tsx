@@ -15,8 +15,8 @@ import React, { type ComponentProps, type RefObject, useCallback, useEffect, use
 import { createContext } from '@dxos/react-hooks';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
-import { composableProps, slottable } from '../../util';
+import { useThemeContext } from '../../hooks/index.ts';
+import { composableProps, slottable } from '../../util/index.ts';
 
 type SplitterOrientation = 'horizontal' | 'vertical';
 

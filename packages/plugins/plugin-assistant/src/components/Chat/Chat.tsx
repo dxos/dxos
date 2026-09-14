@@ -37,14 +37,13 @@ import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
-import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
+import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
 import {
   ChatStatus,
-  ChatStatusStack,
   ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
@@ -805,11 +804,20 @@ ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 
 const CHAT_QUEUE_NAME = 'Chat.Queue';
 
+/**
+ * How long a prompt must sit in the queue before the queue shows it. A prompt sent to an idle agent
+ * is taken up within a frame or two, so showing it at once flashes a row that is gone before it can
+ * be read; only one that is actually waiting behind a running turn earns a row.
+ */
+const QUEUE_REVEAL_DELAY = 1_000;
+
 type ChatQueueProps = Omit<NaturalChatQueueProps, 'messages' | 'onCancel'>;
 
 const ChatQueue = (props: ChatQueueProps) => {
   const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
-  return <NaturalChatQueue {...props} messages={queued} onCancel={onCancel} />;
+  const messages = useSettled(queued, QUEUE_REVEAL_DELAY);
+
+  return <NaturalChatQueue {...props} messages={messages} onCancel={onCancel} />;
 };
 
 ChatQueue.displayName = CHAT_QUEUE_NAME;
@@ -848,7 +856,6 @@ export const Chat = {
   Queue: ChatQueue,
   Activity: ChatActivity,
   Status: ChatStatus,
-  StatusStack: ChatStatusStack,
   Thread: ChatThread,
   Outline: ChatOutline,
 };

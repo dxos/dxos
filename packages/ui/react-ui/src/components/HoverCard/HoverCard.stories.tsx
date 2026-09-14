@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../testing';
-import { Button } from '../Button';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
 import { HoverCard, type HoverCardRootProps } from './HoverCard.tsx';
 
 type StoryProps = Pick<HoverCardRootProps, 'openDelay' | 'closeDelay'> & { side?: 'top' | 'bottom' };

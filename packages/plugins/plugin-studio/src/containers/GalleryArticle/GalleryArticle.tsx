@@ -16,19 +16,19 @@ import { Masonry } from '@dxos/react-ui-masonry';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';
-import { Artifact } from '#types';
+import { MediaArtifact } from '#types';
 
-import { useArtifactCoverSource } from '../../hooks/index.ts';
+import { useMediaArtifactCoverSource } from '../../hooks/index.ts';
 
-const isArtifact = Obj.instanceOf(Artifact.Artifact);
+const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
 type TileData = {
-  artifact: Obj.Snapshot<Artifact.Artifact>;
+  artifact: Obj.Snapshot<MediaArtifact.MediaArtifact>;
   index: number;
 };
 
 const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
-  const { src, contentType } = useArtifactCoverSource(data?.artifact);
+  const { src, contentType } = useMediaArtifactCoverSource(data?.artifact);
   if (!data) {
     return null;
   }
@@ -43,8 +43,8 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
 export type GalleryArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 /**
- * Article surface for a masonry gallery: a `Collection` of {@link Artifact}s rendered as thumbnails.
- * The toolbar creates a new Artifact (added to the collection and opened) and deletes the
+ * Article surface for a masonry gallery: a `Collection` of {@link MediaArtifact}s rendered as thumbnails.
+ * The toolbar creates a new MediaArtifact (added to the collection and opened) and deletes the
  * multi-selected ones. Selection state is owned here via `useListSelection` (multi); the masonry
  * renders the outline and emits tile clicks.
  */
@@ -59,7 +59,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
   const items = useMemo(
     () =>
       objects
-        .filter((object): object is Obj.Snapshot<Artifact.Artifact> => isArtifact(object))
+        .filter((object): object is Obj.Snapshot<MediaArtifact.MediaArtifact> => isArtifact(object))
         .map((artifact, index) => ({ artifact, index })),
     [objects],
   );
@@ -67,12 +67,12 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
   const { bind } = useListSelection({ mode: 'multi', value: selectedIds, onValueChange: setSelectedIds });
 
-  // Create a new Artifact owned by (parented to) the collection, then open it to author.
+  // Create a new MediaArtifact owned by (parented to) the collection, then open it to author.
   const handleCreate = useCallback(async () => {
     if (!db) {
       return;
     }
-    const artifact = Artifact.make({ [Obj.Parent]: collection });
+    const artifact = MediaArtifact.make({ [Obj.Parent]: collection });
     db.add(artifact);
     Obj.update(collection, (collection) => {
       collection.objects ??= [];

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -16,11 +17,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
+import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { meta } from '#meta';
-import { ConnectorAnnotations, ConnectorSpec } from '#types';
+import { ConnectorAnnotations, ConnectorEvents, ConnectorSpec } from '#types';
 
 import * as Binding from '../Binding.ts';
 import * as ConnectorAuth from '../ConnectorAuth.ts';
@@ -66,6 +68,28 @@ export default Capability.makeModule(
     // Hoisted so the connector-reading extensions below establish a reactive dependency instead of
     // reading the capability manager synchronously (graph-extension bodies must never sync-get).
     const connectorAtom = yield* Capability.atom(ConnectorSpec.Connector);
+    // Providers activate on the feature's start event, which nothing on the path to an annotated
+    // object's toolbar fires — a cold load straight onto an artifact showed no Connect until the
+    // Connections page had been visited. Requested once, detached: the body must stay synchronous,
+    // and the atom read in `connectorAuth` re-runs it when the providers land.
+    // Optional so a headless harness that supplies only the capability manager still builds the graph.
+    const pluginManager = Option.getOrUndefined(yield* Effect.serviceOption(Plugin.Service));
+    let providersRequested = false;
+    const requestProviders = Effect.suspend(() => {
+      if (providersRequested || !pluginManager) {
+        return Effect.void;
+      }
+      providersRequested = true;
+      return Effect.forkDetach(
+        pluginManager
+          .activate(ConnectorEvents.Start)
+          .pipe(
+            Effect.catch((error) =>
+              Effect.sync(() => log.warn('connector activation failed', { error: String(error) })),
+            ),
+          ),
+      );
+    });
 
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
@@ -205,12 +229,14 @@ export default Capability.makeModule(
             const allConnectors = capabilities.getAll(ConnectorSpec.Connector).flat();
             if (allConnectors.length === 0) {
               // Nothing known yet: indistinguishable from "none installed", so contribute nothing rather
-              // than a disabled control that would stick once the registry fills in.
+              // than a disabled control that would stick once the registry fills in — but ask for the
+              // providers, so a toolbar reached before any connector surface still gets its Connect.
+              yield* requestProviders;
               return [];
             }
             const connectorIds =
               typeof annotation.connectorIds === 'function'
-                ? annotation.connectorIds(object, capabilities)
+                ? annotation.connectorIds(object, capabilities, get)
                 : annotation.connectorIds;
             if (connectorIds.length === 0) {
               // Providers exist, none binds this type: a bindable type still shows where connecting

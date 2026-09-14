@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
@@ -102,6 +103,11 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
   activatesOn: ReviewEvents.Start,
   environments: ['node'],
 });
+export const TourFragment = Capability.lazyModule(
+  'TourFragment',
+  { provides: [AppCapabilities.TourFragment], environments: [] },
+  () => import('./tour-fragment.ts'),
+);
 export const Translations = AppCapability.translations([...translations, ...threadTranslations]);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
