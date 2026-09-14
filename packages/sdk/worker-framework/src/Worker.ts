@@ -134,7 +134,6 @@ export const run = ({
       livenessLockGranted.wake();
       await livenessLockHeld;
     });
-    await livenessLockGranted.wait();
 
     let shuttingDown = false;
     const shutdown = async () => {
@@ -153,12 +152,23 @@ export const run = ({
       releaseLivenessLock();
       releaseStorageLock();
     };
+    // Installed in the same synchronous block as the channel, so no displacement can land in a gap:
+    // BroadcastChannel queues a delivery task and never replays it to a listener attached after an
+    // await, which would leave this worker holding the storage lock a displacer is waiting on.
     channel.onmessage = (event) => {
       if (event.data?.action === DISPLACE_MESSAGE.action) {
         log('displaced by newer worker, shutting down');
         void shutdown();
       }
     };
+
+    await livenessLockGranted.wait();
+    if (shuttingDown) {
+      // Displaced before startup finished: `shutdown` has released both locks, so there is nothing
+      // to serve and advertising `listening` would hand out a session this worker cannot keep.
+      log('displaced during startup, not serving');
+      return;
+    }
 
     const requestShutdown = () => void shutdown();
 

@@ -15,7 +15,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Field, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 
 import { isPersistent, setPersistent } from '../testing/persistence.ts';
@@ -240,6 +240,10 @@ const TEMPLATE_MODELS: Record<string, Model.Model> = {
   'org.dxos.plugin-debug.sample.weather': Model.deepseekV4Pro,
 };
 
-/** The space a template opened before, identified by the name the story creates it with. */
+/**
+ * The space a template opened before, identified by the name the story creates it with. Only ready
+ * spaces are considered: `properties` throws on one that is not, and a boot that brings several up at
+ * once — an imported profile, say — would otherwise reject here before any of them has settled.
+ */
 const findTemplateSpace = (client: Client, label: string): Space | undefined =>
-  client.spaces.get().find((space) => space.properties.name === label);
+  client.spaces.get().find((space) => space.state.get() === SpaceState.SPACE_READY && space.properties.name === label);
