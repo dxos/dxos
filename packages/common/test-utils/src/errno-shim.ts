@@ -5,7 +5,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, renameSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 /**
@@ -32,19 +31,22 @@ extern int *__errno_location(void);
 
 static sigaction_fn next_sigaction;
 
-/* The handler the process installed for each signal, and whether it takes siginfo. */
+/* The handler the process installed for each signal, and whether it asked for siginfo. */
 static void *volatile handlers[SIGNAL_COUNT];
 static volatile int takes_siginfo[SIGNAL_COUNT];
 
+/* Resolved at load, so a signal handler never has to call dlsym; a constructor that ran earlier resolves it lazily. */
+__attribute__((constructor)) static void resolve_next_sigaction(void) {
+  if (!next_sigaction) {
+    next_sigaction = (sigaction_fn)dlsym(RTLD_NEXT_HANDLE, "sigaction");
+  }
+}
+
+/* Passes all three arguments, which a one-argument handler ignores on x86_64 and aarch64. */
 static void trampoline(int signal, void *info, void *context) {
   int *error = __errno_location();
   int saved = *error;
-  void *handler = handlers[signal];
-  if (takes_siginfo[signal]) {
-    ((void (*)(int, void *, void *))handler)(signal, info, context);
-  } else {
-    ((void (*)(int))handler)(signal);
-  }
+  ((void (*)(int, void *, void *))handlers[signal])(signal, info, context);
   *error = saved;
 }
 
@@ -57,9 +59,7 @@ static void unwrap(struct glibc_sigaction *action, void *handler, int siginfo) {
 }
 
 int sigaction(int signal, const struct glibc_sigaction *action, struct glibc_sigaction *previous) {
-  if (!next_sigaction) {
-    next_sigaction = (sigaction_fn)dlsym(RTLD_NEXT_HANDLE, "sigaction");
-  }
+  resolve_next_sigaction();
   if (signal <= 0 || signal >= SIGNAL_COUNT) {
     return next_sigaction(signal, action, previous);
   }
@@ -74,18 +74,13 @@ int sigaction(int signal, const struct glibc_sigaction *action, struct glibc_sig
     return result;
   }
 
-  /* A handler is only ever called with at least the arguments it takes, including mid-update. */
-  int siginfo = action->flags & SA_SIGINFO_FLAG;
-  takes_siginfo[signal] = SA_SIGINFO_FLAG;
   handlers[signal] = action->handler;
-  takes_siginfo[signal] = siginfo;
-
+  takes_siginfo[signal] = action->flags & SA_SIGINFO_FLAG;
   struct glibc_sigaction wrapped = *action;
   wrapped.handler = (void *)trampoline;
   wrapped.flags |= SA_SIGINFO_FLAG;
   int result = next_sigaction(signal, &wrapped, previous);
   if (result != 0) {
-    takes_siginfo[signal] = SA_SIGINFO_FLAG;
     handlers[signal] = old_handler;
     takes_siginfo[signal] = old_siginfo;
     return result;
@@ -95,16 +90,19 @@ int sigaction(int signal, const struct glibc_sigaction *action, struct glibc_sig
 }
 `;
 
-/** Compiles {@link ERRNO_SHIM_SOURCE} once per source and architecture and returns the shared object's path. */
-export const buildErrnoShim = (): string => {
+/** Whether {@link ERRNO_SHIM_SOURCE} fits this process's platform and architecture. */
+export const errnoShimSupported = (): boolean =>
+  process.platform === 'linux' && (process.arch === 'x64' || process.arch === 'arm64');
+
+/** Compiles {@link ERRNO_SHIM_SOURCE} into `cacheDir` once per source and architecture and returns its path. */
+export const buildErrnoShim = (cacheDir: string): string => {
   const hash = createHash('sha256').update(ERRNO_SHIM_SOURCE).digest('hex').slice(0, 16);
-  const dir = join(tmpdir(), 'dxos-test-utils');
-  const output = join(dir, `errno-shim-${process.arch}-${hash}.so`);
+  const output = join(cacheDir, `errno-shim-${process.arch}-${hash}.so`);
   if (existsSync(output)) {
     return output;
   }
 
-  mkdirSync(dir, { recursive: true });
+  mkdirSync(cacheDir, { recursive: true });
   // Renamed into place, so a concurrent Playwright worker never preloads a partly written file.
   const partial = `${output}.${process.pid}`;
   try {
@@ -118,7 +116,7 @@ export const buildErrnoShim = (): string => {
 };
 
 export const compileSharedObject = (source: string, output: string): void => {
-  execFileSync(process.env.CC || 'cc', ['-shared', '-fPIC', '-O2', '-x', 'c', '-o', output, '-'], {
+  execFileSync(process.env.CC || 'cc', ['-shared', '-fPIC', '-O2', '-x', 'c', '-o', output, '-', '-ldl'], {
     input: source,
     stdio: ['pipe', 'ignore', 'pipe'],
   });

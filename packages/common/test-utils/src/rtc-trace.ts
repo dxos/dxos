@@ -174,7 +174,7 @@ export const installRtcTrace = (prefix: string): void => {
       if (copy === 'rebuilt') {
         text = rebuild(sdp);
       }
-      apply(then, apply(nativeSetRemoteDescription, probe, [{ type: 'answer', sdp: text }]), [
+      void apply(then, apply(nativeSetRemoteDescription, probe, [{ type: 'answer', sdp: text }]), [
         () => settle({ outcome: 'applied' }),
         (err: unknown) => settle({ outcome: parseOutcome(err) }, () => describeError(err)),
       ]);

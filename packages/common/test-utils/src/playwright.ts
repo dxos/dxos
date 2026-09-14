@@ -16,7 +16,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { buildErrnoShim } from './errno-shim.ts';
+import { buildErrnoShim, errnoShimSupported } from './errno-shim.ts';
 import { Lock } from './lock.ts';
 import { RTC_TRACE_PREFIX, installRtcTrace } from './rtc-trace.ts';
 import { WEBKIT_RTC_EVENTS_FILE_ENV, startWebKitRtcEventCapture } from './webkit-rtc-events.ts';
@@ -98,7 +98,9 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
         })
       : undefined;
   const errnoShim =
-    process.platform === 'linux' && (browser === 'all' || browser === 'webkit') ? buildErrnoShim() : undefined;
+    errnoShimSupported() && (browser === 'all' || browser === 'webkit')
+      ? buildErrnoShim(join(workspaceRoot, 'node_modules/.cache/dxos-test-utils'))
+      : undefined;
   // In the Claude Code cloud sandbox chromium needs a pinned executable, the egress proxy passed via
   // ARGS (Playwright's `proxy:` option drops its bypass list for non-default contexts), and a TLS 1.2
   // cap (see the cloud-sandbox skill). Gated so real dev/CI runs are never silently downgraded.
