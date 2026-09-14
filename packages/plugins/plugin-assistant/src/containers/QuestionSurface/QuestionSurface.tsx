@@ -58,7 +58,9 @@ export const QuestionSurface = ({ question: id }: QuestionSurfaceProps) => {
             <Icon icon={Obj.getIcon(object)?.icon ?? 'ph--question--regular'} />
           </CardIconSlot>
         </Card.Block>
-        <Card.Title>{object.text}</Card.Title>
+        {/* The type name, not the question: a `Card.Title` truncates to one line by design, and the
+            question is a sentence the reader has to read in full — so the body carries it. */}
+        <Card.Title>{t('question-card.label')}</Card.Title>
         {/* Same trailing slot the deck's popover host gives every card, so a question in a message
             offers the actions a question anywhere else does. */}
         <Card.Block end>

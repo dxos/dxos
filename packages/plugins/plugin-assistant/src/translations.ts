@@ -173,6 +173,7 @@ export const translations: Resource[] = [
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
         'integration-prompt.scopes': 'Permissions needed:',
 
+        'question-card.label': 'Question',
         'question-answer.label': 'Your answer',
         'question-answer.placeholder': 'Type an answer…',
         'question-submit.label': 'Answer',

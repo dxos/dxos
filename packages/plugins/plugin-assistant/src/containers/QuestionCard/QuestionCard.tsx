@@ -22,9 +22,7 @@ export type QuestionCardProps = AppSurface.ObjectCardProps<Question.Question>;
 /**
  * The card body for a question: why it was asked, and the means to answer it.
  *
- * A `CardContent` surface is the body ONLY — the host draws `Card.Root` and the header, and the
- * question's own text is its label, so the header already carries it and repeating it here would
- * print the question twice.
+ * A `CardContent` surface is the body ONLY — the host draws `Card.Root` and the header.
  *
  * The free-form field is always present, never a fallback revealed by a "something else" option:
  * the options are the asker's guesses, and making the reader hunt for the escape hatch pressures
@@ -95,14 +93,19 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
 
   return (
     <Card.Body data-testid='question-card'>
+      {/* The question itself, in the body rather than left to the host's title: every card host
+          truncates `Card.Title` to one line, and a question is a sentence that has to be readable
+          in full wherever it is shown — inline in the thread and in the task's hover card alike. */}
+      <Card.Row>
+        <Card.Text classNames='text-base font-medium'>{question.text}</Card.Text>
+      </Card.Row>
+
       {question.context && (
         <Card.Row>
-          {/* Unclamped, against the card default: a card is normally a preview of something you
-              open elsewhere, but there is nowhere else to read this — the context is the input to
-              the decision the reader is being asked to make here. */}
-          <Card.Text variant='description' classNames='line-clamp-none'>
-            {question.context}
-          </Card.Text>
+          {/* Clamped, per the card default: in a height-constrained host (the task's hover card)
+              an unclamped rationale pushes every option below the fold, and the agent's message in
+              the thread already carries the same reasoning in full. */}
+          <Card.Text variant='description'>{question.context}</Card.Text>
         </Card.Row>
       )}
 
@@ -116,9 +119,9 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
       ) : (
         <>
           {question.options?.map((option) => (
-            // `fullWidth` so an option spans the card's gutters: it is a control the reader aims
-            // at, not prose inset with the text.
-            <Card.Row key={option.title} fullWidth>
+            // Not `fullWidth`: an option is content, so it lines up with the context above it
+            // rather than bleeding past the gutters the rest of the card observes.
+            <Card.Row key={option.title}>
               <Button
                 variant='default'
                 disabled={busy}
@@ -129,15 +132,17 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
                 onClick={() => void submit(option.title)}
               >
                 {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
-                <div className='grow min-w-0 text-start'>
-                  <div className='text-sm break-words'>{option.title}</div>
-                  {option.description && <div className='text-xs text-subdued break-words'>{option.description}</div>}
+                <div className='grow min-w-0 flex flex-col gap-1 text-start'>
+                  <div className='text-sm font-medium break-words'>{option.title}</div>
+                  {option.description && (
+                    <div className='text-xs text-description break-words leading-snug'>{option.description}</div>
+                  )}
                 </div>
               </Button>
             </Card.Row>
           ))}
 
-          <Card.Row fullWidth>
+          <Card.Row>
             <Field.Root>
               <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
               <Field.Input
@@ -157,7 +162,7 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
             </Card.Row>
           )}
 
-          <Card.Row fullWidth>
+          <Card.Row>
             <div className='flex justify-end'>
               <Button
                 variant='primary'
