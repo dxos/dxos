@@ -159,14 +159,21 @@ describe('spaces/space-root-migration', () => {
       await expect
         .poll(() => s2OnB1.inner.spaceState.genesisCredential !== undefined, { timeout: 60_000 })
         .to.equal(true);
-      expect(s2OnB1.inner.spaceState.members.size).to.be.greaterThan(1);
+      // Polled, not read once: B's own admission reaches it over the control feed, so the member set
+      // is only eventually both identities.
+      await expect.poll(() => s2OnB1.inner.spaceState.members.size > 1, { timeout: 60_000 }).to.equal(true);
 
       //
       // The HALO is anchored too, and A's devices keep access: a space A1 creates afterwards still
       // reaches A2, which it can only do on credentials both devices agree about.
       //
+      // The halo anchors in the background once the identity exists, so this is polled too.
+      await expect
+        .poll(() => typeof a1.echoHost.getSpaceRootRefs(identityA.haloSpaceId)?.spaceRootDocUrl === 'string', {
+          timeout: 120_000,
+        })
+        .to.equal(true);
       const haloRefs = a1.echoHost.getSpaceRootRefs(identityA.haloSpaceId);
-      expect(haloRefs?.spaceRootDocUrl, 'A1 anchored its halo').to.be.a('string');
       await expect
         .poll(() => a2.echoHost.getSpaceRootRefs(identityA.haloSpaceId)?.spaceRootDocUrl, { timeout: 120_000 })
         .to.equal(haloRefs!.spaceRootDocUrl);
