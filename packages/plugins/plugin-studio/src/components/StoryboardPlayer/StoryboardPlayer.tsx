@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Flex, IconButton, MediaPlayer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { MediaPlayer, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -21,6 +21,8 @@ export type StoryboardPlayerProps = ThemedClassName<{
   clips: StoryboardClip[];
   /** How long a still is shown before advancing. */
   stillMs?: number;
+  /** The plank the toolbar is attended through. */
+  attendableId?: string;
   onClose?: () => void;
 }>;
 
@@ -31,7 +33,13 @@ const DEFAULT_STILL_MS = 4_000;
  * source advances on `ended`, and stills that advance on a timer. No file is produced; see the
  * design doc for the ffmpeg.wasm splice that would.
  */
-export const StoryboardPlayer = ({ classNames, clips, stillMs = DEFAULT_STILL_MS, onClose }: StoryboardPlayerProps) => {
+export const StoryboardPlayer = ({
+  classNames,
+  clips,
+  stillMs = DEFAULT_STILL_MS,
+  attendableId,
+  onClose,
+}: StoryboardPlayerProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [index, setIndex] = useState(0);
   const clip = clips[index];
@@ -51,49 +59,81 @@ export const StoryboardPlayer = ({ classNames, clips, stillMs = DEFAULT_STILL_MS
     return () => clearTimeout(timer);
   }, [clip, isVideo, advance, stillMs]);
 
+  const menuActions = useMenuBuilder(
+    (): ActionGraphProps =>
+      MenuBuilder.make()
+        .action(
+          'previous',
+          {
+            label: ['previous-frame.label', { ns: meta.profile.key }],
+            icon: 'ph--skip-back--regular',
+            disposition: 'toolbar',
+            disabled: index === 0,
+          },
+          () => setIndex((current) => Math.max(0, current - 1)),
+        )
+        .action(
+          'next',
+          {
+            label: ['next-frame.label', { ns: meta.profile.key }],
+            icon: 'ph--skip-forward--regular',
+            disposition: 'toolbar',
+            disabled: index + 1 >= clips.length,
+          },
+          advance,
+        )
+        .action(
+          'position',
+          {
+            variant: 'custom',
+            label: ['play.label', { ns: meta.profile.key }],
+            render: () => (
+              <span className='truncate text-description'>
+                {index + 1} / {clips.length}
+                {clip?.name ? ` — ${clip.name}` : ''}
+              </span>
+            ),
+          },
+          () => {},
+        )
+        .separator('gap')
+        .action(
+          'close',
+          {
+            label: ['close.label', { ns: meta.profile.key }],
+            icon: 'ph--x--regular',
+            disposition: 'toolbar',
+            disabled: !onClose,
+          },
+          () => onClose?.(),
+        )
+        .build(),
+    [index, clips.length, clip?.name, advance, onClose],
+  );
+
   if (!clip) {
     return null;
   }
 
   return (
-    <div className={mx('grid grid-rows-[1fr_auto] dx-expand', classNames)}>
-      {/* Keyed by clip so the element remounts and autoplays the next source. */}
-      <MediaPlayer
-        key={clip.id}
-        classNames='dx-expand'
-        src={clip.src}
-        kind={isVideo ? 'video' : undefined}
-        fit='contain'
-        autoPlay
-        alt={clip.name}
-        onEnded={advance}
-      />
-      <Flex align='center' gap='xs' classNames='p-2 border-t border-subdued-separator'>
-        <IconButton
-          iconOnly
-          variant='ghost'
-          icon='ph--skip-back--regular'
-          label={t('previous-frame.label')}
-          disabled={index === 0}
-          onClick={() => setIndex((current) => Math.max(0, current - 1))}
+    <Panel.Root classNames={classNames}>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Toolbar>
+      <Panel.Content>
+        {/* Keyed by clip so the element remounts and autoplays the next source. */}
+        <MediaPlayer
+          key={clip.id}
+          classNames='dx-expand'
+          src={clip.src}
+          kind={isVideo ? 'video' : undefined}
+          fit='contain'
+          autoPlay
+          alt={clip.name}
+          onEnded={advance}
         />
-        <IconButton
-          iconOnly
-          variant='ghost'
-          icon='ph--skip-forward--regular'
-          label={t('next-frame.label')}
-          disabled={index + 1 >= clips.length}
-          onClick={advance}
-        />
-        <span className='grow truncate text-description'>
-          {index + 1} / {clips.length}
-          {clip.name ? ` — ${clip.name}` : ''}
-        </span>
-        {onClose && (
-          <IconButton iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
-        )}
-      </Flex>
-    </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

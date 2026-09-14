@@ -34,6 +34,7 @@ export const FrameVariants = ({ frame, attendableId }: FrameVariantsProps) => {
       </Panel.Root>
     );
   }
+
   return <MediaArtifactVariants artifact={artifact} attendableId={attendableId} />;
 };
 

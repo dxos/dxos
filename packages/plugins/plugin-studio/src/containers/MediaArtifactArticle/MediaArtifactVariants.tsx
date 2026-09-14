@@ -161,7 +161,7 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId }: Me
   return (
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
-        <ActionToolbar {...menuActions} attendableId={attendableId} classNames='dx-document' />
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
       <Panel.Content>
         {selected === 'all' ? (
