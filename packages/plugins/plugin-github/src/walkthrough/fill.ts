@@ -153,10 +153,10 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
     }
 
     // A rename, a mode change or a binary file has no hunks; there is nothing to splice, and an
-    // empty fence would render as a bare code block.
+    // empty fence would render as a bare code block. NOT `unresolved`: the patch does contain this
+    // file, and `textless` already reports it — counting it as missing would say both at once.
     const hunks = selectHunks(file, rest.lines);
     if (hunks.length === 0) {
-      unresolved.push(path);
       filled += verbatim;
       continue;
     }

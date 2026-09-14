@@ -249,10 +249,13 @@ describe('DiffBlockWidget equality', () => {
       return found.widget;
     };
 
-    // `auto` and an absent layout both start split, and an absent `highlight` means on.
+    // An absent layout means `auto` and an absent `highlight` means on.
     expect(widget({}).eq(widget({ layout: 'auto', highlight: true }))).to.eq(true);
     expect(widget({}).eq(widget({ layout: 'inline' }))).to.eq(false);
     expect(widget({}).eq(widget({ highlight: false }))).to.eq(false);
+    // `auto` and `split` both START split, but only `auto` observes its width, so a widget
+    // configured one way cannot stand in for the other.
+    expect(widget({ layout: 'auto' }).eq(widget({ layout: 'split' }))).to.eq(false);
   });
 });
 

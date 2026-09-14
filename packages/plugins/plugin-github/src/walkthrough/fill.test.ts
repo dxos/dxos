@@ -212,6 +212,37 @@ describe('fillWalkthrough', () => {
     expect(filled).to.contain('new.ts');
   });
 
+  test('ends the range at a pure removal that a live hunk shares the fence with', () => {
+    const patch = [
+      'diff --git a/src/mixed.ts b/src/mixed.ts',
+      '--- a/src/mixed.ts',
+      '+++ b/src/mixed.ts',
+      '@@ -1,1 +1,2 @@',
+      ' keep();',
+      '+added();',
+      // A pure removal spans nothing after the change: `afterEnd` is 98 while it sits at 99.
+      '@@ -100,1 +99,0 @@',
+      '-gone();',
+    ].join('\n');
+    const { body: filled } = fillWalkthrough(['```diff file=src/mixed.ts', '```', ''].join('\n'), patch);
+
+    expect(filled).to.contain('lines=1-99');
+  });
+
+  test('does not call a textless file unresolved as well', () => {
+    const patch = [
+      'diff --git a/old.ts b/new.ts',
+      'similarity index 100%',
+      'rename from old.ts',
+      'rename to new.ts',
+    ].join('\n');
+    const { textless, unresolved } = fillWalkthrough(['```diff file=new.ts', '```', ''].join('\n'), patch);
+
+    // The patch does contain the file; `unresolved` is for one it does not.
+    expect(textless).to.deep.eq(['new.ts']);
+    expect(unresolved).to.deep.eq([]);
+  });
+
   test('emits no dangling attribute for a file it cannot fill', () => {
     const patch = ['diff --git a/old.ts b/new.ts', 'similarity index 100%'].join('\n');
     const { body: filled } = fillWalkthrough(['```diff file=new.ts', '```', ''].join('\n'), patch);

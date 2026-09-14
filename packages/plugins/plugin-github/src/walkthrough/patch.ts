@@ -147,6 +147,8 @@ export const hunkRange = (hunks: PatchHunk[]): string | undefined => {
   }
   const survives = hunks.some((hunk) => hunk.afterEnd >= hunk.afterStart);
   const start = Math.min(...hunks.map((hunk) => (survives ? hunk.afterStart : hunk.beforeStart)));
-  const end = Math.max(...hunks.map((hunk) => (survives ? hunk.afterEnd : hunk.beforeEnd)));
+  // `afterStart` for a pure removal, as `hunkOverlaps` does: its `afterEnd` is one BELOW its start,
+  // so a set mixing one with a live hunk would end the range before the removal it contains.
+  const end = Math.max(...hunks.map((hunk) => (survives ? Math.max(hunk.afterEnd, hunk.afterStart) : hunk.beforeEnd)));
   return start >= end ? `${start}` : `${start}-${end}`;
 };

@@ -142,13 +142,13 @@ class DiffBlockWidget extends WidgetType {
   }
 
   override eq(other: this): boolean {
-    // Normalized rather than compared raw, and `highlight` included: `auto` and an absent layout
-    // both start as `split`, and an absent `highlight` means on, so a widget configured either way
-    // renders identically. Comparing raw would tear one down and lose the collapse the reader
-    // toggled and the width the observer measured.
+    // Only the DEFAULTS are normalized: an absent layout means `auto` and an absent `highlight`
+    // means on, so a widget configured either way renders identically and must not be torn down —
+    // that would lose the collapse the reader toggled and the width the observer measured. `auto`
+    // and `split` stay distinct despite both starting split, since only `auto` observes its width.
     return (
       this.#source === other.#source &&
-      initialLayout(this.#options.layout) === initialLayout(other.#options.layout) &&
+      (this.#options.layout ?? 'auto') === (other.#options.layout ?? 'auto') &&
       highlighted(this.#options) === highlighted(other.#options)
     );
   }
