@@ -18,7 +18,6 @@ import INSTRUCTIONS from './update-tasks.md?raw';
  * One edit to the conversation's tasks. Flat rather than a union of create/update shapes: a union
  * renders as `anyOf`, which some providers handle poorly, so the handler enforces the combinations.
  */
-// TODO(burdon): Reconcile with Task.
 const TaskChange = Schema.Struct({
   task: Ref.Ref(Task.Task)
     .annotate({ description: 'The existing task to change, as the ref on its checklist line. Omit with `create`.' })
