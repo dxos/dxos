@@ -94,12 +94,37 @@ export const stageProfileImport = async (bytes: Uint8Array): Promise<void> => {
   }
 };
 
+/** Discards the staged archive, tolerating a concurrent caller having got there first. */
+const removeStagedImport = async (root: FileSystemDirectoryHandle): Promise<void> => {
+  try {
+    await root.removeEntry(STAGED_IMPORT_FILENAME);
+  } catch (error) {
+    if (!(error instanceof DOMException) || error.name !== 'NotFoundError') {
+      throw error;
+    }
+  }
+};
+
+/**
+ * Shared by every concurrent caller in this document. React runs a mount effect twice under
+ * StrictMode, so the story calls this twice: without the guard the second call reads a handle the
+ * first has already consumed and fails on it, and the reported failure is the import's own.
+ */
+let applying: Promise<void> | undefined;
+
 /**
  * Writes a staged archive into the pool and removes it. Must run before this tab's client starts,
  * and under the storage lock: the outgoing document's worker is torn down asynchronously, so a
  * reload alone does not free the pool's sync access handles (see {@link withPersistentStorage}).
  */
 export const applyStagedProfileImport = async (): Promise<void> => {
+  applying ??= applyStagedProfileImportOnce().finally(() => {
+    applying = undefined;
+  });
+  return applying;
+};
+
+const applyStagedProfileImportOnce = async (): Promise<void> => {
   const root = await navigator.storage.getDirectory();
   const handle = await root.getFileHandle(STAGED_IMPORT_FILENAME).catch(() => undefined);
   if (!handle) {
@@ -112,7 +137,7 @@ export const applyStagedProfileImport = async (): Promise<void> => {
     database = selectDatabase(bytes);
   } catch (error) {
     // Unreadable bytes would fail identically on every later boot, so drop them rather than retry.
-    await root.removeEntry(STAGED_IMPORT_FILENAME);
+    await removeStagedImport(root);
     throw error;
   }
 
@@ -120,7 +145,7 @@ export const applyStagedProfileImport = async (): Promise<void> => {
   // rather than discarding a profile the user picked.
   await withPersistentStorage(async () => {
     await OpfsPool.writeDatabase(database, OPFS_SQLITE_DB_FILENAME);
-    await root.removeEntry(STAGED_IMPORT_FILENAME);
+    await removeStagedImport(root);
   });
 };
 
