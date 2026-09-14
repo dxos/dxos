@@ -134,6 +134,8 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
         launchOptions: {
           // Replaces the browser's whole environment rather than extending it.
           env: {
+            // JSC's wasm OSR entry faults on x86_64 Linux (oven-sh/bun#26366), surfacing as wasm traps in Automerge.
+            JSC_useWasmOSR: 'false',
             ...definedEnv(),
             ...(errnoShim ? { LD_PRELOAD: [errnoShim, process.env.LD_PRELOAD].filter(Boolean).join(':') } : {}),
             ...(webkitRtcEvents ? { [WEBKIT_RTC_EVENTS_FILE_ENV]: webkitRtcEvents.fifoPath } : {}),
