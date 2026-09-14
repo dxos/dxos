@@ -304,8 +304,10 @@ export class ConvergenceKeyMerger {
           entity.data[field] = _clone(value);
         }
       }
-      if (entity.meta === undefined) {
-        entity.meta = { keys: [] };
+      // Stored meta can predate the `keys` array (the client backfills it on read); the raw document
+      // does not.
+      if (entity.meta.keys === undefined) {
+        entity.meta.keys = [];
       }
       const keys = entity.meta.keys;
       for (const key of result.keys) {

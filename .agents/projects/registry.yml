@@ -556,7 +556,7 @@ projects:
     user: josiah
     host: remote
     created: 2026-07-30
-    summary: ECHO-level deterministic object merging keyed on identity key (meta key + version) — duplicates from uncoordinated per-peer space initialization merge into a min-id winner with redirects and reference rewriting.
+    summary: ECHO-level deterministic object merging keyed on `meta.convergenceKey` — duplicates from uncoordinated per-peer space initialization merge into a min-id winner with redirects and reference rewriting.
     tasks: .agents/projects/object-merging/TASKS.md
     design: .agents/projects/object-merging/DESIGN.md
     prs: [12410, 12412]

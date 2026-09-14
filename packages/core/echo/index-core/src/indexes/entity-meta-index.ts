@@ -487,10 +487,15 @@ export class EntityMetaIndex implements Index {
                   : null;
               // Parent (nullable).
               const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
-              // Convergence key (nullable) — from the meta section of the serialized object.
+              // Convergence key (nullable) — from the meta section of the serialized object. The meta
+              // arrives as raw replicated JSON, so anything but a string is treated as no key.
+              const rawConvergenceKey = (castData[ATTR_META] as { convergenceKey?: unknown } | undefined)
+                ?.convergenceKey;
               const convergenceKey = preserveBody
                 ? priorRow.convergenceKey
-                : ((castData[ATTR_META] as { convergenceKey?: string } | undefined)?.convergenceKey ?? null);
+                : typeof rawConvergenceKey === 'string'
+                  ? rawConvergenceKey
+                  : null;
 
               const updatedAtTimestamp = object.updatedAt;
               // Prefer the creation timestamp stored in the document (survives compaction/migrations).

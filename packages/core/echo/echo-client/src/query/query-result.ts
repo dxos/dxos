@@ -239,10 +239,15 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     entries: QueryResult.EntityEntry<T>[];
     grouped: boolean;
   } {
-    entries = this._collapseDuplicates(entries);
+    const { kept, removed } = this._collapseDuplicates(entries);
+    entries = kept;
 
     if (entries.length > 0 && entries[0].group !== undefined) {
-      const { groups, entries: groupEntries } = _assembleGroups(entries, _groupAggregatesFromQuery(this._query.ast));
+      const { groups, entries: groupEntries } = _assembleGroups(
+        entries,
+        _groupAggregatesFromQuery(this._query.ast),
+        removed,
+      );
       // Boundary cast: T is the flat aggregate record for aggregate queries (per Query.aggregate's
       // return type), but this class is written generically over the row type — aggregation is a
       // presentation transform applied on top of row-level entries, with the row type erased at runtime.
@@ -269,14 +274,19 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * entity: a loser resurrected by `db.add` stays visible until the worker re-tombstones it,
    * instead of becoming a live-but-unqueryable zombie.
    */
-  private _collapseDuplicates(entries: SourceEntry<T>[]): SourceEntry<T>[] {
+  private _collapseDuplicates(entries: SourceEntry<T>[]): { kept: SourceEntry<T>[]; removed: SourceEntry<T>[] } {
     // A query that explicitly asks for tombstones is asking to see what was merged away, so
     // filtering would defeat it — this is how a diagnostic inspects the losers.
     if (_queryIncludesDeleted(this._query.ast)) {
-      return entries;
+      return { kept: entries, removed: [] };
     }
 
-    return entries.filter(({ result }) => !(isEchoObject(result) && getObjectCore(result).isDeleted()));
+    const kept: SourceEntry<T>[] = [];
+    const removed: SourceEntry<T>[] = [];
+    for (const entry of entries) {
+      (isEchoObject(entry.result) && getObjectCore(entry.result).isDeleted() ? removed : kept).push(entry);
+    }
+    return { kept, removed };
   }
 
   private _uniqueObjects(entries: SourceEntry<T>[]): T[] {
@@ -349,6 +359,7 @@ type GroupResult = { [field: string]: unknown };
 const _assembleGroups = (
   entries: SourceEntry[],
   aggregates: readonly QueryAST.GroupAggregate[],
+  removed: SourceEntry[] = [],
 ): { groups: GroupResult[]; entries: QueryResult.Entry<GroupResult>[] } => {
   const seenIds = new Set<unknown>();
   const order: string[] = [];
@@ -379,6 +390,25 @@ const _assembleGroups = (
     if (entry.result != null) {
       members.get(serializedKey)!.push(entry.result);
     }
+  }
+
+  // Tombstones the collapse dropped are still inside the server-side `count`; subtract them so the
+  // count agrees with the members it is reported alongside.
+  const removedIds = new Map<string, Set<unknown>>();
+  for (const entry of removed) {
+    const objectId = entry.result?.id;
+    if (!entry.group || objectId == null) {
+      continue;
+    }
+    const serializedKey = JSON.stringify(entry.group.key);
+    const count = counts.get(serializedKey);
+    const ids = removedIds.get(serializedKey) ?? new Set<unknown>();
+    if (count === undefined || ids.has(objectId)) {
+      continue;
+    }
+    ids.add(objectId);
+    removedIds.set(serializedKey, ids);
+    counts.set(serializedKey, count - 1);
   }
 
   const groups = order.map((serializedKey): GroupResult => {

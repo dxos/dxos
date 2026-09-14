@@ -19,7 +19,7 @@ import {
   resolveMergeRedirect,
   setRefResolver,
 } from '@dxos/echo/internal';
-import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
@@ -589,11 +589,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * already loaded, so a miss here falls through to the resolve trap rather than being final.
    */
   #followMergeRedirect(db: DatabaseImpl, objectId: EntityId): Entity.Any | undefined {
-    const survivor = resolveMergeRedirect(objectId, (id) => {
+    const survivor = this.#resolveMergeSurvivorId(db, objectId);
+    return survivor !== objectId ? db.getObjectById(survivor) : undefined;
+  }
+
+  /** The live end of `objectId`'s redirect chain over the working set — `objectId` itself when none. */
+  #resolveMergeSurvivorId(db: DatabaseImpl, objectId: EntityId): EntityId {
+    return resolveMergeRedirect(objectId, (id) => {
       const entity = db.getObjectById(id, { deleted: true });
       return entity && isEchoObject(entity) ? getObjectCore(entity).getMergedInto() : undefined;
     });
-    return survivor !== objectId ? db.getObjectById(survivor) : undefined;
   }
 
   private async _resolveAsync(
@@ -841,13 +846,25 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           if (!db) {
             continue;
           }
-          const obj = db.getObjectById(item.id);
-          if (!obj) {
+          const entityId = EntityId.isValid(item.id) ? item.id : undefined;
+          const obj =
+            db.getObjectById(item.id) ?? (entityId !== undefined ? this.#followMergeRedirect(db, entityId) : undefined);
+          if (obj) {
+            log('resolve', { spaceId: updateEvent.spaceId, objectId: obj.id });
+            listeners.emit(obj);
+            listenerMap.delete(item.id);
             continue;
           }
-          log('resolve', { spaceId: updateEvent.spaceId, objectId: obj.id });
-          listeners.emit(obj);
-          listenerMap.delete(item.id);
+          // A merge loser's tombstone loaded before its survivor: `getObjectById` skips tombstones,
+          // and the survivor's own load fires under its id, so the wait has to move there or the
+          // callbacks stay pending forever.
+          const survivorId = entityId !== undefined ? this.#resolveMergeSurvivorId(db, entityId) : undefined;
+          if (survivorId !== undefined && survivorId !== item.id) {
+            entry(listenerMap, survivorId)
+              .orInsert(new Event<Entity.Any>())
+              .value.on(new Context(), (survivor) => listeners.emit(survivor));
+            listenerMap.delete(item.id);
+          }
         }
       });
     }

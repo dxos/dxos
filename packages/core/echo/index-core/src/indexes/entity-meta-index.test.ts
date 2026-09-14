@@ -533,6 +533,38 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('indexes a string convergence key and treats any other shape as no key', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const keyed = EntityId.random();
+      const malformed = EntityId.random();
+      const makeItem = (id: EntityId, meta: unknown): IndexerObject => ({
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: `doc-${id}`,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        // Parsed from JSON because the malformed meta shape under test has no static type.
+        data: JSON.parse(JSON.stringify({ id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false, '@meta': meta })),
+      });
+
+      yield* index.update([
+        makeItem(keyed, { keys: [], convergenceKey: 'example.com/thing/a' }),
+        makeItem(malformed, { keys: [], convergenceKey: 42 }),
+      ]);
+
+      const rows = yield* index.queryByConvergenceKeys(spaceId, ['example.com/thing/a', '42']);
+      expect(rows.map((row) => row.objectId)).toEqual([keyed]);
+      const all = yield* index.queryAll({ spaceIds: [spaceId] });
+      expect(all.find((row) => row.objectId === malformed)?.convergenceKey).toBeNull();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('cursors under retired index names are purged so pre-convergenceKey data re-indexes', () =>
     Effect.gen(function* () {
       // A build before `convergenceKey` tracked its progress under the retired names (`fts5`,

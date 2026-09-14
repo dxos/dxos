@@ -235,6 +235,30 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
     expect(entityOf(fixture, ID_A)?.data.description).toBe('straggler');
   });
 
+  test('a winner whose stored meta predates the keys array still absorbs foreign keys', async ({ expect }) => {
+    // Parsed from JSON because the on-disk shape (a key without a `keys` array) has no static type.
+    const legacyWinner: EntityStructure = JSON.parse(
+      JSON.stringify({ system: { kind: 'object' }, meta: { convergenceKey: KEY }, data: { title: 'a' } }),
+    );
+    const fixture = setup([
+      [ID_A, legacyWinner],
+      [
+        ID_B,
+        {
+          ...makeEntity(KEY, { title: 'b' }),
+          meta: { keys: [{ source: 'example.com', id: '1' }], convergenceKey: KEY },
+        },
+      ],
+    ]);
+
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
+
+    expect(entityOf(fixture, ID_A)?.meta?.keys).toEqual([{ source: 'example.com', id: '1' }]);
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBe(ID_A);
+  });
+
   test('a loser re-keyed during the durability flush is not tombstoned', async ({ expect }) => {
     // Re-keying declares a different identity; converting it into a redirect would destroy an
     // entity the user just split off.
