@@ -11,8 +11,8 @@ import { createContext, useControllableState, useForwardedRef } from '@dxos/reac
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { type ThemedClassName, composableProps, slottable } from '../../util';
-import { Button, type ButtonProps, IconButton, type IconButtonProps } from '../Button';
+import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
+import { Button, type ButtonProps, IconButton, type IconButtonProps } from '../Button/index.ts';
 
 type TabsActivePart = 'list' | 'panel';
 

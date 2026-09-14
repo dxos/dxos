@@ -4,7 +4,7 @@
 
 import { type Theme } from '@dxos/ui-types';
 
-import { type PopoverStyleProps, popoverTheme } from '../Popover/Popover.theme';
+import { type PopoverStyleProps, popoverTheme } from '../Popover/Popover.theme.ts';
 
 export type HoverCardStyleProps = PopoverStyleProps;
 
