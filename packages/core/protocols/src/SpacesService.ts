@@ -82,6 +82,13 @@ export const SubscribeMessagesRequest = Schema.Struct({
 });
 export interface SubscribeMessagesRequest extends Schema.Schema.Type<typeof SubscribeMessagesRequest> {}
 
+export const SubscribeMessagesResponse = Schema.Struct({
+  /** Sent once the channel listener is registered; messages posted earlier may have been dropped. */
+  ready: Schema.optional(Schema.Struct({})),
+  message: Schema.optional(bufMessage(GossipMessageSchema)),
+});
+export interface SubscribeMessagesResponse extends Schema.Schema.Type<typeof SubscribeMessagesResponse> {}
+
 export const WriteCredentialsRequest = Schema.Struct({
   spaceKey: publicKey,
   credentials: Schema.optional(mutableArray(bufMessage(CredentialSchema))),
@@ -244,7 +251,7 @@ export class Rpcs extends RpcGroup.make(
    */
   Rpc.make('subscribeMessages', {
     payload: SubscribeMessagesRequest,
-    success: bufMessage(GossipMessageSchema),
+    success: SubscribeMessagesResponse,
     error: serviceError,
     stream: true,
   }),

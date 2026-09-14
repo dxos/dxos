@@ -41,7 +41,7 @@ import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { type ListenHandle, decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { fromPublicKey, packJson, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
@@ -564,15 +564,29 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * Listen for messages posted to the space.
    */
-  listen(channel: string, callback: (message: GossipMessage) => void): () => Promise<void> {
+  listen(channel: string, callback: (message: GossipMessage) => void): ListenHandle {
+    const registered = new Trigger();
     const cleanup = subscribeStream(
       this._runtime,
       this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: this.key, channel }),
       {
-        onData: (message) => callback(message),
+        onData: ({ ready, message }) => {
+          if (ready) {
+            registered.wake();
+          } else if (message) {
+            callback(message);
+          }
+        },
+        onError: (err) => {
+          registered.throw(err);
+          log.catch(err);
+        },
       },
     );
-    return async () => cleanup();
+    const ready = registered.wait();
+    // Most callers never await readiness, and the failure is already logged above.
+    ready.catch(() => {});
+    return Object.assign(cleanup, { ready });
   }
 
   /**

@@ -28,7 +28,7 @@ import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { toPublicKey, unpackJson } from '@dxos/protocols/buf';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
@@ -138,21 +138,21 @@ describe('Spaces', () => {
 
     const hello = new Trigger();
     {
-      space2.listen('hello', (message) => {
+      await space2.listen('hello', (message) => {
         expect(message.channelId).to.include('hello');
-        expect(message.payload).to.deep.contain({ data: 'Hello, world!' });
+        expect(unpackJson(message.payload)).to.deep.contain({ data: 'Hello, world!' });
         hello.wake();
-      });
+      }).ready;
       await space1.postMessage('hello', { data: 'Hello, world!' });
     }
 
     const goodbye = new Trigger();
     {
-      space2.listen('goodbye', (message) => {
+      await space2.listen('goodbye', (message) => {
         expect(message.channelId).to.include('goodbye');
-        expect(message.payload).to.deep.contain({ data: 'Goodbye' });
+        expect(unpackJson(message.payload)).to.deep.contain({ data: 'Goodbye' });
         goodbye.wake();
-      });
+      }).ready;
       await space1.postMessage('goodbye', { data: 'Goodbye' });
     }
 
