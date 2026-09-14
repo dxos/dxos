@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type ReactNode, memo, useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -28,7 +28,7 @@ import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } fro
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
-import { ObjectCard, ProjectPipeline } from '#components';
+import { ObjectCard, ProjectPipeline, useProjectChats } from '#components';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
@@ -106,12 +106,21 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     setShowPipeline((show) => !show);
   }, []);
 
-  // The reader is taken to the pipeline as the session starts, so the first events land in view.
-  const handleDelegated = useCallback(() => {
-    clearChecked();
-    setTab('tasks');
-    setShowPipeline(true);
-  }, [clearChecked]);
+  const handleDelegated = useCallback(() => clearChecked(), [clearChecked]);
+
+  // A session starting is what the chart is for, so a chat newly filed under the project — from the
+  // toolbar, a row's menu, or the agent — brings the pipeline into view. Compared against the count
+  // at mount rather than shown whenever chats exist, so a project with a history of sessions opens
+  // on its ledger and the reader still decides when to look.
+  const chats = useProjectChats(space, subject);
+  const seenChats = useRef(chats.length);
+  useEffect(() => {
+    if (chats.length > seenChats.current) {
+      setTab('tasks');
+      setShowPipeline(true);
+    }
+    seenChats.current = chats.length;
+  }, [chats.length]);
 
   const menuActions = useToolbarActions({
     project: subject,

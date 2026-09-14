@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
-import * as Chat from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
-import { Filter } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
 import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -15,6 +13,8 @@ import { Gantt, type GanttLane } from '@dxos/react-ui-components';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
+
+import { useProjectChats } from './useProjectChats.ts';
 
 export type ProjectPipelineProps = {
   space: Space;
@@ -32,13 +32,7 @@ export type ProjectPipelineProps = {
  */
 export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: ProjectPipelineProps) => {
   const { t } = useTranslation(meta.profile.key);
-  // Every chat in the space, narrowed by the parent walk: a project's chats are filed under it, and
-  // the query re-emits when one is added — which is exactly when a session begins.
-  const allChats = useQuery(space.db, Filter.type(Chat.Chat));
-  const chats = useMemo(
-    () => allChats.filter((chat) => Chat.peekProject(chat)?.id === project.id),
-    [allChats, project.id],
-  );
+  const chats = useProjectChats(space, project);
   const timeline = useSessionTimeline(space, { chats, tasks });
 
   // The chart hands back its own lane shape, which carries no chat; the timeline's lane of the same
