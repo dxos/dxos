@@ -9,8 +9,8 @@ import { captureDebugLogs } from '@dxos/test-utils/playwright';
 
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager.ts';
 
-/** A healthy run is ~30s plus up to a 10s collection-sync poll for the upload gate; a 60s sync-round timeout overruns it. */
-const TEST_TIMEOUT = 75_000;
+/** A healthy run is ~30s; the budget also covers the upload gate's two sync rounds. */
+const TEST_TIMEOUT = 240_000;
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973

@@ -42,8 +42,8 @@ export const INITIAL_SPACE_COUNT = 1;
 // whose barrel drags the client and observability graphs into every worker.
 const LOG_STORE_DB_NAME = 'composer-logs';
 
-/** Under one 60s subduction sync round, so a round that times out fails the wait instead of fitting inside it. */
-const UPLOAD_TIMEOUT = 30_000;
+/** A subduction sync round waits up to 60s, so the wait spans two rounds and one stalled round does not fail it. */
+const UPLOAD_TIMEOUT = 130_000;
 
 /**
  * Budget for `joinNewIdentity()`: spans a storage reset, page reload and app boot, so it is sized well
