@@ -126,24 +126,33 @@ export const applyStagedProfileImport = async (): Promise<void> => {
 
 const applyStagedProfileImportOnce = async (): Promise<void> => {
   const root = await navigator.storage.getDirectory();
-  const handle = await root.getFileHandle(STAGED_IMPORT_FILENAME).catch(() => undefined);
-  if (!handle) {
+  // Fast path, so an ordinary boot neither takes the storage lock nor displaces anyone else's
+  // worker. The reading that decides anything is the one under the lock below.
+  if (!(await root.getFileHandle(STAGED_IMPORT_FILENAME).catch(() => undefined))) {
     return;
   }
 
-  const bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
-  let database: Uint8Array;
-  try {
-    database = selectDatabase(bytes);
-  } catch (error) {
-    // Unreadable bytes would fail identically on every later boot, so drop them rather than retry.
-    await removeStagedImport(root);
-    throw error;
-  }
-
-  // Removed inside the lock, so a failure to take it leaves the import staged for the next reload
-  // rather than discarding a profile the user picked.
   await withPersistentStorage(async () => {
+    // Re-read while holding the lock. Two documents booting together both see the staged file, and
+    // reading it outside would let the second write its stale snapshot over everything the first
+    // one's client has already done since applying the very same archive.
+    const handle = await root.getFileHandle(STAGED_IMPORT_FILENAME).catch(() => undefined);
+    if (!handle) {
+      return;
+    }
+
+    const bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
+    let database: Uint8Array;
+    try {
+      database = selectDatabase(bytes);
+    } catch (error) {
+      // Unreadable bytes would fail identically on every later boot, so drop them rather than retry.
+      await removeStagedImport(root);
+      throw error;
+    }
+
+    // Removed under the lock too, so a failure to take it leaves the import staged for the next
+    // reload rather than discarding a profile the user picked.
     await OpfsPool.writeDatabase(database, OPFS_SQLITE_DB_FILENAME);
     await removeStagedImport(root);
   });
