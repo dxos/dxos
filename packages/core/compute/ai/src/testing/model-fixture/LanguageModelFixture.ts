@@ -274,8 +274,38 @@ const remapStoredResponse = (
     }
   }
 
-  return replaceTokens(storedResponse, mapping) as readonly unknown[];
+  // Coalesced first: a provider streams arguments in small chunks that split an id across deltas,
+  // and a token replaced per string never matches a split one.
+  return replaceTokens(
+    mapping.size > 0 ? coalesceDeltas(storedResponse) : storedResponse,
+    mapping,
+  ) as readonly unknown[];
 };
+
+const DELTA_TYPES = new Set(['text-delta', 'reasoning-delta', 'tool-params-delta']);
+
+/** Merges consecutive stream deltas of one part into a single delta; consumers concatenate them anyway. */
+const coalesceDeltas = (response: readonly unknown[]): unknown[] => {
+  const merged: unknown[] = [];
+  for (const part of response) {
+    const previous = merged.at(-1);
+    if (isDelta(part) && isDelta(previous) && previous.type === part.type && previous.id === part.id) {
+      merged[merged.length - 1] = { ...previous, delta: previous.delta + part.delta };
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged;
+};
+
+const isDelta = (part: unknown): part is { type: string; id: string; delta: string } =>
+  typeof part === 'object' &&
+  part !== null &&
+  'type' in part &&
+  typeof part.type === 'string' &&
+  DELTA_TYPES.has(part.type) &&
+  'delta' in part &&
+  typeof part.delta === 'string';
 
 /**
  * Internal seams exposed for unit testing the dynamic-value matching/substitution logic.
