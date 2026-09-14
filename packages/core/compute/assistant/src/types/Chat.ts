@@ -280,16 +280,17 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
   });
 
 /**
- * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order. Status/dependency notes go on
- * their own indented line — appended to the title, models paste them back through title-keyed
- * upserts and duplicate the task.
+ * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order, each followed by an indented
+ * note line carrying the task's ref and any status/dependency notes — appended to the title, models
+ * paste the notes back into it.
  */
 const formatTasks = (tasks: readonly Task.Task[]): string => {
   const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
   return tasks
     .map((task, index) => {
       const line = `${index + 1}. [${task.status === 'done' ? 'x' : ' '}] ${task.title}`;
-      const notes: string[] = [];
+      // The ref is the handle update-tasks takes, so every line carries one the model can pass back.
+      const notes: string[] = [`ref: ${Obj.getURI(task)}`];
       if (task.status && task.status !== 'todo' && task.status !== 'done') {
         notes.push(task.status);
       }
@@ -302,7 +303,7 @@ const formatTasks = (tasks: readonly Task.Task[]): string => {
         notes.push(`depends on ${deps.join(', ')}`);
       }
 
-      return notes.length > 0 ? `${line}\n   (${notes.join('; ')})` : line;
+      return `${line}\n   (${notes.join('; ')})`;
     })
     .join('\n');
 };

@@ -23,3 +23,13 @@ export class PromptError extends BaseError.extend('PromptError') {
     });
   }
 }
+
+/**
+ * A batch of task changes was rejected as a whole; the message lists every bad change and the
+ * current checklist so the model can resend.
+ */
+export class UpdateTasksError extends BaseError.extend('UpdateTasksError') {
+  constructor(message: string) {
+    super({ message });
+  }
+}
