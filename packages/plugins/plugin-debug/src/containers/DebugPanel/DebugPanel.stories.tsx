@@ -8,7 +8,6 @@ import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Splitter } from '@dxos/react-ui';
 import { Path } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -21,22 +20,14 @@ import { DebugPanel, type DebugPanelRootProps } from './DebugPanel.tsx';
 import { type DebugPanelViewState, debugPanelAspect } from './view-state.ts';
 
 /**
- * The parts split as the floating window splits them, sized by the story: the tree over the hidden
- * debug category beside the selected tool's article. Selection and open branches come from
- * persisted view state, so choosing a tool here survives a reload of the story.
+ * The body as every host splits it, sized by the story: the tree over the hidden debug category
+ * beside the selected tool's article. Selection and open branches come from persisted view state,
+ * so choosing a tool here survives a reload of the story.
  */
 const Render = (props: DebugPanelRootProps) => (
   <div className='h-[24rem] w-[64rem] max-w-full grid'>
     <DebugPanel.Root {...props}>
-      <Splitter.Root orientation='horizontal' anchor='start' resizable defaultSize={16} minSize={8}>
-        <Splitter.Panel position='start'>
-          <DebugPanel.Sidebar />
-        </Splitter.Panel>
-        <Splitter.Handle />
-        <Splitter.Panel position='end'>
-          <DebugPanel.Main />
-        </Splitter.Panel>
-      </Splitter.Root>
+      <DebugPanel.Body />
     </DebugPanel.Root>
   </div>
 );
