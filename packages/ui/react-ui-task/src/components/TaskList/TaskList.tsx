@@ -737,7 +737,10 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
  *
  * A {@link Question.Question} also opens on hover: it is not something the task produced but the
  * reason it is stopped, so it should not need a click to find. `useCardHover`'s grace period
- * answers the objection above. No tab stop is added — that half of the objection still stands.
+ * answers the objection above. No tab stop is added — that half of the objection still stands, so
+ * the tag carries no `button` role either: a role promising keyboard activation that a
+ * non-focusable element cannot deliver is worse than none. A question is answered from its card in
+ * the conversation, which is keyboard-operable throughout.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   const tagRef = useRef<HTMLSpanElement>(null);
@@ -765,7 +768,6 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
     <Tag
       ref={tagRef}
       hue='amber'
-      role='button'
       classNames='cursor-pointer'
       onClick={handleClick}
       onPointerEnter={question ? startHover : undefined}
