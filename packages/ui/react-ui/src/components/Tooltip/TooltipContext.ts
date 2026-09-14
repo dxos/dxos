@@ -34,6 +34,8 @@ export type TooltipContextValue = {
   contentId: string;
   /** Registers what a trigger shows; returns the unregister. */
   register(value: string, entry: TooltipEntry): () => void;
+  /** Sets the side to position at; call before forwarding an event that may open or switch the tooltip. */
+  setSide(side?: TooltipSide): void;
   onOpen(): void;
   onClose(): void;
 };

@@ -8,7 +8,7 @@ import { afterEach, describe, test } from 'vitest';
 
 import { ThemeProvider } from '../../providers/index.ts';
 import { defaultTx } from '../../theme/index.ts';
-import { Tooltip } from './Tooltip.tsx';
+import { Tooltip, type TooltipSide } from './Tooltip.tsx';
 
 /**
  * A single provider serves every trigger in the app, so these pin the two consequences of that: the
@@ -86,22 +86,41 @@ describe('Tooltip', () => {
     // A trigger re-render drags whatever it wraps via `asChild` with it, so this must stay at zero.
     expect(renders).toEqual([]);
   });
+
+  test('the content is placed on the active trigger side', async ({ expect }) => {
+    render(<Harness sides={['right', 'left']} />, { wrapper: Wrapper });
+    const [first, second] = screen.getAllByRole('button');
+    const placement = () =>
+      document.querySelector('[data-scope="tooltip"][data-part="content"]')?.getAttribute('data-placement');
+
+    fireEvent.pointerMove(first, { pointerType: 'mouse' });
+    await waitFor(() => expect(placement()).toEqual('right'));
+
+    fireEvent.pointerLeave(first);
+    fireEvent.pointerMove(second, { pointerType: 'mouse' });
+    await waitFor(() => expect(placement()).toEqual('left'));
+  });
 });
 
 type HarnessProps = { onRender?: (label: string) => void; describedBy?: string };
 
 // `delayDuration={0}` opens on pointer-move without waiting, so no timer control is needed.
-const Harness = ({ onRender, describedBy }: HarnessProps) => (
+const Harness = ({ onRender, describedBy, sides = [] }: HarnessProps & { sides?: TooltipSide[] }) => (
   <Tooltip.Provider delayDuration={0} disableHoverableContent>
-    <CountingTrigger label='first' onRender={onRender} describedBy={describedBy} />
-    <CountingTrigger label='second' onRender={onRender} />
+    <CountingTrigger label='first' onRender={onRender} describedBy={describedBy} side={sides[0]} />
+    <CountingTrigger label='second' onRender={onRender} side={sides[1]} />
   </Tooltip.Provider>
 );
 
 // The counter belongs on the child, not here: a context change re-renders the consumer rather than
 // whoever rendered it, and `Slot` clones the child on each trigger render, as `IconButton` does.
-const CountingTrigger = ({ label, onRender, describedBy }: { label: string } & HarnessProps) => (
-  <Tooltip.Trigger asChild content={`${label} tip`}>
+const CountingTrigger = ({
+  label,
+  onRender,
+  describedBy,
+  side,
+}: { label: string; side?: TooltipSide } & HarnessProps) => (
+  <Tooltip.Trigger asChild content={`${label} tip`} side={side}>
     <CountingButton label={label} onRender={onRender} describedBy={describedBy} />
   </Tooltip.Trigger>
 );
