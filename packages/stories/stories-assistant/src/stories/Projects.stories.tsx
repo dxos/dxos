@@ -13,7 +13,14 @@ import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 
 import { SpaceTemplateToolbar, StoryRole } from '../modules/index.ts';
 import { applyStagedProfileImport } from '../modules/profile-archive.ts';
-import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing/index.ts';
+import {
+  HelpdeskSpacePlugin,
+  ModuleContainer,
+  VoyageSpacePlugin,
+  config,
+  createDecorators,
+  storyParameters,
+} from '../testing/index.ts';
 import { isPersistent } from '../testing/persistence.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -43,6 +50,7 @@ const storyOptions = {
       { Collection, Feed },
       { Text, TagIndex },
       { Mailbox },
+      { Question, Task, TaskSet },
       { SpacePlugin },
       { InboxPlugin },
       ProjectsPlugin,
@@ -55,6 +63,7 @@ const storyOptions = {
       import('@dxos/echo'),
       import('@dxos/schema'),
       import('@dxos/plugin-inbox'),
+      import('@dxos/types'),
       import('@dxos/plugin-space/testing'),
       import('@dxos/plugin-inbox/testing'),
       import('@dxos/plugin-projects/ProjectsPlugin'),
@@ -80,6 +89,8 @@ const storyOptions = {
         // command-execution tool and answers every shell task as blocked.
         SandboxPlugin.make(),
         VoyageSpacePlugin,
+        // Contributes the Helpdesk template, whose first task forces the agent to ask a question.
+        HelpdeskSpacePlugin,
       ],
       types: [
         Project.Project,
@@ -91,6 +102,10 @@ const storyOptions = {
         Feed.Feed,
         TagIndex.TagIndex,
         Sandbox.Sandbox,
+        // The Helpdesk template's ledger, and the questions an agent files against it.
+        TaskSet.TaskSet,
+        Task.Task,
+        Question.Question,
       ],
     };
   },

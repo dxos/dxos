@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -25,7 +25,10 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
+          >
             <Form.Fields />
           </Form.FieldSet>
         </Form.Content>
