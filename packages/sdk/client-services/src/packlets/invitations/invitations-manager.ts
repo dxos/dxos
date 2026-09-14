@@ -15,7 +15,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { EffectEx, Event as EffectEvent } from '@dxos/effect';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -79,6 +79,9 @@ export class InvitationsManager {
     this._invitationHandlerFactory = getHandler;
   }
 
+  /**
+   * Resolves the protocol for an invitation kind; throws until a factory has been wired.
+   */
   getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
     invariant(this._invitationHandlerFactory, 'Invitation handler factory not set.');
     return this._invitationHandlerFactory(invitation);

@@ -20,7 +20,7 @@ import {
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { EffectEx, Event as EffectEvent } from '@dxos/effect';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';

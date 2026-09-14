@@ -13,7 +13,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
-  type ClientServicesHandlers,
+  type ClientServicesHandlersContext,
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -36,19 +36,7 @@ import {
 } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService, type TransportFactory } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
-import {
-  ContactsService,
-  DataService,
-  DevicesService,
-  EdgeAgentService,
-  FeedService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
-  QueryService,
-  SpacesService,
-} from '@dxos/protocols/rpc';
+import { SystemService } from '@dxos/protocols/rpc';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
@@ -143,10 +131,9 @@ export type ServiceContext = ClientServicesHost;
  */
 export class ClientServicesHost {
   readonly #resourceLock?: ResourceLock;
-  // Effect-rpc handlers served over each connection, resolved from the Layer stack on open and reset
-  // to the host-local set on close. Held directly (no separate registry indirection).
-  // TODO(dmaretskyi): Change to effect context of handlers (reuse .stack)
-  #handlers: Partial<ClientServicesHandlers>;
+  // Effect-rpc handlers served over each connection: the stack context plus the host-owned system
+  // service while open, the system service alone while closed.
+  #handlers: ClientServicesHandlersContext;
   readonly #systemService: SystemServiceImpl;
   readonly #statusUpdate = new Event<void>();
 
@@ -258,9 +245,7 @@ export class ClientServicesHost {
 
     this.#diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this.#systemService);
 
-    this.#handlers = {
-      SystemService: this.#systemService,
-    };
+    this.#handlers = EffectContext.make(SystemService.Tag, this.#systemService);
   }
 
   get isOpen() {
@@ -277,7 +262,10 @@ export class ClientServicesHost {
     return this;
   }
 
-  get services() {
+  /**
+   * Effect-rpc handlers to serve, as a context keyed by each service's rpc tag.
+   */
+  get services(): ClientServicesHandlersContext {
     return this.#handlers;
   }
 
@@ -455,82 +443,57 @@ export class ClientServicesHost {
       Layer.provideMerge(RuntimeProvider.toLayer(this.#runtime)),
       Layer.orDie,
     );
-    this.#stackRuntime = ManagedRuntime.make(stackLayer);
-    this.#stackContext = await this.#stackRuntime.context();
-    const resolved = await this.#stackRuntime.runPromise(
-      Effect.all({
-        // Components.
-        metadataStore: IMetadataStoreService,
-        keyring: KeyringApiService,
-        feedStore: FeedStoreService,
-        spaceManager: SpaceManagerService,
-        identityManager: IdentityManagerService,
-        recoveryManager: EdgeIdentityRecoveryManagerService,
-        invitations: InvitationsHandlerService,
-        invitationsManager: InvitationsManagerService,
-        echoHost: EchoHostService,
-        dataSpaceManager: DataSpaceManagerService,
-        edgeAgentManager: EdgeAgentManagerService,
-        identityLifecycle: IdentityLifecycleService,
-        readiness: StackReadinessService,
-        networkManager: SwarmNetworkManagerService,
-        // Handlers.
-        identityService: IdentityService.Tag,
-        contactsService: ContactsService.Tag,
-        invitationsService: InvitationsService.Tag,
-        devicesService: DevicesService.Tag,
-        spacesService: SpacesService.Tag,
-        networkService: NetworkService.Tag,
-        edgeAgentService: EdgeAgentService.Tag,
-        dataService: DataService.Tag,
-        queryService: QueryService.Tag,
-        feedService: FeedService.Tag,
-        loggingService: LoggingService.Tag,
-        devtoolsHost: DevtoolsHostService,
-      }),
-    );
-
-    this.#metadataStore = resolved.metadataStore;
-    this.#keyring = resolved.keyring;
-    this.#feedStore = resolved.feedStore;
-    this.#spaceManager = resolved.spaceManager;
-    this.#identityManager = resolved.identityManager;
-    this.#recoveryManager = resolved.recoveryManager;
-    this.#invitations = resolved.invitations;
-    this.#invitationsManager = resolved.invitationsManager;
-    this.#echoHost = resolved.echoHost;
-    this.#dataSpaceManager = resolved.dataSpaceManager;
-    this.#edgeAgentManager = resolved.edgeAgentManager;
-    this.#identityLifecycle = resolved.identityLifecycle;
-    this.#readiness = resolved.readiness;
-    this.#devtoolsHost = resolved.devtoolsHost;
-    this.#networkManager = resolved.networkManager;
-
-    this.#handlers = {
-      SystemService: this.#systemService,
-      IdentityService: resolved.identityService,
-      ContactsService: resolved.contactsService,
-      InvitationsService: resolved.invitationsService,
-      DevicesService: resolved.devicesService,
-      SpacesService: resolved.spacesService,
-      DataService: resolved.dataService,
-      QueryService: resolved.queryService,
-      FeedService: resolved.feedService,
-      NetworkService: resolved.networkService,
-      LoggingService: resolved.loggingService,
-      DevtoolsHost: resolved.devtoolsHost,
-      EdgeAgentService: resolved.edgeAgentService,
-    };
-
     try {
+      this.#stackRuntime = ManagedRuntime.make(stackLayer);
+      this.#stackContext = await this.#stackRuntime.context();
+      const resolved = await this.#stackRuntime.runPromise(
+        Effect.all({
+          // Components.
+          metadataStore: IMetadataStoreService,
+          keyring: KeyringApiService,
+          feedStore: FeedStoreService,
+          spaceManager: SpaceManagerService,
+          identityManager: IdentityManagerService,
+          recoveryManager: EdgeIdentityRecoveryManagerService,
+          invitations: InvitationsHandlerService,
+          invitationsManager: InvitationsManagerService,
+          echoHost: EchoHostService,
+          dataSpaceManager: DataSpaceManagerService,
+          edgeAgentManager: EdgeAgentManagerService,
+          identityLifecycle: IdentityLifecycleService,
+          readiness: StackReadinessService,
+          networkManager: SwarmNetworkManagerService,
+          devtoolsHost: DevtoolsHostService,
+        }),
+      );
+
+      this.#metadataStore = resolved.metadataStore;
+      this.#keyring = resolved.keyring;
+      this.#feedStore = resolved.feedStore;
+      this.#spaceManager = resolved.spaceManager;
+      this.#identityManager = resolved.identityManager;
+      this.#recoveryManager = resolved.recoveryManager;
+      this.#invitations = resolved.invitations;
+      this.#invitationsManager = resolved.invitationsManager;
+      this.#echoHost = resolved.echoHost;
+      this.#dataSpaceManager = resolved.dataSpaceManager;
+      this.#edgeAgentManager = resolved.edgeAgentManager;
+      this.#identityLifecycle = resolved.identityLifecycle;
+      this.#readiness = resolved.readiness;
+      this.#devtoolsHost = resolved.devtoolsHost;
+      this.#networkManager = resolved.networkManager;
+
+      this.#handlers = EffectContext.add(this.#stackContext, SystemService.Tag, this.#systemService);
+
       await this._openStack(ctx);
     } catch (err) {
-      // Release the layer-owned components so a failed boot does not leak the runtime; the stores
-      // below the stack stay untouched since nothing guarantees they were loaded.
-      await this.#stackRuntime.dispose();
+      // One rollback boundary for building the runtime and running the open chain. Only the runtime
+      // is released: the stores below it are not closed, since the metadata store persists on close
+      // and nothing guarantees the storage stage loaded it.
+      await this.#stackRuntime?.dispose();
       this.#stackRuntime = undefined;
       this.#stackContext = undefined;
-      this.#handlers = { SystemService: this.#systemService };
+      this.#handlers = EffectContext.make(SystemService.Tag, this.#systemService);
       this.#opening = false;
       throw err;
     }
@@ -575,7 +538,7 @@ export class ClientServicesHost {
     log('closing...', { deviceKey });
     this.#diagnosticsBroadcastHandler.stop();
     await this.#devtoolsProxy?.close();
-    this.#handlers = { SystemService: this.#systemService };
+    this.#handlers = EffectContext.make(SystemService.Tag, this.#systemService);
     await this.#disposeStack();
     this.#open = false;
     this.#statusUpdate.emit();
@@ -635,9 +598,8 @@ export class ClientServicesHost {
    * has completed, so `StackOpened` fires after storage, identity, network, and spaces are up.
    */
   private async _openStack(ctx: Context): Promise<void> {
-    // TODO(dmaretskyi): ctx being payload of events is wrong. we should update all of them ctx carries tracing + cancellation, something effect does natively, there's a helper in @dxos/effect to brige them.
-    await this.#emit(Opening, { ctx });
-    await this.#emit(StackOpened, { ctx });
+    await this.#emit(Opening, undefined, ctx);
+    await this.#emit(StackOpened, undefined, ctx);
     log('stack opened');
   }
 
@@ -656,8 +618,12 @@ export class ClientServicesHost {
     log('stack closed');
   }
 
-  #emit<E extends EffectEvent.Any>(event: E, payload: EffectEvent.Payload<E>): Promise<void> {
+  /**
+   * Emits on the stack bus; under `ctx` the handlers nest under its trace and stop when it disposes.
+   */
+  #emit<E extends EffectEvent.Any>(event: E, payload: EffectEvent.Payload<E>, ctx?: Context): Promise<void> {
     invariant(this.#stackRuntime, 'stack runtime not built');
-    return this.#stackRuntime.runPromise(EffectEvent.emit(event, payload));
+    const emit = EffectEvent.emit(event, payload);
+    return this.#stackRuntime.runPromise(ctx ? EffectEx.withContext(ctx)(emit) : emit);
   }
 }

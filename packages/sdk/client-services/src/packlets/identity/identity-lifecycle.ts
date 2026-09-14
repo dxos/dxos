@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Context } from '@dxos/context';
-import { EffectEx, Event as EffectEvent, RuntimeProvider } from '@dxos/effect';
+import { Event as EffectEvent, EffectEx, RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { IdentityAvailable, IdentityBound, NetworkReady } from '../services/events.ts';
@@ -26,7 +26,9 @@ import { type Identity } from './identity.ts';
  * from the host's open sequence.
  */
 export interface IdentityLifecycle {
+  /** Creates a fresh identity and resolves once its identity-bound services are open. */
   createIdentity(params?: CreateIdentityOptions, ctx?: Context): Promise<Identity>;
+  /** Adopts an identity admitted by another device and resolves once its services are open. */
   acceptIdentity(params: JoinIdentityProps): Promise<Identity>;
 }
 

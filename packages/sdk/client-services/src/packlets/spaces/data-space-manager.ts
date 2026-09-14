@@ -46,7 +46,7 @@ import {
   type EdgeHttpClient,
   EdgeHttpClientService,
 } from '@dxos/edge-client';
-import { EffectEx, Event as EffectEvent } from '@dxos/effect';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { type FeedStore, FeedStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';

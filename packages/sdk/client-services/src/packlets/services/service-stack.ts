@@ -210,6 +210,7 @@ export const ServiceStack = (
  * Attaches the configured replicators to the echo host once networking is up. Sits above both
  * replicator layers so it can see whichever of them is wired.
  */
+// TODO(dmaretskyi): Make individual MeshEchoReplicatorService and EdgeAutomergeReplicatorService register themselves so this layer disspears
 const replicatorsLayer = Layer.effectDiscard(
   Effect.gen(function* () {
     const echoHost = yield* EchoHostService;

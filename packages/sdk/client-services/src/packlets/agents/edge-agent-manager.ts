@@ -12,7 +12,7 @@ import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
-import { EffectEx, Event as EffectEvent } from '@dxos/effect';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

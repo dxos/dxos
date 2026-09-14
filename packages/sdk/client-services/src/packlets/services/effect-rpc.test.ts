@@ -24,6 +24,7 @@ import {
   ClientRpcServer,
   type ClientServicesHandlers,
   type ClientServicesRpc,
+  handlersContextFromObject,
   makeClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -117,7 +118,11 @@ const setupRpc = async (
   const proxyPort = channel.port1;
   const serverPort = channel.port2;
 
-  const server = new ClientRpcServer({ services, port: serverPort, onRequest: options?.onRequest });
+  const server = new ClientRpcServer({
+    services: () => handlersContextFromObject(services()),
+    port: serverPort,
+    onRequest: options?.onRequest,
+  });
   await server.open();
   onTestFinished(() => server.close());
 

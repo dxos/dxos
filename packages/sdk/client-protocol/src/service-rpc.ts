@@ -238,7 +238,7 @@ export type ServeClientServicesOverIFrameOptions = {
   iframe: HTMLIFrameElement;
   origin: string;
   channel?: string;
-  services: () => Partial<ClientServicesHandlers>;
+  services: () => ClientServicesHandlersContext;
 };
 
 /**
