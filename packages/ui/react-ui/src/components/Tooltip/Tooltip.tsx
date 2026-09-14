@@ -103,7 +103,7 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
   // The machine copies `positioning` when it opens or switches trigger, so the side must be rendered before that event.
   const [placement, setPlacement] = useState<TooltipSide>('top');
   const placementRef = useRef(placement);
-  const syncPlacement = useCallback((value: string) => {
+  const prepareTrigger = useCallback((value: string) => {
     const side = registry.current.get(value)?.side ?? 'top';
     if (placementRef.current !== side) {
       placementRef.current = side;
@@ -160,11 +160,11 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
       apiRef,
       contentId,
       register,
-      syncPlacement,
+      prepareTrigger,
       onOpen: () => apiRef.current?.setOpen(true),
       onClose: () => apiRef.current?.setOpen(false),
     }),
-    [contentId, register, syncPlacement],
+    [contentId, register, prepareTrigger],
   );
 
   const { tx } = useThemeContext();
@@ -212,18 +212,18 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
     { onInteract, delayDuration: _delayDuration, side, content, id: idProp, asChild, ...triggerProps },
     forwardedRef,
   ) => {
-    const { apiRef, register, syncPlacement } = useTooltipContext(TRIGGER_NAME);
+    const { apiRef, register, prepareTrigger } = useTooltipContext(TRIGGER_NAME);
     const generatedId = useId();
     const value = idProp ?? generatedId;
 
     useLayoutEffect(() => register(value, { content, side }), [register, value, content, side]);
 
     // The machine's own trigger handlers, fetched at event time so nothing here subscribes to it.
-    // Any forwarded event may open or switch the tooltip, so the placement is synced before each one.
+    // Any forwarded event may open or switch the tooltip, so the trigger is prepared before each one.
     const machine = useCallback(() => {
-      syncPlacement(value);
+      prepareTrigger(value);
       return apiRef.current?.getTriggerProps({ value });
-    }, [apiRef, value, syncPlacement]);
+    }, [apiRef, value, prepareTrigger]);
 
     return (
       <ark.button

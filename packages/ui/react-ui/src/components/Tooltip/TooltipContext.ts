@@ -34,8 +34,8 @@ export type TooltipContextValue = {
   contentId: string;
   /** Registers what a trigger shows; returns the unregister. */
   register(value: string, entry: TooltipEntry): () => void;
-  /** Renders the registered side of the trigger with this value as the machine's placement, synchronously. */
-  syncPlacement(value: string): void;
+  /** Renders the machine placement from the trigger with this value; call before forwarding its events. */
+  prepareTrigger(value: string): void;
   onOpen(): void;
   onClose(): void;
 };
