@@ -73,7 +73,7 @@ The other tags (`sync`, `sync-e2e`, `functions-e2e`, `manual`) are declared in [
 
 ## Assistant evals nightly
 
-[`assistant-evals.yml`](./workflows/assistant-evals.yml) runs every `@dxos/assistant-evals` scenario against the live model at 03:00 UTC. Each run is an AI observability trace in the Composer PostHog project, with one `$ai_evaluation` event per scorer tagged by the CI run as the experiment; the package README has the event shapes. The Anthropic key is a dedicated key, limited in Depot's secret settings to that workflow file on `main`, and the workflow has no `pull_request` trigger.
+[`assistant-evals.yml`](./workflows/assistant-evals.yml) runs every `@dxos/assistant-evals` scenario against the live model at 03:00 UTC. Each run is an AI observability trace in the Composer PostHog project, with one `$ai_evaluation` event per scorer tagged by the CI run as the experiment; the package README has the event shapes. The Anthropic key is the `DX_ANTHROPIC_API_KEY` Depot secret. Limit its variant in Depot's secret settings to that workflow file on `main`, since any workflow that names an unscoped variant can read it. The workflow has no `pull_request` trigger.
 
 ## Resources
 
