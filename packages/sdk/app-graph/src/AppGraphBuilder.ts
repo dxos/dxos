@@ -304,7 +304,8 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 };
 
 // The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.
-export * as GraphBuilder from '@dxos/graph/GraphBuilder';
+// Named (not namespace) re-export: this module already exports its own `GraphBuilder` class above.
+export { addExtension, destroy, explore, flush, release, removeExtension } from '@dxos/graph/GraphBuilder';
 
 /**
  * Flatten arbitrarily nested extension groups into a single list. Pinned to the app extension type,

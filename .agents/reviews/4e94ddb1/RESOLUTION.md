@@ -164,7 +164,7 @@
 - 4e94ddb1-160 - resolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-voxel/src/types/Voxel.ts:8:1
 - 4e94ddb1-161 - resolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-zen/src/types/Dream.ts:8:1
 - 4e94ddb1-162 - resolved - import-as-namespace-is-all-or-nothing - packages/reflect/introspect/src/__fixtures__/packages/pkg-a/src/Task.ts:10:1
-- 4e94ddb1-163 - resolved - import-as-namespace-is-all-or-nothing - packages/sdk/app-graph/src/AppGraphBuilder.ts:307:1
+- 4e94ddb1-163 - ignored - import-as-namespace-is-all-or-nothing - packages/sdk/app-graph/src/AppGraphBuilder.ts:307:1
 - 4e94ddb1-164 - resolved - no-casts - packages/sdk/app-graph/src/path-resolution.test.ts:521:47
 - 4e94ddb1-165 - resolved - import-as-namespace-is-all-or-nothing - packages/sdk/app-toolkit/src/echo/Query.ts:14:1
 - 4e94ddb1-166 - resolved - import-as-namespace-is-all-or-nothing - packages/sdk/app-toolkit/src/echo/TypeOptions.test.ts:9:1
