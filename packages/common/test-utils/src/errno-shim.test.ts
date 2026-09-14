@@ -10,7 +10,10 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { buildErrnoShim, compileSharedObject, errnoShimSupported } from './errno-shim.ts';
 
-/** Preloaded constructor: a SIGUSR1 handler sets errno to EINTR; reports errno after raising it, and whether `sigaction` reports that handler. */
+/**
+ * Preloaded constructor: a SIGUSR1 handler sets errno to EINTR; reports errno after raising it, and whether `sigaction`
+ * reports that handler.
+ */
 const PROBE_SOURCE = `struct glibc_sigaction {
   void *handler;
   unsigned long mask[16];

@@ -11,7 +11,8 @@ import { join } from 'node:path';
  * Shared object preloaded into Linux WebKit that restores errno around every signal handler installed with `sigaction`:
  * WebKit's thread-suspend handler returns from `sigsuspend` with errno set to EINTR on the thread it interrupted, which
  * fails an errno-checked parse in progress there (ICE candidates, SDP ports, GLib `getauxval`). A crash signal no
- * handler claims prints `dx-crash-report` with the fault address and a native backtrace to stderr before the process dies.
+ * handler claims prints `dx-crash-report` with the fault address and a native backtrace to stderr before the process
+ * dies.
  * Freestanding, for glibc on x86_64 and aarch64, whose `struct sigaction` share this layout.
  */
 export const ERRNO_SHIM_SOURCE = `#define SA_SIGINFO_FLAG 4
