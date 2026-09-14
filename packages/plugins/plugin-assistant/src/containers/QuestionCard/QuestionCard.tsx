@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Button, Field, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import { Button, Card, Field, Icon, useTranslation } from '@dxos/react-ui';
 import { Question } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -20,11 +20,15 @@ const QUESTION_CARD_NAME = 'QuestionCard';
 export type QuestionCardProps = AppSurface.ObjectCardProps<Question.Question>;
 
 /**
- * A question an agent asked, and the means to answer it.
+ * The card body for a question: why it was asked, and the means to answer it.
+ *
+ * A `CardContent` surface is the body ONLY — the host draws `Card.Root` and the header, and the
+ * question's own text is its label, so the header already carries it and repeating it here would
+ * print the question twice.
  *
  * The free-form field is always present, never a fallback revealed by a "something else" option:
- * the options are the asker's guesses, and a surface that makes the reader hunt for the escape
- * hatch pressures them into picking a wrong one.
+ * the options are the asker's guesses, and making the reader hunt for the escape hatch pressures
+ * them into picking a wrong one.
  */
 export const QuestionCard = ({ subject }: QuestionCardProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -90,85 +94,90 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
   const answered = Question.isAnswered(question);
 
   return (
-    // A popover sizes to its content, so `w-full` is indefinite there and the text would collapse
-    // to one character per line; the `min-w` floor is what makes it a card.
-    <Flex
-      role='group'
-      column
-      gap='sm'
-      classNames='w-full min-w-[18rem] max-w-full my-2 p-3 border border-subdued-separator rounded-sm'
-      data-testid='question-card'
-    >
-      <Flex gap='sm' align='start' classNames='w-full min-w-0'>
-        <Icon icon='ph--question--regular' size={5} classNames='shrink-0 text-subdued mt-0.5' />
-        <Flex column classNames='grow min-w-0'>
-          <p className='text-sm font-medium break-words'>{question.text}</p>
-          {question.context && <p className='text-sm text-subdued break-words'>{question.context}</p>}
-        </Flex>
-      </Flex>
+    <Card.Body data-testid='question-card'>
+      {question.context && (
+        <Card.Row>
+          {/* Unclamped, against the card default: a card is normally a preview of something you
+              open elsewhere, but there is nowhere else to read this — the context is the input to
+              the decision the reader is being asked to make here. */}
+          <Card.Text variant='description' classNames='line-clamp-none'>
+            {question.context}
+          </Card.Text>
+        </Card.Row>
+      )}
 
       {answered ? (
-        <>
-          <Flex gap='sm' align='start' classNames='w-full min-w-0' data-testid='question-card.answer'>
-            <Icon icon='ph--check-circle--regular' size={4} classNames='shrink-0 text-subdued mt-0.5' />
-            <p className='text-sm grow min-w-0 break-words'>{question.selectedAnswer}</p>
-          </Flex>
-          {stranded && (
-            <p className='text-sm text-warning break-words' data-testid='question-card.stranded'>
-              {t('question-stranded.message')}
-            </p>
-          )}
-        </>
+        <Card.Row data-testid='question-card.answer'>
+          <Card.Block>
+            <Icon icon='ph--check-circle--regular' />
+          </Card.Block>
+          <Card.Text>{question.selectedAnswer}</Card.Text>
+        </Card.Row>
       ) : (
         <>
           {question.options?.map((option) => (
-            <Button
-              key={option.title}
-              variant='default'
-              disabled={busy}
-              // `h-auto`: an option is a sentence, not a label, so the button grows to the text
-              // rather than clipping it to one row's height.
-              classNames='w-full min-w-0 h-auto py-2 justify-start text-start whitespace-normal'
-              data-testid='question-card.option'
-              onClick={() => void submit(option.title)}
-            >
-              {/* `div`, not `span`: `Button` carries `[&_span]:truncate`, and a suggested answer is a
-                  sentence rather than a label. */}
-              <Flex column classNames='grow min-w-0 text-start'>
-                <div className='text-sm break-words'>{option.title}</div>
-                {option.description && <div className='text-xs text-subdued break-words'>{option.description}</div>}
-              </Flex>
-            </Button>
+            // `fullWidth` so an option spans the card's gutters: it is a control the reader aims
+            // at, not prose inset with the text.
+            <Card.Row key={option.title} fullWidth>
+              <Button
+                variant='default'
+                disabled={busy}
+                // `h-auto` and wrapping: an option is a sentence, not a label, so the button grows
+                // to its text instead of clipping it.
+                classNames='w-full min-w-0 h-auto py-2 justify-start text-start whitespace-normal'
+                data-testid='question-card.option'
+                onClick={() => void submit(option.title)}
+              >
+                {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
+                <div className='grow min-w-0 text-start'>
+                  <div className='text-sm break-words'>{option.title}</div>
+                  {option.description && <div className='text-xs text-subdued break-words'>{option.description}</div>}
+                </div>
+              </Button>
+            </Card.Row>
           ))}
-          <Field.Root>
-            <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
-            <Field.Input
-              value={text}
-              disabled={busy}
-              placeholder={t('question-answer.placeholder')}
-              data-testid='question-card.input'
-              onChange={(event) => setText(event.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-          </Field.Root>
+
+          <Card.Row fullWidth>
+            <Field.Root>
+              <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
+              <Field.Input
+                value={text}
+                disabled={busy}
+                placeholder={t('question-answer.placeholder')}
+                data-testid='question-card.input'
+                onChange={(event) => setText(event.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            </Field.Root>
+          </Card.Row>
+
           {failed && (
-            <p className='text-sm text-error break-words' data-testid='question-card.error'>
-              {t('question-failed.message')}
-            </p>
+            <Card.Row data-testid='question-card.error'>
+              <Card.Text variant='description'>{t('question-failed.message')}</Card.Text>
+            </Card.Row>
           )}
-          <Flex justify='end'>
-            <Button
-              variant='primary'
-              disabled={busy || text.trim() === ''}
-              data-testid='question-card.submit'
-              onClick={() => void submit(text)}
-            >
-              {t('question-submit.label')}
-            </Button>
-          </Flex>
+
+          <Card.Row fullWidth>
+            <div className='flex justify-end'>
+              <Button
+                variant='primary'
+                disabled={busy || text.trim() === ''}
+                data-testid='question-card.submit'
+                onClick={() => void submit(text)}
+              >
+                {t('question-submit.label')}
+              </Button>
+            </div>
+          </Card.Row>
         </>
       )}
-    </Flex>
+
+      {stranded && (
+        <Card.Row data-testid='question-card.stranded'>
+          <Card.Text variant='description'>{t('question-stranded.message')}</Card.Text>
+        </Card.Row>
+      )}
+    </Card.Body>
   );
 };
 

@@ -14,6 +14,8 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { Card, Icon } from '@dxos/react-ui';
+import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Question, Task } from '@dxos/types';
@@ -46,6 +48,11 @@ const seed = (space: Space) => {
   return question;
 };
 
+/**
+ * Both card roles side by side, composed the way the real hosts do (see plugin-preview's card
+ * stories): the host draws `Card.Root` and the header, the surface draws only the body. A body that
+ * looks right in one role and wrong in the other is the failure this story exists to catch.
+ */
 const DefaultStory = () => {
   const [space] = useSpaces();
   const [question] = useQuery(space?.db, Filter.type(Question.Question));
@@ -53,9 +60,29 @@ const DefaultStory = () => {
     return <Loading data={{ db: !!space?.db, question: false }} />;
   }
 
+  const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
+
   return (
-    <div className='w-96'>
-      <QuestionCard role='card--content' subject={question} />
+    <div className='dx-fill grid grid-cols-2 py-16 gap-8'>
+      {roles.map((role) => (
+        <div key={role} className='flex h-full justify-center overflow-hidden'>
+          <div className='flex flex-col gap-4 w-full items-center'>
+            <span className='text-sm text-description'>{role}</span>
+            <CardContainer role={role} icon='ph--question--regular'>
+              <Card.Root border={false}>
+                <Card.Header>
+                  <Card.Block>
+                    <Icon icon='ph--question--regular' />
+                  </Card.Block>
+                  <Card.Title>{question.text}</Card.Title>
+                  <Card.Menu />
+                </Card.Header>
+                <QuestionCard role='card--content' subject={question} />
+              </Card.Root>
+            </CardContainer>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
@@ -65,7 +92,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'centered' }),
+    withLayout({ layout: 'fullscreen' }),
     // The plugin manager, not a bare client provider: answering invokes `AnswerQuestion` through
     // `useOperationInvoker`, which throws without PluginManagerContext.
     withPluginManager({
@@ -101,13 +128,22 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/**
+ * The story renders the body in both card roles, so every query matches twice — `getAllBy*` and the
+ * first match, never `getBy*`, which throws on more than one.
+ */
+const firstCard = (canvas: ReturnType<typeof within>, testId: string): HTMLElement => {
+  const matches = canvas.getAllByTestId(testId);
+  return matches[0];
+};
+
 /** Picking a pre-baked answer records it, and the card collapses to what was decided. */
 export const AnswerWithOption: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText(QUESTION_TEXT, undefined, { timeout: 10_000 });
-    await userEvent.click(canvas.getByText('30 days — no exception'));
-    await waitFor(async () => await expect(canvas.getByTestId('question-card.answer')).toBeTruthy(), {
+    await canvas.findAllByText(QUESTION_TEXT, undefined, { timeout: 10_000 });
+    await userEvent.click(firstCard(canvas, 'question-card.option'));
+    await waitFor(async () => await expect(canvas.getAllByTestId('question-card.answer').length).toBeGreaterThan(0), {
       timeout: 10_000,
     });
   },
@@ -117,10 +153,10 @@ export const AnswerWithOption: Story = {
 export const AnswerFreeForm: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText(QUESTION_TEXT, undefined, { timeout: 10_000 });
-    await userEvent.type(canvas.getByTestId('question-card.input'), 'Ask legal first');
-    await userEvent.click(canvas.getByTestId('question-card.submit'));
-    await waitFor(async () => await expect(canvas.getByTestId('question-card.answer')).toBeTruthy(), {
+    await canvas.findAllByText(QUESTION_TEXT, undefined, { timeout: 10_000 });
+    await userEvent.type(firstCard(canvas, 'question-card.input'), 'Ask legal first');
+    await userEvent.click(firstCard(canvas, 'question-card.submit'));
+    await waitFor(async () => await expect(canvas.getAllByTestId('question-card.answer').length).toBeGreaterThan(0), {
       timeout: 10_000,
     });
   },
