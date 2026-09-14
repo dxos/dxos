@@ -6,6 +6,7 @@ export { performInvitation } from '@dxos/client-services/testing';
 
 export * from './data.ts';
 export * from './persistentClientServices.ts';
+export * from './storage-lock.ts';
 export * from './test-builder.ts';
 export * from './test-worker-factory.ts';
 export * from './utils.ts';
