@@ -148,7 +148,7 @@ describe('EDGE Hypergraph.Service', () => {
   // name one declares the graph instead.
   const ReachGraph = Operation.make({
     meta: { key: DXN.make('com.example.operation.reachGraph'), name: 'Reach Graph' },
-    services: [Hypergraph.Service],
+    services: [Hypergraph.Service, Registry.Service],
     input: Schema.Struct({ spaceId: SpaceId }),
     output: Schema.Struct({ found: Schema.Boolean, matches: Schema.Number, sharesRegistry: Schema.Boolean }),
   }).pipe(
@@ -177,7 +177,9 @@ describe('EDGE Hypergraph.Service', () => {
   const openPeer = async () => {
     const builder = new EchoTestBuilder();
     await builder.open();
-    onTestFinished(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const peer = await builder.createPeer();
     const scope = Effect.runSync(Scope.make());
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
