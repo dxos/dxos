@@ -3,10 +3,10 @@
 //
 
 import type * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Schema from 'effect/Schema';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { type Obj } from '@dxos/echo';
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import { Annotation, type Obj } from '@dxos/echo';
 
 /**
  * Value of {@link ConnectorAuthAnnotation}: declares that objects of the annotated type offer
@@ -44,4 +44,7 @@ export type ConnectorAuthAnnotationValue = {
  * object's schema and contributes the connect action group.
  */
 export const ConnectorAuthAnnotationId = '@dxos/plugin-connector/annotation/ConnectorAuth';
-export const ConnectorAuthAnnotation = createAnnotationHelper<ConnectorAuthAnnotationValue>(ConnectorAuthAnnotationId);
+export const ConnectorAuthAnnotation = Annotation.make<ConnectorAuthAnnotationValue>({
+  id: ConnectorAuthAnnotationId,
+  schema: Schema.Any,
+});

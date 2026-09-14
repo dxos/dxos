@@ -7,8 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, DXN, Filter, Ref, Registry } from '@dxos/echo';
-import type { EntityNotFoundError } from '@dxos/echo/Error';
+import { Database, DXN, type Error, Filter, Ref, Registry } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
@@ -86,7 +85,7 @@ export const process = <Options extends {}>(source: string, variables: Partial<O
 
 export const processTemplate = (
   template: Template,
-): Effect.Effect<string, EntityNotFoundError | FunctionNotFoundError, Registry.Service | Operation.Service> =>
+): Effect.Effect<string, Error.EntityNotFoundError | FunctionNotFoundError, Registry.Service | Operation.Service> =>
   Effect.gen(function* () {
     const entries = yield* Effect.forEach(template.inputs ?? [], (input) =>
       Effect.gen(function* () {

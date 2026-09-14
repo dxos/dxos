@@ -4,6 +4,7 @@
 
 export * from './edge-client.ts';
 export * as EdgeOperationInvoker from './EdgeOperationInvoker.ts';
+export * as EdgeProcessControl from './EdgeProcessControl.ts';
 export * as EdgeProcessManager from './EdgeProcessManager.ts';
 export * as EdgeTriggerManager from './EdgeTriggerManager.ts';
 export * from './FunctionsServiceClient.ts';
