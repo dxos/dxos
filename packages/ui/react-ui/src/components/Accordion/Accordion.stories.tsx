@@ -27,7 +27,9 @@ const DefaultStory = () => {
         <>
           {items.map((item) => (
             <Accordion.Item key={item.id} item={item}>
-              <Accordion.ItemHeader icon='ph--circle--regular'>{item.name}</Accordion.ItemHeader>
+              <Accordion.ItemHeader icon='ph--circle--regular' hover>
+                {item.name}
+              </Accordion.ItemHeader>
               <Accordion.ItemBody>
                 <p>{item.text}</p>
               </Accordion.ItemBody>
