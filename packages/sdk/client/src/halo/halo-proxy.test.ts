@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { toBinary } from '@bufbuild/protobuf';
+import { isMessage, toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { type ClientServicesProvider, type ClientServicesRpc } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
@@ -27,10 +28,15 @@ import { HaloProxy } from './halo-proxy.ts';
 const recordRecoverIdentity = () => {
   let request: RecoverIdentityRequest | undefined;
   const rpc: Pick<ClientServicesRpc, 'IdentityService.recoverIdentity'> = {
-    'IdentityService.recoverIdentity': (value: RecoverIdentityRequest) => {
+    // Effect's generated RPC client signature is generically quantified over `AsQueue`/`Discard` so
+    // callers can request a queue or fire-and-forget variant; this stub only serves the plain case
+    // these tests exercise, which the conditional return type can't express without reproducing the
+    // whole generic signature.
+    'IdentityService.recoverIdentity': ((value: unknown) => {
+      invariant(isMessage(value, RecoverIdentityRequestSchema));
       request = value;
       return Effect.succeed({} as Identity);
-    },
+    }) as ClientServicesRpc['IdentityService.recoverIdentity'],
   };
   // Only `recoverIdentity` is exercised; every other tag throws instead of silently returning `undefined`.
   const rpcStub = new Proxy(rpc, {
