@@ -4,12 +4,15 @@
 
 import React, { useMemo } from 'react';
 
-import { CardIconSlot, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { CardIconSlot, useActiveSpace, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';
-import { Card, Icon } from '@dxos/react-ui';
+import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { ActionMenu } from '@dxos/react-ui-menu';
 import { Question } from '@dxos/types';
+
+import { meta } from '#meta';
 
 import { QuestionCard } from '../QuestionCard/QuestionCard.tsx';
 
@@ -31,6 +34,7 @@ export type QuestionSurfaceProps = {
  * answer given here and one given from the task have to be the same answer.
  */
 export const QuestionSurface = ({ question: id }: QuestionSurfaceProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const space = useActiveSpace();
   // Validated before it reaches `Filter.id`, which asserts on its arguments: this id is written by
   // a model, so a truncated or hallucinated one is the expected case, and an unguarded filter
@@ -38,12 +42,16 @@ export const QuestionSurface = ({ question: id }: QuestionSurfaceProps) => {
   const valid = id !== undefined && EntityId.isValid(id) ? id : undefined;
   const filter = useMemo(() => (valid ? Filter.id(valid) : Filter.nothing()), [valid]);
   const [object] = useQuery(valid ? space?.db : undefined, filter);
+  // Before the guard below, so the hook count is stable; it answers `[]` for a missing subject.
+  const menuItems = useObjectMenuItems(object);
   if (!object || !Obj.instanceOf(Question.Question, object)) {
     return null;
   }
 
   return (
-    <Card.Root classNames='my-2'>
+    // `fullWidth`: a card defaults to `dx-card-max-width`, which is right where cards are laid out
+    // beside each other and wrong in a message, where the thread's column is the width to fill.
+    <Card.Root fullWidth classNames='my-2'>
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={object}>
@@ -51,6 +59,19 @@ export const QuestionSurface = ({ question: id }: QuestionSurfaceProps) => {
           </CardIconSlot>
         </Card.Block>
         <Card.Title>{object.text}</Card.Title>
+        {/* Same trailing slot the deck's popover host gives every card, so a question in a message
+            offers the actions a question anywhere else does. */}
+        <Card.Block end>
+          <ActionMenu disabled={!menuItems.length} actions={menuItems}>
+            <IconButton
+              variant='ghost'
+              density='sm'
+              icon='ph--dots-three-vertical--regular'
+              iconOnly
+              label={t('question-actions.label')}
+            />
+          </ActionMenu>
+        </Card.Block>
       </Card.Header>
       <QuestionCard subject={object} />
     </Card.Root>
