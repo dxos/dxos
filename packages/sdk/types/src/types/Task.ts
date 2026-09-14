@@ -81,7 +81,7 @@ export const StatusOptions: Option<Status>[] = [
   { id: 'duplicate', title: 'Duplicate', color: 'orange', icon: 'ph--copy--regular' },
   { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
   { id: 'cancelled', title: 'Cancelled', color: 'rose', icon: 'ph--x--regular' },
-  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--x--regular' },
+  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--warning-diamond--regular' },
 ];
 
 /**

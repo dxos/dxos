@@ -7,7 +7,7 @@ import React from 'react';
 
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 
-import { withLayout, withTheme } from '../../testing';
+import { withLayout, withTheme } from '../../testing/index.ts';
 import { ErrorFallback } from './ErrorFallback.tsx';
 import { ThrowError } from './ThrowError.tsx';
 

@@ -13,7 +13,8 @@ grading the outcome with a **Scorer** — code that checks the real DB/tool-invo
 supersedes trusting the agent's own self-reported `completedCriteria`.
 
 Package: `packages/core/compute/assistant-evals`. Library: `src/runner.ts` (`createEvalRunner`),
-`src/assertions.ts` (deterministic helpers), `src/judge.ts` (LLM-judge helper). Evals live in
+`src/Scorer.ts` (the scorer constructors), `src/assertions.ts` (deterministic helpers),
+`src/judge.ts` (LLM-judge helper). Evals live in
 `src/evals/*.eval.ts`. See `packages/core/compute/ai/TESTING.md` for how this package is scoped
 (cross-plugin scenarios live here; single-plugin scenarios belong in their own plugin package,
 importing this library). The older memoized/live gated agent-e2e harness is a separate, deprecated
@@ -22,12 +23,26 @@ package, `@dxos/assistant-e2e` — not covered by this skill; see its own README
 ## Eval File Structure
 
 ```typescript
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { objectExists } from '../assertions';
+import { Filter, Query } from '@dxos/echo';
+import { Organization } from '@dxos/types';
+import { trim } from '@dxos/util';
+
 import { createEvalRunner } from '../runner';
+import * as Scorer from '../Scorer';
+
+const ORGANIZATION_NAME = 'Cyberdyne Systems';
+
+const SCORERS = [
+  Scorer.database({
+    name: 'organization-created',
+    description: 'The named Organization object exists in the DB after the run.',
+    query: Query.select(Filter.type(Organization.Organization)),
+    score: (organizations) => organizations.some((org) => org.name === ORGANIZATION_NAME),
+  }),
+];
 
 const task = createEvalRunner({
   instructions: trim`
@@ -35,26 +50,44 @@ const task = createEvalRunner({
   `,
   input: Schema.Struct({ name: Schema.String }),
   output: Schema.Unknown,
-  dbQuery: ({ name }) => objectExists(Organization.Organization, (org) => org.name === name),
+  scored: true,
 });
 
 evalite('Descriptive scenario name', {
-  data: [{ input: { name: 'Cyberdyne Systems' } }],
+  data: [{ input: { name: ORGANIZATION_NAME } }],
   task,
-  scorers: [
-    {
-      name: 'organization-created',
-      description: 'The named Organization object exists in the DB after the run.',
-      scorer: ({ output }) => (output.dbQuery ? 1 : 0),
-    },
-  ],
+  scorers: Scorer.toEvalite(SCORERS),
 });
 ```
 
-`createEvalRunner` boots a full Composer test harness, invokes the prompt, and — when `dbQuery` is
-passed — runs a deterministic assertion **while the space is still open**, returning
-`{ agentOutput, dbQuery }` instead of the bare agent output. Model precedence:
-`variant.model` → `options.model` → `com.anthropic.model.claude-opus-4-8.default`.
+`createEvalRunner` boots a full Composer test harness, invokes the prompt, and — with `scored: true`
+— keeps the space **open past the task**, returning `{ runId, agentOutput, durationMillis }` instead
+of the bare agent output. The scorers then run on the evalite side, against that live space; the
+harness is disposed by an `afterAll` the runner registers, once every row of the eval has been
+graded. Model precedence:
+`variant.model` → `options.model` → `com.anthropic.model.claude-opus-5.default`.
+
+### Scorers (`../Scorer.ts`)
+
+Each scorer is **self-contained**: `score` is a single `Effect<number | boolean, _, Scorer.Services>`
+that reads whatever it needs of the open run and returns the mark for it. Reading and judging are one
+step, so a dimension can be read, moved or deleted without touching anything else.
+
+- **`Scorer.make({ name, description?, score })`** — the general case; `score` is the effect.
+- **`Scorer.database({ name, query, score })`** — `query` is an ECHO `Query`; `score` is a plain
+  function over its results.
+- **`Scorer.toolCalls({ name, score })`** — `score` is a plain function over the run's
+  `ToolInvocation[]` (`Scorer.invocations` is the same effect, for composing into a larger one).
+- **`Scorer.duration({ name, targetMinutes, budgetMinutes, delivered })`** — grades the session's
+  wall clock, gated on `delivered` (an effect) proving the run produced the thing being timed.
+  `Scorer.Run` is the service carrying `durationMillis` for a scorer that wants it directly.
+- **`Scorer.shared(effect)`** — wrap a query several dimensions read so the run pays for it once.
+  Name it at module level and `.pipe(Effect.map(…))` it per scorer; a judge call belongs behind one
+  of these.
+
+A fraction is clamped to `[0, 1]`; a boolean is one mark or none. A scorer that fails scores nothing
+and reports why rather than failing the row. `Scorer.toEvalite(SCORERS)` turns the same list into the
+evalite scorers, so a dimension is declared once and wired once.
 
 ### `createEvalRunner` options
 
@@ -76,7 +109,8 @@ passed — runs a deterministic assertion **while the space is still open**, ret
   per-scenario timeout of its own; this is what actually bounds each eval (`vitest.config.ts`'s
   `testTimeout` is just the outer safety net). Raise it only for scenarios with more tool
   round-trips than a typical eval — e.g. `crm-mailbox.eval.ts`/`planning.eval.ts` use `150_000`.
-- `dbQuery: (input, spaceId) => Effect<D, unknown, Database.Service>` — see Assertions below.
+- `scored: true` — keeps the space open past the task so the eval's scorers can query it; see
+  Scorers above. Leave it unset for an eval graded from the agent's output alone (`basic`, `smoke`).
 
 ### Driving a real Claude Code subprocess (`../claude-harness.ts`)
 
@@ -92,14 +126,14 @@ server's tools allowed — no Bash, no file tools, so a prompt the surface canno
   claims rather than at the end.
 - Needs `DX_ANTHROPIC_API_KEY` and a `claude` binary on PATH; `DX_EVAL_CLAUDE_MODEL` overrides the
   model (default `sonnet`).
-- The scored fields are plain booleans the task returns, so the evalite scorers stay one-liners —
-  see `src/evals/mcp-server.eval.ts`, whose subprocess-server counterpart is the CLI's
+- `score(scorers)` grades a list in the same harness; a staged run records what each turn
+  established and the scorers read it back — see `src/evals/mcp-server.eval.ts`, whose subprocess-server counterpart is the CLI's
   `mcp/agent-e2e.test.ts` (a real Claude Code against `dx mcp serve`).
 - `src/mcp-host.test.ts` covers the server itself deterministically and offline, with no model.
 
 ### Assertions (`../assertions.ts`)
 
-All are `Effect<_, _, Database.Service>` — compose freely inside a `dbQuery`'s `Effect.gen`:
+All are `Effect<_, _, Database.Service>` — compose freely inside a scorer's `score`:
 
 - **`objectExists(type, predicate)`** / **`findObject(type, predicate)`** — query the DB for a
   matching entity (object or relation). `findObject` returns the match itself (e.g. to load a
@@ -145,7 +179,7 @@ routing through Braintrust's proxy, neither of which this repo has wired up.
 only for the specific criterion that needs a content judgment, never as a blanket replacement for a
 deterministic check that already exists — and when you add one, also demonstrate it can fail (a
 judge that only ever passes is worthless as a scorer). See `planning.eval.ts` for the pattern: one
-`dbQuery`-embedded judge call for the real scenario's haiku-quality criterion, plus a second
+judge call behind one scorer's `score` for the real scenario's haiku-quality criterion, plus a second
 `evalite()` case in the same file feeding the same rubric a hand-crafted bad transcript, asserting
 `pass === false`. Don't build a separate meta-test file for the judge mechanism itself, and don't
 convert every eval's checks to judges just because one exists — most criteria in this package
@@ -184,12 +218,12 @@ moon run assistant-evals:evals -- src/evals/planning.eval.ts
 
 ## Common Mistakes
 
-| Mistake                                                       | Fix                                                                                                                 |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Adding a judge for a criterion a `dbQuery` check could grade  | Reach for `judge()` only when the criterion is a genuine content/quality judgment.                                  |
-| A judge with no demonstrated failure case                     | Add a case (in the same eval file) proving it can fail, using a hand-crafted bad input.                             |
-| Matching a tool by `name` instead of `operationKey`           | `name` is a display/toolkit name and varies; `operationKey` is the stable match target.                             |
-| Guessing a tool name/operationKey string instead of checking  | Add a temp debug field to the `dbQuery` output, run once, inspect `cache.sqlite`, fix, remove the debug field.      |
-| Forgetting `sessionChat: true` for a chat-scoped skill's tool | Symptom is a context-resolution error, not "no chat found" — check the skill's operation for `Chat.getFromContext`. |
-| Assuming pre-seeded data without saying so in the prompt      | State the DB starts empty; seed via the database skill's tools at the start of the prompt.                          |
-| Pasting entire eval files in chat when structure is standard  | Point at the file + line range instead.                                                                             |
+| Mistake                                                           | Fix                                                                                                                 |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Adding a judge for a criterion a deterministic scorer could grade | Reach for `judge()` only when the criterion is a genuine content/quality judgment.                                  |
+| A judge with no demonstrated failure case                         | Add a case (in the same eval file) proving it can fail, using a hand-crafted bad input.                             |
+| Matching a tool by `name` instead of `operationKey`               | `name` is a display/toolkit name and varies; `operationKey` is the stable match target.                             |
+| Guessing a tool name/operationKey string instead of checking      | Add a temp scorer whose query returns the invocations, run once, inspect `cache.sqlite`, fix, remove it.            |
+| Forgetting `sessionChat: true` for a chat-scoped skill's tool     | Symptom is a context-resolution error, not "no chat found" — check the skill's operation for `Chat.getFromContext`. |
+| Assuming pre-seeded data without saying so in the prompt          | State the DB starts empty; seed via the database skill's tools at the start of the prompt.                          |
+| Pasting entire eval files in chat when structure is standard      | Point at the file + line range instead.                                                                             |

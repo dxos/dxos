@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { type Elevation } from '@dxos/ui-types';
 
-import { ElevationContext } from '../providers';
+import { ElevationContext } from '../providers/index.ts';
 
 export const useElevationContext = (propsElevation?: Elevation) => {
   const { elevation } = useContext(ElevationContext);

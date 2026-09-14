@@ -214,10 +214,21 @@ const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, proj
   const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
   // Registry refs rather than database clones: the ECHO resolver spans the registry, as
-  // `CreateChat` does for the default set.
-  const skills = DELEGATION_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
-  const objects = project ? [Ref.make(project)] : [];
+  // `CreateChat` does for the default set. The project's instructions name the skills and context
+  // its work needs (a studio project's storyboard verbs, say); the subject binding only renders
+  // their text, so those refs are bound too.
+  const bindings = project ? yield* projectBindings(project) : { skills: [], objects: [] };
+  const skills = [...DELEGATION_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))), ...bindings.skills];
+  const objects = project ? [Ref.make(project), ...bindings.objects] : [];
   yield* Effect.promise(() => binder.use((binder: AiContext.Binder) => binder.bind({ skills, objects })));
+});
+
+/** `Project.contextBindings` needs the instructions ref resolved, which a fresh load guarantees. */
+const projectBindings = Effect.fnUntraced(function* (project: Project.Project) {
+  if (project.instructions) {
+    yield* Database.load(project.instructions);
+  }
+  return Project.contextBindings(project);
 });
 
 export default handler;

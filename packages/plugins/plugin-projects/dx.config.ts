@@ -15,7 +15,7 @@ export default Config2.make({
       sentinel commands, routines, artifacts, and AI chat sessions in project context.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-projects',
-    icon: { key: 'ph--stack--regular', hue: 'rose' },
+    icon: { key: 'ph--stack--regular', hue: 'sky' },
     tags: ['alpha', 'assistant'],
     // Assistant is a hard dependency: the article's chat actions and task delegation invoke its
     // operations, so a host that runs Projects must run Assistant beside it.

@@ -395,10 +395,11 @@ export const DelegateCheckedTasks: Story = {
 
     // Checked in reverse reading order, so the assertion below distinguishes tick order from the
     // order the rows are shown in.
+    // Matched among all of the title's occurrences rather than expecting one: once the pipeline is
+    // open the chart names every lane too, so the title is on the page twice.
     const checkbox = async (title: string) => {
-      const row = (await canvas.findByText(title, undefined, { timeout: 10_000 })).closest(
-        '[data-testid="taskList.item"]',
-      );
+      const labels = await canvas.findAllByText(title, undefined, { timeout: 10_000 });
+      const row = labels.map((label) => label.closest('[data-testid="taskList.item"]')).find(Boolean);
       await expect(row).toBeTruthy();
       return within(row as HTMLElement).getByTestId('taskList.item.checkbox');
     };

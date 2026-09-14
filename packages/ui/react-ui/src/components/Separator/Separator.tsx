@@ -5,8 +5,8 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
 
 type SeparatorProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
   orientation?: 'horizontal' | 'vertical';

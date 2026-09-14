@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Task } from '@dxos/types';
@@ -35,7 +36,7 @@ export const UpdateTasks = Operation.make({
     tasks: Schema.Array(SimpleTask),
   }),
   output: Schema.Any,
-  services: [Harness.HarnessService, Database.Service],
+  services: [Harness.HarnessService, Database.Service, Trace.TraceService],
 });
 
 const TaskRefs = Schema.Array(Ref.Ref(Task.Task));

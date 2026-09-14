@@ -18,6 +18,7 @@ import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions.ts';
 import { createEvalRunner } from '../runner.ts';
+import * as Scorer from '../Scorer.ts';
 import { getDefaultSkills } from '../skills.ts';
 
 // The sender-ledger routine's headless task, run through the same RunInstructions path a
@@ -66,6 +67,68 @@ const entityId = (uri: string): string => {
   return (eid && EID.getEntityId(eid)) ?? uri;
 };
 
+/** The ledger tables in the space, and how many of them the project filed as artifacts. */
+const ledgerTables = Scorer.shared(
+  Effect.gen(function* () {
+    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+    const tables = yield* Database.query(Filter.type(Table.Table)).run;
+    if (!project) {
+      return { tableCount: tables.length, filedCount: 0 };
+    }
+    const tableIds = new Set(tables.map((table) => entityId(Obj.getURI(table))));
+    return {
+      tableCount: tables.length,
+      filedCount: project.artifacts.filter((ref) => tableIds.has(entityId(ref.uri))).length,
+    };
+  }),
+);
+
+/**
+ * The sender's rows, schema-agnostic: table rows are objects of a table-owned dynamic schema, so
+ * every object carrying the sender's email is a candidate and its count/lastSeen are read as
+ * properties. Exactly one such row proves the upsert deduped.
+ */
+const senderRows = Scorer.shared(
+  Effect.gen(function* () {
+    const everything = yield* Database.query(Query.select(Filter.everything())).run;
+    return everything.filter(
+      (candidate): candidate is Obj.Unknown & { count?: unknown; lastSeen?: unknown } =>
+        Obj.isObject(candidate) &&
+        !Obj.instanceOf(Table.Table, candidate) &&
+        Object.values(Obj.getSnapshot(candidate)).includes(SENDER_EMAIL),
+    );
+  }),
+);
+
+const SCORERS = [
+  Scorer.make({
+    name: 'ledger-created',
+    description: 'At least one Table exists after the run.',
+    score: ledgerTables.pipe(Effect.map(({ tableCount }) => tableCount > 0)),
+  }),
+  Scorer.make({
+    name: 'ledger-filed',
+    description: "The ledger table is in the project's artifacts.",
+    score: ledgerTables.pipe(Effect.map(({ filedCount }) => filedCount > 0)),
+  }),
+  Scorer.make({
+    name: 'ledger-deduped',
+    description: 'Exactly one table exists and it is filed exactly once (no duplicate ledger).',
+    score: ledgerTables.pipe(Effect.map(({ tableCount, filedCount }) => tableCount === 1 && filedCount === 1)),
+  }),
+  Scorer.make({
+    name: 'row-upserted',
+    description: 'Exactly one sender row exists, with count 2 and lastSeen from the later message.',
+    score: senderRows.pipe(
+      Effect.map((rows) => {
+        const [row] = rows;
+        const count = typeof row?.count === 'string' ? Number(row.count) : row?.count;
+        return rows.length === 1 && count === MESSAGES.length && String(row?.lastSeen ?? '').startsWith('2026-07-02');
+      }),
+    ),
+  }),
+];
+
 const task = createEvalRunner({
   instructions: INSTRUCTIONS,
   input: Schema.Unknown,
@@ -82,33 +145,7 @@ const task = createEvalRunner({
       yield* Database.flush();
       return { objects: [Ref.make(project)] };
     }),
-  dbQuery: () =>
-    Effect.gen(function* () {
-      const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-      const tables = yield* Database.query(Filter.type(Table.Table)).run;
-
-      // Row-level assertion, schema-agnostic (table rows are objects of a table-owned dynamic
-      // schema): scan every object carrying the sender's email and read its count/lastSeen
-      // properties. Exactly one such row with count 2 proves the upsert deduped.
-      const everything = yield* Database.query(Query.select(Filter.everything())).run;
-      const senderRows = everything.filter(
-        (candidate): candidate is Obj.Unknown & { count?: unknown; lastSeen?: unknown } =>
-          Obj.isObject(candidate) &&
-          !Obj.instanceOf(Table.Table, candidate) &&
-          Object.values(Obj.getSnapshot(candidate)).includes(SENDER_EMAIL),
-      );
-      const [row] = senderRows;
-      const rowCount = typeof row?.count === 'string' ? Number(row.count) : row?.count;
-      const rowUpserted =
-        senderRows.length === 1 && rowCount === MESSAGES.length && String(row?.lastSeen ?? '').startsWith('2026-07-02');
-
-      if (!project) {
-        return { tableCount: tables.length, filedCount: 0, senderRowCount: senderRows.length, rowUpserted };
-      }
-      const tableIds = new Set(tables.map((table) => entityId(Obj.getURI(table))));
-      const filedCount = project.artifacts.filter((ref) => tableIds.has(entityId(ref.uri))).length;
-      return { tableCount: tables.length, filedCount, senderRowCount: senderRows.length, rowUpserted };
-    }),
+  scored: true,
 });
 
 // Skipped: `table.create` fails headless with `Invalid draft for org.dxos.type.table: view: Missing
@@ -117,26 +154,5 @@ const task = createEvalRunner({
 evalite.skip('Projects — sender-ledger routine maintains one filed table', {
   data: [{ input: { messages: MESSAGES } }],
   task,
-  scorers: [
-    {
-      name: 'ledger-created',
-      description: 'At least one Table exists after the run.',
-      scorer: ({ output }) => (output.dbQuery.tableCount > 0 ? 1 : 0),
-    },
-    {
-      name: 'ledger-filed',
-      description: "The ledger table is in the project's artifacts.",
-      scorer: ({ output }) => (output.dbQuery.filedCount > 0 ? 1 : 0),
-    },
-    {
-      name: 'ledger-deduped',
-      description: 'Exactly one table exists and it is filed exactly once (no duplicate ledger).',
-      scorer: ({ output }) => (output.dbQuery.tableCount === 1 && output.dbQuery.filedCount === 1 ? 1 : 0),
-    },
-    {
-      name: 'row-upserted',
-      description: 'Exactly one sender row exists, with count 2 and lastSeen from the later message.',
-      scorer: ({ output }) => (output.dbQuery.rowUpserted ? 1 : 0),
-    },
-  ],
+  scorers: Scorer.toEvalite(SCORERS),
 });

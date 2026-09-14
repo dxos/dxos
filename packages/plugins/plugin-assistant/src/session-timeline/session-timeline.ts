@@ -63,6 +63,103 @@ interface SessionSource {
   pids: Set<string>;
 }
 
+/**
+ * The stretch of a session during which one task was the active one, bounded by the status events
+ * the planning tool writes. Everything the session did inside it belongs to that task.
+ */
+interface TaskSegment {
+  taskId: string;
+  laneId: string;
+  start: number;
+  end?: number;
+}
+
+/**
+ * Cuts a session's events into one segment per task worked, from the status events its task tools
+ * write. Only tasks in `taskIds` — the session's own checklist — take part: an agent is free to move
+ * a task belonging to nothing on this chart, and such an event must not close the segment that is
+ * open or move the boundary.
+ *
+ * A `started` event opens a segment and closes the one still open — the agent keeps exactly one task
+ * in progress. Any other status ends the agent's work on the task: `todo` puts it down as surely as
+ * `done`, and whatever the agent does next is no longer that task's. A task can also finish without
+ * a start: delegation marks every task it hands over
+ * `started` before the agent's first turn, so the run's only event for that task is the one closing
+ * it. Such a task gets the stretch since the last boundary, which is where its work happened — but
+ * only on the transition out of `started` and only while no other task holds the stretch: a task
+ * merely dismissed (`todo` → `blocked`) claims nothing, a second close (`review` → `done`) mints
+ * nothing, and a close arriving after the next task has started leaves that task's segment alone
+ * rather than overlapping it.
+ */
+const buildTaskSegments = (
+  events: readonly Trace.FlatEvent[],
+  sessionStart: number | undefined,
+  taskIds: ReadonlySet<string>,
+): TaskSegment[] => {
+  const segments: TaskSegment[] = [];
+  let open: TaskSegment | undefined;
+  let boundary = sessionStart;
+  const close = (segment: TaskSegment, timestamp: number): void => {
+    segment.end = timestamp;
+    boundary = timestamp;
+    if (open === segment) {
+      open = undefined;
+    }
+  };
+
+  for (const event of events) {
+    if (event.type !== Trace.TaskStatusChanged.key) {
+      continue;
+    }
+    const data = decode(Trace.TaskStatusChanged.schema, event.data);
+    if (!data || !taskIds.has(data.taskId)) {
+      continue;
+    }
+    if (data.status === 'started') {
+      if (open && open.taskId !== data.taskId) {
+        close(open, event.timestamp);
+      }
+      if (!open) {
+        open = { taskId: data.taskId, laneId: taskLaneId(data.taskId), start: event.timestamp };
+        segments.push(open);
+        boundary = event.timestamp;
+      }
+    } else {
+      const started = segments.findLast((candidate) => candidate.taskId === data.taskId && candidate.end === undefined);
+      if (started) {
+        close(started, event.timestamp);
+      } else if (data.previousStatus === 'started' && open === undefined) {
+        const segment = {
+          taskId: data.taskId,
+          laneId: taskLaneId(data.taskId),
+          start: Math.min(boundary ?? event.timestamp, event.timestamp),
+        };
+        segments.push(segment);
+        close(segment, event.timestamp);
+      }
+    }
+  }
+  return segments;
+};
+
+/**
+ * The segment an event belongs to. Segments meet where one task starts over another, so a
+ * status event is matched to its own task's segment, and any other event at a shared boundary
+ * goes to the later segment — the newcomer's start is the first thing the agent did on it.
+ */
+const segmentFor = (segments: readonly TaskSegment[] | undefined, event: Trace.FlatEvent): TaskSegment | undefined => {
+  if (!segments) {
+    return undefined;
+  }
+  const contains = (segment: TaskSegment) =>
+    event.timestamp >= segment.start && event.timestamp <= (segment.end ?? Number.MAX_SAFE_INTEGER);
+  if (event.type === Trace.TaskStatusChanged.key) {
+    const data = decode(Trace.TaskStatusChanged.schema, event.data);
+    return data && segments.findLast((segment) => segment.taskId === data.taskId && contains(segment));
+  }
+  return segments.findLast(contains);
+};
+
 interface SubAgentSpan {
   span: Span;
   pid: string;
@@ -116,7 +213,9 @@ export const buildSessionTimeline = ({
           pids.add(event.meta.pid);
         }
       }
-      sources.push({ key: chat.id, label: chat.name?.trim() || feed || chat.id, chat, pids });
+      // A feed or object id is not a name: an unnamed chat reads as the session it is until the
+      // naming turn lands.
+      sources.push({ key: chat.id, label: chat.name?.trim() || 'Session', chat, pids });
     }
   } else {
     // Without chats, the conversation feed groups a session's pids; a trace with no conversation
@@ -143,6 +242,8 @@ export const buildSessionTimeline = ({
   const markers: Marker[] = [];
   const childSessions: { lane: MutableLane; sessionLaneId: string }[] = [];
   const replacedTaskLanes = new Map<string, string>();
+  /** Per session lane: the task segments its markers are attributed to. */
+  const segmentsBySession = new Map<string, TaskSegment[]>();
 
   for (const source of sources) {
     const laneId = sessionLaneId(source.key);
@@ -234,6 +335,30 @@ export const buildSessionTimeline = ({
 
     // Spawned pids without a trace yet still get a lane from their process.
     const subAgentPids = new Set<string>([...subAgentSpans.map(({ pid }) => pid), ...taskByPid.keys()]);
+
+    // The status events bound each task's stretch of the session, giving its lane a span of its own
+    // and a node where it started and finished. A status tool runs as a child process of the agent,
+    // so its events carry their own pid and reach the session through `parentPid`; a spawned
+    // sub-agent's do too, and those belong to its own lane rather than cutting this one.
+    const ownEvents = events.filter(
+      (event) =>
+        (event.meta.pid !== undefined && source.pids.has(event.meta.pid)) ||
+        (event.meta.parentPid !== undefined &&
+          source.pids.has(event.meta.parentPid) &&
+          !(event.meta.pid !== undefined && subAgentPids.has(event.meta.pid))),
+    );
+    const segments = buildTaskSegments(ownEvents, begins[0]?.timestamp, chatTaskIds);
+    segmentsBySession.set(laneId, segments);
+    for (const segment of segments) {
+      const taskLane = taskLanes.get(segment.taskId);
+      if (!taskLane) {
+        continue;
+      }
+      taskLane.start = Math.min(taskLane.start ?? segment.start, segment.start);
+      // An open segment leaves the lane open, even if an earlier one closed.
+      taskLane.end = segment.end === undefined ? undefined : Math.max(taskLane.end ?? segment.end, segment.end);
+    }
+
     for (const subPid of subAgentPids) {
       const match = subAgentSpans.find((candidate) => candidate.pid === subPid);
       const process = processByPid.get(subPid);
@@ -273,6 +398,15 @@ export const buildSessionTimeline = ({
     }
   }
 
+  // A delegated task IS its child session, drawn with the child's own span; the parent's markers in
+  // that stretch are the parent's work of handing it over, so the segment goes rather than moving.
+  for (const [sessionId, segments] of segmentsBySession) {
+    segmentsBySession.set(
+      sessionId,
+      segments.filter((segment) => !replacedTaskLanes.has(segment.laneId)),
+    );
+  }
+
   // Dependencies named the task lane; they follow it to the session that replaced it.
   for (const lane of lanes) {
     if (lane.blockedOn) {
@@ -291,7 +425,13 @@ export const buildSessionTimeline = ({
     if (laneId === undefined) {
       continue;
     }
-    const marker = toMarker(event, `${laneId}:${markers.length}`, laneId);
+    // Everything the session did while a task was active is that task's, so the session bar keeps
+    // only what brackets the whole run (its request markers) and the timeline reads per task.
+    const markerLaneId =
+      event.type === AgentRequestBegin.key || event.type === AgentRequestEnd.key
+        ? laneId
+        : (segmentFor(segmentsBySession.get(laneId), event)?.laneId ?? laneId);
+    const marker = toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
     if (marker) {
       markers.push(marker);
       if (marker.kind === 'delegation') {
@@ -381,6 +521,16 @@ const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | 
         label: `Request ${data?.status ?? 'ended'}`,
         level: data?.status === 'error' ? 'error' : data?.status === 'interrupted' ? 'warn' : undefined,
         detail: data?.error,
+      };
+    }
+    case Trace.TaskStatusChanged.key: {
+      const data = decode(Trace.TaskStatusChanged.schema, event.data);
+      return {
+        ...base,
+        kind: 'task',
+        label: data?.status === 'started' ? 'Task started' : `Task ${data?.status ?? 'updated'}`,
+        level: data?.status === 'failed' ? 'error' : undefined,
+        detail: data,
       };
     }
     case DelegationSpawned.key: {

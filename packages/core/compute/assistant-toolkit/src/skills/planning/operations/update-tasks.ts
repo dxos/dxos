@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database } from '@dxos/echo';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -28,11 +29,29 @@ export default UpdateTasks.pipe(
       for (const { title, status } of tasks) {
         const task = existing.find((candidate) => candidate.title === title.trim());
         if (task) {
+          const previousStatus = task.status;
           // A task someone was named to review lands in `review` rather than closing; the rule is
           // `Task.update`'s, since the model naming `done` cannot know about reviewers.
           Task.setStatus(task, status);
+          // The resolved status, not the requested one: a reviewed task lands in `review`.
+          if (task.status !== undefined && task.status !== previousStatus) {
+            yield* Trace.write(Trace.TaskStatusChanged, {
+              taskId: task.id,
+              title: task.title,
+              status: task.status,
+              ...(previousStatus ? { previousStatus } : {}),
+            });
+          }
         } else {
-          existing.push(Chat.addTask(db, chat, title, { status }));
+          const created = Chat.addTask(db, chat, title, { status });
+          existing.push(created);
+          if (created.status !== undefined) {
+            yield* Trace.write(Trace.TaskStatusChanged, {
+              taskId: created.id,
+              title: created.title,
+              status: created.status,
+            });
+          }
         }
       }
       yield* Database.flush();

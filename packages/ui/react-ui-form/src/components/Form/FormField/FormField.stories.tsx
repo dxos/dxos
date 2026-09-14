@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type FormPresentation } from '#types';
 
-import { type FormVariant } from '../Form.theme';
+import { type FormVariant } from '../Form.theme.ts';
 import { Form } from '../Form.tsx';
 import { useFormField } from './FormFieldContext.ts';
 

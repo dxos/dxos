@@ -7,8 +7,8 @@ import React, { useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Toolbar } from '../Toolbar';
+import { withTheme } from '../../testing/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
 import { textCrawlSizes } from './sizes.ts';
 import { TextCrawl } from './TextCrawl.tsx';
 

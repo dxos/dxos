@@ -92,6 +92,9 @@
       "path": "../../plugins/plugin-game"
     },
     {
+      "path": "../../plugins/plugin-higgsfield"
+    },
+    {
       "path": "../../plugins/plugin-illustrator"
     },
     {
@@ -126,6 +129,9 @@
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-studio"
     },
     {
       "path": "../../plugins/plugin-table"
