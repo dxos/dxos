@@ -25,6 +25,12 @@ export type RunDedicatedWorkerOptions = {
 /** Removed as soon as the probe below has opened it. */
 const OPFS_PROBE_FILE = '.dxos-opfs-probe';
 
+/** Only the WebWorker lib declares this method, and this package compiles against DOM. */
+type SyncAccessFileHandle = FileSystemFileHandle & { createSyncAccessHandle(): Promise<{ close(): void }> };
+
+const hasSyncAccessHandle = (file: FileSystemFileHandle): file is SyncAccessFileHandle =>
+  'createSyncAccessHandle' in file && typeof file.createSyncAccessHandle === 'function';
+
 /**
  * Probes whether OPFS is usable in this worker — it is not in private browsing, and WebKit can fail
  * it for what it calls a transient reason.
@@ -42,9 +48,14 @@ const probeOpfsAvailable = async (): Promise<boolean> => {
 
     const root = await navigator.storage.getDirectory();
     const file = await root.getFileHandle(OPFS_PROBE_FILE, { create: true });
-    const handle = await (file as any).createSyncAccessHandle();
+    if (!hasSyncAccessHandle(file)) {
+      log.warn('OPFS has no sync access handles, falling back to in-memory storage');
+      return false;
+    }
+
+    const handle = await file.createSyncAccessHandle();
     handle.close();
-    await root.removeEntry(OPFS_PROBE_FILE).catch(() => {});
+    await root.removeEntry(OPFS_PROBE_FILE).catch((err) => log.warn('OPFS probe file not removed', { err }));
     return true;
   } catch (err) {
     log.warn('OPFS not usable, falling back to in-memory storage', { err });

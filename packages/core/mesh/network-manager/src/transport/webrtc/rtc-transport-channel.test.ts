@@ -105,7 +105,7 @@ describe('RtcTransportChannel', () => {
   // A channel already open when the handlers are attached never dispatches `open`.
   test('a channel that is already open delivers messages', async () => {
     const controller = createChannelController();
-    (controller.channel as any).readyState = 'open';
+    controller.channel.readyState = 'open';
     const { deliveredMessages, transport } = createTransport(controller.connection);
     await transport.open();
     await controller.onChannelCreated();
@@ -118,7 +118,7 @@ describe('RtcTransportChannel', () => {
   // Opening twice pipes the protocol stream into two channels, so every outgoing frame is sent twice.
   test('a channel open at attach time sends each frame once', async ({ expect }) => {
     const controller = createChannelController();
-    (controller.channel as any).readyState = 'open';
+    controller.channel.readyState = 'open';
     const { stream, transport } = createTransport(controller.connection);
     await transport.open();
     await controller.onChannelCreated();
@@ -184,7 +184,14 @@ describe('RtcTransportChannel', () => {
         callback();
       },
     });
-    const options = { topic: 'test', stream } as any as TransportOptions;
+    const options: TransportOptions = {
+      ownPeerKey: 'local',
+      remotePeerKey: 'remote',
+      topic: 'test',
+      initiator: true,
+      stream,
+      sendSignal: async () => {},
+    };
     return { deliveredMessages, stream, transport: new RtcTransportChannel(connection, options) };
   };
 
@@ -202,25 +209,36 @@ describe('RtcTransportChannel', () => {
     // Lowercase methods will get overwritten internally.
     let closed = false;
     let failsSending = false;
-    const channel = {
+    const channel: {
+      readyState: RTCDataChannelState;
+      onopen: () => void;
+      onclose: () => Promise<void>;
+      onmessage: (event: { data: string }) => void;
+      close: () => void;
+      sentMessages: Uint8Array[];
+      send: (message: Uint8Array) => void;
+      wasClosed: () => boolean;
+      onMessage: (message: string) => Promise<void>;
+    } = {
       // A real `RTCDataChannel` always reports one, and `send` throws outside `open`.
-      readyState: 'connecting' as RTCDataChannelState,
+      readyState: 'connecting',
       onopen: () => {},
       onclose: async () => {},
+      onmessage: () => {},
       close: () => {
         closed = true;
         channel.readyState = 'closed';
       },
-      sentMessages: [] as any[],
-      send: (message: any) => {
+      sentMessages: [],
+      send: (message) => {
         if (failsSending) {
           throw new Error('Expected');
         }
         channel.sentMessages.push(message);
       },
       wasClosed: () => closed,
-      onMessage: async (message: string) => {
-        (channel as any).onmessage({ data: message });
+      onMessage: async (message) => {
+        channel.onmessage({ data: message });
         await sleep(5);
       },
     };
@@ -237,7 +255,7 @@ describe('RtcTransportChannel', () => {
       /** Mirrors the browser: the channel reports `open` before it fires `onopen`. */
       open: () => {
         channel.readyState = 'open';
-        (channel as any).onopen();
+        channel.onopen();
       },
       onChannelCreated,
       onChannelCreationFailed,
