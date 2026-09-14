@@ -22,6 +22,7 @@ import {
   defaultsKeyForProvider,
   pickPreset,
   presetsForProvider,
+  providerForModel,
   resolveProvider,
 } from '../processor/index.ts';
 
@@ -89,12 +90,12 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
     if (!chatModel || presets.length === 0 || presets.some((preset) => preset.model === chatModel)) {
       return undefined;
     }
-    // Carries the catalog's own provider for the model rather than the active one, which by
-    // definition does not serve it — a resolver chain that still reaches it then can.
+    // Carries the provider that actually serves the model rather than the active one, which by
+    // definition does not — a resolver chain that still reaches it then can.
     const catalog = Model.byId(chatModel)[0];
     return {
       id: chatModel,
-      provider: catalog?.provider ?? provider,
+      provider: providerForModel(chatModel, provider) ?? provider,
       model: chatModel,
       backend: catalog?.backend ?? '',
       label: t('model-unavailable.label', { label: catalog?.label ?? DXN.getName(chatModel) }),

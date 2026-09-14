@@ -54,6 +54,16 @@ export const defaultPreset = (
 };
 
 /**
+ * The provider to resolve `model` through, given the one settings currently select. Model ids are
+ * provider-scoped, so a chat that kept a selection across a provider change (it picked Claude, then
+ * the user went offline) would otherwise be handed a provider that does not serve it and fail to
+ * resolve. The active provider wins whenever it serves the model — several providers serve the same
+ * local model ids, and the catalog's first entry is not necessarily the live one.
+ */
+export const providerForModel = (model: DXN.DXN, active: DXN.DXN | undefined): DXN.DXN | undefined =>
+  active && Model.get(active, model) ? active : (Model.byId(model)[0]?.provider ?? active);
+
+/**
  * Reconcile a stored provider DXN with the runtime: map the bundled sidecar (`built-in`) and an
  * external server (`ollama`) onto whichever is actually available — they are environment-exclusive
  * (the sidecar exists only on desktop). Defaults to `edge` when unset or unparseable.

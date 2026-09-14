@@ -12,12 +12,13 @@ import * as Chat from '@dxos/assistant/Chat';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
 import { ChatNotSpecifiedError } from '../errors.ts';
-import { defaultPreset } from '../processor/index.ts';
+import { defaultPreset, providerForModel } from '../processor/index.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
@@ -56,8 +57,11 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
             chat.model = Ref.fromURI(preset.model);
           });
         }
+        // The model is the chat's, so the provider has to be the one that serves THAT model rather
+        // than whichever the settings now name — a chat outlives a provider change.
+        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? preset?.model;
         const session = yield* getSession(chat, {
-          provider: preset?.provider,
+          provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
           location: chat.remote ? 'edge' : 'local',
         });
         yield* session.submitPrompt(prompt);

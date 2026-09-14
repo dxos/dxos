@@ -43,6 +43,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause.ts';
+import { providerForModel } from './presets.ts';
 import { type ProcessorRequestContext, createPromptContent } from './prompt.ts';
 
 /**
@@ -520,8 +521,11 @@ export class AiChatProcessor {
           chat.model = Ref.fromURI(selected);
         });
       }
+      // The model is the chat's, so the provider has to be the one that serves THAT model: the
+      // configured provider can have moved on since the chat made its selection.
+      const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? selected;
       return yield* AgentService.getSession(chat, {
-        provider: this._options.provider,
+        provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
         location: chat.remote ? 'edge' : 'local',
       });
     });
