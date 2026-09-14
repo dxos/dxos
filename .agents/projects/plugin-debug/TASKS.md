@@ -19,6 +19,19 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 - [x] `root/debug` is the single attachment: remove the root-matched duplicate (`root/devtools/...`) and the `whenAny(whenRoot, …)` match. Landed with phase 1 (commit 67b83e69e4: `createDevtoolsExtension` matches only `AppNodeMatcher.whenDebugGroup`).
 - [x] Space-scoped containers (ECHO inspectors, Generate objects) read the active workspace's space through one shared hook; no space in node data. Landed with phase 1 (`useActiveSpace` in `DevtoolsSurfaces.tsx` and `DebugSurfaces.tsx`).
 
+## Phase 3: dock the panel as a deck bottom drawer (design §5)
+
+- [ ] `Main.Drawer` in `@dxos/react-ui` (`Main.tsx` + `layout/main.css`): fixed block-end, inline insets
+      follow the sidebar states, `--main-drawer-height`, resize handle; `Main.Content` pads block-end
+      when open. Story in `Main.stories.tsx`.
+- [ ] Deck state `drawerState` + persisted height; `LayoutOperation.UpdateDrawer`; `DeckContent` renders
+      `Main.Drawer` hosting `Surface type={DeckRole.Drawer} limit={1}`; fullscreen closes it.
+- [ ] plugin-debug: `debugPanelAspect.mode: 'floating' | 'docked'` (default docked); `DebugPanelStatus`
+      toggles the drawer or opens the floating window by mode; dock/float control in both title bars;
+      `DebugPanel` surface for `DeckRole.Drawer`.
+- [ ] Verify in Composer: toggle from the status bar, resize, planks reflow, float ↔ dock keeps selection,
+      fullscreen hides it, reload restores state; stories for `Main.Drawer` and the docked panel.
+
 ## Follow-ups
 
 - [ ] `plugin-devtools` `SpaceListSurface`/`SpaceInfoSurface` (`DevtoolsSurfaces.tsx` ~40, ~51) still call `LayoutOperation.Open` with a dotted id (`Devtools.Echo.Space`) that was never a graph path — should `select` in the debug panel instead.

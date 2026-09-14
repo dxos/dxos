@@ -73,6 +73,37 @@ attachment: the root-matched duplicate goes, and the space-scoped containers rea
 workspace's space uniformly (one hook, no space in node data). The `Devtools.*` id namespace and
 `DevtoolsSurfaces` stay.
 
+### 5. Docking the panel (phase 3)
+
+The floating window is a portal over the whole app. Docked, the panel becomes part of the deck's
+layout — a **bottom drawer** across the main content, between the two sidebars, that the planks
+shrink to make room for — and it can be floated again.
+
+- **`Main.Drawer`** (`@dxos/react-ui` `Main`): a new part beside `NavigationSidebar` /
+  `ComplementarySidebar`. Fixed to the block-end edge of `Main.Content`'s area (inset-inline follows
+  the sidebar paddings, inset-block-end `max(0, safe-area)`), height from `--main-drawer-height`,
+  a top edge `Splitter`-style resize handle, `data-drawer-state='open'|'closed'`. `Main.Content`
+  gains `padding-block-end: var(--main-drawer-height)` (and scroll-padding) when the drawer is
+  open, so planks reflow rather than being covered — the same mechanism the sidebars use for
+  inline padding.
+- **Deck state**: `DeckCapabilities.State` gains `drawerState: 'open' | 'closed'` and the height is
+  persisted with the rest of the deck's layout state (not the URL: the drawer is chrome, like the
+  sidebars). `LayoutOperation.UpdateDrawer({ state })` mirrors `UpdateSidebar`; fullscreen closes
+  it like the sidebars.
+- **Surface**: `DeckRole.Drawer` (`org.dxos.plugin.deck.role.drawer`), `limit={1}`; plugin-debug
+  contributes `DebugPanel` (Root + Splitter + Sidebar/Main) there. Any plugin can contribute a
+  drawer later (assistant trace, a terminal); which one shows is the first match for now.
+- **Float ↔ dock**: `debugPanelAspect` gains `mode: 'floating' | 'docked'` (default `docked`).
+  The status-bar button toggles the drawer in docked mode and opens the `FloatingPanel` in floating
+  mode; the panel's title bar gets a dock/float control that flips the mode and moves the panel —
+  the same `DebugPanel.Root` context, so selection and open state carry over.
+- **Attention/focus**: the drawer is not a plank — it never takes the deck's attention; keyboard
+  escape closes it like the floating window.
+
+Rejected: a floating stage pinned to the bottom edge (content underneath stays covered, no
+reflow); a `Splitter` around the deck viewport (the deck's own sizing and the sidebars' padding
+already own that axis — a second splitter competes with them).
+
 ## Rejected
 
 - Per-space `debug` group (`root/<spaceId>/debug`) or a `spaces/<spaceId>` branch: the panel is
@@ -81,6 +112,7 @@ workspace's space uniformly (one hook, no space in node data). The `Devtools.*` 
 - plugin-debug depending on plugin-navtree for the model: shares the navtree's persisted open/current
   map (path keys collide) and makes "current" mean the deck's selection.
 - Keeping the console/logs tabs beside a "Tools" tab: two navigation systems in one window.
+- Docking alternatives — see §5.
 
 ## Testing
 
