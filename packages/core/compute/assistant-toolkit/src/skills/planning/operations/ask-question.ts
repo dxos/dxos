@@ -17,8 +17,10 @@ import { AskQuestion } from './definitions.ts';
 /**
  * Files a question on a checklist task and blocks the task on it.
  *
- * The task is matched by title, as every planning tool matches one — the model is handed a numbered
- * checklist of titles and nothing else, so a ref it cannot see would be a ref it has to invent.
+ * The task is matched by title: the question has to name the task in words the reader recognizes,
+ * and the title is the only part of a task the person answering ever sees. Two tasks sharing one
+ * title are refused rather than guessed between — blocking the wrong one would leave the right one
+ * looking live while nothing advances it.
  *
  * Three writes, deliberately together: without the artifact the question is unreachable from the
  * task, without `blocked` the checklist reads as work in progress that nothing is advancing, and
@@ -31,7 +33,19 @@ export default AskQuestion.pipe(
       const { db } = yield* Database.Service;
 
       const tasks = yield* Chat.loadTasks(chat);
-      const task = tasks.find((candidate) => candidate.title === title.trim());
+      const matches = tasks.filter((candidate) => candidate.title === title.trim());
+      if (matches.length > 1) {
+        return trim`
+          "${title.trim()}" is the title of ${matches.length} tasks on this conversation's checklist, so
+          nothing was filed — blocking the wrong one would leave the right one looking live. Give the
+          tasks distinct titles with update-tasks, then ask again.
+
+          <checklist>
+          ${yield* Chat.formatChecklist(chat)}
+          </checklist>
+        `;
+      }
+      const [task] = matches;
       if (!task) {
         // Not a failure: the model gets the checklist back and re-reads the title it should have used.
         return trim`
