@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { EchoHostService } from '@dxos/echo-host';
+import { type Event } from '@dxos/effect';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
@@ -22,22 +23,26 @@ import {
   SpacesService,
 } from '@dxos/protocols/rpc';
 
-import { EdgeAgentServiceLayer } from '../agents/edge-agent-service.ts';
-import { DevicesServiceLayer } from '../devices/devices-service.ts';
-import { ContactsServiceLayer } from '../identity/contacts-service.ts';
+import { EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
+import { DevicesServiceLayer } from '../devices/index.ts';
 import { EdgeIdentityRecoveryManagerService } from '../identity/identity-recovery-manager.ts';
-import { IdentityManagerService, IdentityServiceLayer } from '../identity/index.ts';
+import {
+  ContactsServiceLayer,
+  IdentityLifecycleService,
+  IdentityManagerService,
+  IdentityServiceLayer,
+} from '../identity/index.ts';
 import { InvitationsManagerService, InvitationsServiceLayer } from '../invitations/index.ts';
-import { NetworkServiceLayer } from '../network/network-service.ts';
+import { NetworkServiceLayer } from '../network/index.ts';
 import { SpaceManagerService } from '../space/index.ts';
-import { SpacesServiceLayer } from '../spaces/spaces-service.ts';
-import { ClientServicesHostService } from './host-service.ts';
+import { DataSpaceManagerService, SpacesServiceLayer } from '../spaces/index.ts';
+import { StackReadinessService } from './stack-readiness.ts';
 
 //
 // Each client RPC service handler is exposed as an individual Effect service tag. Handlers depend
 // directly on the lower-level component tags they consume (EchoHostService, IdentityManagerService,
-// …); only handlers that need lifecycle orchestration (identity creation, readiness gates)
-// additionally depend on {@link ClientServicesHostService} (the host provides itself into the stack).
+// …); the ones that need lifecycle orchestration depend on IdentityLifecycleService and the
+// StackReadinessService gate.
 //
 
 /**
@@ -87,7 +92,11 @@ export const ClientServicesRpcLayer: Layer.Layer<
   | KeyringApiService
   | SwarmNetworkManagerService
   | SignalManagerService
-  | ClientServicesHostService
+  | DataSpaceManagerService
+  | EdgeAgentManagerService
+  | IdentityLifecycleService
+  | StackReadinessService
+  | Event.Bus
 > = Layer.mergeAll(
   IdentityServiceLayer,
   ContactsServiceLayer,

@@ -3,6 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Ref from 'effect/Ref';
 
@@ -82,6 +83,44 @@ describe('Event bus', () => {
       yield* Event.emit(Foo, 7);
 
       expect(yield* Ref.get(seen)).to.deep.equal(['foo:7', 'serial:7']);
+    }, Effect.provide(Event.busLayer)),
+  );
+
+  it.effect(
+    'runs handlers concurrently for "parallel" events',
+    Effect.fn(function* ({ expect }) {
+      // The first handler only completes once the second has run, which deadlocks under serial dispatch.
+      const gate = yield* Deferred.make<void>();
+      const order = yield* Ref.make<string[]>([]);
+
+      yield* Event.subscribe(
+        Event.handler(Foo, () =>
+          Deferred.await(gate).pipe(Effect.andThen(Ref.update(order, (items) => [...items, 'a']))),
+        ),
+      );
+      yield* Event.subscribe(
+        Event.handler(Foo, () =>
+          Ref.update(order, (items) => [...items, 'b']).pipe(Effect.andThen(Deferred.succeed(gate, undefined))),
+        ),
+      );
+
+      yield* Event.emit(Foo, 1);
+
+      expect(yield* Ref.get(order)).to.deep.equal(['b', 'a']);
+    }, Effect.provide(Event.busLayer)),
+  );
+
+  it.effect(
+    'keeps events with the same id apart',
+    Effect.fn(function* ({ expect }) {
+      const Twin = Event.make<string>()('foo');
+      const seen = yield* Ref.make<string[]>([]);
+
+      yield* Event.subscribe(Event.handler(Twin, (payload) => Ref.update(seen, (items) => [...items, payload])));
+
+      yield* Event.emit(Foo, 1);
+
+      expect(yield* Ref.get(seen)).to.deep.equal([]);
     }, Effect.provide(Event.busLayer)),
   );
 

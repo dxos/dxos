@@ -79,7 +79,7 @@ export class InvitationsManager {
     this._invitationHandlerFactory = getHandler;
   }
 
-  private _getHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
     invariant(this._invitationHandlerFactory, 'Invitation handler factory not set.');
     return this._invitationHandlerFactory(invitation);
   }
@@ -96,7 +96,7 @@ export class InvitationsManager {
       }
     }
 
-    const handler = this._getHandler(options);
+    const handler = this.getInvitationHandler(options);
     const invitationError = handler.checkCanInviteNewMembers();
     if (invitationError != null) {
       throw invitationError;
@@ -176,7 +176,7 @@ export class InvitationsManager {
       return existingInvitation;
     }
 
-    const handler = this._getHandler(options);
+    const handler = this.getInvitationHandler(options);
     const {
       ctx: invitationCtx,
       invitation,
@@ -223,7 +223,7 @@ export class InvitationsManager {
         await this._metadataStore.removeInvitation(invitationId);
       }
       if (created.get().type === Invitation_Type.DELEGATED) {
-        const handler = this._getHandler(created.get());
+        const handler = this.getInvitationHandler(created.get());
         await handler.cancelDelegation(created.get());
       }
       await created.cancel();

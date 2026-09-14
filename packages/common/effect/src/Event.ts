@@ -90,14 +90,14 @@ type AnyHandler = {
 };
 
 export const makeBus = (): BusService => {
-  const subscribers = new Map<string, Set<AnyHandler>>();
+  const subscribers = new Map<Any, Set<AnyHandler>>();
 
   const bus: BusService = {
     subscribe: (handler) =>
       Effect.gen(function* () {
         const scope = yield* Effect.scope;
-        const handlers = subscribers.get(handler.event.id) ?? new Set<AnyHandler>();
-        subscribers.set(handler.event.id, handlers);
+        const handlers = subscribers.get(handler.event) ?? new Set<AnyHandler>();
+        subscribers.set(handler.event, handlers);
         handlers.add(handler);
         yield* Scope.addFinalizer(
           scope,
@@ -106,7 +106,7 @@ export const makeBus = (): BusService => {
       }),
     emit: (event, payload) =>
       Effect.gen(function* () {
-        const handlers = subscribers.get(event.id);
+        const handlers = subscribers.get(event);
         if (handlers === undefined) {
           return;
         }
@@ -114,7 +114,7 @@ export const makeBus = (): BusService => {
         if (event.strategy === 'serial') {
           yield* Effect.forEach(dispatch, (effect) => effect, { discard: true });
         } else {
-          yield* Effect.all(dispatch, { discard: true });
+          yield* Effect.all(dispatch, { concurrency: 'unbounded', discard: true });
         }
       }).pipe(Effect.provideService(Bus, bus)),
   };

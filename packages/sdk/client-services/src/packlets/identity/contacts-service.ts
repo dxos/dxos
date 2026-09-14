@@ -21,9 +21,9 @@ import {
 import { ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { ClientServicesHostService } from '../services/host-service.ts';
+import { StackReadinessService } from '../services/stack-readiness.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { type DataSpaceManager } from '../spaces/index.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 import { type IdentityManager, IdentityManagerService } from './identity-manager.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
@@ -108,7 +108,10 @@ export const ContactsServiceLayer = Layer.effect(
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
     const spaceManager = yield* SpaceManagerService;
-    const host = yield* ClientServicesHostService;
-    return new ContactsServiceImpl(identityManager, spaceManager, () => host.whenDataSpaceManagerReady());
+    const dataSpaceManager = yield* DataSpaceManagerService;
+    const readiness = yield* StackReadinessService;
+    return new ContactsServiceImpl(identityManager, spaceManager, () =>
+      readiness.initialized.wait().then(() => dataSpaceManager),
+    );
   }),
 );

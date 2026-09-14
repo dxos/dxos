@@ -9,7 +9,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import { Event as EffectEvent, EffectEx, RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
@@ -26,7 +26,8 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityService } from '@dxos/protocols/rpc';
 
-import { ClientServicesHostService } from '../services/host-service.ts';
+import { ProfileUpdated } from '../services/events.ts';
+import { IdentityLifecycleService } from './identity-lifecycle.ts';
 import { type CreateIdentityOptions, type IdentityManager, IdentityManagerService } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 import { type Identity } from './identity.ts';
@@ -199,8 +200,6 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   }
 }
 
-// Identity creation is a lifecycle sequence and profile broadcast iterates live spaces, so both
-// remain orchestrator responsibilities resolved from {@link ClientServicesHostService}.
 // The impl is a {@link Resource}; its open/close lifecycle is bound to the layer scope.
 export const IdentityServiceLayer = Layer.effect(
   IdentityService.Tag,
@@ -208,17 +207,17 @@ export const IdentityServiceLayer = Layer.effect(
     const identityManager = yield* IdentityManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const keyring = yield* KeyringApiService;
-    const host = yield* ClientServicesHostService;
+    const identityLifecycle = yield* IdentityLifecycleService;
+    const runtime = yield* RuntimeProvider.currentRuntime<EffectEvent.Bus>();
     const service = new IdentityServiceImpl(
       identityManager,
       recoveryManager,
       keyring,
-      async (params, ctx) => {
-        const identity = await host.createIdentity(params, ctx);
-        await host.initialized.wait();
-        return identity;
-      },
-      (profile) => host.broadcastProfileUpdate(profile),
+      (params, ctx) => identityLifecycle.createIdentity(params, ctx),
+      (profile) =>
+        profile
+          ? RuntimeProvider.runPromise(runtime)(EffectEvent.emit(ProfileUpdated, { profile }))
+          : Promise.resolve(),
     );
     yield* Effect.acquireRelease(
       Effect.promise(() => service.open()),

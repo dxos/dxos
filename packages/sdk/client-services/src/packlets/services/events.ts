@@ -12,16 +12,19 @@ import { type Identity } from '../identity/index.ts';
 // Lifecycle events of the client stack. Boot order is the chain of these events, each layer
 // subscribing to the fact it needs and emitting the fact it establishes:
 //
-//   StorageReady → IdentityLoaded → NetworkReady            (host, then cascades)
+//   Opening → StorageReady → IdentityLoaded → NetworkReady   (host emits Opening, then cascades)
 //   IdentityBound                                            (a created or accepted identity)
 //   IdentityAvailable → DataSpacesReady                      (identity-bound services)
-//   StackOpened                                              (everything above is done)
+//   StackOpened                                              (host, once the cascade is done)
 //
 // Teardown has no events: each layer closes its component in its layer finalizer, so runtime
 // disposal unwinds the stack in reverse build order.
 //
 
 type LifecyclePayload = { ctx: Context };
+
+/** The host is opening; nothing has been touched yet. */
+export const Opening = Event.make<LifecyclePayload>()('client-services/Opening');
 
 /** Storage has been migrated, version-checked, and loaded. */
 export const StorageReady = Event.make<LifecyclePayload>()('client-services/StorageReady');

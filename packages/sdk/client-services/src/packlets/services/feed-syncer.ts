@@ -595,6 +595,18 @@ export const FeedSyncerLayer = (
         ...options,
       });
 
+      // The echo host falls back to a no-op sync while these are unset, so only this layer sets them.
+      echoHost.setFeedSyncHandlers({
+        syncFeed: (ctx, request) =>
+          feedSyncer.syncBlocking(ctx, {
+            spaceId: request.spaceId as SpaceId,
+            subspaceTag: request.subspaceTag,
+            shouldPush: request.shouldPush,
+            shouldPull: request.shouldPull,
+          }),
+        getSyncState: (ctx, request) => feedSyncer.getSyncState(ctx, request),
+      });
+
       yield* Effect.addFinalizer(() => Effect.promise(() => feedSyncer.close()));
       yield* StackOpened.pipe(
         Event.handler(({ ctx }) => Effect.promise(() => feedSyncer.open(ctx))),

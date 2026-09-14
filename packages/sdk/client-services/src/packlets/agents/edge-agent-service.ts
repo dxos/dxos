@@ -21,8 +21,8 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeAgentService } from '@dxos/protocols/rpc';
 
-import { ClientServicesHostService } from '../services/host-service.ts';
-import { type EdgeAgentManager } from './edge-agent-manager.ts';
+import { StackReadinessService } from '../services/stack-readiness.ts';
+import { type EdgeAgentManager, EdgeAgentManagerService } from './edge-agent-manager.ts';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
 export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
@@ -84,11 +84,16 @@ const mapStatus = (agentStatus: EdgeAgentStatus | undefined): QueryAgentStatusRe
   }
 };
 
-export const EdgeAgentServiceLayer: Layer.Layer<EdgeAgentService.Tag, never, ClientServicesHostService> = Layer.effect(
+export const EdgeAgentServiceLayer: Layer.Layer<
+  EdgeAgentService.Tag,
+  never,
+  StackReadinessService | EdgeAgentManagerService
+> = Layer.effect(
   EdgeAgentService.Tag,
   Effect.gen(function* () {
     const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
-    const host = yield* ClientServicesHostService;
-    return new EdgeAgentServiceImpl(() => host.whenEdgeAgentManagerReady(), edgeConnection);
+    const readiness = yield* StackReadinessService;
+    const edgeAgentManager = yield* EdgeAgentManagerService;
+    return new EdgeAgentServiceImpl(() => readiness.initialized.wait().then(() => edgeAgentManager), edgeConnection);
   }),
 );

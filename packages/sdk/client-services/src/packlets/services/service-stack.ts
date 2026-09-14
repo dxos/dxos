@@ -16,6 +16,7 @@ import {
   EdgeAutomergeReplicatorService,
   MeshEchoReplicatorLayer,
   MeshEchoReplicatorService,
+  runSqliteHealthCheck,
 } from '@dxos/echo-host';
 import {
   type EdgeConnection,
@@ -26,8 +27,10 @@ import {
 import { Event, RuntimeProvider } from '@dxos/effect';
 import { FeedFactoryLayer, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
+import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
+import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { SqlTransaction } from '@dxos/sql-sqlite';
@@ -38,6 +41,8 @@ import {
   EdgeIdentityRecoveryManagerService,
 } from '../identity/identity-recovery-manager.ts';
 import {
+  IdentityLifecycleLayer,
+  IdentityLifecycleService,
   IdentityManagerLayer,
   type IdentityManagerProps,
   IdentityManagerService,
@@ -46,6 +51,7 @@ import {
 } from '../identity/index.ts';
 import {
   type InvitationConnectionProps,
+  InvitationFactoriesLayer,
   InvitationsHandlerLayer,
   InvitationsHandlerService,
   InvitationsManagerLayer,
@@ -65,10 +71,11 @@ import {
   CrossDeviceSpaceSynchronizerLayer,
   CrossDeviceSpaceSynchronizerService,
 } from './cross-device-space-synchronizer.ts';
-import { NetworkReady } from './events.ts';
+import { NetworkReady, Opening, StorageReady } from './events.ts';
 import { FeedSyncerLayer } from './feed-syncer.ts';
 import { NetworkLifecycleLayer } from './network-lifecycle.ts';
 import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
+import { StackReadinessLayer, StackReadinessService } from './stack-readiness.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -85,14 +92,14 @@ export type ServiceContextRuntimeProps = Pick<
 
 /**
  * Combined storage migration effect gathered from the concrete SQLite stores.
- * Run by {@link ClientServicesHost} during open (storage migration stage).
+ * Run by the storage lifecycle handler when the host starts opening.
  */
 export class StorageMigrationService extends EffectContext.Service<
   StorageMigrationService,
   Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>
 >()('@dxos/client-services/StorageMigration') {}
 
-export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
+export type ServiceStackServices = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime_Client_EdgeFeatures;
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
@@ -117,14 +124,17 @@ export type ServiceContextStackContext =
   | SigningContextProviderService
   | IMetadataStoreService
   | FeedStoreService
-  | StorageMigrationService;
+  | StorageMigrationService
+  | IdentityLifecycleService
+  | StackReadinessService;
 
 /**
  * Effect Layer composing the dormant client-stack components, constructed before identity is ready.
- * {@link ClientServicesHost} resolves these tags and drives their lifecycle.
+ * Each layer opens its component on the lifecycle event it depends on (see `events.ts`) and closes
+ * it in its finalizer; {@link ClientServicesHost} only emits `Opening` and `StackOpened`.
  */
-export const ServiceContextLayer = (
-  options: ServiceContextLayerOptions,
+export const ServiceStack = (
+  options: ServiceStackServices,
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
@@ -139,6 +149,7 @@ export const ServiceContextLayer = (
   // build order, so a dependent must sit above what it depends on.
   const core = CrossDeviceSpaceSynchronizerLayer.pipe(
     Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
+    Layer.provideMerge(InvitationFactoriesLayer),
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
     Layer.provideMerge(identityProviderLayer),
@@ -147,6 +158,7 @@ export const ServiceContextLayer = (
     Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
     Layer.provideMerge(InvitationsManagerLayer()),
     Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
+    Layer.provideMerge(IdentityLifecycleLayer),
     Layer.provideMerge(EdgeIdentityRecoveryManagerLayer()),
     Layer.provideMerge(
       IdentityManagerLayer({
@@ -158,6 +170,8 @@ export const ServiceContextLayer = (
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
     Layer.provideMerge(NetworkLifecycleLayer),
+    Layer.provideMerge(StackReadinessLayer),
+    Layer.provideMerge(storageLifecycleLayer),
     Layer.provideMerge(storageLayer),
   );
 
@@ -223,7 +237,7 @@ const identityProviderLayer = Layer.effect(
 /**
  * Combined storage migration effect. Storage migrations are idempotent `CREATE TABLE` effects that
  * do not depend on store instance state, so they are extracted from throwaway instances to keep the
- * store layers individual. Run by {@link ClientServicesHost} during open.
+ * store layers individual.
  */
 const storageMigrationLayer = Layer.effect(
   StorageMigrationService,
@@ -236,6 +250,37 @@ const storageMigrationLayer = Layer.effect(
         new SqliteStorage({ runtime }).migrate,
       ],
       { discard: true },
+    );
+  }),
+);
+
+/**
+ * Opens storage when the host starts opening: migrations, the storage version check, and the SQLite
+ * health check run in this order inside one handler, since a `serial` event would order them by
+ * subscription instead.
+ */
+const storageLifecycleLayer = Layer.effectDiscard(
+  Effect.gen(function* () {
+    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+    const migrate = yield* StorageMigrationService;
+    const metadataStore = yield* IMetadataStoreService;
+    yield* Opening.pipe(
+      Event.handler(({ ctx }) =>
+        Effect.gen(function* () {
+          log('running storage migrations...');
+          yield* Effect.promise(() => RuntimeProvider.runPromise(runtime)(migrate));
+          yield* Effect.promise(() => metadataStore.load());
+          if (metadataStore.version !== STORAGE_VERSION) {
+            // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
+            throw new InvalidStorageVersionError(STORAGE_VERSION, metadataStore.version);
+          }
+          log('running sqlite health check...');
+          yield* Effect.promise(() => runSqliteHealthCheck(runtime));
+          log('storage ready');
+          yield* Event.emit(StorageReady, { ctx });
+        }),
+      ),
+      Event.subscribe,
     );
   }),
 );

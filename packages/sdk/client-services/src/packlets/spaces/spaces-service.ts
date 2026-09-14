@@ -61,7 +61,7 @@ import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
 import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
-import { ClientServicesHostService } from '../services/host-service.ts';
+import { StackReadinessService } from '../services/stack-readiness.ts';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
@@ -71,7 +71,7 @@ import {
   writeSerializedSpaceArchive,
 } from '../space-export/index.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { type DataSpaceManager } from './data-space-manager.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from './data-space-manager.ts';
 import { type DataSpace } from './data-space.ts';
 
 /** Reads the space as the buf message the service returns. */
@@ -598,15 +598,18 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 export const SpacesServiceLayer: Layer.Layer<
   SpacesService.Tag,
   never,
-  IdentityManagerService | SpaceManagerService | EchoHostService | ClientServicesHostService
+  IdentityManagerService | SpaceManagerService | EchoHostService | DataSpaceManagerService | StackReadinessService
 > = Layer.effect(
   SpacesService.Tag,
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
     const spaceManager = yield* SpaceManagerService;
     const echoHost = yield* EchoHostService;
-    const host = yield* ClientServicesHostService;
-    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () => host.whenDataSpaceManagerReady());
+    const dataSpaceManager = yield* DataSpaceManagerService;
+    const readiness = yield* StackReadinessService;
+    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () =>
+      readiness.initialized.wait().then(() => dataSpaceManager),
+    );
   }),
 );
 

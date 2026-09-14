@@ -611,7 +611,7 @@ export const IdentityManagerLayer = (
       yield* StorageReady.pipe(
         EffectEvent.handler(({ ctx }) =>
           Effect.promise(() => identityManager.open(ctx)).pipe(
-            Effect.andThen(EffectEvent.emit(IdentityLoaded, { ctx, identity: identityManager.identity })),
+            Effect.flatMap(() => EffectEvent.emit(IdentityLoaded, { ctx, identity: identityManager.identity })),
           ),
         ),
         EffectEvent.subscribe,

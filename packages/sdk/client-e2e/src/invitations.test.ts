@@ -732,7 +732,7 @@ const createInvitationsApi = async (
   metadata: MetadataStore = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
 ) => {
   const manager = new InvitationsManager(context.invitations, metadata);
-  manager.setInvitationHandlerFactory((invitation) => context.getInvitationHandler(invitation));
+  manager.setInvitationHandlerFactory((invitation) => context.invitationsManager.getInvitationHandler(invitation));
   // InvitationsProxy consumes the Promise/Stream shaped proto service; bridge the effect-rpc Handlers
   // impl in-process (no wire hop) and derive the proto surface from it. The endpoint is kept open for
   // the whole file (torn down in afterAll) so fire-and-forget teardown calls (e.g. invitation cancel)

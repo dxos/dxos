@@ -8,12 +8,10 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { Event, Trigger, synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesHandlers,
@@ -23,13 +21,12 @@ import {
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { type EchoHost, EchoHostService, runSqliteHealthCheck } from '@dxos/echo-host';
+import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { Event as EffectEvent, EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
-import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   EdgeSignalManager,
@@ -45,12 +42,8 @@ import {
   createIceProvider,
   createRtcTransportFactory,
 } from '@dxos/network-manager';
-import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
-import { toPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   ContactsService,
   DataService,
@@ -82,40 +75,27 @@ import {
 import {
   type CreateIdentityOptions,
   type Identity,
+  type IdentityLifecycle,
+  IdentityLifecycleService,
   type IdentityManager,
   IdentityManagerService,
-  type JoinIdentityProps,
 } from '../identity/index.ts';
 import {
-  DeviceInvitationProtocol,
-  type InvitationProtocol,
   type InvitationsHandler,
   InvitationsHandlerService,
   type InvitationsManager,
   InvitationsManagerService,
-  SpaceInvitationProtocol,
 } from '../invitations/index.ts';
 import { Lock, type ResourceLock } from '../locks/index.ts';
 import { LoggingServiceImpl } from '../logging/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import {
-  type DataSpaceManager,
-  DataSpaceManagerService,
-  type SigningContextProvider,
-  SigningContextProviderService,
-} from '../spaces/index.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 import { SystemServiceImpl } from '../system/index.ts';
 import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
-import { IdentityAvailable, IdentityBound, ProfileUpdated, StackOpened, StorageReady } from './events.ts';
-import { type FeedSyncer, FeedSyncerService } from './feed-syncer.ts';
-import { ClientServicesHostService } from './host-service.ts';
-import {
-  ServiceContextLayer,
-  type ServiceContextRuntimeProps,
-  type ServiceContextStackContext,
-  StorageMigrationService,
-} from './service-context.ts';
+import { Opening, StackOpened } from './events.ts';
+import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
+import { type StackReadiness, StackReadinessService } from './stack-readiness.ts';
 
 export type ClientServicesHostProps = {
   /**
@@ -158,11 +138,9 @@ export type ServiceContext = ClientServicesHost;
  *
  * Owns the full client stack and its lifecycle: it builds the layer-composed components (keyring,
  * feed store, echo host, identity/space managers, …) plus the client RPC handlers. The open sequence
- * is an event chain (see `events.ts`): the host runs the storage stage and emits `StorageReady`; each
- * layer opens its component on the event it needs and emits the fact it establishes. Teardown is
- * runtime disposal, which runs the layer finalizers in reverse build order. The host provides itself
- * into the stack (via {@link ClientServicesHostService}) so the RPC handler layers can resolve the
- * orchestration entry points they need without a separate `ServiceContext` service.
+ * is an event chain (see `events.ts`): the host emits `Opening` and each layer opens its component on
+ * the event it needs and emits the fact it establishes; `StackOpened` follows once the cascade is
+ * done. Teardown is runtime disposal, which runs the layer finalizers in reverse build order.
  */
 export class ClientServicesHost {
   readonly #resourceLock?: ResourceLock;
@@ -182,7 +160,7 @@ export class ClientServicesHost {
   #edgeHttpClient?: EdgeHttpClient = undefined;
 
   #stackRuntime?: ManagedRuntime.ManagedRuntime<
-    EffectEvent.Bus | ClientServicesHostService | ClientServicesRpcContext | ServiceContextStackContext,
+    EffectEvent.Bus | ClientServicesRpcContext | ServiceContextStackContext,
     never
   >;
   readonly #runtime: RuntimeProvider.RuntimeProvider<
@@ -212,15 +190,10 @@ export class ClientServicesHost {
   #invitations?: InvitationsHandler;
   #invitationsManager?: InvitationsManager;
   #echoHost?: EchoHost;
-  #signingContextProvider?: SigningContextProvider;
   #dataSpaceManager?: DataSpaceManager;
   #edgeAgentManager?: EdgeAgentManager;
-  #feedSyncer?: FeedSyncer;
-  #storageMigrate?: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
-
-  // Orchestration state (formerly on `ServiceContext`).
-  readonly #initialized = new Trigger();
-  readonly #handlerFactories = new Map<Invitation_Kind, (invitation: Partial<Invitation>) => InvitationProtocol>();
+  #identityLifecycle?: IdentityLifecycle;
+  #readiness?: StackReadiness;
 
   constructor({
     config,
@@ -310,7 +283,7 @@ export class ClientServicesHost {
   }
 
   get initialized() {
-    return this.#initialized;
+    return (this.#readiness ?? failUndefined()).initialized;
   }
 
   get identityManager(): IdentityManager {
@@ -486,12 +459,10 @@ export class ClientServicesHost {
 
     await this.#loggingService.open();
 
-    // Build a single runtime from the component layer stack plus the client RPC handlers, providing
-    // the host itself so the handler layers can resolve their orchestration entry points.
+    // Build a single runtime from the component layer stack plus the client RPC handlers.
     const stackLayer = ClientServicesRpcLayer.pipe(
-      Layer.provideMerge(Layer.succeed(ClientServicesHostService, this)),
       Layer.provideMerge(
-        ServiceContextLayer({
+        ServiceStack({
           ...this.#runtimeProps,
           edgeFeatures: config.get('runtime.client.edgeFeatures'),
           edgeConnection: this.#edgeConnection,
@@ -517,11 +488,10 @@ export class ClientServicesHost {
         invitations: InvitationsHandlerService,
         invitationsManager: InvitationsManagerService,
         echoHost: EchoHostService,
-        signingContextProvider: SigningContextProviderService,
         dataSpaceManager: DataSpaceManagerService,
         edgeAgentManager: EdgeAgentManagerService,
-        storageMigrate: StorageMigrationService,
-        feedSyncer: Effect.serviceOption(FeedSyncerService),
+        identityLifecycle: IdentityLifecycleService,
+        readiness: StackReadinessService,
         // Handlers.
         identityService: IdentityService.Tag,
         contactsService: ContactsService.Tag,
@@ -545,39 +515,10 @@ export class ClientServicesHost {
     this.#invitations = resolved.invitations;
     this.#invitationsManager = resolved.invitationsManager;
     this.#echoHost = resolved.echoHost;
-    this.#signingContextProvider = resolved.signingContextProvider;
     this.#dataSpaceManager = resolved.dataSpaceManager;
     this.#edgeAgentManager = resolved.edgeAgentManager;
-    this.#storageMigrate = resolved.storageMigrate;
-    this.#feedSyncer = Option.getOrUndefined(resolved.feedSyncer);
-
-    // Wire the setters for components that point "up the stack".
-    this.#handlerFactories.set(
-      Invitation_Kind.DEVICE,
-      () =>
-        new DeviceInvitationProtocol(
-          this.#keyring!,
-          () => this.#identityManager!.identity ?? failUndefined(),
-          this._acceptIdentity.bind(this),
-        ),
-    );
-    this.#recoveryManager.setAcceptRecoveredIdentity((params) => this._acceptIdentity(params));
-    this.#invitationsManager.setInvitationHandlerFactory((invitation) => this.getInvitationHandler(invitation));
-    this.#echoHost.setFeedSyncHandlers({
-      syncFeed: async (feedSyncCtx, request) =>
-        this.#feedSyncer?.syncBlocking(feedSyncCtx, {
-          spaceId: request.spaceId as SpaceId,
-          subspaceTag: request.subspaceTag,
-          shouldPush: request.shouldPush,
-          shouldPull: request.shouldPull,
-        }),
-      getSyncState: async (feedSyncCtx, request) => {
-        if (!this.#feedSyncer) {
-          return { namespaces: [] };
-        }
-        return this.#feedSyncer.getSyncState(feedSyncCtx, request);
-      },
-    });
+    this.#identityLifecycle = resolved.identityLifecycle;
+    this.#readiness = resolved.readiness;
 
     this.#handlers = {
       SystemService: this.#systemService,
@@ -602,7 +543,17 @@ export class ClientServicesHost {
       EdgeAgentService: resolved.edgeAgentService,
     };
 
-    await this._openStack(ctx);
+    try {
+      await this._openStack(ctx);
+    } catch (err) {
+      // Release the layer-owned components so a failed boot does not leak the runtime; the stores
+      // below the stack stay untouched since nothing guarantees they were loaded.
+      await this.#stackRuntime.dispose();
+      this.#stackRuntime = undefined;
+      this.#handlers = { SystemService: this.#systemService };
+      this.#opening = false;
+      throw err;
+    }
 
     const devtoolsProxy = this.#config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
@@ -664,7 +615,7 @@ export class ClientServicesHost {
     this.#resetting = true;
     this.#statusUpdate.emit();
     if (this.#open) {
-      await this.#disposeStack();
+      await this.close();
     }
     // Wipe all SQLite tables so next open starts fresh.
     await RuntimeProvider.runPromise(this.#runtime)(
@@ -702,106 +653,15 @@ export class ClientServicesHost {
   //
 
   async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
-    ctx ??= this.#ctx ?? Context.default();
-    const identity = await this.identityManager.createIdentity(params, ctx);
-    await this.#emit(IdentityBound, { ctx, identity });
-    await identity.joinNetwork(ctx);
-    await this._bindIdentity(identity, ctx);
-    return identity;
-  }
-
-  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
-    if (this.identityManager.identity == null && invitation.kind === Invitation_Kind.SPACE) {
-      throw new Error('Identity must be created before joining a space.');
-    }
-    const factory = this.#handlerFactories.get(invitation.kind);
-    invariant(factory, `Unknown invitation kind: ${invitation.kind}`);
-    return factory(invitation);
-  }
-
-  async broadcastProfileUpdate(profile: ProfileDocument | undefined): Promise<void> {
-    if (!profile) {
-      return;
-    }
-    await this.#emit(ProfileUpdated, { profile });
+    return (this.#identityLifecycle ?? failUndefined()).createIdentity(params, ctx ?? this.#ctx);
   }
 
   /**
-   * Resolves the {@link DataSpaceManager} once identity-bound services have opened (`initialized`).
-   */
-  async whenDataSpaceManagerReady(): Promise<DataSpaceManager> {
-    await this.#initialized.wait();
-    return this.#dataSpaceManager ?? failUndefined();
-  }
-
-  /**
-   * Resolves the {@link EdgeAgentManager} once identity-bound services have opened (`initialized`).
-   */
-  async whenEdgeAgentManagerReady(): Promise<EdgeAgentManager> {
-    await this.#initialized.wait();
-    return this.#edgeAgentManager ?? failUndefined();
-  }
-
-  private async _acceptIdentity(params: JoinIdentityProps): Promise<Identity> {
-    const ctx = this.#ctx ?? Context.default();
-    const { identity, identityRecord } = await this.identityManager.prepareIdentity(params, ctx);
-    await this.#emit(IdentityBound, { ctx, identity, deviceCredential: params.authorizedDeviceCredential! });
-    await identity.joinNetwork(ctx);
-    await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
-    await this._bindIdentity(identity, ctx);
-    return identity;
-  }
-
-  private async _checkStorageVersion(): Promise<void> {
-    await this.metadataStore.load();
-    if (this.metadataStore.version !== STORAGE_VERSION) {
-      throw new InvalidStorageVersionError(STORAGE_VERSION, this.metadataStore.version);
-      // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
-    }
-  }
-
-  /**
-   * Opens the identity-bound services once an identity has joined the network.
-   */
-  @Trace.span()
-  private async _bindIdentity(identity: Identity, ctx: Context): Promise<void> {
-    this.#handlerFactories.set(
-      Invitation_Kind.SPACE,
-      (invitation) =>
-        new SpaceInvitationProtocol(
-          this.#dataSpaceManager!,
-          this.#signingContextProvider!(),
-          this.#keyring!,
-          toPublicKey(invitation.spaceKey),
-        ),
-    );
-    await this.#emit(IdentityAvailable, { ctx, identity });
-    this.#initialized.wake();
-  }
-
-  /**
-   * Runs the storage stage, then starts the open event chain; each emit returns once every handler
-   * it triggered (transitively) has completed.
+   * Starts the open event chain; each emit returns once every handler it triggered (transitively)
+   * has completed, so `StackOpened` fires after storage, identity, network, and spaces are up.
    */
   private async _openStack(ctx: Context): Promise<void> {
-    log('running storage migrations...');
-    await RuntimeProvider.runPromise(this.#runtime)(this.#storageMigrate!);
-    await this._checkStorageVersion();
-    log('running sqlite health check...');
-    await runSqliteHealthCheck(this.#runtime);
-    log('sqlite health check passed');
-
-    await this.#emit(StorageReady, { ctx });
-
-    const identity = this.#identityManager!.identity;
-    if (identity) {
-      log('joining network...');
-      await identity.joinNetwork(ctx);
-      await this._bindIdentity(identity, ctx);
-    } else {
-      log('no identity, skipping network join and space initialization');
-    }
-
+    await this.#emit(Opening, { ctx });
     await this.#emit(StackOpened, { ctx });
     log('stack opened');
 
@@ -829,10 +689,3 @@ export class ClientServicesHost {
     return this.#stackRuntime.runPromise(EffectEvent.emit(event, payload));
   }
 }
-
-/**
- * Layer that constructs a {@link ClientServicesHost} from its props and exposes it under
- * {@link ClientServicesHostService}. Host lifecycle (`open` / `close`) stays caller-driven.
- */
-export const layerClientServicesHost = (props: ClientServicesHostProps): Layer.Layer<ClientServicesHostService> =>
-  Layer.sync(ClientServicesHostService, () => new ClientServicesHost(props));
