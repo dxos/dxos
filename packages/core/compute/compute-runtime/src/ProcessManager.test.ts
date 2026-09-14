@@ -253,6 +253,17 @@ const makeSumAggregator = () =>
       }),
   );
 
+/** Succeeds on its first input without producing an output. */
+const makeSucceedingExecutable = () =>
+  Process.make({ key: 'test.succeeding', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.void,
+      onInput: () => Effect.sync(() => ctx.succeed()),
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );
+
 /**
  * Waits for 500ms and then exits.
  */
@@ -1134,6 +1145,22 @@ describe('ProcessOperationInvoker', () => {
       const fiber = yield* invoker.invokeFiber(Failing, undefined);
       const output = yield* fiber.await;
       expect(Result.getOrUndefined(Exit.findDefect(output))).toEqual('Test Error');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a finished process reads as terminal by the time its outputs close',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSucceedingExecutable());
+      // The first read after the stream ends is what the invoker bases its verdict on.
+      const collector = yield* handle.subscribeOutputs().pipe(
+        Stream.runDrain,
+        Effect.map(() => handle.status.state),
+        Effect.forkChild,
+      );
+      yield* handle.submitInput(undefined);
+      expect(yield* Fiber.join(collector)).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
 
