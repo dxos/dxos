@@ -62,7 +62,9 @@ export const AskQuestion = Operation.make({
     name: 'Ask question',
     icon: 'ph--question--regular',
     description: trim`
-      Ask the user a question you cannot answer yourself, and stop on it.
+      Ask the user a question you cannot answer yourself, and stop that task on it.
+      Prefer asking to guessing: an assumption the checklist then carries as fact costs more than
+      the round trip does.
       Every question is about one task on the checklist, named by its exact title: the task is put in
       'blocked' and the question filed on it, so the person answering can see what it holds up.
       Offer the likely answers in "options" when you have them — the reader may still type their own,

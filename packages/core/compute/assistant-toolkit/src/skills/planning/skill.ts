@@ -36,10 +36,6 @@ const make = () =>
         A task that already exists elsewhere (a project's task, a sub-task of one you were given) is
         worked through its own ref — never recreate it with create. assign puts it on this checklist
         and makes you its assignee; unassign takes it off and clears the assignee, never deleting it.
-        When a task cannot proceed until the user decides something, ask with ask-question rather
-        than guessing or stalling: it blocks that task, files the question on it, and ends your
-        involvement until the answer arrives. Ask about one task at a time, offer the answers you
-        think likely, and then finish the turn — you are sent a message when it is answered.
       `,
     }),
     // At the end of every request, remind the agent to keep working while its plan has open tasks.
