@@ -11,7 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
+import { Panel, ScrollArea, Splitter, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -66,11 +66,20 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
       Atom.make((get) => {
         const clips: StoryboardClip[] = [];
         for (const frame of get(framesAtom)) {
+          // A live object's atom yields the same reference on every change, which dedupes away
+          // downstream; the snapshot atoms are what re-fire when a cover is set or a variant lands.
           const artifact = frame.artifact ? get(Obj.atomReactive(frame.artifact)) : undefined;
+          const artifactSnapshot = artifact && isArtifact(artifact) ? get(Obj.atom(artifact)) : undefined;
           const cover: Variant.Variant | undefined =
-            artifact && isArtifact(artifact) && artifact.cover ? get(Obj.atomReactive(artifact.cover)) : undefined;
-          if (cover?.url) {
-            clips.push({ id: frame.id, name: frame.name, src: cover.url, contentType: cover.contentType });
+            artifactSnapshot?.cover && artifact ? get(Obj.atomReactive(artifactSnapshot.cover)) : undefined;
+          const coverSnapshot = cover ? get(Obj.atom(cover)) : undefined;
+          if (coverSnapshot?.url) {
+            clips.push({
+              id: frame.id,
+              name: frame.name,
+              src: coverSnapshot.url,
+              contentType: coverSnapshot.contentType,
+            });
           }
         }
         return clips;
@@ -157,19 +166,22 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
           },
           () => selectedFrame && handleDelete(selectedFrame),
         )
-        .separator('gap')
-        .action(
-          'play',
-          {
-            label: [playing ? 'stop.label' : 'play.label', { ns: meta.profile.key }],
-            icon: playing ? 'ph--film-strip--regular' : 'ph--play--regular',
-            disposition: 'toolbar',
-            disabled: clips.length === 0,
-          },
-          () => setPlaying((current) => !current),
-        )
         .build(),
-    [handleAppend, handleDelete, selectedFrame, playing, clips.length],
+    [handleAppend, handleDelete, selectedFrame],
+  );
+
+  // Play sits at the end of the main panel's toolbar, whichever content that panel shows.
+  const play = (
+    <>
+      <Toolbar.Separator variant='gap' />
+      <Toolbar.IconButton
+        icon='ph--play--regular'
+        iconOnly
+        label={t('play.label')}
+        disabled={clips.length === 0}
+        onClick={() => setPlaying(true)}
+      />
+    </>
   );
 
   return (
@@ -207,10 +219,14 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
         {playing ? (
           <StoryboardPlayer clips={clips} onClose={() => setPlaying(false)} />
         ) : selectedFrame ? (
-          <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId} />
+          <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId}>
+            {play}
+          </FrameVariants>
         ) : (
           <Panel.Root>
-            <Panel.Toolbar />
+            <Panel.Toolbar asChild>
+              <ActionToolbar attendableId={attendableId}>{play}</ActionToolbar>
+            </Panel.Toolbar>
             <Panel.Content>
               <Empty classNames='h-full' label={t('storyboard-empty.message')} />
             </Panel.Content>

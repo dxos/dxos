@@ -66,21 +66,11 @@ export const StoryboardPlayer = ({
           'previous',
           {
             label: ['previous-frame.label', { ns: meta.profile.key }],
-            icon: 'ph--skip-back--regular',
+            icon: 'ph--caret-left--regular',
             disposition: 'toolbar',
             disabled: index === 0,
           },
           () => setIndex((current) => Math.max(0, current - 1)),
-        )
-        .action(
-          'next',
-          {
-            label: ['next-frame.label', { ns: meta.profile.key }],
-            icon: 'ph--skip-forward--regular',
-            disposition: 'toolbar',
-            disabled: index + 1 >= clips.length,
-          },
-          advance,
         )
         .action(
           'position',
@@ -88,15 +78,34 @@ export const StoryboardPlayer = ({
             variant: 'custom',
             label: ['play.label', { ns: meta.profile.key }],
             render: () => (
-              <span className='truncate text-description'>
+              <span className='tabular-nums'>
                 {index + 1} / {clips.length}
-                {clip?.name ? ` — ${clip.name}` : ''}
               </span>
             ),
           },
           () => {},
         )
-        .separator('gap')
+        .action(
+          'next',
+          {
+            label: ['next-frame.label', { ns: meta.profile.key }],
+            icon: 'ph--caret-right--regular',
+            disposition: 'toolbar',
+            disabled: index + 1 >= clips.length,
+          },
+          advance,
+        )
+        .separator()
+        .action(
+          'title',
+          {
+            variant: 'custom',
+            label: ['play.label', { ns: meta.profile.key }],
+            render: () => <span className='truncate'>{clip?.name}</span>,
+          },
+          () => {},
+        )
+        .separator()
         .action(
           'close',
           {

@@ -4,17 +4,22 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
 import { StoryboardPlayer } from './StoryboardPlayer.tsx';
 
+const ATTENDABLE_ID = 'test';
+
 const meta = {
   title: 'plugins/plugin-studio/components/StoryboardPlayer',
   component: StoryboardPlayer,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  // The toolbar is live only while its plank has attention, so the story attends it up front.
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withAttention(ATTENDABLE_ID)],
   parameters: { layout: 'fullscreen', translations },
+  args: { attendableId: ATTENDABLE_ID },
 } satisfies Meta<typeof StoryboardPlayer>;
 
 export default meta;

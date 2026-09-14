@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
@@ -15,10 +15,12 @@ import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
 import { type MediaArtifact } from '#types';
 
-export type MediaArtifactVariantsProps = ThemedClassName<{
-  artifact: MediaArtifact.MediaArtifact;
-  attendableId?: string;
-}>;
+export type MediaArtifactVariantsProps = ThemedClassName<
+  PropsWithChildren<{
+    artifact: MediaArtifact.MediaArtifact;
+    attendableId?: string;
+  }>
+>;
 
 /** `'all'` gallery, or the index of a produced (frozen) variant. */
 type Selected = 'all' | number;
@@ -28,9 +30,10 @@ type Selected = 'all' | number;
  * produced variant, the gallery or the selected variant rendered through the variant surface, and
  * — for a produced variant — the cover toggle and delete. Opens on the cover; a variant that is
  * still generating shows as a spinner tab, and the newest variant is selected as it lands, so a
- * Generate in the form ends on its result.
+ * Generate in the form ends on its result. `children` land at the end of the toolbar — a host's
+ * own controls (the storyboard's Play).
  */
-export const MediaArtifactVariants = ({ classNames, artifact, attendableId }: MediaArtifactVariantsProps) => {
+export const MediaArtifactVariants = ({ classNames, artifact, attendableId, children }: MediaArtifactVariantsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(artifact);
   const [artifactSnapshot] = useObject(artifact);
@@ -149,11 +152,11 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId }: Me
         },
         () => {},
       );
-      builder.action(
-        'delete-variant',
-        { label: ['delete-variant.label', { ns: meta.profile.key }], icon: 'ph--trash--regular' },
-        handleDeleteVariant,
-      );
+      // builder.action(
+      //   'delete-variant',
+      //   { label: ['delete-variant.label', { ns: meta.profile.key }], icon: 'ph--trash--regular' },
+      //   handleDeleteVariant,
+      // );
     }
     return builder.build();
   }, [selected, variants, selectedVariant, isCover, t, handleCoverChange, handleDeleteVariant]);
@@ -161,7 +164,9 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId }: Me
   return (
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
-        <ActionToolbar {...menuActions} attendableId={attendableId} />
+        <ActionToolbar {...menuActions} attendableId={attendableId}>
+          {children}
+        </ActionToolbar>
       </Panel.Toolbar>
       <Panel.Content>
         {selected === 'all' ? (
