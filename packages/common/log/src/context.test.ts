@@ -59,3 +59,13 @@ describe('computedError', () => {
     expect(entry({ error }).computedError).toBe('TypeError: boom');
   });
 });
+
+describe('computedContext', () => {
+  test('renders a context Error with its message and cause chain', ({ expect }) => {
+    const root = Object.assign(new Error('no route'), { stack: '' });
+    const cause = Object.assign(new Error('ICE timeout', { cause: root }), { stack: 'connect@worker.js:10:3' });
+    expect(entry({ context: { cause } }).computedContext.cause).toBe(
+      'Error: ICE timeout\nconnect@worker.js:10:3\nCaused by: Error: no route',
+    );
+  });
+});
