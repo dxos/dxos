@@ -74,3 +74,6 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [ ] Chat tools accordion header row: the title is not vertically centred (`items-center`).
 - [ ] The Help companion for a Project article shows the Inbox text ("A unified inbox for managing
       email…") — the help surface resolves the wrong plugin for `Project`.
+- [ ] Frame companion `model` / `stillModel` comboboxes: the closed control shows the raw value
+      (`higgsfield-ai/dop/lite`) while the list shows labels (`DoP (lite)`) — `ProviderOptionsField`
+      should render the selected option's label.
