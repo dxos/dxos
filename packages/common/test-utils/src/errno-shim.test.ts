@@ -97,6 +97,76 @@ const TRAP_PROBE_SOURCE = `__attribute__((destructor)) static void crash(void) {
 }
 `;
 
+/**
+ * Preloaded destructor, run once the shim is initialized: a breakpoint whose report calls `abort()` from the
+ * `backtrace` the shim resolves here.
+ */
+const NESTED_PROBE_SOURCE = `extern void abort(void);
+static volatile int armed;
+int backtrace(void **buffer, int size) {
+  (void)buffer;
+  (void)size;
+  if (armed) {
+    abort();
+  }
+  return 0;
+}
+__attribute__((destructor)) static void crash(void) {
+  armed = 1;
+#if defined(__x86_64__)
+  __asm__("int3");
+#else
+  __builtin_trap();
+#endif
+}
+`;
+
+/**
+ * Preloaded destructor, run once the shim is initialized: faults, and the `backtrace` the shim resolves here faults a
+ * second thread with the same signal and returns once that thread reaches `pause()`.
+ */
+const THREAD_PROBE_SOURCE = `extern int pipe(int fds[2]);
+extern long read(int fd, void *buffer, unsigned long count);
+extern long write(int fd, const void *buffer, unsigned long count);
+extern int pthread_create(unsigned long *thread, const void *attr, void *(*start)(void *), void *arg);
+static int go[2];
+static int waiting[2];
+static volatile int armed;
+static void *second(void *unused) {
+  char byte;
+  read(go[0], &byte, 1);
+  int *volatile pointer = (int *)16;
+  *pointer = 1;
+  return unused;
+}
+int backtrace(void **buffer, int size) {
+  (void)buffer;
+  (void)size;
+  if (armed) {
+    char byte = 0;
+    write(go[1], &byte, 1);
+    read(waiting[0], &byte, 1);
+    write(2, "second thread waited\\n", 21);
+  }
+  return 0;
+}
+int pause(void) {
+  char byte = 0;
+  write(waiting[1], &byte, 1);
+  read(go[0], &byte, 1);
+  return -1;
+}
+__attribute__((destructor)) static void crash(void) {
+  unsigned long thread;
+  pipe(go);
+  pipe(waiting);
+  pthread_create(&thread, 0, second, 0);
+  armed = 1;
+  int *volatile pointer = (int *)16;
+  *pointer = 1;
+}
+`;
+
 const runProbe = (preload: string[]): string =>
   spawnSync('/bin/true', { env: { LD_PRELOAD: preload.join(':') }, encoding: 'utf8' }).stderr.trim();
 
@@ -149,5 +219,33 @@ describe.runIf(errnoShimSupported())('errno shim', () => {
     });
     expect(result.signal).toBe('SIGTRAP');
     expect(result.stderr).toMatch(/dx-crash-report pid=\d+ signal=5 /);
+  });
+
+  test('a crash signal raised while the report is written ends the process with that signal', ({ expect }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'errno-shim-probe-'));
+    onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+    const probe = join(dir, 'nested-probe.so');
+    compileSharedObject(NESTED_PROBE_SOURCE, probe);
+
+    const result = spawnSync('/bin/true', {
+      env: { LD_PRELOAD: [buildErrnoShim(dir), probe].join(':') },
+      encoding: 'utf8',
+    });
+    expect(result.signal).toBe('SIGABRT');
+    expect(result.stderr).toMatch(/dx-crash-report pid=\d+ signal=5 /);
+  });
+
+  test('a second thread crashing with the same signal waits for the first report to finish', ({ expect }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'errno-shim-probe-'));
+    onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+    const probe = join(dir, 'thread-probe.so');
+    compileSharedObject(THREAD_PROBE_SOURCE, probe);
+
+    const result = spawnSync('/bin/true', {
+      env: { LD_PRELOAD: [buildErrnoShim(dir), probe].join(':') },
+      encoding: 'utf8',
+    });
+    expect(result.signal).toBe('SIGSEGV');
+    expect(result.stderr).toMatch(/dx-crash-report pid=\d+ signal=11 code=\d+ addr=0x10\nsecond thread waited\n/);
   });
 });

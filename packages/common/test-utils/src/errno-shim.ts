@@ -62,9 +62,10 @@ extern int getpid(void);
 extern int raise(int signal);
 extern unsigned alarm(unsigned seconds);
 extern int pause(void);
+extern int gettid(void);
 
-/* Set by the first thread to report, so a second crashing thread waits for the process to end instead. */
-static volatile int reporting;
+/* The thread writing the report; another crashing thread waits for the process to end instead. */
+static volatile int reporting_thread;
 
 static void write_text(const char *text) {
   unsigned long length = 0;
@@ -88,14 +89,20 @@ static void write_number(unsigned long value, unsigned base) {
 static void report_crash(int signal, void *info, void *context) {
   (void)context;
   struct crash_siginfo *details = info;
-  if (!__sync_bool_compare_and_swap(&reporting, 0, 1)) {
+  struct glibc_sigaction fallback = {0};
+  int thread = gettid();
+  if (!__sync_bool_compare_and_swap(&reporting_thread, 0, thread)) {
+    /* A crash signal raised while this thread reports ends the process with that signal once the handler returns. */
+    if (reporting_thread == thread) {
+      next_sigaction(signal, &fallback, 0);
+      raise(signal);
+      return;
+    }
     for (;;) {
       pause();
     }
   }
-  /* Defaults first: a second fault, or an unwinder stuck on a lock another thread holds, still ends the process. */
-  struct glibc_sigaction fallback = {0};
-  next_sigaction(signal, &fallback, 0);
+  /* An unwinder stuck on a lock another thread holds still ends the process. */
   next_sigaction(14, &fallback, 0);
   alarm(5);
   write_text("dx-crash-report pid=");
@@ -116,6 +123,8 @@ static void report_crash(int signal, void *info, void *context) {
   void *frames[64];
   int count = backtrace(frames, 64);
   backtrace_symbols_fd(frames, count, 2);
+  /* Defaulted only now, so another thread crashing with this signal waits; a repeat fault here is fatal regardless. */
+  next_sigaction(signal, &fallback, 0);
   /* Pending until return, so a breakpoint that resumes after the trap still ends the process. */
   raise(signal);
 }
