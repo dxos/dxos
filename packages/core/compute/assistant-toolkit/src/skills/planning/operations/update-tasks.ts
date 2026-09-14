@@ -13,6 +13,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { type Actor, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { UpdateTasksError } from '../../../errors.ts';
 import { type TaskChange, UpdateTasks } from './definitions.ts';
 
 /**
@@ -84,7 +85,7 @@ export default UpdateTasks.pipe(
 
       if (errors.length > 0) {
         return yield* Effect.fail(
-          new Error(trim`
+          new UpdateTasksError(trim`
             No changes were applied. Fix these and resend the whole batch:
             ${errors.join('\n')}
 

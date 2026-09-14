@@ -20,13 +20,6 @@ type ArchivedTask = {
   'assignee'?: unknown;
 };
 
-/** The archive's objects of one typename fragment, in the order they were written. */
-const archived = async <T>(fragment: string): Promise<T[]> => {
-  const { json } = await EffectEx.runPromise(buildArchive(WeatherSpace()));
-  const objects: Array<{ '@type'?: string }> = JSON.parse(json).objects;
-  return objects.filter((object) => object['@type']?.includes(fragment)) as T[];
-};
-
 describe('Weather MCP sample space', () => {
   test('builds the project, its skill and four steps, and nothing else', { timeout: 120_000 }, async ({ expect }) => {
     const { json, objectCount } = await EffectEx.runPromise(buildArchive(WeatherSpace()));
@@ -91,3 +84,10 @@ describe('Weather MCP sample space', () => {
     },
   );
 });
+
+/** The archive's objects of one typename fragment, in the order they were written. */
+const archived = async <T>(fragment: string): Promise<T[]> => {
+  const { json } = await EffectEx.runPromise(buildArchive(WeatherSpace()));
+  const objects: Array<{ '@type'?: string }> = JSON.parse(json).objects;
+  return objects.filter((object) => object['@type']?.includes(fragment)) as T[];
+};

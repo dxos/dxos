@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { test } from 'vitest';
 
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -212,7 +213,7 @@ describe('makeDelegationStrategy', () => {
 });
 
 describe('isSubAgentTask', () => {
-  it('is only a bare assistant assignee: a subject names a session that already owns the task', ({ expect }) => {
+  test('is only a bare assistant assignee: a subject names a session that already owns the task', ({ expect }) => {
     const chat = Chat.make({ feed: Ref.make(Feed.make()) });
     expect(isSubAgentTask(Task.make({ title: 'unassigned' }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'person', assignee: { name: 'Alice' } }))).toBe(false);

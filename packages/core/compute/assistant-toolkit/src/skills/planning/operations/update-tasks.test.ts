@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
+import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
@@ -41,7 +42,7 @@ const TestLayer = AssistantTestLayer(layerOptions);
 const TracingTestLayer = AssistantTestLayer({ ...layerOptions, tracing: 'feed' });
 
 describe('UpdateTasks', () => {
-  it('renders as a tool schema', ({ expect }) => {
+  test('renders as a tool schema', ({ expect }) => {
     // A definition whose input cannot render as JSON Schema is dropped rather than raised, which
     // would silently leave the model with no tool at all — ref-typed inputs are the risky case.
     expect(Operation.serializable([UpdateTasks])).toHaveLength(1);

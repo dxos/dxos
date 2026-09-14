@@ -196,8 +196,9 @@ const ProfileControls = () => {
 
   /** Takes effect on reload: the client has already booted with the previous choice. */
   const handlePersistentChange = useCallback((checked: boolean | 'indeterminate') => {
-    setPersistent(checked === true);
-    window.location.reload();
+    if (setPersistent(checked === true)) {
+      window.location.reload();
+    }
   }, []);
 
   /** Wipes the profile and reloads, the way the other stories reset a persistent client. */
