@@ -196,21 +196,19 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId, play
               {t('generating.label')}
             </Flex>
           ) : (
-            <div className='dx-expand p-2'>
-              <Surface.Surface
-                type={VariantRenderer}
-                data={{
-                  variant: {
-                    contentType: selectedVariant.contentType,
-                    url: selectedVariant.url,
-                    content: selectedVariant.content,
-                    generation: selectedVariant.generation,
-                  },
-                  contentType: selectedVariant.contentType ?? '',
-                }}
-                limit={1}
-              />
-            </div>
+            <Surface.Surface
+              type={VariantRenderer}
+              data={{
+                variant: {
+                  contentType: selectedVariant.contentType,
+                  url: selectedVariant.url,
+                  content: selectedVariant.content,
+                  generation: selectedVariant.generation,
+                },
+                contentType: selectedVariant.contentType ?? '',
+              }}
+              limit={1}
+            />
           ))
         )}
       </Panel.Content>

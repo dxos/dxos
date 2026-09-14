@@ -4,7 +4,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { MediaPlayer, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { MediaPlayer, Panel, type ThemedClassName, composableProps } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
@@ -17,6 +18,8 @@ export type StoryboardClip = {
   contentType?: string;
 };
 
+const DEFAULT_STILL_MS = 4_000;
+
 export type StoryboardPlayerProps = ThemedClassName<{
   clips: StoryboardClip[];
   /** How long a still is shown before advancing. */
@@ -25,8 +28,6 @@ export type StoryboardPlayerProps = ThemedClassName<{
   attendableId?: string;
   onClose?: () => void;
 }>;
-
-const DEFAULT_STILL_MS = 4_000;
 
 /**
  * Plays a storyboard's frames back to back in one player — a view-time splice: one `<video>` whose
@@ -40,7 +41,7 @@ export const StoryboardPlayer = ({
   attendableId,
   onClose,
 }: StoryboardPlayerProps) => {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const clip = clips[index];
   const isVideo = clip?.contentType?.startsWith('video/') ?? false;
@@ -95,7 +96,7 @@ export const StoryboardPlayer = ({
           },
           advance,
         )
-        .separator()
+        .separator('gap')
         .action(
           'title',
           {
@@ -105,7 +106,7 @@ export const StoryboardPlayer = ({
           },
           () => {},
         )
-        .separator()
+        .separator('gap')
         .action(
           'close',
           {
@@ -120,10 +121,13 @@ export const StoryboardPlayer = ({
     [index, clips.length, clip?.name, advance, onClose],
   );
 
-  // Opening the player unmounts whatever control opened it, which drops focus to the body; take it
-  // back so the transport works from the keyboard and attention stays on the plank.
+  // Opening the player unmounts whatever control opened it, which drops focus to the body; the
+  // toolbar takes it back so the plank stays attended (attention follows focus into an attendable)
+  // and the transport is a key away. The attendable attributes mark the panel as that attention's
+  // surface, which is what draws the attention ring.
+  const attentionAttributes = useAttentionAttributes(attendableId);
   useEffect(() => {
-    rootRef.current?.querySelector<HTMLElement>('[role="toolbar"] button:not(:disabled)')?.focus();
+    toolbarRef.current?.focus();
   }, []);
 
   if (!clip) {
@@ -131,9 +135,15 @@ export const StoryboardPlayer = ({
   }
 
   return (
-    <Panel.Root classNames={classNames} ref={rootRef}>
+    <Panel.Root {...composableProps({ classNames }, attentionAttributes)}>
       <Panel.Toolbar asChild>
-        <ActionToolbar {...menuActions} attendableId={attendableId} />
+        <ActionToolbar
+          {...menuActions}
+          attendableId={attendableId}
+          ref={toolbarRef}
+          tabIndex={-1}
+          classNames='outline-none'
+        />
       </Panel.Toolbar>
       <Panel.Content>
         {/* Keyed by clip so the element remounts and autoplays the next source. */}

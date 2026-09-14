@@ -28,6 +28,7 @@ export const FrameVariants = ({ frame, attendableId, play }: FrameVariantsProps)
   if (!artifact) {
     return <EmptyPanel label={t('frame-empty.message')} attendableId={attendableId} play={play} />;
   }
+
   return <MediaArtifactVariants artifact={artifact} attendableId={attendableId} play={play} />;
 };
 

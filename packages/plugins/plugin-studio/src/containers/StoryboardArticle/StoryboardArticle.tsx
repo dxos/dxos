@@ -211,7 +211,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
       <Splitter.Handle />
       <Splitter.Panel position='end'>
         {playing ? (
-          <StoryboardPlayer clips={clips} onClose={() => setPlaying(false)} />
+          <StoryboardPlayer clips={clips} attendableId={attendableId} onClose={() => setPlaying(false)} />
         ) : selectedFrame ? (
           <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId} play={play} />
         ) : (
