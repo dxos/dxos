@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -153,6 +154,9 @@ const StoryAppGraphBuilder = Capability.inlineModule(
   }),
 );
 
+/** The `ScrollIntoView` invocations the stub handler below has received. */
+let scrollIntoViewCount = 0;
+
 const StoryOperationHandler = Capability.inlineModule(
   'StoryOperationHandler',
   { provides: [Capabilities.OperationHandler] },
@@ -162,7 +166,11 @@ const StoryOperationHandler = Capability.inlineModule(
         Capabilities.OperationHandler,
         OperationHandlerSet.make(
           Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-          Operation.withHandler(LayoutOperation.ScrollIntoView, () => Effect.void),
+          Operation.withHandler(LayoutOperation.ScrollIntoView, () =>
+            Effect.sync(() => {
+              scrollIntoViewCount++;
+            }),
+          ),
         ),
       ),
     ]),
@@ -323,6 +331,27 @@ export const WithAutoAgent: Story = {
 export const WithComments: Story = {
   args: {
     seedComments: true,
+  },
+};
+
+/**
+ * Focusing a thread's reply composer leaves the document plank alone, so focus stays in the composer.
+ */
+export const FocusingReplyKeepsFocus: Story = {
+  args: {
+    seedComments: true,
+  },
+  play: async ({ canvasElement }) => {
+    const replies = await within(canvasElement).findAllByTestId('thread.reply', {}, { timeout: 30_000 });
+    const reply = replies[replies.length - 1];
+    const textbox = await within(reply).findByRole('textbox');
+
+    scrollIntoViewCount = 0;
+    textbox.focus();
+    // Past an operation round trip, so a reveal the focus requested has been invoked.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(scrollIntoViewCount).toBe(0);
+    await expect(reply.contains(document.activeElement)).toBe(true);
   },
 };
 

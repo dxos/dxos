@@ -93,11 +93,10 @@ export const CommentThread = ({
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
   // Activating reveals the thread in the anchored document, moving focus to that plank. Operating the
-  // thread's own controls is not that gesture: it would pull focus out of the editor a control just
-  // opened, mid-keystroke.
+  // thread's own controls or editors is not that gesture: it would pull focus out of them mid-keystroke.
   const handleContentClickCapture = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
-      if (event.target instanceof Element && event.target.closest('button')) {
+      if (event.target instanceof Element && event.target.closest('button, [contenteditable="true"]')) {
         return;
       }
       handleActivate();

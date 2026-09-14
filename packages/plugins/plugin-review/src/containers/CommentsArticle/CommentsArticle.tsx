@@ -226,30 +226,16 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // from `anchors` + `state.current`, both reactive, involves no timing.
   const currentThreadId = currentObjectId(state.current);
 
-  // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
-  // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
-  // (a newly created draft autofocusing, a re-render restoring focus), and moving the document caret
-  // there would retarget the comment they create next.
+  // Passive attention (a thread taking focus) only records it as current. Focus lands on a thread for
+  // reasons the reader did not ask for (a draft autofocusing, a reply being focused), and revealing the
+  // plank would pull focus out of the thread mid-keystroke and retarget the comment they create next.
+  // A direct write, never an invocation: applied at event time, it loses to any later intent.
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const threadId = Obj.getURI(thread);
-      // Recorded unconditionally, revealed only on a change: skipping the write leaves the selection
-      // on a stale spelling, so a freshly persisted comment never shows the marker. A direct write,
-      // never an invocation: attention is passive (a re-render restoring focus, a draft
-      // autofocusing), and applied at event time it loses to any later intent — which is the point.
-      const sameThread = currentObjectId(state.current) === thread.id;
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
-      if (sameThread) {
-        // Re-revealing the plank pulls focus there ~170ms later, which lands mid-keystroke in an
-        // open message edit and loses the typed text.
-        return;
-      }
-
-      // Scroll plank into view (deck handler).
-      void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getURI(thread) });
     },
-    [state.current, invokePromise, registry, stateAtom, attendableId],
+    [registry, stateAtom],
   );
 
   // A deliberate click additionally reveals and highlights the thread in the anchored content. Not
@@ -258,6 +244,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const handleActivate = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
       handleAttend(anchor);
+      // Scroll plank into view (deck handler), which focuses it.
+      void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
       if (!anchor.anchor) {
         return;
       }
