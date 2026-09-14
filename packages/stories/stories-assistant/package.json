@@ -14,6 +14,7 @@
   "sideEffects": true,
   "exports": {},
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -51,7 +52,6 @@
   },
   "devDependencies": {
     "@dxos/agent-claude": "workspace:*",
-    "@dxos/ai": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",

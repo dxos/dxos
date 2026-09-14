@@ -19221,6 +19221,9 @@ importers:
 
   packages/stories/stories-assistant:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -19327,9 +19330,6 @@ importers:
       '@dxos/agent-claude':
         specifier: workspace:*
         version: link:../../core/compute/agent-claude
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/compute/assistant-toolkit

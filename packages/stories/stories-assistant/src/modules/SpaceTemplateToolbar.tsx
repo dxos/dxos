@@ -4,11 +4,12 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { Model } from '@dxos/ai';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Project from '@dxos/compute/Project';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
@@ -68,7 +69,7 @@ const TemplateSelect = () => {
 
   /** Creates a fresh chat over the space's project, the way opening a project chat does in the app. */
   const bindChat = useCallback(
-    async (space: Space) => {
+    async (space: Space, templateId: string) => {
       // Indexed first: the query behind the binding reads the index, and a template whose content
       // has not landed there yet would leave the chat bound to nothing, silently.
       await space.db.flush({ indexes: true });
@@ -79,6 +80,14 @@ const TemplateSelect = () => {
       }
       // The operation returns the chat unfiled, for the caller to persist.
       const chat = space.db.add(created.data.object);
+      // Set before the first turn so the run starts on the model the template is written for, rather
+      // than whatever the picker last defaulted to.
+      const model = TEMPLATE_MODELS[templateId];
+      if (model) {
+        Obj.update(chat, (chat) => {
+          chat.model = Ref.fromURI(model.id);
+        });
+      }
       if (project) {
         await invokePromise(AssistantOperation.BindChatContext, { chat, subject: project }, { spaceId: space.id });
       }
@@ -114,7 +123,7 @@ const TemplateSelect = () => {
         }
         await space.waitUntilReady();
         await showSpace(space);
-        await bindChat(space);
+        await bindChat(space, template.id);
       } finally {
         busy.current = false;
       }
@@ -220,6 +229,15 @@ const ProfileControls = () => {
       <Toolbar.IconButton icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );
+};
+
+/**
+ * The model each template's chat starts on. The agent-run templates are written for DeepSeek V4 Pro
+ * through the edge, which needs no key; a template not listed keeps the picker's default.
+ */
+const TEMPLATE_MODELS: Record<string, Model.Model> = {
+  'org.dxos.plugin-debug.sample.stockfish': Model.deepseekV4Pro,
+  'org.dxos.plugin-debug.sample.weather': Model.deepseekV4Pro,
 };
 
 /** The space a template opened before, identified by the name the story creates it with. */
