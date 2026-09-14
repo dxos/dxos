@@ -59,9 +59,14 @@ export type SpaceServices =
   | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
+  /**
+   * The model the chat's picker shows selected. The agent process reads the model off the chat, so
+   * this is stamped onto a chat that has not selected one before its first request — otherwise the
+   * picker and the process would disagree about what the conversation runs on.
+   */
   model?: DXN.DXN;
-  // The selected provider, carried with the model so the agent process resolves the (provider, id)
-  // pair — the catalog's shared model ids are ambiguous without it.
+  // The provider is a global setting rather than the chat's, carried so the agent process resolves
+  // the (provider, id) pair — the catalog's shared model ids are ambiguous without it.
   provider?: DXN.DXN;
   modelRegistry?: Model.Registry;
   registry?: Registry.Registry;
@@ -509,8 +514,13 @@ export class AiChatProcessor {
         // conversation to run.
         return yield* Effect.die(new Error('Chat processor requires a chat.'));
       }
+      const selected = this._options.model;
+      if (!chat.model && selected) {
+        Obj.update(chat, (chat) => {
+          chat.model = Ref.fromURI(selected);
+        });
+      }
       return yield* AgentService.getSession(chat, {
-        model: this._options.model,
         provider: this._options.provider,
         location: chat.remote ? 'edge' : 'local',
       });

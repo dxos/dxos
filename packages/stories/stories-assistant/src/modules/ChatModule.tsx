@@ -24,13 +24,14 @@ export const ChatModule = () => {
 };
 
 const ChatModuleContainer = ({ space }: { space: Space }) => {
-  const { preset, ...chatProps } = usePresets({});
-
   const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
   // The newest chat until the reader picks another; a template switch drops the id and lands on the
   // new space's own chat.
   const [selected, setSelected] = useState<string>();
   const chat = chats.find(({ id }) => id === selected) ?? chats.at(-1);
+
+  // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
+  const { preset, ...chatProps } = usePresets({}, chat);
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
