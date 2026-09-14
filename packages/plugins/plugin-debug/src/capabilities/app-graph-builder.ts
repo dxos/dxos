@@ -54,7 +54,8 @@ export const createDebugToolsExtension = () =>
           properties: {
             label: ['console.tab.label', { ns: meta.profile.key }],
             icon: 'ph--terminal-window--regular',
-            position: Position.first,
+            // Explicit (not Position.first): -Infinity + 1 collapses back to -Infinity, tying with logs.
+            position: 0,
           },
         }),
         AppGraphNode.make({
@@ -64,7 +65,7 @@ export const createDebugToolsExtension = () =>
           properties: {
             label: ['logs.tab.label', { ns: meta.profile.key }],
             icon: 'ph--list-bullets--regular',
-            position: Position.first + 1,
+            position: 1,
           },
         }),
       ]),
