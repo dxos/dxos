@@ -6,7 +6,9 @@ import { Drawer as DrawerPrimitive, useDrawer } from '@ark-ui/react/drawer';
 import { ark } from '@ark-ui/react/factory';
 import React, {
   type ComponentPropsWithRef,
+  type CSSProperties,
   type KeyboardEvent,
+  type PointerEvent,
   type PropsWithChildren,
   forwardRef,
   useCallback,
@@ -20,13 +22,26 @@ import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
 import { useComposedRefs, useControllableState, useMediaQuery } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
+import { translationKey } from '#translations';
+
 import { useThemeContext } from '../../hooks/index.ts';
 import { type Label, toLocalizedString, useTranslation } from '../../providers/index.ts';
 import { type MainStyleProps } from '../../theme/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext.ts';
+import {
+  DRAWER_DEFAULT_HEIGHT,
+  DRAWER_MAX_HEIGHT,
+  DRAWER_MIN_HEIGHT,
+  type DrawerState,
+  MAIN_NAME,
+  MainProvider,
+  type SidebarState,
+  useLandmarkMover,
+  useMainContext,
+} from './MainContext.ts';
 
 const MAIN_ROOT_NAME = 'Main.Root';
+const MAIN_DRAWER_NAME = 'Main.Drawer';
 const MAIN_OVERLAY_NAME = 'Main.Overlay';
 const MAIN_CONTENT_NAME = 'Main.Content';
 const NAVIGATION_SIDEBAR_NAME = 'Main.NavigationSidebar';
@@ -55,6 +70,17 @@ type MainRootProps = PropsWithChildren<{
   complementarySidebarState?: SidebarState;
   defaultComplementarySidebarState?: SidebarState;
   onComplementarySidebarStateChange?: (nextState: SidebarState) => void;
+
+  drawerState?: DrawerState;
+  defaultDrawerState?: DrawerState;
+  onDrawerStateChange?: (nextState: DrawerState) => void;
+
+  /** Height in rem. */
+  drawerHeight?: number;
+  defaultDrawerHeight?: number;
+  onDrawerHeightChange?: (nextHeight: number) => void;
+  /** Fired when a resize drag ends: the moment to persist. */
+  onDrawerHeightChangeEnd?: (nextHeight: number) => void;
 }>;
 
 const MainRoot = ({
@@ -65,6 +91,15 @@ const MainRoot = ({
   complementarySidebarState: propsComplementarySidebarState,
   defaultComplementarySidebarState = 'closed',
   onComplementarySidebarStateChange,
+
+  drawerState: propsDrawerState,
+  defaultDrawerState = 'closed',
+  onDrawerStateChange,
+
+  drawerHeight: propsDrawerHeight,
+  defaultDrawerHeight = DRAWER_DEFAULT_HEIGHT,
+  onDrawerHeightChange,
+  onDrawerHeightChangeEnd,
 
   children,
   ...props
@@ -82,6 +117,16 @@ const MainRoot = ({
       defaultProp: defaultComplementarySidebarState,
       onChange: onComplementarySidebarStateChange,
     });
+  const [drawerState = 'closed', setDrawerState] = useControllableState<DrawerState>({
+    prop: propsDrawerState,
+    defaultProp: defaultDrawerState,
+    onChange: onDrawerStateChange,
+  });
+  const [drawerHeight = DRAWER_DEFAULT_HEIGHT, setDrawerHeight] = useControllableState<number>({
+    prop: propsDrawerHeight,
+    defaultProp: defaultDrawerHeight,
+    onChange: onDrawerHeightChange,
+  });
 
   const [resizing, setResizing] = useState(false);
   const resizeInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,6 +154,11 @@ const MainRoot = ({
         setNavigationSidebarState,
         complementarySidebarState,
         setComplementarySidebarState,
+        drawerState,
+        setDrawerState,
+        drawerHeight,
+        setDrawerHeight,
+        onDrawerHeightChangeEnd,
       }}
       resizing={resizing}
     >
@@ -336,12 +386,19 @@ type MainContentProps = ThemedClassName<
     }
 >;
 
+type MainContentStyle = CSSProperties & Record<'--main-drawer-height', string>;
+
 const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
   ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
-    const { navigationSidebarState, complementarySidebarState } = useMainContext(MAIN_NAME);
+    const { navigationSidebarState, complementarySidebarState, drawerState, drawerHeight } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Comp = role ? ark.div : ark.main;
     const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '1');
+    // The padding lives in CSS so it transitions with the sidebars'; only the height is a variable.
+    const style: MainContentStyle = {
+      ...props.style,
+      '--main-drawer-height': drawerState === 'open' ? `${drawerHeight}rem` : '0rem',
+    };
 
     return (
       <Comp
@@ -351,7 +408,9 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         role={role}
         data-sidebar-left-state={navigationSidebarState}
         data-sidebar-right-state={complementarySidebarState}
+        data-drawer-state={drawerState}
         data-handles-focus={handlesFocus}
+        style={style}
         className={tx('main.content', { bounce, handlesFocus }, classNames)}
         ref={useComposedRefs<HTMLDivElement>(forwardedRef, handlesFocus ? moverRef : null)}
       >
@@ -364,6 +423,155 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
 MainContent.displayName = MAIN_CONTENT_NAME;
 
 //
+// Drawer
+//
+
+type MainDrawerProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
+  label: Label;
+  /** Height in rem. */
+  minHeight?: number;
+  /** Height in rem. */
+  maxHeight?: number;
+};
+
+type Drag = { startY: number; startHeight: number; height: number };
+
+/**
+ * A bottom drawer across the main area, between the sidebars: `Main.Content` pads block-end by its
+ * height so content reflows above it rather than being covered. Closed, it is not in the DOM.
+ */
+const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
+  (
+    { classNames, children, label, minHeight = DRAWER_MIN_HEIGHT, maxHeight = DRAWER_MAX_HEIGHT, ...props },
+    forwardedRef,
+  ) => {
+    const { t } = useTranslation(translationKey);
+    const { tx } = useThemeContext();
+    const {
+      drawerState,
+      setDrawerState,
+      drawerHeight,
+      setDrawerHeight,
+      onDrawerHeightChangeEnd,
+      navigationSidebarState,
+      complementarySidebarState,
+    } = useMainContext(MAIN_DRAWER_NAME);
+    // Escape closes the drawer like the floating window it stands in for, unless a child already claimed it.
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Escape' && !event.defaultPrevented) {
+          event.preventDefault();
+          setDrawerState('closed');
+        }
+        props.onKeyDown?.(event);
+      },
+      [setDrawerState, props.onKeyDown],
+    );
+    const { ref: moverRef, ...mover } = useLandmarkMover(handleKeyDown, '3');
+    const composedRef = useComposedRefs<HTMLDivElement>(forwardedRef, moverRef);
+
+    // Pointer drag on the top edge: rem = px / root font size, clamped. The drag carries its own
+    // latest height because the render's `drawerHeight` can trail the final move by a frame.
+    const dragRef = useRef<Drag | null>(null);
+    const handlePointerDown = useCallback(
+      (event: PointerEvent<HTMLButtonElement>) => {
+        dragRef.current = { startY: event.clientY, startHeight: drawerHeight, height: drawerHeight };
+        event.currentTarget.setPointerCapture(event.pointerId);
+      },
+      [drawerHeight],
+    );
+    const handlePointerMove = useCallback(
+      (event: PointerEvent<HTMLButtonElement>) => {
+        const drag = dragRef.current;
+        if (!drag) {
+          return;
+        }
+
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const next = drag.startHeight + (drag.startY - event.clientY) / rem;
+        drag.height = Math.min(maxHeight, Math.max(minHeight, next));
+        setDrawerHeight(drag.height);
+      },
+      [setDrawerHeight, minHeight, maxHeight],
+    );
+    // Also the cancel and lost-capture path: a drag left open would resize on the next bare hover.
+    const handlePointerUp = useCallback(
+      (event: PointerEvent<HTMLButtonElement>) => {
+        const drag = dragRef.current;
+        if (!drag) {
+          return;
+        }
+
+        dragRef.current = null;
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        // A click that never moved has nothing new to persist.
+        if (drag.height !== drag.startHeight) {
+          onDrawerHeightChangeEnd?.(drag.height);
+        }
+      },
+      [onDrawerHeightChangeEnd],
+    );
+    // Keyboard resize steps a rem at a time and persists each step, there being no drag to end.
+    const handleHandleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLButtonElement>) => {
+        const delta = event.key === 'ArrowUp' ? 1 : event.key === 'ArrowDown' ? -1 : 0;
+        if (delta === 0) {
+          return;
+        }
+
+        event.preventDefault();
+        const next = Math.min(maxHeight, Math.max(minHeight, drawerHeight + delta));
+        if (next !== drawerHeight) {
+          setDrawerHeight(next);
+          onDrawerHeightChangeEnd?.(next);
+        }
+      },
+      [drawerHeight, setDrawerHeight, onDrawerHeightChangeEnd, minHeight, maxHeight],
+    );
+
+    if (drawerState !== 'open') {
+      return null;
+    }
+
+    return (
+      <div
+        {...mover}
+        {...props}
+        role='region'
+        aria-label={toLocalizedString(label, t)}
+        data-sidebar-left-state={navigationSidebarState}
+        data-sidebar-right-state={complementarySidebarState}
+        className={tx('main.drawer', {}, classNames)}
+        style={{ ...props.style, blockSize: `${drawerHeight}rem` }}
+        ref={composedRef}
+      >
+        <button
+          type='button'
+          role='separator'
+          aria-label={t('drawer.resize.label')}
+          aria-orientation='horizontal'
+          aria-valuenow={drawerHeight}
+          aria-valuemin={minHeight}
+          aria-valuemax={maxHeight}
+          className={tx('main.drawerHandle', {})}
+          onKeyDown={handleHandleKeyDown}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onLostPointerCapture={handlePointerUp}
+        />
+        {children}
+      </div>
+    );
+  },
+);
+
+MainDrawer.displayName = MAIN_DRAWER_NAME;
+
+//
 // Main
 //
 
@@ -373,6 +581,17 @@ export const Main = {
   Content: MainContent,
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
+  Drawer: MainDrawer,
 };
 
-export type { MainContentProps, MainNavigationSidebarProps, MainOverlayProps, MainRootProps, SidebarState };
+export { DRAWER_DEFAULT_HEIGHT, DRAWER_MAX_HEIGHT, DRAWER_MIN_HEIGHT };
+
+export type {
+  DrawerState,
+  MainContentProps,
+  MainDrawerProps,
+  MainNavigationSidebarProps,
+  MainOverlayProps,
+  MainRootProps,
+  SidebarState,
+};

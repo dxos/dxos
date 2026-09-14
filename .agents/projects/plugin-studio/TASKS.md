@@ -64,3 +64,13 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [ ] Verify a video model path against a real account and set it as the video default.
 - [x] Shared `GenerationService.fieldOptions` → cached combobox (`ProviderOptionsField`); HeyGen migrated, Higgsfield static image list.
 - [ ] Higgsfield model catalogue from the API once it exposes one.
+
+### Observed 2026-09-14 (Composer, studio session)
+
+- [x] Frame companion **Generate** loses its spinning state when navigating away and back — busy now
+      also reads the op's progress monitor (`<plugin>/<artifactId>`), and the resume effect waits
+      while that op still runs instead of starting a second poll on the same job.
+- [x] Chat tools accordion ("Ran 13 commands") has no border — frame uses `border-separator`; row hover (`--color-hover-surface-subtle`) lifted 0.02 → 0.035.
+- [x] Chat tools accordion header row: the title is not vertically centred — label centred on the control-tall icon line.
+- [x] The Help companion for a Project article showed the Inbox text — when several plugins register a schema, the one contributing a `CreateObjectEntry` for the typename owns it.
+- [x] Frame companion `model` / `stillModel` comboboxes showed the raw path when closed — `ComboboxField` derives the label of a stored value from the loaded catalogue.

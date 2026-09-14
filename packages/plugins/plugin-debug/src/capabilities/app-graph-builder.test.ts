@@ -13,15 +13,16 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { DebugNodes } from '#types';
 
-import { createDebugRootExtension, createDebugToolsExtension } from './app-graph-builder.ts';
+import { createDebugExtension, createDebugRootExtension } from './app-graph-builder.ts';
 
 describe('debug graph extensions', () => {
   const setup = async () => {
     const rootExtensions = await EffectEx.runPromise(createDebugRootExtension());
-    const toolExtensions = await EffectEx.runPromise(createDebugToolsExtension());
-    const context = setupGraphBuilder({ extensions: [...rootExtensions, ...toolExtensions] });
+    const debugExtensions = await EffectEx.runPromise(createDebugExtension());
+    const context = setupGraphBuilder({ extensions: [...rootExtensions, ...debugExtensions] });
     await context.expand(GraphNode.RootId);
     await context.expand(DebugNodes.DEBUG_ROOT_ID);
+    await context.expand(DebugNodes.DEBUG_NODE_ID);
     return context;
   };
 
@@ -32,12 +33,13 @@ describe('debug graph extensions', () => {
     expect(node.data).toBeNull();
   });
 
-  test('console and logs are its first children, in that order', async ({ expect }) => {
+  test('the Debug node hosts console, logs, then the generator', async ({ expect }) => {
     const { getConnections } = await setup();
-    const ids = getConnections(DebugNodes.DEBUG_ROOT_ID).map((node) => node.id);
-    expect(ids.slice(0, 2)).toEqual([
-      `${DebugNodes.DEBUG_ROOT_ID}/${DebugNodes.nodeId(DebugNodes.Console)}`,
-      `${DebugNodes.DEBUG_ROOT_ID}/${DebugNodes.nodeId(DebugNodes.Logs)}`,
+    expect(getConnections(DebugNodes.DEBUG_ROOT_ID).map((node) => node.id)).toEqual([DebugNodes.DEBUG_NODE_ID]);
+    expect(getConnections(DebugNodes.DEBUG_NODE_ID).map((node) => node.id)).toEqual([
+      DebugNodes.CONSOLE_NODE_ID,
+      `${DebugNodes.DEBUG_NODE_ID}/${DebugNodes.nodeId(DebugNodes.Logs)}`,
+      `${DebugNodes.DEBUG_NODE_ID}/${DebugNodes.nodeId(DebugNodes.SpaceType)}`,
     ]);
   });
 });
