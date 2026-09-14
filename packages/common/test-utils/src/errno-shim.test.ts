@@ -56,7 +56,8 @@ extern void *signal(int number, void *handler);
 extern int raise(int number);
 extern int *__errno_location(void);
 extern long write(int fd, const void *buffer, unsigned long count);
-static void clobber(int number) { (void)number; *__errno_location() = 4; }
+static int runs;
+static void clobber(int number) { (void)number; runs++; *__errno_location() = 4; }
 static void other(int number) { (void)number; }
 __attribute__((constructor)) static void mix(void) {
   struct glibc_sigaction action = {0};
@@ -68,9 +69,10 @@ __attribute__((constructor)) static void mix(void) {
   sigaction(10, &restore, 0);
   *__errno_location() = 0;
   raise(10);
-  char line[] = "mixed errno=?\\n";
+  char line[] = "mixed errno=? runs=?\\n";
   int error = *__errno_location();
   line[12] = (char)('0' + (error >= 0 && error <= 9 ? error : 9));
+  line[19] = (char)('0' + (runs <= 9 ? runs : 9));
   write(2, line, sizeof line - 1);
 }
 `;
@@ -89,12 +91,12 @@ describe.runIf(errnoShimSupported())('errno shim', () => {
     expect(runProbe([buildErrnoShim(dir), probe])).toBe('errno=0 handler=1');
   });
 
-  test('a handler restored from what signal() reported still runs once', ({ expect }) => {
+  test('a handler restored from what signal() reported runs once, with errno restored', ({ expect }) => {
     const dir = mkdtempSync(join(tmpdir(), 'errno-shim-probe-'));
     onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
     const probe = join(dir, 'restore-probe.so');
     compileSharedObject(RESTORE_PROBE_SOURCE, probe);
 
-    expect(runProbe([buildErrnoShim(dir), probe])).toBe('mixed errno=0');
+    expect(runProbe([buildErrnoShim(dir), probe])).toBe('mixed errno=0 runs=1');
   });
 });

@@ -104,10 +104,10 @@ int sigaction(int signal, const struct glibc_sigaction *action, struct glibc_sig
 export const errnoShimSupported = (): boolean =>
   process.platform === 'linux' && (process.arch === 'x64' || process.arch === 'arm64');
 
-/** Compiles {@link ERRNO_SHIM_SOURCE} into `cacheDir` once per source and architecture and returns its path. */
+/** Compiles {@link ERRNO_SHIM_SOURCE} into `cacheDir` once per source, compiler invocation and architecture, and returns its path. */
 export const buildErrnoShim = (cacheDir: string): string => {
   const hash = createHash('sha256')
-    .update(JSON.stringify([ERRNO_SHIM_SOURCE, COMPILE_ARGS]))
+    .update(JSON.stringify([ERRNO_SHIM_SOURCE, compiler(), COMPILE_ARGS, LINK_ARGS]))
     .digest('hex')
     .slice(0, 16);
   const output = join(cacheDir, `errno-shim-${process.arch}-${hash}.so`);
@@ -128,11 +128,14 @@ export const buildErrnoShim = (cacheDir: string): string => {
   return output;
 };
 
-/** Compiler arguments ahead of the output path, which is followed by the source on stdin and `-ldl`. */
+/** Compiler arguments ahead of the output path, which is followed by the source on stdin and then {@link LINK_ARGS}. */
 const COMPILE_ARGS = ['-shared', '-fPIC', '-O2', '-x', 'c', '-o'];
+const LINK_ARGS = ['-ldl'];
+
+const compiler = (): string => process.env.CC || 'cc';
 
 export const compileSharedObject = (source: string, output: string): void => {
-  execFileSync(process.env.CC || 'cc', [...COMPILE_ARGS, output, '-', '-ldl'], {
+  execFileSync(compiler(), [...COMPILE_ARGS, output, '-', ...LINK_ARGS], {
     input: source,
     stdio: ['pipe', 'ignore', 'pipe'],
   });
