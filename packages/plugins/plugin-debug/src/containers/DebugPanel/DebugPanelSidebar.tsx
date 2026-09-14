@@ -29,6 +29,12 @@ const lineage = (nodeId: string): string[] => {
     .filter((id) => id.startsWith(DebugNodes.DEBUG_ROOT_ID));
 };
 
+/** Page ids the panel persisted before the pages lived under the Debug node. */
+const LEGACY_PAGE_IDS: Record<string, string> = {
+  [`${DebugNodes.DEBUG_ROOT_ID}/${DebugNodes.nodeId(DebugNodes.Console)}`]: DebugNodes.CONSOLE_NODE_ID,
+  [`${DebugNodes.DEBUG_ROOT_ID}/${DebugNodes.nodeId(DebugNodes.Logs)}`]: DebugNodes.LOGS_NODE_ID,
+};
+
 /** The tree over the hidden `root/debug` category: every developer tool, selected here and shown in `Main`. */
 export const DebugPanelSidebar = () => {
   const { t } = useTranslation(meta.profile.key);
@@ -50,19 +56,27 @@ export const DebugPanelSidebar = () => {
 
   // Persisted state names nodes whose children come from connectors that only run on expansion, so
   // without this an open branch restores empty and a nested selection restores to a blank page. A
-  // pristine panel opens on the console, as it did when the console was its first tab.
-  const restoredRef = useRef({ open, nodeId });
+  // pristine panel opens on the console, as it did when the console was its first tab. The latest
+  // state is read through a ref so the restore runs once per context, not on every change.
+  const latestRef = useRef({ open, nodeId });
+  latestRef.current = { open, nodeId };
   useEffect(() => {
     AppGraph.expandSync(graph, DebugNodes.DEBUG_ROOT_ID, 'child');
-    const { open, nodeId } = restoredRef.current;
+    const { open, nodeId } = latestRef.current;
     if (!nodeId && open.length === 0) {
       setOpen(Path.create(DebugNodes.DEBUG_ROOT_ID, contextId, DebugNodes.DEBUG_NODE_ID), true);
       select(DebugNodes.CONSOLE_NODE_ID);
     }
+    // The console and logs pages moved under the Debug node; a selection persisted at their old
+    // top-level ids is carried to the new ones.
+    const legacy = nodeId ? LEGACY_PAGE_IDS[nodeId] : undefined;
+    if (legacy) {
+      select(legacy);
+    }
     for (const key of open) {
       AppGraph.expandSync(graph, Path.last(key), 'child');
     }
-    for (const id of lineage(nodeId ?? DebugNodes.CONSOLE_NODE_ID)) {
+    for (const id of lineage(legacy ?? nodeId ?? DebugNodes.CONSOLE_NODE_ID)) {
       AppGraph.expandSync(graph, id, 'child');
     }
   }, [graph, contextId, select, setOpen]);

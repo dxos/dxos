@@ -198,7 +198,9 @@ export const StoragePanel = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       {/* The tree takes the full width; a selected feed's detail opens beneath it. */}
-      <Panel.Content classNames={selectedValue ? 'grid grid-rows-2 divide-y divide-separator' : 'grid'}>
+      <Panel.Content
+        classNames={selectedValue?.kind === 'feed' ? 'grid grid-rows-2 divide-y divide-separator' : 'grid'}
+      >
         <ScrollArea.Root thin orientation='all'>
           <ScrollArea.Viewport>
             <DataTree items={items} onSelect={setSelected} />

@@ -99,13 +99,13 @@ component DebugPanel
     ┌─ Main.Drawer (docked, default) ──────────────────────┐
     │ Debug                                          ⇱ ×  │
     ├─ Sidebar (Tree) ──┬─ Main (article surface) ────────┤
-    │ ▸ Console         │                                  │
-    │   Logs            │  Config JSON / log table /       │
-    │ ▾ DevTools        │  generator / ...                 │
-    │   ▾ Client        │                                  │
-    │       Config      │  (console and logs stay mounted  │
-    │ ▾ Debug           │   while another page is shown)   │
+    │ ▾ Debug           │                                  │
+    │   ▸ Console       │  Config JSON / log table /       │
+    │     Logs          │  generator / ...                 │
     │     Generate obj. │                                  │
+    │ ▾ DevTools        │  (console and logs stay mounted  │
+    │   ▾ Client        │   while another page is shown)   │
+    │       Config      │                                  │
     └───────────────────┴──────────────────────────────────┘
     Floating: the same Sidebar/Main under a FloatingPanel title bar (⇲ dock, — minimize, ×).
 ```
@@ -119,8 +119,9 @@ feat DebugPanel
     drawer via `LayoutOperation.UpdateDrawer`, so the planks reflow above it, its height is dragged
     from the top edge and persists with the deck's layout, and fullscreen hides it; floating, it
     opens the panel as a window over the app. The title bar's dock/float control moves the panel
-    between the two with the same tool selected. The sidebar lists Console, Logs, DevTools, and
-    Debug, and the selection, open branches, and mode persist across reloads.
+    between the two with the same tool selected. The sidebar lists Debug (Console, Logs, Generate
+    objects — a pristine panel opens Debug with the console selected) and DevTools, and the
+    selection, open branches, and mode persist across reloads.
 ```
 
 ```mdl

@@ -261,8 +261,9 @@
     padding-inline-end: 0;
     scroll-padding-inline-end: 0;
     /* `Main.Content` sets the variable from the drawer's height (0 when closed) so content reflows above it. */
-    padding-block-end: var(--main-drawer-height, 0rem);
-    scroll-padding-block-end: var(--main-drawer-height, 0rem);
+    /* The drawer sits above the bottom safe area, so the reserved space includes it. */
+    padding-block-end: calc(var(--main-drawer-height, 0rem) + env(safe-area-inset-bottom));
+    scroll-padding-block-end: calc(var(--main-drawer-height, 0rem) + env(safe-area-inset-bottom));
 
     @media (width >= theme(--breakpoint-lg)) {
       &[data-sidebar-left-state='collapsed'] {

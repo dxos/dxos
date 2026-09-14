@@ -7,10 +7,11 @@ import React, { type PropsWithChildren, useCallback, useEffect, useState } from 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { DRAWER_DEFAULT_HEIGHT, Main, useTranslation } from '@dxos/react-ui';
+import { Main, useTranslation } from '@dxos/react-ui';
 
 import { useBreakpoints } from '#hooks';
 import { meta } from '#meta';
+import { DeckSchema } from '#types';
 
 import { layoutAppliesTopbar } from '../../util/index.ts';
 import { ComplementarySidebar, Sidebar } from '../Sidebar/index.ts';
@@ -97,7 +98,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
       navigationSidebarState={fullscreen ? 'closed' : sidebarState}
       complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
       drawerState={effectiveDrawerState}
-      drawerHeight={liveHeight ?? drawerHeight ?? DRAWER_DEFAULT_HEIGHT}
+      drawerHeight={liveHeight ?? drawerHeight ?? DeckSchema.DRAWER_DEFAULT_HEIGHT}
       onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
       onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
       onDrawerStateChange={handleDrawerStateChange}
@@ -106,7 +107,11 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     >
       <Sidebar />
       <ComplementarySidebar current={complementarySidebarPanel} />
-      <Main.Drawer label={t('drawer.label')}>
+      <Main.Drawer
+        label={t('drawer.label')}
+        minHeight={DeckSchema.DRAWER_MIN_HEIGHT}
+        maxHeight={DeckSchema.DRAWER_MAX_HEIGHT}
+      >
         <Surface.Surface type={AppSurface.Drawer} limit={1} />
       </Main.Drawer>
       <Main.Overlay />

@@ -33,3 +33,6 @@ export const CONSOLE_NODE_ID = `${DEBUG_NODE_ID}/${nodeId(Console)}`;
 
 /** Node data of the log viewer page. */
 export const Logs = `${debugId}.logs`;
+
+/** Qualified id of the log viewer page. */
+export const LOGS_NODE_ID = `${DEBUG_NODE_ID}/${nodeId(Logs)}`;
