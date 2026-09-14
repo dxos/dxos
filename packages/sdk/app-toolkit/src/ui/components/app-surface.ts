@@ -339,16 +339,17 @@ export type SettingsProps<T extends {}, Props extends {} = {}> = {
   onSettingsChange?: (cb: (current: T) => T) => void;
 } & Props;
 
-/** Filter: matches any plugin-settings article, for the generic settings surface. */
-export function settings(token: Role.Role<any>): Surface.Filter<SettingsData>;
-/**
- * Filter: matches one plugin's settings article.
- *
- * @deprecated Contribute a schema and atom and let `plugin-settings`' generic surface render the
- * panel; a bespoke article re-implements the panel chrome by hand.
- */
-export function settings(token: Role.Role<any>, prefix: string): Surface.Filter<SettingsData>;
-export function settings(token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> {
+export const settings: {
+  /** Filter: matches any plugin-settings article, for the generic settings surface. */
+  (token: Role.Role<any>): Surface.Filter<SettingsData>;
+  /**
+   * Filter: matches one plugin's settings article.
+   *
+   * @deprecated Contribute a schema and atom and let `plugin-settings`' generic surface render the
+   * panel; a bespoke article re-implements the panel chrome by hand.
+   */
+  (token: Role.Role<any>, prefix: string): Surface.Filter<SettingsData>;
+} = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -358,7 +359,7 @@ export function settings(token: Role.Role<any>, prefix?: string): Surface.Filter
     return AppCapabilities.isSettings(subject) && (prefix === undefined || subject.prefix === prefix);
   };
   return { bindings: [{ role: token.role, guard }] };
-}
+};
 
 //
 // Section
