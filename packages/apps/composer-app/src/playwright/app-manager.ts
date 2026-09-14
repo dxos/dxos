@@ -28,6 +28,10 @@ const REGISTRY_WORKSPACE = 'dxos:registry';
 // `UrlPath.WORKSPACE_KEY` — the pair-chain anchor segment, restated for the same reason.
 const WORKSPACE_KEY = 'w';
 
+// localStorage prefix of the navtree's `navtree-open` view-state aspect, restated for the same reason;
+// the key's suffix is the tree path joined with `+`.
+const NAVTREE_OPEN_STORAGE_PREFIX = 'dxos:view-state:navtree-open:';
+
 /** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
 const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
 
@@ -38,14 +42,8 @@ export const INITIAL_SPACE_COUNT = 1;
 // whose barrel drags the client and observability graphs into every worker.
 const LOG_STORE_DB_NAME = 'composer-logs';
 
-/** A subduction sync round is fire-and-wait with this deadline and no per-round re-ask. */
-const SYNC_ROUND_TIMEOUT = 60_000;
-
-/** Two rounds plus slack, so one disrupted round does not exhaust the wait by itself. */
-const UPLOAD_SETTLE_TIMEOUT = SYNC_ROUND_TIMEOUT * 2 + 10_000;
-
-/** One try at revealing a settings page, short enough that the enclosing `toPass` gets several. */
-const EXPAND_ATTEMPT_TIMEOUT = 5_000;
+/** Under one 60s subduction sync round, so a round that times out fails the wait instead of fitting inside it. */
+const UPLOAD_TIMEOUT = 30_000;
 
 /**
  * Budget for `joinNewIdentity()`: spans a storage reset, page reload and app boot, so it is sized well
@@ -115,6 +113,29 @@ export class AppManager {
           throw new Error(`app did not boot: ${err.message}`, { cause: err });
         }
         throw err;
+      });
+
+    // Boot's last write is onboarding's Expose of the default space's Home, scheduled after the
+    // SwitchWorkspace and Set that land there; on a new identity only it persists that path as open.
+    await this.page
+      .waitForFunction(
+        ({ anchorKey, storagePrefix }) => {
+          const [anchor, workspaceId, ...rest] = window.location.pathname.split('/').filter(Boolean);
+          if (anchor !== anchorKey || rest.join('/') !== 'home') {
+            return false;
+          }
+          const home = `root/${workspaceId}/home`;
+          const plank = document.querySelector('[data-testid="deck.plank"]');
+          const exposed = window.localStorage.getItem(`${storagePrefix}root+root/${workspaceId}+${home}`);
+          return plank?.getAttribute('data-attendable-id') === home && exposed === '{"open":true}';
+        },
+        { anchorKey: WORKSPACE_KEY, storagePrefix: NAVTREE_OPEN_STORAGE_PREFIX },
+        { timeout: 30_000 },
+      )
+      .catch((err: Error) => {
+        throw new Error(`boot did not settle on an exposed default-space Home (at ${this.page.url()})`, {
+          cause: err,
+        });
       });
 
     this.shell = new ShellManager(this.page, this._inIframe);
@@ -214,13 +235,9 @@ export class AppManager {
   }
 
   async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
+    await this.expandSection('spacePlugin.settings', timeout);
     const heading = this.currentWorkspace.getByTestId(testId).first().getByTestId('treeItem.heading').first();
-    // Expanding is retried, not done once: a navtree re-render under the open section collapses it
-    // again, and only the next expand reveals the page.
-    await expect(async () => {
-      await this.expandSection('spacePlugin.settings', EXPAND_ATTEMPT_TIMEOUT);
-      await heading.waitFor({ state: 'visible', timeout: EXPAND_ATTEMPT_TIMEOUT });
-    }).toPass({ timeout });
+    await expect(heading).toBeVisible({ timeout });
     await heading.click({ timeout });
   }
 
@@ -274,9 +291,9 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
-    // `init()` only waits for `treeView.userAccount`, so the space list is still empty for a moment
-    // after boot and a baseline taken there undercounts.
+  /** Creates a space and returns its id, once the app is in it. */
+  async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<string> {
+    // The baseline counts rendered rail rows, so it is taken once one exists.
     await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
     const initialCount = await this.getSpaceItems().count();
 
@@ -288,22 +305,20 @@ export class AppManager {
     await expect(this.getSpaceItems()).toHaveCount(initialCount + 1, { timeout });
 
     await this.waitForSpaceReady(timeout);
+    const spaceId = this.workspaceId;
+    if (!spaceId) {
+      throw new Error(`created space is ready but the URL names no workspace: ${this.page.url()}`);
+    }
+    return spaceId;
   }
 
   /** Opens the add-space dialog, submits it, and waits for it to close. */
   async #submitCreateSpaceForm(): Promise<void> {
     const dialog = this.page.getByTestId('create-space-dialog');
-    // A navigation landing while the menu is open detaches the item mid-click, and the overlay that
-    // replaces it swallows the pointer. `addSpace` is the menu's trigger, so a retry must not click
-    // it again once the dialog is up — that would toggle the menu behind a modal.
-    await expect(async () => {
-      if (await dialog.isVisible()) {
-        return;
-      }
-      await this.page.getByTestId('spacePlugin.addSpace').click({ timeout: 5_000 });
-      await this.page.getByTestId('spacePlugin.createSpace').click({ timeout: 5_000 });
-      await expect(dialog).toBeVisible({ timeout: 5_000 });
-    }).toPass({ timeout: 30_000 });
+    // Opened once, because `init()` waits out the boot writes that could detach the menu mid-click.
+    await this.page.getByTestId('spacePlugin.addSpace').click();
+    await this.page.getByTestId('spacePlugin.createSpace').click();
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     const form = this.page.getByTestId('create-space-form');
     // The action row is pinned outside the scrolling field region, so it is scoped to the dialog,
@@ -365,16 +380,23 @@ export class AppManager {
   }
 
   /**
-   * Waits for this peer to have nothing left to push, before inviting a device to a just-created
-   * space — `createSpace` returns once the space is locally ready, not once it has reached EDGE.
-   *
-   * Best-effort: the attribute is a client-wide summary that reads settled at rest, so it cannot
-   * distinguish "already uploaded" from "not started yet".
+   * Waits for EDGE to report this space's own sync state with nothing left to push; a space EDGE has
+   * not reported on yet does not pass.
    */
-  async waitForUploadsSettled(timeout = UPLOAD_SETTLE_TIMEOUT): Promise<void> {
-    await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-upload-settled', 'true', {
-      timeout,
-    });
+  async waitForUploadsSettled(spaceId: string, timeout = UPLOAD_TIMEOUT): Promise<void> {
+    const syncStatus = this.page.getByTestId('spacePlugin.syncStatus');
+    try {
+      await expect(syncStatus).toHaveAttribute('data-uploaded-spaces', new RegExp(`(^| )${spaceId}( |$)`), {
+        timeout,
+      });
+    } catch (err) {
+      // `remote-synced` with the space absent means EDGE never reported on it; `uploading`/`stalled` mean it did.
+      const status = await syncStatus.getAttribute('data-status', { timeout: 1_000 }).then(
+        (value) => value ?? 'absent',
+        (readErr: Error) => `unreadable: ${readErr.message}`,
+      );
+      throw new Error(`space ${spaceId} did not finish uploading (sync status: ${status})`, { cause: err });
+    }
   }
 
   getSpacePresenceMembers(): Locator {
@@ -395,13 +417,9 @@ export class AppManager {
    */
   async deleteSpace(nth = 1, timeout = 30_000): Promise<void> {
     const space = this.getSpaceItems().nth(nth);
-    // The rail is a tablist, and a click landing while the navtree is still settling after a
-    // navigation is dropped — the row takes focus and then loses it, never becoming selected.
-    // Clicking an already-selected row is a no-op, so re-running the block is safe.
-    await expect(async () => {
-      await space.click();
-      await expect(space).toHaveAttribute('aria-selected', 'true', { timeout: 5_000 });
-    }).toPass({ timeout });
+    // Clicked once. A row left unselected after a reload is an app defect, and the assertion below reports it.
+    await space.click();
+    await expect(space).toHaveAttribute('aria-selected', 'true', { timeout });
     await this.openSpaceSettings(timeout);
     await this.page.getByTestId('spaceSettings.deleteSpace').click({ timeout });
     await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
@@ -435,6 +453,8 @@ export class AppManager {
     await row.hover();
     await expect(toggle).toBeEnabled({ timeout });
     await toggle.click();
+    // An open commits through the model at once, so an expand that did not take fails here.
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true', { timeout });
   }
 
   async expandCollection(nth = 0, timeout = 15_000): Promise<void> {

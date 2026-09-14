@@ -9,6 +9,9 @@ import { captureDebugLogs } from '@dxos/test-utils/playwright';
 
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager.ts';
 
+/** A healthy run is ~30s plus up to a 10s collection-sync poll for the upload gate; a 60s sync-round timeout overruns it. */
+const TEST_TIMEOUT = 75_000;
+
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
 test.describe('HALO tests', () => {
@@ -37,12 +40,12 @@ test.describe('HALO tests', () => {
   });
 
   test('join new identity', async () => {
-    test.setTimeout(240_000);
+    test.setTimeout(TEST_TIMEOUT);
 
-    await host.createSpace();
+    const spaceId = await host.createSpace();
 
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
-    await host.waitForUploadsSettled();
+    await host.waitForUploadsSettled(spaceId);
     // The guest has only its own default space until it joins the host's identity.
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT);
 
@@ -73,12 +76,12 @@ test.describe('HALO tests', () => {
   });
 
   test('deleting a space replicates across devices', async () => {
-    test.setTimeout(240_000);
+    test.setTimeout(TEST_TIMEOUT);
 
     // Host creates a space; guest joins the host's identity and inherits it.
-    await host.createSpace();
+    const spaceId = await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
-    await host.waitForUploadsSettled();
+    await host.waitForUploadsSettled(spaceId);
 
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();

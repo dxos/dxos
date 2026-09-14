@@ -45,9 +45,6 @@ test.describe('Basic tests', () => {
   });
 
   test('create space, which is displayed in tree', async () => {
-    // Creating a space waits out a boot-time navigation that can detach the menu.
-    test.slow();
-
     await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
   });
