@@ -77,6 +77,12 @@ export const subscribe = <E extends Any>(handler: Handler<E>): Effect.Effect<voi
   Bus.pipe(Effect.flatMap((bus) => bus.subscribe(handler)));
 
 /**
+ * Subscribes `fn` to `event` for the current scope: `handler` and `subscribe` in one call.
+ */
+export const on = <E extends Any>(event: E, fn: HandlerFn<E>): Effect.Effect<void, never, Bus | Scope.Scope> =>
+  subscribe(handler(event, fn));
+
+/**
  * Dispatches to every subscriber and completes once all of them have, so an emit doubles as a
  * barrier for the work the event triggers.
  */

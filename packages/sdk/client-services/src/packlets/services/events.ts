@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Context } from '@dxos/context';
 import { Event } from '@dxos/effect';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -21,43 +20,39 @@ import { type Identity } from '../identity/index.ts';
 // Teardown has no events: each layer closes its component in its layer finalizer, so runtime
 // disposal unwinds the stack in reverse build order.
 //
-
-type LifecyclePayload = { ctx: Context };
+// Payloads carry facts only. Cancellation and tracing ride on the Effect: a layer that needs a DXOS
+// `Context` for a component takes one from its scope (`EffectEx.contextFromScope`), and the host
+// emits under its open context (`EffectEx.withContext`) so handler spans nest under it.
+//
 
 /** The host is opening; nothing has been touched yet. */
-export const Opening = Event.make<LifecyclePayload>()('client-services/Opening');
+export const Opening = Event.make<void>()('client-services/Opening');
 
 /** Storage has been migrated, version-checked, and loaded. */
-export const StorageReady = Event.make<LifecyclePayload>()('client-services/StorageReady');
+export const StorageReady = Event.make<void>()('client-services/StorageReady');
 
 /** The identity manager is open; `identity` is the persisted identity, if there is one. */
-export const IdentityLoaded = Event.make<LifecyclePayload & { identity?: Identity }>()(
-  'client-services/IdentityLoaded',
-);
+export const IdentityLoaded = Event.make<{ identity?: Identity }>()('client-services/IdentityLoaded');
 
 /** Edge, signaling, and swarm networking are open with the current network identity. */
-export const NetworkReady = Event.make<LifecyclePayload>()('client-services/NetworkReady');
+export const NetworkReady = Event.make<void>()('client-services/NetworkReady');
 
 /**
  * A new identity must be bound to the network before it joins; `deviceCredential` is present when
  * the identity was admitted by another device.
  */
-export const IdentityBound = Event.make<LifecyclePayload & { identity: Identity; deviceCredential?: Credential }>()(
+export const IdentityBound = Event.make<{ identity: Identity; deviceCredential?: Credential }>()(
   'client-services/IdentityBound',
 );
 
 /** An identity has joined the network; identity-bound services may open. */
-export const IdentityAvailable = Event.make<LifecyclePayload & { identity: Identity }>()(
-  'client-services/IdentityAvailable',
-);
+export const IdentityAvailable = Event.make<{ identity: Identity }>()('client-services/IdentityAvailable');
 
 /** The data space manager is open. */
-export const DataSpacesReady = Event.make<LifecyclePayload & { identity: Identity }>()(
-  'client-services/DataSpacesReady',
-);
+export const DataSpacesReady = Event.make<{ identity: Identity }>()('client-services/DataSpacesReady');
 
 /** The open sequence has completed, with or without an identity. */
-export const StackOpened = Event.make<LifecyclePayload>()('client-services/StackOpened');
+export const StackOpened = Event.make<void>()('client-services/StackOpened');
 
 /** Outbound networking may begin; emitted on `StackOpened` when auto-connecting, else by the embedder. */
 export const NetworkingEnabled = Event.make<void>()('client-services/NetworkingEnabled');

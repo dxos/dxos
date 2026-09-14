@@ -18,7 +18,7 @@ import {
   createChainEdgeIdentity,
   createEphemeralEdgeIdentity,
 } from '@dxos/edge-client';
-import { Event } from '@dxos/effect';
+import { EffectEx, Event } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';
@@ -104,6 +104,7 @@ export const NetworkLifecycleLayer = (
         log('network identity set');
       };
 
+      const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() =>
         Effect.promise(async () => {
           await networkManager.close(Context.default());
@@ -112,9 +113,10 @@ export const NetworkLifecycleLayer = (
         }),
       );
 
-      yield* IdentityLoaded.pipe(
-        Event.handler(({ ctx, identity }) =>
-          Effect.promise(async () => {
+      yield* Event.on(
+        IdentityLoaded,
+        Effect.fn('NetworkLifecycle.onIdentityLoaded')(function* ({ identity }) {
+          yield* Effect.promise(async () => {
             await setNetworkIdentity({ identity });
             log('opening edge connection...');
             await edgeConnection?.open(ctx);
@@ -122,33 +124,33 @@ export const NetworkLifecycleLayer = (
             await signalManager.open(ctx);
             log('opening network manager...');
             await networkManager.open();
-          }).pipe(Effect.andThen(Event.emit(NetworkReady, { ctx }))),
-        ),
-        Event.subscribe,
+          });
+          yield* Event.emit(NetworkReady, undefined);
+        }),
       );
 
-      yield* IdentityBound.pipe(
-        Event.handler(({ identity, deviceCredential }) =>
-          Effect.promise(() => setNetworkIdentity({ identity, deviceCredential })),
-        ),
-        Event.subscribe,
+      yield* Event.on(
+        IdentityBound,
+        Effect.fn('NetworkLifecycle.onIdentityBound')(function* ({ identity, deviceCredential }) {
+          yield* Effect.promise(() => setNetworkIdentity({ identity, deviceCredential }));
+        }),
       );
 
       // Only the edge dial is gated: subduction and feed sync resume from the edge reconnect.
-      yield* NetworkingEnabled.pipe(
-        Event.handler(() =>
-          Effect.sync(() => {
-            log('starting edge networking');
-            edgeConnection?.startNetworking();
-          }),
-        ),
-        Event.subscribe,
+      yield* Event.on(
+        NetworkingEnabled,
+        Effect.fn('NetworkLifecycle.onNetworkingEnabled')(function* () {
+          log('starting edge networking');
+          edgeConnection?.startNetworking();
+        }),
       );
 
       if (options.autoConnect) {
-        yield* StackOpened.pipe(
-          Event.handler(() => Event.emit(NetworkingEnabled, undefined)),
-          Event.subscribe,
+        yield* Event.on(
+          StackOpened,
+          Effect.fn('NetworkLifecycle.onStackOpened')(function* () {
+            yield* Event.emit(NetworkingEnabled, undefined);
+          }),
         );
       }
     }),

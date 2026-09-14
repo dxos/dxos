@@ -25,7 +25,7 @@ import {
   type EdgeHttpClient,
   EdgeHttpClientService,
 } from '@dxos/edge-client';
-import { Event, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
 import { FeedFactoryLayer, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { log } from '@dxos/log';
@@ -215,18 +215,17 @@ const replicatorsLayer = Layer.effectDiscard(
     const echoHost = yield* EchoHostService;
     const meshReplicator = Option.getOrUndefined(yield* Effect.serviceOption(MeshEchoReplicatorService));
     const edgeReplicator = Option.getOrUndefined(yield* Effect.serviceOption(EdgeAutomergeReplicatorService));
-    yield* NetworkReady.pipe(
-      Event.handler(({ ctx }) =>
-        Effect.promise(async () => {
-          if (meshReplicator) {
-            await echoHost.addReplicator(ctx, meshReplicator);
-          }
-          if (edgeReplicator) {
-            await echoHost.addReplicator(ctx, edgeReplicator);
-          }
-        }),
-      ),
-      Event.subscribe,
+    const ctx = yield* EffectEx.contextFromScope();
+    yield* Event.on(
+      NetworkReady,
+      Effect.fn('EchoHost.onNetworkReady')(function* () {
+        if (meshReplicator) {
+          yield* Effect.promise(() => echoHost.addReplicator(ctx, meshReplicator));
+        }
+        if (edgeReplicator) {
+          yield* Effect.promise(() => echoHost.addReplicator(ctx, edgeReplicator));
+        }
+      }),
     );
   }),
 );
@@ -272,23 +271,21 @@ const storageLifecycleLayer = Layer.effectDiscard(
     const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
     const migrate = yield* StorageMigrationService;
     const metadataStore = yield* IMetadataStoreService;
-    yield* Opening.pipe(
-      Event.handler(({ ctx }) =>
-        Effect.gen(function* () {
-          log('running storage migrations...');
-          yield* Effect.promise(() => RuntimeProvider.runPromise(runtime)(migrate));
-          yield* Effect.promise(() => metadataStore.load());
-          if (metadataStore.version !== STORAGE_VERSION) {
-            // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
-            throw new InvalidStorageVersionError(STORAGE_VERSION, metadataStore.version);
-          }
-          log('running sqlite health check...');
-          yield* Effect.promise(() => runSqliteHealthCheck(runtime));
-          log('storage ready');
-          yield* Event.emit(StorageReady, { ctx });
-        }),
-      ),
-      Event.subscribe,
+    yield* Event.on(
+      Opening,
+      Effect.fn('Storage.onOpening')(function* () {
+        log('running storage migrations...');
+        yield* Effect.promise(() => RuntimeProvider.runPromise(runtime)(migrate));
+        yield* Effect.promise(() => metadataStore.load());
+        if (metadataStore.version !== STORAGE_VERSION) {
+          // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
+          throw new InvalidStorageVersionError(STORAGE_VERSION, metadataStore.version);
+        }
+        log('running sqlite health check...');
+        yield* Effect.promise(() => runSqliteHealthCheck(runtime));
+        log('storage ready');
+        yield* Event.emit(StorageReady, undefined);
+      }),
     );
   }),
 );

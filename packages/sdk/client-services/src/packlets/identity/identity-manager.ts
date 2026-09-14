@@ -20,7 +20,7 @@ import {
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { Event as EffectEvent } from '@dxos/effect';
+import { EffectEx, Event as EffectEvent } from '@dxos/effect';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -607,14 +607,14 @@ export const IdentityManagerLayer = (
         ...options,
       });
 
+      const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => identityManager.close(Context.default())));
-      yield* StorageReady.pipe(
-        EffectEvent.handler(({ ctx }) =>
-          Effect.promise(() => identityManager.open(ctx)).pipe(
-            Effect.flatMap(() => EffectEvent.emit(IdentityLoaded, { ctx, identity: identityManager.identity })),
-          ),
-        ),
-        EffectEvent.subscribe,
+      yield* EffectEvent.on(
+        StorageReady,
+        Effect.fn('IdentityManager.onStorageReady')(function* () {
+          yield* Effect.promise(() => identityManager.open(ctx));
+          yield* EffectEvent.emit(IdentityLoaded, { identity: identityManager.identity });
+        }),
       );
       return identityManager;
     }),

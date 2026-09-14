@@ -13,7 +13,7 @@ import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
-import { Event, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -607,10 +607,13 @@ export const FeedSyncerLayer = (
         getSyncState: (ctx, request) => feedSyncer.getSyncState(ctx, request),
       });
 
+      const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => feedSyncer.close()));
-      yield* StackOpened.pipe(
-        Event.handler(({ ctx }) => Effect.promise(() => feedSyncer.open(ctx))),
-        Event.subscribe,
+      yield* Event.on(
+        StackOpened,
+        Effect.fn('FeedSyncer.onStackOpened')(function* () {
+          yield* Effect.promise(() => feedSyncer.open(ctx));
+        }),
       );
       return feedSyncer;
     }),

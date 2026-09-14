@@ -129,6 +129,7 @@ export type InitializeOptions = {
 
 // Alias for consumers (tests, devtools, diagnostics) that referred to the former `ServiceContext`
 // orchestrator; its lifecycle and API now live on {@link ClientServicesHost} directly.
+// TODO(dmaretskyi): Remove this update consumers.
 export type ServiceContext = ClientServicesHost;
 
 /**
@@ -144,6 +145,7 @@ export class ClientServicesHost {
   readonly #resourceLock?: ResourceLock;
   // Effect-rpc handlers served over each connection, resolved from the Layer stack on open and reset
   // to the host-local set on close. Held directly (no separate registry indirection).
+  // TODO(dmaretskyi): Change to effect context of handlers (reuse .stack)
   #handlers: Partial<ClientServicesHandlers>;
   readonly #systemService: SystemServiceImpl;
   readonly #statusUpdate = new Event<void>();
@@ -633,6 +635,7 @@ export class ClientServicesHost {
    * has completed, so `StackOpened` fires after storage, identity, network, and spaces are up.
    */
   private async _openStack(ctx: Context): Promise<void> {
+    // TODO(dmaretskyi): ctx being payload of events is wrong. we should update all of them ctx carries tracing + cancellation, something effect does natively, there's a helper in @dxos/effect to brige them.
     await this.#emit(Opening, { ctx });
     await this.#emit(StackOpened, { ctx });
     log('stack opened');

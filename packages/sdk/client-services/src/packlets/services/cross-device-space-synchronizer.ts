@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { type Context, type Lifecycle, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
-import { Event } from '@dxos/effect';
+import { EffectEx, Event } from '@dxos/effect';
 import { assertState } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { requirePublicKey } from '@dxos/protocols/buf';
@@ -136,15 +136,14 @@ export const CrossDeviceSpaceSynchronizerLayer: Layer.Layer<
     const dataSpaceManager = yield* DataSpaceManagerService;
     const synchronizer = createCrossDeviceSpaceSynchronizer(dataSpaceManager);
 
+    const ctx = yield* EffectEx.contextFromScope();
     yield* Effect.addFinalizer(() => Effect.promise(async () => synchronizer.close?.()));
-    yield* DataSpacesReady.pipe(
-      Event.handler(({ ctx, identity }) =>
-        Effect.promise(async () => {
-          synchronizer.setIdentity(identity);
-          await synchronizer.open?.(ctx);
-        }),
-      ),
-      Event.subscribe,
+    yield* Event.on(
+      DataSpacesReady,
+      Effect.fn('CrossDeviceSpaceSynchronizer.onDataSpacesReady')(function* ({ identity }) {
+        synchronizer.setIdentity(identity);
+        yield* Effect.promise(async () => synchronizer.open?.(ctx));
+      }),
     );
     return synchronizer;
   }),

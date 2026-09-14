@@ -75,9 +75,11 @@ describe('Event bus', () => {
         ),
         Event.subscribe,
       );
-      yield* Serial.pipe(
-        Event.handler((payload) => Ref.update(seen, (items) => [...items, `serial:${payload}`])),
-        Event.subscribe,
+      yield* Event.on(
+        Serial,
+        Effect.fn('onSerial')(function* (payload) {
+          yield* Ref.update(seen, (items) => [...items, `serial:${payload}`]);
+        }),
       );
 
       yield* Event.emit(Foo, 7);

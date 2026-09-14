@@ -27,9 +27,11 @@ export const StackReadinessLayer: Layer.Layer<StackReadinessService, never, Even
   StackReadinessService,
   Effect.gen(function* () {
     const initialized = new Trigger();
-    yield* DataSpacesReady.pipe(
-      Event.handler(() => Effect.sync(() => initialized.wake())),
-      Event.subscribe,
+    yield* Event.on(
+      DataSpacesReady,
+      Effect.fn('StackReadiness.onDataSpacesReady')(function* () {
+        initialized.wake();
+      }),
     );
     return { initialized };
   }),

@@ -12,7 +12,7 @@ import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
-import { Event as EffectEvent } from '@dxos/effect';
+import { EffectEx, Event as EffectEvent } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -230,10 +230,13 @@ export const EdgeAgentManagerLayer = (
         identityProvider,
       );
 
+      const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => edgeAgentManager.close()));
-      yield* DataSpacesReady.pipe(
-        EffectEvent.handler(({ ctx }) => Effect.promise(() => edgeAgentManager.open(ctx))),
-        EffectEvent.subscribe,
+      yield* EffectEvent.on(
+        DataSpacesReady,
+        Effect.fn('EdgeAgentManager.onDataSpacesReady')(function* () {
+          yield* Effect.promise(() => edgeAgentManager.open(ctx));
+        }),
       );
       return edgeAgentManager;
     }),

@@ -46,7 +46,7 @@ import {
   type EdgeHttpClient,
   EdgeHttpClientService,
 } from '@dxos/edge-client';
-import { Event as EffectEvent } from '@dxos/effect';
+import { EffectEx, Event as EffectEvent } from '@dxos/effect';
 import { type FeedStore, FeedStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -1215,24 +1215,22 @@ export const DataSpaceManagerLayer = (
         ...options,
       });
 
+      const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => dataSpaceManager.close(Context.default())));
-      yield* IdentityAvailable.pipe(
-        EffectEvent.handler(({ ctx, identity }) =>
-          Effect.promise(() => dataSpaceManager.open(ctx)).pipe(
-            Effect.andThen(EffectEvent.emit(DataSpacesReady, { ctx, identity })),
-          ),
-        ),
-        EffectEvent.subscribe,
+      yield* EffectEvent.on(
+        IdentityAvailable,
+        Effect.fn('DataSpaceManager.onIdentityAvailable')(function* ({ identity }) {
+          yield* Effect.promise(() => dataSpaceManager.open(ctx));
+          yield* EffectEvent.emit(DataSpacesReady, { identity });
+        }),
       );
-      yield* ProfileUpdated.pipe(
-        EffectEvent.handler(({ profile }) =>
-          Effect.promise(async () => {
-            for (const space of dataSpaceManager.spaces.values()) {
-              await space.updateOwnProfile(profile);
-            }
-          }),
-        ),
-        EffectEvent.subscribe,
+      yield* EffectEvent.on(
+        ProfileUpdated,
+        Effect.fn('DataSpaceManager.onProfileUpdated')(function* ({ profile }) {
+          for (const space of dataSpaceManager.spaces.values()) {
+            yield* Effect.promise(() => space.updateOwnProfile(profile));
+          }
+        }),
       );
       return dataSpaceManager;
     }),
