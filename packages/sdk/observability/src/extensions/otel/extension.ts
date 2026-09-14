@@ -42,6 +42,7 @@ export type ExtensionsOptions = {
   /** Where the user's opt-out is stored: a localForage prefix in the browser, a config directory in node. */
   namespace?: string;
   config: Config;
+  /** In the browser, takes precedence over `DX_OTEL_ENDPOINT` in config. */
   endpoint?: string;
   headers?: Record<string, string>;
   additionalDestinations?: OtelDestination[];
@@ -91,7 +92,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
 
     const rawEndpoint = isNode()
       ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
-      : (getEnvString(config, 'DX_OTEL_ENDPOINT') ?? _endpoint);
+      : (_endpoint ?? getEnvString(config, 'DX_OTEL_ENDPOINT'));
     // The OTLP exporter (>= 0.203) validates URLs and rejects relative paths.
     // In the browser/worker, resolve relative endpoints against the current origin
     // so callers can keep using paths like `/api/otel` for proxied deployments.
