@@ -64,6 +64,28 @@ describe('Event bus', () => {
   );
 
   it.effect(
+    'lets a handler emit a follow-up event through the pipe form',
+    Effect.fn(function* ({ expect }) {
+      const seen = yield* Ref.make<string[]>([]);
+
+      yield* Foo.pipe(
+        Event.handler((payload) =>
+          Ref.update(seen, (items) => [...items, `foo:${payload}`]).pipe(Effect.andThen(Event.emit(Serial, payload))),
+        ),
+        Event.subscribe,
+      );
+      yield* Serial.pipe(
+        Event.handler((payload) => Ref.update(seen, (items) => [...items, `serial:${payload}`])),
+        Event.subscribe,
+      );
+
+      yield* Event.emit(Foo, 7);
+
+      expect(yield* Ref.get(seen)).to.deep.equal(['foo:7', 'serial:7']);
+    }, Effect.provide(Event.busLayer)),
+  );
+
+  it.effect(
     'runs handlers sequentially for "serial" events',
     Effect.fn(function* ({ expect }) {
       const order = yield* Ref.make<string[]>([]);

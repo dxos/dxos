@@ -21,7 +21,7 @@ import {
 import { ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { ClientServicesHostService } from '../services/service-host.ts';
+import { ClientServicesHostService } from '../services/host-service.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager } from '../spaces/index.ts';
 import { type IdentityManager, IdentityManagerService } from './identity-manager.ts';

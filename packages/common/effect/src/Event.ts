@@ -1,13 +1,26 @@
-import { Context, Effect, Function, Layer, Scope } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
+import * as Pipeable from 'effect/Pipeable';
+import * as Scope from 'effect/Scope';
 
 // @import-as-namespace
 
+/**
+ * How the handlers of one event are dispatched: `parallel` runs them concurrently and is the
+ * default; `serial` runs them one after another in subscription order.
+ */
 export type Strategy = 'serial' | 'parallel';
 
 export const TypeId = '~@dxos/effect/Event';
 export type TypeId = typeof TypeId;
 
-export interface Event<Id extends string, T> {
+export interface Event<Id extends string, T> extends Pipeable.Pipeable {
   readonly [TypeId]: {
     _Data: T;
   };
@@ -23,24 +36,28 @@ export type Any = {
   readonly strategy: Strategy;
 };
 
-export type Payload<E extends Any> = E extends Event<infer _Id, infer T> ? T : never;
+export type Payload<E extends Any> = E[TypeId]['_Data'];
+
+/**
+ * Handlers run in the subscriber's bus so they can emit further events; failures are defects since
+ * an event cannot enumerate the errors of every subscriber.
+ */
+export type HandlerFn<E extends Any> = (payload: Payload<E>) => Effect.Effect<void, never, Bus>;
 
 export interface Handler<E extends Any> {
   readonly event: E;
-  readonly handler: (payload: Payload<E>) => Effect.Effect<void>;
+  readonly handler: HandlerFn<E>;
 }
 
 export const handler: {
-  <E extends Any>(event: E, handler: (payload: Payload<E>) => Effect.Effect<void>): Handler<E>;
-  <E extends Any>(event: E): (handler: (payload: Payload<E>) => Effect.Effect<void>) => Handler<E>;
-} = Function.dual(2, <E extends Any>(event: E, handler: (payload: Payload<E>) => Effect.Effect<void>) => ({
-  event,
-  handler,
-}));
+  <E extends Any>(event: E, handler: HandlerFn<E>): Handler<E>;
+  <E extends Any>(handler: HandlerFn<E>): (event: E) => Handler<E>;
+} = Function.dual(2, <E extends Any>(event: E, handler: HandlerFn<E>): Handler<E> => ({ event, handler }));
 
 export const make =
   <const T>() =>
   <const Id extends string>(id: Id, options?: { strategy?: Strategy }): Event<Id, T> => ({
+    ...Pipeable.Prototype,
     [TypeId]: { _Data: undefined as any },
     id,
     strategy: options?.strategy ?? 'parallel',
@@ -53,23 +70,35 @@ interface BusService {
 
 export class Bus extends Context.Service<Bus, BusService>()('@dxos/effect/Event.Bus') {}
 
+/**
+ * Registers the handler until the current scope closes; unsubscription is a plain removal.
+ */
 export const subscribe = <E extends Any>(handler: Handler<E>): Effect.Effect<void, never, Bus | Scope.Scope> =>
   Bus.pipe(Effect.flatMap((bus) => bus.subscribe(handler)));
 
+/**
+ * Dispatches to every subscriber and completes once all of them have, so an emit doubles as a
+ * barrier for the work the event triggers.
+ */
 export const emit = <E extends Any>(event: E, payload: Payload<E>): Effect.Effect<void, never, Bus> =>
   Bus.pipe(Effect.flatMap((bus) => bus.emit(event, payload)));
 
-export const makeBus = (): BusService => {
-  const subscribers = new Map<string, Set<Handler<Any>>>();
+// Erases the payload type so handlers for different events can share one registry.
+type AnyHandler = {
+  readonly event: Any;
+  readonly handler: (payload: any) => Effect.Effect<void, never, Bus>;
+};
 
-  return {
+export const makeBus = (): BusService => {
+  const subscribers = new Map<string, Set<AnyHandler>>();
+
+  const bus: BusService = {
     subscribe: (handler) =>
       Effect.gen(function* () {
         const scope = yield* Effect.scope;
-        const handlers = (subscribers.get(handler.event.id) ?? new Set<Handler<Any>>()).add(handler);
-        if (!subscribers.has(handler.event.id)) {
-          subscribers.set(handler.event.id, handlers);
-        }
+        const handlers = subscribers.get(handler.event.id) ?? new Set<AnyHandler>();
+        subscribers.set(handler.event.id, handlers);
+        handlers.add(handler);
         yield* Scope.addFinalizer(
           scope,
           Effect.sync(() => void handlers.delete(handler)),
@@ -83,12 +112,17 @@ export const makeBus = (): BusService => {
         }
         const dispatch = Array.from(handlers, (entry) => entry.handler(payload));
         if (event.strategy === 'serial') {
-          yield* Effect.forEach(dispatch, (effect) => effect);
+          yield* Effect.forEach(dispatch, (effect) => effect, { discard: true });
         } else {
           yield* Effect.all(dispatch, { discard: true });
         }
-      }),
+      }).pipe(Effect.provideService(Bus, bus)),
   };
+
+  return bus;
 };
 
-export const busLayer: Layer.Layer<Bus> = Layer.succeed(Bus, makeBus());
+/**
+ * One bus per layer build, so separate runtimes never share subscribers.
+ */
+export const busLayer: Layer.Layer<Bus> = Layer.sync(Bus, makeBus);

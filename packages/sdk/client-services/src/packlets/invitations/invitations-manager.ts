@@ -15,6 +15,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
+import { Event as EffectEvent } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -32,6 +33,7 @@ import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata/index.ts';
+import { StackOpened } from '../services/events.ts';
 import type { InvitationProtocol } from './invitation-protocol.ts';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
 
@@ -406,13 +408,24 @@ export class InvitationsManager {
 export const InvitationsManagerLayer = (): Layer.Layer<
   InvitationsManagerService,
   never,
-  InvitationsHandlerService | IMetadataStoreService
+  EffectEvent.Bus | InvitationsHandlerService | IMetadataStoreService
 > =>
   Layer.effect(
     InvitationsManagerService,
     Effect.gen(function* () {
       const invitationsHandler = yield* InvitationsHandlerService;
       const metadataStore = yield* IMetadataStoreService;
-      return new InvitationsManager(invitationsHandler, metadataStore);
+      const invitationsManager = new InvitationsManager(invitationsHandler, metadataStore);
+
+      yield* StackOpened.pipe(
+        EffectEvent.handler(({ ctx }) =>
+          Effect.promise(async () => {
+            const loaded = await invitationsManager.loadPersistentInvitations(ctx);
+            log('loaded persistent invitations', { count: loaded.invitations.length });
+          }),
+        ),
+        EffectEvent.subscribe,
+      );
+      return invitationsManager;
     }),
   );

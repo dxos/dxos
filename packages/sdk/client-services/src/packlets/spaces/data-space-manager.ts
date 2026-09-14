@@ -46,6 +46,7 @@ import {
   type EdgeHttpClient,
   EdgeHttpClientService,
 } from '@dxos/edge-client';
+import { Event as EffectEvent } from '@dxos/effect';
 import { type FeedStore, FeedStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -91,6 +92,7 @@ import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 import { type Identity, IdentityProviderService, createAuthProvider } from '../identity/index.ts';
 import { type InvitationsManager, InvitationsManagerService } from '../invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { DataSpacesReady, IdentityAvailable, ProfileUpdated } from '../services/events.ts';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -1174,6 +1176,7 @@ export const DataSpaceManagerLayer = (
 ): Layer.Layer<
   DataSpaceManagerService,
   never,
+  | EffectEvent.Bus
   | SpaceManagerService
   | IMetadataStoreService
   | KeyringApiService
@@ -1197,7 +1200,7 @@ export const DataSpaceManagerLayer = (
       const meshReplicator = yield* Effect.serviceOption(MeshEchoReplicatorService);
       const echoEdgeReplicator = yield* Effect.serviceOption(EdgeAutomergeReplicatorService);
 
-      return new DataSpaceManager({
+      const dataSpaceManager = new DataSpaceManager({
         spaceManager,
         metadataStore,
         keyring,
@@ -1211,5 +1214,26 @@ export const DataSpaceManagerLayer = (
         echoEdgeReplicator: Option.getOrUndefined(echoEdgeReplicator),
         ...options,
       });
+
+      yield* Effect.addFinalizer(() => Effect.promise(() => dataSpaceManager.close(Context.default())));
+      yield* IdentityAvailable.pipe(
+        EffectEvent.handler(({ ctx, identity }) =>
+          Effect.promise(() => dataSpaceManager.open(ctx)).pipe(
+            Effect.andThen(EffectEvent.emit(DataSpacesReady, { ctx, identity })),
+          ),
+        ),
+        EffectEvent.subscribe,
+      );
+      yield* ProfileUpdated.pipe(
+        EffectEvent.handler(({ profile }) =>
+          Effect.promise(async () => {
+            for (const space of dataSpaceManager.spaces.values()) {
+              await space.updateOwnProfile(profile);
+            }
+          }),
+        ),
+        EffectEvent.subscribe,
+      );
+      return dataSpaceManager;
     }),
   );

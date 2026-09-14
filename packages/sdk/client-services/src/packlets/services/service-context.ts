@@ -5,6 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
@@ -12,7 +13,9 @@ import {
   EchoEdgeSubductionReplicatorLayer,
   EchoHostLayer,
   EchoHostService,
+  EdgeAutomergeReplicatorService,
   MeshEchoReplicatorLayer,
+  MeshEchoReplicatorService,
 } from '@dxos/echo-host';
 import {
   type EdgeConnection,
@@ -20,7 +23,7 @@ import {
   type EdgeHttpClient,
   EdgeHttpClientService,
 } from '@dxos/edge-client';
-import { RuntimeProvider } from '@dxos/effect';
+import { Event, RuntimeProvider } from '@dxos/effect';
 import { FeedFactoryLayer, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
@@ -62,7 +65,9 @@ import {
   CrossDeviceSpaceSynchronizerLayer,
   CrossDeviceSpaceSynchronizerService,
 } from './cross-device-space-synchronizer.ts';
+import { NetworkReady } from './events.ts';
 import { FeedSyncerLayer } from './feed-syncer.ts';
+import { NetworkLifecycleLayer } from './network-lifecycle.ts';
 import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
@@ -123,18 +128,21 @@ export const ServiceContextLayer = (
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
+  Event.Bus | SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
 > => {
   const { edgeConnection, edgeHttpClient } = options;
 
   // Core stack, flattened into a single pipe. Optional replicators expose their service via
   // `provideMerge` and are read with `serviceOption` down the stack; their absence is modelled by
   // not wiring the layer, not by a null value.
+  // The chain order is load-bearing for teardown: layer finalizers close components in reverse
+  // build order, so a dependent must sit above what it depends on.
   const core = CrossDeviceSpaceSynchronizerLayer.pipe(
     Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
     Layer.provideMerge(identityProviderLayer),
+    Layer.provideMerge(replicatorsLayer),
     Layer.provideMerge(options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer()),
     Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
     Layer.provideMerge(InvitationsManagerLayer()),
@@ -149,6 +157,7 @@ export const ServiceContextLayer = (
       }),
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
+    Layer.provideMerge(NetworkLifecycleLayer),
     Layer.provideMerge(storageLayer),
   );
 
@@ -174,6 +183,31 @@ export const ServiceContextLayer = (
     ),
   );
 };
+
+/**
+ * Attaches the configured replicators to the echo host once networking is up. Sits above both
+ * replicator layers so it can see whichever of them is wired.
+ */
+const replicatorsLayer = Layer.effectDiscard(
+  Effect.gen(function* () {
+    const echoHost = yield* EchoHostService;
+    const meshReplicator = Option.getOrUndefined(yield* Effect.serviceOption(MeshEchoReplicatorService));
+    const edgeReplicator = Option.getOrUndefined(yield* Effect.serviceOption(EdgeAutomergeReplicatorService));
+    yield* NetworkReady.pipe(
+      Event.handler(({ ctx }) =>
+        Effect.promise(async () => {
+          if (meshReplicator) {
+            await echoHost.addReplicator(ctx, meshReplicator);
+          }
+          if (edgeReplicator) {
+            await echoHost.addReplicator(ctx, edgeReplicator);
+          }
+        }),
+      ),
+      Event.subscribe,
+    );
+  }),
+);
 
 /**
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.

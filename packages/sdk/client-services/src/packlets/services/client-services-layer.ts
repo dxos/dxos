@@ -31,7 +31,7 @@ import { InvitationsManagerService, InvitationsServiceLayer } from '../invitatio
 import { NetworkServiceLayer } from '../network/network-service.ts';
 import { SpaceManagerService } from '../space/index.ts';
 import { SpacesServiceLayer } from '../spaces/spaces-service.ts';
-import { ClientServicesHostService } from './service-host.ts';
+import { ClientServicesHostService } from './host-service.ts';
 
 //
 // Each client RPC service handler is exposed as an individual Effect service tag. Handlers depend

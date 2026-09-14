@@ -61,7 +61,7 @@ import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
 import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
-import { ClientServicesHostService } from '../services/service-host.ts';
+import { ClientServicesHostService } from '../services/host-service.ts';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,

@@ -26,7 +26,7 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityService } from '@dxos/protocols/rpc';
 
-import { ClientServicesHostService } from '../services/service-host.ts';
+import { ClientServicesHostService } from '../services/host-service.ts';
 import { type CreateIdentityOptions, type IdentityManager, IdentityManagerService } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 import { type Identity } from './identity.ts';

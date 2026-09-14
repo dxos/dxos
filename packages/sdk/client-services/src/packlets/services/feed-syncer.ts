@@ -13,7 +13,7 @@ import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
-import { RuntimeProvider } from '@dxos/effect';
+import { Event, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -25,6 +25,8 @@ import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/serv
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
+
+import { StackOpened } from './events.ts';
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 
@@ -577,7 +579,7 @@ export const FeedSyncerLayer = (
 ): Layer.Layer<
   FeedSyncerService,
   never,
-  SqlClient.SqlClient | SqlTransaction.SqlTransaction | EchoHostService | EdgeConnectionService
+  Event.Bus | SqlClient.SqlClient | SqlTransaction.SqlTransaction | EchoHostService | EdgeConnectionService
 > =>
   Layer.effect(
     FeedSyncerService,
@@ -585,12 +587,19 @@ export const FeedSyncerLayer = (
       const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const echoHost = yield* EchoHostService;
       const edgeClient = yield* EdgeConnectionService;
-      return new FeedSyncer({
+      const feedSyncer = new FeedSyncer({
         runtime,
         feedStore: echoHost.feedStore,
         edgeClient,
         getSpaceIds: () => echoHost.spaceIds,
         ...options,
       });
+
+      yield* Effect.addFinalizer(() => Effect.promise(() => feedSyncer.close()));
+      yield* StackOpened.pipe(
+        Event.handler(({ ctx }) => Effect.promise(() => feedSyncer.open(ctx))),
+        Event.subscribe,
+      );
+      return feedSyncer;
     }),
   );
