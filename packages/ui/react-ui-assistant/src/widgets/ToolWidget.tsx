@@ -79,7 +79,7 @@ const STATUS_ICON = 'ph--info--regular';
 const REASONING_ICON = 'ph--brain--regular';
 
 /** The bordered box the disclosure opens onto — the list and a lone call's detail share it. */
-const PANEL_FRAME = 'border border-subdued-separator rounded-md min-w-0';
+const PANEL_FRAME = 'border border-separator rounded-md min-w-0';
 
 /**
  * The operation's human-readable name where the call is an operation invocation; the raw tool name
@@ -323,7 +323,10 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
                 data-testid={`assistant.tool-${entry.kind}`}
                 classNames={mx('text-sm', entry.error !== undefined && 'text-error')}
               >
-                <span className='truncate'>{label(entry)}</span>
+                {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
+                <span className='flex items-center h-(--dx-control-sm) min-w-0'>
+                  <span className='truncate'>{label(entry)}</span>
+                </span>
               </Accordion.ItemHeader>
               <Accordion.ItemBody>
                 <ToolCallDetail entry={entry} />
