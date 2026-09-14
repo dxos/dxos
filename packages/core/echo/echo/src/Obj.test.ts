@@ -630,6 +630,35 @@ describe('Obj', () => {
       });
       expect(fires).toBe(baseline + 1);
     });
+
+    test('a ref-valued property keeps its uri and re-fires only on a different target', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const orgA = Obj.make(TestSchema.Organization, { name: 'A' });
+      const orgB = Obj.make(TestSchema.Organization, { name: 'B' });
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [], employer: Ref.make(orgA) });
+
+      const employerAtom = Obj.atomProperty(obj, 'employer');
+      let fires = 0;
+      registry.subscribe(employerAtom, () => {
+        fires++;
+      });
+      // The snapshot must stay a usable ref: a shallow spread drops `uri`, which is a prototype
+      // getter over a private field, and every consumer reading the DXN off it sees `undefined`.
+      expect(registry.get(employerAtom)?.uri.toString()).toBe(Ref.make(orgA).uri.toString());
+      const baseline = fires;
+
+      // Unrelated writes are silent — refs compare by URI, not identity.
+      Obj.update(obj, (obj) => {
+        obj.name = 'Bob';
+      });
+      expect(fires).toBe(baseline);
+
+      Obj.update(obj, (obj) => {
+        obj.employer = Ref.make(orgB);
+      });
+      expect(fires).toBe(baseline + 1);
+      expect(registry.get(employerAtom)?.uri.toString()).toBe(Ref.make(orgB).uri.toString());
+    });
   });
 
   describe('Obj.updateFrom', () => {

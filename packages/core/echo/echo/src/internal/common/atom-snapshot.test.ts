@@ -4,7 +4,12 @@
 
 import { describe, test } from 'vitest';
 
+import { URI } from '@dxos/keys';
+
+import { RefImpl } from '../Ref/ref.ts';
 import { snapshotEquals, snapshotForComparison } from './atom-snapshot.ts';
+
+const makeRef = (uri: string) => new RefImpl(URI.make(uri));
 
 describe('snapshotEquals', () => {
   test('an array holding a record always compares unequal', ({ expect }) => {
@@ -25,5 +30,21 @@ describe('snapshotEquals', () => {
     expect(snapshotEquals(value, snapshot)).toBe(true);
     expect(snapshotEquals(['a', 'c'], snapshot)).toBe(false);
     expect(snapshotEquals(['a'], snapshot)).toBe(false);
+  });
+});
+
+describe('snapshotForComparison', () => {
+  test('a ref survives the snapshot with its uri intact', ({ expect }) => {
+    // `RefImpl.uri` is a prototype getter over a `#private` field, so a shallow spread would drop it
+    // and hand the consumer an empty object — which is what froze the chat's model selector.
+    const ref = makeRef('dxn:model:com.anthropic:claude');
+    expect(snapshotForComparison(ref).uri).toBe(ref.uri);
+  });
+
+  test('a ref field compares by uri', ({ expect }) => {
+    const snapshot = snapshotForComparison(makeRef('dxn:model:a'));
+    expect(snapshotEquals(makeRef('dxn:model:a'), snapshot)).toBe(true);
+    expect(snapshotEquals(makeRef('dxn:model:b'), snapshot)).toBe(false);
+    expect(snapshotEquals(undefined, snapshot)).toBe(false);
   });
 });

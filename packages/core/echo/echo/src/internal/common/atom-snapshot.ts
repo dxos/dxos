@@ -4,27 +4,32 @@
 
 import { RefTypeId } from '../Ref/ref.ts';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const isRefLike = (value: unknown): value is { uri: { toString(): string } } =>
+  value !== null && typeof value === 'object' && RefTypeId in value;
+
 /**
  * Snapshot a value to create a new reference for atom change-detection and React dependency tracking.
  * Objects and arrays are shallow-copied (a fresh reference each read, so an in-place mutation is
- * observed); primitives are returned as-is (so they dedupe via `!==`). Shared by the object-property
- * and annotation atom families.
+ * observed); primitives and refs are returned as-is (so they dedupe via `!==`). Shared by the
+ * object-property and annotation atom families.
  */
 export const snapshotForComparison = <V>(value: V): V => {
   if (Array.isArray(value)) {
     return [...value] as V;
+  }
+  // Refs are immutable handles whose `uri`/`target` are prototype getters over private fields, so a
+  // spread would hand the consumer an empty object — `useObject(obj, refField).uri` read `undefined`.
+  if (isRefLike(value)) {
+    return value;
   }
   if (value !== null && typeof value === 'object') {
     return { ...value } as V;
   }
   return value;
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value);
-
-const isRefLike = (value: unknown): value is { uri: { toString(): string } } =>
-  value !== null && typeof value === 'object' && RefTypeId in value;
 
 // Refs compare by URI: `RefImpl` mints a fresh wrapper on every property read, so `Object.is` never
 // matches two reads of the same element.
@@ -51,6 +56,11 @@ const elementEquals = (a: unknown, b: unknown): boolean => {
 export const snapshotEquals = (value: unknown, snapshot: unknown): boolean => {
   if (Array.isArray(value) && Array.isArray(snapshot)) {
     return value.length === snapshot.length && value.every((item, index) => elementEquals(item, snapshot[index]));
+  }
+  // A ref field held directly (not inside an array) compares by URI for the same reason an element
+  // does: `RefImpl` mints a fresh wrapper on every read, so identity never matches.
+  if (isRefLike(value) || isRefLike(snapshot)) {
+    return isRefLike(value) && isRefLike(snapshot) && value.uri.toString() === snapshot.uri.toString();
   }
   if (isRecord(value) || isRecord(snapshot)) {
     return false;
