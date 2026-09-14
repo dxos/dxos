@@ -673,3 +673,15 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
+@@ -1026,7 +1131,10 @@ export class SubductionSource {
+                 .slice(0, 8)}: setting needsResync=true (sync in flight)`);
+             entry.needsResync = true;
+         }
+-        else if (entry.lastSyncResult !== "no-peers") {
++        else if (entry.lastSyncResult !== "no-peers" || this.isConnected()) {
++            // DXOS patch: a live connection makes a "no-peers" census stale. Subduction 0.17 counts
++            // only peers SUBSCRIBED to this sedimentree, so a census taken before the peer subscribed
++            // latches with no connection change left to clear it and the commits are never broadcast.
+             entry.lastSyncResult = null;
+         }
+         this.#scheduleRecompute(entry);

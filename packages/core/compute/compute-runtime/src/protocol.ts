@@ -309,8 +309,10 @@ export class FunctionContext extends Resource {
       types: this.opts.types?.length ?? 0,
     });
 
-    const registryLayer = this.db
-      ? Layer.succeed(Registry.Service, this.db.graph.registry)
+    // The client's graph rather than the database's (they are the same graph), so the registry
+    // reached through `Hypergraph.Service` and `Registry.Service` is one object even with no space.
+    const registryLayer = this.client
+      ? Layer.succeed(Registry.Service, this.client.graph.registry)
       : Layer.succeed(Registry.Service, makeRegistry());
 
     // The cross-space handle, alongside the space-scoped `Database.Service`: an operation invoked
