@@ -24,9 +24,10 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { type Actor, Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { findObject, toolInvocations } from '../assertions.ts';
+import { findObject } from '../assertions.ts';
 import { judge } from '../judge.ts';
 import { createEvalRunner } from '../runner.ts';
+import * as Scorer from '../Scorer.ts';
 import { getDefaultSkills } from '../skills.ts';
 
 //
@@ -94,6 +95,156 @@ const REVIEWER: Actor.Actor = { role: 'user', name: 'Eval' };
 
 const lower = (text: string | undefined) => (text ?? '').toLowerCase();
 
+const REQUIRED_TOOLS = ['projects-add-artifact', 'tasks-create'];
+
+/** The documents the session filed on the project, by the name each task asked for. */
+const filedDocuments = Scorer.shared(
+  Effect.gen(function* () {
+    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+    if (!project) {
+      return { timeline: '', retro: '', notice: '' };
+    }
+    const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
+      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+    );
+    const documents = artifacts.filter((candidate): candidate is Markdown.Document =>
+      Obj.instanceOf(Markdown.Document, candidate),
+    );
+    const textOf = (needle: RegExp) => {
+      const document = documents.find((candidate) => needle.test(candidate.name ?? ''));
+      return document
+        ? Database.load(document.content).pipe(
+            Effect.map((text) => text.content),
+            Effect.orElseSucceed(() => ''),
+          )
+        : Effect.succeed('');
+    };
+    return {
+      timeline: yield* textOf(/timeline/i),
+      retro: yield* textOf(/retro/i),
+      notice: yield* textOf(/notice|customer/i),
+    };
+  }),
+);
+
+/** Reads the filed documents and turns them into a mark. */
+const filed = (score: (documents: Effect.Success<typeof filedDocuments>) => Scorer.Result) =>
+  filedDocuments.pipe(Effect.map(score));
+
+/** The judge's verdict on the filed retrospective; absent when the session filed none. */
+const retroVerdict = Scorer.shared(
+  filedDocuments.pipe(
+    Effect.flatMap(({ retro }) =>
+      retro ? judge(RETRO_RUBRIC, retro).pipe(Effect.orElseSucceed(() => undefined)) : Effect.succeed(undefined),
+    ),
+  ),
+);
+
+/** The project's tasks, split into the four the session was given and the ones it added. */
+const taskLedger = Scorer.shared(
+  Effect.gen(function* () {
+    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+    const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
+    if (!taskSet) {
+      return { delegated: [] as Task.Task[], created: [] as Task.Task[] };
+    }
+    const tasks = (yield* Effect.forEach(taskSet.tasks, (ref) =>
+      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+    )).filter((candidate): candidate is Task.Task => !!candidate);
+    return {
+      delegated: tasks.filter((candidate) => candidate.assignee?.role === 'assistant'),
+      created: tasks.filter((candidate) => candidate.assignee?.role !== 'assistant'),
+    };
+  }),
+);
+
+/** Reads the project's tasks and turns them into a mark. */
+const ledger = (score: (tasks: Effect.Success<typeof taskLedger>) => Scorer.Result) =>
+  taskLedger.pipe(Effect.map(score));
+
+const about = (task: Task.Task, needle: RegExp) => needle.test(`${task.title ?? ''} ${task.description ?? ''}`);
+
+const SCORERS = [
+  Scorer.make({
+    name: 'timeline-follows-the-log',
+    description: 'A Timeline artifact carries the four times the log fixes.',
+    score: filed(({ timeline }) => LOG_TIMES.filter((time) => timeline.includes(time)).length / LOG_TIMES.length),
+  }),
+  Scorer.make({
+    name: 'timeline-holds-the-disk-claim-as-a-claim',
+    description: 'The second-hand disk claim is absent from the timeline, or marked as unsupported by the log.',
+    // The disk claim may appear, but only as a claim: something the record does not bear out.
+    score: filed(
+      ({ timeline }) =>
+        !/disk/i.test(timeline) ||
+        /second.?hand|unverified|not (?:supported|borne out|confirmed)|contradict|rules? (?:this |it )?out|no evidence|held at 41/i.test(
+          timeline,
+        ),
+    ),
+  }),
+  Scorer.make({
+    name: 'retro-names-the-cause',
+    description: 'A Retrospective artifact is filed and names the expired certificate.',
+    score: filed(({ retro }) => retro.length > 0 && /certificate/i.test(retro)),
+  }),
+  Scorer.make({
+    name: 'retro-finds-both-process-gaps',
+    description: 'The retrospective names the stale alert routing and the unowned renewal.',
+    score: filed(({ retro }) => [ROUTING_GAP.test(retro), RENEWAL_GAP.test(retro)].filter(Boolean).length / 2),
+  }),
+  Scorer.make({
+    name: 'retro-grounded-and-blameless',
+    description: 'Judge: no deploy freeze, the disk claim not stated as fact, no named person blamed.',
+    score: retroVerdict.pipe(Effect.map((verdict) => verdict?.pass ?? false)),
+  }),
+  Scorer.make({
+    name: 'action-items-are-owned-tasks',
+    description: "At least two new tasks on the project's set, each assigned to someone from the notes.",
+    score: ledger(({ created }) =>
+      created.length >= 2
+        ? created.filter((candidate) => CAST.some((name) => lower(candidate.assignee?.name).includes(lower(name))))
+            .length / created.length
+        : 0,
+    ),
+  }),
+  Scorer.make({
+    name: 'action-items-follow-the-evidence',
+    description: 'One item on alert routing, one on renewal ownership, none on deploys or disk.',
+    score: ledger(
+      ({ created }) =>
+        [
+          created.some((candidate) => about(candidate, ROUTING_GAP)),
+          created.some((candidate) => about(candidate, RENEWAL_GAP)),
+          !created.some((candidate) => DISTRACTOR_ACTIONS.test(candidate.title ?? '')),
+        ].filter(Boolean).length / 3,
+    ),
+  }),
+  Scorer.make({
+    name: 'customer-notice-is-plain',
+    description: 'A Customer notice artifact names the certificate and carries no internal names or systems.',
+    score: filed(({ notice }) => notice.length > 0 && /certificate/i.test(notice) && !INTERNAL.test(notice)),
+  }),
+  Scorer.make({
+    name: 'delegated-tasks-back-in-review',
+    description: 'Every task the session was given is in review (or done) when it finishes.',
+    // `done` past a named reviewer lands as `review`; either means the session finished the task.
+    score: ledger(({ delegated }) =>
+      delegated.length > 0
+        ? delegated.filter((candidate) => candidate.status === 'review' || candidate.status === 'done').length /
+          delegated.length
+        : 0,
+    ),
+  }),
+  Scorer.toolCalls({
+    name: 'project-verbs-reached',
+    description: 'Artifacts were filed and tasks created through the project skill, and no tool errored.',
+    score: (invocations) => {
+      const called = new Set(invocations.map(({ name }) => name));
+      return REQUIRED_TOOLS.every((name) => called.has(name)) && invocations.every(({ error }) => !error);
+    },
+  }),
+];
+
 const task = createEvalRunner({
   instructions: OPENING_PROMPT,
   input: Schema.Unknown,
@@ -144,180 +295,13 @@ const task = createEvalRunner({
 
       return { objects: [Ref.make(project)], chat: Ref.make(chat) };
     }),
-  dbQuery: () =>
-    Effect.gen(function* () {
-      const invocations = yield* toolInvocations();
-      const trace = {
-        artifactAddCalled: invocations.some(({ name }) => name === 'projects-add-artifact'),
-        taskCreateCalled: invocations.some(({ name }) => name === 'tasks-create'),
-        erroredTools: invocations.filter(({ error }) => error).map(({ name }) => name),
-      };
-      const empty = {
-        ...trace,
-        timelineTimes: 0,
-        timelineDiskHandled: false,
-        retroFiled: false,
-        retroNamesCertificate: false,
-        retroNamesRoutingGap: false,
-        retroNamesRenewalGap: false,
-        retroJudge: undefined as { pass: boolean; reasoning: string } | undefined,
-        actionItems: 0,
-        actionItemsOwned: 0,
-        actionItemRouting: false,
-        actionItemRenewal: false,
-        actionItemsClean: false,
-        distractorItems: [] as string[],
-        noticeFiled: false,
-        noticeNamesCertificate: false,
-        noticeClean: false,
-        delegatedInReview: 0,
-        delegatedTotal: 4,
-      };
-
-      const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-      const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
-      if (!project || !taskSet) {
-        return empty;
-      }
-
-      // The documents filed on the project, by the name each task asked for.
-      const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
-        Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-      );
-      const documents = artifacts.filter((candidate): candidate is Markdown.Document =>
-        Obj.instanceOf(Markdown.Document, candidate),
-      );
-      const textOf = (document: Markdown.Document | undefined) =>
-        document
-          ? Database.load(document.content).pipe(
-              Effect.map((text) => text.content),
-              Effect.orElseSucceed(() => ''),
-            )
-          : Effect.succeed('');
-      const named = (needle: RegExp) => documents.find((document) => needle.test(document.name ?? ''));
-      const timeline = yield* textOf(named(/timeline/i));
-      const retro = yield* textOf(named(/retro/i));
-      const notice = yield* textOf(named(/notice|customer/i));
-
-      // The disk claim may appear, but only as a claim: something the record does not bear out.
-      const timelineDiskHandled =
-        !/disk/i.test(timeline) ||
-        /second.?hand|unverified|not (?:supported|borne out|confirmed)|contradict|rules? (?:this |it )?out|no evidence|held at 41/i.test(
-          timeline,
-        );
-
-      const retroJudge = retro
-        ? yield* judge(RETRO_RUBRIC, retro).pipe(Effect.orElseSucceed(() => undefined))
-        : undefined;
-
-      // Action items: the tasks the session added to the set beyond the four it was given.
-      const allTasks = yield* Effect.forEach(taskSet.tasks, (ref) =>
-        Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-      );
-      const delegated = allTasks.filter((candidate) => candidate?.assignee?.role === 'assistant');
-      const created = allTasks.filter(
-        (candidate): candidate is Task.Task => !!candidate && candidate.assignee?.role !== 'assistant',
-      );
-      const ownedBy = (candidate: Task.Task) =>
-        CAST.some((name) => lower(candidate.assignee?.name).includes(lower(name)));
-      const about = (candidate: Task.Task, needle: RegExp) =>
-        needle.test(`${candidate.title ?? ''} ${candidate.description ?? ''}`);
-      const distractorItems = created
-        .filter((candidate) => DISTRACTOR_ACTIONS.test(candidate.title ?? ''))
-        .map((candidate) => candidate.title ?? '');
-
-      return {
-        ...trace,
-        timelineTimes: LOG_TIMES.filter((time) => timeline.includes(time)).length,
-        timelineDiskHandled,
-        retroFiled: retro.length > 0,
-        retroNamesCertificate: /certificate/i.test(retro),
-        retroNamesRoutingGap: ROUTING_GAP.test(retro),
-        retroNamesRenewalGap: RENEWAL_GAP.test(retro),
-        retroJudge,
-        actionItems: created.length,
-        actionItemsOwned: created.filter(ownedBy).length,
-        actionItemRouting: created.some((candidate) => about(candidate, ROUTING_GAP)),
-        actionItemRenewal: created.some((candidate) => about(candidate, RENEWAL_GAP)),
-        actionItemsClean: distractorItems.length === 0,
-        distractorItems,
-        noticeFiled: notice.length > 0,
-        noticeNamesCertificate: /certificate/i.test(notice),
-        noticeClean: notice.length > 0 && !INTERNAL.test(notice),
-        // `done` past a named reviewer lands as `review`; either means the session finished the task.
-        delegatedInReview: delegated.filter(
-          (candidate) => candidate?.status === 'review' || candidate?.status === 'done',
-        ).length,
-        delegatedTotal: delegated.length,
-      };
-    }),
+  scored: true,
 });
 
 evalite('Incident retro — a delegated session turns a log and four notes into a filed retro', {
   data: [{ input: null }],
   task,
-  scorers: [
-    {
-      name: 'timeline-follows-the-log',
-      description: 'A Timeline artifact carries the four times the log fixes.',
-      scorer: ({ output }) => output.dbQuery.timelineTimes / LOG_TIMES.length,
-    },
-    {
-      name: 'timeline-holds-the-disk-claim-as-a-claim',
-      description: 'The second-hand disk claim is absent from the timeline, or marked as unsupported by the log.',
-      scorer: ({ output }) => (output.dbQuery.timelineDiskHandled ? 1 : 0),
-    },
-    {
-      name: 'retro-names-the-cause',
-      description: 'A Retrospective artifact is filed and names the expired certificate.',
-      scorer: ({ output }) => (output.dbQuery.retroFiled && output.dbQuery.retroNamesCertificate ? 1 : 0),
-    },
-    {
-      name: 'retro-finds-both-process-gaps',
-      description: 'The retrospective names the stale alert routing and the unowned renewal.',
-      scorer: ({ output }) =>
-        [output.dbQuery.retroNamesRoutingGap, output.dbQuery.retroNamesRenewalGap].filter(Boolean).length / 2,
-    },
-    {
-      name: 'retro-grounded-and-blameless',
-      description: 'Judge: no deploy freeze, the disk claim not stated as fact, no named person blamed.',
-      scorer: ({ output }) => (output.dbQuery.retroJudge?.pass ? 1 : 0),
-    },
-    {
-      name: 'action-items-are-owned-tasks',
-      description: "At least two new tasks on the project's set, each assigned to someone from the notes.",
-      scorer: ({ output }) =>
-        output.dbQuery.actionItems >= 2 ? output.dbQuery.actionItemsOwned / output.dbQuery.actionItems : 0,
-    },
-    {
-      name: 'action-items-follow-the-evidence',
-      description: 'One item on alert routing, one on renewal ownership, none on deploys or disk.',
-      scorer: ({ output }) =>
-        [output.dbQuery.actionItemRouting, output.dbQuery.actionItemRenewal, output.dbQuery.actionItemsClean].filter(
-          Boolean,
-        ).length / 3,
-    },
-    {
-      name: 'customer-notice-is-plain',
-      description: 'A Customer notice artifact names the certificate and carries no internal names or systems.',
-      scorer: ({ output }) =>
-        output.dbQuery.noticeFiled && output.dbQuery.noticeNamesCertificate && output.dbQuery.noticeClean ? 1 : 0,
-    },
-    {
-      name: 'delegated-tasks-back-in-review',
-      description: 'Every task the session was given is in review (or done) when it finishes.',
-      scorer: ({ output }) =>
-        output.dbQuery.delegatedTotal > 0 ? output.dbQuery.delegatedInReview / output.dbQuery.delegatedTotal : 0,
-    },
-    {
-      name: 'project-verbs-reached',
-      description: 'Artifacts were filed and tasks created through the project skill, and no tool errored.',
-      scorer: ({ output }) =>
-        output.dbQuery.artifactAddCalled && output.dbQuery.taskCreateCalled && output.dbQuery.erroredTools.length === 0
-          ? 1
-          : 0,
-    },
-  ],
+  scorers: Scorer.toEvalite(SCORERS),
 });
 
 /**

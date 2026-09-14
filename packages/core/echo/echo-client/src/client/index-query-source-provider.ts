@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldToEventLoop } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, subscribeStream } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
-import { isNonNullable } from '@dxos/util';
+import { chunkArray, isNonNullable } from '@dxos/util';
 
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
@@ -28,6 +28,9 @@ import {
   getTargetSpacesForQuery,
   queryTargetsSpacesOrFeeds,
 } from '../query/index.ts';
+
+/** Records hydrated between turns of the event loop in {@link IndexQuerySource._mapRecords}. */
+const HYDRATE_CHUNK_SIZE = 64;
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -354,9 +357,10 @@ export class IndexQuerySource implements QuerySource {
         this._hydrationCtx = ctx;
         const results = await this._mapRecords(ctx, queryId, query, Date.now(), records);
 
-        // Dropped if the source closed (or was re-opened with a new query) during hydration.
+        // Dropped if the source closed (or was re-opened with a new query) during hydration; a pass
+        // queued for the new query still runs.
         if (this._hydrationCtx !== ctx) {
-          return;
+          continue;
         }
 
         this._results = results;
@@ -384,9 +388,18 @@ export class IndexQuerySource implements QuerySource {
     });
 
     const hydratedIntoFeedHandle = new Set<string>();
-    const processedResults = await Promise.all(
-      records.map((result) => this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle)),
-    );
+    // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
+    const processedResults: (SourceEntry | null)[] = [];
+    for (const chunk of chunkArray([...records], HYDRATE_CHUNK_SIZE)) {
+      if (processedResults.length > 0) {
+        await yieldToEventLoop();
+      }
+      processedResults.push(
+        ...(await Promise.all(
+          chunk.map((result) => this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle)),
+        )),
+      );
+    }
     const results = processedResults.filter(isNonNullable);
 
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.

@@ -6,7 +6,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 
-import { CHATS_SEGMENT } from './capabilities/app-graph-builder.ts';
+import { SESSIONS_SEGMENT } from './capabilities/app-graph-builder.ts';
 
 const PROJECT_TYPENAME = Type.getTypename(Project.Project)!;
 
@@ -20,4 +20,4 @@ export const getProjectPath = (spaceId: string, projectId: string): string =>
  * is the only place the navtree shows them, and the only path that opens them.
  */
 export const getProjectChatPath = (spaceId: string, projectId: string, chatId: string): string =>
-  `${getProjectPath(spaceId, projectId)}/${CHATS_SEGMENT}/${chatId}`;
+  `${getProjectPath(spaceId, projectId)}/${SESSIONS_SEGMENT}/${chatId}`;

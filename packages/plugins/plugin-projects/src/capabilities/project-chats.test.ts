@@ -3,25 +3,29 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import {
-  CHATS_SEGMENT,
+  ARTIFACTS_SEGMENT,
+  SESSIONS_SEGMENT,
+  createProjectArtifactsActionExtension,
+  createProjectArtifactsExtension,
   createProjectChatsChildrenExtension,
   createProjectChatsExtension,
 } from './app-graph-builder.ts';
-
-const PROJECT_ID = 'project';
 
 describe('project chats graph extension', () => {
   let builder: EchoTestBuilder;
@@ -39,25 +43,78 @@ describe('project chats graph extension', () => {
     const project = db.add(Project.make({ name: 'Test' }));
     await db.flush();
 
+    const sectionPath = [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)];
     const rootExtensions = await EffectEx.runPromise(
       AppGraphBuilder.createExtension({
         id: 'testRoot',
         match: GraphNodeMatcher.whenRoot,
-        connector: () => Effect.succeed([{ id: PROJECT_ID, type: 'test', data: project }]),
+        connector: () => Effect.succeed([{ id: db.spaceId, type: 'test-space' }]),
+      }),
+    );
+    const spaceExtensions = await EffectEx.runPromise(
+      AppGraphBuilder.createExtension({
+        id: 'testSpace',
+        match: GraphNodeMatcher.whenNodeType('test-space'),
+        connector: () => Effect.succeed([{ id: sectionPath[0], type: 'test-group' }]),
+      }),
+    );
+    const groupExtensions = await EffectEx.runPromise(
+      AppGraphBuilder.createExtension({
+        id: 'testGroup',
+        match: GraphNodeMatcher.whenNodeType('test-group'),
+        connector: () => Effect.succeed([{ id: sectionPath[1], type: 'test-section' }]),
+      }),
+    );
+    const sectionExtensions = await EffectEx.runPromise(
+      AppGraphBuilder.createExtension({
+        id: 'testSection',
+        // Stands in for the real type section, which shares the key and the path.
+        url: { key: 'project', kind: 'item', path: sectionPath },
+        match: GraphNodeMatcher.whenNodeType('test-section'),
+        connector: () => Effect.succeed([{ id: project.id, type: 'test', data: project }]),
       }),
     );
     const chatExtensions = await EffectEx.runPromise(createProjectChatsExtension());
     const chatChildrenExtensions = await EffectEx.runPromise(createProjectChatsChildrenExtension());
+    const artifactExtensions = await EffectEx.runPromise(createProjectArtifactsExtension());
+    const artifactChildrenExtensions = await EffectEx.runPromise(createProjectArtifactsActionExtension());
     const context = setupGraphBuilder({
-      extensions: [...rootExtensions, ...chatExtensions, ...chatChildrenExtensions],
+      extensions: [
+        ...rootExtensions,
+        ...spaceExtensions,
+        ...groupExtensions,
+        ...sectionExtensions,
+        ...chatExtensions,
+        ...chatChildrenExtensions,
+        ...artifactExtensions,
+        ...artifactChildrenExtensions,
+      ],
     });
 
-    // The chats hang off a virtual Chats branch, not the project row, so both levels are expanded.
-    const projectNodeId = GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID);
-    const chatsNodeId = GraphNode.qualifyId(projectNodeId, CHATS_SEGMENT);
-    await context.expand(GraphNode.RootId);
+    const projectNodeId = GraphPath.getSpacePath(db.spaceId, ...sectionPath, project.id);
+    const chatsNodeId = GraphNode.qualifyId(projectNodeId, SESSIONS_SEGMENT);
+    const artifactsNodeId = GraphNode.qualifyId(projectNodeId, ARTIFACTS_SEGMENT);
+    for (const nodeId of [
+      GraphNode.RootId,
+      ...sectionPath.map((_, index) => GraphPath.getSpacePath(db.spaceId, ...sectionPath.slice(0, index))),
+    ]) {
+      await context.expand(nodeId);
+    }
+    await context.expand(GraphPath.getSpacePath(db.spaceId, ...sectionPath));
     await context.expand(projectNodeId);
     await context.expand(chatsNodeId);
+    await context.expand(artifactsNodeId);
+
+    const addArtifact = async () => {
+      const artifact = db.add(Feed.make());
+      Obj.update(project, (project) => {
+        project.artifacts.push(Ref.make(artifact));
+      });
+      await db.flush();
+      await context.flush();
+      await context.expand(artifactsNodeId);
+      return artifact;
+    };
 
     const addChat = async (name: string) => {
       const feed = db.add(Feed.make());
@@ -73,17 +130,18 @@ describe('project chats graph extension', () => {
       db,
       project,
       addChat,
+      addArtifact,
       projectNodeId,
       chatsNodeId,
+      artifactsNodeId,
       getChildIds: () => context.getConnections(chatsNodeId).map((node) => node.id),
     };
   };
 
   test('a project always carries the Chats branch, empty or not', async ({ expect }) => {
-    const { projectNodeId, chatsNodeId, getConnections, getChildIds } = await setupTestContext();
+    const { projectNodeId, chatsNodeId, artifactsNodeId, getConnections, getChildIds } = await setupTestContext();
 
-    // The branch is what the reader clicks into, so it exists before there is anything under it.
-    expect(getConnections(projectNodeId).map((node) => node.id)).toEqual([chatsNodeId]);
+    expect(getConnections(projectNodeId).map((node) => node.id)).toEqual([chatsNodeId, artifactsNodeId]);
     expect(getChildIds()).toEqual([]);
   });
 
@@ -110,5 +168,93 @@ describe('project chats graph extension', () => {
     await flush();
 
     expect(getChildIds()).toEqual([GraphNode.qualifyId(chatsNodeId, chat.id)]);
+  });
+
+  test('a project chat is addressable by URL: `project/<project>+sessions+<id>` resolves to the node and back', async ({
+    expect,
+  }) => {
+    const { db, project, builder, addChat, chatsNodeId } = await setupTestContext();
+    const chat = await addChat('Chat');
+    const chatNodeId = GraphNode.qualifyId(chatsNodeId, chat.id);
+    const pairId = [project.id, SESSIONS_SEGMENT, chat.id].join('+');
+
+    const represented = PathResolution.representNode(builder, chatNodeId);
+    expect(Option.getOrUndefined(represented)).toEqual({ key: 'project', id: pairId, workspace: db.spaceId });
+
+    const [resolved] = await EffectEx.runPromise(
+      PathResolution.resolveUrl(builder, {
+        workspace: db.spaceId,
+        pairs: [{ key: 'project', id: pairId, workspace: db.spaceId }],
+      }),
+    );
+    expect(resolved?.nodeId).toEqual(chatNodeId);
+  });
+
+  test('one key addresses the project and everything under it', async ({ expect }) => {
+    const { db, project, builder, addChat, projectNodeId, chatsNodeId } = await setupTestContext();
+    const chat = await addChat('Chat');
+
+    // Four extensions share the key; only how far the id reaches tells these apart.
+    const cases = [
+      [projectNodeId, project.id],
+      [chatsNodeId, [project.id, SESSIONS_SEGMENT].join('+')],
+      [GraphNode.qualifyId(chatsNodeId, chat.id), [project.id, SESSIONS_SEGMENT, chat.id].join('+')],
+    ] as const;
+    for (const [nodeId, id] of cases) {
+      expect(Option.getOrUndefined(PathResolution.representNode(builder, nodeId))).toEqual({
+        key: 'project',
+        id,
+        workspace: db.spaceId,
+      });
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: db.spaceId,
+          pairs: [{ key: 'project', id, workspace: db.spaceId }],
+        }),
+      );
+      expect(resolved?.nodeId).toEqual(nodeId);
+    }
+  });
+
+  test('the branch rows are addressable too, at the id their children extend', async ({ expect }) => {
+    const { db, project, builder, chatsNodeId, artifactsNodeId } = await setupTestContext();
+
+    for (const [nodeId, segment] of [
+      [chatsNodeId, SESSIONS_SEGMENT],
+      [artifactsNodeId, ARTIFACTS_SEGMENT],
+    ] as const) {
+      const pairId = [project.id, segment].join('+');
+      expect(Option.getOrUndefined(PathResolution.representNode(builder, nodeId))).toEqual({
+        key: 'project',
+        id: pairId,
+        workspace: db.spaceId,
+      });
+
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: db.spaceId,
+          pairs: [{ key: 'project', id: pairId, workspace: db.spaceId }],
+        }),
+      );
+      expect(resolved?.nodeId).toEqual(nodeId);
+    }
+  });
+
+  test('a project artifact is addressable by URL under the project key', async ({ expect }) => {
+    const { db, project, builder, addArtifact, artifactsNodeId } = await setupTestContext();
+    const artifact = await addArtifact();
+    const artifactNodeId = GraphNode.qualifyId(artifactsNodeId, artifact.id);
+    const pairId = [project.id, ARTIFACTS_SEGMENT, artifact.id].join('+');
+
+    const represented = PathResolution.representNode(builder, artifactNodeId);
+    expect(Option.getOrUndefined(represented)).toEqual({ key: 'project', id: pairId, workspace: db.spaceId });
+
+    const [resolved] = await EffectEx.runPromise(
+      PathResolution.resolveUrl(builder, {
+        workspace: db.spaceId,
+        pairs: [{ key: 'project', id: pairId, workspace: db.spaceId }],
+      }),
+    );
+    expect(resolved?.nodeId).toEqual(artifactNodeId);
   });
 });

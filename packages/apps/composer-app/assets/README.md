@@ -30,8 +30,10 @@ pnpm icons:menubar
 ## Per-channel brand artwork
 
 Every non-production channel deploys as its own app and installs beside the released one, so each ships a
-recoloured mark rather than sharing production's blue, named by environment: **purple** for `preview`,
-**rust** for `dev` and `staging`. Three places carry it, all from the same four-colour ramp:
+recoloured mark rather than sharing production's blue. `@dxos/brand`'s `channels.ts` owns the channels and
+each one's colour; the generated artwork here must be regenerated whenever it changes, or the favicon
+and app icon drift from the boot mark (which is recoloured live from the same table). Three places carry
+it, all from the same four-colour ramp:
 
 | Artwork | Source | Generated | Selected by |
 | --- | --- | --- | --- |

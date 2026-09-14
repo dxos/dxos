@@ -5,6 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-client/testing';
 import { PublicKey } from '@dxos/keys';
@@ -40,7 +41,10 @@ describe('list-milestones', () => {
       expect(milestones).toEqual([
         { id: milestone.id, name: 'Alpha', description: 'Ships to staging', targetDate: undefined, total: 2, done: 1 },
       ]);
-    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+    }).pipe(
+      Effect.provide(Trace.writerLayerNoop),
+      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+    ),
   );
 
   it.effect(

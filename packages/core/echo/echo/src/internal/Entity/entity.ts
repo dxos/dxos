@@ -119,37 +119,6 @@ export interface EchoTypeSchema<
       : {});
 }
 
-// type MakeProps =
-//   | boolean
-//   | {
-//       readonly disableValidation?: boolean;
-//     };
-
-// NOTE: Utils copied from Effect `Schema.ts`.
-// const _ownKeys = (o: object): Array<PropertyKey> =>
-//   (Object.keys(o) as Array<PropertyKey>).concat(Object.getOwnPropertySymbols(o));
-
-// const _lazilyMergeDefaults = (
-//   fields: Schema.Struct.Fields,
-//   out: Record<PropertyKey, unknown>,
-// ): { [x: string | symbol]: unknown } => {
-//   const ownKeys = _ownKeys(fields);
-//   for (const key of ownKeys) {
-//     const field = fields[key];
-//     if (out[key] === undefined && Schema.isPropertySignature(field)) {
-//       const ast = field.ast;
-//       const defaultValue = ast._tag === 'PropertySignatureDeclaration' ? ast.defaultValue : ast.to.defaultValue;
-//       if (defaultValue !== undefined) {
-//         out[key] = defaultValue();
-//       }
-//     }
-//   }
-//   return out;
-// };
-
-// const _getDisableValidationMakeOption = (options: MakeProps | undefined): boolean =>
-//   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
-
 /**
  * Identity (typename + version) of the type meta-schema — the `Type.Type` that
  * every ECHO type entity is itself an instance of. Shared by the materialisation

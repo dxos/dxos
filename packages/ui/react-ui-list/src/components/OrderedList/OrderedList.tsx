@@ -7,6 +7,7 @@ import {
   OrderedListDetailItem,
   type OrderedListDetailItemProps,
   OrderedListDragHandle,
+  type OrderedListDragHandleProps,
   OrderedListExpandCaret,
   OrderedListIconButton,
   OrderedListItem,
@@ -60,4 +61,10 @@ export const OrderedList = {
   ExpandCaret: OrderedListExpandCaret,
 };
 
-export type { OrderedListDetailItemProps, OrderedListItemProps, OrderedListRootProps, OrderedListViewportProps };
+export type {
+  OrderedListDetailItemProps,
+  OrderedListDragHandleProps,
+  OrderedListItemProps,
+  OrderedListRootProps,
+  OrderedListViewportProps,
+};

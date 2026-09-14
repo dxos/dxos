@@ -23,7 +23,6 @@ export default defineConfig({
     Support: 'src/types/Support.ts',
     SupportCapabilities: 'src/types/SupportCapabilities.ts',
     SupportOperation: 'src/types/SupportOperation.ts',
-    Tour: 'src/types/Tour.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

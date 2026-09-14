@@ -30,7 +30,7 @@ export const MobileDrawer = () => {
   const placeholder = useMemo(() => <Loading />, []);
 
   // Companions of the visible panel; the drawer shows the one the complementary sidebar selects.
-  const companions = useCompanions(topId);
+  const companions = useCompanions(topId) ?? [];
   const { companionId, variant } = useSelectedCompanion(companions, state.complementarySidebarPanel);
 
   const node = useNode(graph, companionId);

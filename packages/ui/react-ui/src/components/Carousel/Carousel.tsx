@@ -165,12 +165,12 @@ const CarouselSlide = ({
   return (
     <CarouselPrimitive.Item index={index} className={mx('relative h-full dx-base-surface', classNames)}>
       <MediaPlayer
+        classNames='dx-fill'
         src={src}
         kind={kind}
         alt={alt}
-        classNames='dx-fill'
-        // Every slide stays in the track, so only the one on screen may play — the others would be
-        // heard rather than seen.
+        // Every slide stays in the track, so only the one on screen may play —
+        // the others would be heard rather than seen.
         autoPlay={autoPlay && page === index}
         loop={loop}
         muted={muted}

@@ -36,12 +36,17 @@ export const currentNavigation = Effect.fnUntraced(function* () {
  * Change what is open: push the URL, then project it. Returns the plank attention has to move to
  * because the one holding it is no longer open.
  */
-export const navigate = Effect.fnUntraced(function* (next: Navigation.Navigation, method?: 'push' | 'replace') {
+export const navigate = Effect.fnUntraced(function* (
+  next: Navigation.Navigation,
+  options?: { method?: 'push' | 'replace'; navigatedIds?: Navigation.PlankIds },
+) {
   if (!next.workspace) {
     log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
     return undefined;
   }
-  return Navigation.push(next, method) ? yield* projectUrl(undefined, { attend: false }) : undefined;
+  return Navigation.push(next, options?.method)
+    ? yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds })
+    : undefined;
 });
 
 /**
@@ -66,6 +71,7 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
     anchorId && variant && isCompanionOpen(companionPlanks, flatten, anchorId) ? anchorId : undefined;
 
   const pairs: UrlPath.Pair[] = [];
+  const navigatedIds = new Map<Navigation.PlankSegment, string>();
   for (const nodeId of active) {
     const represented = PathResolution.representNode(builder, nodeId);
     if (Option.isNone(represented)) {
@@ -76,12 +82,13 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
       continue;
     }
     pairs.push(represented.value);
+    navigatedIds.set(Navigation.toSegment(represented.value), nodeId);
     if (nodeId === companionAnchor) {
       pairs.push({ key: UrlPath.COMPANION_KEY, id: variant, workspace });
     }
   }
 
-  return { workspace, pairs };
+  return { navigation: { workspace, pairs }, navigatedIds };
 });
 
 /** Navigate to the deck `params` describes, returning the plank attention has to move to. */
@@ -90,5 +97,6 @@ export const navigateDeck = Effect.fnUntraced(function* (params: {
   active: readonly string[];
   companionPlanks?: readonly string[];
 }) {
-  return yield* navigate(yield* deckNavigation(params));
+  const { navigation, navigatedIds } = yield* deckNavigation(params);
+  return yield* navigate(navigation, { navigatedIds });
 });

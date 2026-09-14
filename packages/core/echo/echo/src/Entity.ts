@@ -231,9 +231,9 @@ export const getDatabase = (entity: Unknown | Snapshot): any | undefined => inte
  * Returns read-only meta when passed a regular entity or snapshot.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
-export function getMeta(entity: Mutable<Unknown>): internal.EntityMeta;
+export function getMeta(entity: Mutable<Unknown>): internal.Meta;
 export function getMeta(entity: Unknown | Snapshot): internal.ReadonlyMeta;
-export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.EntityMeta | internal.ReadonlyMeta {
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.Meta | internal.ReadonlyMeta {
   return internal.getMetaChecked(entity);
 }
 

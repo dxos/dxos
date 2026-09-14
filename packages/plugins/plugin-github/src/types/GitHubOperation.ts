@@ -6,13 +6,18 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { DXN } from '@dxos/echo';
+import * as Trace from '@dxos/compute/Trace';
+import { DXN, Obj, Ref } from '@dxos/echo';
 // Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
 // lets TypeScript name it (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import { PullRequest } from '@dxos/types';
+
+import * as Walkthrough from './Walkthrough.ts';
 
 /**
  * Discovery only — list GitHub repositories the connection's token can see.
@@ -90,3 +95,44 @@ export const SyncGitHubRepositories = Operation.make({
     }),
   }),
 }).pipe(Operation.visible);
+
+/**
+ * Generate a walkthrough of a pull request: one markdown document narrating the change in reading
+ * order, with its diff chunks spliced in from the patch itself.
+ *
+ * Idempotent by commit — a walkthrough already generated for the pull request's head is returned
+ * unchanged unless `force` says otherwise, since the answer cannot have changed.
+ */
+export const GenerateWalkthrough = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.generateWalkthrough'),
+    name: 'Generate Walkthrough',
+    description: "Narrate a pull request as one markdown document, with the change's diffs embedded in it.",
+    icon: 'ph--path--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+    /** Regenerate even where a walkthrough for this head already exists. */
+    force: Schema.Boolean.pipe(Schema.optional),
+  }),
+  output: Schema.Struct({
+    walkthrough: Ref.Ref(Walkthrough.Walkthrough),
+    /** Whether the model ran, as against an existing walkthrough being returned unchanged. */
+    generated: Schema.Boolean,
+    /** Hunks the prose accounts for, over the patch's total. */
+    covered: Schema.Number,
+    total: Schema.Number,
+  }),
+  types: [Walkthrough.Walkthrough, PullRequest.PullRequest],
+  // `AiService` must be declared, not merely provided: the invoker builds the runtime from THIS list
+  // and `Layer.orDie` clears a layer's error channel, never its requirement.
+  services: [Trace.TraceService, AiService.AiService],
+}).pipe(Operation.visible);
+
+/**
+ * Progress key for {@link GenerateWalkthrough}, derived from the pull request rather than passed, so
+ * the UI can watch a run it did not start. The absolute URI form is required: a hydration-dependent
+ * one would not match the key the producer mints.
+ */
+export const createWalkthroughProgressKey = (pullRequest: PullRequest.PullRequest): string =>
+  Obj.getURI(pullRequest, { prefer: 'absolute' }).toString() + '#walkthrough';

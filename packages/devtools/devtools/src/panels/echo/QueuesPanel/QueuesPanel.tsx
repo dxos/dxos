@@ -11,8 +11,8 @@ import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '
 import { mx } from '@dxos/ui-theme';
 
 import { Searchbar } from '../../../components/index.ts';
-// import { DataSpaceSelector } from '../../../containers';
-// import { useDevtoolsState } from '../../../hooks';
+// import { DataSpaceSelector } from '../../../containers/index.ts';
+// import { useDevtoolsState } from '../../../hooks/index.ts';
 
 // TODO(queue-to-feed-migration): retains "Queue" naming — `FeedsPanel` already names the unrelated
 // hypercore feed-pipeline devtools panel (see ../FeedsPanel), so renaming this to `FeedsPanel` would

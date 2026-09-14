@@ -86,11 +86,12 @@ export const formattingStyles = EditorView.theme({
   '& .cm-code-inline': {
     fontFamily: fontMono,
     height: '24px',
-    // display: 'inline-flex',
     alignItems: 'center',
     overflow: 'hidden',
     whiteSpace: 'nowrap',
+    padding: '0 0.25rem',
     color: 'var(--color-cm-code-inline)',
+    backgroundColor: 'var(--color-cm-codeblock)',
   },
   '& .cm-code-mark': {
     fontFamily: fontMono,

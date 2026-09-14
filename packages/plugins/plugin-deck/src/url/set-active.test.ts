@@ -113,9 +113,42 @@ describe('computeActiveUpdates', () => {
       expect(deckUpdates.companionPlanks).toEqual(['a']);
     });
 
+    // The reader never closed it, so replacing the plank it hung off must not shut it.
+    test('carries an open companion to the newest plank when its own plank closes', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['b'] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['c'], deck });
+      expect(deckUpdates.companionPlanks).toEqual(['c']);
+    });
+
+    test('leaves a closed companion closed when planks are replaced', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: [] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['c'], deck });
+      expect(deckUpdates.companionPlanks).toEqual([]);
+    });
+
     test('leaves the deck-wide flag closed under flatten', ({ expect }) => {
       const deck = makeDeck({ active: ['a', 'b'], companionPlanks: [] });
       const { deckUpdates } = computeActiveUpdates({ next: ['a'], deck, flatten: true });
+      expect(deckUpdates.companionPlanks).toEqual([]);
+    });
+
+    test('stays undecided while the deck holds nothing to hang a companion off', ({ expect }) => {
+      const deck = makeDeck({ active: [], companionPlanks: undefined });
+      const { deckUpdates } = computeActiveUpdates({ next: [], deck });
+      expect(deckUpdates.companionPlanks).toBeUndefined();
+    });
+
+    test('carries an undecided companion through navigation rather than settling it', ({ expect }) => {
+      const deck = makeDeck({ active: [], companionPlanks: undefined });
+      expect(computeActiveUpdates({ next: ['a'], deck }).deckUpdates.companionPlanks).toBeUndefined();
+
+      const opened = makeDeck({ active: ['a'], companionPlanks: undefined });
+      expect(computeActiveUpdates({ next: ['a', 'b'], deck: opened }).deckUpdates.companionPlanks).toBeUndefined();
+    });
+
+    test('once the reader closes it, later navigation keeps it closed', ({ expect }) => {
+      const closed = makeDeck({ active: ['a'], companionPlanks: [] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['a', 'b'], deck: closed });
       expect(deckUpdates.companionPlanks).toEqual([]);
     });
   });

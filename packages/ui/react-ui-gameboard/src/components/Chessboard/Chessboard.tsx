@@ -56,21 +56,8 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
       );
     }, [orientation, rows, cols]);
 
-    // Use DOM grid layout to position squares.
-    const layout = useMemo(() => {
-      return squares.map((location) => {
-        return (
-          <div
-            key={locationToString(location)}
-            {...{
-              'data-location': locationToString(location),
-            }}
-          />
-        );
-      });
-    }, [squares]);
-
-    // Build map of square locations to bounds.
+    // Square bounds, measured from the grid for the pieces (which are positioned absolutely so they can
+    // animate between squares).
     const [grid, setGrid] = useState<Record<string, DOMRectBounds>>({});
     const gridRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -106,18 +93,13 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
 
     return (
       <div ref={targetRef} tabIndex={0} className={mx('dx-expand overflow-hidden relative outline-hidden', classNames)}>
-        {/* DOM Layout. */}
+        {/* Squares: the grid itself, so adjacent squares share exact edges. */}
         <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
-          {layout}
-        </div>
-        {/* Squares. */}
-        <div>
           {squares.map((location) => (
             <Gameboard.Square
               key={locationToString(location)}
               location={location}
               label={showLabels ? locationToPos(location) : undefined}
-              bounds={grid[locationToString(location)]}
               classNames={getSquareColor(location)}
             />
           ))}

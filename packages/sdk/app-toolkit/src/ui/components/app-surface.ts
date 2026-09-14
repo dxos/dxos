@@ -339,12 +339,17 @@ export type SettingsProps<T extends {}, Props extends {} = {}> = {
   onSettingsChange?: (cb: (current: T) => T) => void;
 } & Props;
 
-/**
- * Filter: matches a plugin-settings article. When `prefix` is omitted the
- * filter matches any settings subject (used by the generic default settings
- * surface); pass a `prefix` to match a single plugin's settings.
- */
-export const settings = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
+export const settings: {
+  /** Filter: matches any plugin-settings article, for the generic settings surface. */
+  (token: Role.Role<any>): Surface.Filter<SettingsData>;
+  /**
+   * Filter: matches one plugin's settings article.
+   *
+   * @deprecated Contribute a schema and atom and let `plugin-settings`' generic surface render the
+   * panel; a bespoke article re-implements the panel chrome by hand.
+   */
+  (token: Role.Role<any>, prefix: string): Surface.Filter<SettingsData>;
+} = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;

@@ -17,6 +17,13 @@ export type Navigation = {
 };
 
 /**
+ * Node ids by the URL segment that addresses them. An in-app navigation derived its pairs FROM these
+ * ids, so it can hand them to the projection and skip the placeholder a pair otherwise opens under.
+ * Not part of {@link Navigation}: the URL cannot carry them, and an external navigation has none.
+ */
+export type PlankIds = ReadonlyMap<PlankSegment, string>;
+
+/**
  * A pair as it appears in a plank list, in its URL segment form (`doc/<id>`, `home`). Branded so a
  * plank id cannot be passed where a segment belongs: the two are the same shape and are routinely
  * held side by side.
@@ -101,3 +108,15 @@ export const getCandidateEntityIds = (pairId: string, tailSeparator: string): st
 /** The plank id for a pair no extension could resolve. */
 export const getUnresolvedPlankId = (pair: UrlPath.Pair): string =>
   [GraphPath.getSpacePath(pair.workspace), pair.key, pair.id].filter((segment) => segment !== undefined).join('/');
+
+/**
+ * The planks a chain opens before it resolves: each pair under the id `idsBySegment` holds for its
+ * segment, else under a placeholder the resolved id replaces.
+ */
+export const initialPlanks = (pairs: readonly UrlPath.Pair[], idsBySegment: PlankIds): Plank[] =>
+  pairs
+    .filter((pair) => pair.key !== UrlPath.COMPANION_KEY)
+    .map((pair) => {
+      const segment = toSegment(pair);
+      return { segment, id: idsBySegment.get(segment) ?? getUnresolvedPlankId(pair) };
+    });

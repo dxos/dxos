@@ -9,7 +9,7 @@ import { afterEach, describe, test, vi } from 'vitest';
 
 import { CHANNEL_COLORS, CHANNELS, RAMP_HUE } from '@dxos/brand/channels';
 
-import { applyChannelFavicons, bootMarkFilter, channelVariant } from './channel-branding.ts';
+import { applyChannelFavicons, bootMarkFilter, channelFaviconPath, channelVariant } from './channel-branding.ts';
 
 const FAVICONS = [
   'favicon.svg',
@@ -32,6 +32,10 @@ describe('channelVariant', () => {
     expect(channelVariant('build', 'production')).toBeUndefined();
   });
 
+  test('the e2e bundle is not a deploy, so it ships the released mark', ({ expect }) => {
+    expect(channelVariant('build', 'ci')).toBeUndefined();
+  });
+
   test('an unset environment is a local build, not a channel', ({ expect }) => {
     // `environment` defaults to `process.env.DX_ENVIRONMENT`, so passing `undefined` reads the
     // ambient value — a developer who exports one (a machine name, say) fails this otherwise.
@@ -50,10 +54,29 @@ describe('channelVariant', () => {
     expect(() => channelVariant('build', 'labs')).toThrow(/unknown environment: labs/);
   });
 
-  // Only a deployed bundle is branded, so `DX_ENVIRONMENT` in a shell does not repaint localhost.
-  test('a dev server keeps the released mark whatever the environment says', ({ expect }) => {
-    expect(channelVariant('serve', 'preview')).toBeUndefined();
-    expect(channelVariant('serve', 'dev')).toBeUndefined();
+  // A dev server is never the released app, so it wears the dev mark whatever the shell's environment says.
+  test('a dev server is the dev channel whatever the environment says', ({ expect }) => {
+    expect(channelVariant('serve', 'preview')).toEqual('dev');
+    expect(channelVariant('serve', 'production')).toEqual('dev');
+    expect(channelVariant('serve', undefined)).toEqual('dev');
+  });
+});
+
+describe('channelFaviconPath', () => {
+  const appDir = '/app';
+
+  test('maps a favicon request to the variant file, ignoring the query', ({ expect }) => {
+    expect(channelFaviconPath(appDir, 'dev', '/favicon.svg?v=2')).toEqual('/app/assets/favicons-dev/favicon.svg');
+    expect(channelFaviconPath(appDir, 'dev', '/web-app-manifest-192x192.png')).toEqual(
+      '/app/assets/favicons-dev/web-app-manifest-192x192.png',
+    );
+  });
+
+  test('leaves other requests and the released app alone', ({ expect }) => {
+    expect(channelFaviconPath(appDir, 'dev', '/index.html')).toBeUndefined();
+    expect(channelFaviconPath(appDir, 'dev', '/assets/favicon.svg')).toBeUndefined();
+    expect(channelFaviconPath(appDir, undefined, '/favicon.svg')).toBeUndefined();
+    expect(channelFaviconPath(appDir, 'dev', undefined)).toBeUndefined();
   });
 });
 

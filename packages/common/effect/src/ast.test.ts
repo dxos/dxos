@@ -281,4 +281,46 @@ describe('mapAst', () => {
     // A replacement that already carries its own context is left alone.
     expect(SchemaAST.isOptional(retainContext(Schema.String.ast, Schema.Number.ast))).to.be.false;
   });
+
+  test('a rebuilt node keeps its encoding checks', ({ expect }) => {
+    const rejectAll: SchemaAST.Checks = [Schema.makeFilter(() => 'rejected')];
+    const cases: [SchemaAST.AST, unknown][] = [
+      [
+        new SchemaAST.Objects(
+          [new SchemaAST.PropertySignature('a', Schema.String.ast)],
+          [],
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          rejectAll,
+        ),
+        { a: 'x' },
+      ],
+      [
+        new SchemaAST.Union(
+          [Schema.String.ast, Schema.Number.ast],
+          'anyOf',
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          rejectAll,
+        ),
+        'x',
+      ],
+      [
+        new SchemaAST.Arrays(false, [], [Schema.String.ast], undefined, undefined, undefined, undefined, rejectAll),
+        ['x'],
+      ],
+    ];
+    for (const [node, value] of cases) {
+      const mapped = mapAst(node, (child) => child);
+      expect(mapped, mapped._tag).to.have.property('encodingChecks', rejectAll);
+      expect(mapped.checks, mapped._tag).to.be.undefined;
+      expect(() => Schema.decodeUnknownSync(Schema.make<Schema.Codec<unknown>>(mapped))(value), mapped._tag).to.throw(
+        'rejected',
+      );
+    }
+  });
 });
