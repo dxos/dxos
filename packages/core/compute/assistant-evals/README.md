@@ -34,13 +34,15 @@ one:
 | `main`       | `https://mcp.preview.dxos.network/mcp` | `DX_EVAL_MCP_TOKEN`         | discovery + latency    |
 | `prod`       | `https://mcp.dxos.network/mcp`         | `DX_EVAL_MCP_TOKEN`         | discovery + latency    |
 
-Against `dev` the run is a real client: the harness creates an identity, replicates the space it
-seeds to dev EDGE, and mints the worker's grant itself through the identity-key form the dev worker
-serves on `/authorize?dev_form=1` (`src/McpAuth.ts` — the OAuth grant a real MCP client performs,
-with the passkey ceremony replaced by the form a headless client can complete). Every write the
-`claude` subprocess makes through the deployed worker comes back by replication, so the run is
-graded from the database exactly as a local one is. The other deployed workers serve a space this
-process cannot see, so a run against them drops the write stages and scores discovery and latency.
+Against `dev` the run is a real client: the harness creates an identity, binds it to a test account
+(`test+…@dxos.org`, the hatch dev and preview keep open), replicates the space it seeds to dev
+EDGE, and mints itself an identity-bound API token (`src/McpAuth.ts`, `POST /hub/api/api-tokens`
+with a verifiable presentation — the credential a CI job or an agent holds in place of a HALO key).
+The deployed worker accepts that token on `/mcp` in place of an OAuth grant and serves the spaces
+the identity's agent holds. Every write the `claude` subprocess makes through the deployed worker
+comes back by replication, so the run is graded from the database exactly as a local one is. The
+other deployed workers serve a space this process cannot see, so a run against them drops the write
+stages and scores discovery and latency.
 
 ```bash
 moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts                        # in-process host

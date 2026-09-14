@@ -25,9 +25,11 @@
   ],
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/keys": "workspace:*"
   },
   "devDependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",

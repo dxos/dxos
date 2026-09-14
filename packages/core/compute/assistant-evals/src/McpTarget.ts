@@ -52,8 +52,8 @@ export const fromEnv = (value: string | undefined = process.env.DX_EVAL_MCP_TARG
 /**
  * The EDGE deployment behind a target, for a run that brings its own identity and space.
  *
- * Only `dev` has one: it is the one worker whose `/authorize` serves the identity-key form
- * (`McpAuth.devGrant`), and the one EDGE a throwaway identity may be registered against.
+ * Only `dev` has one: it is the one EDGE whose test-account hatch admits a throwaway identity, which
+ * the run needs before it can mint its token (`McpAuth.mintApiToken`).
  */
 const EDGE_URLS: Partial<Record<Target, string>> = {
   dev: 'https://dev.dxos.network',
@@ -87,9 +87,9 @@ export const mode = (target: Target): Mode => {
 /**
  * The EDGE a `provisioned` run registers against; `DX_EVAL_EDGE_URL` overrides it.
  *
- * `dev` alone, override included: provisioning ends in a grant minted through the identity-key form,
- * which no other worker serves, so pointing another target at an EDGE would only move the failure to
- * the `/authorize` that refuses the form.
+ * `dev` alone, override included: provisioning starts by binding a fresh identity to a test account,
+ * which only dev's hatch admits, so pointing another target at an EDGE would only move the failure
+ * to the login that refuses it.
  */
 export const edgeUrl = (target: Target): string | undefined =>
   target === 'dev' ? (process.env.DX_EVAL_EDGE_URL ?? EDGE_URLS[target]) : undefined;
@@ -102,7 +102,7 @@ export const url = (target: Target): string | undefined =>
  * Credentials for a deployed endpoint.
  *
  * The deployed surface is OAuth-gated, and an eval cannot complete a passkey ceremony: on `dev` the
- * harness mints its own grant (`McpAuth.devGrant`), and everywhere else the token is minted by hand
+ * harness mints its own API token (`McpAuth.mintApiToken`), and everywhere else the token is minted by hand
  * and handed over in `DX_EVAL_MCP_TOKEN`. Without either a remote run gets 401s, which is a legible
  * failure rather than a silent one.
  */

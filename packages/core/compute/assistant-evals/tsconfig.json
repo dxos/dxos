@@ -96,6 +96,9 @@
       "path": "../../halo/credentials"
     },
     {
+      "path": "../../mesh/edge-client"
+    },
+    {
       "path": "../../protocols"
     },
     {

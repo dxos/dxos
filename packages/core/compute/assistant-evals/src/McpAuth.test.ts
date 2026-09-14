@@ -2,30 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createHash } from 'node:crypto';
+import { create } from '@bufbuild/protobuf';
 import { type Server, createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
+import { type EdgeIdentity } from '@dxos/edge-client';
+import { IdentityDid, PublicKey } from '@dxos/keys';
+import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
+import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+
 import * as McpAuth from './McpAuth.ts';
 
-/** What the fake worker saw, for the assertions: the grant is only right if every step carried its part. */
+/** What the fake EDGE saw, for the assertions: the mint is only right if every step carried its part. */
 type Seen = {
-  registration?: Record<string, unknown>;
-  authorize?: URLSearchParams;
-  form?: URLSearchParams;
-  exchange?: URLSearchParams;
+  signedChallenge?: string;
+  authorization?: string;
+  body?: Record<string, unknown>;
 };
 
-const NONCE = 'nonce-1';
-const CODE = 'code-1';
-const TOKEN = 'token-1';
+const CHALLENGE = Buffer.from('nonce-1').toString('base64');
+const TOKEN = 'dx-api01-' + 'a'.repeat(48);
 
-/**
- * The four endpoints the grant touches, answering as `mcp-space-service` does. The form itself is a
- * real page so the nonce has to be read out of HTML, which is what a worker hands a client.
- */
-const fakeWorker = (seen: Seen): Server =>
+/** The two endpoints the mint touches, answering as EDGE and the hub behind its `/hub` prefix do. */
+const fakeEdge = (seen: Seen): Server =>
   createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', 'http://fake');
     const chunks: Buffer[] = [];
@@ -34,119 +34,78 @@ const fakeWorker = (seen: Seen): Server =>
     }
     const body = Buffer.concat(chunks).toString();
 
-    if (url.pathname === '/register' && request.method === 'POST') {
-      seen.registration = JSON.parse(body);
-      response.writeHead(201, { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify({ client_id: 'client-1' }));
-    } else if (url.pathname === '/authorize' && request.method === 'GET') {
-      seen.authorize = url.searchParams;
-      if (url.searchParams.get('dev_form') !== '1') {
-        // A passkey redirect, which a headless client cannot follow.
-        response.writeHead(302, { Location: 'http://hub.fake/auth/mcp' });
-        response.end();
-        return;
-      }
-      response.writeHead(200, { 'Content-Type': 'text/html' });
-      response.end(`<form method="POST"><input type="hidden" name="nonce" value="${NONCE}"></form>`);
-    } else if (url.pathname === '/authorize' && request.method === 'POST') {
-      seen.form = new URLSearchParams(body);
-      const redirect = new URL('http://127.0.0.1/callback');
-      redirect.searchParams.set('code', CODE);
-      redirect.searchParams.set('state', seen.authorize?.get('state') ?? '');
-      response.writeHead(302, { Location: redirect.toString() });
-      response.end();
-    } else if (url.pathname === '/token' && request.method === 'POST') {
-      seen.exchange = new URLSearchParams(body);
+    if (url.pathname === '/auth' && request.method === 'GET') {
       response.writeHead(200, { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify({ access_token: TOKEN, token_type: 'bearer' }));
+      response.end(JSON.stringify({ data: { challenge: CHALLENGE } }));
+    } else if (url.pathname === '/hub/api/api-tokens' && request.method === 'POST') {
+      seen.authorization = request.headers.authorization;
+      seen.body = JSON.parse(body);
+      response.writeHead(201, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ data: { id: 'id-1', prefix: TOKEN.slice(0, 16), token: TOKEN } }));
     } else {
       response.writeHead(404);
       response.end();
     }
   });
 
+/** Signs nothing, but records the challenge it was handed, which is what binds the mint to EDGE's nonce. */
+const identityFor = (seen: Seen): EdgeIdentity => ({
+  identityDid: IdentityDid.random(),
+  peerKey: PublicKey.random().toHex(),
+  presentCredentials: async ({ challenge }) => {
+    seen.signedChallenge = Buffer.from(challenge).toString('base64');
+    return create(PresentationSchema, {});
+  },
+});
+
 describe('McpAuth', () => {
   const seen: Seen = {};
   let server: Server;
-  let mcpUrl: string;
+  let edgeUrl: string;
 
   beforeAll(async () => {
-    server = fakeWorker(seen);
+    server = fakeEdge(seen);
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    mcpUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}/mcp`;
+    edgeUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   });
 
   afterAll(async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
-  test('mints a bearer through the dev form, as a public PKCE client', async ({ expect }) => {
-    const token = await McpAuth.devGrant({
-      mcpUrl,
-      identityKey: 'ab'.repeat(32),
-      haloSpaceId: 'BHALO',
-      spaceIds: ['BSPACE1', 'BSPACE2'],
-    });
+  test('mints a token with a presentation bound to the challenge EDGE issued', async ({ expect }) => {
+    const token = await McpAuth.mintApiToken({ edgeUrl, identity: identityFor(seen), label: 'eval run' });
     expect(token).to.equal(TOKEN);
-
-    // A public client: no secret is registered, and the PKCE verifier is the proof at exchange.
-    expect(seen.registration?.token_endpoint_auth_method).to.equal('none');
-    expect(seen.authorize?.get('dev_form')).to.equal('1');
-    expect(seen.authorize?.get('code_challenge_method')).to.equal('S256');
-    const verifier = seen.exchange?.get('code_verifier') ?? '';
-    const challenge = createHash('sha256').update(verifier).digest().toString('base64url');
-    expect(seen.authorize?.get('code_challenge')).to.equal(challenge);
-
-    // The form carries the identity and the spaces the session is granted, and nothing else names them.
-    expect(seen.form?.get('nonce')).to.equal(NONCE);
-    expect(seen.form?.get('identity_key')).to.equal('ab'.repeat(32));
-    expect(seen.form?.get('halo_space_id')).to.equal('BHALO');
-    expect(seen.form?.get('space_ids')).to.equal('BSPACE1,BSPACE2');
-
-    expect(seen.exchange?.get('grant_type')).to.equal('authorization_code');
-    expect(seen.exchange?.get('code')).to.equal(CODE);
-    expect(seen.exchange?.get('client_id')).to.equal('client-1');
+    expect(seen.signedChallenge).to.equal(CHALLENGE);
+    // The presentation travels in the header the edge middleware decodes, and nothing else names the identity.
+    expect(seen.authorization).to.be.a('string');
+    expect(() => EdgeCredentialsHeaderCodec.decode(seen.authorization ?? '')).not.toThrow();
+    expect(seen.body).to.deep.equal({ label: 'eval run' });
   });
 
   test('refuses to mint over a cleartext transport, before the first request', async ({ expect }) => {
-    // The `/token` response carries the bearer, so a transport rejected after the grant has already
-    // published it. Loopback is exempt — that hop never leaves the machine, and is what this suite
-    // and a local worker use.
+    // The mint response carries the token, so a transport rejected after it has already published
+    // it. Loopback is exempt — that hop never leaves the machine, and is what this suite uses.
+    const untouched: Seen = {};
     await expect(
-      McpAuth.devGrant({
-        mcpUrl: 'http://mcp.example.test/mcp',
-        identityKey: 'ab'.repeat(32),
-        haloSpaceId: 'BHALO',
-        spaceIds: [],
-      }),
-    ).rejects.toThrow(/refusing to mint a token over http:/);
+      McpAuth.mintApiToken({ edgeUrl: 'http://edge.example.test', identity: identityFor(untouched) }),
+    ).rejects.toThrow(/refusing to mint over http:/);
+    expect(untouched.signedChallenge).to.equal(undefined);
   });
 
-  test('a worker that answers with the passkey redirect is a legible failure', async ({ expect }) => {
-    // Same fake, form withheld: `dev_form` is what the fake keys on, so a grant without it is what a
-    // worker with the form disabled answers.
-    const withoutForm = createServer((request, response) => {
-      if (request.url?.startsWith('/register')) {
-        response.writeHead(201, { 'Content-Type': 'application/json' });
-        response.end(JSON.stringify({ client_id: 'client-2' }));
-        return;
-      }
-      response.writeHead(302, { Location: 'http://hub.fake/auth/mcp' });
+  test('an EDGE that issues no challenge is a legible failure', async ({ expect }) => {
+    const silent = createServer((_request, response) => {
+      response.writeHead(404);
       response.end();
     });
-    await new Promise<void>((resolve) => withoutForm.listen(0, '127.0.0.1', resolve));
+    await new Promise<void>((resolve) => silent.listen(0, '127.0.0.1', resolve));
     try {
-      const port = (withoutForm.address() as AddressInfo).port;
+      const port = (silent.address() as AddressInfo).port;
       await expect(
-        McpAuth.devGrant({
-          mcpUrl: `http://127.0.0.1:${port}/mcp`,
-          identityKey: 'ab'.repeat(32),
-          haloSpaceId: 'BHALO',
-          spaceIds: [],
-        }),
-      ).rejects.toThrow(/authorize \(dev form\) answered 302/);
+        McpAuth.mintApiToken({ edgeUrl: `http://127.0.0.1:${port}`, identity: identityFor({}) }),
+      ).rejects.toThrow(/issued no challenge/);
     } finally {
-      await new Promise<void>((resolve) => withoutForm.close(() => resolve()));
+      await new Promise<void>((resolve) => silent.close(() => resolve()));
     }
   });
 });

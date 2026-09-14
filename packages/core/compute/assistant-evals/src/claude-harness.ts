@@ -16,12 +16,13 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import { Stream, asyncTimeout } from '@dxos/async';
 import { type Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { Database, Tag, type Type } from '@dxos/echo';
-import { createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -274,16 +275,15 @@ const replicateToEdge = async (
 };
 
 /**
- * Mints the deployed dev worker's bearer for the identity this run created, over the space it
- * replicated. The worker's grant carries the space list, so the agent's session sees exactly the
- * one space the scorers will read.
+ * Mints the identity's API token, the bearer the deployed worker accepts in place of an OAuth grant.
+ * The worker serves the spaces the identity's agent holds, so the space this run replicated is in
+ * scope by replication alone; nothing here names it.
  */
-const provisionGrant = async (mcpUrl: string, identity: Identity, spaceId: SpaceId): Promise<string> =>
-  McpAuth.devGrant({
-    mcpUrl,
-    identityKey: requirePublicKey(identity.identityKey).toHex(),
-    haloSpaceId: await createIdFromSpaceKey(requirePublicKey(identity.spaceKey)),
-    spaceIds: [spaceId],
+const provisionToken = (edgeUrl: string, client: Client, identity: Identity): Promise<string> =>
+  McpAuth.mintApiToken({
+    edgeUrl,
+    identity: createEdgeIdentity(client),
+    label: `mcp-eval ${requirePublicKey(identity.identityKey).toHex().slice(0, 12)}`,
   });
 
 const count = (value: unknown): number => (typeof value === 'number' ? value : 0);
@@ -445,10 +445,11 @@ export const runClaudeEval = async <T>(
         await query(options.seed({ spaceId }));
         await query(Database.flush());
       }
-      if (edgeSpace != null && remoteUrl != null) {
-        // The seed has to be on EDGE before the agent's first read, and the grant names the space.
+      if (edgeSpace != null && edgeUrl != null) {
+        // The seed has to be on EDGE before the agent's first read, and so does the space itself: the
+        // worker resolves the token's spaces from the agent, which holds only what has replicated.
         await waitForEdge(edgeSpace);
-        headers = McpTarget.headers(target, await provisionGrant(remoteUrl, identity, spaceId));
+        headers = McpTarget.headers(target, await provisionToken(edgeUrl, client, identity));
       }
 
       agent = ClaudeAgent.start({
