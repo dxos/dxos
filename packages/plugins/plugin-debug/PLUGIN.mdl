@@ -43,7 +43,7 @@ type DebugPanelViewState
     size?: Size                 # the size the floating panel was last resized to
 ```
 
-## Graph
+## App graph
 
 ```mdl
 feat DebugCategory

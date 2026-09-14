@@ -16,4 +16,5 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 
 ## Phase 2: devtools attachment cleanup
 
-- [ ] `root/debug` is the single attachment: remove the root-matched duplicate (`root/devtools/...`) and the `whenAny(whenRoot, …)` match; the ECHO inspectors read the active workspace's space through the same shared hook the generator uses.
+- [x] `root/debug` is the single attachment: remove the root-matched duplicate (`root/devtools/...`) and the `whenAny(whenRoot, …)` match. Landed with phase 1 (commit 67b83e69e4: `createDevtoolsExtension` matches only `AppNodeMatcher.whenDebugGroup`).
+- [x] Space-scoped containers (ECHO inspectors, Generate objects) read the active workspace's space through one shared hook; no space in node data. Landed with phase 1 (`useActiveSpace` in `DevtoolsSurfaces.tsx` and `DebugSurfaces.tsx`).
