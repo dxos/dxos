@@ -19,6 +19,8 @@ type TracedMethod = {
   result?: (value: unknown) => Details;
   /** Re-parses a description the call rejected as unparseable. */
   reparse?: boolean;
+  /** Receives a synchronous result. */
+  returned?: (pc: number, value: unknown) => void;
 };
 
 /**
@@ -26,7 +28,8 @@ type TracedMethod = {
  * captured at install; self-contained because Playwright serializes it into the page.
  *
  * A call logs `start`, then `ret` when its synchronous part returns a pending promise, then `ok` or `err` once; a remote
- * description WebKit rejects as unparseable then logs `reparse` lines carrying the failing call's `call`.
+ * description WebKit rejects as unparseable then logs `reparse` lines carrying the failing call's `call`. Each data
+ * channel logs its state events and its first sends and messages, observed ahead of the app's own handlers.
  */
 export const installRtcTrace = (prefix: string): void => {
   const marker = Symbol.for('dxos.e2e.rtc-trace');
@@ -52,6 +55,7 @@ export const installRtcTrace = (prefix: string): void => {
   // Captured before wrapping, so a re-parse connection is never traced.
   const nativeSetRemoteDescription = proto.setRemoteDescription;
   const nativeClose = proto.close;
+  const NativeDataChannel: typeof RTCDataChannel | undefined = Reflect.get(globalThis, 'RTCDataChannel');
 
   /** Keyed weakly so tracing never extends a connection's lifetime. */
   const indices = new WeakMap<object, number>();
@@ -202,6 +206,43 @@ export const installRtcTrace = (prefix: string): void => {
     }
   };
 
+  /** Frames logged per data channel in each direction. */
+  const DATA_CHANNEL_FRAMES = 8;
+  /** Keyed weakly, like `indices`. */
+  const dataChannels = new WeakMap<object, { dc: number; sent: number; received: number }>();
+  let dataChannelCount = 0;
+
+  const frameSize = (data: unknown): Details =>
+    typeof data === 'string'
+      ? { chars: data.length }
+      : { bytes: field(data, 'byteLength') ?? field(data, 'size') ?? null, kind: typeof data };
+
+  /** Listens from the channel's creation or announcement, so a frame dispatched before the app attaches is still seen. */
+  const traceDataChannel = (pc: number, channel: unknown): void => {
+    if (!NativeDataChannel || !(channel instanceof NativeDataChannel) || dataChannels.has(channel)) {
+      return;
+    }
+    const traced = { dc: ++dataChannelCount, sent: 0, received: 0 };
+    dataChannels.set(channel, traced);
+    for (const type of ['open', 'closing', 'close', 'error', 'bufferedamountlow']) {
+      apply(addEventListener, channel, [
+        type,
+        () => emit(pc, `dc.${type}`, { dc: traced.dc }, () => ({ label: channel.label, state: channel.readyState })),
+      ]);
+    }
+    apply(addEventListener, channel, [
+      'message',
+      (event: MessageEvent) => {
+        if (traced.received++ < DATA_CHANNEL_FRAMES) {
+          emit(pc, 'dc.message', { dc: traced.dc, seq: traced.received }, () => ({
+            state: channel.readyState,
+            ...frameSize(field(event, 'data')),
+          }));
+        }
+      },
+    ]);
+  };
+
   const describeCandidate = (candidate: unknown): Details => {
     if (typeof candidate !== 'object' || candidate === null) {
       return { end: true, arg: candidate === null ? 'null' : 'none' };
@@ -249,13 +290,17 @@ export const installRtcTrace = (prefix: string): void => {
         remote: attempt(() => pc.remoteDescription?.type ?? null),
       }),
     },
-    { name: 'createDataChannel', args: (_, [label]) => ({ label: typeof label === 'string' ? label : typeof label }) },
+    {
+      name: 'createDataChannel',
+      args: (_, [label]) => ({ label: typeof label === 'string' ? label : typeof label }),
+      returned: traceDataChannel,
+    },
     { name: 'close' },
     { name: 'restartIce' },
     { name: 'getStats' },
   ];
 
-  for (const { name, args: describeArgs, result: describeResult, reparse } of methods) {
+  for (const { name, args: describeArgs, result: describeResult, reparse, returned } of methods) {
     const descriptor = Object.getOwnPropertyDescriptor(proto, name);
     const original: unknown = descriptor?.value;
     if (!descriptor || typeof original !== 'function') {
@@ -284,6 +329,7 @@ export const installRtcTrace = (prefix: string): void => {
 
         if (!(result instanceof NativePromise)) {
           emit(index, name, { ph: 'ok', call });
+          returned?.(index, result);
           return result;
         }
 
@@ -354,6 +400,7 @@ export const installRtcTrace = (prefix: string): void => {
       'datachannel',
       function (event) {
         emit(indexOf(this), 'datachannel', {}, () => ({ label: field(field(event, 'channel'), 'label') ?? null }));
+        traceDataChannel(indexOf(this), field(event, 'channel'));
       },
     ],
   ];
@@ -387,6 +434,25 @@ export const installRtcTrace = (prefix: string): void => {
       Reflect.set(target, key, Traced);
     }
   };
+  const send = NativeDataChannel ? Object.getOwnPropertyDescriptor(NativeDataChannel.prototype, 'send') : undefined;
+  if (NativeDataChannel && send && typeof send.value === 'function') {
+    const original: (...args: unknown[]) => unknown = send.value;
+    const wrapper = {
+      send(this: unknown, ...args: unknown[]): unknown {
+        const traced = typeof this === 'object' && this !== null ? dataChannels.get(this) : undefined;
+        if (traced && traced.sent++ < DATA_CHANNEL_FRAMES) {
+          emit(0, 'dc.send', { dc: traced.dc, seq: traced.sent }, () => ({
+            state: field(this, 'readyState'),
+            ...frameSize(args[0]),
+          }));
+        }
+        return apply(original, this, args);
+      },
+    }.send;
+    Object.defineProperty(wrapper, 'length', { value: original.length });
+    Object.defineProperty(NativeDataChannel.prototype, 'send', { ...send, value: wrapper });
+  }
+
   replace(proto, 'constructor');
   if (Reflect.get(globalThis, 'webkitRTCPeerConnection') === Native) {
     replace(globalThis, 'webkitRTCPeerConnection');
