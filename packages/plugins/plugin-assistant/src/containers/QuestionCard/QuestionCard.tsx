@@ -106,9 +106,12 @@ export const QuestionCard = ({ subject }: QuestionCardProps) => {
               data-testid='question-card.option'
               onClick={() => void submit(option.title)}
             >
+              {/* `div`, not `span`: `Button` carries `[&_span]:truncate`, so every span inside one is
+                  single-line by design — correct for a label, wrong for a suggested answer, which is
+                  a sentence. Changing the element sidesteps that rule instead of out-specifying it. */}
               <Flex column classNames='grow min-w-0 text-start'>
-                <span className='text-sm break-words'>{option.title}</span>
-                {option.description && <span className='text-xs text-subdued break-words'>{option.description}</span>}
+                <div className='text-sm break-words'>{option.title}</div>
+                {option.description && <div className='text-xs text-subdued break-words'>{option.description}</div>}
               </Flex>
             </Button>
           ))}
