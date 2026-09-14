@@ -11,6 +11,8 @@ import { WeatherSkill } from './skill.ts';
 import { Tasks } from './tasks.ts';
 import { REFERENCE } from './util.ts';
 
+export { FORECAST_URL } from './util.ts';
+
 const phases = {
   skill: WeatherSkill,
   tasks: Tasks,
