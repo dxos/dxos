@@ -15,7 +15,7 @@ import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx, SchemaAST } from '@dxos/effect';
@@ -41,6 +41,7 @@ export type EdgeFunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
+  | Hypergraph.Service
   | Trace.TraceService
   | Operation.Service
   | Registry.Service
@@ -281,6 +282,13 @@ export class FunctionContext extends Resource {
       ? Layer.succeed(Registry.Service, this.db.graph.registry)
       : Layer.succeed(Registry.Service, makeRegistry());
 
+    // The cross-space handle, alongside the space-scoped `Database.Service`: an operation invoked
+    // by a harness hook is handed a fixed payload with no space id, so it has to find its own space
+    // (`RemoteSessionOperation`). Omitting it failed every such operation at the first service
+    // access with `Service not found: @dxos/echo/Hypergraph/Service` — half of all deployed
+    // `operation.invoke` calls, after ~1.8s of work.
+    const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
+
     return Layer.mergeAll(
       dbLayer,
       credentials,
@@ -289,6 +297,7 @@ export class FunctionContext extends Resource {
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
       registryLayer,
+      hypergraphLayer,
     );
   }
 }

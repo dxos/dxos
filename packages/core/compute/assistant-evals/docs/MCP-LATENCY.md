@@ -135,3 +135,54 @@ concurrency before it is worth changing.
   dev worker, since both share the worker name. It briefly pointed dev's `DX_AUTH_BASE_URL` at
   `http://localhost:8790` on 2026-09-14 08:24 until a correct `--env dev` deploy at 08:25. Fix is
   `--env dev`.
+
+---
+
+## 2026-09-14 — fixes
+
+### Correction to hypothesis (1) above
+
+**The per-space reads are already concurrent.** `mcp-space-service/src/mcp/space-tools.ts` issues
+them as `Effect.all({ spaceTags, properties, memberCount }, { concurrency: 'unbounded' })`, inside an
+`Effect.forEach(…, { concurrency: DESCRIBE_CONCURRENCY })` over the spaces. So the ~5.8s of summed
+p50 span time across `space.query` / `space.tags` / `space.members` is _overlapped_, not additive,
+and "batch them" was never the available win. The hypothesis was written from the Signoz totals
+without reading the code; recorded here because it reached this file as a ranked recommendation.
+
+### Fix 1 — `operation.invoke`: 50% of deployed calls were failing
+
+**`Service not found: @dxos/echo/Hypergraph/Service`** (production, 13 of 26 `operation.invoke`
+spans in 24h, ~1.8s spent before erroring, HTTP 200 returned).
+
+Root cause: `FunctionContext.createLayer()`
+(`packages/core/compute/compute-runtime/src/protocol.ts`) provided `Database.Service`,
+credentials, AI, trace, registry and toolkits — but **not** `Hypergraph.Service`. Operations
+declaring the cross-space handle rather than the space-scoped database
+(`plugin-tasks`'s `RecordSession` / `report-session`, which a harness hook fires with a fixed
+payload carrying no space id) therefore died at their first service access.
+
+Fix: the layer now provides `Hypergraph.layer(client.graph)` when the context has ECHO services, and
+`Hypergraph.notAvailable` otherwise. Covered by a regression test in `protocol.test.ts`
+("provides Hypergraph.Service to a handler that declares it").
+
+Caveat, not fixed here: with no `spaceId` in the context no database is constructed, so the graph is
+present but empty — a hook-fired call that omits `spaceId` can resolve the service and still find no
+space. That is space discovery on the worker, a separate change.
+
+### Fix 2 — the trace drain off the invocation's critical path
+
+`operation.traceFlush` measured **p50 150ms / p95 2316ms**, all of it inside `Effect.ensuring` on
+`invokeOperation` (`mcp-space-service/src/mcp/util.ts`): the drain sleeps `TRACE_FLUSH_ATTEMPTS = 3`
+× `TRACE_FLUSH_INTERVAL = 20ms` before it can even finish, so **≥60ms is pure wait every call**, and
+the tail is the flush occasionally landing in the request path.
+
+Fix: the drain is forked and handed to the request's `waitUntil`, which keeps the Workers I/O
+context alive so the trailing `OperationEnd` still lands while the caller stops paying for it. The
+`waitUntil` is read from async-local storage (`mcp/deferral.ts`) rather than captured at handler
+build, because the MCP handler is **cached per identity across requests** — a captured `ctx` would
+be an earlier request's, which is the cross-request-promise hazard this service is audited against.
+Without a deferral (tests, hand-built stacks) the drain is awaited exactly as before.
+
+Expected effect on `operation.invoke`: p50 down by ~the `traceFlush` p50 (150ms), p95 by up to its
+p95 (2.3s). To be confirmed against Signoz after the dev deploy — recorded here as a prediction, not
+a measurement.
