@@ -162,10 +162,7 @@ const createValue = <S extends Type.AnyObj>(
   }
 
   // Generator value from annotation.
-  const annotation = SchemaEx.findAnnotation<Annotation.GeneratorAnnotationValue>(
-    property.type,
-    Annotation.GeneratorAnnotationId,
-  );
+  const annotation = SchemaEx.findAnnotation<Annotation.GeneratorAnnotationValue>(property.type, Annotation.GeneratorAnnotationId);
   if (annotation) {
     const {
       generator: generatorName,
@@ -207,7 +204,7 @@ export const createReferences = <S extends Type.AnyObj>(schema: S, db: Database.
     for (const property of SchemaEx.getProperties(Type.getSchema(schema).ast)) {
       if (!property.isOptional || randomBoolean()) {
         if (Ref.isRefType(property.type)) {
-          const jsonSchema = SchemaEx.findAnnotation<JsonSchemaType>(property.type, SchemaAST.JSONSchemaAnnotationId);
+          const jsonSchema = SchemaEx.findAnnotation<JsonSchema.JsonSchema>(property.type, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);

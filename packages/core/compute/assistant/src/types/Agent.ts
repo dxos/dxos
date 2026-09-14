@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, DXN, Error, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, type Error, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 

@@ -19,7 +19,7 @@ export class Dream extends Type.makeObject<Dream>(DXN.make('dxos.org.type.Dream'
     ),
     sequences: Schema.optional(Schema.Array(Sequence)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--moon-stars--regular', hue: 'violet' }),
   ),
 ) {}

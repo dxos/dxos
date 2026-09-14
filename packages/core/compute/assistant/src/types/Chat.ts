@@ -12,7 +12,6 @@ import * as Schema from 'effect/Schema';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';
 import { Task } from '@dxos/types';
 
@@ -32,13 +31,13 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
 
     /** Message feed, owned by the chat so `SetParent` cascades it. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Instructions steering this conversation, rendered into the system prompt at request time.
      * Held by reference (never copied), so a project's chats follow edits to its instructions.
      */
-    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
      * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
@@ -47,9 +46,9 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * would silently move that task out of the set that owns it. Tasks the chat itself creates are
      * parented to it explicitly; see {@link addTask}.
      */
-    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(FormInputAnnotation.set(false)),
+    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
       icon: 'ph--sparkle--regular',
       hue: 'amber',
