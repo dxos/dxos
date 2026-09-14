@@ -6,6 +6,7 @@ import { type ComponentType, lazy } from 'react';
 
 export const DiscordPanel: ComponentType<any> = lazy(() => import('./DiscordPanel/index.ts'));
 export const FeedbackPanel: ComponentType<any> = lazy(() => import('./FeedbackPanel/index.ts'));
+export const GuidedTourContainer: ComponentType<any> = lazy(() => import('./GuidedTourContainer/index.ts'));
 export const HelpMenu: ComponentType<any> = lazy(() => import('./HelpMenu/index.ts'));
 export const ShortcutsDialogContent: ComponentType<any> = lazy(() => import('./ShortcutsDialogContent/index.ts'));
 export const ShortcutsHints: ComponentType<any> = lazy(() => import('./ShortcutsHints/index.ts'));

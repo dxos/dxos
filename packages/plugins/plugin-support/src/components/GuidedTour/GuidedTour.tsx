@@ -48,13 +48,13 @@ const toStep = (
   }),
 });
 
-export type WelcomeTourProps = {
+export type GuidedTourProps = {
   steps: readonly Tour.Step[];
   running?: boolean;
   onRunningChanged?: (state: boolean) => any;
 };
 
-export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: WelcomeTourProps) => {
+export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: GuidedTourProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const layout = useLayout();

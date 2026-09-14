@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { WelcomeTour } from './WelcomeTour.tsx';
+import { GuidedTour } from './GuidedTour.tsx';
 
 const steps: Tour.Step[] = [
   {
@@ -56,13 +56,13 @@ const DefaultStory = () => {
           Start tour
         </Button>
       </Panel.Content>
-      <WelcomeTour steps={steps} running={running} onRunningChanged={setRunning} />
+      <GuidedTour steps={steps} running={running} onRunningChanged={setRunning} />
     </Panel.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-support/components/WelcomeTour',
+  title: 'plugins/plugin-support/components/GuidedTour',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -164,7 +164,7 @@ const LateStepsStory = () => {
           Start second tour
         </Button>
       </Panel.Content>
-      <WelcomeTour steps={current} running={running && current.length > 0} onRunningChanged={setRunning} />
+      <GuidedTour steps={current} running={running && current.length > 0} onRunningChanged={setRunning} />
     </Panel.Root>
   );
 };
@@ -209,7 +209,7 @@ export const TestMissingTarget: Story = {
             Start tour
           </Button>
         </Panel.Content>
-        <WelcomeTour steps={withMissing} running={running} onRunningChanged={setRunning} />
+        <GuidedTour steps={withMissing} running={running} onRunningChanged={setRunning} />
       </Panel.Root>
     );
   },
