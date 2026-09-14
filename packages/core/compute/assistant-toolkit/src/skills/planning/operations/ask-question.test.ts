@@ -136,6 +136,31 @@ describe('AskQuestion', () => {
   );
 
   it.effect(
+    'refuses a title two tasks share rather than blocking either',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { chat, invoke } = yield* setupChat;
+        yield* invoke(UpdateTasks, {
+          changes: [
+            { create: true, title: 'Draft the reply' },
+            { create: true, title: 'Draft the reply' },
+          ],
+        });
+
+        const result = yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'Which one?' });
+        yield* Database.flush();
+
+        expect(yield* loadQuestions).toEqual([]);
+        expect(String(result)).toContain('is the title of 2 tasks');
+        const tasks = yield* Chat.loadTasks(chat);
+        expect(tasks.map(({ status }) => status)).toEqual(['todo', 'todo']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'asks again once the first question has been answered',
     Effect.fnUntraced(
       function* ({ expect }) {
