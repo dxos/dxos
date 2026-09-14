@@ -147,15 +147,14 @@ const NOTHING_STAGED: Staged = {
 };
 
 /**
- * Latency as a graded dimension, carrying the whole report as its value: the pass/fail is the p95
- * against a budget, but what a reader of a run wants is the per-tool spread next to it.
+ * Latency as a graded dimension: the mark is the p95 against a budget, while the per-tool spread a
+ * reader of the run wants rides the task's own output (`latency`), which is where a report survives.
  */
 const latencyScorer = (report?: McpLatency.Report): Scorer.Any =>
   Scorer.make({
     name: 'tool-latency',
     description: `Client-observed MCP tool latency against "${TARGET}"; p95 within ${LATENCY_BUDGET}ms and no errored call.`,
-    query: Effect.succeed(report),
-    score: (value) => value != null && value.stats['*'].errors === 0 && value.stats['*'].p95 <= LATENCY_BUDGET,
+    score: Effect.succeed(report != null && report.stats['*'].errors === 0 && report.stats['*'].p95 <= LATENCY_BUDGET),
   });
 
 /** What a deployed target can be held to: the surface answered, and it answered fast enough. */
@@ -163,8 +162,7 @@ const remoteScorers = (discovered: boolean, report?: McpLatency.Report): Scorer.
   Scorer.make({
     name: 'operations-discovered',
     description: 'The agent reached the deployed surface and got operations back through it.',
-    query: Effect.succeed(discovered),
-    score: (ok) => ok,
+    score: Effect.succeed(discovered),
   }),
   latencyScorer(report),
 ];
