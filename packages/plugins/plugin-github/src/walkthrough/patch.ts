@@ -11,6 +11,9 @@ export type PatchHunk = {
   /** 1-based inclusive span in the file AFTER the change; `afterEnd < afterStart` for a pure removal. */
   afterStart: number;
   afterEnd: number;
+  /** The same span in the file BEFORE it, which is all a pure removal has. */
+  beforeStart: number;
+  beforeEnd: number;
   added: number;
   removed: number;
 };
@@ -38,7 +41,10 @@ export const parsePatch = (patch: string): PatchFile[] => {
   let file: PatchFile | undefined;
   let hunk: PatchHunk | undefined;
 
-  for (const line of patch.split('\n')) {
+  for (const raw of patch.split('\n')) {
+    // A patch saved or served with CRLF keeps its carriage returns, and every match below is
+    // anchored: left in place they make the whole parse return nothing at all.
+    const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw;
     const header = FILE_HEADER.exec(line);
     if (header) {
       // `b/` is the post-image path and is `/dev/null` only in the `+++` line, never here.
@@ -53,9 +59,20 @@ export const parsePatch = (patch: string): PatchFile[] => {
 
     const hunkHeader = HUNK_HEADER.exec(line);
     if (hunkHeader) {
+      const beforeStart = Number(hunkHeader[1]);
+      const beforeCount = hunkHeader[2] === undefined ? 1 : Number(hunkHeader[2]);
       const afterStart = Number(hunkHeader[3]);
       const afterCount = hunkHeader[4] === undefined ? 1 : Number(hunkHeader[4]);
-      hunk = { header: line, lines: [], afterStart, afterEnd: afterStart + afterCount - 1, added: 0, removed: 0 };
+      hunk = {
+        header: line,
+        lines: [],
+        afterStart,
+        afterEnd: afterStart + afterCount - 1,
+        beforeStart,
+        beforeEnd: beforeStart + beforeCount - 1,
+        added: 0,
+        removed: 0,
+      };
       file.hunks.push(hunk);
       continue;
     }
@@ -80,31 +97,56 @@ export const parsePatch = (patch: string): PatchFile[] => {
     hunk.lines.push(line);
   }
 
-  // A trailing blank line belongs to the transport, not to the last hunk.
-  for (const parsed of files) {
-    const last = parsed.hunks.at(-1);
-    while (last && last.lines.at(-1) === '') {
-      last.lines.pop();
+  // Only the LAST hunk of the LAST file can carry the transport's trailing newline, and only one of
+  // them: a blank line anywhere else is context the chunk has to keep showing.
+  const trailing = files.at(-1)?.hunks.at(-1);
+  if (trailing?.lines.at(-1) === '') {
+    trailing.lines.pop();
+  }
+
+  // A patch may name one path twice (a rename reported as delete-then-add, a malformed paste). Their
+  // hunks belong to one file, or the second silently hides the first from every fence.
+  const merged = new Map<string, PatchFile>();
+  for (const file of files) {
+    const existing = merged.get(file.path);
+    if (existing) {
+      existing.hunks.push(...file.hunks);
+      existing.added += file.added;
+      existing.removed += file.removed;
+    } else {
+      merged.set(file.path, file);
     }
   }
 
-  return files;
+  return [...merged.values()];
 };
 
 /** The hunk text a diff fence holds: the `@@` header and its body, as git wrote them. */
 export const renderHunks = (hunks: PatchHunk[]): string =>
   hunks.map((hunk) => [hunk.header, ...hunk.lines].join('\n')).join('\n');
 
-/** Whether a hunk shows any of `[start, end]` of the post-change file. */
+/**
+ * Whether a hunk shows any of `[start, end]` of the post-change file.
+ *
+ * A pure removal spans nothing after the change (`afterEnd === afterStart - 1`), so it is treated as
+ * occupying the single position the lines were removed from — otherwise no range could ever select
+ * it, including the one this module's own {@link hunkRange} reports for it.
+ */
 export const hunkOverlaps = (hunk: PatchHunk, start: number, end: number): boolean =>
-  hunk.afterStart <= end && hunk.afterEnd >= start;
+  hunk.afterStart <= end && Math.max(hunk.afterEnd, hunk.afterStart) >= start;
 
-/** The span a set of hunks covers, for a fence's `lines=` attribute. */
+/**
+ * The span a set of hunks covers, for a fence's `lines=` attribute.
+ *
+ * Measured after the change, except where nothing survives it: a deleted file's post-image is empty
+ * and would otherwise read as `Lines 0`, so its range is quoted from the pre-image instead.
+ */
 export const hunkRange = (hunks: PatchHunk[]): string | undefined => {
   if (hunks.length === 0) {
     return undefined;
   }
-  const start = Math.min(...hunks.map((hunk) => hunk.afterStart));
-  const end = Math.max(...hunks.map((hunk) => hunk.afterEnd));
+  const survives = hunks.some((hunk) => hunk.afterEnd >= hunk.afterStart);
+  const start = Math.min(...hunks.map((hunk) => (survives ? hunk.afterStart : hunk.beforeStart)));
+  const end = Math.max(...hunks.map((hunk) => (survives ? hunk.afterEnd : hunk.beforeEnd)));
   return start >= end ? `${start}` : `${start}-${end}`;
 };

@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { DXN, Obj, Ref } from '@dxos/echo';
@@ -123,7 +124,9 @@ export const GenerateWalkthrough = Operation.make({
     total: Schema.Number,
   }),
   types: [Walkthrough.Walkthrough, PullRequest.PullRequest],
-  services: [Trace.TraceService],
+  // `AiService` must be declared, not merely provided: the invoker builds the runtime from THIS list
+  // and `Layer.orDie` clears a layer's error channel, never its requirement.
+  services: [Trace.TraceService, AiService.AiService],
 }).pipe(Operation.visible);
 
 /**

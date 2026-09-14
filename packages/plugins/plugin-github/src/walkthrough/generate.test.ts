@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { beforeEach, afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
 import { Database, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
 import { PullRequest } from '@dxos/types';
 
 import { Walkthrough } from '#types';
@@ -53,7 +54,7 @@ describe('generateWalkthrough', () => {
 
     const phases: { message: string; current: number }[] = [];
     const run = (options: { commit?: string; force?: boolean; narration?: string } = {}) =>
-      Effect.runPromise(
+      EffectEx.runPromise(
         generateWalkthrough({
           pullRequest,
           remote: { commit: options.commit ?? 'sha-1' },

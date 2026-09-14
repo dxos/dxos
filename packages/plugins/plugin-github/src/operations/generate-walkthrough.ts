@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
@@ -18,6 +20,7 @@ import { PullRequest } from '@dxos/types';
 import { GitHubOperation } from '#types';
 
 import { GITHUB_PROVIDER_ID } from '../constants.ts';
+import { GitHubPullRequestUnstoredError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
 import { GENERATE_PHASES, generateWalkthrough } from '../walkthrough/index.ts';
 
@@ -45,7 +48,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
         const pullRequest = pullRequestRef.target;
         const db = pullRequest ? Obj.getDatabase(pullRequest) : undefined;
         if (!pullRequest || !db) {
-          return yield* Effect.die(new Error('No database for pull request ref.'));
+          // A preview card mints a pull request in memory rather than storing it, and there is
+          // nowhere to put a walkthrough of one.
+          return yield* Effect.die(new GitHubPullRequestUnstoredError());
         }
 
         const traceWriter = yield* Trace.TraceService;
@@ -99,10 +104,16 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
         }).pipe(
           // The meter stays open forever without a terminal, and the sentinel is all the UI shows —
           // the failure itself goes to the log.
-          Effect.tapError((error) =>
+          // `onExit`, not `tapError`: the model call and the database both surface as DEFECTS rather
+          // than typed errors, and interruption raises neither. A meter with no terminal stays open
+          // and leaves the action disabled.
+          Effect.onExit((exit) =>
             Effect.sync(() => {
-              report(PROGRESS_STATUS_FAILED, GENERATE_PHASES);
-              return error;
+              if (Exit.isSuccess(exit)) {
+                return;
+              }
+              const terminal = Cause.hasInterrupts(exit.cause) ? PROGRESS_STATUS_CANCELLED : PROGRESS_STATUS_FAILED;
+              report(terminal, GENERATE_PHASES);
             }),
           ),
           Effect.provide(Database.layer(db)),

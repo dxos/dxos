@@ -23,7 +23,7 @@ export type RemoteFacts = {
   commit?: string;
 };
 
-export type GenerateOptions = {
+export type GenerateOptions<R = never> = {
   pullRequest: PullRequest.PullRequest;
   remote: RemoteFacts;
   /** The whole unified diff, which the chunks are filled from. */
@@ -32,8 +32,12 @@ export type GenerateOptions = {
   force?: boolean;
   /** Identifier recorded on the result, so a regression can be attributed after the default moves. */
   model: string;
-  /** Runs the model over the prompt. Injected so the decision logic can be tested without one. */
-  narrate: (prompt: string) => Effect.Effect<string>;
+  /**
+   * Runs the model over the prompt. Injected so the decision logic can be tested without one, and
+   * generic in its requirement so the model service it needs is DECLARED by the caller rather than
+   * quietly dropped — a requirement erased here is a defect at the first real invocation.
+   */
+  narrate: (prompt: string) => Effect.Effect<string, never, R>;
   /** Phase reporter; `current` counts against {@link GENERATE_PHASES}. */
   report?: (message: string, current: number) => void;
 };
@@ -55,7 +59,7 @@ export const GENERATE_PHASES = 5;
  * Split from the operation handler so the part with the decisions in it can be tested against a real
  * database without a network or a model: what the handler adds is two HTTP calls.
  */
-export const generateWalkthrough = ({
+export const generateWalkthrough = <R = never>({
   pullRequest,
   remote,
   diff,
@@ -63,7 +67,7 @@ export const generateWalkthrough = ({
   model,
   narrate,
   report = () => {},
-}: GenerateOptions): Effect.Effect<GenerateResult, never, Database.Service> =>
+}: GenerateOptions<R>): Effect.Effect<GenerateResult, never, Database.Service | R> =>
   Effect.gen(function* () {
     const existing = yield* findWalkthrough(pullRequest);
 
@@ -111,20 +115,12 @@ export const generateWalkthrough = ({
 export const findWalkthrough = (
   pullRequest: PullRequest.PullRequest,
 ): Effect.Effect<Walkthrough.Walkthrough | undefined, never, Database.Service> =>
-  Effect.gen(function* () {
-    const uri = Obj.getURI(pullRequest, { prefer: 'absolute' }).toString();
-    const walkthroughs = yield* Database.query(Filter.type(Walkthrough.Walkthrough)).run;
-    for (const walkthrough of walkthroughs) {
-      // Each ref is resolved rather than compared unloaded: a space holds one walkthrough per pull
-      // request, so this is a handful of loads, and the ref's own identity is not readable from it.
-      const target = yield* Database.load(walkthrough.pullRequest).pipe(Effect.orElseSucceed(() => undefined));
-      if (target && Obj.getURI(target, { prefer: 'absolute' }).toString() === uri) {
-        return walkthrough;
-      }
-    }
-
-    return undefined;
-  }).pipe(Effect.orDie);
+  Database.query(Filter.type(Walkthrough.Walkthrough, { pullRequest: Ref.make(pullRequest) })).run.pipe(
+    // Filtered by the ref rather than by loading every walkthrough and comparing: a space holds one
+    // per reviewed pull request, which is not a handful.
+    Effect.map((walkthroughs) => walkthroughs[0]),
+    Effect.orDie,
+  );
 
 /** Replaces the body in place where one exists, so links to the walkthrough survive regeneration. */
 const upsert = (

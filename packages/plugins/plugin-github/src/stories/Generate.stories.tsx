@@ -25,7 +25,10 @@ import {
   walkthroughTheme,
 } from '@dxos/ui-editor';
 
-import { SYSTEM_PROMPT, buildPrompt, fillWalkthrough } from '../walkthrough/index.ts';
+// Imported directly rather than through the barrel: that also exports the generation logic, which
+// pulls ECHO into a bundle that only needs the pure parsing.
+import { fillWalkthrough } from '../walkthrough/fill.ts';
+import { SYSTEM_PROMPT, buildPrompt } from '../walkthrough/prompt.ts';
 import { fetchPullRequest, parsePullRequestUrl } from './github.ts';
 
 const MODEL = 'com.anthropic.model.claude-sonnet-5.default';
@@ -84,7 +87,16 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
       const pullRequest = await fetchPullRequest(ref);
 
       setPhase('generating');
-      const prompt = buildPrompt({ ...ref, ...pullRequest });
+      // Named rather than spread: `RemotePullRequest.body` is the prompt's `description`, and a
+      // spread would drop it without a type error.
+      const prompt = buildPrompt({
+        ...ref,
+        title: pullRequest.title,
+        description: pullRequest.body,
+        baseBranch: pullRequest.baseBranch,
+        headBranch: pullRequest.headBranch,
+        diff: pullRequest.diff,
+      });
       const { text } = await EffectEx.runPromise(
         LanguageModel.generateText({ prompt: `${SYSTEM_PROMPT}\n\n---\n\n${prompt}` }).pipe(
           Effect.provide(AiService.model(MODEL).pipe(Layer.orDie)),

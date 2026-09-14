@@ -193,9 +193,13 @@ export const parseDiff = (body: string, info?: FenceInfo): ParsedDiff => {
     }
 
     // A new file's header ends whatever chunk was open; nothing inside a hunk starts unprefixed.
+    // A fence holding more than one file is a misuse, but it must not then label every chunk with
+    // the first file's name or measure the second file's gap from the first file's line numbers.
     if (line.startsWith('diff --git ')) {
       flush();
       chunk = undefined;
+      headerFile = undefined;
+      beforeEnd = undefined;
       continue;
     }
 
@@ -261,7 +265,10 @@ export const parseDiff = (body: string, info?: FenceInfo): ParsedDiff => {
 
 /** The `after` line span the block covers, for the header's `Lines 66-99`. */
 const shownRange = (chunks: DiffChunk[]): string | undefined => {
-  const numbers = chunks.flatMap((chunk) => chunk.rows.map((row) => row.after?.number)).filter((n): n is number => !!n);
+  // `!== undefined`, not a truthiness test: a `@@ -0,0 +1,N @@` new-file hunk numbers a side 0.
+  const numbers = chunks
+    .flatMap((chunk) => chunk.rows.map((row) => row.after?.number))
+    .filter((line): line is number => line !== undefined);
   if (numbers.length === 0) {
     return undefined;
   }
