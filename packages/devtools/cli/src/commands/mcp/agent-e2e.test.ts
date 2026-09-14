@@ -73,6 +73,17 @@ const BACKFILL = 'Backfill the sync telemetry dashboard';
 type TaskRow = { id: string; title?: string; status?: string; description?: string };
 type SessionRow = { id: string; title?: string; summary?: string; state?: string };
 
+/** What `space.addObject` hands back: the id of the object it created. */
+type AddObjectResult = { readonly id: string };
+
+/** What `tasks.recordSession` hands back, whether or not the report was placed. */
+type RecordSessionResult = {
+  readonly created: boolean;
+  readonly session?: unknown;
+  readonly instructions?: string;
+  readonly tasks?: readonly { readonly title?: string; readonly dxn?: string }[];
+};
+
 /** The harness session id the hook-path stages report under; arbitrary, but stable across them. */
 const E2E_SESSION = 'e2e-0000-1111-2222-333344445555';
 
@@ -141,7 +152,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     try {
       // `tasks` and `milestones` are required by the schema even when empty; a draft missing
       // them is rejected before it reaches the database.
-      const taskSet = await scaffold.invoke(
+      const taskSet = await scaffold.invoke<AddObjectResult>(
         'org.dxos.operation.space.addObject',
         { object: { '@type': TASK_SET_TYPE, 'name': 'Agent E2E backlog', 'tasks': [], 'milestones': [] } },
         spaceId,
@@ -289,7 +300,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
       const scaffold = await McpSession.open({ home });
       let instructions: string;
       try {
-        const unplaced = await scaffold.invoke('org.dxos.operation.tasks.recordSession', {
+        const unplaced = await scaffold.invoke<RecordSessionResult>('org.dxos.operation.tasks.recordSession', {
           sessionId: E2E_SESSION,
           worktree: workdir,
         });
@@ -342,7 +353,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
           spaceId,
         );
 
-        const beat = await spaceless.invoke('org.dxos.operation.tasks.recordSession', {
+        const beat = await spaceless.invoke<RecordSessionResult>('org.dxos.operation.tasks.recordSession', {
           sessionId: E2E_SESSION,
           lastMessage: 'still working',
         });

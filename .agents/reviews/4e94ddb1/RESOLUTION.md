@@ -70,9 +70,9 @@
 - 4e94ddb1-66 - resolved - no-casts - packages/core/halo/credentials/src/credentials/golden-credential.test.ts:112:37
 - 4e94ddb1-67 - resolved - no-casts - packages/core/halo/credentials/src/credentials/golden-credential.test.ts:138:16
 - 4e94ddb1-68 - resolved - no-trivial-wrappers-over-official-apis - packages/core/mesh/messaging/src/signal-manager/memory-signal-manager.test.ts:26:7
-- 4e94ddb1-69 - unresolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:319:24
-- 4e94ddb1-70 - unresolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:320:24
-- 4e94ddb1-71 - unresolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:340:70
+- 4e94ddb1-69 - resolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:319:24
+- 4e94ddb1-70 - resolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:320:24
+- 4e94ddb1-71 - resolved - no-casts - packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts:340:70
 - 4e94ddb1-72 - unresolved - no-casts - packages/devtools/cli/src/testing/mcp-session.ts:24:38
 - 4e94ddb1-73 - unresolved - no-casts - packages/devtools/cli/src/testing/mcp-session.ts:97:92
 - 4e94ddb1-74 - unresolved - no-casts - packages/experimental/ner/src/named-entity-recognition.test.ts:51:41

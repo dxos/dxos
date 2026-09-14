@@ -230,7 +230,8 @@ describe('RepoProxy', () => {
 
       const text = 'Hello World!';
       const clientHandle = clientRepo.create<{ text: string }>({ text: text });
-      await sleep(200); // Wait for the object to be saved without flush.
+      // Wait for the background auto-save to persist the object without an explicit flush.
+      await asyncTimeout(host.documentsSaved.waitFor(() => true), 1000);
       url = clientHandle.url!;
       await host.close();
       await clientRepo.close();
@@ -267,7 +268,8 @@ describe('RepoProxy', () => {
       await clientRepo.flush();
       clientHandle.change((doc: TestDoc) => (doc.text = text));
       url = clientHandle.url!;
-      await sleep(200); // Wait for the object to be saved without flush.
+      // Wait for the background auto-save to persist the mutation without an explicit flush.
+      await asyncTimeout(host.documentsSaved.waitFor(() => true), 1000);
       await host.close();
       await clientRepo.close();
       await dispose();

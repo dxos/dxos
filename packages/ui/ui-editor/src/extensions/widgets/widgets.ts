@@ -28,7 +28,7 @@ import {
   keymap,
 } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
-import { type FunctionComponent } from 'react';
+import { type FunctionComponent, type ReactNode } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -63,16 +63,18 @@ export interface WidgetStateManager {
   updateWidget<T>(id: string, props: StateDispatch<T>): void;
 }
 
-export type WidgetEventHandler<TEvent = any> = (event: TEvent) => void;
+export type WidgetEventHandler<TEvent = unknown> = (event: TEvent) => void;
 
 /**
- * Props every widget receives: what matched (`_tag`), where, and the host's context.
+ * Props every widget receives: what matched (`_tag`), where, and the host's context. `TProps`
+ * defaults to an index signature (rather than `unknown`) so a matcher can carry the tag's own
+ * caller-defined attributes (see `xml-tags.ts`) without narrowing them first.
  */
-export type WidgetProps<TProps = any, TContext = any> = TProps & {
+export type WidgetProps<TProps = Record<string, unknown>, TContext = unknown> = TProps & {
   _tag: string;
   view?: EditorView;
   range: Range;
-  children?: any[];
+  children?: ReactNode[];
   context?: TContext;
   onEvent?: WidgetEventHandler;
 };
@@ -126,7 +128,7 @@ export type WidgetDef<TProps extends WidgetProps = WidgetProps> = {
 export type WidgetState = {
   id: string;
   root: HTMLElement;
-  props: any;
+  props: WidgetProps;
   Component: FunctionComponent<WidgetProps>;
 };
 
@@ -139,7 +141,7 @@ export type { WidgetNotifier };
 /**
  * Update context.
  */
-export const widgetContextEffect = StateEffect.define<any>();
+export const widgetContextEffect = StateEffect.define<unknown>();
 
 /**
  * Reset all state.
