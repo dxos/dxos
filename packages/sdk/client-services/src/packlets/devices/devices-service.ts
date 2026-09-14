@@ -8,24 +8,24 @@ import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList } from '@dxos/async';
-import { EdgeConnectionService, type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
+  type Device,
   Device_PresenceState,
   DeviceKind,
   DeviceSchema,
   EdgeStatus_ConnectionState,
-  type Device,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { DevicesService } from '@dxos/protocols/rpc';
 
-import { IdentityManagerService, type IdentityManager } from '../identity/index.ts';
+import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
-  constructor(
+  'constructor'(
     private readonly _identityManager: IdentityManager,
     private readonly _edgeConnection?: EdgeConnection,
   ) {}

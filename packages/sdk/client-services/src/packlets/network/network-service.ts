@@ -8,12 +8,12 @@ import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
-import { EdgeConnectionService, type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
-import { SignalManagerService, type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
-import { SwarmNetworkManagerService, type SwarmNetworkManager } from '@dxos/network-manager';
+import { type SignalManager, SignalManagerService, type UnsubscribeCallback } from '@dxos/messaging';
+import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import { buf } from '@dxos/protocols/buf';
-import { NetworkStatusSchema, type NetworkStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type JoinRequest,
@@ -24,7 +24,7 @@ import {
 import { NetworkService } from '@dxos/protocols/rpc';
 
 export class NetworkServiceImpl implements NetworkService.Handlers {
-  constructor(
+  'constructor'(
     private readonly networkManager: SwarmNetworkManager,
     private readonly signalManager: SignalManager,
     private readonly edgeConnection?: EdgeConnection,

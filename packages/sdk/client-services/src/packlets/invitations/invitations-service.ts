@@ -19,16 +19,16 @@ import {
 import { InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { InvitationsManagerService, type InvitationsManager } from './invitations-manager.ts';
+import { type InvitationsManager, InvitationsManagerService } from './invitations-manager.ts';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
 export class InvitationsServiceImpl implements InvitationsService.Handlers {
-  constructor(private readonly _invitationsManager: InvitationsManager) {}
+  'constructor'(private readonly _invitationsManager: InvitationsManager) {}
 
   // TODO(burdon): Guest/host label.
-  getLoggingContext() {
+  'getLoggingContext'() {
     return {
       // deviceKey: this._identityManager.identity?.deviceKey
     };

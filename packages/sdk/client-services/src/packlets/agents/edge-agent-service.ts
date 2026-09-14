@@ -26,7 +26,7 @@ import { type EdgeAgentManager } from './edge-agent-manager.ts';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
 export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
-  constructor(
+  'constructor'(
     private readonly _agentManagerProvider: () => Promise<EdgeAgentManager>,
     private readonly _edgeConnection?: EdgeConnection,
   ) {}
