@@ -238,9 +238,10 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+    const resultIds = new Set(this._results.map((result) => result.id));
     const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
       // If any updated object was in previous results, invalidate.
-      if (this._results!.find((result) => result.id === objectId)) {
+      if (resultIds.has(objectId)) {
         return true;
       }
 

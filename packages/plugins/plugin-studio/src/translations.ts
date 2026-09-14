@@ -81,7 +81,7 @@ export const translations = [
         'frame-companion.label': 'Frame',
         'frame-empty.message': 'No artifact yet.',
         'add-frame-artifact.label': 'Add artifact',
-        'storyboard-empty.message': 'No frames yet — append one from the toolbar.',
+        'storyboard-empty.message': 'No frames',
         'play.label': 'Play',
         'stop.label': 'Back to frames',
         'previous-frame.label': 'Previous frame',

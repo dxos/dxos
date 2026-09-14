@@ -4,7 +4,7 @@ name: DebugPlugin
 version: 0.1.0
 ---
 
-Developer debugging utilities for `DXOS` Composer — synthetic-object generation, a per-object Debug companion, a space-objects browser, a wireframe overlay, and a transient-stats panel. Rendered under a Debug node in the SYSTEM navigation group, a sibling of the Devtools inspector (`org.dxos.plugin.devtools`).
+Developer debugging utilities for `DXOS` Composer — a floating debug panel (console, log viewer, and every developer tool as a navtree), synthetic-object generation, a per-object Debug companion, a space-objects browser, a wireframe overlay, and a transient-stats panel. The panel is a navtree over a hidden `root/debug` app-graph category that this plugin contributes; the Devtools inspector (`org.dxos.plugin.devtools`) attaches its tree there too. Nothing under `root/debug` appears in the main navtree, opens in the deck, or has a URL.
 
 ## Extensions
 
@@ -33,11 +33,79 @@ type DebugPluginOptions
     persistStats?: boolean      # persist the stats-panel store to localStorage (default true)
 ```
 
+```mdl
+type DebugPanelViewState
+  desc: Persisted (localStorage) so a debugging session survives the reloads it provokes; the floating window's open/closed state is not part of it.
+  fields:
+    nodeId?: string             # qualified id of the selected page (e.g. root/debug/devtools/client/config)
+    open: string[]              # path keys of the expanded branches
+    position?: Point            # where the floating panel was last dragged
+    size?: Size                 # the size the floating panel was last resized to
+```
+
+## App graph
+
+```mdl
+feat DebugCategory
+  desc: |
+    A hidden `debug` category on the app-graph root: node `root/debug`, type
+    `GraphPath.GroupTypes.debug`, `data: null`, `disposition: hidden`, not draggable or droppable.
+    `hidden` is what the main navtree already filters, so no consumer has to learn about the
+    category. Tool plugins attach with `AppNodeMatcher.whenDebugGroup`; every tool is a global node
+    (no per-space enumeration) and a space-scoped tool resolves the active workspace's space at
+    render time. Nothing under `root/debug` declares a URL binding.
+```
+
+| Node                        | Type                | Article                    |
+|-----------------------------|---------------------|----------------------------|
+| `root/debug/console`        | `DebugNodes.Console`| Console (agent debug shell)|
+| `root/debug/logs`           | `DebugNodes.Logs`   | Log viewer                 |
+| `root/debug/debug`          | `DebugNodes.id`     | branch (no article)        |
+| `root/debug/debug/space`    | `DebugNodes.SpaceType` | Generate objects (active space) |
+| `root/debug/devtools/...`   | contributed by `org.dxos.plugin.devtools` | Client / HALO / ECHO / MESH / EDGE inspectors, App Graph, SDK Explorer, CLI |
+
+## Components
+
+```mdl
+component DebugPanel
+  desc: |
+    The debug surface in parts (`DebugPanel.Root` / `Sidebar` / `Main`), hosted by `DebugPanelStatus`
+    inside a `FloatingPanel` opened from the status bar. `Root` owns the selection and the expanded
+    branches (DebugPanelViewState); `Sidebar` is a `Tree` over `root/debug` via
+    `useGraphTreeModel` (`@dxos/plugin-graph/hooks`); `Main` renders the selected node's article
+    surface. Selecting a row never touches the deck, attention, or the URL.
+  props:
+    contextId?: string          # view-state context; defaults to the status-rail singleton
+  state:
+    nodeId?: string             # selected page
+    open: string[]              # expanded branch path keys
+  actions:
+    select(nodeId: string)      # a leaf shows its article; a branch (data: null) toggles instead
+    setOpen(pathKey: string, isOpen: boolean)
+  layout: |
+    ┌─ FloatingPanel ──────────────────────────────────────┐
+    │ Debug                                          — ×  │
+    ├─ Sidebar (Tree) ──┬─ Main (article surface) ────────┤
+    │ ▸ Console         │                                  │
+    │   Logs            │  Config JSON / log table /       │
+    │ ▾ DevTools        │  generator / ...                 │
+    │   ▾ Client        │                                  │
+    │       Config      │  (console and logs stay mounted  │
+    │ ▾ Debug           │   while another page is shown)   │
+    │     Generate obj. │                                  │
+    └───────────────────┴──────────────────────────────────┘
+```
+
 ## Features
 
 ```mdl
+feat DebugPanel
+  desc: A status-bar button opens the floating debug panel; its sidebar lists Console, Logs, DevTools, and Debug, and the selection and open branches persist across reloads.
+```
+
+```mdl
 feat GenerateObjects
-  desc: Create configurable batches of synthetic ECHO objects into a space collection.
+  desc: Create configurable batches of synthetic ECHO objects into the active workspace's space, from the Debug → Generate objects page of the panel.
 ```
 
 ```mdl
@@ -108,11 +176,14 @@ test QA-2: Generate synthetic objects into a collection
     - collection: a collection in that space, empty of synthetic objects
     - plugin-debug is enabled (dev-only default; see above)
   steps:
-    - name: Open the Debug node and generate objects
+    - name: Open the debug panel and generate objects
       do: |
-        In the SYSTEM navigation group, open the Debug node's space-objects browser, choose a
-        small batch (e.g. 5 Markdown documents) into the collection, and run it.
-      expect: 5 new documents appear under the collection, and the space-objects browser lists them
+        Click the status-bar debug button (terminal icon), then in the panel's sidebar open
+        Debug → Generate objects. Set the batch size (e.g. 5) and press `+` on
+        `org.dxos.type.document`.
+      expect: |
+        the type's count rises by 5, the documents appear in the space-objects browser, and the
+        main navtree's SYSTEM group still shows only Database (no DevTools or Debug node)
       note: NO `invoke` — GenerateObjects has no operation; it is a UI-only synthetic-data generator.
   after:
     - name: Remove the generated objects

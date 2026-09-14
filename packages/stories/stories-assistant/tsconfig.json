@@ -32,6 +32,12 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -156,6 +162,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/react-client"

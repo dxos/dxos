@@ -31,3 +31,16 @@ describe('is405', () => {
     expect(McpToolkit.is405(undefined)).toBe(false);
   });
 });
+
+describe('formatCause', () => {
+  test('names the transport error a wrapped throw carries', ({ expect }) => {
+    const wrapped = new Cause.UnknownError(new Error('Error POSTing to endpoint (HTTP 403): challenge'));
+    expect(McpToolkit.formatCause(wrapped)).toBe('Error POSTing to endpoint (HTTP 403): challenge');
+  });
+
+  test('cuts a message that carries a whole error page', ({ expect }) => {
+    const formatted = McpToolkit.formatCause(new Error(`HTTP 403: ${'<html>'.repeat(100)}`));
+    expect(formatted.length).toBeLessThanOrEqual(201);
+    expect(formatted.endsWith('…')).toBe(true);
+  });
+});
