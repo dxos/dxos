@@ -42,6 +42,7 @@ const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
   toasts: [],
   currentUndoId: undefined,
   scrollIntoView: undefined,
+  scrollIntoViewFocus: undefined,
   open: {},
 };
 

@@ -16,6 +16,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.ScrollIntoView> = La
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
         ...state,
         scrollIntoView: input.subject,
+        scrollIntoViewFocus: input.focus,
       }));
     }),
   ),
