@@ -44,7 +44,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const db = Obj.getDatabase(chat) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
 
-    const { preset, ...chatProps } = usePresets(settings);
+    const { preset, ...chatProps } = usePresets(settings, chat);
     const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
     const getContext = useSelectionContext(companionTo);
 
