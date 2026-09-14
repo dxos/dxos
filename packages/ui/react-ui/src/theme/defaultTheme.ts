@@ -4,6 +4,7 @@
 
 import { type Theme } from '@dxos/ui-types';
 
+import { accordionTheme } from '../components/Accordion/Accordion.theme';
 import { avatarTheme } from '../components/Avatars/Avatar.theme';
 import { bannerTheme } from '../components/Banner/Banner.theme';
 import { breadcrumbTheme } from '../components/Breadcrumb/Breadcrumb.theme';
@@ -59,6 +60,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   // Components
   //
 
+  accordion: accordionTheme,
   avatar: avatarTheme,
   breadcrumb: breadcrumbTheme,
   button: buttonTheme,

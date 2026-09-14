@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -96,8 +96,10 @@ export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <SearchList.Input placeholder={t('search-placeholder.label')} />
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <SearchList.Input placeholder={t('search-placeholder.label')} />
+          </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content>
           {empty ? (

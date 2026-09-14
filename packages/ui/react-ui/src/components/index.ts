@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './Accordion';
 export * from './AttentionGlyph';
 export * from './Avatars';
 export * from './Breadcrumb';

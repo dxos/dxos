@@ -26,6 +26,7 @@ export default Config2.make({
     icon: { key: 'ph--paint-brush--regular', hue: 'purple' },
     spec: 'PLUGIN.mdl',
     screenshots: [],
+    dependsOn: ['org.dxos.plugin.projects'],
     tags: ['labs'],
   },
 });
