@@ -196,6 +196,9 @@ ChatThreadViewport.displayName = CHAT_THREAD_VIEWPORT_NAME;
 
 const CHAT_THREAD_SCROLL_TO_BOTTOM_NAME = 'ChatThread.ScrollToBottom';
 
+/** How long the reader must be away from the tail before the button shows. */
+const SCROLL_TO_BOTTOM_SHOW_DELAY = 400;
+
 /**
  * Returns the reader to the tail, and re-arms the follow with it (`scrollToBottom` does both).
  *
@@ -207,6 +210,19 @@ const ScrollToBottom = () => {
   const { t } = useTranslation(translationKey);
   const { atEnd, scrollToBottom } = useMessageList(CHAT_THREAD_SCROLL_TO_BOTTOM_NAME);
 
+  // Shown only once the reader has been away for a moment, hidden the instant they are back: while a
+  // turn streams, the tail outruns the follow's glide for a frame or two at a time, and `atEnd`
+  // flickers with it — a button that tracked it directly would blink through every response.
+  const [shown, setShown] = useState(!atEnd);
+  useEffect(() => {
+    if (atEnd) {
+      setShown(false);
+      return;
+    }
+    const timeout = setTimeout(() => setShown(true), SCROLL_TO_BOTTOM_SHOW_DELAY);
+    return () => clearTimeout(timeout);
+  }, [atEnd]);
+
   return (
     <IconButton
       variant='primary'
@@ -214,11 +230,11 @@ const ScrollToBottom = () => {
       iconOnly
       density='sm'
       label={t('scroll-to-bottom.label')}
-      disabled={atEnd}
-      aria-hidden={atEnd}
+      disabled={!shown}
+      aria-hidden={!shown}
       classNames={[
         'absolute bottom-2 left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300',
-        atEnd && 'opacity-0 pointer-events-none',
+        !shown && 'opacity-0 pointer-events-none',
       ]}
       data-testid='assistant.thread.scroll-to-bottom'
       onClick={() => scrollToBottom({ behavior: 'smooth' })}
