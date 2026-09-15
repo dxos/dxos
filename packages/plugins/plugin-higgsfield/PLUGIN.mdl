@@ -47,13 +47,13 @@ feat HiggsfieldGenerationService
   source: higgsfield.ai
   requestSchema:
     image: { model, prompt }
-    video: { model, prompt, imageUrl?, stillModel? }   # DoP animates a still: generated from the prompt unless imageUrl is given
+    video: { model, prompt, imageUrl?, imageModel? }   # DoP animates a still: generated from the prompt unless imageUrl is given
   fieldOptions:
     image.model: Soul v2 / Soul (text-to-image)
-    video.model: DoP lite / turbo / standard (image-to-video); video.stillModel: the Soul tiers
+    video.model: DoP lite / turbo / standard (image-to-video); video.imageModel: the Soul tiers
   defaultRequest:
     image: { model: "higgsfield-ai/soul/v2/standard" }
-    video: { model: "higgsfield-ai/dop/lite", stillModel: "higgsfield-ai/soul/v2/standard" }
+    video: { model: "higgsfield-ai/dop/lite", imageModel: "higgsfield-ai/soul/v2/standard" }
   enqueue:
     endpoint: POST https://api.higgsfield.ai/<model>   # via edge CORS proxy; header Authorization: Key id:secret
     body: { prompt } (image) | { prompt, image_url } (video — the still is a synchronous Soul job inside enqueue)

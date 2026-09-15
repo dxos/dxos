@@ -17,6 +17,7 @@ import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
@@ -41,6 +42,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
   const manager = usePluginManager();
   const { invokePromise } = useOperationInvoker();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));
+  const createEntriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
 
   const typename = Obj.getTypename(companionTo);
   const tours = useTours(companionTo);
@@ -51,25 +53,37 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
       return empty;
     }
 
-    // Find the module whose contributed schemas include this typename.
-    const owningModuleId = Object.entries(schemasByModule).find(([, contributions]) =>
-      contributions.some((schemas) => schemas.some((schema) => Type.getTypename(schema) === typename)),
-    )?.[0];
-    if (!owningModuleId) {
+    // Several plugins may register the same schema (inbox registers Project for its mailboxes);
+    // the one that also offers to create the type is the one that owns it.
+    const registrarModuleIds = Object.entries(schemasByModule)
+      .filter(([, contributions]) =>
+        contributions.some((schemas) => schemas.some((schema) => Type.getTypename(schema) === typename)),
+      )
+      .map(([moduleId]) => moduleId);
+    if (registrarModuleIds.length === 0) {
       return empty;
     }
-
-    // Map module id → plugin.
-    const owningPlugin = manager
+    const creatorPluginIds = new Set(
+      manager
+        .getPlugins()
+        .filter((plugin) =>
+          plugin.modules.some((module) =>
+            (createEntriesByModule[module.id] ?? []).some((entry) => entry.id === typename),
+          ),
+        )
+        .map((plugin) => plugin.meta.profile.key),
+    );
+    const registrars = manager
       .getPlugins()
-      .find((plugin) => plugin.modules.some((module) => module.id === owningModuleId));
+      .filter((plugin) => plugin.modules.some((module) => registrarModuleIds.includes(module.id)));
+    const owningPlugin = registrars.find((plugin) => creatorPluginIds.has(plugin.meta.profile.key)) ?? registrars[0];
     return {
       content: owningPlugin?.meta.profile.description ?? '',
       screenshots: (owningPlugin?.meta.profile.screenshots ?? [])
         .map((s) => (typeof s === 'string' ? s : (s.light ?? s.dark ?? '')))
         .filter(Boolean),
     };
-  }, [typename, manager, schemasByModule]);
+  }, [typename, manager, schemasByModule, createEntriesByModule]);
 
   return (
     <Panel.Root>

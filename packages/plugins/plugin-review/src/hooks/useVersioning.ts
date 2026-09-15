@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
@@ -66,8 +66,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
 
   // Subscribe to history mutations (checkpoints/branches added elsewhere).
   useObject(document, 'history');
-  const [rootText] = [document?.content.target];
-  useObject(document?.content);
+  const rootText = useResolveRef(document?.content);
 
   const selection = perObject.selection ?? { kind: 'current' as const };
   const view = perObject.view ?? 'branch';
@@ -141,17 +140,11 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     };
   }, [document, boundBranch]);
 
-  // Load the legacy branch Text (triggers re-render when the ref resolves).
-  useObject(activeBranch?.content);
-  const activeText = activeBranch
-    ? Branch.isCore(activeBranch)
-      ? branchBinding?.object
-      : activeBranch.content?.target
-    : rootText;
+  const legacyBranchText = useResolveRef(activeBranch?.content);
+  const activeText = activeBranch ? (Branch.isCore(activeBranch) ? branchBinding?.object : legacyBranchText) : rootText;
 
   // The compare/merge base: parent content at the branch anchor.
-  useObject(activeBranch?.parent);
-  const branchParent = activeBranch?.parent.target;
+  const branchParent = useResolveRef(activeBranch?.parent);
   const branchBaseContent = useMemo(() => {
     if (!activeBranch || !branchParent) {
       return undefined;
@@ -160,8 +153,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   }, [activeBranch, branchParent]);
 
   // The fork point: parent content at the fork's anchor — the read-only state the branch began from.
-  useObject(activeFork?.parent);
-  const forkParent = activeFork?.parent.target;
+  const forkParent = useResolveRef(activeFork?.parent);
   const forkContent = useMemo(() => {
     if (!activeFork || !forkParent) {
       return undefined;
@@ -172,12 +164,8 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   // A checkpoint on an ACTIVE branch reads/pins against the branch-bound Text (its heads live in the
   // branch document). A base checkpoint — or a checkpoint on a since-merged branch, whose heads the
   // merge folded into the root — resolves against the root target directly.
-  useObject(activeVersion?.target);
-  const checkpointText = activeVersion
-    ? checkpointBranch
-      ? branchBinding?.object
-      : activeVersion.target.target
-    : undefined;
+  const versionTarget = useResolveRef(activeVersion?.target);
+  const checkpointText = activeVersion ? (checkpointBranch ? branchBinding?.object : versionTarget) : undefined;
   const checkpointContent = useMemo(() => {
     if (!activeVersion || !checkpointText) {
       return undefined;

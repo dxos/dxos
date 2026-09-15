@@ -8,7 +8,7 @@ import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useSt
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
@@ -169,14 +169,20 @@ export const MediaArtifactForm = ({
     }
   }, [invokePromise, artifact, db, provider?.id, draft]);
 
-  // A produced variant with a persisted jobId is an in-flight async job; resume awaiting it on mount
-  // so a long provider poll survives navigation/remount (the op polls without re-enqueueing).
+  // The op publishes a progress monitor under the artifact's id for as long as it runs, so a
+  // generation started before this form mounted (navigated away and back, or an agent's) reads as
+  // busy too — `generating` alone dies with the component.
+  const running = useProgressMonitor(`${meta.profile.key}/${artifactId}`) !== undefined;
+
+  // A produced variant with a persisted jobId is an in-flight async job whose op is no longer
+  // running (a reload); resume awaiting it so a long provider poll survives (the op polls without
+  // re-enqueueing). While the op still runs, it will fill the variant itself.
   const pendingIndex = useMemo(() => variants.findIndex((variant) => !!variant.jobId), [variants]);
   const pendingId = pendingIndex >= 0 ? variants[pendingIndex]?.id : undefined;
   const resumingRef = useRef(false);
   useEffect(() => {
     const pendingRef = pendingIndex >= 0 ? variantRefs[pendingIndex] : undefined;
-    if (!db || !pendingRef || generating || resumingRef.current) {
+    if (!db || !pendingRef || generating || running || resumingRef.current) {
       return;
     }
     resumingRef.current = true;
@@ -190,14 +196,14 @@ export const MediaArtifactForm = ({
         resumingRef.current = false;
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [db, pendingId, generating, invokePromise, artifact, provider?.id]);
+  }, [db, pendingId, generating, running, invokePromise, artifact, provider?.id]);
 
   // Undo-aware removal (trashes the object, removing it from any collection + closing its plank).
   const handleDelete = useCallback(() => {
     void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] });
   }, [invokePromise, artifact]);
 
-  const busy = generating || pendingIndex >= 0;
+  const busy = generating || running || pendingIndex >= 0;
   // Generation is enabled only when the draft satisfies the provider's request schema (required
   // fields present, e.g. a non-empty prompt + any provider-required values).
   const canGenerate =

@@ -19,6 +19,8 @@ export const translations = [
         'floating-panel.maximize.label': 'Maximize',
         'floating-panel.restore.label': 'Restore',
 
+        'drawer.resize.label': 'Resize drawer',
+
         'system-button.star.label': 'Star',
         'system-button.unstar.label': 'Unstar',
         'system-button.bookmark.label': 'Bookmark',

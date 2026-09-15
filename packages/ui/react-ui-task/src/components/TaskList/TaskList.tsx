@@ -40,7 +40,7 @@ import {
   executeMenuAction,
   fallbackIcon,
 } from '@dxos/react-ui-menu';
-import { type Actor, RemoteSession, Task } from '@dxos/types';
+import { type Actor, Question, RemoteSession, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -734,22 +734,45 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
  * Click, not hover or focus: the tag sits inside a listbox option, where a tab stop of its own would
  * split the row into several arrow-key stops, and a hover card would fire while the pointer crosses
  * the row on its way somewhere else.
+ *
+ * A {@link Question.Question} also opens on hover: it is not something the task produced but the
+ * reason it is stopped, so it should not need a click to find. `useCardHover`'s grace period
+ * answers the objection above. No tab stop is added — that half of the objection still stands, so
+ * the tag carries no `button` role either: a role promising keyboard activation that a
+ * non-focusable element cannot deliver is worse than none. A question is answered from its card in
+ * the conversation, which is keyboard-operable throughout.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   const tagRef = useRef<HTMLSpanElement>(null);
   const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
+  const question = Obj.instanceOf(Question.Question, artifact);
+  // Keyed on the URI string, not the object: `useCardHover` cancels its timer whenever `open`
+  // changes, and the live query re-identifies the artifact on every tick, so an object dependency
+  // means any re-render inside the hover delay swallows the hover.
+  const uri = Obj.getURI(artifact);
+  const openCard = useCallback(() => {
+    const trigger = tagRef.current;
+    trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: uri, label, kind: 'card' }));
+  }, [uri, label]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, question);
   const handleClick = useCallback(
     (event: MouseEvent<HTMLSpanElement>) => {
       // The row is an option: without this the click selects the task as well as opening the card.
       event.stopPropagation();
-      const trigger = tagRef.current;
-      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: Obj.getURI(artifact), label, kind: 'card' }));
+      openCard();
     },
-    [artifact, label],
+    [openCard],
   );
 
   return (
-    <Tag ref={tagRef} hue='amber' role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Tag
+      ref={tagRef}
+      hue='amber'
+      classNames='cursor-pointer'
+      onClick={handleClick}
+      onPointerEnter={question ? startHover : undefined}
+      onPointerLeave={question ? cancelHover : undefined}
+    >
       {label}
     </Tag>
   );

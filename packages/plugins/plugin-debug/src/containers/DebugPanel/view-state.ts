@@ -14,8 +14,11 @@ const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 
 const Size = Schema.Struct({ width: Schema.Number, height: Schema.Number });
 
+const Mode = Schema.Literals(['floating', 'docked']);
+
 const DebugPanelViewStateSchema = Schema.Struct({
   nodeId: Schema.optional(Schema.String),
+  mode: Schema.optional(Mode),
   // Defaulted rather than required so a value persisted by the tab-based panel still decodes and
   // keeps its position and size.
   open: Schema.Array(Schema.String).pipe(Schema.withDecodingDefault(Effect.succeed([]))),
@@ -23,9 +26,13 @@ const DebugPanelViewStateSchema = Schema.Struct({
   size: Schema.optional(Size),
 });
 
+export type DebugPanelMode = Schema.Schema.Type<typeof Mode>;
+
 export type DebugPanelViewState = {
   /** Qualified id of the selected page; absent until something is chosen. */
   readonly nodeId?: string;
+  /** Docked in the deck's drawer or floating over the app; absent means docked. */
+  readonly mode?: DebugPanelMode;
   /** Joined paths (`Path.create`) of the expanded branches. */
   readonly open: readonly string[];
   /** Where the floating panel was last left; absent until it has been dragged. */
@@ -38,7 +45,7 @@ export type DebugPanelViewState = {
 export const DEBUG_PANEL_CONTEXT = 'debug-panel';
 
 /**
- * Selection, expansion, position and size, persisted (localStorage) so a debugging session survives
+ * Selection, expansion, mode, position and size, persisted (localStorage) so a debugging session survives
  * the reloads it provokes; requires a `ViewStateProvider` ancestor to persist (degrades to the
  * defaults without one).
  */

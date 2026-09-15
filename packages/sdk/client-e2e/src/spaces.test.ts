@@ -3,11 +3,13 @@
 //
 
 import { create } from '@bufbuild/protobuf';
+import * as EffectContext from 'effect/Context';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
+import { DataSpaceManagerService } from '@dxos/client-services';
 import { performInvitation } from '@dxos/client-services/testing';
 import { SpaceState, getSpace, importSpace } from '@dxos/client/echo';
 import { SpacesService } from '@dxos/client/halo';
@@ -25,12 +27,14 @@ import { Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
+import { FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { toPublicKey, unpackJson } from '@dxos/protocols/buf';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { range } from '@dxos/util';
 
 describe('Spaces', () => {
@@ -136,29 +140,21 @@ describe('Spaces', () => {
       ready: true,
     });
 
-    const hello = new Trigger();
-    {
-      space2.listen('hello', (message) => {
-        expect(message.channelId).to.include('hello');
-        expect(message.payload).to.deep.contain({ data: 'Hello, world!' });
-        hello.wake();
-      });
-      await space1.postMessage('hello', { data: 'Hello, world!' });
-    }
+    const hello = new Trigger<GossipMessage>();
+    await space2.listen('hello', (message) => hello.wake(message)).ready;
+    await space1.postMessage('hello', { data: 'Hello, world!' });
 
-    const goodbye = new Trigger();
-    {
-      space2.listen('goodbye', (message) => {
-        expect(message.channelId).to.include('goodbye');
-        expect(message.payload).to.deep.contain({ data: 'Goodbye' });
-        goodbye.wake();
-      });
-      await space1.postMessage('goodbye', { data: 'Goodbye' });
-    }
+    const goodbye = new Trigger<GossipMessage>();
+    await space2.listen('goodbye', (message) => goodbye.wake(message)).ready;
+    await space1.postMessage('goodbye', { data: 'Goodbye' });
 
     // Guards against a hang, so it is generous: two peers replicating is not a latency assertion, and
     // both 200ms and 2s were under the round trip's own cost on a loaded runner.
-    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 30_000);
+    const [helloMessage, goodbyeMessage] = await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 30_000);
+    expect(helloMessage.channelId).to.include('hello');
+    expect(unpackJson(helloMessage.payload)).to.deep.contain({ data: 'Hello, world!' });
+    expect(goodbyeMessage.channelId).to.include('goodbye');
+    expect(unpackJson(goodbyeMessage.payload)).to.deep.contain({ data: 'Goodbye' });
   });
 
   // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.
@@ -179,9 +175,9 @@ describe('Spaces', () => {
     const space1 = await client1.spaces.create();
     await space1.waitUntilReady();
 
-    const dataSpace1 = services1.host!.context.dataSpaceManager?.spaces.get(space1.key);
+    const dataSpace1 = EffectContext.get(services1.stack, DataSpaceManagerService).spaces.get(space1.key);
     const feedKey = dataSpace1!.inner.dataFeedKey;
-    const feed1 = services1.host!.context.feedStore.getFeed(feedKey!)!;
+    const feed1 = EffectContext.get(services1.stack, FeedStoreService).getFeed(feedKey!)!;
 
     const amount = 10;
     {
@@ -204,7 +200,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
+    const feed2 = EffectContext.get(services2.stack, FeedStoreService).getFeed(feedKey!)!;
 
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
 
