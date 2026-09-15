@@ -52,10 +52,16 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -68,6 +74,9 @@
     },
     {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/ui-editor"
