@@ -133,6 +133,9 @@ describe('Higgsfield generation services', () => {
       ),
     ).rejects.toThrow('6 or 10 seconds, not 7');
     expect(calls).toHaveLength(2);
+    // A path with a leading slash is the same model to the check as to the API.
+    await enqueue({ model: ' /higgsfield-ai/dop/lite', prompt: 'pan', imageArtifact, duration: 10 }, options);
+    expect(calls[2].body.duration).toBeUndefined();
   });
 
   test('awaitResult reports progress and maps outputs to variants', async ({ expect }) => {

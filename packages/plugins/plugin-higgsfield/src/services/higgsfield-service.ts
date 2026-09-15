@@ -198,9 +198,12 @@ export const makeHiggsfieldVideoService = (
     if (cover.contentType && !cover.contentType.startsWith('image/')) {
       throw new GenerationService.GenerationError(`The reference cover is ${cover.contentType}, not an image.`);
     }
-    const duration = durationBody(config.model, config.duration);
+    // The same normalization the provider applies at submit, so the duration check sees the path
+    // the API will.
+    const model = config.model.trim().replace(/^\/+/, '');
+    const duration = durationBody(model, config.duration);
     const job = await provider.enqueue(
-      { model: config.model, body: { prompt: config.prompt, image_url: cover.url, ...duration } },
+      { model, body: { prompt: config.prompt, image_url: cover.url, ...duration } },
       credentials(apiKey, signal),
     );
     return toJob(job);
