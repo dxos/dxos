@@ -206,7 +206,7 @@ const reveal = 'pt-1 opacity-0 transition-opacity';
 const revealOnHover = 'group-hover/message:opacity-100';
 
 const Row = ({ children, classNames }: PropsWithChildren<{ classNames?: string }>) => (
-  <div className={mx('group/message relative px-2 py-2', classNames)} data-testid='feed.message'>
+  <div className={mx('group/message relative py-2', classNames)} data-testid='feed.message'>
     {children}
   </div>
 );

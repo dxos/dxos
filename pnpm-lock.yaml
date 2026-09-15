@@ -4302,6 +4302,9 @@ importers:
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../../plugins/plugin-debug
+      '@dxos/plugin-file':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-file
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../../../plugins/plugin-illustrator
@@ -15970,12 +15973,18 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector

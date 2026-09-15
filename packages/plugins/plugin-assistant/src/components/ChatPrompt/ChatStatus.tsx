@@ -121,7 +121,7 @@ export const ChatStatusView = ({
       {show && (
         <div className='flex items-center'>
           {requestTiming && (
-            <NaturalChatStatus.Text>
+            <NaturalChatStatus.Text classNames={isRunning && 'text-sky-500'}>
               <Elapsed timing={requestTiming} />
             </NaturalChatStatus.Text>
           )}
