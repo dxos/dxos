@@ -129,6 +129,7 @@ export default Capability.makeModule(
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,
               position: Position.last,
+              mount: 'open',
             }),
           ]),
       }),
