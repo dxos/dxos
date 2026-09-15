@@ -339,6 +339,41 @@ describe('buildSessionTimeline', () => {
   );
 
   it.effect(
+    'a run whose process ended without a request end closes at its last event, and the axis stops following now',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Only', status: 'started' });
+      const chat = makeChat('Only', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* toolCall('Read file'); // 2 — the run dies here: no AgentRequestEnd.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const now = 2 + 60 * 60_000;
+      const dead = buildSessionTimeline({
+        traceMessages: messages,
+        chats: [chat],
+        tasks: [task],
+        processes: [agentProcess('agent', chat, Process.State.FAILED)],
+        now,
+      });
+      expect(dead.lanes[0]).toMatchObject({ kind: 'session', status: 'failed', start: 1, end: 2 });
+      expect(dead.range).toEqual({ start: 1, end: 2 });
+
+      // Without a process record the begin is taken as still in flight — but an hour of silence
+      // keeps the axis on the events rather than on now.
+      const unknown = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task], now });
+      expect(unknown.lanes[0]).toMatchObject({ status: 'running', end: undefined });
+      expect(unknown.range).toEqual({ start: 1, end: 2 });
+      const fresh = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task], now: 5 });
+      expect(fresh.range).toEqual({ start: 1, end: 5 });
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
     'putting a task back to todo ends its stretch as surely as finishing it',
     Effect.fnUntraced(function* ({ expect }) {
       const task = Task.make({ title: 'Deferred', status: 'todo' });
