@@ -108,8 +108,13 @@ export const makeHiggsfieldImageService = (
   // Async so a config decode failure surfaces as a rejection, not a synchronous throw.
   enqueue: async (request, { apiKey, signal }) => {
     const config = decodeImageConfig(request);
+    // A request seeded from a video config names a DoP model, which the API rejects for want of an
+    // `image_url`; an image is always a text-to-image job, so the still generator stands in.
+    const model = VIDEO_MODELS.some((option) => option.value === config.model)
+      ? HIGGSFIELD_DEFAULT_IMAGE_MODEL
+      : config.model;
     const job = await provider.enqueue(
-      { model: config.model, body: { prompt: config.prompt, aspect_ratio: config.aspectRatio } },
+      { model, body: { prompt: config.prompt, aspect_ratio: config.aspectRatio } },
       credentials(apiKey, signal),
     );
     return toJob(job);

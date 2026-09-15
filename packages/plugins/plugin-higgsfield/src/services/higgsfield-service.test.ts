@@ -40,6 +40,22 @@ describe('Higgsfield generation services', () => {
     expect(captured?.body).toEqual({ prompt: 'hello', aspect_ratio: '16:9' });
   });
 
+  test('image service substitutes the still generator for a video model', async ({ expect }) => {
+    let url = '';
+    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL) => {
+      url = String(input);
+      return json({ status: 'queued', request_id: 'req-1' });
+    };
+    const service = makeHiggsfieldImageService(new HiggsfieldProvider({ fetch: fetchImpl }));
+    const { enqueue } = service;
+    expect(enqueue).toBeDefined();
+    if (!enqueue) {
+      return;
+    }
+    await enqueue({ model: 'higgsfield-ai/dop/lite', prompt: 'a still' }, { apiKey: Redacted.make('id:secret') });
+    expect(url).toContain(`/${HIGGSFIELD_DEFAULT_IMAGE_MODEL}`);
+  });
+
   test('video service generates a still, then animates it, and returns the animation job', async ({ expect }) => {
     const calls: { url: string; body: Record<string, unknown> }[] = [];
     const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
