@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Format, Ref } from '@dxos/echo';
-import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 
 const model = Schema.NonEmptyString.annotate({
@@ -34,30 +33,22 @@ export const HiggsfieldImageConfig = Schema.Struct({ model, prompt, aspectRatio 
 export interface HiggsfieldImageConfig extends Schema.Schema.Type<typeof HiggsfieldImageConfig> {}
 
 /**
- * The video service's request config. Higgsfield's video models animate a still (`image_url`),
- * so a frame is either given a still (`imageUrl`, or a reference image artifact's cover) or has
- * one generated from the prompt first (`imageModel`), then animated by `model`.
+ * The video service's request config. Higgsfield's video models (DoP) animate a still (`image_url`),
+ * which is the cover of a referenced image artifact: an image is generated as its own artifact and
+ * then animated, so a clip's still is always a produced, reviewable object.
  */
 export const HiggsfieldVideoConfig = Schema.Struct({
   model,
   prompt,
-  // The animation follows its still's shape, so the ratio is the still's.
-  aspectRatio,
-  imageArtifact: Schema.optional(
-    Ref.Ref(MediaArtifact.MediaArtifact).annotate({
-      title: 'Reference image',
-      description: 'A generated image whose cover is animated; used when no still URL is given.',
+  imageArtifact: Ref.Ref(MediaArtifact.MediaArtifact).annotate({
+    title: 'Reference image',
+    description: 'The generated image whose cover is animated.',
+  }),
+  duration: Schema.optional(
+    Schema.Int.annotate({
+      title: 'Duration',
+      description: 'Clip length in seconds (Kling and Wan: 5 or 10; Hailuo: 6 or 10; DoP clips are a fixed length).',
     }),
-  ),
-  imageUrl: Schema.optional(
-    Schema.String.pipe(
-      Format.FormatAnnotation.set(Format.TypeFormat.URL),
-      GenerationService.FileUrlAnnotation.set({ accept: 'image/*' }),
-      Schema.annotate({ title: 'Still image', description: 'Image to animate; generated from the prompt when empty.' }),
-    ),
-  ),
-  imageModel: Schema.optional(
-    Schema.String.annotate({ title: 'Image model', description: 'Image model used when no still is given.' }),
   ),
 });
 export interface HiggsfieldVideoConfig extends Schema.Schema.Type<typeof HiggsfieldVideoConfig> {}

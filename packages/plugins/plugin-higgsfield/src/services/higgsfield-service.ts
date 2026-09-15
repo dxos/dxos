@@ -78,12 +78,27 @@ const IMAGE_MODELS: readonly GenerationService.FieldOption[] = [
   { value: 'higgsfield-ai/soul/standard', label: 'Soul (standard)', secondaryLabel: 'text-to-image' },
 ];
 
-/** Video (image-to-video) model paths, cheapest first; verified against the estimate endpoint. */
+/**
+ * Video (image-to-video) model paths, cheapest first; verified against the estimate endpoint. DoP
+ * clips are a fixed length; the third-party models take a `duration`.
+ */
 const VIDEO_MODELS: readonly GenerationService.FieldOption[] = [
   { value: 'higgsfield-ai/dop/lite', label: 'DoP (lite)', secondaryLabel: 'image-to-video' },
   { value: 'higgsfield-ai/dop/turbo', label: 'DoP (turbo)', secondaryLabel: 'image-to-video' },
   { value: 'higgsfield-ai/dop/standard', label: 'DoP (standard)', secondaryLabel: 'image-to-video' },
+  { value: 'kling-video/v2.1/standard/image-to-video', label: 'Kling 2.1 (standard)', secondaryLabel: '5s / 10s' },
+  { value: 'minimax/hailuo-2.3/standard/image-to-video', label: 'Hailuo 2.3 (standard)', secondaryLabel: '6s / 10s' },
+  {
+    value: 'kling-video/v2.5-turbo/standard/image-to-video',
+    label: 'Kling 2.5 turbo (standard)',
+    secondaryLabel: '5s / 10s',
+  },
+  { value: 'wan-25-preview/image-to-video', label: 'Wan 2.5 (preview)', secondaryLabel: '5s / 10s' },
+  { value: 'kling-video/v2.1/pro/image-to-video', label: 'Kling 2.1 (pro)', secondaryLabel: '5s / 10s' },
 ];
+
+/** Whether a video model takes a clip `duration`; DoP's length is fixed. */
+const takesDuration = (model: string): boolean => !model.startsWith('higgsfield-ai/dop/');
 
 /**
  * The studio persists one opaque job id per pending variant; ours is the API's `status_url`, so a
@@ -129,10 +144,9 @@ export const makeHiggsfieldImageService = (
 });
 
 /**
- * The Higgsfield `kind: 'video'` service. The video models animate a still, so `enqueue` first
- * produces one from the prompt (unless the config names an `imageUrl`) — a synchronous Soul job
- * inside the enqueue, since the studio persists only one job id — then submits the animation, whose
- * status URL is what `awaitResult` polls.
+ * The Higgsfield `kind: 'video'` service. The video models animate a still, which is the referenced
+ * image artifact's cover (resolved through the op's `load`); the animation's status URL is what
+ * `awaitResult` polls.
  */
 export const makeHiggsfieldVideoService = (
   provider: HiggsfieldProvider = makeHiggsfieldProvider(),
@@ -141,49 +155,28 @@ export const makeHiggsfieldVideoService = (
   kind: 'video',
   contentType: 'video/mp4',
   requestSchema: HiggsfieldVideoConfig,
-  defaultRequest: {
-    model: HIGGSFIELD_DEFAULT_VIDEO_MODEL,
-    imageModel: HIGGSFIELD_DEFAULT_IMAGE_MODEL,
-    aspectRatio: HIGGSFIELD_DEFAULT_ASPECT_RATIO,
-  },
-  fieldOptions: { model: async () => VIDEO_MODELS, imageModel: async () => IMAGE_MODELS },
-  enqueue: async (request, { apiKey, signal, onProgress, load }) => {
+  defaultRequest: { model: HIGGSFIELD_DEFAULT_VIDEO_MODEL },
+  fieldOptions: { model: async () => VIDEO_MODELS },
+  enqueue: async (request, { apiKey, signal, load }) => {
     const config = decodeVideoConfig(request);
-    const options = credentials(apiKey, signal);
-    let imageUrl = config.imageUrl;
-    // A reference artifact contributes its cover: the still the animation continues from.
-    if (!imageUrl && config.imageArtifact && load) {
-      const reference = await load(config.imageArtifact);
-      if (reference.kind !== 'image') {
-        throw new GenerationService.GenerationError('The reference artifact must be an image.');
-      }
-      const cover = reference.cover ? await load(reference.cover) : undefined;
-      if (!cover?.url) {
-        throw new GenerationService.GenerationError('The reference image has no produced cover to animate.');
-      }
-      if (cover.contentType && !cover.contentType.startsWith('image/')) {
-        throw new GenerationService.GenerationError(`The reference cover is ${cover.contentType}, not an image.`);
-      }
-      imageUrl = cover.url;
+    if (!load) {
+      throw new GenerationService.GenerationError('The reference image cannot be loaded here.');
     }
-    if (!imageUrl) {
-      onProgress?.({ status: 'Generating still' });
-      const still = await provider.enqueue(
-        {
-          model: config.imageModel ?? HIGGSFIELD_DEFAULT_IMAGE_MODEL,
-          body: { prompt: config.prompt, aspect_ratio: config.aspectRatio },
-        },
-        options,
-      );
-      const output = await provider.awaitResult(still.statusUrl, options);
-      if (output.kind !== 'image') {
-        throw new Error(`Higgsfield still model returned ${output.kind}, expected an image.`);
-      }
-      imageUrl = output.urls[0];
+    const reference = await load(config.imageArtifact);
+    if (reference.kind !== 'image') {
+      throw new GenerationService.GenerationError('The reference artifact must be an image.');
     }
+    const cover = reference.cover ? await load(reference.cover) : undefined;
+    if (!cover?.url) {
+      throw new GenerationService.GenerationError('The reference image has no produced cover to animate.');
+    }
+    if (cover.contentType && !cover.contentType.startsWith('image/')) {
+      throw new GenerationService.GenerationError(`The reference cover is ${cover.contentType}, not an image.`);
+    }
+    const duration = config.duration !== undefined && takesDuration(config.model) ? { duration: config.duration } : {};
     const job = await provider.enqueue(
-      { model: config.model, body: { prompt: config.prompt, image_url: imageUrl } },
-      options,
+      { model: config.model, body: { prompt: config.prompt, image_url: cover.url, ...duration } },
+      credentials(apiKey, signal),
     );
     return toJob(job);
   },

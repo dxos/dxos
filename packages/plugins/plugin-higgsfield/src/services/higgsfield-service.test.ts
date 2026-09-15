@@ -56,61 +56,7 @@ describe('Higgsfield generation services', () => {
     expect(url).toContain(`/${HIGGSFIELD_DEFAULT_IMAGE_MODEL}`);
   });
 
-  test('video service generates a still, then animates it, and returns the animation job', async ({ expect }) => {
-    const calls: { url: string; body: Record<string, unknown> }[] = [];
-    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      if (init?.method === 'POST') {
-        calls.push({ url, body: JSON.parse(String(init.body)) });
-        return json({ status: 'queued', request_id: url.includes('/dop/') ? 'video-1' : 'still-1' });
-      }
-      // The still's status poll completes at once with an image.
-      return json({ status: 'completed', request_id: 'still-1', images: [{ url: 'https://cdn/still.jpg' }] });
-    };
-    const service = makeHiggsfieldVideoService(
-      new HiggsfieldProvider({ fetch: fetchImpl, initialPollIntervalMs: 1, maxPollIntervalMs: 1 }),
-    );
-    expect(service.kind).toBe('video');
-    const { enqueue } = service;
-    expect(enqueue).toBeDefined();
-    if (!enqueue) {
-      return;
-    }
-    const statuses: (string | undefined)[] = [];
-    const { jobId } = await enqueue(
-      { ...service.defaultRequest, prompt: 'slow dolly in' },
-      { apiKey: Redacted.make('id:secret'), onProgress: ({ status }) => statuses.push(status) },
-    );
-    expect(jobId).toBe('https://api.higgsfield.ai/requests/video-1/status');
-    expect(calls.map((call) => call.url.split('.ai/')[1])).toEqual([
-      'higgsfield-ai/soul/v2/standard',
-      'higgsfield-ai/dop/lite',
-    ]);
-    expect(calls[1].body).toEqual({ prompt: 'slow dolly in', image_url: 'https://cdn/still.jpg' });
-    expect(statuses).toEqual(['Generating still']);
-  });
-
-  test('video service animates a given still without generating one', async ({ expect }) => {
-    const calls: string[] = [];
-    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL) => {
-      calls.push(String(input));
-      return json({ status: 'queued', request_id: 'video-1' });
-    };
-    const service = makeHiggsfieldVideoService(new HiggsfieldProvider({ fetch: fetchImpl }));
-    const { enqueue } = service;
-    expect(enqueue).toBeDefined();
-    if (!enqueue) {
-      return;
-    }
-    await enqueue(
-      { model: 'higgsfield-ai/dop/lite', prompt: 'pan', imageUrl: 'https://cdn/mine.jpg' },
-      { apiKey: Redacted.make('id:secret') },
-    );
-    expect(calls).toHaveLength(1);
-    expect(calls[0]).toContain('/dop/lite');
-  });
-
-  test("video service animates a reference artifact's cover without generating a still", async ({ expect }) => {
+  test("video service animates the reference artifact's cover", async ({ expect }) => {
     const calls: { url: string; body: Record<string, unknown> }[] = [];
     const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       calls.push({ url: String(input), body: JSON.parse(String(init?.body)) });
@@ -145,6 +91,41 @@ describe('Higgsfield generation services', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toContain('/dop/lite');
     expect(calls[0].body).toEqual({ prompt: 'pan', image_url: 'https://cdn/reference.jpg' });
+  });
+
+  test('video service passes a duration to a model that takes one and drops it for DoP', async ({ expect }) => {
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
+    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: String(input), body: JSON.parse(String(init?.body)) });
+      return json({ status: 'queued', request_id: 'video-1' });
+    };
+    const service = makeHiggsfieldVideoService(new HiggsfieldProvider({ fetch: fetchImpl }));
+    const { enqueue } = service;
+    expect(enqueue).toBeDefined();
+    if (!enqueue) {
+      return;
+    }
+    const cover = Variant.make({ name: 'cover', url: 'https://cdn/reference.jpg', contentType: 'image/jpeg' });
+    const reference = MediaArtifact.make({ name: 'reference', kind: 'image' });
+    Obj.update(reference, (reference) => {
+      reference.cover = Ref.make(cover);
+    });
+    const load = async <T>(ref: Ref.Ref<T>): Promise<T> => {
+      const target = ref.target;
+      if (!target) {
+        throw new Error('unresolved');
+      }
+      return target;
+    };
+    const imageArtifact = Ref.make(reference);
+    const options = { apiKey: Redacted.make('id:secret'), load };
+    await enqueue(
+      { model: 'kling-video/v2.1/standard/image-to-video', prompt: 'pan', imageArtifact, duration: 10 },
+      options,
+    );
+    await enqueue({ model: 'higgsfield-ai/dop/lite', prompt: 'pan', imageArtifact, duration: 10 }, options);
+    expect(calls[0].body.duration).toBe(10);
+    expect(calls[1].body.duration).toBeUndefined();
   });
 
   test('awaitResult reports progress and maps outputs to variants', async ({ expect }) => {
