@@ -68,7 +68,10 @@ export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps
   return (
     // `font-body` overrides the pill root's `font-mono`, which suits the status pill's token counts
     // and elapsed clock but renders a sentence as debug output.
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-1 px-2 gap-2 text-sm font-body', classNames]}>
+    <NaturalChatStatus.Root
+      defaultRunning={false}
+      classNames={['border py-1 px-2 gap-2 text-sm font-body', classNames]}
+    >
       <NaturalChatStatus.Icon />
       <NaturalChatStatus.Text>
         <span data-testid='assistant.chat-activity'>{label}</span>
