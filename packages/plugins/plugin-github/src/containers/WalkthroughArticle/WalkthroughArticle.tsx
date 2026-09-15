@@ -161,7 +161,7 @@ export const WalkthroughArticle = ({ role, attendableId, subject }: WalkthroughA
             commit: subject.commit,
             path: lineTarget.file,
             line: lineTarget.line,
-            side: lineTarget.side === 'before' ? 'LEFT' : 'RIGHT',
+            side: lineTarget.side === 'before' ? ('LEFT' as const) : ('RIGHT' as const),
           },
           { spaceId },
         )
