@@ -257,7 +257,15 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
       const binary = toBinary(CredentialSchema, credential);
       return Buffer.from(binary).toString('base64');
     });
-    scheduleTask(ctx, async () => {
+
+    // A repeatable task, not a one-shot: `notarize({ timeout: 0 })` promises its caller an
+    // unbounded wait (see `_createWritableFeeds`'s "never times out"), but `notarizeCredentials`'s
+    // own retry budget (`MAX_EDGE_RETRIES`) only covers a handful of seconds. `EdgeResponse.failure`
+    // itself already tells the client this is transient (`No active agents in the space` while the
+    // owner's agent is still coming up) and to retry — a failure here must keep trying rather than
+    // give up for good, or a device whose only path to admission is EDGE (no reachable peer) stalls
+    // forever once the HTTP retries run out.
+    const notarizeTask = new DeferredTask(ctx, async () => {
       try {
         await client.notarizeCredentials(
           ctx,
@@ -269,8 +277,10 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         log('edge notarization success');
       } catch (error: any) {
         handleEdgeError(error);
+        scheduleTask(ctx, () => notarizeTask.schedule(), timeouts.retryTimeout);
       }
     });
+    notarizeTask.schedule();
   }
 
   /**
