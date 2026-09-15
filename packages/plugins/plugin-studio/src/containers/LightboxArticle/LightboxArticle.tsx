@@ -46,10 +46,7 @@ const nextFreeCell = (
   const occupied = (x: number, y: number) =>
     Object.values(cells).some(
       (cell) =>
-        x < cell.x + (cell.width ?? 1) &&
-        x + CELL_SIZE > cell.x &&
-        y < cell.y + (cell.height ?? 1) &&
-        y + CELL_SIZE > cell.y,
+        x < cell.x + (cell.w ?? 1) && x + CELL_SIZE > cell.x && y < cell.y + (cell.h ?? 1) && y + CELL_SIZE > cell.y,
     );
   for (let y = 0; y + CELL_SIZE <= bounds.rows; y += 1) {
     for (let x = 0; x + CELL_SIZE <= bounds.columns; x += 1) {
@@ -147,8 +144,8 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
         lightbox.items.push(Ref.make(artifact));
         lightbox.layout.cells[artifact.id] = {
           ...(position ?? nextFreeCell(lightbox.layout.cells, bounds)),
-          width: CELL_SIZE,
-          height: CELL_SIZE,
+          w: CELL_SIZE,
+          h: CELL_SIZE,
         };
       });
     },
