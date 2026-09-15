@@ -16,15 +16,12 @@ const formStyles = tv({
     // Bottom padding on the body, so the last field never sits flush against its host's edge
     // (a form in a card, a dialog body, a scrolled panel all need it).
     content: 'pb-form-padding',
-    // A `<fieldset>`: laid out as a column so its legend (floated by the fieldset theme) is a child
-    // in flow rather than the browser's border-drawn legend. The depth variant decides the chrome.
     fieldSet: 'flex flex-col',
     fieldSetLegend: 'w-full',
     fieldSetTitle: '',
     fieldSetDescription: 'text-description',
     // Padding under whichever of legend or description comes last.
     fieldSetHeader: '',
-    // The end of the legend row; a description sits below the legend, so it never pushes these down.
     fieldSetActions: 'ms-auto flex items-center',
     // The folding body of a collapsible field set.
     fieldSetBody: 'flex flex-col',
