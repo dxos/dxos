@@ -7,6 +7,7 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
@@ -362,7 +363,12 @@ const TaskTreeHeading = ({
           <span className='col-[gutter]' />
         ))}
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
-      <span className='col-[title] self-center min-w-0 truncate'>{current.title}</span>
+      <span className='col-[title] self-center min-w-0 truncate'>
+        {/* The mnemonic names the row in conversation ("look at 7QK2ZB"); monospace so the
+            fixed-width code reads apart from the prose title and aligns down the column. */}
+        <span className='font-mono text-xs text-subdued mie-2'>{Obj.getMnemonic(current)}</span>
+        {current.title}
+      </span>
       {/* The row's second line, running under the title and its chips only: it has to clear the
           ordinal and the status control, or it reads as belonging to the row above, and it must stop
           short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
