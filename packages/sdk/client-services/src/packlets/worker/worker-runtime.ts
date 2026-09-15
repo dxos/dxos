@@ -20,7 +20,7 @@ import {
   layerClientServicesServer,
   makeBridgeServiceClientOverProtocol,
 } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
+import { type Config, ConfigService } from '@dxos/config';
 import { Event } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -66,7 +66,7 @@ export type CreateSessionProps = {
 };
 
 /** A tab connection within the worker; it lives as long as the scope `createSession` ran in. */
-interface WorkerSession {
+export interface WorkerSession {
   /** The tab's WebRTC bridge, which the worker's network stack proxies through. */
   readonly bridgeService: Awaited<ReturnType<typeof makeBridgeServiceClientOverProtocol>>['bridgeService'];
 }
@@ -212,8 +212,6 @@ export const makeWorkerRuntime = ({
       log('worker-runtime: building client services stack');
       const stackContext = yield* Layer.build(
         ClientServicesLayer({
-          config,
-          bus: yield* Event.Bus,
           // The dial is driven below once boot has drained, not on stack open.
           autoConnect: false,
           // Auto-activate spaces that were previously active after leader changeover.
@@ -224,7 +222,11 @@ export const makeWorkerRuntime = ({
             ? undefined
             : new MemorySignalManager(memorySignalManagerContext ?? new MemorySignalManagerContext()),
           transportFactory,
-        }).pipe(Layer.provideMerge(sqlite)),
+        }).pipe(
+          Layer.provideMerge(sqlite),
+          Layer.provideMerge(Layer.succeed(ConfigService, config)),
+          Layer.provideMerge(Layer.succeed(Event.Bus, yield* Event.Bus)),
+        ),
       ).pipe(Scope.provide(stackScope));
       stack = stackContext;
       log('worker-runtime: stack built, opening');

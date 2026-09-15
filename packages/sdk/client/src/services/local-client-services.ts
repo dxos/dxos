@@ -24,7 +24,7 @@ import {
   type ClientServicesStackContext,
   type ServiceContextRuntimeProps,
 } from '@dxos/client-services';
-import { Config } from '@dxos/config';
+import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -282,8 +282,6 @@ export class LocalClientServices implements ClientServicesProvider {
     const config = this._params.config ?? new Config();
     const runtime = ManagedRuntime.make(
       ClientServicesLayer({
-        config,
-        bus: this._bus,
         runtimeProps: this._params.runtimeProps,
         signalManager: this._params.signalManager,
         transportFactory: this._params.transportFactory,
@@ -291,6 +289,7 @@ export class LocalClientServices implements ClientServicesProvider {
         autoConnect: this._params.autoConnect,
       }).pipe(
         Layer.provideMerge(sqliteLayerFromParams(this._params)),
+        Layer.provide(Layer.succeed(ConfigService, config)),
         Layer.provide(Layer.succeed(EffectEvent.Bus, this._bus)),
         Layer.orDie,
       ),

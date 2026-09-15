@@ -34,9 +34,6 @@ export type ClientServicesStackContext =
 export type ClientServicesSqlContext = SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction;
 
 export type ClientServicesLayerOptions = {
-  config: Config;
-  /** The embedder's bus: the stack subscribes to it for its lifetime and the embedder drives it. */
-  bus: Event.BusService;
   /** Overrides for the config-derived runtime props. */
   runtimeProps?: ServiceContextRuntimeProps;
   /** Overrides the config-derived signal manager; tests pass an in-memory one. */
@@ -68,33 +65,43 @@ export const runtimePropsFromConfig = (
 
 /**
  * The whole client services runtime as one layer: RPC handlers over the component stack over the
- * platform inputs, config, and the embedder's bus, persisting through the SQL services provided
+ * platform inputs, persisting through the SQL services, config and the embedder's bus provided
  * beneath it. Build it with `ManagedRuntime`, then emit `Opening` and `StackOpened` to boot; disposing the
  * runtime tears everything down in reverse.
  */
 export const ClientServicesLayer = ({
-  config,
-  bus,
   runtimeProps,
   signalManager,
   transportFactory,
   connectionLog = true,
   autoConnect = true,
-}: ClientServicesLayerOptions): Layer.Layer<ClientServicesStackContext, never, ClientServicesSqlContext | Event.Bus> =>
-  ClientServicesRpcLayer.pipe(
-    Layer.provideMerge(
-      ServiceStack({
-        ...runtimePropsFromConfig(config, runtimeProps),
-        edgeFeatures: config.get('runtime.client.edgeFeatures'),
-        connectionLog,
-        autoConnect,
-      }),
-    ),
-    Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
-    // TODO(dmaretskyi): Those 2 should remain as layer deps, not parameters.
-    Layer.provideMerge(Layer.succeed(ConfigService, config)),
-    Layer.provideMerge(Layer.succeed(Event.Bus, bus)),
-    Layer.orDie,
+}: ClientServicesLayerOptions = {}): Layer.Layer<
+  ClientServicesStackContext,
+  never,
+  ClientServicesSqlContext | ConfigService | Event.Bus
+> =>
+  // The runtime props are read from the config eagerly, so the stack is unwrapped from an effect
+  // that resolves the config the embedder provided beneath it.
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const config = yield* ConfigService;
+      const bus = yield* Event.Bus;
+      return ClientServicesRpcLayer.pipe(
+        Layer.provideMerge(
+          ServiceStack({
+            ...runtimePropsFromConfig(config, runtimeProps),
+            edgeFeatures: config.get('runtime.client.edgeFeatures'),
+            connectionLog,
+            autoConnect,
+          }),
+        ),
+        Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
+        // Re-provided so the built stack context carries them, as every consumer of the context expects.
+        Layer.provideMerge(Layer.succeed(ConfigService, config)),
+        Layer.provideMerge(Layer.succeed(Event.Bus, bus)),
+        Layer.orDie,
+      );
+    }),
   );
 
 /**

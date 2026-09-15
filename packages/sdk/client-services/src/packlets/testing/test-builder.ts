@@ -13,7 +13,7 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { type Trigger } from '@dxos/async';
 import { type ClientServicesHandlers, makeInProcessClientServicesRpc } from '@dxos/client-protocol';
-import { Config } from '@dxos/config';
+import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -207,8 +207,6 @@ export class ServiceContext {
     this.#ctx = ctx;
     this.#runtime = ManagedRuntime.make(
       ClientServicesLayer({
-        config: this.#config,
-        bus: this.#bus,
         runtimeProps: {
           invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
           ...this.#options.runtimeProps,
@@ -217,6 +215,7 @@ export class ServiceContext {
         transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
       }).pipe(
         Layer.provideMerge(RuntimeProvider.toLayer(this.#sql.contextEffect)),
+        Layer.provide(Layer.succeed(ConfigService, this.#config)),
         Layer.provide(Layer.succeed(Event.Bus, this.#bus)),
       ),
     );

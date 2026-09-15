@@ -44,7 +44,7 @@ worker runtime, worker session, and worker framework so that every lifetime is a
 
 - **D8 — `ClientServicesLayer` is the whole runtime.** RPC handler layers over `ServiceStack` over
   `ClientPlatformLayer`, config and bus, requiring the SQL services (`SqlClient | SqlExport |
-  SqlTransaction`) from beneath. Embedders stack their SQLite layer under it and own exactly one
+SqlTransaction`) from beneath. Embedders stack their SQLite layer under it and own exactly one
   runtime/scope. `handlersFromStack(stack)` derives `Partial<ClientServicesHandlers>` from the
   built context; `enableNetworking` is the emit for embedders with `autoConnect: false`.
 - **D9 — Config and bus are inputs, for now.** They are passed as options and re-provided as

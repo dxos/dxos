@@ -1,5 +1,18 @@
 ---
 '@dxos/effect': minor
+'@dxos/client-services': minor
+'@dxos/client-protocol': minor
+'@dxos/worker-framework': minor
+'@dxos/client': minor
+'@dxos/protocols': minor
+'@dxos/rpc': minor
 ---
 
-Add an in-process `Event` bus module (`Event.make`, `Event.handler`, `Event.subscribe`, `Event.emit`, `Event.busLayer`) and drive the client-services host lifecycle through it: each stack layer opens its component on the lifecycle event it depends on and closes it in its layer finalizer, replacing the hand-maintained open and close sequences in `ClientServicesHost`. Also fixes a runtime import cycle that left the bundled `@dxos/client-services` unable to build its RPC layer.
+Dissolve `ClientServicesHost` and drive the client-services runtime through Effect layers and an in-process event bus.
+
+- `@dxos/effect` gains an `Event` module (`Event.make`, `Event.on`, `Event.handler`, `Event.subscribe`, `Event.emit`, `Event.Bus`, `Event.makeBus`, `Event.busLayer`). `emit` awaits every handler, so an emit doubles as a barrier for the work it triggers.
+- `@dxos/client-services` replaces the hand-maintained open/close sequences with a lifecycle event chain (`StorageReady → IdentityLoaded → NetworkReady`, `IdentityBound`, `IdentityAvailable → DataSpacesReady`, `StackOpened`, plus `NetworkingEnabled`, `ProfileUpdated` and the `Closing → WipingStorage → Reset` chain). Each component opens on the event it depends on and closes in its layer finalizer, so open order comes from event causality and teardown from scope disposal. Platform inputs (edge clients, signal manager, transport factory) move into `ClientPlatformLayer`; logging, devtools and system services become stack layers with a push-based system status.
+- `ClientServicesHost` is gone: `ClientServicesLayer` composes the whole runtime, and `LocalClientServices`, the worker runtime and the test builder each compose the stack directly over a single runtime and their own SQLite layer.
+- `@dxos/worker-framework` owns session lifetime: the runtime scope lives until shutdown, a session scope is forked from it and closed when the tab releases its session lock, is superseded, or the worker shuts down. `WorkerSession` is inlined into the worker runtime as a scoped effect.
+- `WorkerService` is removed from `@dxos/protocols` and `@dxos/client-protocol`; tab↔worker session control is the framework's own protocol. `@dxos/client-protocol` adds `Rpc.serverLayer` / `layerClientServicesServer`, an effect-native RPC server over the ambient protocol. `@dxos/rpc` adds `RpcRouter`, which serves several rpc groups that come and go over one protocol, routing by longest tag prefix.
+- Removes the `locks` packlet and the `@dxos/lock-file` dependency, and fixes an import cycle that left the bundled `@dxos/client-services` unable to build its RPC layer.
