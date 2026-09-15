@@ -313,17 +313,12 @@ export class LocalClientServices implements ClientServicesProvider {
   }
 
   /**
-   * Wipes persisted storage through a runtime of its own, since the stack's is gone by the time a
+   * Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a
    * reset gets here.
    */
   private async _wipeStorage(): Promise<void> {
     const { wipeSqliteStorage } = await import('@dxos/client-services');
-    const runtime = ManagedRuntime.make(this._sqliteLayer().pipe(Layer.orDie));
-    try {
-      await runtime.runPromise(wipeSqliteStorage);
-    } finally {
-      await runtime.dispose();
-    }
+    await EffectEx.runPromise(wipeSqliteStorage.pipe(Effect.provide(this._sqliteLayer()), Effect.orDie));
   }
 
   /**
