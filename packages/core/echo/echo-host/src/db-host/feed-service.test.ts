@@ -5,7 +5,6 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 

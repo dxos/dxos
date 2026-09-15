@@ -6,7 +6,6 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Layer from 'effect/Layer';
 import * as Result from 'effect/Result';
 
 import { EntityId, SpaceId } from '@dxos/keys';

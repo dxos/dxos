@@ -6,7 +6,6 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import { describe, expect, onTestFinished, test } from 'vitest';
