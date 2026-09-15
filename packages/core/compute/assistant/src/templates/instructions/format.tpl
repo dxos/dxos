@@ -38,6 +38,10 @@ never wrapped in backticks. Three forms render an object; choose by what the rea
 - Inline chip in a sentence — a markdown link whose target is the URI: `[composer.png](echo://SPACE/OBJECT)`.
 - Embedded as a card, in place — a markdown image on its own line: `![composer.png](echo://SPACE/OBJECT)`.
   Use this when asked to show a file, image or object inline; do not open it in the layout instead.
+
+When you create, upload or file an object — a document, an image, a file — end your reply with it
+embedded as a card, so the reader sees the result where they are. Open an object in the layout only
+when asked to open or navigate to it; a tool that opens one is not how you present it.
 - Block reference — an <object> tag, when you have only the DXN:
 
 <object>
