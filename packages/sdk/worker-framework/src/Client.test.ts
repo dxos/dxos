@@ -460,6 +460,7 @@ describe('Connection multi-client', () => {
 const createRecordingWorker = (storageLockKey: string) => {
   const sessionsOpened: string[] = [];
   const sessionsClosed: string[] = [];
+  const sessionOpenedEvent = new Event<string>();
   const sessionClosedEvent = new Event<string>();
   const runtimeClosed = new Trigger();
   let shutdown: (() => void) | undefined;
@@ -484,6 +485,7 @@ const createRecordingWorker = (storageLockKey: string) => {
             createSession: ({ clientId }) =>
               Effect.gen(function* () {
                 sessionsOpened.push(clientId);
+                sessionOpenedEvent.emit(clientId);
                 yield* Effect.addFinalizer(() =>
                   Effect.sync(() => {
                     sessionsClosed.push(clientId);
@@ -501,6 +503,19 @@ const createRecordingWorker = (storageLockKey: string) => {
     createWorker,
     sessionsOpened,
     sessionsClosed,
+    // The worker posts the session ports before it builds the session, so a connected tab does not
+    // imply the runtime has recorded the session yet.
+    sessionOpened: (clientId: string) =>
+      sessionsOpened.includes(clientId)
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            const off = sessionOpenedEvent.on((opened) => {
+              if (opened === clientId) {
+                off();
+                resolve();
+              }
+            });
+          }),
     sessionClosed: (clientId: string) =>
       sessionsClosed.includes(clientId)
         ? Promise.resolve()
@@ -528,6 +543,7 @@ describe('Worker session lifetime', () => {
     });
 
     await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(connection.clientId), 5_000);
     expect(worker.sessionsOpened).toEqual([connection.clientId]);
     await sleep(200);
     expect(worker.sessionsClosed).toEqual([]);
@@ -546,6 +562,7 @@ describe('Worker session lifetime', () => {
     // A follower, so closing it does not also terminate the worker.
     const { connection: follower } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
     await asyncTimeout(follower.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(follower.clientId), 5_000);
     expect(worker.sessionsOpened).toContain(follower.clientId);
 
     await follower.close();
@@ -567,6 +584,8 @@ describe('Worker session lifetime', () => {
       await follower.close();
     });
     await asyncTimeout(follower.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(leader.clientId), 5_000);
+    await asyncTimeout(worker.sessionOpened(follower.clientId), 5_000);
 
     const order: string[] = [];
     void worker.sessionClosed(leader.clientId).then(() => order.push('session'));
