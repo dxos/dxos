@@ -7,7 +7,7 @@ variables (`DX_EDGE_BASE_URL`, `DX_HUB_URL`, PostHog keys, …).
 
 | Environment  | Worker             | URL                         | EDGE         | Deployed                            |
 | ------------ | ------------------ | --------------------------- | ------------ | ----------------------------------- |
-| `dev`        | `composer-dev`     | `composer-dev.…workers.dev` | EDGE preview | on demand                           |
+| `dev`        | `composer-dev`     | `dev.composer.space`        | EDGE preview | on demand                           |
 | `preview`    | `composer-preview` | `preview.composer.space`    | EDGE prod    | daily, 07:00 UTC, from `main`'s tip |
 | `staging`    | `composer-staging` | `staging.composer.space`    | EDGE prod    | on demand (kept, unused)            |
 | `production` | `composer`         | `composer.space`            | EDGE prod    | on demand; cuts a release           |
