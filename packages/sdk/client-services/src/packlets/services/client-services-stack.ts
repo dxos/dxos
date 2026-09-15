@@ -10,7 +10,7 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { type ClientServicesHandlers } from '@dxos/client-protocol';
 import { type Config, ConfigService } from '@dxos/config';
 import { type Context } from '@dxos/context';
-import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Event } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
@@ -48,9 +48,11 @@ export type ClientServicesStackContext =
   | SignalManagerService
   | TransportFactoryService;
 
+/** The SQL services the stack persists through; the embedder provides them beneath the layer. */
+export type ClientServicesSqlContext = SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction;
+
 export type ClientServicesLayerOptions = {
   config: Config;
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction>;
   /** Overrides for the config-derived runtime props. */
   runtimeProps?: ServiceContextRuntimeProps;
   /** Overrides the config-derived signal manager; tests pass an in-memory one. */
@@ -82,18 +84,18 @@ export const runtimePropsFromConfig = (
 
 /**
  * The whole client services runtime as one layer: RPC handlers over the component stack over the
- * platform inputs, config, the event bus, and the SQL runtime. Build it with `ManagedRuntime` and
- * run {@link openStack} to boot; disposing the runtime tears everything down in reverse.
+ * platform inputs, config, and the event bus, persisting through the SQL services provided beneath
+ * it. Build it with `ManagedRuntime` and run {@link openStack} to boot; disposing the runtime tears
+ * everything down in reverse.
  */
 export const ClientServicesLayer = ({
   config,
-  runtime,
   runtimeProps,
   signalManager,
   transportFactory,
   connectionLog = true,
   autoConnect = true,
-}: ClientServicesLayerOptions): Layer.Layer<ClientServicesStackContext> =>
+}: ClientServicesLayerOptions): Layer.Layer<ClientServicesStackContext, never, ClientServicesSqlContext> =>
   ClientServicesRpcLayer.pipe(
     Layer.provideMerge(
       ServiceStack({
@@ -106,7 +108,6 @@ export const ClientServicesLayer = ({
     Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
     Layer.provideMerge(Layer.succeed(ConfigService, config)),
     Layer.provideMerge(Event.busLayer),
-    Layer.provideMerge(RuntimeProvider.toLayer(runtime)),
     Layer.orDie,
   );
 
@@ -115,6 +116,7 @@ export const ClientServicesLayer = ({
  * has completed, so `StackOpened` fires after storage, identity, network, and spaces are up. Under
  * `ctx` the handlers nest under its trace and stop when it disposes.
  */
+// TODO(dmaretskyi): inline in consumers
 export const openStack = (ctx?: Context): Effect.Effect<void, never, Event.Bus> => {
   const open = Effect.gen(function* () {
     yield* Event.emit(Opening, undefined);

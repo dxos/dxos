@@ -5,6 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
@@ -353,12 +354,11 @@ export class ClientServicesHost {
 
     const stackLayer = ClientServicesLayer({
       config,
-      runtime: this.#runtime,
       runtimeProps: this.#runtimeProps,
       ...this.#platformOptions,
       connectionLog: this.#connectionLog,
       autoConnect: this.#autoConnect,
-    });
+    }).pipe(Layer.provideMerge(RuntimeProvider.toLayer(this.#runtime)));
     try {
       this.#stackRuntime = ManagedRuntime.make(stackLayer);
       this.#stackContext = await this.#stackRuntime.context();

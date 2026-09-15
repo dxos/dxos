@@ -217,14 +217,13 @@ export class ServiceContext {
     this.#runtime = ManagedRuntime.make(
       ClientServicesLayer({
         config: this.#config,
-        runtime: this.#sql.contextEffect,
         runtimeProps: {
           invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
           ...this.#options.runtimeProps,
         },
         signalManager: this.#options.signalManager,
         transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
-      }),
+      }).pipe(Layer.provideMerge(RuntimeProvider.toLayer(this.#sql.contextEffect))),
     );
     try {
       this.#stack = await this.#runtime.context();

@@ -19,6 +19,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/feed-store"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
