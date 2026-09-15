@@ -5,6 +5,10 @@
 import * as Redacted from 'effect/Redacted';
 import { describe, test } from 'vitest';
 
+import { Obj, Ref } from '@dxos/echo';
+import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
+import * as Variant from '@dxos/plugin-studio/Variant';
+
 import { HIGGSFIELD_DEFAULT_IMAGE_MODEL } from '../constants.ts';
 import { HiggsfieldProvider } from './higgsfield-provider.ts';
 import { makeHiggsfieldImageService, makeHiggsfieldVideoService, toVariants } from './higgsfield-service.ts';
@@ -88,6 +92,43 @@ describe('Higgsfield generation services', () => {
     );
     expect(calls).toHaveLength(1);
     expect(calls[0]).toContain('/dop/lite');
+  });
+
+  test("video service animates a reference artifact's cover without generating a still", async ({ expect }) => {
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
+    const fetchImpl: typeof globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: String(input), body: JSON.parse(String(init?.body)) });
+      return json({ status: 'queued', request_id: 'video-1' });
+    };
+    const service = makeHiggsfieldVideoService(new HiggsfieldProvider({ fetch: fetchImpl }));
+    const { enqueue } = service;
+    expect(enqueue).toBeDefined();
+    if (!enqueue) {
+      return;
+    }
+    // The reference's cover is what the op's `load` resolves; a ref made from a local object keeps
+    // its target, so `load` needs no database here.
+    const cover = Variant.make({ name: 'cover', url: 'https://cdn/reference.jpg', contentType: 'image/jpeg' });
+    const reference = MediaArtifact.make({ name: 'reference', kind: 'image' });
+    Obj.update(reference, (reference) => {
+      reference.cover = Ref.make(cover);
+    });
+    await enqueue(
+      { model: 'higgsfield-ai/dop/lite', prompt: 'pan', imageArtifact: Ref.make(reference) },
+      {
+        apiKey: Redacted.make('id:secret'),
+        load: async (ref) => {
+          const target = ref.target;
+          if (!target) {
+            throw new Error('unresolved');
+          }
+          return target;
+        },
+      },
+    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toContain('/dop/lite');
+    expect(calls[0].body).toEqual({ prompt: 'pan', image_url: 'https://cdn/reference.jpg' });
   });
 
   test('awaitResult reports progress and maps outputs to variants', async ({ expect }) => {

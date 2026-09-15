@@ -7,6 +7,7 @@
 import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 
+import type { Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { type FormFieldMap } from '@dxos/react-ui-form';
 import { type OptionsLookupEntry } from '@dxos/react-ui-form/annotations';
@@ -72,6 +73,11 @@ export interface GenerateOptions {
   readonly signal?: AbortSignal;
   /** Called as the provider makes progress; drives the studio progress monitor. */
   readonly onProgress?: (progress: GenerationProgress) => void;
+  /**
+   * Loads an object a request field references (a reference artifact); the config carries `Ref`s
+   * as the form wrote them, and only the studio's operation has the database to follow them.
+   */
+  readonly load?: <T>(ref: Ref.Ref<T>) => Promise<T>;
 }
 
 /**

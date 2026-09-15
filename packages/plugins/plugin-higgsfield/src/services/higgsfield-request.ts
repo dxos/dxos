@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format } from '@dxos/echo';
+import { Format, Ref } from '@dxos/echo';
+import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 
 const model = Schema.NonEmptyString.annotate({
   title: 'Model',
@@ -33,8 +34,8 @@ export interface HiggsfieldImageConfig extends Schema.Schema.Type<typeof Higgsfi
 
 /**
  * The video service's request config. Higgsfield's video models animate a still (`image_url`),
- * so a frame is either given a still (`imageUrl`) or has one generated from the prompt first
- * (`imageModel`), then animated by `model`.
+ * so a frame is either given a still (`imageUrl`, or a reference image artifact's cover) or has
+ * one generated from the prompt first (`imageModel`), then animated by `model`.
  */
 export const HiggsfieldVideoConfig = Schema.Struct({
   model,
@@ -47,6 +48,12 @@ export const HiggsfieldVideoConfig = Schema.Struct({
       Schema.annotate({ title: 'Still image', description: 'Image to animate; generated from the prompt when empty.' }),
     ),
   ),
+  imageArtifact: Schema.optional(
+    Ref.Ref(MediaArtifact.MediaArtifact).annotate({
+      title: 'Reference image',
+      description: 'A generated image whose cover is animated; used when no still URL is given.',
+    }),
+  ),
   imageModel: Schema.optional(
     Schema.String.annotate({ title: 'Image model', description: 'Image model used when no still is given.' }),
   ),
@@ -55,4 +62,18 @@ export interface HiggsfieldVideoConfig extends Schema.Schema.Type<typeof Higgsfi
 
 /** Decodes the kind-specific config from a generation request (excess keys like count ignored). */
 export const decodeImageConfig = Schema.decodeUnknownSync(HiggsfieldImageConfig);
-export const decodeVideoConfig = Schema.decodeUnknownSync(HiggsfieldVideoConfig);
+
+const decodeVideoEncoded = Schema.decodeUnknownSync(HiggsfieldVideoConfig);
+const decodeVideoTyped = Schema.decodeUnknownSync(Schema.toType(HiggsfieldVideoConfig));
+
+/**
+ * The video config's `imageArtifact` arrives as a live `Ref` from the form (the type side) or as its
+ * `{ '/': dxn }` encoding from JSON (an agent's config), so both sides are accepted.
+ */
+export const decodeVideoConfig = (request: unknown): HiggsfieldVideoConfig => {
+  try {
+    return decodeVideoTyped(request);
+  } catch {
+    return decodeVideoEncoded(request);
+  }
+};

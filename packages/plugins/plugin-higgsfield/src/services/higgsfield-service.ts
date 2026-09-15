@@ -142,10 +142,19 @@ export const makeHiggsfieldVideoService = (
     aspectRatio: HIGGSFIELD_DEFAULT_ASPECT_RATIO,
   },
   fieldOptions: { model: async () => VIDEO_MODELS, imageModel: async () => IMAGE_MODELS },
-  enqueue: async (request, { apiKey, signal, onProgress }) => {
+  enqueue: async (request, { apiKey, signal, onProgress, load }) => {
     const config = decodeVideoConfig(request);
     const options = credentials(apiKey, signal);
     let imageUrl = config.imageUrl;
+    // A reference artifact contributes its cover: the still the animation continues from.
+    if (!imageUrl && config.imageArtifact && load) {
+      const reference = await load(config.imageArtifact);
+      const cover = reference.cover ? await load(reference.cover) : undefined;
+      if (!cover?.url) {
+        throw new Error('The reference image has no produced cover to animate.');
+      }
+      imageUrl = cover.url;
+    }
     if (!imageUrl) {
       onProgress?.({ status: 'Generating still' });
       const still = await provider.enqueue(
