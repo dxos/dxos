@@ -492,6 +492,7 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
   const { t } = useTranslation(meta.profile.key);
   const { db, debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
+<<<<<<< HEAD
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
   // A block reference's chip reads the object's name when it is loaded; the type's title otherwise,
@@ -505,6 +506,11 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
     },
     [db],
   );
+||||||| f82c78f441
+=======
+  // Embedded objects resolve against the chat's database (the fallback one while it is transient).
+  const objectImage = useMemo(() => objectCardWidget(db), [db]);
+>>>>>>> origin/main
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
   // The toast renders whatever action the error declares (data-driven) rather than branching on type.
   const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
@@ -572,8 +578,13 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         model={model}
         viewType={viewType}
         registry={chatRegistry}
+<<<<<<< HEAD
         objectImage={objectImage}
         getObjectLabel={getObjectLabel}
+||||||| f82c78f441
+=======
+        objectImage={objectImage}
+>>>>>>> origin/main
         userHue={userHue}
         tailLines={tailLines}
         debug={debug}
