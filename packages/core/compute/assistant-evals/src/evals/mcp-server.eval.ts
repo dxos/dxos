@@ -176,6 +176,35 @@ const readUploadedFile = Effect.gen(function* () {
 const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
   left.length === right.length && left.every((byte, index) => byte === right[index]);
 
+/** The operation the upload stage exists to exercise. */
+const CREATE_FROM_UPLOAD = 'org.dxos.operation.file.createFromUpload';
+
+/**
+ * Every tool call of a turn with its arguments.
+ *
+ * `Turn.toolCalls` carries names only, and a name is not enough here: `invokeOperation` is one tool
+ * standing in front of every projected verb, so asking whether it was called says nothing about
+ * which one ran.
+ */
+const toolUses = (turn: Turn): { name: string; input: Record<string, unknown> }[] => {
+  const uses: { name: string; input: Record<string, unknown> }[] = [];
+  for (const event of turn.events) {
+    if (event?.type !== 'assistant') {
+      continue;
+    }
+    for (const block of event.message?.content ?? []) {
+      if (block?.type === 'tool_use' && typeof block.name === 'string') {
+        uses.push({ name: block.name, input: (block.input ?? {}) as Record<string, unknown> });
+      }
+    }
+  }
+  return uses;
+};
+
+/** Whether the turn invoked a named operation through `invokeOperation`. */
+const invokedOperation = (turn: Turn, key: string): boolean =>
+  toolUses(turn).some((use) => use.name === tool('invokeOperation') && use.input.key === key);
+
 type TaskRow = { title?: string; status?: string; description?: string };
 
 /** Every task in the ledger, read outside the agent. */
@@ -416,7 +445,12 @@ const localTask = () =>
         uploaded =
           !upload.isError &&
           upload.toolCalls.includes(tool('createUpload')) &&
-          upload.toolCalls.includes(tool('invokeOperation')) &&
+          // The operation by name, not merely `invokeOperation`. Without this the stage is
+          // satisfiable through `createFromSource`'s base64 arm — which also stores to edge, so the
+          // external check below does not exclude it — and would pass by doing the one thing this
+          // path exists to avoid. The uploadId needs no separate check: the byte comparison already
+          // fails if the operation adopted a different upload.
+          invokedOperation(upload, CREATE_FROM_UPLOAD) &&
           // The bytes are the real assertion: they can only match if the transfer completed intact
           // and the service stored what it received, which no amount of model narration produces.
           stored?.size === UPLOAD_BYTES &&
