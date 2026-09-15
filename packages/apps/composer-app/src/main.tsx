@@ -59,6 +59,7 @@ import {
   initializeObservability,
   isFalse,
   isTrue,
+  readBootAssetFailure,
   reportBootAssetFailure,
   reportWebProcessTerminations,
   runStorageResetMigration,
@@ -69,7 +70,6 @@ import {
   startupMark,
   startupMeasure,
   startupProfiler,
-  takeBootAssetFailure,
   translations,
 } from './util/index.ts';
 
@@ -445,7 +445,7 @@ const main = async () => {
     window.addEventListener(
       STARTUP_ACTIVATED_EVENT,
       () => {
-        const failure = takeBootAssetFailure();
+        const failure = readBootAssetFailure();
         void observability
           .then(async (obs) => {
             if (failure) {
