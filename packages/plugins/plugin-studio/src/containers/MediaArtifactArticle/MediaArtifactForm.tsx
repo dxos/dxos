@@ -298,7 +298,7 @@ export const MediaArtifactForm = ({
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Toolbar>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>

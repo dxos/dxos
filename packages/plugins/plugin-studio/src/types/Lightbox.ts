@@ -46,9 +46,9 @@ const decodeLegacyCell = Schema.decodeUnknownOption(LegacyCellLayout);
  * The lightbox's cells with any legacy `width`/`height` spans carried to `w`/`h`, so the free-cell
  * search and the board see a 2×2 cell as 2×2 rather than the default 1×1.
  */
-export const cells = (lightbox: Lightbox): Record<string, CellLayout> =>
+export const cells = (layout?: Lightbox['layout']): Record<string, CellLayout> =>
   Object.fromEntries(
-    Object.entries(lightbox.layout.cells).map(([id, cell]) => {
+    Object.entries(layout?.cells ?? {}).map(([id, cell]) => {
       if (cell.w !== undefined || cell.h !== undefined) {
         return [id, cell];
       }
