@@ -146,6 +146,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
         ref={forwardedRef}
       >
         {legend}
+        {!showLabel && trailing}
         {helper}
         {body}
       </Fieldset.Root>
