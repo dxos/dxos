@@ -98,7 +98,10 @@ export const share = Command.make(
       Options.withDescription('Lifetime of the invitation in seconds.'),
       Options.withDefault(12 * 60 * 60), // 12 hours - HALO invitations are typically shorter-lived
     ),
-    open: Options.Boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
+    open: Options.Boolean('open').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Open browser with invitation.'),
+    ),
     host: Options.String('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),

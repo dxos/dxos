@@ -58,7 +58,10 @@ export const inspect = Command.make(
   'inspect',
   {
     file: Options.String('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    storage: Options.Boolean('storage').pipe(Options.withDescription('List storage entries.')),
+    storage: Options.Boolean('storage').pipe(
+      Options.withDefault(false),
+      Options.withDescription('List storage entries.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('Inspect profile archive.'));

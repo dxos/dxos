@@ -108,7 +108,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
   const plugins = Command.make(
     'plugins',
     {
-      all: Flag.Boolean('all').pipe(Flag.withDescription('Include disabled plugins.')),
+      all: Flag.Boolean('all').pipe(Flag.withDefault(false), Flag.withDescription('Include disabled plugins.')),
     },
     ({ all }) =>
       Effect.gen(function* () {
@@ -216,7 +216,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
         Flag.optional,
         Flag.withDescription('"High priority" | "Medium priority" | "Low priority".'),
       ),
-      noLogs: Flag.Boolean('no-logs').pipe(Flag.withDescription('Skip the debug log dump.')),
+      noLogs: Flag.Boolean('no-logs').pipe(Flag.withDefault(false), Flag.withDescription('Skip the debug log dump.')),
     },
     ({ title, body, type, severity, noLogs }) =>
       Effect.gen(function* () {

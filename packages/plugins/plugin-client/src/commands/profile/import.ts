@@ -92,7 +92,10 @@ export const importCommand = Command.make(
   {
     file: Options.String('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
     dataDir: Options.String('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
-    force: Options.Boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
+    force: Options.Boolean('force').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Skip confirmation prompt.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('Import profile.'));

@@ -42,7 +42,11 @@ export const chat = Command.make(
   'chat',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    debug: Options.Boolean('debug').pipe(Options.withDescription('Show console to see logs.'), Options.withAlias('d')),
+    debug: Options.Boolean('debug').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Show console to see logs.'),
+      Options.withAlias('d'),
+    ),
     provider: Options.Literals('provider', Provider.literals).pipe(
       Options.withDescription('AI provider to use.'),
       Options.withAlias('p'),

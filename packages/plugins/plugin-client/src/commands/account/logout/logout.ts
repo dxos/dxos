@@ -16,7 +16,10 @@ import { ConfigService } from '@dxos/config';
 export const logout = Command.make(
   'logout',
   {
-    force: Options.Boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
+    force: Options.Boolean('force').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Skip confirmation prompt.'),
+    ),
   },
   Effect.fnUntraced(function* ({ force }) {
     const fs = yield* FileSystem.FileSystem;

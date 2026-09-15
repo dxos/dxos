@@ -75,6 +75,7 @@ export const reset = Command.make(
   'reset',
   {
     hard: Options.Boolean('hard').pipe(
+      Options.withDefault(false),
       Options.withDescription('Required — deletes ALL local data for the current profile. No remote state is touched.'),
     ),
   },

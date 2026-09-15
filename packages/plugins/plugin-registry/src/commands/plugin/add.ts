@@ -118,6 +118,7 @@ export const add = Command.make(
       Args.withDescription('Manifest URL to install from, or a directory to install with --dev.'),
     ),
     dev: Options.Boolean('dev').pipe(
+      Options.withDefault(false),
       Options.withDescription('Read the plugin in place from a directory, overriding a builtin of the same id.'),
     ),
     enable: Options.Boolean('enable').pipe(
@@ -125,6 +126,7 @@ export const add = Command.make(
       Options.withDescription('Enable the plugin after installing it.'),
     ),
     yes: Options.Boolean('yes').pipe(
+      Options.withDefault(false),
       Options.withAlias('y'),
       Options.withDescription('Confirm that you trust the plugin code, skipping the prompt.'),
     ),

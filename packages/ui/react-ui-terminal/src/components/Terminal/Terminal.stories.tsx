@@ -32,7 +32,7 @@ const greet = Command.make(
   'greet',
   {
     name: Args.String('name'),
-    loud: Options.Boolean('loud').pipe(Options.withDescription('Shout the greeting.')),
+    loud: Options.Boolean('loud').pipe(Options.withDefault(false), Options.withDescription('Shout the greeting.')),
   },
   ({ name, loud }) => Console.log(loud ? `HELLO, ${name.toUpperCase()}!` : `Hello, ${name}.`),
 ).pipe(Command.withDescription('Greet someone by name.'));

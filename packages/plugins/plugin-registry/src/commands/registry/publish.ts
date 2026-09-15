@@ -63,6 +63,7 @@ export const publish = Command.make(
       Options.withDefault('.'),
     ),
     noBuild: Options.Boolean('no-build').pipe(
+      Options.withDefault(false),
       Options.withDescription('Skip running the build command (publish a pre-built dist).'),
     ),
     assetBaseUrl: Options.String('asset-base-url').pipe(
