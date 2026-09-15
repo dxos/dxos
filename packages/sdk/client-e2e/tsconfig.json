@@ -46,6 +46,9 @@
       "path": "../../core/halo/credentials"
     },
     {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

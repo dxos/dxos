@@ -12,5 +12,6 @@ export * from './packlets/space/index.ts';
 export * from './packlets/space-export/index.ts';
 export * from './packlets/spaces/index.ts';
 export * from './packlets/storage/index.ts';
+export * from './packlets/system/index.ts';
 export * from './packlets/worker/index.ts';
 export * from './packlets/agents/index.ts';

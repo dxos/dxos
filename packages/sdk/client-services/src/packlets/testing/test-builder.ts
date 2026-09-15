@@ -257,11 +257,7 @@ export class ServiceContext {
     if (!this.#runtime) {
       return;
     }
-    const { feedStore, metadataStore } = this;
     await this.#runtime.dispose();
-    // The stores below the stack close last; the metadata store persists on close.
-    await feedStore.close();
-    await metadataStore.close();
     this.#runtime = undefined;
     this.#stack = undefined;
     this.#systemService.setStatus(SystemStatus.INACTIVE);

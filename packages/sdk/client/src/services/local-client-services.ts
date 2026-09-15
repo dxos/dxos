@@ -19,7 +19,12 @@ import {
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { type ClientServicesHost, type ClientServicesHostProps } from '@dxos/client-services';
+import {
+  type ClientServicesLayerOptions,
+  type ClientServicesStackContext,
+  type CollectDiagnosticsBroadcastHandler,
+  type ServiceContextRuntimeProps,
+} from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -27,6 +32,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -51,7 +57,15 @@ const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<vo
     worker.addEventListener('message', onMessage);
   });
 
-export type LocalClientServicesParams = Omit<ClientServicesHostProps, 'runtime'> & {
+export type LocalClientServicesParams = {
+  config?: Config;
+  transportFactory?: TransportFactory;
+  signalManager?: SignalManager;
+  connectionLog?: boolean;
+  callbacks?: { onReset?: () => Promise<void> };
+  /** See {@link ClientServicesLayerOptions.autoConnect}. */
+  autoConnect?: boolean;
+  runtimeProps?: ServiceContextRuntimeProps;
   createOpfsWorker?: () => Worker;
   /**
    * Path to SQLite database file for persistent indexing in Node/Bun.
@@ -119,7 +133,8 @@ const setupNetworking = async (
 };
 
 /**
- * Starts a local instance of the service host.
+ * Runs the client services in-process: the stack from {@link ClientServicesLayer} over a SQLite
+ * runtime, served to the client without a wire hop.
  */
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
@@ -127,12 +142,16 @@ export class LocalClientServices implements ClientServicesProvider {
   private readonly _params: LocalClientServicesParams;
   private readonly _createOpfsWorker?: () => Worker;
   private readonly _sqlitePath?: string;
-  private _host?: ClientServicesHost;
+  // TODO(dmaretskyi): Lifetime seems to be the same as a stack -> turn into layer.
   private _opfsWorker?: Worker;
+  // TODO(dmaretskyi): Merge _runtime and _stackRuntime into a single layer.
   private _runtime?: ManagedRuntime.ManagedRuntime<
     SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
     never
   >;
+  private _stackRuntime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
+  private _stack?: EffectContext.Context<ClientServicesStackContext>;
+  private _diagnosticsBroadcast?: CollectDiagnosticsBroadcastHandler;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -172,8 +191,12 @@ export class LocalClientServices implements ClientServicesProvider {
     return this._services;
   }
 
-  get host(): ClientServicesHost | undefined {
-    return this._host;
+  /**
+   * Effect context of the running stack: every component and RPC handler. Present while open.
+   */
+  get stack(): EffectContext.Context<ClientServicesStackContext> {
+    invariant(this._stack, 'Client services not open');
+    return this._stack;
   }
 
   @synchronized
@@ -182,16 +205,22 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    const { ClientServicesHost } = await import('@dxos/client-services');
+    const {
+      ClientServicesLayer,
+      SystemServiceImpl,
+      createCollectDiagnosticsBroadcastHandler,
+      createDiagnostics,
+      handlersFromStack,
+      openStack,
+      wipeSqliteStorage,
+    } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
     // Create SQLite runtime layer. The choice is driven by `runtime.client.storage.sqlite_mode`
     // in config — the presence of `createOpfsWorker` or `sqlitePath` options does not influence
     // the decision. Missing prerequisites throw instead of silently falling back.
     //
-    // TODO(mykola): Worker and runtime leak if _host.open() fails below.
-    //   If _host.open() throws, _isOpen remains false, and close() returns early without
-    //   cleaning up _opfsWorker and _runtime. Consider wrapping in try/catch to clean up on failure.
+    // TODO(mykola): Worker and runtime leak if the stack open fails below.
     const sqliteMode =
       this._params.config?.get('runtime.client.storage.sqliteMode') ??
       Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE;
@@ -234,7 +263,7 @@ export class LocalClientServices implements ClientServicesProvider {
       }
     }
 
-    this._runtime = ManagedRuntime.make(
+    const runtime = ManagedRuntime.make(
       SqlTransaction.layer.pipe(
         Layer.provideMerge(sqlExportLayer),
         Layer.provideMerge(sqliteLayer),
@@ -242,27 +271,46 @@ export class LocalClientServices implements ClientServicesProvider {
         Layer.orDie,
       ),
     );
+    this._runtime = runtime;
 
-    this._host = new ClientServicesHost({
-      ...this._params,
-      runtime: this._runtime.contextEffect,
-      callbacks: {
-        ...this._params.callbacks,
-        onReset: async () => {
-          this.closed.emit(undefined);
-          await this._params.callbacks?.onReset?.();
-        },
+    const config = this._params.config ?? new Config();
+    const stackRuntime = ManagedRuntime.make(
+      ClientServicesLayer({
+        config,
+        runtime: runtime.contextEffect,
+        runtimeProps: this._params.runtimeProps,
+        signalManager: this._params.signalManager,
+        transportFactory: this._params.transportFactory,
+        connectionLog: this._params.connectionLog,
+        autoConnect: this._params.autoConnect,
+      }),
+    );
+    this._stackRuntime = stackRuntime;
+    this._stack = await stackRuntime.context();
+    await stackRuntime.runPromise(openStack(this._ctx));
+
+    // The system service is the host-side owner of status and reset; it lives with this open.
+    const systemService = new SystemServiceImpl({
+      config: () => config,
+      getDiagnostics: async () => createDiagnostics(this.services, this.stack, config),
+      close: () => this.close(),
+      wipeStorage: () => runtime.runPromise(wipeSqliteStorage),
+      onReset: async () => {
+        this.closed.emit(undefined);
+        await this._params.callbacks?.onReset?.();
       },
     });
-
-    await this._host.open(this._ctx);
+    const handlers = { SystemService: systemService, ...handlersFromStack(this._stack) };
+    this._diagnosticsBroadcast = createCollectDiagnosticsBroadcastHandler(systemService);
+    this._diagnosticsBroadcast.start();
+    systemService.setStatus(SystemStatus.ACTIVE);
     this._isOpen = true;
 
-    // Bridge the in-process host Handlers to the effect-rpc client surface (no wire hop), then derive
+    // Bridge the in-process Handlers to the effect-rpc client surface (no wire hop), then derive
     // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
     this._serviceScope = Effect.runSync(Scope.make());
     this._rpc = await EffectEx.runPromise(
-      makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.provide(this._serviceScope)),
+      makeInProcessClientServicesRpc(() => handlers).pipe(Scope.provide(this._serviceScope)),
     );
     this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
 
@@ -281,7 +329,11 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    await this._host?.close(this._ctx);
+    this._diagnosticsBroadcast?.stop();
+    this._diagnosticsBroadcast = undefined;
+    await this._stackRuntime?.dispose();
+    this._stackRuntime = undefined;
+    this._stack = undefined;
 
     if (this._serviceScope) {
       await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));

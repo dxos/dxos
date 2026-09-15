@@ -128,6 +128,8 @@ export const FeedStoreLayer = (): Layer.Layer<FeedStoreService, never, FeedFacto
     FeedStoreService,
     Effect.gen(function* () {
       const factory = yield* FeedFactoryService;
-      return new FeedStore({ factory });
+      const store = new FeedStore({ factory });
+      yield* Effect.addFinalizer(() => Effect.promise(() => store.close()));
+      return store;
     }),
   );

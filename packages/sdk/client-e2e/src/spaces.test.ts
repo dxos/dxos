@@ -3,11 +3,13 @@
 //
 
 import { create } from '@bufbuild/protobuf';
+import * as EffectContext from 'effect/Context';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
+import { DataSpaceManagerService } from '@dxos/client-services';
 import { performInvitation } from '@dxos/client-services/testing';
 import { SpaceState, getSpace, importSpace } from '@dxos/client/echo';
 import { SpacesService } from '@dxos/client/halo';
@@ -25,6 +27,7 @@ import { Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
+import { FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -186,9 +189,9 @@ describe('Spaces', () => {
     const space1 = await client1.spaces.create();
     await space1.waitUntilReady();
 
-    const dataSpace1 = services1.host!.context.dataSpaceManager?.spaces.get(space1.key);
+    const dataSpace1 = EffectContext.get(services1.stack, DataSpaceManagerService).spaces.get(space1.key);
     const feedKey = dataSpace1!.inner.dataFeedKey;
-    const feed1 = services1.host!.context.feedStore.getFeed(feedKey!)!;
+    const feed1 = EffectContext.get(services1.stack, FeedStoreService).getFeed(feedKey!)!;
 
     const amount = 10;
     {
@@ -211,7 +214,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
+    const feed2 = EffectContext.get(services2.stack, FeedStoreService).getFeed(feedKey!)!;
 
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
 

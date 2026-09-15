@@ -480,15 +480,11 @@ export class ClientServicesHost {
   }
 
   /**
-   * Disposes the stack runtime, closing every layer-owned component in reverse build order. The
-   * stores below the stack close last, and only here: the metadata store persists on close, so it
-   * must never close from a layer that was built without the storage stage having loaded it.
+   * Disposes the stack runtime, closing every layer-owned component in reverse build order.
    */
   async #disposeStack(): Promise<void> {
     log('closing stack...');
     await this.#stackRuntime?.dispose();
-    await this.#feedStore?.close();
-    await this.#metadataStore?.close();
     this.#releaseStack();
     log('stack closed');
   }

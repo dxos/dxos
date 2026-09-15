@@ -70,6 +70,7 @@ export class SqliteMetadataStore implements IMetadataStore {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
 
   #metadata: EchoMetadata = emptyEchoMetadata();
+  #loaded = false;
   readonly #spaceLargeMetadata = new ComplexMap<PublicKey, LargeSpaceMetadata>(PublicKey.hash);
 
   readonly update = new Event<EchoMetadata>();
@@ -108,7 +109,11 @@ export class SqliteMetadataStore implements IMetadataStore {
 
   async close(): Promise<void> {
     await this.#invitationCleanupCtx.dispose();
-    await this._save();
+    // A store that never loaded holds empty metadata; saving it would wipe the persisted record.
+    if (this.#loaded) {
+      await this._save();
+    }
+    this.#loaded = false;
     this.#metadata = emptyEchoMetadata();
     this.#spaceLargeMetadata.clear();
   }
@@ -118,6 +123,7 @@ export class SqliteMetadataStore implements IMetadataStore {
    */
   @synchronized
   async load(): Promise<void> {
+    this.#loaded = true;
     const rows = await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -399,6 +405,8 @@ export const SqliteMetadataStoreLayer = (): Layer.Layer<
     IMetadataStoreService,
     Effect.gen(function* () {
       const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
-      return new SqliteMetadataStore({ runtime });
+      const store = new SqliteMetadataStore({ runtime });
+      yield* Effect.addFinalizer(() => Effect.promise(() => store.close()));
+      return store;
     }),
   );
