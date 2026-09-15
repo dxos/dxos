@@ -36,21 +36,14 @@ export default Capability.makeModule(
 
     const status = Atom.make<LaMetricCapabilities.PushStatus>({ state: 'idle' }).pipe(Atom.keepAlive);
     let pusher: Pusher | undefined;
-
-    const publish = () => {
-      if (!pusher) {
-        return;
-      }
-      const { stats, tasks } = registry.get(dashboard);
-      // MAX_FRAMES is this device's geometry, which is why the slot count is applied here rather
-      // than in the space's projection.
-      pusher.send({ frames: toFrames(toMetrics(tasks, stats, LaMetric.MAX_FRAMES)) });
-    };
+    let unsubscribeDashboard: (() => void) | undefined;
 
     // The address decides which transport is used, so a settings change rebuilds rather than mutates.
     const rebuild = () => {
       pusher?.close();
       pusher = undefined;
+      unsubscribeDashboard?.();
+      unsubscribeDashboard = undefined;
       const config = registry.get(settings);
 
       const build = (widgetId: string | undefined) => {
@@ -67,7 +60,15 @@ export default Capability.makeModule(
           minIntervalMs: config.minPushIntervalMs ?? DEFAULT_MIN_INTERVAL_MS,
           onStatus: (next) => registry.set(status, next),
         });
-        publish();
+        unsubscribeDashboard?.();
+        unsubscribeDashboard = registry.subscribe(
+          dashboard,
+          ({ stats, tasks }) =>
+            // MAX_FRAMES is this device's geometry, which is why the slot count is applied here rather
+            // than in the space's projection.
+            pusher?.send({ frames: toFrames(toMetrics(tasks, stats, LaMetric.MAX_FRAMES)) }),
+          { immediate: true },
+        );
       };
 
       // The DIY widget's UUID identifies one installation of the stock app and appears nowhere in
@@ -84,12 +85,13 @@ export default Capability.makeModule(
       }
     };
 
-    const unsubscribe = [registry.subscribe(settings, rebuild), registry.subscribe(dashboard, publish)];
+    const unsubscribeSettings = registry.subscribe(settings, rebuild);
     rebuild();
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        unsubscribe.forEach((fn) => fn());
+        unsubscribeSettings();
+        unsubscribeDashboard?.();
         pusher?.close();
       }),
     );
