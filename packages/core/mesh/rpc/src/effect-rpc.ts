@@ -4,9 +4,11 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcClientError from 'effect/unstable/rpc/RpcClientError';
@@ -184,6 +186,28 @@ export const makeProtocolRpcPortServer = (
         const disconnects = yield* Queue.make<number>();
         const clientId = 0;
 
+        // An unknown request tag is the one response v4 builds structurally instead of through the
+        // rpc's exit codec, and a serialization whose codec returns bytes has no wire form for that
+        // shape. Re-encoding it here keeps an unknown tag a failure of its own request rather than a
+        // defect that ends the connection; the `Die` branch it lands in does not depend on the rpc's
+        // own success or error schemas.
+        const encodeDie = Schema.encodeUnknownSync(
+          serialization.codecFor(Schema.Exit(Schema.Void, Schema.Never, Schema.Defect())),
+        );
+        const unknownTagDefect = (response: RpcMessage.FromServerEncoded): string | undefined => {
+          if (response._tag !== 'Exit' || response.exit instanceof Uint8Array || response.exit._tag !== 'Failure') {
+            return undefined;
+          }
+          const [die, ...rest] = response.exit.cause;
+          return rest.length === 0 && die?._tag === 'Die' && typeof die.defect === 'string' ? die.defect : undefined;
+        };
+        const encodeFrame = (response: RpcMessage.FromServerEncoded): Uint8Array | string | undefined => {
+          const defect = unknownTagDefect(response);
+          return defect === undefined
+            ? parser.encode(response)
+            : parser.encode({ ...response, exit: encodeDie(Exit.die(defect)) });
+        };
+
         yield* Queue.take(queue).pipe(
           Effect.flatMap((frame) =>
             Effect.try({
@@ -205,7 +229,7 @@ export const makeProtocolRpcPortServer = (
         return {
           disconnects,
           send: (_clientId: number, response: RpcMessage.FromServerEncoded) =>
-            Effect.suspend(() => sendFrame(port, parser.encode(response))).pipe(Effect.orDie),
+            Effect.suspend(() => sendFrame(port, encodeFrame(response))).pipe(Effect.orDie),
           end: (_clientId: number) => Effect.void,
           clientIds: Effect.sync(() => new Set([clientId])),
           initialMessage: Effect.succeed(Option.none()),
