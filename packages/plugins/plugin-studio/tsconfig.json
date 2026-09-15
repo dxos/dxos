@@ -109,6 +109,9 @@
       "path": "../plugin-projects"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-space"
     },
     {

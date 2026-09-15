@@ -144,6 +144,11 @@
       "types": "./dist/types/src/types/Storyboard.d.ts",
       "import": "./dist/lib/Storyboard.mjs"
     },
+    "./StoryboardView": {
+      "source": "./src/types/StoryboardView.ts",
+      "types": "./dist/types/src/types/StoryboardView.d.ts",
+      "import": "./dist/lib/StoryboardView.mjs"
+    },
     "./StudioSkill": {
       "source": "./src/skills/StudioSkill.ts",
       "types": "./dist/types/src/skills/StudioSkill.d.ts",
@@ -208,6 +213,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
