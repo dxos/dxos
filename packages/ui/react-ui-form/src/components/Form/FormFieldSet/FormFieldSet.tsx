@@ -67,10 +67,16 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
       </Tooltip.Trigger>
     );
 
+    // In the legend row, not positioned: WebKit starts a fieldset's containing block below its legend.
+    const trailing = actions && <div className={styles.fieldSetActions()}>{actions}</div>;
+
     const legend = showLabel && (
       <Fieldset.Legend
         classNames={styles.fieldSetLegend({
-          class: mx(description && !tooltip ? undefined : styles.fieldSetHeader(), hint && 'flex items-center gap-1'),
+          class: mx(
+            description && !tooltip ? undefined : styles.fieldSetHeader(),
+            (hint || trailing) && 'flex items-center gap-1',
+          ),
         })}
       >
         {canCollapse ? (
@@ -81,19 +87,22 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
             labelId={labelId}
             labelEnd={hint}
             actions={
-              <Field.Block>
-                {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
-                <Collapsible.Trigger
-                  aria-labelledby={labelId}
-                  classNames='group grid size-6 place-items-center rounded-xs hover:bg-hover-surface'
-                >
-                  <Icon
-                    icon='ph--caret-right--regular'
-                    size={3}
-                    classNames='transition-transform group-data-[state=open]:rotate-90'
-                  />
-                </Collapsible.Trigger>
-              </Field.Block>
+              <>
+                {trailing}
+                <Field.Block>
+                  {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
+                  <Collapsible.Trigger
+                    aria-labelledby={labelId}
+                    classNames='group grid size-6 place-items-center rounded-xs hover:bg-hover-surface'
+                  >
+                    <Icon
+                      icon='ph--caret-right--regular'
+                      size={3}
+                      classNames='transition-transform group-data-[state=open]:rotate-90'
+                    />
+                  </Collapsible.Trigger>
+                </Field.Block>
+              </>
             }
           />
         ) : depth === 0 ? (
@@ -103,9 +112,10 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
               {label}
             </h2>
             {hint}
+            {trailing}
           </>
         ) : (
-          <FormFieldHeader label={label} labelId={labelId} labelEnd={hint} />
+          <FormFieldHeader label={label} labelId={labelId} labelEnd={hint} actions={trailing || undefined} />
         )}
       </Fieldset.Legend>
     );
@@ -137,7 +147,6 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
       >
         {legend}
         {helper}
-        {actions && <div className={styles.fieldSetActions()}>{actions}</div>}
         {body}
       </Fieldset.Root>
     );
