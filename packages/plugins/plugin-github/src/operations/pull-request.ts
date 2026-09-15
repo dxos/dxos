@@ -52,7 +52,15 @@ export const resolvePullRequest = (ref: Ref.Ref<PullRequest.PullRequest>) =>
     return { pullRequest, db, credentials: Layer.succeed(GitHubApi.GitHubCredentials, { token }) };
   });
 
-const FAILED_CONCLUSIONS = new Set(['failure', 'cancelled', 'timed_out', 'action_required', 'startup_failure']);
+// `stale` is a completed run GitHub never re-ran, which branch protection does not count as passing.
+const FAILED_CONCLUSIONS = new Set([
+  'failure',
+  'cancelled',
+  'timed_out',
+  'action_required',
+  'startup_failure',
+  'stale',
+]);
 
 /** Folds a commit's check runs into one outcome: any failure fails, then any unfinished run is pending. */
 export const summarizeCheckRuns = (

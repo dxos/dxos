@@ -24,6 +24,8 @@ import { PullRequest } from '@dxos/types';
 import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
+import { newestWalkthrough } from '../../walkthrough/index.ts';
+
 const WALKTHROUGH_ICON = 'ph--path--regular';
 
 /** How long to wait for a just-created walkthrough to appear in the app graph before opening anyway. */
@@ -51,7 +53,7 @@ export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps)
     db,
     stored ? Filter.type(Walkthrough.Walkthrough, { pullRequest: Ref.make(stored) }) : Filter.nothing(),
   );
-  const walkthrough = useMemo(() => newest(walkthroughs), [walkthroughs]);
+  const walkthrough = useMemo(() => newestWalkthrough(walkthroughs), [walkthroughs]);
 
   const openWalkthrough = useCallback(
     async (target: Walkthrough.Walkthrough) => {
@@ -127,13 +129,6 @@ export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps)
 
   return null;
 };
-
-/** The walkthrough generated last; several exist when the pull request was regenerated. */
-const newest = (walkthroughs: Walkthrough.Walkthrough[]): Walkthrough.Walkthrough | undefined =>
-  walkthroughs.reduce<Walkthrough.Walkthrough | undefined>(
-    (latest, candidate) => (!latest || (candidate.generatedAt ?? '') > (latest.generatedAt ?? '') ? candidate : latest),
-    undefined,
-  );
 
 /** The fields of an in-memory pull request, copied into a new object the space can store. */
 const toStoredFields = ({

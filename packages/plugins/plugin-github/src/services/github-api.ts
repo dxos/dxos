@@ -318,9 +318,14 @@ const getNextLink = (header: string | undefined): string | undefined => {
   return undefined;
 };
 
-const githubPaginated = <T>(
+/**
+ * Walks `rel="next"` to the end, decoding each page with `pageSchema` and taking its items through
+ * `select` — an endpoint that answers with an envelope rather than a bare array pages the same way.
+ */
+const githubPages = <TPage, T>(
   buildInitial: () => HttpClientRequest.HttpClientRequest,
-  itemSchema: Schema.Codec<T>,
+  pageSchema: Schema.Codec<TPage>,
+  select: (page: TPage) => readonly T[],
 ): GitHubEffect<readonly T[]> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
@@ -329,7 +334,6 @@ const githubPaginated = <T>(
       HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
-    const arraySchema = Schema.Array(itemSchema);
 
     let nextUrl: string | undefined;
     let request = withAuth(buildInitial(), creds).pipe(HttpClientRequest.appendUrlParam('per_page', '100'));
@@ -340,7 +344,7 @@ const githubPaginated = <T>(
         Effect.flatMap((res) =>
           Effect.gen(function* () {
             const body = yield* res.json;
-            const decoded = yield* Schema.decodeUnknownEffect(arraySchema)(body);
+            const decoded = yield* Schema.decodeUnknownEffect(pageSchema)(body);
             return { decoded, link: res.headers['link'] };
           }),
         ),
@@ -352,7 +356,7 @@ const githubPaginated = <T>(
         Effect.scoped,
       );
 
-      out.push(...result.decoded);
+      out.push(...select(result.decoded));
       nextUrl = getNextLink(result.link);
       if (!nextUrl) {
         break;
@@ -362,6 +366,11 @@ const githubPaginated = <T>(
 
     return out;
   });
+
+const githubPaginated = <T>(
+  buildInitial: () => HttpClientRequest.HttpClientRequest,
+  itemSchema: Schema.Codec<T>,
+): GitHubEffect<readonly T[]> => githubPages(buildInitial, Schema.Array(itemSchema), (page) => page);
 
 //
 // API surface
@@ -506,7 +515,10 @@ export const fetchIssueComments = (
  * Write to a GitHub object (PATCH or POST, as `build` chooses). The shape mirrors {@link githubRequest} except the
  * body is `application/json`. Failures are
  * propagated unchanged; the caller is expected to surface them on the target
- * row's `lastError`. Retry rules are the same — 429 / 5xx retry, 4xx don't.
+ * row's `lastError`.
+ *
+ * Only PATCH retries (429 / 5xx retry, 4xx don't). A POST here creates a comment or a review, and
+ * GitHub can commit one before the response reaches us, so retrying a timeout would post it twice.
  */
 const githubWrite = <T>(
   build: () => HttpClientRequest.HttpClientRequest,
@@ -521,15 +533,20 @@ const githubWrite = <T>(
       HttpClient.filterStatusOk,
     );
     const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyJsonUnsafe(body));
-    return yield* clientNoTracer.execute(request).pipe(
+    const attempt = clientNoTracer.execute(request).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
-      Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
-        while: shouldRetry,
-      }),
-      Effect.scoped,
     );
+    return yield* (
+      request.method === 'PATCH'
+        ? attempt.pipe(
+            Effect.retry({
+              schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
+              while: shouldRetry,
+            }),
+          )
+        : attempt
+    ).pipe(Effect.scoped);
   });
 
 export type IssueUpdateInput = {
@@ -634,15 +651,19 @@ const GitHubCheckRunsSchema = Schema.Struct({
   check_runs: Schema.Array(GitHubCheckRunSchema),
 });
 
-/** GET /repos/{owner}/{repo}/commits/{sha}/check-runs — the first page, which covers any ordinary CI. */
+/**
+ * GET /repos/{owner}/{repo}/commits/{sha}/check-runs — every page, since a truncated list would
+ * report a failing commit as green.
+ */
 export const fetchCheckRuns = (owner: string, repo: string, sha: string): GitHubEffect<readonly GitHubCheckRun[]> =>
-  githubRequest(
+  githubPages(
     () =>
       HttpClientRequest.get(
         `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(sha)}/check-runs`,
-      ).pipe(HttpClientRequest.appendUrlParam('per_page', '100')),
+      ),
     GitHubCheckRunsSchema,
-  ).pipe(Effect.map(({ check_runs }) => check_runs));
+    ({ check_runs }) => check_runs,
+  );
 
 export type ReviewCommentInput = {
   body: string;

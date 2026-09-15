@@ -29,6 +29,15 @@ describe('summarizeCheckRuns', () => {
     expect(ci).toEqual('pending');
   });
 
+  test('a stale run does not count as passed', () => {
+    const { ci, checks } = summarizeCheckRuns([
+      { name: 'build', status: 'completed', conclusion: 'success' },
+      { name: 'test', status: 'completed', conclusion: 'stale' },
+    ]);
+    expect(ci).toEqual('failure');
+    expect(checks).toEqual({ total: 2, passed: 1, failed: 1, pending: 0 });
+  });
+
   test('a failure wins over pending runs', () => {
     const { ci, checks } = summarizeCheckRuns([
       { name: 'build', status: 'completed', conclusion: 'timed_out' },

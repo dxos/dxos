@@ -654,7 +654,7 @@ describe('Spaces', () => {
     expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
   });
 
-  test('imported space archive is queryable by type', { timeout: 5_000 }, async () => {
+  test('imported space archive is queryable by type', { timeout: 5_000 }, async ({ expect }) => {
     const [client1, client2] = await createInitializedClients(2, {
       storage: true,
     });

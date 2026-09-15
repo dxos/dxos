@@ -132,7 +132,9 @@ export const findWalkthrough = (
  * same object, and the next regeneration updates that one in place rather than forking again. The
  * loser stays in the space; removing it from a read path would delete another client's object.
  */
-const newestWalkthrough = (walkthroughs: readonly Walkthrough.Walkthrough[]): Walkthrough.Walkthrough | undefined =>
+export const newestWalkthrough = (
+  walkthroughs: readonly Walkthrough.Walkthrough[],
+): Walkthrough.Walkthrough | undefined =>
   walkthroughs.reduce<Walkthrough.Walkthrough | undefined>((newest, walkthrough) => {
     if (!newest) {
       return walkthrough;
