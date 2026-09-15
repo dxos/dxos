@@ -35,6 +35,10 @@ describe('markdown utils', () => {
         `,
         expected: 'This document is about the…',
       },
+      {
+        content: 'Pneumonoultramicroscopicsilicovolcanoconiosis',
+        expected: 'Pneumonoultramicroscopicsilicovo…',
+      },
     ];
 
     tests.forEach(({ content, expected }) => {

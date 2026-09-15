@@ -104,7 +104,7 @@ export const ChatStatusView = ({
   }
 
   return (
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['gap-2 text-sm', classNames]}>
+    <NaturalChatStatus.Root defaultRunning={false} classNames={['p-1.5 gap-2 text-sm', classNames]}>
       {icon && (
         <NaturalChatStatus.Icon>
           <Matrix

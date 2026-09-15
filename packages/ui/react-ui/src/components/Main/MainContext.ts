@@ -76,6 +76,14 @@ export const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>
 // TODO(burdon): Define collapsed state.
 export type SidebarState = 'expanded' | 'collapsed' | 'closed';
 
+export type DrawerState = 'open' | 'closed';
+
+/** Height in rem. */
+export const DRAWER_DEFAULT_HEIGHT = 24;
+/** Drag bounds in rem; exported so operations persisting a height cannot exceed what a drag can reach. */
+export const DRAWER_MIN_HEIGHT = 8;
+export const DRAWER_MAX_HEIGHT = 64;
+
 export type MainContextValue = {
   resizing: boolean;
 
@@ -86,6 +94,15 @@ export type MainContextValue = {
   // Complementary
   complementarySidebarState: SidebarState;
   setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+
+  // Drawer
+  drawerState: DrawerState;
+  setDrawerState: Dispatch<SetStateAction<DrawerState | undefined>>;
+  /** Height in rem. */
+  drawerHeight: number;
+  setDrawerHeight: Dispatch<SetStateAction<number | undefined>>;
+  /** Fired when a resize drag ends: the moment to persist. */
+  onDrawerHeightChangeEnd?: (next: number) => void;
 };
 
 export const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
@@ -98,6 +115,15 @@ export const [MainProvider, useMainContext] = createContext<MainContextValue>(MA
 
   complementarySidebarState: 'closed',
   setComplementarySidebarState: (_nextState) => {
+    log.warn('Not initialized');
+  },
+
+  drawerState: 'closed',
+  setDrawerState: (_nextState) => {
+    log.warn('Not initialized');
+  },
+  drawerHeight: DRAWER_DEFAULT_HEIGHT,
+  setDrawerHeight: (_nextHeight) => {
     log.warn('Not initialized');
   },
 });

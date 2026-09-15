@@ -122,6 +122,19 @@ describe('effect-to-json', () => {
     expectReferenceAnnotation(jsonSchema.properties!.name);
   });
 
+  test('a check on an optional property survives dropping its undefined member', ({ expect }) => {
+    const jsonSchema = toJsonSchema(
+      Schema.Struct({
+        name: Schema.optional(Schema.String).check(
+          Schema.makeFilter((value: string | undefined) => value === undefined || value.length >= 3, {
+            toJsonSchema: () => ({ minLength: 3 }),
+          }),
+        ),
+      }),
+    );
+    expect(jsonSchema.properties?.name).to.deep.include({ type: 'string', minLength: 3 });
+  });
+
   test('regular objects are not annotated', () => {
     const object = Schema.Struct({ name: Schema.Struct({ name: Schema.String }) });
     const jsonSchema = toJsonSchema(object);

@@ -11,6 +11,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Task } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import INSTRUCTIONS from './update-tasks.md?raw';
 
@@ -50,6 +51,46 @@ export const UpdateTasks = Operation.make({
   },
   input: Schema.Struct({
     changes: Schema.Array(TaskChange),
+  }),
+  output: Schema.Any,
+  services: [Harness.HarnessService, Database.Service, Trace.TraceService],
+});
+
+export const AskQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.askQuestion'),
+    name: 'Ask question',
+    icon: 'ph--question--regular',
+    description: trim`
+      Ask the user a question you cannot answer yourself, and stop that task on it.
+      Prefer asking to guessing: an assumption the checklist then carries as fact costs more than
+      the round trip does.
+      Every question is about one task on the checklist, named by its exact title: the task is put in
+      'blocked' and the question filed on it, so the person answering can see what it holds up.
+      Offer the likely answers in "options" when you have them — the reader may still type their own,
+      so never phrase the question as if the list were exhaustive.
+      Ask only what you genuinely cannot decide: a question costs the user a round trip, and a
+      blocked task stays blocked until they take it.
+      You are not resumed by waiting: finish this turn after asking. When the answer lands you are
+      sent a message naming the question, and you read it back with the get-objects tool.
+    `,
+  },
+  input: Schema.Struct({
+    task: Schema.String.annotate({
+      description: 'Exact title of the checklist task this question blocks.',
+    }),
+    question: Schema.String.annotate({ description: 'The question, as put to the user.' }),
+    context: Schema.optional(
+      Schema.String.annotate({ description: 'Why you are asking — what you are blocked on, in a sentence or two.' }),
+    ),
+    options: Schema.optional(
+      Schema.Array(
+        Schema.Struct({
+          title: Schema.String.annotate({ description: 'The answer, as the reader will see it on the button.' }),
+          description: Schema.optional(Schema.String.annotate({ description: 'What choosing it means.' })),
+        }),
+      ).annotate({ description: 'Suggested answers. Omit when you have no plausible candidates.' }),
+    ),
   }),
   output: Schema.Any,
   services: [Harness.HarnessService, Database.Service, Trace.TraceService],
