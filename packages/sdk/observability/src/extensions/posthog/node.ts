@@ -36,7 +36,7 @@ const isEncrypted = (host: string): boolean => {
  */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(
   function* ({ config, release, environment, node }) {
-    const { apiKey: _apiKey, host: _host, distinctId: initialDistinctId, mcpServer } = node ?? {};
+    const { apiKey: _apiKey, host: _host, distinctId: initialDistinctId, anonymousDistinctId, mcpServer } = node ?? {};
     const apiKey =
       _apiKey ??
       process.env.DX_POSTHOG_API_KEY ??
@@ -63,11 +63,26 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       ...(release ? { release } : {}),
       ...(environment ? { environment } : {}),
     };
-    let distinctId = initialDistinctId;
+    const resolve = typeof initialDistinctId === 'function' ? initialDistinctId : () => undefined;
+    let identified = typeof initialDistinctId === 'string' ? initialDistinctId : undefined;
     let enabled = true;
 
-    const attribution = (): string | undefined => (enabled ? distinctId : undefined);
-    const properties = (attributes?: ObservabilityExtension.EventAttributes) => ({ ...superProperties, ...attributes });
+    type Attribution = { id: string; anonymous: boolean };
+    const attribution = (): Attribution | undefined => {
+      if (!enabled) {
+        return undefined;
+      }
+      const person = resolve() ?? identified;
+      if (person) {
+        return { id: person, anonymous: false };
+      }
+      return anonymousDistinctId ? { id: anonymousDistinctId, anonymous: true } : undefined;
+    };
+    const properties = ({ anonymous }: Attribution, attributes?: ObservabilityExtension.EventAttributes) => ({
+      ...superProperties,
+      ...attributes,
+      ...(anonymous ? { $process_person_profile: false } : {}),
+    });
 
     const mcpProperties = () => ({
       ...superProperties,
@@ -86,15 +101,15 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           enabled = false;
         }),
       identify: (id, attributes, setOnceAttributes) => {
-        distinctId = id;
+        identified = id;
         client.identify({ distinctId: id, properties: { ...attributes, $set_once: setOnceAttributes } });
       },
       alias: (id, previousId) => {
-        const previous = previousId ?? distinctId;
+        const previous = previousId ?? identified;
         if (previous) {
           client.alias({ distinctId: previous, alias: id });
         }
-        distinctId = id;
+        identified = id;
       },
       setTags: (tags) => {
         Object.assign(superProperties, tags);
@@ -107,9 +122,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           kind: 'events',
           isAvailable: () => Effect.succeed(true),
           captureEvent: (event, attributes) => {
-            const id = attribution();
-            if (id) {
-              client.capture({ distinctId: id, event, properties: properties(attributes) });
+            const who = attribution();
+            if (who) {
+              client.capture({ distinctId: who.id, event, properties: properties(who, attributes) });
             }
           },
         },
@@ -117,9 +132,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           kind: 'errors',
           isAvailable: () => Effect.succeed(true),
           captureException: (error, attributes) => {
-            const id = attribution();
-            if (id) {
-              client.captureException(error, id, properties(attributes));
+            const who = attribution();
+            if (who) {
+              client.captureException(error, who.id, properties(who, attributes));
             }
           },
         },
@@ -127,33 +142,33 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           kind: 'mcp',
           isAvailable: () => Effect.succeed(true),
           captureInitialize: ({ clientName, clientVersion, sessionId, protocolVersion }) => {
-            const id = attribution();
-            if (id) {
+            const who = attribution();
+            if (who) {
               client.captureInitialize({
                 clientName,
                 clientVersion,
                 sessionId,
                 protocolVersion,
-                distinctId: id,
-                properties: mcpProperties(),
+                distinctId: who.id,
+                properties: properties(who, mcpProperties()),
               });
             }
           },
           captureToolCall: ({ clientName, clientVersion, sessionId, protocolVersion, ...call }) => {
-            const id = attribution();
-            if (id) {
+            const who = attribution();
+            if (who) {
               client.captureToolCall({
                 ...call,
                 sessionId,
                 protocolVersion,
-                distinctId: id,
+                distinctId: who.id,
                 // `captureToolCall` takes a client name only on the handshake, so the calls carry
                 // it as the property that event would have produced.
-                properties: {
+                properties: properties(who, {
                   ...mcpProperties(),
                   ...(clientName ? { $mcp_client_name: clientName } : {}),
                   ...(clientVersion ? { $mcp_client_version: clientVersion } : {}),
-                },
+                }),
               });
             }
           },

@@ -49,6 +49,29 @@ vi.mock('@posthog/mcp', () => ({
 }));
 
 describe('posthog node extension', () => {
+  test('a resolver attributes each capture, and the anonymous id takes what no person claims', async () => {
+    captured.length = 0;
+    let person: string | undefined = DID;
+    const extension = await makeWith({ distinctId: () => person, anonymousDistinctId: 'edge' });
+
+    api(extension, 'events').captureEvent('op');
+    person = undefined;
+    api(extension, 'events').captureEvent('background');
+    expect(
+      captured.map(({ distinctId, properties }) => [distinctId, properties?.$process_person_profile]),
+    ).to.deep.equal([
+      [DID, undefined],
+      ['edge', false],
+    ]);
+  });
+
+  test('a capture nobody claims is dropped without an anonymous id', async () => {
+    captured.length = 0;
+    const extension = await makeWith({ distinctId: () => undefined });
+    api(extension, 'events').captureEvent('background');
+    expect(captured).to.deep.equal([]);
+  });
+
   test('attributes events to the current distinct id, with the registered properties', async () => {
     captured.length = 0;
     const extension = await make(INSTALLATION_ID);
@@ -125,14 +148,19 @@ describe('posthog node extension', () => {
   });
 });
 
-const make = (distinctId: string | undefined, host?: string): Promise<ObservabilityExtension.Extension> =>
+const makeWith = (
+  node: Partial<ObservabilityExtension.PostHog.NodeOptions>,
+): Promise<ObservabilityExtension.Extension> =>
   EffectEx.runPromise(
     extensions({
       config: new Config({}),
       release: '1.2.3',
-      node: { apiKey: TOKEN, distinctId, host, mcpServer: { name: 'dxos-cli', version: '1.2.3' } },
+      node: { apiKey: TOKEN, mcpServer: { name: 'dxos-cli', version: '1.2.3' }, ...node },
     }),
   );
+
+const make = (distinctId: string | undefined, host?: string): Promise<ObservabilityExtension.Extension> =>
+  makeWith({ distinctId, host });
 
 const api = <K extends ObservabilityExtension.ExtensionApi['kind']>(
   extension: ObservabilityExtension.Extension,
