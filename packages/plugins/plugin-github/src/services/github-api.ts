@@ -503,12 +503,12 @@ export const fetchIssueComments = (
 //
 
 /**
- * PATCH a GitHub object. The shape mirrors {@link githubRequest} except the
- * request method is PATCH and the body is `application/json`. Failures are
+ * Write to a GitHub object (PATCH or POST, as `build` chooses). The shape mirrors {@link githubRequest} except the
+ * body is `application/json`. Failures are
  * propagated unchanged; the caller is expected to surface them on the target
  * row's `lastError`. Retry rules are the same — 429 / 5xx retry, 4xx don't.
  */
-const githubPatch = <T>(
+const githubWrite = <T>(
   build: () => HttpClientRequest.HttpClientRequest,
   body: Record<string, unknown>,
   schema: Schema.Codec<T>,
@@ -552,7 +552,7 @@ export const updateIssue = (
   issueNumber: number,
   input: IssueUpdateInput,
 ): GitHubEffect<GitHubIssue> =>
-  githubPatch(
+  githubWrite(
     () =>
       HttpClientRequest.patch(
         `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`,
@@ -575,8 +575,97 @@ export type RepoUpdateInput = {
  * almost never what a user wants from a sync mirror.
  */
 export const updateRepo = (owner: string, repo: string, input: RepoUpdateInput): GitHubEffect<GitHubRepo> =>
-  githubPatch(
+  githubWrite(
     () => HttpClientRequest.patch(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
     input as unknown as Record<string, unknown>,
     GitHubRepoSchema,
+  );
+
+const GitHubReviewSchema = Schema.Struct({
+  id: Schema.Number,
+  state: Schema.String,
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubReview = Schema.Schema.Type<typeof GitHubReviewSchema>;
+
+/** POST /repos/{owner}/{repo}/pulls/{number}/reviews with `event: APPROVE`. */
+export const approvePullRequest = (
+  owner: string,
+  repo: string,
+  number: number,
+  body?: string,
+): GitHubEffect<GitHubReview> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}/reviews`,
+      ),
+    { event: 'APPROVE', ...(body ? { body } : {}) },
+    GitHubReviewSchema,
+  );
+
+/** POST /repos/{owner}/{repo}/issues/{number}/comments — a conversation comment, which a pull request shares with issues. */
+export const createIssueComment = (
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  body: string,
+): GitHubEffect<GitHubComment> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments`,
+      ),
+    { body },
+    GitHubCommentSchema,
+  );
+
+const GitHubCheckRunSchema = Schema.Struct({
+  name: Schema.String,
+  /** `queued`, `in_progress` or `completed`. */
+  status: Schema.String,
+  /** Set once `completed`: `success`, `failure`, `neutral`, `cancelled`, `skipped`, `timed_out`, `action_required`. */
+  conclusion: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubCheckRun = Schema.Schema.Type<typeof GitHubCheckRunSchema>;
+
+const GitHubCheckRunsSchema = Schema.Struct({
+  total_count: Schema.Number,
+  check_runs: Schema.Array(GitHubCheckRunSchema),
+});
+
+/** GET /repos/{owner}/{repo}/commits/{sha}/check-runs — the first page, which covers any ordinary CI. */
+export const fetchCheckRuns = (owner: string, repo: string, sha: string): GitHubEffect<readonly GitHubCheckRun[]> =>
+  githubRequest(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(sha)}/check-runs`,
+      ).pipe(HttpClientRequest.appendUrlParam('per_page', '100')),
+    GitHubCheckRunsSchema,
+  ).pipe(Effect.map(({ check_runs }) => check_runs));
+
+export type ReviewCommentInput = {
+  body: string;
+  /** Head SHA the line numbers refer to. */
+  commit_id: string;
+  path: string;
+  line: number;
+  /** `LEFT` is the base (removed) side, `RIGHT` the head (added or context) side. */
+  side: 'LEFT' | 'RIGHT';
+};
+
+/** POST /repos/{owner}/{repo}/pulls/{number}/comments — a review comment on one line of the diff. */
+export const createReviewComment = (
+  owner: string,
+  repo: string,
+  number: number,
+  input: ReviewCommentInput,
+): GitHubEffect<GitHubComment> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}/comments`,
+      ),
+    input,
+    GitHubCommentSchema,
   );

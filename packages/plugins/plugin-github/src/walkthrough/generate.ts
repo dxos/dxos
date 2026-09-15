@@ -99,6 +99,7 @@ export const generateWalkthrough = <R = never>({
     const filled = fillWalkthrough(narration, diff);
     const walkthrough = yield* upsert(existing, {
       pullRequest: Ref.make(pullRequest),
+      title: Walkthrough.makeTitle(pullRequest, remote.title ?? pullRequest.title),
       body: filled.body,
       commit: remote.commit ?? '',
       generatedAt: new Date().toISOString(),
@@ -169,6 +170,7 @@ const upsert = (
     // One notification for the whole replacement, rather than six — a subscriber re-rendering the
     // document between the body and the commit would show one against the other.
     return Obj.update(existing, (existing) => {
+      existing.title = props.title;
       existing.body = props.body;
       existing.commit = props.commit;
       existing.generatedAt = props.generatedAt;
