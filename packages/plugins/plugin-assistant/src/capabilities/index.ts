@@ -65,11 +65,12 @@ export const SubjectContext = Capability.lazyModule(
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
 });
-// Provisions companion chats against deck planks and attention state — app-shell only.
+// Excluded from the workerd barrel: provisions companion chats against deck planks and attention
+// state, which no worker host holds. Node keeps it — the composer test harness runs there.
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
   {
-    environments: [],
+    environments: ['node'],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
