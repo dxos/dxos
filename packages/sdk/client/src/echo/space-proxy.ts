@@ -41,7 +41,7 @@ import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { type ListenHandle, RpcClosedError, decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { fromPublicKey, packJson, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
@@ -564,17 +564,41 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * Listen for messages posted to the space.
    */
-  listen(channel: string, callback: (message: GossipMessage) => void): () => Promise<void> {
+  listen(channel: string, callback: (message: GossipMessage) => void): ListenHandle {
+    const registered = new Trigger();
     const cleanup = subscribeStream(
       this._runtime,
       this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: this.key, channel }),
       {
-        onData: (message) => callback(message),
-        // A throwing callback ends the stream; surface it rather than dropping every later message silently.
-        onError: (err) => log.warn('listen stream failed', { channel, err }),
+        onData: (response) => {
+          switch (response._tag) {
+            case 'Ready':
+              registered.wake();
+              break;
+            case 'Message':
+              callback(response.message);
+              break;
+          }
+        },
+        onError: (err) => {
+          registered.throw(err);
+          if (!(err instanceof RpcClosedError)) {
+            log.catch(err);
+          }
+        },
+        onClose: () => registered.throw(new RpcClosedError()),
       },
     );
-    return async () => cleanup();
+    const ready = registered.wait();
+    // Most callers never await readiness; a closed connection is expected and anything else is logged above.
+    ready.catch(() => {});
+    return Object.assign(
+      () => {
+        registered.throw(new RpcClosedError());
+        cleanup();
+      },
+      { ready },
+    );
   }
 
   /**

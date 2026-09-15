@@ -6,7 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, TriggerState, asyncTimeout, latch } from '@dxos/async';
+import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
 import { DataSpaceManagerService } from '@dxos/client-services';
@@ -34,6 +34,7 @@ import { log } from '@dxos/log';
 import { toPublicKey, unpackJson } from '@dxos/protocols/buf';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { range } from '@dxos/util';
 
 describe('Spaces', () => {
@@ -139,36 +140,21 @@ describe('Spaces', () => {
       ready: true,
     });
 
-    const hello = new Trigger();
-    space2.listen('hello', (message) => {
-      expect(message.channelId).to.include('hello');
-      expect(unpackJson(message.payload)).to.deep.contain({ data: 'Hello, world!' });
-      hello.wake();
-    });
+    const hello = new Trigger<GossipMessage>();
+    await space2.listen('hello', (message) => hello.wake(message)).ready;
+    await space1.postMessage('hello', { data: 'Hello, world!' });
 
-    const goodbye = new Trigger();
-    space2.listen('goodbye', (message) => {
-      expect(message.channelId).to.include('goodbye');
-      expect(unpackJson(message.payload)).to.deep.contain({ data: 'Goodbye' });
-      goodbye.wake();
-    });
+    const goodbye = new Trigger<GossipMessage>();
+    await space2.listen('goodbye', (message) => goodbye.wake(message)).ready;
+    await space1.postMessage('goodbye', { data: 'Goodbye' });
 
-    // Gossip is fire-and-forget and `listen` gives no signal for when the peer's subscription is
-    // live, so a single post can land before the listener exists; re-post until it is observed.
-    // The outer bound is generous: it guards against a hang, not latency.
-    const postUntilReceived = async (received: Trigger, post: () => Promise<void>) => {
-      while (received.state !== TriggerState.RESOLVED) {
-        await post();
-        await received.wait({ timeout: 500 }).catch(() => {});
-      }
-    };
-    await asyncTimeout(
-      Promise.all([
-        postUntilReceived(hello, () => space1.postMessage('hello', { data: 'Hello, world!' })),
-        postUntilReceived(goodbye, () => space1.postMessage('goodbye', { data: 'Goodbye' })),
-      ]),
-      30_000,
-    );
+    // Guards against a hang, so it is generous: two peers replicating is not a latency assertion, and
+    // both 200ms and 2s were under the round trip's own cost on a loaded runner.
+    const [helloMessage, goodbyeMessage] = await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 30_000);
+    expect(helloMessage.channelId).to.include('hello');
+    expect(unpackJson(helloMessage.payload)).to.deep.contain({ data: 'Hello, world!' });
+    expect(goodbyeMessage.channelId).to.include('goodbye');
+    expect(unpackJson(goodbyeMessage.payload)).to.deep.contain({ data: 'Goodbye' });
   });
 
   // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.

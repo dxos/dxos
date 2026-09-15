@@ -55,7 +55,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                 {({ items }) => (
                   <Flex column>
                     {items.map((run) => (
-                      <Accordion.Item key={run.pid} item={run} classNames='border-b border-subdued-separator'>
+                      <Accordion.Item key={run.pid} item={run}>
                         <Accordion.ItemHeader hover>
                           <Listbox.ItemContent
                             icon={

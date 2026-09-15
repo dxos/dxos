@@ -9,7 +9,7 @@ import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/echo-react';
+import { useResolveRef } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
 import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
@@ -93,10 +93,8 @@ export const useExtensions = ({
 
   // Get the content reference from Document objects.
   const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
-  // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
-  useObject(contentRef);
-  // Get the actual live object target via .target (needed for Doc.createAccessor).
-  const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
+  const loadedContent = useResolveRef(contentRef);
+  const target = loadedContent ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.

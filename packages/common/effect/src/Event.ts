@@ -85,8 +85,9 @@ export const on = <E extends Any>(event: E, fn: HandlerFn<E>): Effect.Effect<voi
   subscribe(handler(event, fn));
 
 /**
- * Dispatches to every subscriber and completes once all of them have, so an emit doubles as a
- * barrier for the work the event triggers.
+ * Dispatches to every subscriber and completes once all of them have — including the events those
+ * handlers emit in turn — so an emit doubles as a barrier for the work the event triggers. A
+ * handler that fails fails the emitter as a defect, so this is not a fire-and-forget notification.
  */
 export const emit = <E extends Any>(event: E, payload: Payload<E>): Effect.Effect<void, never, Bus> =>
   Bus.pipe(Effect.flatMap((bus) => bus.emit(event, payload)));

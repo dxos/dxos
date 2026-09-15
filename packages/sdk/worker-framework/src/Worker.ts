@@ -22,6 +22,26 @@ import * as WorkerProtocol from './WorkerProtocol.ts';
 // every other call).
 const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
 
+/** Message that tears down whichever worker currently owns a storage lock. */
+const DISPLACE_MESSAGE = { action: 'stop' } as const;
+
+/** Default displacement channel for a storage lock; see {@link Options.displaceChannel}. */
+export const displaceChannelFor = (storageLockKey: string): string => `${storageLockKey}/displace`;
+
+/**
+ * Shuts down whichever worker currently holds `storageLockKey`, so its storage can be taken over.
+ * A worker does this to its predecessor on startup; a caller rewriting the storage from outside
+ * does it to free the lock, and must still wait for the lock itself — this only asks.
+ */
+export const displace = (storageLockKey: string, displaceChannel = displaceChannelFor(storageLockKey)): void => {
+  const channel = new BroadcastChannel(displaceChannel);
+  try {
+    channel.postMessage(DISPLACE_MESSAGE);
+  } finally {
+    channel.close();
+  }
+};
+
 const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePort) =>
   Layer.merge(
     RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(clientToWorker))),
@@ -95,7 +115,7 @@ const defaultEndpoint = (): WorkerProtocol.WorkerEndpoint => {
 export const run = ({
   endpoint = defaultEndpoint(),
   storageLockKey,
-  displaceChannel = `${storageLockKey}/displace`,
+  displaceChannel = displaceChannelFor(storageLockKey),
   createRuntime,
 }: Options): void => {
   void navigator.locks.request(storageLockKey, async () => {
@@ -116,7 +136,7 @@ export const run = ({
 
     // Displace any previously-running worker for this storage lock, and shut down if displaced.
     const channel = new BroadcastChannel(displaceChannel);
-    channel.postMessage({ action: 'stop' });
+    channel.postMessage(DISPLACE_MESSAGE);
 
     // Hold a dedicated liveness lock for the worker's whole lifetime. Clients watch this key to detect
     // termination, so it must be held before `ready` is advertised — hence the awaited grant below.
@@ -130,7 +150,6 @@ export const run = ({
       livenessLockGranted.wake();
       await livenessLockHeld;
     });
-    await livenessLockGranted.wait();
 
     let shuttingDown = false;
     const shutdown = async () => {
@@ -145,12 +164,23 @@ export const run = ({
       releaseLivenessLock();
       releaseStorageLock();
     };
+    // Installed in the same synchronous block as the channel, so no displacement can land in a gap:
+    // BroadcastChannel queues a delivery task and never replays it to a listener attached after an
+    // await, which would leave this worker holding the storage lock a displacer is waiting on.
     channel.onmessage = (event) => {
-      if (event.data?.action === 'stop') {
+      if (event.data?.action === DISPLACE_MESSAGE.action) {
         log('displaced by newer worker, shutting down');
         void shutdown();
       }
     };
+
+    await livenessLockGranted.wait();
+    if (shuttingDown) {
+      // Displaced before startup finished: `shutdown` has released both locks, so there is nothing
+      // to serve and advertising `listening` would hand out a session this worker cannot keep.
+      log('displaced during startup, not serving');
+      return;
+    }
 
     const requestShutdown = () => void shutdown();
 

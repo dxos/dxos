@@ -32,9 +32,9 @@ export const HiggsfieldImageConfig = Schema.Struct({ model, prompt, aspectRatio 
 export interface HiggsfieldImageConfig extends Schema.Schema.Type<typeof HiggsfieldImageConfig> {}
 
 /**
- * The video service's request config. Higgsfield's video models animate a still (`image_url`), so a
- * frame is either given a still (`imageUrl`) or has one generated from the prompt first
- * (`stillModel`), then animated by `model`.
+ * The video service's request config. Higgsfield's video models animate a still (`image_url`),
+ * so a frame is either given a still (`imageUrl`) or has one generated from the prompt first
+ * (`imageModel`), then animated by `model`.
  */
 export const HiggsfieldVideoConfig = Schema.Struct({
   model,
@@ -44,11 +44,11 @@ export const HiggsfieldVideoConfig = Schema.Struct({
   imageUrl: Schema.optional(
     Schema.String.pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.URL),
-      Schema.annotate({ title: 'Still', description: 'Image to animate; generated from the prompt when empty.' }),
+      Schema.annotate({ title: 'Still image', description: 'Image to animate; generated from the prompt when empty.' }),
     ),
   ),
-  stillModel: Schema.optional(
-    Schema.String.annotate({ title: 'Still model', description: 'Image model used when no still is given.' }),
+  imageModel: Schema.optional(
+    Schema.String.annotate({ title: 'Image model', description: 'Image model used when no still is given.' }),
   ),
 });
 export interface HiggsfieldVideoConfig extends Schema.Schema.Type<typeof HiggsfieldVideoConfig> {}
