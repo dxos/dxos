@@ -2,33 +2,26 @@
 
 Design: [`./DESIGN.md`](./DESIGN.md). Branch `dm/client-services-refactor`, PR #13094.
 
-_Resume: Branch pushed through `62901596` (cloud sandbox). Fixed since the last note: the
-`client-services` build break (`WorkerSession` was not exported, which failed EVERY CI shard),
-the three browser `Worker session lifetime` tests (they asserted on `sessionsOpened` before the
-worker had recorded the session; they now await it), the `Event.Bus` defect in the worker's
-session finalizer, the `client-services-stack.ts` TODO (config and the bus are layer
-requirements now), `Rpc.serverLayer`'s typing, the stale `packages/sdk/client-services/TASKS.md`,
-and the changeset (now a summary of the whole PR). Green locally: `client-services` 30 files /
-`client-protocol` / `rpc` / `effect` / `worker-framework` node + browser, and builds for
-`client-services`, `client`, `client-protocol`, `client-e2e`, `worker-framework`, `composer-app`.
+_Resume: Branch pushed through `c1c387a7`; every suite that was red is green locally. THE BLOCKER
+IS FIXED: `RpcGroup.toLayer` stores the handler functions and effect-rpc calls them unbound, so
+serving each service's tag directly cost every class-backed impl its `this` — the first
+private-field access threw during dispatch, where nothing carries the throw back to the caller, so
+the request hung. Unary calls that never touched `this` still answered, which is why only streams
+looked broken (`SystemService.queryStatus` never emitted, so a tab never left "waiting for
+status"). `client-protocol` now exports `boundServiceHandlers` / `layerHandlersFromTag` and the
+worker session uses them for all thirteen services. Also fixed: the `client-services` build break
+(`WorkerSession` was not exported, which failed EVERY CI shard), the three browser `Worker session
+lifetime` tests (they asserted on `sessionsOpened` before the worker had recorded the session), the
+`Event.Bus` defect in the session-closed finalizer, the `client-services-stack.ts` TODO (config and
+the bus are layer requirements now), `Rpc.serverLayer`'s typing, the stale
+`packages/sdk/client-services/TASKS.md`, and the changeset (now a summary of the whole PR).
 
-OPEN, THE ONE REAL BLOCKER: every STREAMING rpc over a worker session hangs, so
-`client:test`'s `dedicated-worker-client-services.test.ts` fails 5/7 (CI never reached it before,
-because the build failed first). Evidence gathered: a unary rpc over a real worker session
-answers in ~200ms, while `SystemService.queryStatus` over the same session never produces a
-chunk; the request IS delivered and dispatched (`entry.handler` is the right impl, the fiber is
-forked, `Stream.runForEachArray` runs) but the handler's stream is never pulled — its
-`streamFromEmitter` registration never runs — so nothing is written back and the tab's
-`client._open: waiting for status trigger` never resolves. Ruled out: the `RpcTiming` wrap
-middleware (fails with `timing: false` too), `Layer.build` vs `ManagedRuntime` for the session
-server, the breadth of the stack context handed to the handlers (narrowing it to the 13 service
-tags changes nothing), and session-scope lifetime (the scope only closes at test teardown). The
-same server path — `layerClientServicesServer` + `Rpcs.toLayer(Tag)` over a MessagePort, with
-timing on, streaming, callback-registered streams, and a client that connects first — passes in
-`effect-rpc.test.ts` (4 new tests), so the difference is something about the session's
-arrangement, most likely the reverse-direction `RpcClient.layerProtocolWorker` the framework
-merges into the same context (an UNPEERED one demonstrably stalls the forward server's streams;
-see D18). NEXT: fix that, then rerun `client:test` and `client-e2e:test`._
+Green locally: `client` 34, `client-e2e` 174, `client-services` 190, `client-protocol`, `rpc`,
+`effect`, `worker-framework` node (27) + browser (13); builds for the whole chain through
+`composer-app`; lint and format clean. CI on the previous head (`2116d372`) was already green
+except the two shards carrying `client:test` and `client-e2e:test`, both failing on exactly this
+hang. NEXT: confirm CI on `c1c387a7`, then the browser `client` tests and Composer e2e
+(`DX_ENVIRONMENT=dev`) for the dedicated worker, and decide D17's readiness-gate behaviour._
 
 ## Phase 1: Event lifecycle in the stack (landed)
 
@@ -94,9 +87,7 @@ see D18). NEXT: fix that, then rerun `client:test` and `client-e2e:test`._
 
 - [x] `client-services` (30 files), `client-protocol`, `rpc`, `effect`, `worker-framework`
       (node + browser) suites green.
-- [ ] `client:test` — `dedicated-worker-client-services.test.ts` fails 5/7 on the streaming-rpc
-      hang described in the resume note; everything else in the package passes.
-- [ ] `client-e2e:test` — not reached (the run aborts on `client:test`).
+- [x] `client:test` (34) and `client-e2e:test` (174) green, including the dedicated-worker suites.
 - [ ] Run the client browser tests (`sync-main-thread-lag.browser.test.ts`, dedicated worker
       paths) — the session lifetime change is browser-only in production.
 - [ ] Composer e2e (`DX_ENVIRONMENT=dev`) for the dedicated worker: boot, second tab, tab close,
@@ -110,6 +101,9 @@ see D18). NEXT: fix that, then rerun `client:test` and `client-e2e:test`._
 - [x] `ClientServicesLayer` takes `ConfigService` and `Event.Bus` as layer requirements; every
       embedder provides them once beneath the layer.
 - [ ] Decide D17's readiness-gate behaviour (startup error visibility to the tab).
+- [ ] Consider serving the in-process and iframe paths through `layerHandlersFromTag` too, so the
+      hand-written `makeClientServicesHandlers` binding is not the only guard against unbound
+      handlers.
 - [x] `packages/sdk/client-services/TASKS.md` points here instead of describing the old
       `ClientServicesHost` architecture.
 - [x] The changeset is a summary of the whole PR (effect, client-services, client-protocol,
