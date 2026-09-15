@@ -117,8 +117,10 @@ export const make: Effect.Effect<Service, never, RpcServer.Protocol | Scope.Scop
           clientIds: parent.clientIds,
           initialMessage: parent.initialMessage,
           supportsAck: parent.supportsAck,
+          supportsNotifications: parent.supportsNotifications,
           supportsTransferables: parent.supportsTransferables,
           supportsSpanPropagation: parent.supportsSpanPropagation,
+          codecFor: parent.codecFor,
         };
       }),
     );

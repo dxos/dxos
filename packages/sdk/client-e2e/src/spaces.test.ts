@@ -691,6 +691,23 @@ describe('Spaces', () => {
     expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
   });
 
+  test('imported space archive is queryable by type', { timeout: 5_000 }, async ({ expect }) => {
+    const [client1, client2] = await createInitializedClients(2, {
+      storage: true,
+    });
+    await Promise.all([client1, client2].map(registerTypes));
+
+    const space = await client1.spaces.create();
+    const doc1 = space.db.add(createDocument());
+    await space.db.flush();
+    const archive = await space.internal.export();
+
+    const importedSpace = await client2.spaces.import(archive);
+    await expect
+      .poll(async () => (await importedSpace.db.query(Filter.type(TestSchema.DocumentType)).run()).map((doc) => doc.id))
+      .toEqual([doc1.id]);
+  });
+
   test('export space archive (JSON)', { timeout: 3_000 }, async () => {
     const [client] = await createInitializedClients(1, { storage: true });
     await registerTypes(client);

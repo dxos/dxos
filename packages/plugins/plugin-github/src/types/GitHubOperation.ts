@@ -129,6 +129,102 @@ export const GenerateWalkthrough = Operation.make({
   services: [Trace.TraceService, AiService.AiService],
 }).pipe(Operation.visible);
 
+/** Submit an approving review on a pull request, as the space's GitHub connection. */
+export const SubmitPullRequestApproval = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.submitPullRequestApproval'),
+    name: 'Submit Pull Request Approval',
+    description: 'Submit an approving review on a pull request.',
+    icon: 'ph--check-circle--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+    /** Optional review summary. */
+    body: Schema.String.pipe(Schema.optional),
+  }),
+  output: Schema.Struct({
+    reviewId: Schema.Number,
+  }),
+  types: [PullRequest.PullRequest],
+});
+
+/** Post a conversation comment on a pull request, as the space's GitHub connection. */
+export const AddPullRequestComment = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.addPullRequestComment'),
+    name: 'Add Pull Request Comment',
+    description: 'Post a comment on a pull request.',
+    icon: 'ph--chat-text--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+    body: Schema.String,
+  }),
+  output: Schema.Struct({
+    commentId: Schema.Number,
+    url: Schema.String.pipe(Schema.optional),
+  }),
+  types: [PullRequest.PullRequest],
+});
+
+/** Post a review comment on one line of a pull request's diff, as the space's GitHub connection. */
+export const AddPullRequestReviewComment = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.addPullRequestReviewComment'),
+    name: 'Add Pull Request Review Comment',
+    description: 'Post a review comment on a line of a pull request diff.',
+    icon: 'ph--chat-centered-text--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+    body: Schema.String,
+    /** Head SHA the line numbers refer to; a walkthrough's `commit`. */
+    commit: Schema.String,
+    path: Schema.String,
+    line: Schema.Number,
+    /** `LEFT` for the removed side, `RIGHT` for added and context lines. */
+    side: Schema.Literals(['LEFT', 'RIGHT']),
+  }),
+  output: Schema.Struct({
+    commentId: Schema.Number,
+    url: Schema.String.pipe(Schema.optional),
+  }),
+  types: [PullRequest.PullRequest],
+});
+
+/** Aggregate outcome of a commit's check runs; `none` when the commit has no checks at all. */
+export const CiState = Schema.Literals(['success', 'failure', 'pending', 'none']);
+export type CiState = Schema.Schema.Type<typeof CiState>;
+
+export const CheckCounts = Schema.Struct({
+  total: Schema.Number,
+  passed: Schema.Number,
+  failed: Schema.Number,
+  pending: Schema.Number,
+});
+export interface CheckCounts extends Schema.Schema.Type<typeof CheckCounts> {}
+
+/** Read a pull request's live state and the CI outcome of its head commit from GitHub. */
+export const GetPullRequestStatus = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.getPullRequestStatus'),
+    name: 'Get Pull Request Status',
+    description: "Read a pull request's state and the CI status of its head commit.",
+    icon: 'ph--git-pull-request--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+  }),
+  output: Schema.Struct({
+    state: PullRequest.State,
+    title: Schema.String,
+    commit: Schema.String.pipe(Schema.optional),
+    ci: CiState,
+    checks: CheckCounts,
+  }),
+  types: [PullRequest.PullRequest],
+});
+
 /**
  * Progress key for {@link GenerateWalkthrough}, derived from the pull request rather than passed, so
  * the UI can watch a run it did not start. The absolute URI form is required: a hydration-dependent

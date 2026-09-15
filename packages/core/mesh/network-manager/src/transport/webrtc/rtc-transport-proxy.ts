@@ -84,7 +84,12 @@ export class RtcTransportProxy extends Resource implements Transport {
       () => {
         stream.subscribe(
           async (event: BridgeEvent) => {
-            log('rtc transport proxy event', event);
+            // Summarised, never the event: a data event carries the raw packet, and the logger
+            // serialises a Uint8Array as one JSON key per byte — megabytes per connection.
+            log('rtc transport proxy event', {
+              case: event.type.case,
+              bytes: event.type.case === 'data' ? event.type.value.payload.length : undefined,
+            });
             switch (event.type.case) {
               case 'connection':
                 await this._handleConnection(event.type.value);

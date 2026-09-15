@@ -35,7 +35,6 @@ import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/conf
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
   new Promise((resolve) => {
@@ -158,7 +157,7 @@ const sqliteLayerFromParams = ({
   createOpfsWorker,
   sqlitePath,
 }: Pick<LocalClientServicesParams, 'config' | 'createOpfsWorker' | 'sqlitePath'>): Layer.Layer<
-  SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
+  SqlClient.SqlClient | SqlExport.SqlExport,
   unknown
 > => {
   const sqliteMode =
@@ -204,11 +203,7 @@ const sqliteLayerFromParams = ({
     }
   }
 
-  return SqlTransaction.layer.pipe(
-    Layer.provideMerge(sqlExportLayer),
-    Layer.provideMerge(sqliteLayer),
-    Layer.provideMerge(Reactivity.layer),
-  );
+  return sqlExportLayer.pipe(Layer.provideMerge(sqliteLayer), Layer.provideMerge(Reactivity.layer));
 };
 
 /**

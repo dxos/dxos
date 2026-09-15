@@ -41,12 +41,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, defaultMap } from '@dxos/util';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
 import {
   type CollectionState,
@@ -70,7 +66,7 @@ export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | u
 const SUBDUCTION_SERVICE_NAME = 'dxos-subduction';
 
 export type AutomergeHostProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   dataMonitor?: EchoDataMonitor;
 
   /**
@@ -194,7 +190,7 @@ const MIN_RESIDENT_DOCUMENTS = 256;
  * level and never reach the Subduction sedimentree layer.
  */
 export class AutomergeHost extends Resource {
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
@@ -528,7 +524,7 @@ export class AutomergeHost extends Resource {
    * Creates automerge_chunks and automerge_heads tables if they do not exist.
    * Must be called (via RuntimeProvider.runPromise) before opening the host.
    */
-  get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> {
+  get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     return this._storage.migrate.pipe(Effect.andThen(this._headsStore.migrate));
   }
 
@@ -840,8 +836,8 @@ export class AutomergeHost extends Resource {
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen({ self: this }, function* () {
-        const transaction = yield* SqlTransaction.SqlTransaction;
-        yield* transaction.withTransaction(
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql.withTransaction(
           Effect.gen({ self: this }, function* () {
             yield* this._headsStore.remove(documentId);
             yield* this._storage.removeRangeEffect([documentId]);

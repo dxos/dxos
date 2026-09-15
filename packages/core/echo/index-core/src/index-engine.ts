@@ -3,14 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
 import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId, URI } from '@dxos/keys';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
@@ -318,10 +317,10 @@ export class IndexEngine {
     spaceId: SpaceId;
     documentIds: readonly string[];
     objects: readonly { documentId: string; objectId: string }[];
-  }): Effect.Effect<number, SqlError.SqlError, SqlTransaction.SqlTransaction | SqlClient.SqlClient> {
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen({ self: this }, function* () {
-      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
-      return yield* sqlTransaction.withTransaction(
+      const sql = yield* SqlClient.SqlClient;
+      return yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
           const recordIds = yield* this.#objectMetaIndex.selectRecordIdsForRemoval({
             spaceId: opts.spaceId,
@@ -346,7 +345,7 @@ export class IndexEngine {
     ctx: Context,
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlTransaction.SqlTransaction | SqlClient.SqlClient> {
+  ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen({ self: this }, function* () {
       const result = makeEmptyIndexingResult();
 
@@ -414,10 +413,10 @@ export class IndexEngine {
   ): Effect.Effect<
     { updated: number; done: boolean; objects: readonly IndexerObject[] },
     SqlError.SqlError,
-    SqlTransaction.SqlTransaction | SqlClient.SqlClient
+    SqlClient.SqlClient
   > {
     return Effect.gen({ self: this }, function* () {
-      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
+      const sql = yield* SqlClient.SqlClient;
 
       // Reads run OUTSIDE the transaction: getChangedObjects may call RuntimeProvider.runPromise
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
@@ -448,7 +447,7 @@ export class IndexEngine {
       }
 
       // Writes run INSIDE the transaction for atomicity.
-      return yield* sqlTransaction.withTransaction(
+      return yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
           // Ensure objects exist in EntityMetaIndex.
           yield* this.#objectMetaIndex.update(objects);

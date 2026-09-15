@@ -10,7 +10,6 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import type { IndexerObject } from './interface.ts';
@@ -19,14 +18,9 @@ import { ReverseRefIndex } from './reverse-ref-index.ts';
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_EXAMPLE = DXN.make('com.example.type.example', '0.1.0');
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-  Layer.provideMerge(Reactivity.layer),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+}).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('ReverseRefIndex', () => {
   it.effect('should store and query reverse references', () =>
