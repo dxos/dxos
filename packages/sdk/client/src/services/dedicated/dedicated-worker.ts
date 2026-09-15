@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { type ClientServicesHost, makeWorkerRuntime } from '@dxos/client-services';
+import { type ClientServicesStackContext, makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -21,8 +22,8 @@ import { STORAGE_LOCK_KEY } from '../../lock-key.ts';
 export type RunDedicatedWorkerOptions = {
   /** Called with the worker config before the runtime starts. Use to e.g. initialize observability in the worker. */
   onBeforeStart?: (config: Config) => Promise<void>;
-  /** Runs once the runtime has started, with the host it serves from. */
-  onStart?: (host: ClientServicesHost) => Promise<void>;
+  /** Runs once the runtime has started, with the effect context of the stack it serves. */
+  onStart?: (stack: EffectContext.Context<ClientServicesStackContext>) => Promise<void>;
   /** Storage for the runtime; by default OPFS-backed SQLite, or in-memory where OPFS is unavailable. */
   sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 };
@@ -76,7 +77,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         yield* runtime.start();
         log('dedicated-worker: WorkerRuntime started');
         if (options.onStart) {
-          yield* Effect.promise(() => options.onStart!(runtime.host));
+          yield* Effect.promise(() => options.onStart!(runtime.stack()));
         }
 
         return {

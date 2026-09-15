@@ -75,7 +75,6 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/websocket-rpc": "workspace:*",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
     "crc-32": "catalog:",

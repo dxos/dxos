@@ -3,12 +3,19 @@
 //
 
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 
 import { asyncTimeout } from '@dxos/async';
 import { getFirstStreamValue } from '@dxos/async';
-import { type ClientServices } from '@dxos/client-protocol';
+import {
+  type ClientServices,
+  type ClientServicesHandlers,
+  makeInProcessClientServicesRpc,
+  makeServicesFromRpc,
+} from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialsOfType } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
@@ -83,6 +90,26 @@ export type SpaceStats = {
   members?: SpaceMember[];
   pipeline?: Space_PipelineState;
 };
+
+/**
+ * {@link createDiagnostics} over the effect-rpc handlers an embedder serves, bridged in-process for
+ * the duration of the collection.
+ */
+export const createDiagnosticsFromHandlers = (
+  handlers: () => Partial<ClientServicesHandlers>,
+  stack: EffectContext.Context<IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService>,
+  config: Config,
+): Promise<Diagnostics['services']> =>
+  EffectEx.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const rpc = yield* makeInProcessClientServicesRpc(handlers);
+        return yield* Effect.promise(() =>
+          createDiagnostics(makeServicesFromRpc(rpc, EffectContext.empty()), stack, config),
+        );
+      }),
+    ),
+  );
 
 /**
  * Create diagnostics to provide snapshot of current system state.

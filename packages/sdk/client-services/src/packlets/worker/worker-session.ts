@@ -7,7 +7,12 @@ import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { Trigger } from '@dxos/async';
-import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClientOverProtocol } from '@dxos/client-protocol';
+import {
+  ClientRpcServer,
+  type ClientServicesHandlers,
+  PROXY_CONNECTION_TIMEOUT,
+  makeBridgeServiceClientOverProtocol,
+} from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
 import { log, logInfo } from '@dxos/log';
 import { type BufService } from '@dxos/protocols/buf-service';
@@ -15,12 +20,11 @@ import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mes
 import { type WorkerService } from '@dxos/protocols/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
-import { type ClientServicesHost } from '../services/index.ts';
-
 type BridgeService = BufService<typeof BridgeServiceDesc>;
 
 export type WorkerSessionProps = {
-  serviceHost: ClientServicesHost;
+  /** The client services handlers the runtime currently serves; read per request since they change with the stack. */
+  services: () => Partial<ClientServicesHandlers>;
   /**
    * Reverse-direction (worker→tab) protocol serving the tab's {@link BridgeService} (WebRTC transport)
    * over effect-rpc. The worker is the client; the tab is the runner.
@@ -45,7 +49,6 @@ export class WorkerSession {
   private readonly _clientRpc: ClientRpcServer;
   private readonly _shellClientRpc?: ClientRpcServer;
   private readonly _startTrigger = new Trigger();
-  private readonly _serviceHost: ClientServicesHost;
   private readonly _systemProtocol: RpcClient.Protocol['Service'];
   #closeBridge?: () => Promise<void>;
 
@@ -81,8 +84,7 @@ export class WorkerSession {
       ).pipe(Effect.asVoid),
   };
 
-  constructor({ serviceHost, systemProtocol, appProtocol, shellPort, readySignal }: WorkerSessionProps) {
-    this._serviceHost = serviceHost;
+  constructor({ services: runtimeServices, systemProtocol, appProtocol, shellPort, readySignal }: WorkerSessionProps) {
     this._systemProtocol = systemProtocol;
 
     // Hold requests until the worker runtime is ready; propagate startup errors to callers.
@@ -94,7 +96,7 @@ export class WorkerSession {
     };
 
     const services = () => ({
-      ...this._serviceHost.services,
+      ...runtimeServices(),
       WorkerService: this.#workerServiceHandlers,
     });
 

@@ -28,7 +28,7 @@ import {
 } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
@@ -216,11 +216,11 @@ export class LocalClientServices implements ClientServicesProvider {
 
     const {
       ClientServicesLayer,
+      HostEvents,
       SystemServiceImpl,
       createCollectDiagnosticsBroadcastHandler,
       createDiagnostics,
       handlersFromStack,
-      openStack,
     } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
@@ -237,7 +237,15 @@ export class LocalClientServices implements ClientServicesProvider {
     );
     this._runtime = runtime;
     this._stack = await runtime.context();
-    await runtime.runPromise(openStack(this._ctx));
+    // `StackOpened` resolves once every handler the cascade triggered has run.
+    await runtime.runPromise(
+      EffectEx.withContext(this._ctx)(
+        Effect.gen(function* () {
+          yield* EffectEvent.emit(HostEvents.Opening, undefined);
+          yield* EffectEvent.emit(HostEvents.StackOpened, undefined);
+        }),
+      ),
+    );
 
     // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
     const systemService = new SystemServiceImpl({

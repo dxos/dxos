@@ -5,25 +5,19 @@
 import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { type Trigger } from '@dxos/async';
-import {
-  type ClientServicesHandlers,
-  makeInProcessClientServicesRpc,
-  makeServicesFromRpc,
-} from '@dxos/client-protocol';
+import { type ClientServicesHandlers } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { EchoHost, EchoHostService, MeshEchoReplicator } from '@dxos/echo-host';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
 import {
@@ -48,7 +42,7 @@ import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
-import { createDiagnostics } from '../diagnostics/index.ts';
+import { createDiagnosticsFromHandlers } from '../diagnostics/index.ts';
 import {
   type EdgeIdentityRecoveryManager,
   EdgeIdentityRecoveryManagerService,
@@ -69,13 +63,13 @@ import {
 } from '../invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
+import { Opening, StackOpened } from '../services/events.ts';
 import {
   ClientServicesLayer,
   type ClientServicesStackContext,
   type ServiceContextRuntimeProps,
   StackReadinessService,
   handlersFromStack,
-  openStack,
 } from '../services/index.ts';
 import { SqliteStorage, wipeSqliteStorage } from '../services/sqlite-storage.ts';
 import { SpaceManager, SpaceManagerService } from '../space/index.ts';
@@ -86,6 +80,12 @@ import {
   type SigningContext,
 } from '../spaces/index.ts';
 import { SystemServiceImpl } from '../system/index.ts';
+
+/** The open event chain; `StackOpened` resolves once every handler the cascade triggered has run. */
+const openChain = Effect.gen(function* () {
+  yield* Event.emit(Opening, undefined);
+  yield* Event.emit(StackOpened, undefined);
+});
 
 /**
  * Options for a test {@link ServiceContext}.
@@ -120,17 +120,7 @@ export class ServiceContext {
     this.#config = options.config ?? new Config();
     this.#systemService = new SystemServiceImpl({
       config: () => this.#config,
-      getDiagnostics: async () => {
-        const scope = Effect.runSync(Scope.make());
-        try {
-          const rpc = await EffectEx.runPromise(
-            makeInProcessClientServicesRpc(() => this.services).pipe(Effect.provideService(Scope.Scope, scope)),
-          );
-          return await createDiagnostics(makeServicesFromRpc(rpc, EffectContext.empty()), this.stack, this.#config);
-        } finally {
-          await EffectEx.runPromise(Scope.close(scope, Exit.void));
-        }
-      },
+      getDiagnostics: () => createDiagnosticsFromHandlers(() => this.services, this.stack, this.#config),
       close: () => this.close(),
       wipeStorage: () => RuntimeProvider.runPromise(this.#sql.contextEffect)(wipeSqliteStorage),
     });
@@ -227,7 +217,7 @@ export class ServiceContext {
     );
     try {
       this.#stack = await this.#runtime.context();
-      await this.#runtime.runPromise(openStack(ctx));
+      await this.#runtime.runPromise(EffectEx.withContext(ctx)(openChain));
     } catch (err) {
       await this.#runtime.dispose();
       this.#runtime = undefined;

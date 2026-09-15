@@ -9,9 +9,7 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type ClientServicesHandlers } from '@dxos/client-protocol';
 import { type Config, ConfigService } from '@dxos/config';
-import { type Context } from '@dxos/context';
-import { EffectEx, Event } from '@dxos/effect';
-import { log } from '@dxos/log';
+import { Event } from '@dxos/effect';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
 import {
@@ -33,7 +31,7 @@ import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { ClientPlatformLayer, type TransportFactoryService } from './client-platform.ts';
 import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
-import { NetworkingEnabled, Opening, StackOpened } from './events.ts';
+import { NetworkingEnabled } from './events.ts';
 import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
 
 /**
@@ -85,8 +83,8 @@ export const runtimePropsFromConfig = (
 /**
  * The whole client services runtime as one layer: RPC handlers over the component stack over the
  * platform inputs, config, and the event bus, persisting through the SQL services provided beneath
- * it. Build it with `ManagedRuntime` and run {@link openStack} to boot; disposing the runtime tears
- * everything down in reverse.
+ * it. Build it with `ManagedRuntime`, then emit `Opening` and `StackOpened` to boot; disposing the
+ * runtime tears everything down in reverse.
  */
 export const ClientServicesLayer = ({
   config,
@@ -110,21 +108,6 @@ export const ClientServicesLayer = ({
     Layer.provideMerge(Event.busLayer),
     Layer.orDie,
   );
-
-/**
- * Starts the open event chain; each emit returns once every handler it triggered (transitively)
- * has completed, so `StackOpened` fires after storage, identity, network, and spaces are up. Under
- * `ctx` the handlers nest under its trace and stop when it disposes.
- */
-// TODO(dmaretskyi): inline in consumers
-export const openStack = (ctx?: Context): Effect.Effect<void, never, Event.Bus> => {
-  const open = Effect.gen(function* () {
-    yield* Event.emit(Opening, undefined);
-    yield* Event.emit(StackOpened, undefined);
-    log('stack opened');
-  });
-  return ctx ? EffectEx.withContext(ctx)(open) : open;
-};
 
 /**
  * Allows outbound network activity to begin; for embedders that build the stack with

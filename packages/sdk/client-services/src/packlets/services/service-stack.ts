@@ -12,6 +12,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import { type ConfigService } from '@dxos/config';
 import { failUndefined } from '@dxos/debug';
 import {
+  type AutomergeReplicator,
   EchoEdgeSubductionReplicatorLayer,
   EchoHostLayer,
   EchoHostService,
@@ -104,8 +105,8 @@ export type ServiceStackServices = ServiceContextRuntimeProps & {
 };
 
 /**
- * Component tags the composed stack exposes so {@link ClientServicesHost} and the client RPC service
- * layers can depend on each component directly.
+ * Component tags the composed stack exposes so embedders and the client RPC service layers can
+ * depend on each component directly.
  */
 export type ServiceContextStackContext =
   | EchoHostService
@@ -130,7 +131,7 @@ export type ServiceContextStackContext =
 /**
  * Effect Layer composing the dormant client-stack components, constructed before identity is ready.
  * Each layer opens its component on the lifecycle event it depends on (see `events.ts`) and closes
- * it in its finalizer; {@link ClientServicesHost} only emits `Opening` and `StackOpened`.
+ * it in its finalizer; the embedder only emits `Opening` and `StackOpened`.
  */
 export const ServiceStack = (
   options: ServiceStackServices,
@@ -150,8 +151,7 @@ export const ServiceStack = (
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
     Layer.provideMerge(identityProviderLayer),
-    Layer.provideMerge(replicatorsLayer),
-    Layer.provideMerge(options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer()),
+    Layer.provideMerge(options.disableP2pReplication ? Layer.empty : meshReplicatorLayer()),
     Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
     Layer.provideMerge(InvitationsManagerLayer()),
     Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
@@ -175,7 +175,8 @@ export const ServiceStack = (
 
   // The edge clients come from the platform layer below and exist only with a configured endpoint.
   // With edge: the feed syncer sits above the core for its `EchoHostService` requirement; the edge
-  // replicator sits below, needing only the edge inputs, which the core reads via `serviceOption`.
+  // replicator sits below, needing only the edge inputs, which the core reads via `serviceOption`,
+  // and registers with the echo host from above the core.
   return Layer.unwrap(
     Effect.gen(function* () {
       const edge = Option.isSome(yield* Effect.serviceOption(EdgeConnectionService));
@@ -186,6 +187,7 @@ export const ServiceStack = (
         peerId: '',
         syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
       }).pipe(
+        Layer.provideMerge(registerReplicator(EdgeAutomergeReplicatorService)),
         Layer.provideMerge(core),
         Layer.provideMerge(
           options.edgeFeatures?.subductionReplicator ? EchoEdgeSubductionReplicatorLayer() : Layer.empty,
@@ -208,29 +210,35 @@ const presentService = <Self, Service>(tag: EffectContext.Key<Self, Service>): E
   Effect.map(Effect.serviceOption(tag), Option.getOrElse(failUndefined));
 
 /**
- * Attaches the configured replicators to the echo host once networking is up. Sits above both
- * replicator layers so it can see whichever of them is wired.
+ * Attaches the replicator behind `tag`, when one is wired beneath, to the echo host once networking
+ * is up. Each replicator registers itself through this; the stack does not enumerate them.
  */
-// TODO(dmaretskyi): Make individual MeshEchoReplicatorService and EdgeAutomergeReplicatorService register themselves so this layer disspears
-const replicatorsLayer = Layer.effectDiscard(
-  Effect.gen(function* () {
-    const echoHost = yield* EchoHostService;
-    const meshReplicator = Option.getOrUndefined(yield* Effect.serviceOption(MeshEchoReplicatorService));
-    const edgeReplicator = Option.getOrUndefined(yield* Effect.serviceOption(EdgeAutomergeReplicatorService));
-    const ctx = yield* EffectEx.contextFromScope();
-    yield* Event.on(
-      NetworkReady,
-      Effect.fn('EchoHost.onNetworkReady')(function* () {
-        if (meshReplicator) {
-          yield* Effect.promise(() => echoHost.addReplicator(ctx, meshReplicator));
-        }
-        if (edgeReplicator) {
-          yield* Effect.promise(() => echoHost.addReplicator(ctx, edgeReplicator));
-        }
+const registerReplicator = <Self>(
+  tag: EffectContext.Key<Self, AutomergeReplicator>,
+): Layer.Layer<never, never, EchoHostService | Event.Bus> =>
+  Layer.unwrap(
+    Effect.map(Effect.serviceOption(tag), (replicator) =>
+      Option.match(replicator, {
+        onNone: () => Layer.empty,
+        onSome: (replicator) =>
+          Layer.effectDiscard(
+            Effect.gen(function* () {
+              const echoHost = yield* EchoHostService;
+              const ctx = yield* EffectEx.contextFromScope();
+              yield* Event.on(
+                NetworkReady,
+                Effect.fn('EchoHost.addReplicator')(function* () {
+                  yield* Effect.promise(() => echoHost.addReplicator(ctx, replicator));
+                }),
+              );
+            }),
+          ),
       }),
-    );
-  }),
-);
+    ),
+  );
+
+const meshReplicatorLayer = (): Layer.Layer<MeshEchoReplicatorService, never, EchoHostService | Event.Bus> =>
+  registerReplicator(MeshEchoReplicatorService).pipe(Layer.provideMerge(MeshEchoReplicatorLayer()));
 
 /**
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
@@ -311,7 +319,7 @@ const storageLayer = Layer.empty.pipe(
  *
  * The host is self-contained (runs its own migrations, owns its feed/automerge stores), so its
  * open/close is owned by the layer scope: it opens when the stack is built and closes when the
- * runtime is disposed. Identity-, network-, and storage-bound lifecycle stays in `ClientServicesHost`.
+ * runtime is disposed. Identity-, network-, and storage-bound lifecycle is driven by the events.
  */
 const echoHostLayer = (options: { useSubduction?: boolean }) =>
   Layer.effectDiscard(
