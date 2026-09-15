@@ -5,6 +5,7 @@
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -20,6 +21,16 @@ export const translations = [
         'rename-object.label': 'Rename project',
         'delete-object.label': 'Delete project',
         'object-deleted.label': 'Project deleted',
+      },
+      [Type.getTypename(Repo.Repo)]: {
+        'typename.label': 'Repository',
+        'typename.label_zero': 'Repositories',
+        'typename.label_one': 'Repository',
+        'typename.label_other': 'Repositories',
+        'object-name.placeholder': 'owner/name',
+        'rename-object.label': 'Rename repository',
+        'delete-object.label': 'Delete repository',
+        'object-deleted.label': 'Repository deleted',
       },
       [meta.profile.key]: {
         'plugin.name': 'Projects',
