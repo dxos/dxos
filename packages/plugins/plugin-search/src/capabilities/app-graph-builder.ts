@@ -23,6 +23,7 @@ export default Capability.makeModule(
     // Reactive read: the connector may evaluate before the client module finishes
     // activating; the atom dependency re-evaluates it when the client lands.
     const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+    // TODO(wittjosiah): Factor out initialized atom?
     const initializedClientAtom = Atom.make((get) => {
       const [client] = get(clientAtom);
       if (client && !client.initialized) {
