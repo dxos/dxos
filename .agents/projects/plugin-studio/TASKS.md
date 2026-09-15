@@ -73,9 +73,11 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
       through `objectLinks()` in the feed Block extensions, and parsed `<object>` reference blocks
       through the `<reference>` → `ReferenceWidget` chip; both carry the preview hover card. Test
       against `plugins/plugin-assistant/components/Thread → Default` (its generator emits one link).
-      Open: which form the model wrote that did NOT render — a bare `echo://…` / `@echo://…` outside
-      markdown link syntax is the one shape nothing decorates.
-- [ ] Task list toolbar: add a text filter.
+      Embedded cards (`![label](echo://…)`) now render too: `objectImage` threads from
+      `ChatThread.Root` to the block's `objectLinks({ image })`, plugin-assistant supplies
+      `ObjectCardWidget` (header + `CardContent` surface). Open: a bare `echo://…` / `@echo://…`
+      outside markdown link syntax is the one shape nothing decorates.
+- [x] Task list toolbar: text filter (title/description, keeps a match's ancestors) on the standalone `TaskSetArticle`.
 
 ### Observed 2026-09-14 (Composer, studio session)
 
