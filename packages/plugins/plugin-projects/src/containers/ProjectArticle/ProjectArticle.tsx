@@ -308,7 +308,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Splitter.Panel>
               <Splitter.Handle />
               <Splitter.Panel position='end'>
-                {space && (
+                {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
+                    trace feed on every trace message, which is pure cost behind a collapsed panel. */}
+                {showPipeline && space && (
                   <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
                 )}
               </Splitter.Panel>
