@@ -17,7 +17,7 @@ import { type Space } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage, GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 
-import { type ServiceContext } from '../services/index.ts';
+import { type ServiceContext } from '../testing/index.ts';
 import { createServiceContext } from '../testing/index.ts';
 import { SpacesServiceImpl } from './spaces-service.ts';
 

@@ -18365,6 +18365,13 @@ importers:
       fast-deep-equal:
         specifier: 'catalog:'
         version: 3.1.3
+    devDependencies:
+      '@dxos/feed-store':
+        specifier: workspace:*
+        version: link:../../common/feed-store
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
 
   packages/sdk/client-protocol:
     dependencies:
@@ -18491,9 +18498,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/lock-file':
-        specifier: workspace:*
-        version: link:../../common/lock-file
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -18533,9 +18537,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@dxos/websocket-rpc':
-        specifier: workspace:*
-        version: link:../../core/mesh/websocket-rpc
       '@obsidize/tar-browserify':
         specifier: 'catalog:'
         version: 5.2.0
