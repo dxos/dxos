@@ -186,7 +186,7 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
   }
   return new SchemaAST.Union(
     defined.map(stripUndefinedMember),
-    ast.mode,
+    ast.options,
     ast.annotations,
     ast.checks,
     ast.encoding,

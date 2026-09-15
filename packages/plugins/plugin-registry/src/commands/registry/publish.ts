@@ -53,23 +53,23 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
 export const publish = Command.make(
   'publish',
   {
-    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.string('app-password').pipe(
+    handle: Options.String('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.String('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    dir: Options.string('dir').pipe(
+    dir: Options.String('dir').pipe(
       Options.withDescription('Project directory containing dx.config.ts. Defaults to the current directory.'),
       Options.withDefault('.'),
     ),
-    noBuild: Options.boolean('no-build').pipe(
+    noBuild: Options.Boolean('no-build').pipe(
       Options.withDescription('Skip running the build command (publish a pre-built dist).'),
     ),
-    assetBaseUrl: Options.string('asset-base-url').pipe(
+    assetBaseUrl: Options.String('asset-base-url').pipe(
       Options.withDescription('Skip upload and point the release at an already-hosted bundle directory.'),
       Options.optional,
     ),
-    edgeUrl: Options.string('edge-url').pipe(
+    edgeUrl: Options.String('edge-url').pipe(
       Options.withDescription(
         'Edge base URL for bundle upload (e.g. http://localhost:8787). Bypasses profile config; auth is skipped (requires WORKER_ENV=dev on the server).',
       ),
@@ -147,7 +147,7 @@ export const publish = Command.make(
           // When --edge-url is provided we bypass the profile's edge config and post directly
           // with auth: false — relies on WORKER_ENV=dev skipAuth on the server (local dev only).
           const explicitEdgeUrl = Option.getOrUndefined(options.edgeUrl);
-          const apiKey = Option.getOrUndefined(yield* Config.option(Config.string('DX_HUB_API_KEY')));
+          const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
           if (explicitEdgeUrl) {
             const http = new EdgeHttpClient(explicitEdgeUrl);
             moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });

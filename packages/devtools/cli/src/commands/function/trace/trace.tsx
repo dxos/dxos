@@ -31,7 +31,7 @@ export const trace = Command.make(
   {
     functionId: Common.functionId.pipe(Options.optional),
     spaceId: Common.spaceId.pipe(Options.optional),
-    localTriggers: Options.boolean('local-triggers').pipe(
+    localTriggers: Options.Boolean('local-triggers').pipe(
       Options.withDescription('Enable local trigger runtime to run functions in the background.'),
     ),
   },

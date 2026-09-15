@@ -40,7 +40,7 @@ export const handler = Effect.fn(function* ({
   if (!dataDirValue) {
     if (!force) {
       yield* Console.log(`Will overwrite profile: ${profile}`);
-      const confirmed = yield* Prompt.confirm({
+      const confirmed = yield* Prompt.Confirm({
         message: `Delete all data? (Profile: ${profile})`,
         initial: false,
       }).pipe(Prompt.run);
@@ -90,9 +90,9 @@ export const handler = Effect.fn(function* ({
 export const importCommand = Command.make(
   'import',
   {
-    file: Options.string('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    dataDir: Options.string('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
-    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
+    file: Options.String('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    dataDir: Options.String('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
+    force: Options.Boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
   },
   handler,
 ).pipe(Command.withDescription('Import profile.'));

@@ -300,7 +300,7 @@ describe('mapAst', () => {
       [
         new SchemaAST.Union(
           [Schema.String.ast, Schema.Number.ast],
-          'anyOf',
+          { mode: 'anyOf' },
           undefined,
           undefined,
           undefined,

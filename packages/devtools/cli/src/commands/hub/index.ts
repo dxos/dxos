@@ -13,7 +13,7 @@ import { status } from './status/index.ts';
 import { user } from './user/index.ts';
 
 export const hub = Command.make('hub', {
-  apiKey: Options.string('api-key').pipe(Options.withDescription('API key.'), Options.optional),
+  apiKey: Options.String('api-key').pipe(Options.withDescription('API key.'), Options.optional),
 }).pipe(
   Command.withDescription('Manage Hub.'),
   Command.provide(({ apiKey }) =>

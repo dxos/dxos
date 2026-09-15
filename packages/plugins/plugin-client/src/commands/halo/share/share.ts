@@ -94,12 +94,12 @@ export const handler = Effect.fn(function* ({
 export const share = Command.make(
   'share',
   {
-    lifetime: Options.integer('lifetime').pipe(
+    lifetime: Options.Int('lifetime').pipe(
       Options.withDescription('Lifetime of the invitation in seconds.'),
       Options.withDefault(12 * 60 * 60), // 12 hours - HALO invitations are typically shorter-lived
     ),
-    open: Options.boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.string('host').pipe(
+    open: Options.Boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
+    host: Options.String('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),
