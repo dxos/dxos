@@ -493,3 +493,31 @@ export const FeedStorageDirectoryLayer = (
       return storage.createDirectory(options.sub ?? 'feeds');
     }),
   );
+
+/**
+ * Deletes every row the stack persists, so the next open starts from an empty database.
+ */
+export const wipeSqliteStorage: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient;
+  // Echo metadata + large space data.
+  yield* sql`DELETE FROM space_metadata`;
+  yield* sql`DELETE FROM space_large`;
+  // Keyring.
+  yield* sql`DELETE FROM keyring`;
+  // Automerge chunks + heads.
+  yield* sql`DELETE FROM automerge_chunks`;
+  yield* sql`DELETE FROM automerge_heads`;
+  // Hypercore feed files.
+  yield* sql`DELETE FROM hypercore_files`;
+  // Feed store (queue feeds, blocks, etc.).
+  yield* sql`DELETE FROM feeds`;
+  yield* sql`DELETE FROM blocks`;
+  yield* sql`DELETE FROM subscriptions`;
+  yield* sql`DELETE FROM cursor_tokens`;
+  yield* sql`DELETE FROM sync_state`;
+  // Index tables.
+  yield* sql`DELETE FROM indexCursor`;
+  yield* sql`DELETE FROM objectMeta`;
+  yield* sql`DELETE FROM reverseRef`;
+  yield* sql`DELETE FROM ftsIndex`;
+});

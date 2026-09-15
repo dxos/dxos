@@ -2,14 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { ClientRpcServer } from '@dxos/client-protocol';
-import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { ServiceContext } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -29,7 +27,6 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
@@ -91,18 +88,9 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
-    const runtime = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
-
-    const services = new ClientServicesHost({
-      config: this.config,
-      runtimeProps,
-      runtime: runtime.contextEffect,
-      ...this.networking,
-    });
-
-    this._ctx.onDispose(() => runtime.dispose());
-    this._ctx.onDispose(() => services.close(this._ctx));
+  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ServiceContext {
+    const services = new ServiceContext({ config: this.config, runtimeProps, ...this.networking });
+    this._ctx.onDispose(() => services.destroy());
     return services;
   }
 
@@ -136,7 +124,7 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ClientRpcServer] {
+  createClientServer(host: ServiceContext = this.createClientServicesHost()): [Client, ClientRpcServer] {
     const channel = new MessageChannel();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(channel.port1) });
     const server = new ClientRpcServer({

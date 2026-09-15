@@ -13,7 +13,7 @@ import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
-import { RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -24,6 +24,8 @@ import { createBuf } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
+
+import { StackOpened } from './events.ts';
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 
@@ -573,19 +575,41 @@ export type FeedSyncerLayerOptions = Pick<
  */
 export const FeedSyncerLayer = (
   options: FeedSyncerLayerOptions,
-): Layer.Layer<FeedSyncerService, never, SqlClient.SqlClient | EchoHostService | EdgeConnectionService> =>
+): Layer.Layer<FeedSyncerService, never, Event.Bus | SqlClient.SqlClient | EchoHostService | EdgeConnectionService> =>
   Layer.effect(
     FeedSyncerService,
     Effect.gen(function* () {
       const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       const echoHost = yield* EchoHostService;
       const edgeClient = yield* EdgeConnectionService;
-      return new FeedSyncer({
+      const feedSyncer = new FeedSyncer({
         runtime,
         feedStore: echoHost.feedStore,
         edgeClient,
         getSpaceIds: () => echoHost.spaceIds,
         ...options,
       });
+
+      // The echo host falls back to a no-op sync while these are unset, so only this layer sets them.
+      echoHost.setFeedSyncHandlers({
+        syncFeed: (ctx, request) =>
+          feedSyncer.syncBlocking(ctx, {
+            spaceId: request.spaceId as SpaceId,
+            subspaceTag: request.subspaceTag,
+            shouldPush: request.shouldPush,
+            shouldPull: request.shouldPull,
+          }),
+        getSyncState: (ctx, request) => feedSyncer.getSyncState(ctx, request),
+      });
+
+      const ctx = yield* EffectEx.contextFromScope();
+      yield* Effect.addFinalizer(() => Effect.promise(() => feedSyncer.close()));
+      yield* Event.on(
+        StackOpened,
+        Effect.fn('FeedSyncer.onStackOpened')(function* () {
+          yield* Effect.promise(() => feedSyncer.open(ctx));
+        }),
+      );
+      return feedSyncer;
     }),
   );

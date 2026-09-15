@@ -3,6 +3,8 @@
 //
 
 export * from './authenticator.ts';
+export * from './contacts-service.ts';
 export * from './identity.ts';
+export * from './identity-lifecycle.ts';
 export * from './identity-manager.ts';
 export * from './identity-service.ts';

@@ -2,13 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+
 import { asyncTimeout } from '@dxos/async';
 import { getFirstStreamValue } from '@dxos/async';
-import { type ClientServices } from '@dxos/client-protocol';
+import {
+  type ClientServices,
+  type ClientServicesHandlers,
+  makeInProcessClientServicesRpc,
+  makeServicesFromRpc,
+} from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialsOfType } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { buf, fromPublicKey, fromTimeframe, toDate, toPublicKey } from '@dxos/protocols/buf';
 import {
@@ -32,8 +43,9 @@ import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 
 import { DXOS_VERSION } from '../../version.ts';
-import { type ServiceContext } from '../services/index.ts';
+import { IdentityManagerService } from '../identity/index.ts';
 import { getPlatform } from '../services/platform.ts';
+import { DataSpaceManagerService } from '../spaces/index.ts';
 import { type DataSpace } from '../spaces/index.ts';
 
 const DEFAULT_TIMEOUT = 1_000;
@@ -81,11 +93,31 @@ export type SpaceStats = {
 };
 
 /**
+ * {@link createDiagnostics} over the effect-rpc handlers an embedder serves, bridged in-process for
+ * the duration of the collection.
+ */
+export const createDiagnosticsFromHandlers = (
+  handlers: () => Partial<ClientServicesHandlers>,
+  stack: EffectContext.Context<IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService>,
+  config: Config,
+): Promise<Diagnostics['services']> =>
+  EffectEx.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const rpc = yield* makeInProcessClientServicesRpc(handlers);
+        return yield* Effect.promise(() =>
+          createDiagnostics(makeServicesFromRpc(rpc, EffectContext.empty()), stack, config),
+        );
+      }),
+    ),
+  );
+
+/**
  * Create diagnostics to provide snapshot of current system state.
  */
 export const createDiagnostics = async (
   clientServices: Partial<ClientServices>,
-  serviceContext: ServiceContext,
+  stack: EffectContext.Context<IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService>,
   config: Config,
 ): Promise<Diagnostics['services']> => {
   const diagnostics: Diagnostics['services'] = {
@@ -111,8 +143,8 @@ export const createDiagnostics = async (
     (async () => {
       diagnostics.storage = await asyncTimeout(getStorageDiagnostics(), DEFAULT_TIMEOUT).catch(() => undefined);
     })(),
-    async () => {
-      const identity = serviceContext.identityManager.identity;
+    (async () => {
+      const identity = EffectContext.get(stack, IdentityManagerService).identity;
       if (identity) {
         // Identity.
         diagnostics.identity = buf.create(IdentitySchema, {
@@ -132,11 +164,10 @@ export const createDiagnostics = async (
         // TODO(dmaretskyi): Add metrics for halo space.
 
         // Spaces.
-        if (serviceContext.dataSpaceManager) {
-          diagnostics.spaces = await Promise.all(
-            Array.from(serviceContext.dataSpaceManager.spaces.values()).map((space) => getSpaceStats(space)) ?? [],
-          );
-        }
+        const dataSpaceManager = EffectContext.get(stack, DataSpaceManagerService);
+        diagnostics.spaces = await Promise.all(
+          Array.from(dataSpaceManager.spaces.values()).map((space) => getSpaceStats(space)),
+        );
 
         // Feeds.
         const { feeds = [] } =
@@ -154,9 +185,11 @@ export const createDiagnostics = async (
 
         // Networking.
 
-        diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
+        diagnostics.swarms = EffectContext.get(stack, SwarmNetworkManagerService).connectionLog?.swarms;
       }
-    },
+      // Diagnostics are best-effort: a half-open space or a tag the stack has not built yet must
+      // leave the other sections intact rather than failing the whole report.
+    })().catch((err) => log.warn('failed to collect identity diagnostics', { err })),
   ]);
 
   diagnostics.config = config.values;
