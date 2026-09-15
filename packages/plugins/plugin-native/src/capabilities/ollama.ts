@@ -58,7 +58,12 @@ export default Capability.makeModule(
       Effect.sync(() => registry.set(stateAtom, f(registry.get(stateAtom))));
 
     // Connection-level failure (reaching the service); shown at the section, not tied to a model.
-    const fail = (error: string): Effect.Effect<void> => updateState((state) => ({ ...state, kind: 'failed', error }));
+    // Logged as well as rendered, so a bug report's log bundle carries it.
+    const fail = (error: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        yield* Effect.sync(() => log.warn('ollama unreachable', { error }));
+        yield* updateState((state) => ({ ...state, kind: 'failed', error }));
+      });
 
     // Per-model action error (load/unload/remove/pull); shown inline on that model's row. Pass
     // `undefined` to clear.
@@ -287,8 +292,10 @@ const OllamaSidecarLive = Layer.effect(
   Effect.gen(function* () {
     // The `ollama` launcher discovers `llama-server` + its libraries relative to its own
     // executable (`<exe>/lib/ollama/`), ignoring OLLAMA_LIBRARY_PATH, so the runtime ships into
-    // `Contents/MacOS/lib/ollama` next to the signed sidecar (see tauri.conf bundle.macOS.files).
-    const command = Command.sidecar('sidecar/ollama', ['serve'], {
+    // `Contents/Resources/lib/ollama` beside it (see tauri.conf bundle.macOS.files). It is a
+    // bundled file rather than a Tauri sidecar because Tauri signs `externalBin` with the app's
+    // entitlements, and AMFI kills a bare binary that claims restricted ones with no profile.
+    const command = Command.create('ollama', ['serve'], {
       env: {
         OLLAMA_HOST,
         OLLAMA_ORIGINS: '*', // CORS
@@ -300,11 +307,21 @@ const OllamaSidecarLive = Layer.effect(
     // console with red errors. Kept on `console.*` for Ollama's own line formatting.
     command.stdout.on('data', (data) => logSidecar(data.toString()));
     command.stderr.on('data', (data) => logSidecar(data.toString()));
-    command.on('close', (code) => log.info('Ollama process exited', { code }));
+    // Set before the finalizer's kill, so a warning below means the process died on its own — the
+    // only other trace of that is the connection error the settings panel shows nine seconds later.
+    let stopping = false;
+    command.on('close', ({ code, signal }) => {
+      if (stopping || code === 0) {
+        log.info('Ollama process exited', { code, signal });
+      } else {
+        log.warn('Ollama process exited', { code, signal });
+      }
+    });
     command.on('error', (error) => log.error('Ollama error', { error }));
     const child = yield* Effect.promise(() => command.spawn());
     yield* Effect.addFinalizer(
       Effect.fn(function* () {
+        stopping = true;
         yield* Effect.promise(() => child.kill());
       }),
     );

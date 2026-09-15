@@ -265,11 +265,13 @@ jobs:
       - name: Fetch Ollama runtime
         run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs --packaged)
 
-      # Ollama's sibling libraries live under Contents/MacOS/ via `bundle.macOS.files`, which Tauri
-      # never signs (its nested-code walk only covers framework/xpc/app subfolders), so pre-sign
-      # them here. Skips mlx.metallib — not Mach-O, so it can't survive Tauri's `xattr -crs`; that's
-      # handled separately via sidecar/ollama-metal.framework (see fetch-ollama.mjs).
-      - name: Sign Ollama runtime libraries
+      # The ollama launcher and its sibling libraries ship under Contents/Resources/ via
+      # `bundle.macOS.files`, which Tauri never signs (its nested-code walk only covers
+      # framework/xpc/app subfolders), so sign them here — deliberately without the app's
+      # entitlements, which a bare binary cannot claim without a provisioning profile. Skips
+      # mlx.metallib — not Mach-O, so it can't survive Tauri's `xattr -crs`; that's handled
+      # separately via sidecar/ollama-metal.framework (see fetch-ollama.mjs).
+      - name: Sign Ollama runtime
         if: matrix.os == 'depot-macos-latest'
         run: |
           find packages/apps/composer-app/src-tauri/sidecar/ollama-runtime -type f -print0 |
@@ -300,6 +302,21 @@ jobs:
           NODE_ENV: production
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      # AMFI kills a bare binary that claims restricted entitlements (application-identifier,
+      # associated-domains) without a provisioning profile, which is what shipping ollama as an
+      # `externalBin` did: Tauri signs every sidecar with the app's entitlements. Assert the shipped
+      # launcher claims none, so that regression fails the release rather than the user's first chat.
+      - name: Verify Ollama launcher signature
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
+          launcher="$app/Contents/Resources/ollama"
+          codesign --verify --strict "$launcher"
+          entitlements=$(codesign -d --entitlements - --xml "$launcher" 2>/dev/null)
+          if [ -n "$entitlements" ]; then
+            echo "::error::ollama launcher is signed with entitlements: $entitlements" && exit 1
+          fi
 
       - name: Upload assets
         timeout-minutes: 30
