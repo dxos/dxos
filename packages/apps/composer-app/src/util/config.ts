@@ -81,15 +81,6 @@ const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefi
     ? (getEnvString(config, 'DX_FEEDBACK_LOGS_ENDPOINT') ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
     : undefined;
 
-/**
- * Where OTEL exports go. A native build's own origin answers `/api/otel` with index.html, so a relative
- * endpoint must name the deployment; elsewhere the configured value stands.
- */
-const otelEndpoint = (config: Config, isTauri: boolean): string | undefined => {
-  const endpoint = getEnvString(config, 'DX_OTEL_ENDPOINT');
-  return isTauri && endpoint?.startsWith('/') ? `https://${APP_DOMAIN}${endpoint}` : undefined;
-};
-
 const composerBuildVersion = (config: Config): string | undefined => config.get('runtime.app.build.version');
 
 /** Initialize observability extensions and data providers for Composer. */
@@ -109,7 +100,6 @@ export const initializeObservability = async (
         serviceVersion: DXOS_VERSION,
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         config,
-        endpoint: otelEndpoint(config, isTauri),
         logs: true,
         observabilityWorker,
         additionalDestinations: [ObservabilityExtension.PostHog.otelDestination(config)].filter(isNonNullable),
