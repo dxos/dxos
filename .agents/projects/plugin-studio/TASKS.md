@@ -69,8 +69,12 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 
 - [ ] Task list (plugin-tasks): constrain the height of the inline task editor, and enable
       `dx-preview` object links in it, as the description's markdown view already does.
-- [ ] Chat session: render inline ECHO object links (find or add the storybook story that exercises
-      links in a chat thread to test against).
+- [x] Chat session: inline ECHO object links — already rendered: `[label](echo://…)` in a text block
+      through `objectLinks()` in the feed Block extensions, and parsed `<object>` reference blocks
+      through the `<reference>` → `ReferenceWidget` chip; both carry the preview hover card. Test
+      against `plugins/plugin-assistant/components/Thread → Default` (its generator emits one link).
+      Open: which form the model wrote that did NOT render — a bare `echo://…` / `@echo://…` outside
+      markdown link syntax is the one shape nothing decorates.
 - [ ] Task list toolbar: add a text filter.
 
 ### Observed 2026-09-14 (Composer, studio session)
