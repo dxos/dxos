@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
@@ -21,8 +21,6 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
     /** Whether this device uses its own plugin set rather than the account's; `undefined` hides the section. */
     pluginScopeLocal?: boolean;
     onPluginScopeLocalChange?: (local: boolean) => void;
-    /** Controls for the panel's heading row. */
-    scope?: ReactNode;
   }
 >;
 

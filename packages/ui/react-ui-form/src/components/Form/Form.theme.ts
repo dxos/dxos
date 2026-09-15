@@ -26,7 +26,7 @@ const formStyles = tv({
     // Padding under whichever of legend or description comes last.
     fieldSetHeader: '',
     // Out of flow, so a description below the label does not push the actions down.
-    fieldSetActions: 'absolute inset-block-start-0 inset-inline-end-0 flex items-center',
+    fieldSetActions: 'absolute top-0 end-0 flex items-center',
     // The folding body of a collapsible field set.
     fieldSetBody: 'flex flex-col',
     field: '',
@@ -102,7 +102,7 @@ const formStyles = tv({
         // The gap spaces the section's direct children: its header and every field or group in it.
         fieldSet: 'py-form-section-gap! gap-trim-md',
         fieldSetHeader: 'pb-form-section-gap',
-        fieldSetActions: 'inset-block-start-form-section-gap px-trim-md',
+        fieldSetActions: 'top-form-section-gap px-trim-md',
         fieldSetTitle: 'px-trim-md text-xl',
         fieldSetDescription: 'px-trim-md',
         fieldSetBody: 'gap-trim-md',

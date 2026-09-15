@@ -3,6 +3,7 @@
 //
 
 import type * as Schema from 'effect/Schema';
+import { type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
@@ -338,6 +339,8 @@ export type SettingsData<Props extends {} = {}> = {
 export type SettingsProps<T extends {}, Props extends {} = {}> = {
   settings: T;
   onSettingsChange?: (cb: (current: T) => T) => void;
+  /** Controls for the panel's heading row, such as the settings-scope toggle. */
+  scope?: ReactNode;
 } & Props;
 
 export const settings: {
