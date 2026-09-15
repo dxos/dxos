@@ -5,7 +5,6 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
@@ -18,12 +17,12 @@ import {
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { type Config, ConfigService } from '@dxos/config';
+import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { Event as EffectEvent, EffectEx, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -31,19 +30,6 @@ import { log } from '@dxos/log';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService, type TransportFactory } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
-import {
-  ContactsService,
-  DataService,
-  DevicesService,
-  EdgeAgentService,
-  FeedService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
-  QueryService,
-  SpacesService,
-} from '@dxos/protocols/rpc';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
@@ -78,24 +64,17 @@ import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 import { SystemServiceImpl } from '../system/index.ts';
-import { ClientPlatformLayer, type ClientPlatformLayerOptions, TransportFactoryService } from './client-platform.ts';
-import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
-import { NetworkingEnabled, Opening, StackOpened } from './events.ts';
-import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
+import { type ClientPlatformLayerOptions } from './client-platform.ts';
+import {
+  ClientServicesLayer,
+  type ClientServicesStackContext,
+  enableNetworking,
+  handlersFromStack,
+  openStack,
+} from './client-services-stack.ts';
+import { type ServiceContextRuntimeProps } from './service-stack.ts';
 import { wipeSqliteStorage } from './sqlite-storage.ts';
 import { type StackReadiness, StackReadinessService } from './stack-readiness.ts';
-
-/**
- * Everything the host's stack runtime provides: the event bus, the component layers, and the RPC
- * handler layers.
- */
-export type ClientServicesStackContext =
-  | EffectEvent.Bus
-  | ConfigService
-  | ClientServicesRpcContext
-  | ServiceContextStackContext
-  | SignalManagerService
-  | TransportFactoryService;
 
 export type ClientServicesHostProps = {
   /**
@@ -217,7 +196,7 @@ export class ClientServicesHost {
             makeInProcessClientServicesRpc(() => this.#handlers).pipe(Effect.provideService(Scope.Scope, scope)),
           );
           const services = makeServicesFromRpc(rpc, EffectContext.empty());
-          return await createDiagnostics(services, this, this.#config!);
+          return await createDiagnostics(services, this.stack, this.#config!);
         } finally {
           await EffectEx.runPromise(Scope.close(scope, Exit.void));
         }
@@ -344,16 +323,6 @@ export class ClientServicesHost {
     log('initializing...');
 
     if (config) {
-      if (this.#runtimeProps.disableP2pReplication === undefined) {
-        this.#runtimeProps.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
-      }
-      if (this.#runtimeProps.enableVectorIndexing === undefined) {
-        this.#runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
-      }
-      if (this.#runtimeProps.automergeCredentials === undefined) {
-        this.#runtimeProps.automergeCredentials = config?.get('runtime.client.automergeCredentials', false);
-      }
-
       invariant(!this.#config, 'config already set');
       this.#config = config;
     }
@@ -382,22 +351,14 @@ export class ClientServicesHost {
     this.#ctx = ctx;
     log('opening...');
 
-    // Build a single runtime from the component layer stack plus the client RPC handlers.
-    const stackLayer = ClientServicesRpcLayer.pipe(
-      Layer.provideMerge(
-        ServiceStack({
-          ...this.#runtimeProps,
-          edgeFeatures: config.get('runtime.client.edgeFeatures'),
-          connectionLog: this.#connectionLog,
-          autoConnect: this.#autoConnect,
-        }),
-      ),
-      Layer.provideMerge(ClientPlatformLayer(this.#platformOptions)),
-      Layer.provideMerge(Layer.succeed(ConfigService, config)),
-      Layer.provideMerge(EffectEvent.busLayer),
-      Layer.provideMerge(RuntimeProvider.toLayer(this.#runtime)),
-      Layer.orDie,
-    );
+    const stackLayer = ClientServicesLayer({
+      config,
+      runtime: this.#runtime,
+      runtimeProps: this.#runtimeProps,
+      ...this.#platformOptions,
+      connectionLog: this.#connectionLog,
+      autoConnect: this.#autoConnect,
+    });
     try {
       this.#stackRuntime = ManagedRuntime.make(stackLayer);
       this.#stackContext = await this.#stackRuntime.context();
@@ -420,18 +381,6 @@ export class ClientServicesHost {
           networkManager: SwarmNetworkManagerService,
           signalManager: SignalManagerService,
           edgeConnection: Effect.serviceOption(EdgeConnectionService),
-          // Handlers.
-          identityService: IdentityService.Tag,
-          contactsService: ContactsService.Tag,
-          invitationsService: InvitationsService.Tag,
-          devicesService: DevicesService.Tag,
-          spacesService: SpacesService.Tag,
-          networkService: NetworkService.Tag,
-          edgeAgentService: EdgeAgentService.Tag,
-          dataService: DataService.Tag,
-          queryService: QueryService.Tag,
-          feedService: FeedService.Tag,
-          loggingService: LoggingService.Tag,
           devtoolsHost: DevtoolsHostService,
         }),
       );
@@ -454,23 +403,9 @@ export class ClientServicesHost {
       this.#signalManager = resolved.signalManager;
       this.#edgeConnection = Option.getOrUndefined(resolved.edgeConnection);
 
-      this.#handlers = {
-        SystemService: this.#systemService,
-        IdentityService: resolved.identityService,
-        ContactsService: resolved.contactsService,
-        InvitationsService: resolved.invitationsService,
-        DevicesService: resolved.devicesService,
-        SpacesService: resolved.spacesService,
-        DataService: resolved.dataService,
-        QueryService: resolved.queryService,
-        FeedService: resolved.feedService,
-        NetworkService: resolved.networkService,
-        LoggingService: resolved.loggingService,
-        DevtoolsHost: resolved.devtoolsHost,
-        EdgeAgentService: resolved.edgeAgentService,
-      };
+      this.#handlers = { SystemService: this.#systemService, ...handlersFromStack(this.#stackContext) };
 
-      await this._openStack(ctx);
+      await this.#stackRuntime.runPromise(openStack(ctx));
     } catch (err) {
       // One rollback boundary for building the runtime and running the open chain. Only the runtime
       // is released: the stores below it are not closed, since the metadata store persists on close
@@ -508,7 +443,7 @@ export class ClientServicesHost {
       log.warn('startNetworking called before the stack is open; ignoring');
       return;
     }
-    void this.#emit(NetworkingEnabled, undefined);
+    void this.#stackRuntime.runPromise(enableNetworking);
   }
 
   @synchronized
@@ -542,16 +477,6 @@ export class ClientServicesHost {
 
   async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
     return (this.#identityLifecycle ?? failUndefined()).createIdentity(params, ctx ?? this.#ctx);
-  }
-
-  /**
-   * Starts the open event chain; each emit returns once every handler it triggered (transitively)
-   * has completed, so `StackOpened` fires after storage, identity, network, and spaces are up.
-   */
-  private async _openStack(ctx: Context): Promise<void> {
-    await this.#emit(Opening, undefined, ctx);
-    await this.#emit(StackOpened, undefined, ctx);
-    log('stack opened');
   }
 
   /**
@@ -591,14 +516,5 @@ export class ClientServicesHost {
     this.#networkManager = undefined;
     this.#signalManager = undefined;
     this.#edgeConnection = undefined;
-  }
-
-  /**
-   * Emits on the stack bus; under `ctx` the handlers nest under its trace and stop when it disposes.
-   */
-  #emit<E extends EffectEvent.Any>(event: E, payload: EffectEvent.Payload<E>, ctx?: Context): Promise<void> {
-    invariant(this.#stackRuntime, 'stack runtime not built');
-    const emit = EffectEvent.emit(event, payload);
-    return this.#stackRuntime.runPromise(ctx ? EffectEx.withContext(ctx)(emit) : emit);
   }
 }
