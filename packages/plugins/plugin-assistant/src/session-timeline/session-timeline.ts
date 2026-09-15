@@ -477,6 +477,28 @@ export const buildSessionTimeline = ({
     }
   }
 
+  // A session working exactly one task is that task: the two lanes would carry the same label,
+  // so the task lane folds into the session's (which keeps its run span and totals, and takes the
+  // task's id and status so it still reads as the work). Only a lone in-session task, with nothing
+  // depending on it and no spawned child, folds — a checklist of several stays a tree.
+  for (const session of lanes.filter((lane) => lane.kind === 'session' && lane.parentId === undefined)) {
+    const children = lanes.filter((lane) => lane.parentId === session.id);
+    const [task] = children;
+    if (children.length !== 1 || task.kind !== 'task' || lanes.some((lane) => lane.blockedOn?.includes(task.id))) {
+      continue;
+    }
+    lanes.splice(lanes.indexOf(task), 1);
+    session.taskId = task.taskId;
+    if (task.status === 'blocked' || task.status === 'review' || task.status === 'pending') {
+      session.status = task.status;
+    }
+    markers.forEach((marker, index) => {
+      if (marker.laneId === task.id) {
+        markers[index] = { ...marker, laneId: session.id };
+      }
+    });
+  }
+
   const times = [
     ...lanes.flatMap((lane) => [lane.start, lane.end]).filter((time): time is number => time !== undefined),
     ...markers.map((marker) => marker.timestamp),
