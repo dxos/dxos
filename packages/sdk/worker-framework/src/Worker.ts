@@ -30,7 +30,7 @@ const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePo
   );
 
 export type RuntimeHandle = {
-  stop?(): Promise<void>;
+  stop?(): Effect.Effect<void>;
   createSession(args: {
     clientId: string;
     isOwner: boolean;
@@ -124,10 +124,8 @@ export const run = ({
       shuttingDown = true;
       log('worker shutting down');
       channel.close();
-      try {
-        await runtime?.stop?.();
-      } catch (err: any) {
-        log.catch(err);
+      if (runtime?.stop) {
+        await EffectEx.runPromise(runtime.stop()).catch((err) => log.catch(err));
       }
       endpoint.close?.();
       releaseLivenessLock();

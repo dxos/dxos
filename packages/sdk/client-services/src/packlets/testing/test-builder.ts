@@ -12,7 +12,7 @@ import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { type Trigger } from '@dxos/async';
-import { type ClientServicesHandlers } from '@dxos/client-protocol';
+import { type ClientServicesHandlers, makeInProcessClientServicesRpc } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
@@ -36,7 +36,6 @@ import {
 } from '@dxos/network-manager';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType } from '@dxos/random-access-storage';
@@ -44,7 +43,6 @@ import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
-import { createDiagnosticsFromHandlers } from '../diagnostics/index.ts';
 import {
   type EdgeIdentityRecoveryManager,
   EdgeIdentityRecoveryManagerService,
@@ -81,7 +79,6 @@ import {
   DataSpaceManagerService,
   type SigningContext,
 } from '../spaces/index.ts';
-import { SystemServiceImpl } from '../system/index.ts';
 
 /** The open event chain; `StackOpened` resolves once every handler the cascade triggered has run. */
 const openChain = Effect.gen(function* () {
@@ -112,7 +109,6 @@ export class ServiceContext {
       .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
       .pipe(Layer.orDie),
   );
-  readonly #systemService: SystemServiceImpl;
   readonly #bus = Event.makeBus();
   /** Holds the reset handlers; closed by `destroy`. */
   readonly #busScope = Effect.runSync(Scope.make());
@@ -123,11 +119,6 @@ export class ServiceContext {
   constructor(options: ServiceContextOptions = {}) {
     this.#options = options;
     this.#config = options.config ?? new Config();
-    this.#systemService = new SystemServiceImpl({
-      config: () => this.#config,
-      getDiagnostics: () => createDiagnosticsFromHandlers(() => this.services, this.stack, this.#config),
-      bus: this.#bus,
-    });
     Effect.runSync(
       Effect.gen({ self: this }, function* () {
         yield* Event.on(Closing, () => Effect.promise(() => this.#closeStack()));
@@ -146,7 +137,7 @@ export class ServiceContext {
 
   /** The RPC handlers served while open; only the system service while closed. */
   get services(): Partial<ClientServicesHandlers> {
-    return { SystemService: this.#systemService, ...(this.#stack ? handlersFromStack(this.#stack) : {}) };
+    return this.#stack ? handlersFromStack(this.#stack) : {};
   }
 
   get stack(): EffectContext.Context<ClientServicesStackContext> {
@@ -235,15 +226,22 @@ export class ServiceContext {
       this.#stack = undefined;
       throw err;
     }
-    this.#systemService.setStatus(SystemStatus.ACTIVE);
   }
 
   async close(_ctx?: Context): Promise<void> {
     await this.#closeStack();
   }
 
+  /** Resets through the in-process RPC bridge, as a client does. */
   async reset(): Promise<void> {
-    await EffectEx.runPromise(this.#systemService.reset());
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen({ self: this }, function* () {
+          const rpc = yield* makeInProcessClientServicesRpc(() => this.services);
+          yield* rpc['SystemService.reset']();
+        }),
+      ),
+    );
   }
 
   /** Disposes the SQLite runtime too; call once the context is no longer needed. */
@@ -261,7 +259,6 @@ export class ServiceContext {
     await this.#runtime.dispose();
     this.#runtime = undefined;
     this.#stack = undefined;
-    this.#systemService.setStatus(SystemStatus.INACTIVE);
   }
 
   async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {

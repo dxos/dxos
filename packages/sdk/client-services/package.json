@@ -12,17 +12,6 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
-  "imports": {
-    "#diagnostics-broadcast": {
-      "source": {
-        "browser": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
-        "default": "./src/packlets/diagnostics/diagnostics-broadcast.ts"
-      },
-      "types": "./dist/types/src/packlets/diagnostics/diagnostics-broadcast.d.ts",
-      "browser": "./dist/lib/packlets/diagnostics/browser-diagnostics-broadcast.mjs",
-      "default": "./dist/lib/packlets/diagnostics/diagnostics-broadcast.mjs"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",

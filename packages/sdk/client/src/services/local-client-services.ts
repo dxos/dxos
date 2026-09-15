@@ -22,9 +22,7 @@ import {
 import {
   type ClientServicesLayerOptions,
   type ClientServicesStackContext,
-  type CollectDiagnosticsBroadcastHandler,
   type ServiceContextRuntimeProps,
-  type SystemServiceImpl,
 } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -33,7 +31,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
-import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -152,6 +149,69 @@ const setupNetworking = async (
 };
 
 /**
+ * The SQLite layer for `runtime.client.storage.sqlite_mode`; a reset wipes storage over a fresh
+ * one, since the stack's is gone by then. The presence of `createOpfsWorker` or
+ * `sqlitePath` does not influence the choice; a missing prerequisite throws instead of falling back.
+ */
+const sqliteLayerFromParams = ({
+  config,
+  createOpfsWorker,
+  sqlitePath,
+}: Pick<LocalClientServicesParams, 'config' | 'createOpfsWorker' | 'sqlitePath'>): Layer.Layer<
+  SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
+  unknown
+> => {
+  const sqliteMode =
+    config?.get('runtime.client.storage.sqliteMode') ?? Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE;
+  log('initiatlizing sqlite', {
+    sqliteMode,
+    createOpfsWorker: !!createOpfsWorker,
+    sqlitePath: sqlitePath,
+  });
+  let sqliteLayer: Layer.Layer<SqlClient.SqlClient, unknown>;
+  switch (sqliteMode) {
+    case Runtime_Client_Storage_SqliteMode.OPFS: {
+      const createWorker = createOpfsWorker;
+      if (!createWorker) {
+        throw new Error(
+          'LocalClientServices: runtime.client.storage.sqlite_mode=OPFS requires a createOpfsWorker option.',
+        );
+      }
+      sqliteLayer = Layer.unwrap(
+        Effect.map(OpfsWorker, (worker) => SqliteClient.layer({ worker: Effect.succeed(worker) })),
+      ).pipe(Layer.provide(opfsWorkerLayer(createWorker)));
+      log('using sqlite opfs worker');
+      break;
+    }
+    case Runtime_Client_Storage_SqliteMode.FILE: {
+      if (!sqlitePath) {
+        throw new Error(
+          'LocalClientServices: runtime.client.storage.sqlite_mode=FILE requires sqlitePath (or runtime.client.storage.data_root with persistent=true).',
+        );
+      }
+      sqliteLayer = layerFile(sqlitePath);
+      log('using sqlite file', { sqlitePath: sqlitePath });
+      break;
+    }
+    case Runtime_Client_Storage_SqliteMode.MEMORY:
+    case Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE:
+    default: {
+      if (sqliteMode === Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE) {
+        log.warn('runtime.client.storage.sqlite_mode not set, using in-memory SQLite');
+      }
+      sqliteLayer = layerMemory;
+      break;
+    }
+  }
+
+  return SqlTransaction.layer.pipe(
+    Layer.provideMerge(sqlExportLayer),
+    Layer.provideMerge(sqliteLayer),
+    Layer.provideMerge(Reactivity.layer),
+  );
+};
+
+/**
  * Runs the client services in-process: the stack from {@link ClientServicesLayer} over a SQLite
  * layer chosen by config, served to the client without a wire hop.
  */
@@ -164,8 +224,6 @@ export class LocalClientServices implements ClientServicesProvider {
   private _busScope?: Scope.Closeable;
   private _runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
   private _stack?: EffectContext.Context<ClientServicesStackContext>;
-  private _systemService?: SystemServiceImpl;
-  private _diagnosticsBroadcast?: CollectDiagnosticsBroadcastHandler;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -217,15 +275,8 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    const {
-      ClientServicesLayer,
-      HostEvents,
-      SystemServiceImpl,
-      createCollectDiagnosticsBroadcastHandler,
-      createDiagnostics,
-      handlersFromStack,
-      wipeSqliteStorage,
-    } = await import('@dxos/client-services');
+    const { ClientServicesLayer, HostEvents, handlersFromStack, wipeSqliteStorage } =
+      await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
     const config = this._params.config ?? new Config();
@@ -238,7 +289,7 @@ export class LocalClientServices implements ClientServicesProvider {
         transportFactory: this._params.transportFactory,
         connectionLog: this._params.connectionLog,
         autoConnect: this._params.autoConnect,
-      }).pipe(Layer.provideMerge(this._sqliteLayer()), Layer.orDie),
+      }).pipe(Layer.provideMerge(sqliteLayerFromParams(this._params)), Layer.orDie),
     );
     this._runtime = runtime;
     this._stack = await runtime.context();
@@ -252,19 +303,13 @@ export class LocalClientServices implements ClientServicesProvider {
       ),
     );
 
-    const systemService = new SystemServiceImpl({
-      config: () => config,
-      getDiagnostics: async () => createDiagnostics(this.services, this.stack, config),
-      bus: this._bus,
-    });
-    this._systemService = systemService;
     // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
     this._busScope = Effect.runSync(Scope.make());
     Effect.runSync(
       Effect.gen({ self: this }, function* () {
         yield* EffectEvent.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
         yield* EffectEvent.on(HostEvents.WipingStorage, () =>
-          wipeSqliteStorage.pipe(Effect.provide(this._sqliteLayer()), Effect.orDie),
+          wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
         );
         yield* EffectEvent.on(HostEvents.Reset, () =>
           Effect.promise(async () => {
@@ -274,10 +319,7 @@ export class LocalClientServices implements ClientServicesProvider {
         );
       }).pipe(Effect.provideService(EffectEvent.Bus, this._bus), Scope.provide(this._busScope)),
     );
-    const handlers = { SystemService: systemService, ...handlersFromStack(this._stack) };
-    this._diagnosticsBroadcast = createCollectDiagnosticsBroadcastHandler(systemService);
-    this._diagnosticsBroadcast.start();
-    systemService.setStatus(SystemStatus.ACTIVE);
+    const handlers = handlersFromStack(this._stack);
     this._isOpen = true;
 
     // Bridge the in-process Handlers to the effect-rpc client surface (no wire hop), then derive
@@ -322,73 +364,9 @@ export class LocalClientServices implements ClientServicesProvider {
    * Disposes the stack runtime, and with it the SQLite layer and its worker. Idempotent.
    */
   private async _closeStack(): Promise<void> {
-    this._diagnosticsBroadcast?.stop();
-    this._diagnosticsBroadcast = undefined;
     const runtime = this._runtime;
     this._runtime = undefined;
     this._stack = undefined;
     await runtime?.dispose();
-    this._systemService?.setStatus(SystemStatus.INACTIVE);
-  }
-
-  /**
-   * The SQLite layer for `runtime.client.storage.sqlite_mode`; a reset wipes storage over a fresh
-   * one, since the stack's is gone by then. The presence of `createOpfsWorker` or
-   * `sqlitePath` does not influence the choice; a missing prerequisite throws instead of falling back.
-   */
-  // TODO(dmaretskyi): Export the sqlite part of this into module-level layer def
-  private _sqliteLayer(): Layer.Layer<
-    SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
-    unknown
-  > {
-    const sqliteMode =
-      this._params.config?.get('runtime.client.storage.sqliteMode') ??
-      Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE;
-    log('initiatlizing sqlite', {
-      sqliteMode,
-      createOpfsWorker: !!this._params.createOpfsWorker,
-      sqlitePath: this._params.sqlitePath,
-    });
-    let sqliteLayer: Layer.Layer<SqlClient.SqlClient, unknown>;
-    switch (sqliteMode) {
-      case Runtime_Client_Storage_SqliteMode.OPFS: {
-        const createWorker = this._params.createOpfsWorker;
-        if (!createWorker) {
-          throw new Error(
-            'LocalClientServices: runtime.client.storage.sqlite_mode=OPFS requires a createOpfsWorker option.',
-          );
-        }
-        sqliteLayer = Layer.unwrap(
-          Effect.map(OpfsWorker, (worker) => SqliteClient.layer({ worker: Effect.succeed(worker) })),
-        ).pipe(Layer.provide(opfsWorkerLayer(createWorker)));
-        log('using sqlite opfs worker');
-        break;
-      }
-      case Runtime_Client_Storage_SqliteMode.FILE: {
-        if (!this._params.sqlitePath) {
-          throw new Error(
-            'LocalClientServices: runtime.client.storage.sqlite_mode=FILE requires sqlitePath (or runtime.client.storage.data_root with persistent=true).',
-          );
-        }
-        sqliteLayer = layerFile(this._params.sqlitePath);
-        log('using sqlite file', { sqlitePath: this._params.sqlitePath });
-        break;
-      }
-      case Runtime_Client_Storage_SqliteMode.MEMORY:
-      case Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE:
-      default: {
-        if (sqliteMode === Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE) {
-          log.warn('runtime.client.storage.sqlite_mode not set, using in-memory SQLite');
-        }
-        sqliteLayer = layerMemory;
-        break;
-      }
-    }
-
-    return SqlTransaction.layer.pipe(
-      Layer.provideMerge(sqlExportLayer),
-      Layer.provideMerge(sqliteLayer),
-      Layer.provideMerge(Reactivity.layer),
-    );
   }
 }

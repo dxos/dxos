@@ -2,30 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { type ClientServicesHandlers } from '@dxos/client-protocol';
 import { type Config, ConfigService } from '@dxos/config';
 import { Event } from '@dxos/effect';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
-import {
-  ContactsService,
-  DataService,
-  DevicesService,
-  DevtoolsHost,
-  EdgeAgentService,
-  FeedService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
-  QueryService,
-  SpacesService,
-} from '@dxos/protocols/rpc';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -117,23 +101,3 @@ export const ClientServicesLayer = ({
  * `autoConnect: false`.
  */
 export const enableNetworking: Effect.Effect<void, never, Event.Bus> = Event.emit(NetworkingEnabled, undefined);
-
-/**
- * The RPC handlers a built stack serves, keyed by service name.
- */
-export const handlersFromStack = (
-  stack: EffectContext.Context<ClientServicesRpcContext>,
-): Partial<ClientServicesHandlers> => ({
-  IdentityService: EffectContext.get(stack, IdentityService.Tag),
-  ContactsService: EffectContext.get(stack, ContactsService.Tag),
-  InvitationsService: EffectContext.get(stack, InvitationsService.Tag),
-  DevicesService: EffectContext.get(stack, DevicesService.Tag),
-  SpacesService: EffectContext.get(stack, SpacesService.Tag),
-  DataService: EffectContext.get(stack, DataService.Tag),
-  QueryService: EffectContext.get(stack, QueryService.Tag),
-  FeedService: EffectContext.get(stack, FeedService.Tag),
-  NetworkService: EffectContext.get(stack, NetworkService.Tag),
-  LoggingService: EffectContext.get(stack, LoggingService.Tag),
-  DevtoolsHost: EffectContext.get(stack, DevtoolsHost.Tag),
-  EdgeAgentService: EffectContext.get(stack, EdgeAgentService.Tag),
-});

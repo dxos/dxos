@@ -4,20 +4,25 @@
 
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Event, MulticastObservable } from '@dxos/async';
-import { type Config } from '@dxos/config';
+import { type Config, ConfigService } from '@dxos/config';
 import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
-import { type Diagnostics } from '../diagnostics/index.ts';
-import { Closing, Reset, WipingStorage } from '../services/events.ts';
+import { type Diagnostics, createDiagnosticsFromHandlers } from '../diagnostics/index.ts';
+import { IdentityManagerService } from '../identity/index.ts';
+import { Closing, Reset, StackOpened, WipingStorage } from '../services/events.ts';
+import { type RpcServicesContext, rpcHandlersFromStack } from '../services/handlers.ts';
 import { getPlatform } from '../services/platform.ts';
+import { DataSpaceManagerService } from '../spaces/index.ts';
 
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;
@@ -140,3 +145,35 @@ export class SystemServiceImpl implements SystemService.Handlers {
     return this.reset();
   }
 }
+
+/**
+ * Serves the {@link SystemService} over the stack's domain handlers: active once the stack has
+ * opened, inactive when the layer is torn down, and resetting over the embedder's bus.
+ */
+export const SystemServiceLayer: Layer.Layer<
+  SystemService.Tag,
+  never,
+  | RpcServicesContext
+  | ConfigService
+  | EffectEvent.Bus
+  | IdentityManagerService
+  | DataSpaceManagerService
+  | SwarmNetworkManagerService
+> = Layer.effect(
+  SystemService.Tag,
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const bus = yield* EffectEvent.Bus;
+    const stack = yield* Effect.context<
+      RpcServicesContext | IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService
+    >();
+    const service = new SystemServiceImpl({
+      config: () => config,
+      getDiagnostics: () => createDiagnosticsFromHandlers(() => rpcHandlersFromStack(stack), stack, config),
+      bus,
+    });
+    yield* EffectEvent.on(StackOpened, () => Effect.sync(() => service.setStatus(SystemStatus.ACTIVE)));
+    yield* Effect.addFinalizer(() => Effect.sync(() => service.setStatus(SystemStatus.INACTIVE)));
+    return service;
+  }),
+);

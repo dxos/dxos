@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
@@ -24,18 +23,12 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { makeInProcessClient } from '@dxos/protocols';
-import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
-import {
-  type CollectDiagnosticsBroadcastHandler,
-  createCollectDiagnosticsBroadcastHandler,
-  createDiagnosticsFromHandlers,
-} from '../diagnostics/index.ts';
 import {
   ClientServicesLayer,
   type ClientServicesStackContext,
@@ -44,7 +37,6 @@ import {
   handlersFromStack,
   wipeSqliteStorage,
 } from '../services/index.ts';
-import { SystemServiceImpl } from '../system/index.ts';
 import { SessionClosed } from './events.ts';
 import { WorkerSession } from './worker-session.ts';
 
@@ -119,7 +111,7 @@ export class WorkerRuntime extends Context_.Service<WorkerRuntime, WorkerRuntime
 
 /**
  * Constructs the {@link WorkerRuntimeService}. The stack is built in {@link start} once config is
- * resolved: {@link ClientServicesLayer} over the worker's SQLite layer in one `ManagedRuntime`.
+ * resolved: {@link ClientServicesLayer} over the worker's SQLite layer, in a scope of its own.
  */
 export const makeWorkerRuntime = ({
   configProvider,
@@ -142,11 +134,10 @@ export const makeWorkerRuntime = ({
 
   let stopped = false;
   let sessionForNetworking: WorkerSession | undefined;
-  let config: Config | undefined;
-  let runtime: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never> | undefined;
+  /** Owns the built stack; closing it runs every layer finalizer in reverse build order. */
+  let stackScope: Scope.Closeable | undefined;
   let stack: Context_.Context<ClientServicesStackContext> | undefined;
   let serviceScope: Scope.Closeable | undefined;
-  let diagnosticsBroadcast: CollectDiagnosticsBroadcastHandler | undefined;
   /** The deferred networking start, interrupted if the worker is torn down mid-grace-period. */
   let networkingFiber: Fiber.Fiber<void> | undefined;
 
@@ -154,43 +145,26 @@ export const makeWorkerRuntime = ({
     log.warn('Using testing SQLite layer');
   }
 
-  const sqlite = () =>
-    SqlTransaction.layer.pipe(
-      Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer),
-      Layer.provideMerge(Reactivity.layer),
-      Layer.orDie,
-    );
+  const sqlite = SqlTransaction.layer.pipe(
+    Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer),
+    Layer.provideMerge(Reactivity.layer),
+    Layer.orDie,
+  );
 
-  /** Disposes the stack runtime, and with it the SQLite layer. Idempotent. */
+  /** Closes the stack scope, and with it the SQLite layer. Idempotent. */
   const closeStack = Effect.gen(function* () {
-    diagnosticsBroadcast?.stop();
-    diagnosticsBroadcast = undefined;
-    const current = runtime;
-    runtime = undefined;
+    const current = stackScope;
+    stackScope = undefined;
     stack = undefined;
     if (current) {
-      yield* Effect.promise(() => current.dispose());
+      yield* Scope.close(current, Exit.void);
     }
-    systemService.setStatus(SystemStatus.INACTIVE);
   });
 
   /** Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a reset gets here. */
-  const wipeStorage = wipeSqliteStorage.pipe(Effect.provide(sqlite()), Effect.orDie);
+  const wipeStorage = wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie);
 
-  const services = (): Partial<ClientServicesHandlers> => ({
-    SystemService: systemService,
-    ...(stack ? handlersFromStack(stack) : {}),
-  });
-
-  // TODO(dmaretskyi): construct as layer (as other services are)
-  const systemService = new SystemServiceImpl({
-    config: () => config,
-    getDiagnostics: () => {
-      invariant(stack && config, 'worker runtime not started');
-      return createDiagnosticsFromHandlers(services, stack, config);
-    },
-    bus,
-  });
+  const services = (): Partial<ClientServicesHandlers> => (stack ? handlersFromStack(stack) : {});
 
   const stop = (): Effect.Effect<void> =>
     Effect.gen(function* () {
@@ -259,7 +233,6 @@ export const makeWorkerRuntime = ({
       yield* Effect.promise(() => acquireLock());
       log('worker-runtime: storage lock acquired, resolving config');
       const resolvedConfig = yield* Effect.promise(async () => configProvider());
-      config = resolvedConfig;
       log('worker-runtime: config resolved');
       const observabilityGroup = resolvedConfig.get('runtime.client.observabilityGroup');
       if (observabilityGroup) {
@@ -267,7 +240,9 @@ export const makeWorkerRuntime = ({
       }
 
       log('worker-runtime: building client services stack');
-      const stackRuntime = ManagedRuntime.make(
+      const scope = yield* Scope.make();
+      stackScope = scope;
+      const stackContext = yield* Layer.build(
         ClientServicesLayer({
           config: resolvedConfig,
           bus,
@@ -281,10 +256,8 @@ export const makeWorkerRuntime = ({
             ? undefined
             : new MemorySignalManager(memorySignalManagerContext ?? new MemorySignalManagerContext()),
           transportFactory,
-        }).pipe(Layer.provideMerge(sqlite())),
-      );
-      runtime = stackRuntime;
-      const stackContext = yield* Effect.promise(() => stackRuntime.context());
+        }).pipe(Layer.provideMerge(sqlite)),
+      ).pipe(Scope.provide(scope));
       stack = stackContext;
       log('worker-runtime: stack built, opening');
       // `StackOpened` resolves once every handler the cascade triggered has run.
@@ -292,21 +265,17 @@ export const makeWorkerRuntime = ({
         yield* Event.emit(HostEvents.Opening, undefined);
         yield* Event.emit(HostEvents.StackOpened, undefined);
       }).pipe(Effect.provide(stackContext));
-      // TODO(dmaretskyi): is this diagnosticsBroadcast dead in all variations? if so, remove the diagnosticsBroadcast and createCollectDiagnosticsBroadcastHandler definitions and cleanup
-      diagnosticsBroadcast = createCollectDiagnosticsBroadcastHandler(systemService);
-      diagnosticsBroadcast.start();
-      systemService.setStatus(SystemStatus.ACTIVE);
       log('worker-runtime: stack opened, signalling ready');
       ready.wake(undefined);
       log('started');
 
       // Bridge the identity/devices Handlers to the effect-rpc client surface in-process.
-      const scope = yield* Scope.make();
-      serviceScope = scope;
+      const clientScope = yield* Scope.make();
+      serviceScope = clientScope;
       const [identityService, devicesService] = yield* Effect.all([
         makeInProcessClient(IdentityService.Rpcs, Context_.get(stackContext, IdentityService.Tag)),
         makeInProcessClient(DevicesService.Rpcs, Context_.get(stackContext, DevicesService.Tag)),
-      ]).pipe(Effect.provideService(Scope.Scope, scope));
+      ]).pipe(Effect.provideService(Scope.Scope, clientScope));
       setIdentityTags({
         identityService,
         devicesService,

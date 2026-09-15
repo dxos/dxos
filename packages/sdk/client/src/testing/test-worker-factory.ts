@@ -46,7 +46,7 @@ export class TestWorkerFactory extends Resource {
       },
       storageLockKey: STORAGE_LOCK_KEY,
       createRuntime: ({ config: configValues, requestShutdown }) =>
-        Effect.promise(async () => {
+        Effect.gen({ self: this }, function* () {
           const runtime = makeWorkerRuntime({
             configProvider: async () => this._config ?? new Config(configValues ?? {}),
             onStop: async () => {
@@ -58,11 +58,11 @@ export class TestWorkerFactory extends Resource {
             automaticallyConnectWebrtc: false,
             sqliteLayer: sqliteLayerMemory,
           });
-          await EffectEx.runPromise(runtime.start());
+          yield* runtime.start();
           this._ctx.onDispose(() => EffectEx.runPromise(runtime.stop()));
 
           return {
-            stop: async () => EffectEx.runPromise(runtime.stop()),
+            stop: () => runtime.stop(),
             // The framework hands the session its protocol layers via effect context. The WorkerRuntime
             // session manages its own lifecycle, so the effect opens the session then blocks — the
             // framework runs it for the session's lifetime.

@@ -11,7 +11,6 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type ClientServicesStackContext, makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -32,6 +31,7 @@ export type RunDedicatedWorkerOptions = {
  * Probes whether OPFS is available in this worker (it is not, e.g., in private-browsing contexts),
  * gating persistent indexing.
  */
+// TODO(dmaretskyi): Convert to effect
 const probeOpfsAvailable = async (): Promise<boolean> => {
   try {
     if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
@@ -56,11 +56,13 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         log('dedicated-worker: OPFS probe complete', { opfsAvailable });
 
         const runtime = makeWorkerRuntime({
+          // TODO(dmaretskyi): Convert promises -> effect
           configProvider: async () => config,
           onStop: async () => {
             log('dedicated-worker: WorkerRuntime onStop, closing self');
             requestShutdown();
           },
+          // TODO(dmaretskyi): Check if those are still used? if not -- delete
           acquireLock: async () => {},
           releaseLock: () => {},
           automaticallyConnectWebrtc: false,
@@ -81,7 +83,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         }
 
         return {
-          stop: async () => EffectEx.runPromise(runtime.stop()),
+          stop: () => runtime.stop(),
           // The framework hands the session the forward (tab→worker) and reverse (worker→tab) protocol
           // layers via effect context. The WorkerRuntime session manages its own lifecycle (it closes
           // when the tab-liveness lock releases), so the effect opens the session then blocks — the

@@ -13,20 +13,7 @@ import { FeedStoreService } from '@dxos/feed-store';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
-import {
-  ContactsService,
-  DataService,
-  DevicesService,
-  DevtoolsHost,
-  EdgeAgentService,
-  FeedService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
-  QueryService,
-  SpacesService,
-} from '@dxos/protocols/rpc';
+import { DataService, FeedService, QueryService, type SystemService } from '@dxos/protocols/rpc';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import { EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
@@ -45,6 +32,8 @@ import { IMetadataStoreService } from '../metadata/index.ts';
 import { NetworkServiceLayer } from '../network/index.ts';
 import { SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerService, SpacesServiceLayer } from '../spaces/index.ts';
+import { SystemServiceLayer } from '../system/index.ts';
+import { type RpcServicesContext } from './handlers.ts';
 import { StackReadinessService } from './stack-readiness.ts';
 
 //
@@ -57,20 +46,7 @@ import { StackReadinessService } from './stack-readiness.ts';
 /**
  * Union of every client RPC service tag resolved from the stack.
  */
-export type ClientServicesRpcContext =
-  | IdentityService.Tag
-  | ContactsService.Tag
-  | InvitationsService.Tag
-  | DevicesService.Tag
-  | SpacesService.Tag
-  | NetworkService.Tag
-  | EdgeAgentService.Tag
-  | DataService.Tag
-  | QueryService.Tag
-  | FeedService.Tag
-  | LoggingService.Tag
-  | DevtoolsHost.Tag
-  | DevtoolsHostService;
+export type ClientServicesRpcContext = RpcServicesContext | SystemService.Tag | DevtoolsHostService;
 
 // The Data/Query/Feed services are thin projections of {@link EchoHostService} properties rather
 // than package-local ServiceImpl classes, so their layers stay here as trivial maps.
@@ -114,17 +90,21 @@ export const ClientServicesRpcLayer: Layer.Layer<
   | IMetadataStoreService
   | SqlClient.SqlClient
   | SqlExport.SqlExport
-> = Layer.mergeAll(
-  IdentityServiceLayer,
-  ContactsServiceLayer,
-  InvitationsServiceLayer,
-  DevicesServiceLayer,
-  SpacesServiceLayer,
-  NetworkServiceLayer,
-  EdgeAgentServiceLayer,
-  dataServiceLayer,
-  queryServiceLayer,
-  feedServiceLayer,
-  LoggingServiceLayer,
-  DevtoolsHostLayer,
+> = SystemServiceLayer.pipe(
+  Layer.provideMerge(
+    Layer.mergeAll(
+      IdentityServiceLayer,
+      ContactsServiceLayer,
+      InvitationsServiceLayer,
+      DevicesServiceLayer,
+      SpacesServiceLayer,
+      NetworkServiceLayer,
+      EdgeAgentServiceLayer,
+      dataServiceLayer,
+      queryServiceLayer,
+      feedServiceLayer,
+      LoggingServiceLayer,
+      DevtoolsHostLayer,
+    ),
+  ),
 );
