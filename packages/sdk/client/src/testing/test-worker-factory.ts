@@ -48,13 +48,11 @@ export class TestWorkerFactory extends Resource {
       createRuntime: ({ config: configValues, requestShutdown }) =>
         Effect.gen({ self: this }, function* () {
           const runtime = makeWorkerRuntime({
-            configProvider: async () => this._config ?? new Config(configValues ?? {}),
-            onStop: async () => {
+            configProvider: Effect.sync(() => this._config ?? new Config(configValues ?? {})),
+            onStop: Effect.sync(() => {
               messageChannel.port1.close();
               requestShutdown();
-            },
-            acquireLock: async () => {},
-            releaseLock: () => {},
+            }),
             automaticallyConnectWebrtc: false,
             sqliteLayer: sqliteLayerMemory,
           });

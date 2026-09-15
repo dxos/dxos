@@ -31,18 +31,15 @@ export type RunDedicatedWorkerOptions = {
  * Probes whether OPFS is available in this worker (it is not, e.g., in private-browsing contexts),
  * gating persistent indexing.
  */
-// TODO(dmaretskyi): Convert to effect
-const probeOpfsAvailable = async (): Promise<boolean> => {
-  try {
-    if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
-      await navigator.storage.getDirectory();
-      return true;
-    }
-  } catch {
-    log.warn('OPFS not available, disabling persistent indexing');
+const probeOpfsAvailable: Effect.Effect<boolean> = Effect.gen(function* () {
+  if (typeof navigator === 'undefined' || !navigator.storage?.getDirectory) {
+    return false;
   }
-  return false;
-};
+  return yield* Effect.tryPromise(() => navigator.storage.getDirectory()).pipe(
+    Effect.as(true),
+    Effect.catch(() => Effect.sync(() => (log.warn('OPFS not available, disabling persistent indexing'), false))),
+  );
+});
 
 /** Runs the dedicated worker loop. Exported so apps can use a custom worker entrypoint and inject setup (e.g. observability). */
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
@@ -52,19 +49,15 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
       Effect.gen(function* () {
         const config = new Config(configValues ?? {});
         log('dedicated-worker: probing OPFS availability');
-        const opfsAvailable = yield* Effect.promise(() => probeOpfsAvailable());
+        const opfsAvailable = yield* probeOpfsAvailable;
         log('dedicated-worker: OPFS probe complete', { opfsAvailable });
 
         const runtime = makeWorkerRuntime({
-          // TODO(dmaretskyi): Convert promises -> effect
-          configProvider: async () => config,
-          onStop: async () => {
+          configProvider: Effect.succeed(config),
+          onStop: Effect.sync(() => {
             log('dedicated-worker: WorkerRuntime onStop, closing self');
             requestShutdown();
-          },
-          // TODO(dmaretskyi): Check if those are still used? if not -- delete
-          acquireLock: async () => {},
-          releaseLock: () => {},
+          }),
           automaticallyConnectWebrtc: false,
           sqliteLayer: options.sqliteLayer ?? (opfsAvailable ? undefined : layerMemory),
         });

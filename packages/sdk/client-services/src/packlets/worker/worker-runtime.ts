@@ -27,7 +27,6 @@ import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { type MaybePromise } from '@dxos/util';
 
 import {
   ClientServicesLayer,
@@ -59,10 +58,8 @@ export type CreateSessionProps = {
 const EDGE_NETWORKING_START_DELAY = '300 millis';
 
 export type WorkerRuntimeOptions = {
-  configProvider: () => MaybePromise<Config>;
-  acquireLock: () => Promise<void>;
-  releaseLock: () => void;
-  onStop?: () => Promise<void>;
+  configProvider: Effect.Effect<Config>;
+  onStop?: Effect.Effect<void>;
   /**
    * @default true
    */
@@ -115,8 +112,6 @@ export class WorkerRuntime extends Context_.Service<WorkerRuntime, WorkerRuntime
  */
 export const makeWorkerRuntime = ({
   configProvider,
-  acquireLock,
-  releaseLock,
   onStop,
   automaticallyConnectWebrtc = true,
   sqliteLayer,
@@ -175,8 +170,6 @@ export const makeWorkerRuntime = ({
       if (networkingFiber) {
         yield* Fiber.interrupt(networkingFiber);
       }
-      // Release the lock to notify remote clients that the worker is terminating.
-      releaseLock();
       // Always run onStop, even if stack teardown fails — otherwise a failed close skips the shutdown signal.
       yield* Effect.gen(function* () {
         yield* closeStack;
@@ -185,7 +178,7 @@ export const makeWorkerRuntime = ({
           serviceScope = undefined;
         }
         yield* Scope.close(busScope, Exit.void);
-      }).pipe(Effect.ensuring(Effect.promise(async () => onStop?.())));
+      }).pipe(Effect.ensuring(onStop ?? Effect.void));
     });
 
   const connectBridge = (session: WorkerSession | undefined): void => {
@@ -229,10 +222,8 @@ export const makeWorkerRuntime = ({
   const start = (): Effect.Effect<void> =>
     Effect.gen(function* () {
       log('starting...');
-      log('worker-runtime: acquiring storage lock');
-      yield* Effect.promise(() => acquireLock());
-      log('worker-runtime: storage lock acquired, resolving config');
-      const resolvedConfig = yield* Effect.promise(async () => configProvider());
+      log('worker-runtime: resolving config');
+      const resolvedConfig = yield* configProvider;
       log('worker-runtime: config resolved');
       const observabilityGroup = resolvedConfig.get('runtime.client.observabilityGroup');
       if (observabilityGroup) {
