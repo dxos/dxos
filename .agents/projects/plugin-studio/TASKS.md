@@ -15,8 +15,8 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Register in composer-app (`plugin-defs.tsx` dev defaults, `package.json`, `tsconfig.json`, `tsconfig.all.json`).
 - [x] `docs/DESIGN.md`, `PLUGIN.mdl` (+ QA flow), README; build, lint, test, format.
 - [x] Verified in the running app: registry card (scribble/lime), Connections → Higgsfield two-field form, Studio artifact provider = Higgsfield with the model default.
-- [ ] PR.
-- [ ] Live generation blocked: the provided account answers `403 not_enough_credits` (auth + proxy proven via the 404 status test).
+- [x] PR — #13087, #13095, #13110, #13111, #13112 merged.
+- [x] Live generation: the account now answers the estimate endpoint; Kling/Hailuo/Wan paths verified 2026-09-15.
 
 ## Phase 2: adjacent fixes (same PR)
 
@@ -61,7 +61,7 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [ ] Generic mechanism for plugins to add **create menu items to an article's toolbar** (e.g. a
       `CreateObjectEntry`-style capability the Lightbox/Project article's `+` reads), replacing the
       hard-wired Lightbox "Add artifact" action.
-- [ ] Verify a video model path against a real account and set it as the video default.
+- [x] Video model paths verified against the account (DoP default; Kling 2.1/2.5, Hailuo 2.3, Wan 2.5 listed).
 - [x] Shared `GenerationService.fieldOptions` → cached combobox (`ProviderOptionsField`); HeyGen migrated, Higgsfield static image list.
 - [ ] Higgsfield model catalogue from the API once it exposes one.
 
