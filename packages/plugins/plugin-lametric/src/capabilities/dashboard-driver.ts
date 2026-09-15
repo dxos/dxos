@@ -37,9 +37,11 @@ export default Capability.makeModule(
     const status = Atom.make<LaMetricCapabilities.PushStatus>({ state: 'idle' }).pipe(Atom.keepAlive);
     let pusher: Pusher | undefined;
     let unsubscribeDashboard: (() => void) | undefined;
+    let generation = 0;
 
     // The address decides which transport is used, so a settings change rebuilds rather than mutates.
     const rebuild = () => {
+      const current = ++generation;
       pusher?.close();
       pusher = undefined;
       unsubscribeDashboard?.();
@@ -47,6 +49,9 @@ export default Capability.makeModule(
       const config = registry.get(settings);
 
       const build = (widgetId: string | undefined) => {
+        if (current !== generation) {
+          return;
+        }
         const transport: LaMetricTransport | undefined = widgetId
           ? selectTransport({ ...config, widgetId }, tauriFetch)
           : undefined;
@@ -60,7 +65,6 @@ export default Capability.makeModule(
           minIntervalMs: config.minPushIntervalMs ?? DEFAULT_MIN_INTERVAL_MS,
           onStatus: (next) => registry.set(status, next),
         });
-        unsubscribeDashboard?.();
         unsubscribeDashboard = registry.subscribe(
           dashboard,
           ({ stats, tasks }) =>
@@ -79,6 +83,9 @@ export default Capability.makeModule(
         void discoverWidgetId(config, tauriFetch)
           .then(build)
           .catch((error) => {
+            if (current !== generation) {
+              return;
+            }
             log('lametric could not read the device app list', { error });
             registry.set(status, { state: 'idle' });
           });
@@ -90,6 +97,7 @@ export default Capability.makeModule(
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
+        generation++;
         unsubscribeSettings();
         unsubscribeDashboard?.();
         pusher?.close();
