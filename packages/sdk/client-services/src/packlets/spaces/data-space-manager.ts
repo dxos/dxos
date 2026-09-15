@@ -453,10 +453,14 @@ export class DataSpaceManager extends Resource {
             preserveHistory: true,
           });
 
-          // The archived documents might have the spaceKey from the space they were expored from, we need to update it to the new spaceKey.
-          if (newDoc.doc().access !== undefined && newDoc.doc().access!.spaceKey !== spaceKey.toHex()) {
+          // Archived documents carry the exporting space's identity; the indexer attributes documents by `access.spaceId`, so both fields must name the new space.
+          const access = newDoc.doc().access;
+          if (access !== undefined && (access.spaceKey !== spaceKey.toHex() || access.spaceId !== spaceId)) {
             newDoc.change((doc) => {
-              doc.access!.spaceKey = spaceKey.toHex();
+              if (doc.access) {
+                doc.access.spaceKey = spaceKey.toHex();
+                doc.access.spaceId = spaceId;
+              }
             });
           }
 
