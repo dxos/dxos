@@ -39,7 +39,7 @@ const makeProxyServices = async (host: ReturnType<typeof createServiceHost>): Pr
   return makeServicesFromRpc(rpc, EffectContext.empty());
 };
 
-describe('ClientServicesHost', () => {
+describe('ClientServicesLayer', () => {
   const dataRoot = '/tmp/dxos/client-services/service-host/storage';
 
   afterEach(async () => {
