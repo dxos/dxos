@@ -2,26 +2,31 @@
 
 Design: [`./DESIGN.md`](./DESIGN.md). Branch `dm/client-services-refactor`, PR #13094.
 
-_Resume: Branch pushed through `c1c387a7`; every suite that was red is green locally. THE BLOCKER
-IS FIXED: `RpcGroup.toLayer` stores the handler functions and effect-rpc calls them unbound, so
-serving each service's tag directly cost every class-backed impl its `this` — the first
-private-field access threw during dispatch, where nothing carries the throw back to the caller, so
-the request hung. Unary calls that never touched `this` still answered, which is why only streams
-looked broken (`SystemService.queryStatus` never emitted, so a tab never left "waiting for
-status"). `client-protocol` now exports `boundServiceHandlers` / `layerHandlersFromTag` and the
-worker session uses them for all thirteen services. Also fixed: the `client-services` build break
-(`WorkerSession` was not exported, which failed EVERY CI shard), the three browser `Worker session
-lifetime` tests (they asserted on `sessionsOpened` before the worker had recorded the session), the
-`Event.Bus` defect in the session-closed finalizer, the `client-services-stack.ts` TODO (config and
-the bus are layer requirements now), `Rpc.serverLayer`'s typing, the stale
-`packages/sdk/client-services/TASKS.md`, and the changeset (now a summary of the whole PR).
+_Resume: CI IS FULLY GREEN on `4b7315e4` — all six test shards, check, memory, boot-budget, build
+and Model Fixture pass, nothing failing, no merge conflict (15 behind main, clean).
 
-Green locally: `client` 34, `client-e2e` 174, `client-services` 190, `client-protocol`, `rpc`,
-`effect`, `worker-framework` node (27) + browser (13); builds for the whole chain through
-`composer-app`; lint and format clean. CI on the previous head (`2116d372`) was already green
-except the two shards carrying `client:test` and `client-e2e:test`, both failing on exactly this
-hang. NEXT: confirm CI on `c1c387a7`, then the browser `client` tests and Composer e2e
-(`DX_ENVIRONMENT=dev`) for the dedicated worker, and decide D17's readiness-gate behaviour._
+The blocker was `RpcGroup.toLayer`: it reads own-enumerable properties and effect-rpc calls what it
+stored unbound, so serving each service's tag directly both hid the prototype methods and lost
+`this`. The failure lands in dispatch, where nothing carries it back to the caller, so the request
+hung rather than failing — unary calls that never touched `this` still answered, which is why only
+streams looked broken (`SystemService.queryStatus` never emitted, so a tab never left "waiting for
+status"). `makeInProcessClient` already solved this inline; that logic is now
+`normalizeHandlers` in `@dxos/protocols`, `@dxos/client-protocol` wraps it as
+`layerHandlersFromTag`, and the worker session serves all thirteen services through it.
+
+Also fixed in this pass: the `client-services` build break (`WorkerSession` was not exported, which
+failed EVERY CI shard), the three browser `Worker session lifetime` tests (they asserted on
+`sessionsOpened` before the worker had recorded the session), the `Event.Bus` defect in the
+session-closed finalizer (which also leaked sessions and kept the worker alive), the
+`client-services-stack.ts` TODO (config and the bus are layer requirements now), `Rpc.serverLayer`'s
+typing (one cast left, behind `asTimedHandlers` with the invariant in its JSDoc), the stale
+`packages/sdk/client-services/TASKS.md`, and the changeset (a summary of the whole PR, including
+`@dxos/feed-store`).
+
+Green locally too: `client` 34, `client-e2e` 174, `client-services` 190, `echo-client` 556,
+`protocols`, `client-protocol`, `rpc`, `effect`, `worker-framework` node + browser. An adversarial
+review of the diff ran and its findings are addressed. NEXT: reviewers; then Composer e2e
+(`DX_ENVIRONMENT=dev`) for the dedicated worker and D17's readiness-gate decision._
 
 ## Phase 1: Event lifecycle in the stack (landed)
 
