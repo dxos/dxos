@@ -57,6 +57,7 @@ import {
   useChatContext,
 } from './context.ts';
 import { type ChatEvent } from './events.ts';
+import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 import { projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
@@ -489,8 +490,10 @@ type ChatThreadProps = ThemedClassName<{
 
 const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { db, debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
+  // Embedded objects resolve against the chat's database (the fallback one while it is transient).
+  const objectImage = useMemo(() => objectCardWidget(db), [db]);
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
   // The toast renders whatever action the error declares (data-driven) rather than branching on type.
   const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
@@ -558,6 +561,7 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         model={model}
         viewType={viewType}
         registry={chatRegistry}
+        objectImage={objectImage}
         userHue={userHue}
         tailLines={tailLines}
         debug={debug}

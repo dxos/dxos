@@ -20,7 +20,7 @@ import {
   type MessageRange,
   useMessageList,
 } from '@dxos/react-ui-feed';
-import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';
 import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
@@ -63,6 +63,8 @@ type ChatThreadRootProps = PropsWithChildren<
     viewType?: ChatView;
     /** Extends {@link assistantRegistry}; the host's entries win (e.g. a real `surface` widget). */
     registry?: XmlWidgetRegistry;
+    /** The block widget for an object embedded as a card (`![label](echo://…)`); the host's, since only it can render one. */
+    objectImage?: WidgetDef<ObjectLinkProps>;
     /** The reader's identity hue, published to the DOM for the prompt frame's tokens. */
     userHue?: string;
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
@@ -86,6 +88,7 @@ const ChatThreadRoot = ({
   model,
   viewType,
   registry,
+  objectImage,
   getObjectLabel,
   userHue,
   tailLines,
@@ -122,6 +125,7 @@ const ChatThreadRoot = ({
           model={model}
           renderer={renderer}
           registry={merged}
+          objectImage={objectImage}
           Chrome={MessageChrome}
           estimateSize={estimateRow}
           debug={debug}
