@@ -8,8 +8,8 @@ import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { Box } from './common';
-import { type ThreadShape } from './thread-def';
+import { Box } from './common/index.ts';
+import { type ThreadShape } from './thread-def.ts';
 
 export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => {
   const items: any[] = [];

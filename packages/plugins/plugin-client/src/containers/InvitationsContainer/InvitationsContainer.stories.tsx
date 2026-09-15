@@ -13,7 +13,7 @@ import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
-import { InvitationsContainer } from './InvitationsContainer';
+import { InvitationsContainer } from './InvitationsContainer.tsx';
 
 const meta = {
   title: 'plugins/plugin-client/containers/InvitationsContainer',

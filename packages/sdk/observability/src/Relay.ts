@@ -6,4 +6,4 @@
 // envelopes needs nothing else from the extensions barrel, and that barrel carries the OTel and
 // PostHog extensions with it.
 
-export * from './extensions/relay';
+export * from './extensions/relay/index.ts';

@@ -11,8 +11,8 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { getOrCreate } from './getOrCreate';
-import { fromResolvers } from './Resolver';
+import { getOrCreate } from './getOrCreate.ts';
+import { fromResolvers } from './Resolver.ts';
 
 class Contact extends Type.makeObject<Contact>(DXN.make('com.example.type.Contact', '0.1.0'))(
   Schema.Struct({

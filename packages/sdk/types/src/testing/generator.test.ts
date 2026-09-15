@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema/testing';
 import { stripUndefined } from '@dxos/util';
 
-import { Message, Organization, Person, Pipeline } from '../types';
+import { Message, Organization, Person, Pipeline } from '../types/index.ts';
 
 // Local relation type (Person → Person) with only optional props, so the generated relation's
 // properties come entirely from annotations / endpoints.

@@ -54,11 +54,11 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
   }, [status.session]);
 
   return (
-    <Form.Section
-      title={t('settings.debug-port.section.label')}
+    <Form.FieldSet
+      label={t('settings.debug-port.section.label')}
       description={t('settings.debug-port.section.description')}
     >
-      <Form.Field label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
+      <Form.Field standalone label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
         <Flex gap='md' align='center'>
           {status.running && (
             <span className='text-sm text-description'>
@@ -105,7 +105,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
           </Form.Field>
         </>
       )}
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

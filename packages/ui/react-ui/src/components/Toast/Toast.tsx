@@ -31,20 +31,20 @@ import { useControllableState } from '@dxos/react-hooks';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks';
-import { DensityProvider, ElevationProvider } from '../../providers';
-import { type ThemedClassName } from '../../util';
-import { IconButton } from '../Button';
-import { Column } from '../Column';
-import { Icon } from '../Icon';
-import { Progress } from '../Progress';
+import { useThemeContext } from '../../hooks/index.ts';
+import { DensityProvider, ElevationProvider } from '../../providers/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { Column } from '../Column/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Progress } from '../Progress/index.ts';
 import {
   TOAST_NAME,
   ToastProvider as ToastContextProvider,
   type ToastEntry,
   ToastRegistry,
   useToastContext,
-} from './ToastContext';
+} from './ToastContext.ts';
 
 const DEFAULT_DURATION = 5_000;
 

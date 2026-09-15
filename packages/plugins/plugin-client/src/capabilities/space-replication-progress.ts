@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
-import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } from '../progress';
+import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } from '../progress/index.ts';
 
 /**
  * Reconciliation interval. The sync-state streams are the primary signal; a periodic re-read

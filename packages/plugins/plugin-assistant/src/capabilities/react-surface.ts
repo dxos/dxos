@@ -15,6 +15,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
+import { Question } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import {
@@ -25,6 +26,8 @@ import {
   ChatDialog,
   IntegrationPrompt,
   PluginPrompt,
+  QuestionCard,
+  QuestionSurface,
   SpaceHomePrompt,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
@@ -36,7 +39,7 @@ import {
   SpaceHomeSuggestionsSurface,
   TracePanelSurface,
   TriggerStatusSurface,
-} from './AssistantSurfaces';
+} from './AssistantSurfaces.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -146,6 +149,22 @@ export default Capability.makeModule(() =>
         component: PluginPrompt,
         // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
         props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
+      }),
+      Surface.create({
+        // Wherever a card is drawn for the object — the blocked task's artifacts, search — not only
+        // in the conversation that asked.
+        id: 'card.question',
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.CardContent, Question.Question),
+        component: QuestionCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
+        id: 'question',
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'question'),
+        component: QuestionSurface,
+        // `data.data` is model-supplied JSON (untyped); narrow the id before use.
+        props: ({ data }) => ({ question: nonBlank(data.data?.question) }),
       }),
       Surface.create({
         id: 'triggerStatus',

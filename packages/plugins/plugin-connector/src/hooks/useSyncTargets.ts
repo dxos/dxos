@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
 
-import { SYNC_TARGETS_DIALOG } from '../constants';
+import { SYNC_TARGETS_DIALOG } from '../constants.ts';
 
 export type UseSyncTargetsResult = {
   /** True when the connection's connector exposes `sync.getTargets`. Drives "edit" button visibility. */

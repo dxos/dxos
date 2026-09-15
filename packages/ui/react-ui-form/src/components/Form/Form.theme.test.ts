@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { formTheme } from './Form.theme';
+import { formTheme } from './Form.theme.ts';
 
 describe('formTheme', () => {
   test('default variant adds no chrome to the field', ({ expect }) => {

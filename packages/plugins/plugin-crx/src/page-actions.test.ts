@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 
 import { PageAction } from '#types';
 
-import { handleInvokeEvent, handleListEvent } from './page-actions';
+import { handleInvokeEvent, handleListEvent } from './page-actions.ts';
 
 const TestOp = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.pageAction'), name: 'Test' },

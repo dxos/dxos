@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './archive-format';
-export * from './serialized-space-reader';
-export * from './serialized-space-writer';
-export * from './space-archive-reader';
-export * from './space-archive-writer';
+export * from './archive-format.ts';
+export * from './serialized-space-reader.ts';
+export * from './serialized-space-writer.ts';
+export * from './space-archive-reader.ts';
+export * from './space-archive-writer.ts';

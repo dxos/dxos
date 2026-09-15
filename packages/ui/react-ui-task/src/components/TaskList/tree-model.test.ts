@@ -14,7 +14,7 @@ import {
   buildTaskForest,
   createTaskTreeModel,
   flattenVisibleTasks,
-} from './tree-model';
+} from './tree-model.ts';
 
 describe('buildTaskForest', () => {
   test('builds the tree the walk describes, not the array order', ({ expect }) => {

@@ -22,8 +22,8 @@ import compute from '../../docs/diagrams/compute.mmd?raw';
 import echo from '../../docs/diagrams/echo.mmd?raw';
 import edge from '../../docs/diagrams/edge.mmd?raw';
 import pipeline from '../../docs/diagrams/pipeline.mmd?raw';
-import { BASIC } from '../model/testing';
-import { SceneSvg } from './SceneSvg';
+import { BASIC } from '../model/testing.ts';
+import { SceneSvg } from './SceneSvg.tsx';
 
 //
 // Layout bench: the mermaid source (left, editable) with mermaid's own rendering beneath it as the

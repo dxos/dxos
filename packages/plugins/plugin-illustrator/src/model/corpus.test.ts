@@ -6,9 +6,9 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join, resolve, sep } from 'node:path';
 import { beforeAll, describe, test } from 'vitest';
 
-import { analyze, errors } from './diagnostics';
-import * as MermaidEngine from './mermaid-engine';
-import type * as Scene from './scene';
+import { analyze, errors } from './diagnostics.ts';
+import * as MermaidEngine from './mermaid-engine.ts';
+import type * as Scene from './scene.ts';
 
 //
 // Tier 1 over the committed diagram corpus (`docs/diagrams/*.mmd`): every diagram must render

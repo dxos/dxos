@@ -19,14 +19,14 @@ import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
-import { GITHUB_SOURCE } from '../constants';
+import { GITHUB_SOURCE } from '../constants.ts';
 import {
   GitHubProjectMissingError,
   GitHubRepoInaccessibleError,
   GitHubRepoUnresolvedError,
   formatGitHubSyncFailure,
-} from '../errors';
-import { GitHubApi } from '../services';
+} from '../errors.ts';
+import { GitHubApi } from '../services/index.ts';
 
 const { mergeField, snapshotField } = ConnectorSync;
 

@@ -3,9 +3,9 @@
 //
 
 import { TestBuilder } from '@dxos/feed-store/testing';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 
-import { valueEncoding } from '../codec';
+import { valueEncoding } from '../codec.ts';
 
 /**
  * Builder with default encoder and generator.

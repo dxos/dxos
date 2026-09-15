@@ -9,11 +9,11 @@ import { Obj } from '@dxos/echo';
 
 import { Terra, TerraObject } from '#types';
 
-import { type Vec3 } from '../engine';
-import { MAX_CATCHUP_LEGS, SimEngine } from './engine';
-import { angleBetween, toGeo, toUnit } from './geo';
-import { buildNavGrid, isPassable } from './nav-grid';
-import { pickReachableTarget } from './reachable';
+import { type Vec3 } from '../engine/index.ts';
+import { MAX_CATCHUP_LEGS, SimEngine } from './engine.ts';
+import { angleBetween, toGeo, toUnit } from './geo.ts';
+import { buildNavGrid, isPassable } from './nav-grid.ts';
+import { pickReachableTarget } from './reachable.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'engine-1' } }));
 const grid = buildNavGrid(config, 16);

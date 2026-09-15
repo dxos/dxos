@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { rpcCodec } from './rpc-codec';
+import { rpcCodec } from './rpc-codec.ts';
 
 const roundTrip = (value: any): any => rpcCodec.decode(rpcCodec.encode(value));
 

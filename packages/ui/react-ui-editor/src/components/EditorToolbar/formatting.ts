@@ -9,7 +9,7 @@ import { type Formatting, Inline, addLink, removeLink, setStyle } from '@dxos/ui
 
 import { translationKey } from '#translations';
 
-import { type EditorToolbarState } from './types';
+import { type EditorToolbarState } from './types.ts';
 
 const formats = {
   strong: 'ph--text-b--regular',
@@ -36,28 +36,37 @@ export const addFormatting =
       (group) => {
         for (const [type, icon] of Object.entries(formats)) {
           const checked = !!formatting[type as keyof Formatting];
-          group.action(type, { label: [`formatting.${type}.label`, { ns: translationKey }], checked, icon }, () => {
-            const view = getView();
-            if (!view) {
-              return;
-            }
+          group.action(
+            type,
+            {
+              label: [`formatting.${type}.label`, { ns: translationKey }],
+              testId: `editor.toolbar.${type}`,
+              checked,
+              icon,
+            },
+            () => {
+              const view = getView();
+              if (!view) {
+                return;
+              }
 
-            if (type === 'link') {
-              checked ? removeLink(view) : addLink()(view);
-              return;
-            }
+              if (type === 'link') {
+                checked ? removeLink(view) : addLink()(view);
+                return;
+              }
 
-            setStyle(
-              type === 'strong'
-                ? Inline.Strong
-                : type === 'emphasis'
-                  ? Inline.Emphasis
-                  : type === 'strikethrough'
-                    ? Inline.Strikethrough
-                    : Inline.Code,
-              !checked,
-            )(view);
-          });
+              setStyle(
+                type === 'strong'
+                  ? Inline.Strong
+                  : type === 'emphasis'
+                    ? Inline.Emphasis
+                    : type === 'strikethrough'
+                      ? Inline.Strikethrough
+                      : Inline.Code,
+                !checked,
+              )(view);
+            },
+          );
         }
       },
     );

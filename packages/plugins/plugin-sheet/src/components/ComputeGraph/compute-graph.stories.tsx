@@ -17,8 +17,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { withComputeGraphDecorator } from '#testing';
 import { Sheet } from '#types';
 
-import { useSheetModel } from '../../model';
-import { useComputeGraph } from './ComputeGraphContext';
+import { useSheetModel } from '../../model/index.ts';
+import { useComputeGraph } from './ComputeGraphContext.ts';
 
 const FUNCTION_NAME = 'TEST';
 

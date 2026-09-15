@@ -38,6 +38,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -60,9 +65,21 @@
       "source": "./src/PreviewPlugin.ts",
       "types": "./dist/types/src/PreviewPlugin.d.ts",
       "import": "./dist/lib/PreviewPlugin.mjs"
+    },
+    "./PreviewCapabilities": {
+      "source": "./src/types/PreviewCapabilities.ts",
+      "types": "./dist/types/src/types/PreviewCapabilities.d.ts",
+      "import": "./dist/lib/PreviewCapabilities.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "PreviewCapabilities": [
+        "dist/types/src/types/PreviewCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

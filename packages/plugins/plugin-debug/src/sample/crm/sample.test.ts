@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { PipelineSpace } from './index';
+import { PipelineSpace } from './index.ts';
 
 /**
  * The CRM sample space is built on demand rather than committed, so this asserts its shape in place

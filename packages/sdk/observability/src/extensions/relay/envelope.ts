@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import type * as ObservabilityExtension from '../../ObservabilityExtension';
+import type * as ObservabilityExtension from '../../ObservabilityExtension.ts';
 
 /** Bumped when a payload changes shape, so a relay built against an older worker can refuse it. */
 export const VERSION = 1;

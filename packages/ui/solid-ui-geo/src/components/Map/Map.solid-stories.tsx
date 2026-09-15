@@ -5,9 +5,9 @@
 import { createSignal } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
-import { useMapZoomHandler } from '../../hooks';
-import { type GeoMarker } from '../../types';
-import { Map, type MapController } from './Map';
+import { useMapZoomHandler } from '../../hooks/index.ts';
+import { type GeoMarker } from '../../types.ts';
+import { Map, type MapController } from './Map.tsx';
 
 const DefaultStory = ({ markers = [] }: { markers?: GeoMarker[] }) => {
   const [controller, setController] = createSignal<MapController>();

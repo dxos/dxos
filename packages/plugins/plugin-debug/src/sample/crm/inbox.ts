@@ -11,8 +11,8 @@ import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, type ContentBlock, Message } from '@dxos/types';
 
-import { type ContactKey, contactSeed } from './accounts';
-import { daysAgo } from './util';
+import { type ContactKey, contactSeed } from './accounts.ts';
+import { daysAgo } from './util.ts';
 
 //
 // The account mail: the thread behind each pipeline stage.

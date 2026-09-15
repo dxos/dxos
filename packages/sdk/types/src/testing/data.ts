@@ -7,7 +7,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { Message, Organization, Person } from '../types';
+import { Message, Organization, Person } from '../types/index.ts';
 
 random.seed(1);
 

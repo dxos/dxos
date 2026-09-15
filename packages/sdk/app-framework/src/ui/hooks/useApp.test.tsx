@@ -10,10 +10,10 @@ import { vi } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { ActivationEvents, Capabilities } from '../../common';
-import { Capability, Plugin, PluginManager } from '../../core';
-import { STARTUP_WATCHDOG_TICK_MS } from './startup-watchdog';
-import { STARTUP_FAILED_EVENT, type StartupDiagnostics, useApp } from './useApp';
+import { ActivationEvents, Capabilities } from '../../common/index.ts';
+import { Capability, Plugin, PluginManager } from '../../core/index.ts';
+import { STARTUP_WATCHDOG_TICK_MS } from './startup-watchdog.ts';
+import { STARTUP_FAILED_EVENT, type StartupDiagnostics, useApp } from './useApp.tsx';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test', tags: ['system'] });

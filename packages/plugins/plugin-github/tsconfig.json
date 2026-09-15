@@ -31,7 +31,13 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/compute/compute"
@@ -46,16 +52,31 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/ui-editor"
@@ -68,6 +89,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-testing"

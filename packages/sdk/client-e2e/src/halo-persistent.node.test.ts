@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
@@ -9,6 +10,7 @@ import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 describe('Halo', () => {
   test('reopens with persistent storage', async () => {
@@ -31,7 +33,7 @@ describe('Halo', () => {
       onTestFinished(() => client.destroy());
       await client.initialize();
 
-      await client.halo.createIdentity({ displayName: 'test-user' });
+      await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
       expect(client.halo.identity).exist;
       await client.destroy();
     }

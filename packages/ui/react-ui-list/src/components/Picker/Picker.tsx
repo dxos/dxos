@@ -36,13 +36,13 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { listTheme } from '../List.theme';
+import { listTheme } from '../List.theme.ts';
 import {
   PickerInputContextProvider,
   PickerItemContextProvider,
   usePickerInputContext,
   usePickerItemContext,
-} from './context';
+} from './context.ts';
 
 const styles = listTheme.styles();
 

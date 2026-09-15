@@ -25,12 +25,11 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
-import { EchoClient } from '../client';
-import { type BranchStore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
+import { EchoClient } from '../client/index.ts';
+import { type BranchStore } from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -120,10 +119,7 @@ export class EchoTestPeer extends Resource {
   }
 
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
-    never
-  >;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
   constructor({ types, registry, assignQueuePositions, storagePath }: PeerOptions = {}) {
     super();
@@ -134,10 +130,7 @@ export class EchoTestPeer extends Resource {
     this._storagePath = storagePath;
   }
 
-  private _createManagedRuntime(): ManagedRuntime.ManagedRuntime<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
-    never
-  > {
+  private _createManagedRuntime(): ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never> {
     if (this._persistentRuntime == null) {
       const baseLayer = this._storagePath ? layerFile(this._storagePath) : layerMemory;
       this._persistentRuntime = ManagedRuntime.make(baseLayer.pipe(Layer.orDie));
@@ -157,11 +150,7 @@ export class EchoTestPeer extends Resource {
       ),
     );
 
-    return ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(persistedSqlLayer), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
-    );
+    return ManagedRuntime.make(persistedSqlLayer.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
   }
 
   private _initEcho(): void {

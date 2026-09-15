@@ -8,8 +8,8 @@ import { type RDF } from '@dxos/pipeline-rdf';
 import { Button, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
 
-import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList';
-import { FactPanel } from '../FactPanel';
+import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
+import { FactPanel } from '../FactPanel/index.ts';
 
 /** A single named metric shown in the Stats tab. */
 export type StatItem = { label: string; value: string | number };

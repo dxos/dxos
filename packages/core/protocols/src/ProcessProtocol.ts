@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type { SerializedError } from './edge';
+import type { SerializedError } from './edge/index.ts';
 
 /**
  * Wire protocol for controlling processes hosted by a remote runtime (EDGE).

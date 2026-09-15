@@ -6,5 +6,5 @@
 // here for convenience, but consumers wanting only the tools (without the
 // stdio/HTTP server) should import from `@dxos/introspect-mcp/tools`.
 
-export { type ServerOptions, createServer, main } from './server';
-export { type ToolLogEntry, type ToolLogger, fileLogger, noopLogger } from './tools';
+export { type ServerOptions, createServer, main } from './server/index.ts';
+export { type ToolLogEntry, type ToolLogger, fileLogger, noopLogger } from './tools/index.ts';

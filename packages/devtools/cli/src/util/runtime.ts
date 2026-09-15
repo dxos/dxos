@@ -19,13 +19,14 @@ import type * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Trace from '@dxos/compute/Trace';
-import { type Database, type Key, Registry } from '@dxos/echo';
+import { type Database, Hypergraph, type Key, Registry } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 
 export type AiChatServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
+  | Hypergraph.Service
   | Operation.Service
   | Registry.Service
   | Trace.TraceService;
@@ -99,6 +100,10 @@ export const chatLayer = ({
       Layer.unwrap(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
     ),
     Layer.provideMerge(spaceLayer(spaceId, true)),
+    // The cross-space graph, beside the one space `spaceLayer` resolves: an operation that has to
+    // FIND its space (a session report, whose hook payload cannot name one) declares this instead
+    // of the database, and without it the call fails with "Service not found".
+    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService, (client) => Hypergraph.layer(client.graph)))),
     Layer.provideMerge(Trace.writerLayerNoop),
   );
 };

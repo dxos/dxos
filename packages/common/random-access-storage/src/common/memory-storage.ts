@@ -7,8 +7,8 @@ import { type Callback, type RandomAccessStorage } from 'random-access-storage';
 
 import { arrayToBuffer } from '@dxos/util';
 
-import { AbstractStorage } from './abstract-storage';
-import { type DiskInfo, StorageType } from './storage';
+import { AbstractStorage } from './abstract-storage.ts';
+import { type DiskInfo, StorageType } from './storage.ts';
 
 /**
  * Storage interface implementation for RAM.

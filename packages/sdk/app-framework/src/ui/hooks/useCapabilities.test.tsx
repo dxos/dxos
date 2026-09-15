@@ -13,12 +13,12 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { ActivationEvents, Capabilities } from '../../common';
-import { Capability, Plugin } from '../../core';
-import { ProcessManagerPlugin } from '../../plugin-process-manager';
-import { createTestApp } from '../../testing/harness';
-import { render } from '../../testing/react';
-import { useOperationHandler } from './useCapabilities';
+import { ActivationEvents, Capabilities } from '../../common/index.ts';
+import { Capability, Plugin } from '../../core/index.ts';
+import { ProcessManagerPlugin } from '../../plugin-process-manager/index.ts';
+import { createTestApp } from '../../testing/harness.ts';
+import { render } from '../../testing/react.tsx';
+import { useOperationHandler } from './useCapabilities.ts';
 
 const testMeta = Plugin.makeMeta({
   key: DXN.make('org.dxos.plugin.test.useOperationHandler'),

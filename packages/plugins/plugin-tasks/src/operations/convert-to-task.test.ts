@@ -10,7 +10,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
-import convertToTask from './convert-to-task';
+import convertToTask from './convert-to-task.ts';
 
 describe('convert-to-task', () => {
   it.effect('promotes an item into the task set the caller names', () =>

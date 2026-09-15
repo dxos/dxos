@@ -7,8 +7,8 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { hues } from '@dxos/ui-types';
 
-import { hueShades } from './defs';
-import { mx } from './util';
+import { hueShades } from './defs.ts';
+import { mx } from './util/index.ts';
 
 // prettier-ignore
 const neutralShades: [number, string][] = [

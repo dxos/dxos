@@ -8,10 +8,10 @@ import { getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 
 import buildSecrets from '../../cli-observability-secrets.json';
-import * as ObservabilityExtension from '../../ObservabilityExtension';
-import { DXOS_VERSION } from '../../version';
-import { stubExtension } from '../stub';
-import { type ExtensionsOptions } from './extension';
+import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
+import { DXOS_VERSION } from '../../version.ts';
+import { stubExtension } from '../stub.ts';
+import { type ExtensionsOptions } from './extension.ts';
 
 const DEFAULT_HOST = 'https://eu.i.posthog.com';
 

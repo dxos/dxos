@@ -37,29 +37,28 @@ import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
-import { useChatToolbarActions, useDebug } from '#hooks';
+import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
 
-import { TaskSlashCommands } from '../../commands';
-import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
+import { TaskSlashCommands } from '../../commands/index.ts';
+import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
 import {
-  ChatActivity,
   ChatStatus,
-  ChatStatusStack,
+  ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
-} from '../ChatPrompt';
-import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
+} from '../ChatPrompt/index.ts';
+import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue/index.ts';
 import {
   ChatContextProvider,
   type ChatContextValue,
   ChatReportContextProvider,
   type ChatRequestTiming,
   useChatContext,
-} from './context';
-import { type ChatEvent } from './events';
-import { SurfaceWidget } from './SurfaceWidget';
-import { projectAlarms, projectThread, resolveRewind } from './thread';
+} from './context.ts';
+import { type ChatEvent } from './events.ts';
+import { SurfaceWidget } from './SurfaceWidget.tsx';
+import { projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
 //
 // Root
@@ -344,12 +343,14 @@ const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
   PropsWithChildren<{
     companionTo?: Obj.Unknown;
+    /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
+    switcher?: ChatSwitcher;
   }>;
 
 const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
-  ({ children, attendableId, alwaysActive, companionTo, ...props }, forwardedRef) => {
+  ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-    const menuActions = useChatToolbarActions({ chat, companionTo });
+    const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
 
     return (
       <ActionToolbar
@@ -803,14 +804,45 @@ ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 
 const CHAT_QUEUE_NAME = 'Chat.Queue';
 
-type ChatQueueProps = Omit<NaturalChatQueueProps, 'queued' | 'onCancel'>;
+/**
+ * How long a prompt must sit in the queue before the queue shows it. A prompt sent to an idle agent
+ * is taken up within a frame or two, so showing it at once flashes a row that is gone before it can
+ * be read; only one that is actually waiting behind a running turn earns a row.
+ */
+const QUEUE_REVEAL_DELAY = 1_000;
+
+type ChatQueueProps = Omit<NaturalChatQueueProps, 'messages' | 'onCancel'>;
 
 const ChatQueue = (props: ChatQueueProps) => {
   const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
-  return <NaturalChatQueue {...props} queued={queued} onCancel={onCancel} />;
+  const messages = useSettled(queued, QUEUE_REVEAL_DELAY);
+
+  return <NaturalChatQueue {...props} messages={messages} onCancel={onCancel} />;
 };
 
 ChatQueue.displayName = CHAT_QUEUE_NAME;
+
+//
+// Activity
+//
+
+const CHAT_ACTIVITY_NAME = 'Chat.Activity';
+
+/**
+ * The activity line bound to the chat's processor and the chat's pending alarms: what the agent is
+ * doing, for as long as it is doing anything. The line itself takes resolved values, so it lives
+ * beside the prompt with the rest of the presentational parts and only the binding is here.
+ */
+const ChatActivity = ({ classNames }: ThemedClassName) => {
+  const { processor, alarms } = useChatContext(CHAT_ACTIVITY_NAME);
+  const activity = useAtomValue(processor.activity);
+
+  // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the
+  // wait in front of the reader.
+  return <NaturalChatActivity classNames={classNames} activity={activity} wakeAt={alarms[0]?.wakeAt} />;
+};
+
+ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
 //
 // Chat
@@ -824,7 +856,6 @@ export const Chat = {
   Queue: ChatQueue,
   Activity: ChatActivity,
   Status: ChatStatus,
-  StatusStack: ChatStatusStack,
   Thread: ChatThread,
   Outline: ChatOutline,
 };

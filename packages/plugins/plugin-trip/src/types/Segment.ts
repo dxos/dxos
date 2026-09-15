@@ -12,9 +12,9 @@ import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Organization, Provider } from '@dxos/types';
 
-import * as Booking from './Booking';
-import { Place } from './Place';
-import * as Routing from './Routing';
+import * as Booking from './Booking.ts';
+import { Place } from './Place.ts';
+import * as Routing from './Routing.ts';
 
 //
 // Enums

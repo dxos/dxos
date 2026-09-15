@@ -4,8 +4,8 @@
 
 import { type RefObject, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { ScrollFollower } from './follow';
-import { type Placement } from './placement';
+import { ScrollFollower } from './follow.ts';
+import { type Placement } from './placement.ts';
 
 /** Distance from the end within which the reader counts as being at it. */
 const STICKY_THRESHOLD = 32;

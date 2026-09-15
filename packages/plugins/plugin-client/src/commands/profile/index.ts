@@ -4,12 +4,12 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { create } from './create';
-import { del } from './delete';
-import { importCommand } from './import';
-import { inspect } from './inspect';
-import { list } from './list';
-import { reset } from './reset';
+import { create } from './create.ts';
+import { del } from './delete.ts';
+import { importCommand } from './import.ts';
+import { inspect } from './inspect.ts';
+import { list } from './list.ts';
+import { reset } from './reset.ts';
 
 export const profile = Command.make('profile').pipe(
   Command.withDescription('Profile commands.'),

@@ -9,16 +9,16 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Aggregate from './Aggregate';
-import * as Dataset from './Dataset';
-import * as Feed from './Feed';
-import * as Filter from './Filter';
-import * as Obj from './Obj';
-import * as Order from './Order';
-import * as Query from './Query';
-import * as Ref from './Ref';
-import { TestSchema } from './testing';
-import * as Type from './Type';
+import * as Aggregate from './Aggregate.ts';
+import * as Dataset from './Dataset.ts';
+import * as Feed from './Feed.ts';
+import * as Filter from './Filter.ts';
+import * as Obj from './Obj.ts';
+import * as Order from './Order.ts';
+import * as Query from './Query.ts';
+import * as Ref from './Ref.ts';
+import { TestSchema } from './testing/index.ts';
+import * as Type from './Type.ts';
 
 describe('query api', () => {
   describe('Query', () => {

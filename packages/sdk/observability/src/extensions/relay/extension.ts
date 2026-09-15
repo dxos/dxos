@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
 
-import type * as ObservabilityExtension from '../../ObservabilityExtension';
-import { type Envelope, type Payload, VERSION, serializeError } from './envelope';
+import type * as ObservabilityExtension from '../../ObservabilityExtension.ts';
+import { type Envelope, type Payload, VERSION, serializeError } from './envelope.ts';
 
 export type ExtensionsOptions = {
   /**

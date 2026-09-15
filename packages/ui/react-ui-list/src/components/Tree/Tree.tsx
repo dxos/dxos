@@ -43,9 +43,9 @@ import {
 } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
-import { Path } from '../../util';
-import { DROP_INDENTATION, indentTrack } from './helpers';
-import { type TreeData, isTreeDataFor } from './tree-data';
+import { Path } from '../../util/index.ts';
+import { DROP_INDENTATION, indentTrack } from './helpers.ts';
+import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
   type HeadingRenderer,
@@ -56,10 +56,10 @@ import {
   type TreeRenderContextValue,
   TreeRenderProvider,
   useTreeRender,
-} from './TreeContext';
-import { TreeDropDebug } from './TreeDropDebug';
-import { TreeDropIndicator } from './TreeDropIndicator';
-import { TreeItemToggle } from './TreeItemToggle';
+} from './TreeContext.ts';
+import { TreeDropDebug } from './TreeDropDebug.tsx';
+import { TreeDropIndicator } from './TreeDropIndicator.tsx';
+import { TreeItemToggle } from './TreeItemToggle.tsx';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
@@ -767,7 +767,7 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
         // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
         // the rows inside an expanded branch.
         'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden empty:hidden',
-        'overflow-y-clip [interpolate-size:allow-keywords]',
+        '[interpolate-size:allow-keywords]',
         closing ? 'animate-tree-conceal' : 'data-[animate]:data-[state=open]:animate-tree-disclose',
       )}
     >

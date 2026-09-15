@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
-import { Schedule } from './calendar';
-import { ContactsViews } from './contacts-views';
-import { Docs, type DocsContent } from './docs';
-import { Drawings } from './drawings';
-import { Inbox } from './mailbox';
-import { Notes } from './notes';
-import { Organizations } from './organizations';
-import { People } from './people';
-import { RoastLogs } from './roast-log';
-import { Sheets } from './sheets';
-import { SpringBlend } from './tasks';
-import { REFERENCE } from './util';
+import { Schedule } from './calendar.ts';
+import { ContactsViews } from './contacts-views.ts';
+import { Docs, type DocsContent } from './docs.ts';
+import { Drawings } from './drawings.ts';
+import { Inbox } from './mailbox.ts';
+import { Notes } from './notes.ts';
+import { Organizations } from './organizations.ts';
+import { People } from './people.ts';
+import { RoastLogs } from './roast-log.ts';
+import { Sheets } from './sheets.ts';
+import { SpringBlend } from './tasks.ts';
+import { REFERENCE } from './util.ts';
 
 /**
  * The Bramble Coffee Roasters sample space — the content every new identity gets on first launch.

@@ -11,10 +11,9 @@ import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { SyncRpcTimeoutError } from './errors';
-import type { FeedStore } from './feed-store';
+import { SyncRpcTimeoutError } from './errors.ts';
+import type { FeedStore } from './feed-store.ts';
 
 /** Default timeout for feed sync RPCs awaiting an edge response. */
 export const DEFAULT_SYNC_RPC_TIMEOUT_MS = 30_000;
@@ -171,7 +170,7 @@ export class SyncClient {
       feedNamespace: string;
       limit?: number;
     },
-  ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient> {
     const self = this;
     return Effect.gen(function* () {
       const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
@@ -275,7 +274,7 @@ export class SyncClient {
       feedNamespace: string;
       limit?: number;
     },
-  ): Effect.Effect<{ blocksToPull: number }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  ): Effect.Effect<{ blocksToPull: number }, unknown, SqlClient.SqlClient> {
     const self = this;
     return Effect.gen(function* () {
       const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
@@ -322,7 +321,7 @@ export class SyncClient {
       feedNamespace: string;
       limit?: number;
     },
-  ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient> {
     const self = this;
     return Effect.gen(function* () {
       const unpositioned = yield* self.#feedStore.query({
@@ -421,7 +420,7 @@ export class SyncClient {
     opts: { spaceId: SpaceId; feedNamespace: string; lastPulledPosition: number },
     storedToken: string | undefined,
     reportedToken: string | undefined,
-  ): Effect.Effect<'unchanged' | 'reset' | 'restart', unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  ): Effect.Effect<'unchanged' | 'reset' | 'restart', unknown, SqlClient.SqlClient> {
     const self = this;
     return Effect.gen(function* () {
       if (reportedToken == null || reportedToken === storedToken) {

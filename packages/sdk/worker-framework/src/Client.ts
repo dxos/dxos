@@ -15,9 +15,9 @@ import {
   lockOrRpcTimeoutError,
   requestExclusiveLock,
   waitWithLockOrRpcTimeout,
-} from './internal/locks';
-import { workerErrorFromEvent } from './internal/worker-errors';
-import * as WorkerProtocol from './WorkerProtocol';
+} from './internal/locks.ts';
+import { workerErrorFromEvent } from './internal/worker-errors.ts';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
@@ -400,6 +400,9 @@ export class Connection extends Resource {
     // One attempt per run: the heartbeat-driven re-requests below belong to this same attempt, so
     // the worker keeps discarding them as duplicates rather than churning the session.
     const attempt = ++this.#connectAttempt;
+    // Held for this attempt's lifetime and handed to the worker, which ends the session when it
+    // releases — the only way the worker learns that this tab closed or died.
+    const sessionLockKey = `${this.#clientId}/session/${attempt}`;
 
     const handleLeaderStopped = async () => {
       log('worker-connection: lost connection');
@@ -411,6 +414,29 @@ export class Connection extends Resource {
     };
 
     try {
+      if (typeof navigator !== 'undefined' && typeof navigator.locks !== 'undefined') {
+        const granted = new Trigger<Error | undefined>();
+        const released = new Trigger();
+        ctx.onDispose(() => released.wake());
+        navigator.locks
+          .request(sessionLockKey, { signal: ctx.signal }, async () => {
+            granted.wake(undefined);
+            await released.wait();
+          })
+          .catch((err) => {
+            if (!isAbortError(err)) {
+              log.catch(err);
+            }
+            // The attempt waits on this trigger, so a rejection has to wake it — an already-aborted
+            // `ctx.signal` rejects immediately, and this attempt would otherwise never finish or fail.
+            granted.wake(err);
+          });
+        const grantError = await granted.wait();
+        if (grantError) {
+          throw grantError;
+        }
+      }
+
       log('worker-connection: requesting port from leader');
       this.#connectPhase = 'requesting-port';
       const result = await new Promise<
@@ -433,6 +459,7 @@ export class Connection extends Resource {
               type: 'request-port',
               clientId: this.#clientId,
               attempt,
+              sessionLockKey,
             });
           }
         });
@@ -450,6 +477,7 @@ export class Connection extends Resource {
           type: 'request-port',
           clientId: this.#clientId,
           attempt,
+          sessionLockKey,
         });
       });
 
@@ -680,7 +708,12 @@ class LeaderSession extends Resource {
           }
           break;
         case 'request-port':
-          this.#sendMessage({ type: 'start-session', clientId: msg.clientId, attempt: msg.attempt });
+          this.#sendMessage({
+            type: 'start-session',
+            clientId: msg.clientId,
+            attempt: msg.attempt,
+            sessionLockKey: msg.sessionLockKey,
+          });
           break;
         default:
           break;

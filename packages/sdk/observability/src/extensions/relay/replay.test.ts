@@ -4,9 +4,9 @@
 
 import { describe, expect, test, vi } from 'vitest';
 
-import type * as Observability from '../../Observability';
-import { type Envelope, type Payload } from './envelope';
-import { currentDistinctId, replay } from './replay';
+import type * as Observability from '../../Observability.ts';
+import { type Envelope, type Payload } from './envelope.ts';
+import { currentDistinctId, replay } from './replay.ts';
 
 const envelope = (payload: Payload & { distinctId?: string }, tags: Record<string, string> = {}): Envelope => ({
   v: 1,

@@ -11,7 +11,7 @@ import { runServiceCall, subscribeStream } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { ConnectionState, type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { RPC_TIMEOUT } from '../common';
+import { RPC_TIMEOUT } from '../common.ts';
 
 /**
  * Public API for MESH services.

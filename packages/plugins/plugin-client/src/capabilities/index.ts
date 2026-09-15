@@ -14,11 +14,11 @@ import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 export const AccountCache = Capability.lazyModule(
   'AccountCache',
   { provides: [ClientCapabilities.AccountCache] },
-  () => import('./account-cache'),
+  () => import('./account-cache.ts'),
 );
 // Its connectors read `client.halo`/`client.mesh` inside atom computations (initialized-only,
 // and a pre-init throw is not re-evaluated when initialization lands).
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   activatesOn: ClientEvents.Initialized,
 });
 // `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
@@ -32,7 +32,7 @@ export const HubHttpClient = Capability.lazyModule(
     // Reads `client.config` (initialized-only) for the hub URL.
     activatesOn: ClientEvents.Initialized,
   },
-  () => import('./hub-http-client'),
+  () => import('./hub-http-client.ts'),
 );
 export const Client = Capability.lazyModule(
   'Client',
@@ -49,9 +49,9 @@ export const Client = Capability.lazyModule(
     ],
     environments: ['node'],
   },
-  () => import('./client'),
+  () => import('./client.ts'),
 );
-export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
+export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
 });
 export const Migrations = Capability.lazyModule(
@@ -65,18 +65,18 @@ export const Migrations = Capability.lazyModule(
     activatesOn: ClientEvents.Initialized,
     environments: ['node'],
   },
-  () => import('./migrations'),
+  () => import('./migrations.ts'),
 );
-export { NavigationHandler } from './navigation-handler';
-export type { NavigationHandlerOptions } from './navigation-handler';
+export { NavigationHandler } from './navigation-handler/index.ts';
+export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
 export const NavigationTargetLoader = Capability.lazyModule(
   'NavigationTargetLoader',
   { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationTargetLoader] },
-  () => import('./navigation-target-loader'),
+  () => import('./navigation-target-loader.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
   props: ({
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
@@ -100,7 +100,7 @@ export const SchemaDefs = Capability.lazyModule(
     provides: [ClientCapabilities.SchemaRegistered],
     environments: ['node'],
   },
-  () => import('./schema-defs'),
+  () => import('./schema-defs.ts'),
 );
 export const RemoteTraceMonitor = Capability.lazyModule(
   'RemoteTraceMonitor',
@@ -108,7 +108,7 @@ export const RemoteTraceMonitor = Capability.lazyModule(
   // bakes a no-op remote source if it has not been contributed yet — demand activation always loses
   // that race, silencing remote traces for every ProcessMonitor consumer.
   { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
-  () => import('./remote-trace-monitor'),
+  () => import('./remote-trace-monitor.ts'),
 );
 export const SpaceReplicationProgress = Capability.lazyModule(
   'SpaceReplicationProgress',
@@ -120,7 +120,7 @@ export const SpaceReplicationProgress = Capability.lazyModule(
     // Runtime event: spaces become ready when the client observes them, not at startup.
     activatesOn: ClientEvents.SpacesReady,
   },
-  () => import('./space-replication-progress'),
+  () => import('./space-replication-progress.ts'),
 );
 export const TraceProgress = Capability.lazyModule(
   'TraceProgress',
@@ -132,6 +132,6 @@ export const TraceProgress = Capability.lazyModule(
     // registry are all available by the time spaces are observed.
     activatesOn: ClientEvents.SpacesReady,
   },
-  () => import('./trace-progress'),
+  () => import('./trace-progress.ts'),
 );
 export const Translations = AppCapability.translations(translations);

@@ -13,9 +13,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { ToolForm } from '../ToolForm';
-import { ToolList } from '../ToolList';
-import { ToolResults } from '../ToolResults';
+import { ToolForm } from '../ToolForm/index.ts';
+import { ToolList } from '../ToolList/index.ts';
+import { ToolResults } from '../ToolResults/index.ts';
 
 export type ToolsExplorerProps = ThemedClassName<{
   /** URL of the introspect-mcp HTTP server. Renders an unconfigured state when absent. */

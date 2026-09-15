@@ -4,8 +4,8 @@
 
 import { type Progress } from '@dxos/progress';
 
-import { toSlots } from './slots';
-import { type MetricSpec, type SpaceStats } from './types';
+import { toSlots } from './slots.ts';
+import { type MetricSpec, type SpaceStats } from './types.ts';
 
 const ACTIVE: readonly Progress.TaskStatus[] = ['pending', 'running'];
 

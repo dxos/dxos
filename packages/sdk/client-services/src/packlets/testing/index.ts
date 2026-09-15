@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './credential-utils';
-export * from './invitation-utils';
-export * from './test-builder';
+export * from './credential-utils.ts';
+export * from './invitation-utils.ts';
+export * from './test-builder.ts';

@@ -62,8 +62,8 @@ import {
   suggestingScenario,
   tableCellEditScenario,
   tableSuggestScenario,
-} from '../testing';
-import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
+} from '../testing/index.ts';
+import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook.ts';
 
 const concat = (...lines: string[]) => lines.join('\n');
 

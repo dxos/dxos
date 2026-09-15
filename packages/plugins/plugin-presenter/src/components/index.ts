@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Markdown';
-export * from './Presenter';
-export * from './RevealPlayer';
+export * from './Markdown/index.ts';
+export * from './Presenter/index.ts';
+export * from './RevealPlayer/index.ts';

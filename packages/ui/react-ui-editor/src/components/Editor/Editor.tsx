@@ -27,15 +27,18 @@ import {
   type EditorMenuProviderProps,
   type UseEditorMenuProps,
   useEditorMenu,
-} from '../EditorMenuProvider';
+} from '../EditorMenuProvider/index.ts';
 import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
-} from '../EditorToolbar';
-import { type EditorController, noopController } from './controller';
-import { EditorContextProvider, type EditorContextValue, useEditorContext } from './EditorContext';
-import { EditorView as NaturalEditorContent, type EditorViewProps as NaturalEditorContentProps } from './EditorView';
+} from '../EditorToolbar/index.ts';
+import { type EditorController, noopController } from './controller.ts';
+import { EditorContextProvider, type EditorContextValue, useEditorContext } from './EditorContext.ts';
+import {
+  EditorView as NaturalEditorContent,
+  type EditorViewProps as NaturalEditorContentProps,
+} from './EditorView.tsx';
 
 //
 // Root

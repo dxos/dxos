@@ -14,7 +14,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { CrxSettings } from './CrxSettings';
+import { CrxSettings } from './CrxSettings.tsx';
 
 /**
  * Stand in for the extension's content relay so the connection test succeeds: set the readiness

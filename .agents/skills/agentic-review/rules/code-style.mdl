@@ -83,6 +83,68 @@ rule operations-take-refs-not-ids: Operations identify objects by Ref, never by 
   severity: warn
 ```
 
+```mdl
+rule declare-optional-services-with-noop-layers: An optional service is a declared requirement plus a noop layer, never a callback
+  A layer that needs a service only sometimes must still DECLARE it — in the
+  `Layer` signature's requirements, and in a `LayerSpec`'s `requires` — and the
+  hosts that lack a real implementation must satisfy it with a documented noop
+  layer (`layerNoop`). Do not reach for the alternatives: an
+  `Effect.serviceOption` read is invisible to a `LayerSpec` stack, where a tag
+  the spec does not require is never in its context, so the read comes back
+  empty even when the app materialises the service elsewhere; and a
+  `getFooManager?: () => Effect<Foo>` callback option moves the wiring out of
+  the layer graph into a caller that has to re-derive it, so the graph no longer
+  tells you what the layer needs and each host wires it differently — or
+  forgets to. The usual justification for both is that requiring the tag would
+  prune the provider on a host that does not use the feature; a noop layer
+  answers that directly, and fails loudly at the point of use rather than
+  silently disabling the feature at construction. Flag an
+  `Effect.serviceOption` whose tag is not in the enclosing layer's
+  requirements, a `LayerSpec` factory reading a tag absent from its `requires`,
+  and an options field typed as a thunk returning a service or an `Effect` of
+  one. `Effect.serviceOption` for a genuinely optional *value* (a config
+  default, a capability list that may be empty) is NOT a violation, and neither
+  is a callback that supplies behaviour rather than a service — a strategy, a
+  factory the host parameterises.
+  scope: repo
+  files:
+    - packages/**/*.ts
+  grep: serviceOption|LayerSpec|\w+\?:.*=>.*(Service|Manager|Provider|Layer)\b
+  severity: warn
+```
+
+```mdl
+rule import-as-namespace-is-all-or-nothing: A namespace module's directive, filename, re-export and import sites must agree
+  The namespace-export style is four things that have to say the same name, and
+  a module that satisfies only some of them is worse than one that satisfies
+  none — a reader cannot tell from a call site which kind of module they are
+  in. (1) The module carries `// @import-as-namespace` directly under the
+  copyright header. (2) Its filename IS the namespace: capital-case `Foo.ts`,
+  not `foo.ts` or `foo-bar.ts`. (3) The package barrel re-exports it under that
+  same name — `export * as Foo from './Foo'`, never a renamed alias. (4) Every
+  consumer imports the whole namespace, `import * as Foo from '@dxos/pkg/Foo'`
+  or `import { Foo } from '@dxos/pkg'`, and reaches members through it
+  (`Foo.make`); a named import of a member (`import { make, type Options } from
+  '.../Foo'`) pulls the member out of the namespace that gives it its meaning.
+  Inside such a module, members are not prefixed with the namespace's own name
+  (`Options`, not `FooOptions` — callers write `Foo.Options` either way) and
+  there is no default export. Flag any of the four disagreeing: a directive with
+  a lowercase or hyphenated filename, an `export * as X from './Y'` where `X`
+  and `Y` differ, a module the barrel exports as a namespace but that carries no
+  directive, a member import from a module that does, and a namespace-prefixed
+  member inside one. Not violations: the lowercase `*Internal` alias convention
+  for internal barrels (`import * as objInternal from './internal/Obj'`), the
+  directly-exported `errors.ts` and `testing/` entrypoints, and a module that is
+  not a namespace module at all — this rule is about half-applied style, not
+  about converting every file.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: @import-as-namespace|export \* as|import \* as
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl

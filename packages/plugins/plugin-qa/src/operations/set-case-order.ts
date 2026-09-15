@@ -9,7 +9,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 
 import { QaOperation, type TestCase } from '#types';
 
-import { loadCases } from './util';
+import { loadCases } from './util.ts';
 
 const handler: Operation.WithHandler<typeof QaOperation.SetCaseOrder> = QaOperation.SetCaseOrder.pipe(
   Operation.withHandler(

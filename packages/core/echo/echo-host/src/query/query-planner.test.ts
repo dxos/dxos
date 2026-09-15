@@ -9,8 +9,8 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { type QueryPlan } from './plan';
-import { QueryPlanner, filterContainsInQuery } from './query-planner';
+import { type QueryPlan } from './plan.ts';
+import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();

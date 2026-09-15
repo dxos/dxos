@@ -20,7 +20,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SpaceHomeDashboard, type SpaceStatId } from './SpaceHomeDashboard';
+import { SpaceHomeDashboard, type SpaceStatId } from './SpaceHomeDashboard.tsx';
 
 class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.1.0'))(
   Schema.Struct({

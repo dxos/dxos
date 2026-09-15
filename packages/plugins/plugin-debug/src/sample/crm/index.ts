@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { Accounts, Contacts } from './accounts';
-import { Inbox } from './inbox';
-import { PipelineBoard } from './pipeline';
-import { REFERENCE } from './util';
+import { Accounts, Contacts } from './accounts.ts';
+import { Inbox } from './inbox.ts';
+import { PipelineBoard } from './pipeline.ts';
+import { REFERENCE } from './util.ts';
 
 const phases = {
   accounts: Accounts,

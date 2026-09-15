@@ -11,7 +11,7 @@ import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { Clipboard, Field, Flex, useControlledState, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Field, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -50,9 +50,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
   }
 
   return (
-    <Flex column>
-      <Form.Section title={t('remote-function-settings.heading')} />
-
+    <Form.FieldSet label={t('remote-function-settings.heading')}>
       {functionUrl && (
         <Field.Root>
           <Field.Label>{t('function-url.label')}</Field.Label>
@@ -78,7 +76,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
           onBlur={handleBindingBlur}
         />
       </Field.Root>
-    </Flex>
+    </Form.FieldSet>
   );
 };
 

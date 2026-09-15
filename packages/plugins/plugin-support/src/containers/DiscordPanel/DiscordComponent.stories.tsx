@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DiscordComponent } from './DiscordComponent';
+import { DiscordComponent } from './DiscordComponent.tsx';
 
 const DefaultStory = () => (
   <DiscordComponent.Root>

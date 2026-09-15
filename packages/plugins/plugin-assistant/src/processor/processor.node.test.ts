@@ -20,7 +20,7 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 
-import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor';
+import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 

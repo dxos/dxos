@@ -15,8 +15,8 @@ import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { SHORTCUTS_DIALOG } from '../../constants';
-import { downloadUrl } from './download';
+import { SHORTCUTS_DIALOG } from '../../constants.ts';
+import { downloadUrl } from './download.ts';
 
 // Mirrors the welcome plugin's ABOUT_DIALOG constant (composer-app/src/plugins/welcome);
 // inlined because composer-app is not a workspace dependency.

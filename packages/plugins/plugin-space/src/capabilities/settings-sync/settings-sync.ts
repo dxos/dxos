@@ -3,33 +3,24 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { type Space } from '@dxos/client/echo';
-import { Filter, Obj } from '@dxos/echo';
+import { Annotation, Database, Obj, Ref } from '@dxos/echo';
 import { createKvsStore } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { resolveSettingsSpace } from '../../util';
-import { installedPlugins, pluginSet, pluginSettings } from './binding';
-import { type Store } from './reconciler';
-import { Sync } from './sync';
-
-/**
- * The space's {@link AppSettings.AppSettings} singleton, created on first use. Two devices racing
- * first use create two objects; the lowest id wins so every device converges on the same one.
- */
-const getOrCreateSettings = Effect.fnUntraced(function* (space: Space) {
-  const existing = yield* Effect.promise(() => space.db.query(Filter.type(AppSettings.AppSettings)).run());
-  const canonical = [...existing].sort((left, right) => left.id.localeCompare(right.id))[0];
-  return canonical ?? space.db.add(AppSettings.make());
-});
+import { resolveSettingsSpace } from '../../util/index.ts';
+import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
+import { type Store } from './reconciler.ts';
+import { Sync } from './sync.ts';
 
 /**
  * Adapt the two halves to the reconciler's storage interface: the shared layer in ECHO, this
@@ -37,14 +28,15 @@ const getOrCreateSettings = Effect.fnUntraced(function* (space: Space) {
  * whether an edit reaches the account.
  */
 const makeStore = (
-  settings: AppSettings.AppSettings,
+  current: () => AppSettings.AppSettings,
   device: Atom.Writable<AppSettings.DeviceSettings>,
   registry: AtomRegistry.AtomRegistry,
 ): Store => ({
-  read: () => ({ shared: settings.shared, local: registry.get(device) }),
+  read: () => ({ shared: current().shared, local: registry.get(device) }),
   update: (fn) => {
     const before = registry.get(device);
     const local: AppSettings.DeviceSettings = structuredClone(before);
+    const settings = current();
     Obj.update(settings, (settings) => fn({ shared: settings.shared, local }));
     if (JSON.stringify(local) !== JSON.stringify(before)) {
       registry.set(device, local);
@@ -69,14 +61,27 @@ export default Capability.makeModule(
     }
 
     const space = yield* resolveSettingsSpace(client);
-    const settings = yield* getOrCreateSettings(space);
+    // Named at genesis; a settings space that predates the name is given one here.
+    let settings = yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+      Option.match({
+        onSome: (ref) => Database.load(ref),
+        onNone: () =>
+          Effect.sync(() => {
+            const settings = space.db.add(AppSettings.make());
+            Obj.update(space.properties, (properties) => {
+              Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
+            });
+            return settings;
+          }),
+      }),
+    );
     // This device's pins. One per device, so the key names no device.
     const device = createKvsStore({
       key: 'org.dxos.app-toolkit.settings-scope',
       schema: AppSettings.DeviceSettings,
       defaultValue: AppSettings.makeDeviceSettings,
     });
-    const store = makeStore(settings, device, registry);
+    const store = makeStore(() => settings, device, registry);
     const sync = new Sync(store);
 
     //
@@ -113,10 +118,40 @@ export default Capability.makeModule(
       sync.pull();
     };
 
+    //
+    // Follow the annotation. Devices that each created an object settle on the one it names, so a
+    // device switches to it and reseeds, republishing what only it holds.
+    //
+
+    const follow = () => {
+      const ref = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrUndefined);
+      void ref?.load().then(
+        (next) => {
+          const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+            Option.getOrUndefined,
+          );
+          if (next.id === settings.id || named?.uri !== ref.uri) {
+            return;
+          }
+
+          unsubscribeSettings();
+          settings = next;
+          unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
+          sync.seed();
+          refresh();
+        },
+        (error) => log.catch(error),
+      );
+    };
+
+    const onSettingsChange = () => (Obj.isDeleted(settings) ? follow() : refresh());
+    let unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
+
     const unsubscribe = [
       registry.subscribe(contributed, bindSettings),
-      Obj.subscribe(settings, refresh),
+      Obj.subscribe(space.properties, follow),
       registry.subscribe(device, refresh),
+      () => unsubscribeSettings(),
     ];
 
     yield* Effect.addFinalizer(() =>
@@ -129,20 +164,19 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.SettingsSync, {
       unsynced,
       pinned,
-      setSynced: (namespace, synced, options) => {
-        // Leaving the plugin set deliberately pins nothing, so plugins enabled on another device
-        // later still arrive here.
-        const freeze = namespace !== AppSettings.PLUGINS_NAMESPACE;
-        store.update((draft) =>
-          AppSettings.setSynced(draft, namespace, synced, sync.local(namespace), {
-            freeze,
-            adopt: options?.adopt,
-          }),
-        );
+      takeLocal: (namespace) => {
+        const freeze = sync.freezes(namespace);
+        store.update((draft) => AppSettings.takeLocal(draft, namespace, sync.local(namespace), { freeze }));
+      },
+      rejoinAccount: (namespace, options) => {
+        store.update((draft) => AppSettings.rejoinAccount(draft, namespace, sync.local(namespace), options));
       },
       conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace, sync.local(namespace)),
-      setKeySynced: (namespace, key, synced) => {
-        store.update((draft) => AppSettings.setKeySynced(draft, namespace, key, synced));
+      pinKey: (namespace, key) => {
+        store.update((draft) => AppSettings.pinKey(draft, namespace, key));
+      },
+      unpinKey: (namespace, key) => {
+        store.update((draft) => AppSettings.unpinKey(draft, namespace, key));
       },
     });
   }),

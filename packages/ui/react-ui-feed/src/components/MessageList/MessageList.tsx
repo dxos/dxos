@@ -29,8 +29,8 @@ import { type WindowController, type WindowState, useFollow, useWindow } from '@
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { type FeedNavigation, useDecorations, useFeedNavigation, useItemSelectionValue } from '../../hooks';
-import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer } from '../../model';
+import { type FeedNavigation, useDecorations, useFeedNavigation, useItemSelectionValue } from '../../hooks/index.ts';
+import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer } from '../../model/index.ts';
 import {
   type HighlightRange,
   HtmlBlock,
@@ -40,8 +40,8 @@ import {
   WidgetStateProvider,
   createSelectionGroup,
   createWidgetStateStore,
-} from '../Block';
-import { useJumpDetector, usePositionLog } from './position-log';
+} from '../Block/index.ts';
+import { useJumpDetector, usePositionLog } from './position-log.ts';
 
 //
 // Context

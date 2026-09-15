@@ -11,13 +11,13 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { type DeleteSpaceResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util';
+import { adminRequest, formatAdminError } from '../util.ts';
 
 export const del = Command.make(
   'delete',
   {
-    spaceId: Args.string('spaceId'),
-    force: Options.boolean('force').pipe(
+    spaceId: Args.String('spaceId'),
+    force: Options.Boolean('force').pipe(
       Options.withDescription('Confirm irreversible deletion.'),
       Options.withDefault(false),
     ),

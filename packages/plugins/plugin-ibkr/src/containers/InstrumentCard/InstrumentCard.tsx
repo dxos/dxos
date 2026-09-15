@@ -11,7 +11,7 @@ import { Card } from '@dxos/react-ui';
 import { TradingViewChart } from '#components';
 import { Ibkr } from '#types';
 
-import { resolveTradingViewSymbol } from '../../services';
+import { resolveTradingViewSymbol } from '../../services/index.ts';
 
 export type InstrumentCardProps = AppSurface.ObjectCardProps<Ibkr.Instrument>;
 

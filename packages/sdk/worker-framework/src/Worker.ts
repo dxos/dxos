@@ -5,8 +5,9 @@
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import type * as Scope from 'effect/Scope';
+import * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
@@ -14,12 +15,32 @@ import { Trigger } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import * as WorkerProtocol from './WorkerProtocol';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 // A single MessagePort multiplexes every request by id, so allow effectively-unbounded concurrent
 // requests over the one worker rather than the pool default of 1 (which lets one open stream block
 // every other call).
 const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
+
+/** Message that tears down whichever worker currently owns a storage lock. */
+const DISPLACE_MESSAGE = { action: 'stop' } as const;
+
+/** Default displacement channel for a storage lock; see {@link Options.displaceChannel}. */
+export const displaceChannelFor = (storageLockKey: string): string => `${storageLockKey}/displace`;
+
+/**
+ * Shuts down whichever worker currently holds `storageLockKey`, so its storage can be taken over.
+ * A worker does this to its predecessor on startup; a caller rewriting the storage from outside
+ * does it to free the lock, and must still wait for the lock itself — this only asks.
+ */
+export const displace = (storageLockKey: string, displaceChannel = displaceChannelFor(storageLockKey)): void => {
+  const channel = new BroadcastChannel(displaceChannel);
+  try {
+    channel.postMessage(DISPLACE_MESSAGE);
+  } finally {
+    channel.close();
+  }
+};
 
 const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePort) =>
   Layer.merge(
@@ -29,12 +50,22 @@ const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePo
     ),
   );
 
+/**
+ * What {@link Options.createRuntime} returns: the worker-specific side of the session protocol.
+ */
 export type RuntimeHandle = {
-  stop?(): Promise<void>;
+  /**
+   * Acquires the resources that serve one tab (RPC servers, clients) into the provided scope and
+   * returns; it does not wait for the session to end. The scope is the session's lifetime: the
+   * framework closes it when the tab's session lock releases (the tab closed or died), when a newer
+   * connect attempt from the same tab supersedes this one, or when the worker shuts down. The
+   * protocols in context are the tab→worker server transport and the worker→tab client transport,
+   * built into the same scope.
+   */
   createSession(args: {
     clientId: string;
     isOwner: boolean;
-  }): Effect.Effect<never, never, Scope.Scope | RpcClient.Protocol | RpcServer.Protocol>;
+  }): Effect.Effect<void, never, Scope.Scope | RpcClient.Protocol | RpcServer.Protocol>;
 };
 
 export type Options = {
@@ -52,7 +83,10 @@ export type Options = {
    */
   displaceChannel?: string;
   /**
-   * Builds the runtime after receiving init config from the leader.
+   * Builds the runtime after receiving init config from the leader. The provided scope is the
+   * runtime's lifetime: it stays open until the worker shuts down (displaced by a newer worker, or
+   * `requestShutdown` called), and every session scope is a child of it, so shutdown closes the
+   * sessions first and then the runtime. Put the runtime's teardown in its finalizers.
    */
   createRuntime: (args: {
     config: Record<string, any> | undefined;
@@ -81,13 +115,15 @@ const defaultEndpoint = (): WorkerProtocol.WorkerEndpoint => {
 export const run = ({
   endpoint = defaultEndpoint(),
   storageLockKey,
-  displaceChannel = `${storageLockKey}/displace`,
+  displaceChannel = displaceChannelFor(storageLockKey),
   createRuntime,
 }: Options): void => {
   void navigator.locks.request(storageLockKey, async () => {
     log('lock acquired');
 
     let runtime: RuntimeHandle | undefined;
+    // The runtime's lifetime (see `Options.createRuntime`); every session scope is forked from it.
+    const runtimeScope = Effect.runSync(Scope.make());
     let owningClientId: string;
     // Live session per client, keyed by the connect attempt that claimed it. `supersede` tears the
     // session down from this side — the only way to reclaim a slot whose tab abandoned it.
@@ -100,7 +136,7 @@ export const run = ({
 
     // Displace any previously-running worker for this storage lock, and shut down if displaced.
     const channel = new BroadcastChannel(displaceChannel);
-    channel.postMessage({ action: 'stop' });
+    channel.postMessage(DISPLACE_MESSAGE);
 
     // Hold a dedicated liveness lock for the worker's whole lifetime. Clients watch this key to detect
     // termination, so it must be held before `ready` is advertised — hence the awaited grant below.
@@ -114,7 +150,6 @@ export const run = ({
       livenessLockGranted.wake();
       await livenessLockHeld;
     });
-    await livenessLockGranted.wait();
 
     let shuttingDown = false;
     const shutdown = async () => {
@@ -124,21 +159,28 @@ export const run = ({
       shuttingDown = true;
       log('worker shutting down');
       channel.close();
-      try {
-        await runtime?.stop?.();
-      } catch (err: any) {
-        log.catch(err);
-      }
+      await EffectEx.runPromise(Scope.close(runtimeScope, Exit.void)).catch((err) => log.catch(err));
       endpoint.close?.();
       releaseLivenessLock();
       releaseStorageLock();
     };
+    // Installed in the same synchronous block as the channel, so no displacement can land in a gap:
+    // BroadcastChannel queues a delivery task and never replays it to a listener attached after an
+    // await, which would leave this worker holding the storage lock a displacer is waiting on.
     channel.onmessage = (event) => {
-      if (event.data?.action === 'stop') {
+      if (event.data?.action === DISPLACE_MESSAGE.action) {
         log('displaced by newer worker, shutting down');
         void shutdown();
       }
     };
+
+    await livenessLockGranted.wait();
+    if (shuttingDown) {
+      // Displaced before startup finished: `shutdown` has released both locks, so there is nothing
+      // to serve and advertising `listening` would hand out a session this worker cannot keep.
+      log('displaced during startup, not serving');
+      return;
+    }
 
     const requestShutdown = () => void shutdown();
 
@@ -150,7 +192,7 @@ export const run = ({
           owningClientId = message.ownerClientId ?? message.clientId;
           log('worker init with config', { keys: Object.keys(message.config ?? {}) });
           runtime = await EffectEx.runPromise(
-            createRuntime({ config: message.config, requestShutdown }).pipe(Effect.scoped),
+            createRuntime({ config: message.config, requestShutdown }).pipe(Scope.provide(runtimeScope)),
           );
           log('dedicated-worker: runtime ready, posting ready');
           endpoint.postMessage({
@@ -202,31 +244,60 @@ export const run = ({
             [clientToWorkerChannel.port1, workerToClientChannel.port1],
           );
 
-          log('dedicated-worker: creating session (waiting for handshake)', { clientId: message.clientId });
-          const sessionEffect = runtime
-            .createSession({
-              clientId: message.clientId,
-              isOwner: message.clientId === owningClientId,
-            })
-            .pipe(
-              Effect.provide(sessionProtocols(clientToWorkerChannel.port2, workerToClientChannel.port2)),
-              // `createSession` blocks for the session's lifetime, so this race is what ends it early
-              // when a newer attempt supersedes this one; `Effect.scoped` below then runs teardown.
-              Effect.raceFirst(Effect.promise(() => superseded.wait())),
-              Effect.ensuring(
-                Effect.sync(() => {
-                  log('dedicated-worker: session closed', { clientId: message.clientId, attempt });
-                  // Guarded: a superseded session finishes after the newer attempt claimed the slot,
-                  // and must not evict it.
-                  if (sessionsByClient.get(message.clientId)?.attempt === attempt) {
-                    sessionsByClient.delete(message.clientId);
-                  }
-                }),
-              ),
+          // The session's lifetime (see `RuntimeHandle.createSession`): a child of the runtime scope,
+          // closed below when the tab's session lock releases or a newer attempt supersedes this one.
+          const sessionScope = await EffectEx.runPromise(Scope.fork(runtimeScope));
+          const closeSession = async () => {
+            await EffectEx.runPromise(Scope.close(sessionScope, Exit.void)).catch((err) => log.catch(err));
+            log('dedicated-worker: session closed', { clientId: message.clientId, attempt });
+            // Guarded: a superseded session finishes after the newer attempt claimed the slot,
+            // and must not evict it.
+            if (sessionsByClient.get(message.clientId)?.attempt === attempt) {
+              sessionsByClient.delete(message.clientId);
+            }
+          };
+
+          log('dedicated-worker: creating session', { clientId: message.clientId });
+          try {
+            await EffectEx.runPromise(
+              Effect.gen(function* () {
+                const protocols = yield* Layer.build(
+                  sessionProtocols(clientToWorkerChannel.port2, workerToClientChannel.port2),
+                );
+                yield* runtime!
+                  .createSession({ clientId: message.clientId, isOwner: message.clientId === owningClientId })
+                  .pipe(Effect.provide(protocols));
+              }).pipe(Scope.provide(sessionScope)),
             );
-          // The session effect runs for the session's lifetime (createSession blocks until the
-          // session ends), so cleanup is handled by `Effect.ensuring` above rather than a log here.
-          await EffectEx.runPromise(sessionEffect.pipe(Effect.scoped));
+          } catch (err) {
+            log.catch(err);
+            await closeSession();
+            break;
+          }
+
+          // Aborted when a newer attempt supersedes this session: an un-cancelled request stays
+          // queued on the tab's lock for the worker's life, and would run `closeSession` against an
+          // already-closed scope whenever the tab finally released it.
+          const tabGoneAbort = new AbortController();
+          const tabGone = message.sessionLockKey
+            ? navigator.locks
+                .request(message.sessionLockKey, { signal: tabGoneAbort.signal }, () => {
+                  // Granted once the tab releases it.
+                })
+                .catch((err) => {
+                  if (err?.name !== 'AbortError') {
+                    throw err;
+                  }
+                  return new Promise<never>(() => {});
+                })
+            : new Promise<never>(() => {});
+          // The rejection path is explicit: `navigator.locks.request` can reject on its own (an
+          // opaque origin, the lock manager going away), and an unhandled one would leave the session
+          // open for the worker's life.
+          void Promise.race([superseded.wait().then(() => tabGoneAbort.abort()), tabGone]).then(closeSession, (err) => {
+            log.catch(err);
+            void closeSession();
+          });
           break;
         }
 

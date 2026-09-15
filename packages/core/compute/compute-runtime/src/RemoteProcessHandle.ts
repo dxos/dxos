@@ -4,9 +4,11 @@
 
 // @import-as-namespace
 
+import type * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
@@ -20,9 +22,10 @@ import * as Trace from '@dxos/compute/Trace';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type * as ProcessManager from './ProcessManager';
-import { toError, toStatus } from './remote-process-info';
-import type * as RemoteProcessManager from './RemoteProcessManager';
+import type * as ProcessManager from './ProcessManager.ts';
+import { toError, toStatus } from './remote-process-info.ts';
+import type * as RemoteProcessManager from './RemoteProcessManager.ts';
+import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /** How long to wait before re-reading a process's event log after an empty page. */
 const DEFAULT_POLL_INTERVAL = Duration.millis(250);
@@ -51,6 +54,16 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
   readonly registry: Registry.AtomRegistry;
 
   readonly pollInterval?: Duration.Duration;
+
+  /**
+   * Live source of the host's ephemeral trace, when the deployment has one.
+   *
+   * Without it {@link RemoteProcessHandle.subscribeEphemeral} discovers the stream by paging the
+   * host's event ring, and the host flushes that ring only at the END of an invocation — so a
+   * reader cannot see a turn arriving at all until it is over, however well the provider streamed.
+   * With it the same messages arrive as they are produced, over the space swarm.
+   */
+  readonly remoteTrace?: RemoteTraceMonitor.Monitor;
 
   /**
    * Ran after a lifecycle change this handle causes, so the manager's process tree — which the
@@ -88,6 +101,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   readonly #definition: Process.Process<_Input, _Output, any, _Rpcs> | undefined;
   readonly #registry: Registry.AtomRegistry;
   readonly #pollInterval: Duration.Duration;
+  readonly #remoteTrace: RemoteTraceMonitor.Monitor | undefined;
   readonly #onLifecycleChange: Effect.Effect<void>;
   readonly #statusAtom: Atom.Writable<ProcessManager.Status>;
   #info: RemoteProcessManager.Snapshot;
@@ -109,6 +123,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     this.#definition = options.definition;
     this.#registry = options.registry;
     this.#pollInterval = options.pollInterval ?? DEFAULT_POLL_INTERVAL;
+    this.#remoteTrace = options.remoteTrace;
     this.#onLifecycleChange = options.onLifecycleChange ?? Effect.void;
     this.#info = options.info;
     this.#statusAtom = Atom.make(toStatus(options.info));
@@ -191,9 +206,69 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   subscribeEphemeral(): Stream.Stream<Trace.Message> {
     // From the start of the log, matching the local handle: it replays buffered ephemeral events
     // before streaming new ones, which is what lets a UI attach mid-turn and still render it.
-    return this.#readEvents(0).pipe(
+    const remoteTrace = this.#remoteTrace;
+    if (remoteTrace === undefined) {
+      return this.#readEvents(0).pipe(
+        Stream.filter((event) => event._tag === 'trace'),
+        Stream.map((event) => event.message),
+      );
+    }
+
+    const replay = this.#readRing(0).pipe(
       Stream.filter((event) => event._tag === 'trace'),
       Stream.map((event) => event.message),
+    );
+
+    // Replay what the host already has, then take the rest as it is PUSHED. Paging the ring for the
+    // rest would defeat the point: it is flushed at the end of an invocation, so the turn this
+    // reader attached to would arrive whole, after the fact.
+    //
+    // A message can appear in both halves — one broadcast buffered while the replay is still
+    // reading. That is left to the consumer rather than deduplicated here: a partial block carries
+    // the whole text so far and is applied by message id, so re-applying one is idempotent.
+    return Stream.unwrap(
+      Effect.gen({ self: this }, function* () {
+        const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message, Cause.Done>(), (queue) =>
+          Queue.shutdown(queue),
+        );
+        // Subscribed BEFORE the replay read rather than concatenated after it: the live source only
+        // registers when its stream starts, so anything produced during the read would be lost.
+        yield* Effect.forkScoped(
+          Stream.runForEach(remoteTrace.subscribeToTraceMessages({ pid: this.pid }), (message) =>
+            Queue.offer(queue, message),
+          ).pipe(
+            // A finite live source (`layerNoop`'s empty stream, a transport that closes) must end
+            // this subscription too; waiting for the scope would leave the reader on an idle queue.
+            // `end` rather than `shutdown`: what is already buffered still has to be delivered.
+            Effect.ensuring(Queue.end(queue)),
+          ),
+        );
+        // Lets the forked fiber reach its subscribe before the replay read is issued; a fork alone
+        // is only scheduled, so the window this buffering exists to close would still be open.
+        yield* Effect.yieldNow;
+        return Stream.concat(replay, Stream.fromQueue(queue));
+      }),
+    );
+  }
+
+  /**
+   * The whole of the host's retained event ring, without the poll loop {@link #readEvents} runs.
+   *
+   * The replay half of a pushed subscription: it must END so the live stream can follow it, where
+   * the polled read is deliberately open until the process settles. Pages to the ring's end rather
+   * than reading once — a page is bounded, so a single read can leave buffered events in neither
+   * half of the subscription.
+   */
+  #readRing(start: number): Stream.Stream<RemoteProcessManager.Event> {
+    return Stream.paginate(start, (cursor: number) =>
+      Effect.gen({ self: this }, function* () {
+        const page = yield* this.#control.readEvents({ ...this.#target, cursor });
+        yield* this.#setInfo(page.snapshot);
+        if (page.truncated) {
+          log.warn('remote process event history truncated', { pid: page.snapshot.pid, cursor });
+        }
+        return [page.events, page.events.length === 0 ? Option.none<number>() : Option.some(page.cursor)] as const;
+      }),
     );
   }
 

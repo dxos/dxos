@@ -38,10 +38,10 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { formatLogEntry, packageName } from './format';
-import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer';
-import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext';
-import { type LevelName, LEVELS, composeFilter } from './recorder';
+import { formatLogEntry, packageName } from './format.ts';
+import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer.ts';
+import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
+import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 
 //
 // Shared

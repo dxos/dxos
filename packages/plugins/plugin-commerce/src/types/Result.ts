@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { Provider } from './Provider';
+import { Provider } from './Provider.ts';
 
 /** A single product listing returned by a provider search. */
 export class Result extends Type.makeObject<Result>(DXN.make('org.dxos.type.productSearchResult', '0.1.0'))(

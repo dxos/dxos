@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { projectFunctionToTool } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 
-import * as ClaudeSkill from './ClaudeSkill';
+import * as ClaudeSkill from './ClaudeSkill.ts';
 
 describe('ClaudeSkill', () => {
   // The resolver drops an operation it cannot project (`operation cannot be projected to a tool`)

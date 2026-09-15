@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { toFrames } from '#render';
 
-import { VirtualLaMetric } from './VirtualLaMetric';
+import { VirtualLaMetric } from './VirtualLaMetric.tsx';
 
 const stats: MetricSpec[] = [
   { kind: 'stat', title: 'Objects', value: '128' },

@@ -10,9 +10,10 @@ import { Entity, Obj, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
+import { type MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { AppCapabilities } from '../../app-framework';
+import { AppCapabilities } from '../../app-framework/index.ts';
 
 //
 // Internal type helpers
@@ -339,16 +340,17 @@ export type SettingsProps<T extends {}, Props extends {} = {}> = {
   onSettingsChange?: (cb: (current: T) => T) => void;
 } & Props;
 
-/** Filter: matches any plugin-settings article, for the generic settings surface. */
-export function settings(token: Role.Role<any>): Surface.Filter<SettingsData>;
-/**
- * Filter: matches one plugin's settings article.
- *
- * @deprecated Contribute a schema and atom and let `plugin-settings`' generic surface render the
- * panel; a bespoke article re-implements the panel chrome by hand.
- */
-export function settings(token: Role.Role<any>, prefix: string): Surface.Filter<SettingsData>;
-export function settings(token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> {
+export const settings: {
+  /** Filter: matches any plugin-settings article, for the generic settings surface. */
+  (token: Role.Role<any>): Surface.Filter<SettingsData>;
+  /**
+   * Filter: matches one plugin's settings article.
+   *
+   * @deprecated Contribute a schema and atom and let `plugin-settings`' generic surface render the
+   * panel; a bespoke article re-implements the panel chrome by hand.
+   */
+  (token: Role.Role<any>, prefix: string): Surface.Filter<SettingsData>;
+} = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -358,7 +360,7 @@ export function settings(token: Role.Role<any>, prefix?: string): Surface.Filter
     return AppCapabilities.isSettings(subject) && (prefix === undefined || subject.prefix === prefix);
   };
   return { bindings: [{ role: token.role, guard }] };
-}
+};
 
 //
 // Section
@@ -459,6 +461,18 @@ export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardI
 
 /** Role token for the card slot. */
 export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
+
+/**
+ * Card header menu items a type contributes. The surface renders nothing: it registers items with the
+ * host's `menu` via `useMenuContribution`, so hosts render it through `CardMenuSlot`.
+ */
+export const CardMenu: Role.Role<CardMenuData<any>> = Role.make('org.dxos.role.cardMenu');
+
+/** Surface data for the card menu role. */
+export type CardMenuData<Subject = unknown> = {
+  subject: Subject;
+  menu: MenuActions;
+};
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {
@@ -566,6 +580,9 @@ export const DocumentTitle: Role.Role<DocumentTitleData<unknown>> = Role.make('o
 
 /** Role token for the `statusIndicator` role (was `status-indicator`). */
 export const StatusIndicator: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.statusIndicator');
+
+/** The deck's bottom drawer; one contributor renders at a time. */
+export const Drawer: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.drawer');
 
 /**
  * Slot for the devtools-overview sub-surface. Defined here (not in plugin-devtools) so public

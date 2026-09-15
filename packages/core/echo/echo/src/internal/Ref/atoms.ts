@@ -4,10 +4,10 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { subscribe } from '../common/proxy/reactive';
-import { ObjectDeletedId } from '../common/types/model-symbols';
-import type { Ref } from './ref';
-import { loadRefTarget } from './utils';
+import { subscribe } from '../common/proxy/reactive.ts';
+import { ObjectDeletedId } from '../common/types/model-symbols.ts';
+import type { Ref } from './ref.ts';
+import { loadRefTarget } from './utils.ts';
 
 /**
  * Atom family for ECHO refs.

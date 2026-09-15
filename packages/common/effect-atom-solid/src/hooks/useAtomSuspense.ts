@@ -6,7 +6,7 @@ import type * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { createResource, onCleanup } from 'solid-js';
 
-import { useRegistry } from '../registry';
+import { useRegistry } from '../registry.ts';
 
 /**
  * Hook to read an atom value with Suspense support

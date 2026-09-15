@@ -15,7 +15,7 @@ import { Flex, Icon, useTranslation } from '@dxos/react-ui';
 import { ConnectorAuthMenu } from '#components';
 import { meta } from '#meta';
 
-import { useChatReportContext } from '../../components/Chat/context';
+import { useChatReportContext } from '../../components/Chat/context.ts';
 
 const INTEGRATION_PROMPT_NAME = 'IntegrationPrompt';
 

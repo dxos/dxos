@@ -22,7 +22,7 @@ import { TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 import { downloadBlob } from '@dxos/util';
 
-import { exportFeedMessages, importMessages, resetMailbox } from '../testing';
+import { exportFeedMessages, importMessages, resetMailbox } from '../testing/index.ts';
 
 /** Stable fallback so the starred-ids atom stays unconditional while the tag index resolves. */
 const NO_STARRED_IDS = Atom.make<readonly EntityId[]>(() => []);

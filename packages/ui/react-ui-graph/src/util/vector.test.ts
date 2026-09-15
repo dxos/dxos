@@ -4,8 +4,8 @@
 
 import { expect, test } from 'vitest';
 
-import { FractionUtil } from './fraction';
-import { Vector } from './vector';
+import { FractionUtil } from './fraction.ts';
+import { Vector } from './vector.ts';
 
 test('center', () => {
   expect(Vector.center(Vector.toBounds({ x: 0, y: 0, width: 2, height: 2 }))).to.deep.equal({

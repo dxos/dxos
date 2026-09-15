@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
@@ -10,13 +12,14 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { fromTimeframe } from '@dxos/protocols/buf';
+import { type FeedMessage, type FeedMessage_Payload, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { createMappedFeedWriter } from './feeds';
-import { createMessageSelector } from './message-selector';
-import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
+import { createMappedFeedWriter } from './feeds.ts';
+import { createMessageSelector } from './message-selector.ts';
+import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock.ts';
 
 export type WaitUntilReachedTargetProps = {
   /**
@@ -177,7 +180,7 @@ export class PipelineState {
 // TODO(mykola): Extract to `@dxos/echo-protocol`
 export interface PipelineAccessor {
   state: PipelineState;
-  writer: FeedWriter<FeedMessage.Payload>;
+  writer: FeedWriter<FeedMessage_Payload>;
 }
 
 /**
@@ -234,7 +237,7 @@ export class Pipeline implements PipelineAccessor {
   private _iteratorChanged = new Trigger();
 
   // Outbound feed writer.
-  private _writer: FeedWriter<FeedMessage.Payload> | undefined;
+  private _writer: FeedWriter<FeedMessage_Payload> | undefined;
 
   private _isStopping = false;
   private _isStarted = false;
@@ -245,7 +248,7 @@ export class Pipeline implements PipelineAccessor {
     return this._state;
   }
 
-  get writer(): FeedWriter<FeedMessage.Payload> {
+  get writer(): FeedWriter<FeedMessage_Payload> {
     invariant(this._writer, 'Writer not set.');
     return this._writer;
   }
@@ -276,11 +279,9 @@ export class Pipeline implements PipelineAccessor {
     invariant(!this._writer, 'Writer already set.');
     invariant(feed.properties.writable, 'Feed must be writable.');
 
-    this._writer = createMappedFeedWriter<FeedMessage.Payload, FeedMessage>(
-      (payload: FeedMessage.Payload) => ({
-        timeframe: this._timeframeClock.timeframe,
-        payload,
-      }),
+    this._writer = createMappedFeedWriter<FeedMessage_Payload, FeedMessage>(
+      (payload: FeedMessage_Payload) =>
+        create(FeedMessageSchema, { timeframe: fromTimeframe(this._timeframeClock.timeframe), payload }),
       feed.createFeedWriter(),
     );
   }

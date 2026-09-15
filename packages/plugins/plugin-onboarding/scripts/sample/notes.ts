@@ -9,9 +9,9 @@ import { Database, EID, Obj } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Organization, type Person, type TaskSet } from '@dxos/types';
 
-import { type OrgKey, type OrgMap } from './organizations';
-import { type PersonKey, type PersonMap } from './people';
-import { daysAgo, daysFromNow } from './util';
+import { type OrgKey, type OrgMap } from './organizations.ts';
+import { type PersonKey, type PersonMap } from './people.ts';
+import { daysAgo, daysFromNow } from './util.ts';
 
 //
 // Markdown notes (with inline DXN links and block embeds)

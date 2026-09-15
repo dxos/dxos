@@ -8,7 +8,7 @@ import { Icon, composable, composableProps, useTranslation } from '@dxos/react-u
 
 import { meta } from '#meta';
 
-import { toEmbedUrl } from './embed-url-parsers';
+import { toEmbedUrl } from './embed-url-parsers.ts';
 
 export type VideoPlayerProps = {
   url?: string;

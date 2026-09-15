@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { useDatePickerContext } from './DatePickerContext';
+export { useDatePickerContext } from './DatePickerContext.ts';
 
-export * from './DatePicker';
+export * from './DatePicker.tsx';

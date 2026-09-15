@@ -7,8 +7,8 @@ import { Decoration, type DecorationSet, EditorView, type GutterMarker, WidgetTy
 
 import { Domino } from '@dxos/ui';
 
-import { ChangeBarMarker, changeBars } from './change-bar';
-import { computeCharHunks } from './diff';
+import { ChangeBarMarker, changeBars } from './change-bar.ts';
+import { computeCharHunks } from './diff.ts';
 
 export type TrackChangesOptions = {
   /**

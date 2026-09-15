@@ -13,9 +13,9 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import * as Process from '@dxos/compute/Process';
 import type * as Trace from '@dxos/compute/Trace';
 
-import { ProcessManagerService } from './process-manager-service';
-import * as RemoteProcessManager from './RemoteProcessManager';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
+import { ProcessManagerService } from './process-manager-service.ts';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * Aggregate {@link Process.ProcessMonitorService} that merges the local

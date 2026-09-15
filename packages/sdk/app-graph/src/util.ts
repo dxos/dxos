@@ -6,7 +6,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { shallowEqual } from '@dxos/util';
 
-import * as Node from './AppGraphNode';
+import * as Node from './AppGraphNode.ts';
 
 /**
  * `Atom.withLabel` captures and formats a stack trace on every call, and the graph labels an atom per node,

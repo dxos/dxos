@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './Call';
-export * from './Toolbar';
+export * from './Call.tsx';
+export * from './Toolbar.tsx';

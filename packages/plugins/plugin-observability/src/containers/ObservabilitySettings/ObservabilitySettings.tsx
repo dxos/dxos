@@ -34,17 +34,17 @@ export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) =
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section
-            title={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={subject.prefix} />}
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
           >
             <Banner.Root valence='info'>
               <Banner.Content>
                 <Banner.Body>{t('observability.description')}</Banner.Body>
               </Banner.Content>
             </Banner.Root>
-            <Form.FieldSet />
-          </Form.Section>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

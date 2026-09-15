@@ -18,7 +18,7 @@ import {
   trackChanges,
 } from '@dxos/ui-editor';
 
-import { Editor, type EditorViewProps } from '../components';
+import { Editor, type EditorViewProps } from '../components/index.ts';
 
 // The accepted base (main). The editor is bound to a *branch* whose live edits are tracked against it.
 const MAIN = 'The quick brown fox jumps over the lazy dog.';

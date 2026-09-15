@@ -16,8 +16,8 @@ import { Attention } from '@dxos/react-ui-attention';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { GraphPath } from '../../app';
-import { LayoutOperation, NavigationOperation } from '../../operations';
+import { GraphPath } from '../../app/index.ts';
+import { LayoutOperation, NavigationOperation } from '../../operations/index.ts';
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 

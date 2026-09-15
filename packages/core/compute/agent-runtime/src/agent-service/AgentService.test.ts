@@ -38,11 +38,11 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer, waitForMessage } from '../testing';
-import * as ResearchService from '../testing/ResearchService';
-import { AGENT_PROCESS_KEY } from './agent-process';
-import * as AgentService from './AgentService';
-import { type DelegationStrategy } from './delegation-strategy';
+import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
+import * as ResearchService from '../testing/ResearchService.ts';
+import { AGENT_PROCESS_KEY } from './agent-process.ts';
+import * as AgentService from './AgentService.ts';
+import { type DelegationStrategy } from './delegation-strategy.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -842,6 +842,50 @@ describe('Agent Service (control plane)', () => {
         expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([String(handleB.pid)]);
 
         yield* resumed.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+  it.effect(
+    'session reuse tracks the model selected on the chat',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        yield* Database.flush();
+        const target = Obj.getURI(chat);
+
+        const isActive = (state: Process.State) =>
+          state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
+        const activePids = Effect.gen(function* () {
+          const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+          return processes.filter((process) => isActive(process.status.state)).map((process) => String(process.pid));
+        });
+
+        // The model is read off the chat, not passed in: a chat without one runs the default.
+        const sessionA = yield* getSession(chat);
+        const [pidA] = yield* activePids;
+        expect(yield* getSession(chat)).toBe(sessionA);
+        expect(yield* activePids).toEqual([pidA]);
+
+        // Selecting a model on the chat tears the process down and respawns it bound to the selection.
+        Obj.update(chat, (chat) => {
+          chat.model = Ref.fromURI(DXN.make('com.anthropic.model.claude-haiku-4-5.default'));
+        });
+        yield* Database.flush();
+        const sessionB = yield* getSession(chat);
+        const [pidB] = yield* activePids;
+        expect(sessionB).not.toBe(sessionA);
+        expect(pidB).not.toBe(pidA);
+        expect(yield* activePids).toEqual([pidB]);
+
+        // The same selection again is a cache hit.
+        expect(yield* getSession(chat)).toBe(sessionB);
+
+        yield* sessionB.terminate();
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,

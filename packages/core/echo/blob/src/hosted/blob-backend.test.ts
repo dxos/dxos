@@ -6,9 +6,9 @@ import { describe, test, vi } from 'vitest';
 
 import { SpaceId } from '@dxos/keys';
 
-import { type BlobTransport } from '../backend';
-import { fromDigestHex } from '../ni-uri';
-import { createEdgeBlobBackend } from './blob-backend';
+import { type BlobTransport } from '../backend.ts';
+import { fromDigestHex } from '../ni-uri.ts';
+import { createEdgeBlobBackend } from './blob-backend.ts';
 
 /**
  * A transport whose unused operations reject. Before the backend took a `BlobTransport` these tests

@@ -5,7 +5,7 @@
 import { type ItemMode } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React from 'react';
 
-import { DROP_INDENTATION } from './helpers';
+import { DROP_INDENTATION } from './helpers.ts';
 
 export type TreeDropDebugProps = {
   mode: ItemMode;

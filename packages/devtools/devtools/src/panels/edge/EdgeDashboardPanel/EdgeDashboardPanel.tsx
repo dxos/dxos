@@ -13,8 +13,8 @@ export const EdgeDashboardPanel = () => {
   const client = useClient();
 
   const credentials = useMulticastObservable(client.halo.credentials);
-  const serviceCredentials = credentials.filter(
-    (cred) => cred.subject.assertion['@type'] === 'dxos.halo.credentials.ServiceAccess',
+  const serviceCredentials = credentials.filter((cred) =>
+    cred.subject?.assertion?.typeUrl.endsWith('dxos.halo.credentials.ServiceAccess'),
   );
 
   return (

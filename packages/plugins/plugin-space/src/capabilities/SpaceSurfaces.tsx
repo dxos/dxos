@@ -41,7 +41,7 @@ import {
 } from '#containers';
 import { Settings, SpaceCapabilities, SpaceOperation } from '#types';
 
-import { tryGetViewForObject } from './try-get-view';
+import { tryGetViewForObject } from './try-get-view.ts';
 
 export type SpaceHomeSectionProps = {
   space: Space;

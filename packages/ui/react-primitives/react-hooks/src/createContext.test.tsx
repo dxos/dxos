@@ -6,7 +6,7 @@ import { render, renderHook, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { createContext } from './createContext';
+import { createContext } from './createContext.ts';
 
 describe('createContext', () => {
   test('provider takes the fields as props and the hook returns them', () => {

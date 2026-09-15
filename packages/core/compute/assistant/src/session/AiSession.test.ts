@@ -9,8 +9,8 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Message } from '@dxos/types';
 
-import * as AiSession from './AiSession';
-import * as SessionLink from './SessionLink';
+import * as AiSession from './AiSession.ts';
+import * as SessionLink from './SessionLink.ts';
 
 // Monotonic timestamps so chronological sorting in SessionStore is deterministic.
 let clock = 0;

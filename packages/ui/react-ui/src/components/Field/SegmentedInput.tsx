@@ -24,13 +24,13 @@ import {
 
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { DatePicker } from '../DatePicker';
-import { Popover } from '../Popover';
-import { type FieldSharedProps } from './Field';
-import { FIELD_NAME, useFieldValence } from './FieldContext';
-import { useFieldTrigger } from './FieldTriggerContext';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { DatePicker } from '../DatePicker/index.ts';
+import { Popover } from '../Popover/index.ts';
+import { type FieldSharedProps } from './Field.tsx';
+import { FIELD_NAME, useFieldValence } from './FieldContext.ts';
+import { useFieldTrigger } from './FieldTriggerContext.ts';
 
 //
 // Value <-> @internationalized/date adapters.

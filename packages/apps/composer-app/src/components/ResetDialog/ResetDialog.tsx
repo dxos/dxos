@@ -21,7 +21,7 @@ import {
 } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util';
+import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util/index.ts';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -104,17 +104,19 @@ export const ResetDialog = ({
   const handleSaveFeedback = useCallback(
     async (values: SupportOperation.SupportRequest) => {
       if (!onSubmitReport) {
-        return;
+        return false;
       }
 
       setFeedbackOpen(false);
       try {
         await onSubmitReport(values);
         setFeedbackSent(true);
+        return true;
       } catch (err) {
         // The dialog is already showing a fatal error; a second one helps nobody, so the only
         // signal is that the sent confirmation never appears.
         log.warn('crash report not filed', { err });
+        return false;
       }
     },
     [onSubmitReport],
@@ -247,7 +249,7 @@ export const ResetDialog = ({
                         <FeedbackForm.Root onSubmit={handleSaveFeedback}>
                           <Form.Viewport>
                             <Form.Content>
-                              <Form.FieldSet />
+                              <Form.Fields />
                               <FeedbackForm.Submit />
                             </Form.Content>
                           </Form.Viewport>

@@ -4,6 +4,7 @@
 
 import { OPFS_SQLITE_DB_FILENAME, createSqliteProfileArchive, encodeProfileArchive } from '@dxos/client-services';
 import { getDebugPortController, mountDevtoolsHooks, resolveDebugPortOrigin } from '@dxos/client/devtools';
+import { toPublicKey } from '@dxos/protocols/buf';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
 import {
@@ -26,7 +27,7 @@ import {
   resetComposerStorage,
   runRecoveryDiagnostics,
   runSqlStorageDiagnostics,
-} from '../recovery';
+} from '../recovery/index.ts';
 
 const { print, setBusy, setDebugPortActive, onAction } = createRecoveryUi({
   container: document.getElementById('root')!,
@@ -85,7 +86,7 @@ const recoveryHelpers: RecoveryHelpers = {
     const client = await bootRecoveryClient();
     attachRecoveryHelpers(recoveryHelpers);
     print(`Client started in ${(performance.now() - started).toFixed(0)} ms — dxos.client available`);
-    return { identity: client.halo.identity.get()?.identityKey.truncate() };
+    return { identity: toPublicKey(client.halo.identity.get()?.identityKey)?.truncate() };
   },
   /** @deprecated Use {@link RecoveryHelpers.startClient}. */
   boot: async () => recoveryHelpers.startClient(),

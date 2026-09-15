@@ -15,7 +15,7 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util';
+import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

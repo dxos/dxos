@@ -24,7 +24,7 @@ import { getStyles } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
+import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;

@@ -12,9 +12,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-import type * as Diagnostics from './diagnostics';
-import type * as Scene from './scene';
-import { GRID } from './uml-grid';
+import type * as Diagnostics from './diagnostics.ts';
+import type * as Scene from './scene.ts';
+import { GRID } from './uml-grid.ts';
 
 /** A candidate layout: the scene plus its analysis. */
 export type Layout = {

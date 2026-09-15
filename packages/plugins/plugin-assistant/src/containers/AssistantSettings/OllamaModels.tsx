@@ -92,8 +92,8 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
   const empty = state.models.length === 0 && pulling.length === 0;
 
   return (
-    <Form.Section title={t('settings.ollama.title')}>
-      <Form.Field label={t('settings.ollama.installed.label')}>
+    <Form.FieldSet label={t('settings.ollama.title')}>
+      <Form.Field standalone label={t('settings.ollama.installed.label')}>
         {state.kind === 'failed' && state.error ? (
           // Connection-level failure has no associated model, so it shows inline as the row content.
           <p className='text-sm text-error-text'>{t('settings.ollama.failed.message', { error: state.error })}</p>
@@ -222,12 +222,11 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   <Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
                 ))}
               </Combobox.List>
-              <Combobox.Arrow />
             </Combobox.Content>
           </Combobox.Portal>
         </Combobox.Root>
       </Form.Field>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

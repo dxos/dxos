@@ -8,7 +8,7 @@ import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { log } from '@dxos/log';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelTracesOptions, makeTracingBackend } from './traces-shared';
+import { type OtelTracesOptions, makeTracingBackend } from './traces-shared.ts';
 
 export type { OtelTracesOptions };
 

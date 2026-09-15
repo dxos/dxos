@@ -8,7 +8,7 @@ import { Icon, Menu, type MenuRootProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type MenuItemChrome } from '@dxos/ui-types';
 
-import { useMenuActions, useMenuItems } from '../hooks';
+import { useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
   type MenuAction,
   type MenuActions,
@@ -17,9 +17,9 @@ import {
   type MenuItemGroup,
   isMenuGroup,
   isSeparator,
-} from '../types';
-import { executeMenuAction } from '../util';
-import { ActionLabel } from './ActionLabel';
+} from '../types.ts';
+import { executeMenuAction } from '../util.ts';
+import { ActionLabel } from './ActionLabel.tsx';
 
 //
 // Items (private): the graph's items as `Menu` parts.

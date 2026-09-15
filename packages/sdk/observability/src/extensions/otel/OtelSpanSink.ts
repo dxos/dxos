@@ -25,9 +25,9 @@ import {
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 
-import * as AiContent from './ai-content';
-import { type OtelDestination, signalUrl } from './otel';
-import * as TailSampling from './tail-sampling';
+import * as AiContent from './ai-content.ts';
+import { type OtelDestination, signalUrl } from './otel.ts';
+import * as TailSampling from './tail-sampling.ts';
 
 export type Init = {
   type: 'otel-traces-init';

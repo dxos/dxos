@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default } from './SidekickArticle';
+export { default } from './SidekickArticle/index.ts';

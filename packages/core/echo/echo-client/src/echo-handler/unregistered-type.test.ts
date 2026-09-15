@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 const fields = Schema.Struct({ name: Schema.optional(Schema.String) });
 

@@ -30,8 +30,9 @@ const tauri = join(root, 'node_modules', '.bin', 'tauri');
 /** Source artwork paired with the `src-tauri` directory `bundle.icon` points at for that channel. */
 const CHANNELS = [
   { source: 'icon.svg', icons: 'icons' },
-  { source: 'icon-purple.svg', icons: 'icons-preview' },
-  { source: 'icon-rust.svg', icons: 'icons-rust' },
+  { source: 'icon-preview.svg', icons: 'icons-preview' },
+  { source: 'icon-dev.svg', icons: 'icons-dev' },
+  { source: 'icon-staging.svg', icons: 'icons-staging' },
 ];
 
 /**

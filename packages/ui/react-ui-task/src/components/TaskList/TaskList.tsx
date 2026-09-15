@@ -29,8 +29,9 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
+import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
+import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import {
   ActionMenu,
   type MenuAction,
@@ -39,16 +40,17 @@ import {
   executeMenuAction,
   fallbackIcon,
 } from '@dxos/react-ui-menu';
-import { type Actor, Task } from '@dxos/types';
+import { type Actor, Question, RemoteSession, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { type TaskPlacement, subtreeIds } from './hierarchy';
-import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons';
-import { TaskTreeContent } from './TaskTreeContent';
-import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model';
+import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
+import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons.ts';
+import { type TaskDescriptionProps } from './TaskDescription.tsx';
+import { TaskTreeContent } from './TaskTreeContent.tsx';
+import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
 
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
@@ -64,6 +66,8 @@ type TaskListContextValue = {
   showGroupLabels: boolean;
   showOrdinals: boolean;
   showDescription: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
   /** Render each task's estimate beside the priority control. */
   showEstimates: boolean;
   hierarchical: boolean;
@@ -169,6 +173,8 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task.
    */
   showDescription?: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
@@ -217,6 +223,7 @@ const TaskListRoot = ({
   showGroupLabels = true,
   showOrdinals = false,
   showDescription = false,
+  descriptionComponents,
   showEstimates = false,
   hierarchical = false,
   collapsed,
@@ -294,6 +301,7 @@ const TaskListRoot = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
+      descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
@@ -375,7 +383,9 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
-    ['chips', 'min-content', 'chips-end'],
+    // Capped at half the row: `min-content` let one long artifact tag push the title to nothing;
+    // the cell scrolls what does not fit and the title truncates instead.
+    ['chips', 'fit-content(50%)', 'chips-end'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
@@ -410,6 +420,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showGroupLabels,
     showOrdinals,
     showDescription,
+    descriptionComponents,
     showGutter,
     gridTemplateColumns,
     isCollapsed,
@@ -445,6 +456,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   // group is a `group` node the machine splices out of its own topology.
   return (
     <TaskTreeContent
+      descriptionComponents={descriptionComponents}
       debug={debug}
       hierarchical={hierarchical}
       groupByStatus={grouping}
@@ -498,10 +510,9 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
  * reads as two empty controls rather than a dash beside a dot.
  */
 const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
   const estimate = task.estimate;
-  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='shrink-0' />;
+  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onTaskUpdate) {
     return <IconBlock classNames={estimateTextStyle(estimate)}>{label}</IconBlock>;
@@ -509,30 +520,19 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
 
   return (
     <>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. Clearing is offered
-          first; the table has no `none` row because the field is simply absent when unset. */}
       <IconBlock>
-        {/* The button is the trigger, not the block: the button stops the click so the row is not selected
-            too, and a trigger above it would never receive it. The block still gives every control in
-            the row one rail-item square. */}
         <ActionMenu
-          actions={Task.EstimateOptions.map(({ id, title }) =>
-            createMenuAction(
-              `estimate-${id}`,
-              // `none` is not an `Estimate`: an unset estimate is the absent property.
-              () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
-              { label: title, classNames: estimateTextStyle(id), checked: (estimate ?? 'none') === id },
-            ),
+          actions={[Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+            createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
+              label: title,
+              checked: (estimate ?? 'none') === id,
+            }),
           )}
         >
           <Button
             variant='ghost'
             data-testid='taskList.item.estimate'
-            // `w-8` fills the block: the label's hit target is the same square as the icon
-            // controls on either side of it.
             classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
-            // The row is the selection target; opening the menu must not also select it.
             onClick={(event: MouseEvent) => event.stopPropagation()}
           >
             {label}
@@ -557,28 +557,25 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
-  const priority = task.priority ?? 'none';
+  const priority = task.priority ?? undefined;
   const icon = priorityIcon(priority);
-  const tint = priorityTextStyle(priority);
+  const styles = priorityTextStyle(priority);
 
   if (!onTaskUpdate) {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
       <IconBlock square>
-        <Icon icon={icon} classNames={mx('shrink-0', tint)} />
+        <Icon icon={icon} classNames={mx('shrink-0', styles)} />
       </IconBlock>
     );
   }
 
   return (
     <IconBlock>
-      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
-            too, and a trigger above it would never receive it. The block still gives every control in
-            the row one rail-item square. */}
       <ActionMenu
-        actions={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
-          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
+        actions={[Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
+          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
             label: t(`priority-${id}.label`),
             icon: optionIcon,
             iconClassNames: priorityTextStyle(id),
@@ -592,10 +589,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           iconOnly
           label={t('task-priority.label')}
           data-testid='taskList.item.priority'
-          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-          // which the `Icon` root reads, so a colour set on the button is overridden at rest.
-          iconClassNames={tint}
-          // The row is the selection target; opening the menu must not also select it.
+          iconClassNames={styles}
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
@@ -623,7 +617,9 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
           is on, and the matching cell is omitted on the same condition, so the two never drift.
           Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own
           a column; every control after it is one rail-item square and needs no wrapper. */}
-      <div className='col-[chips] flex h-(--dx-control) items-center justify-end'>
+      {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
+          reach overflow on its end side, and `justify-end` spills the excess off the start. */}
+      <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
         <TaskListItemArtifacts task={task} />
         {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
@@ -738,22 +734,45 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
  * Click, not hover or focus: the tag sits inside a listbox option, where a tab stop of its own would
  * split the row into several arrow-key stops, and a hover card would fire while the pointer crosses
  * the row on its way somewhere else.
+ *
+ * A {@link Question.Question} also opens on hover: it is not something the task produced but the
+ * reason it is stopped, so it should not need a click to find. `useCardHover`'s grace period
+ * answers the objection above. No tab stop is added — that half of the objection still stands, so
+ * the tag carries no `button` role either: a role promising keyboard activation that a
+ * non-focusable element cannot deliver is worse than none. A question is answered from its card in
+ * the conversation, which is keyboard-operable throughout.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   const tagRef = useRef<HTMLSpanElement>(null);
   const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
+  const question = Obj.instanceOf(Question.Question, artifact);
+  // Keyed on the URI string, not the object: `useCardHover` cancels its timer whenever `open`
+  // changes, and the live query re-identifies the artifact on every tick, so an object dependency
+  // means any re-render inside the hover delay swallows the hover.
+  const uri = Obj.getURI(artifact);
+  const openCard = useCallback(() => {
+    const trigger = tagRef.current;
+    trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: uri, label, kind: 'card' }));
+  }, [uri, label]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, question);
   const handleClick = useCallback(
     (event: MouseEvent<HTMLSpanElement>) => {
       // The row is an option: without this the click selects the task as well as opening the card.
       event.stopPropagation();
-      const trigger = tagRef.current;
-      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: Obj.getURI(artifact), label, kind: 'card' }));
+      openCard();
     },
-    [artifact, label],
+    [openCard],
   );
 
   return (
-    <Tag ref={tagRef} hue='amber' role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Tag
+      ref={tagRef}
+      hue='amber'
+      classNames='cursor-pointer'
+      onClick={handleClick}
+      onPointerEnter={question ? startHover : undefined}
+      onPointerLeave={question ? cancelHover : undefined}
+    >
       {label}
     </Tag>
   );
@@ -776,6 +795,8 @@ type TaskListEditProps = ComposableProps<{
   showDescription?: boolean;
   /** Placeholder for the description field. */
   descriptionPlaceholder?: string;
+  /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
+  descriptionExtensions?: MarkdownEditableProps['extensions'];
   /**
    * Lay the pane out on the list's own column template, so the title field starts where the rows'
    * titles do and the icon sits under their status controls. Off by default: a pane used away from
@@ -792,10 +813,18 @@ type TaskListEditProps = ComposableProps<{
  */
 const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
   (
-    { placeholder = 'Add task', showDescription = false, descriptionPlaceholder = 'Add a description', grid, ...props },
+    {
+      placeholder = 'Add task',
+      showDescription = false,
+      descriptionPlaceholder = 'Add a description',
+      descriptionExtensions,
+      grid,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const descriptionRef = useRef<MarkdownEditableController>(null);
     const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns } =
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
@@ -804,8 +833,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // Subscribe to the selected task so the pane follows a rename made anywhere else.
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
-
-    const descriptionRef = useRef<MarkdownEditableController>(null);
 
     // The create row's description, mirrored out of the field. A ref rather than state because the
     // create reads it in the same tick it commits the field, and `useEditable` calls back
@@ -949,16 +976,20 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
                 it per task, since a field held open never re-reads its subject.
-
                 Creating, the field is uncontrolled: there is no task to read a value from, so it
                 holds the draft itself until the create collects it. */}
             <MarkdownEditable
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
               classNames='text-sm'
-              {...(current && { value: current.description ?? '' })}
               editing
               multiline
+              placeholder={descriptionPlaceholder}
+              extensions={descriptionExtensions}
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
+              // land the reader in the description instead of the list.
+              autoFocus={false}
+              {...(current && { value: current.description ?? '' })}
               onValueChange={(description) => {
                 if (task && current) {
                   onTaskUpdate?.(task, { description });
@@ -966,10 +997,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
                   draftDescription.current = description;
                 }
               }}
-              placeholder={descriptionPlaceholder}
-              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
-              // land the reader in the description instead of the list.
-              autoFocus={false}
             />
           </span>
         )}
@@ -1022,20 +1049,65 @@ TaskListEdit.displayName = 'TaskList.Edit';
 type TaskListAssigneeProps = { assignee: Actor.Actor };
 
 const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
+  const tagRef = useRef<HTMLSpanElement>(null);
   const [contact] = useObject(assignee.contact);
+  // An agent's actor stands for its session rather than a person, so the pill names the harness the
+  // session belongs to — `agent` alone says an assistant owns the task, never which run did.
+  const [session] = useObject(assignee.subject);
+  const harness = session && Obj.instanceOf(RemoteSession.RemoteSession, session) ? session : undefined;
+  const sessionLabel = harness && RemoteSession.harnessName(harness);
+  // The harness's own mark when it has one, so a Claude Code session is recognisable at a glance;
+  // the sparkle stays the generic "an assistant owns this" fallback.
+  const icon = (harness && RemoteSession.harnessIcon(harness)) ?? 'ph--sparkle--regular';
   const label =
     contact?.fullName ??
+    sessionLabel ??
     assignee.name ??
     assignee.email ??
     (assignee.identityDid ? shortDid(assignee.identityDid) : undefined);
   const agent = assignee.role === 'assistant';
+
+  // Hover, not click, because the session is context for the row rather than a place to navigate to:
+  // the reader wants to know which run owns the task while their eye is already on it. The grace
+  // period is what keeps that from firing as the pointer crosses the row on its way elsewhere —
+  // the objection recorded on `ArtifactTag`, which opens a destination and so stays on click.
+  const openCard = useCallback(() => {
+    const trigger = tagRef.current;
+    if (!trigger || !session) {
+      return;
+    }
+    trigger.dispatchEvent(
+      new DxAnchorActivate({
+        trigger,
+        eid: Obj.getURI(session).toString(),
+        label: label ?? '',
+        kind: 'card',
+        // Without this the popover falls back to the type's placeholder ("New item"), since a
+        // session's label prop is its title and the harness reports none.
+        title: harness?.title ?? label,
+      }),
+    );
+  }, [session, harness, label]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!session);
+
   if (!label && !agent) {
     return null;
   }
 
   return (
-    <Tag hue={agent ? 'purple' : 'indigo'}>
-      {agent && <Icon icon='ph--sparkle--regular' size={3} classNames='inline-block me-1' />}
+    <Tag
+      ref={tagRef}
+      hue={agent ? 'purple' : 'indigo'}
+      // Focus as well as hover: the card is the only place the row says which run owns the task, so
+      // a pointer-only trigger puts that out of reach of a keyboard or a touch device.
+      tabIndex={session ? 0 : undefined}
+      onPointerEnter={startHover}
+      onPointerLeave={cancelHover}
+      onFocus={startHover}
+      onBlur={cancelHover}
+      classNames={session && 'cursor-help'}
+    >
+      {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}
       {label ?? 'agent'}
     </Tag>
   );

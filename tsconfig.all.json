@@ -70,9 +70,6 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
-      "path": "packages/common/codec-protobuf/tsconfig.json"
-    },
-    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
@@ -310,6 +307,9 @@
       "path": "packages/sdk/migrations/tsconfig.json"
     },
     {
+      "path": "packages/experimental/ner/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/network-manager/tsconfig.json"
     },
     {
@@ -382,6 +382,9 @@
       "path": "packages/plugins/plugin-client/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
@@ -452,6 +455,9 @@
     },
     {
       "path": "packages/plugins/plugin-heygen/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
@@ -668,9 +674,6 @@
     },
     {
       "path": "packages/e2e/proto-guard/tsconfig.json"
-    },
-    {
-      "path": "packages/common/protobuf-compiler/tsconfig.json"
     },
     {
       "path": "tools/protobuf-test/tsconfig.json"

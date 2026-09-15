@@ -40,6 +40,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/echo-react": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

@@ -11,8 +11,8 @@ import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type GenerationOption } from './heygen-provider-types';
-import { makeHeyGenProvider } from './heygen-service';
+import { type GenerationOption } from './heygen-provider-types.ts';
+import { makeHeyGenProvider } from './heygen-service.ts';
 
 type Kind = 'avatars' | 'voices';
 

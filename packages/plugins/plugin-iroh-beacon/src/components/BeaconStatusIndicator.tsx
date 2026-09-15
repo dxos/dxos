@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { type BeaconPeer } from '#types';
 
-import { BeaconCapabilities } from '../capabilities/beacon-service';
+import { BeaconCapabilities } from '../capabilities/beacon-service.ts';
 
 /** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {

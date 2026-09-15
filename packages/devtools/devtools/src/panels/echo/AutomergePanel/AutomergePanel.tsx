@@ -10,9 +10,9 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { MasterDetailTable, Searchbar } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState } from '../../../hooks';
+import { MasterDetailTable, Searchbar } from '../../../components/index.ts';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsState } from '../../../hooks/index.ts';
 
 const hasMatchRecursive = (object: any, pattern: RegExp): boolean => {
   if (!object) {

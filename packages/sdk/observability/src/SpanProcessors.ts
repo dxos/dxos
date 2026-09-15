@@ -11,6 +11,6 @@ export {
   AiContentStrippingSpanProcessor,
   stripAiContent,
   withoutAiContent,
-} from './extensions/otel/ai-content';
-export { FanoutSpanProcessor, addSpanProcessor } from './extensions/otel/span-fanout';
-export { TagInjectorSpanProcessor } from './extensions/otel/span-processors';
+} from './extensions/otel/ai-content.ts';
+export { FanoutSpanProcessor, addSpanProcessor } from './extensions/otel/span-fanout.ts';
+export { TagInjectorSpanProcessor } from './extensions/otel/span-processors.ts';

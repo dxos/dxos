@@ -12,7 +12,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { AssistantOperation } from '#types';
 
-import ChatArticle from '../ChatArticle';
+import ChatArticle from '../ChatArticle/index.ts';
 
 export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;
 

@@ -17,11 +17,11 @@ import { Ref } from '@dxos/echo/Ref';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { TestSchema } from '../testing';
-import { ViewModel } from '../types';
+import { TestSchema } from '../testing/index.ts';
+import { ViewModel } from '../types/index.ts';
 
 const createFieldId = View.createFieldId;
-import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection';
+import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection.ts';
 
 const getFieldId = (projection: View.Projection, path: string): string => {
   const field = projection.fields.find((field) => field.path === path);

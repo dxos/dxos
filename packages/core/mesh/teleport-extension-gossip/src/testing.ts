@@ -7,8 +7,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type TestConnection, TestPeer as TestPeerBase } from '@dxos/teleport/testing';
 
-import { Gossip } from './gossip';
-import { Presence } from './presence';
+import { Gossip } from './gossip.ts';
+import { Presence } from './presence.ts';
 
 export type TestAgentOptions = {
   peerId?: PublicKey;

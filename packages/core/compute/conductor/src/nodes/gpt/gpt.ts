@@ -20,8 +20,8 @@ import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';
-import { StreamSchema } from '../../util';
+import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types/index.ts';
+import { StreamSchema } from '../../util/index.ts';
 
 export const GptMessage = Schema.Struct({
   role: Schema.Union([Schema.Literal('system'), Schema.Literal('user')]),

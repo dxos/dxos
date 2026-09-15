@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
-import { type TreeData } from './tree-data';
+import { type TreeData } from './tree-data.ts';
 
 export type TestItem = {
   id: string;

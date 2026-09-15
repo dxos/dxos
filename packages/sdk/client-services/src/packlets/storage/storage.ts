@@ -9,7 +9,7 @@ import {
 } from '@dxos/protocols/buf/dxos/config_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { getRootPath } from './util';
+import { getRootPath } from './util.ts';
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime_Client_Storage) => {

@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
-import * as Doc from './Doc';
+import * as Doc from './Doc.ts';
 
 /**
  * A single find/replace edit applied to a text document. This is the structured form of the diff

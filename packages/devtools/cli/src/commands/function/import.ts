@@ -16,13 +16,13 @@ import { Context } from '@dxos/context';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/edge-compute';
 
-import { getFunctionStatus, printFunction, selectDeployedFunction } from './util';
+import { getFunctionStatus, printFunction, selectDeployedFunction } from './util.ts';
 
 export const importCommand = Command.make(
   'import',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    key: Args.string('key').pipe(Args.withDescription('Function key'), Args.optional),
+    key: Args.String('key').pipe(Args.withDescription('Function key'), Args.optional),
   },
   ({ key }) =>
     Effect.gen(function* () {

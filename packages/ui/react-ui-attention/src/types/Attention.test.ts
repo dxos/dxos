@@ -13,7 +13,7 @@ import {
   getSegmentId,
   isLinkedSegment,
   linkedSegment,
-} from './Attention';
+} from './Attention.ts';
 
 describe('AttentionManager', () => {
   test('takes an initial attended id', ({ expect }) => {

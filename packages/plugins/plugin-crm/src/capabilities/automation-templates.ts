@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { crm } from '../templates/crm';
+import { crm } from '../templates/crm.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

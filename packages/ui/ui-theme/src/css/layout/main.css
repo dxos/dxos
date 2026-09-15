@@ -22,7 +22,8 @@
   .dx-main-content-padding-transitions {
     transition-duration: 200ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
-    transition-property: padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
+    transition-property:
+      padding-inline-start, padding-inline-end, padding-block-end, scroll-padding-start, scroll-padding-end;
   }
 
   /**
@@ -203,6 +204,54 @@
     }
   }
 
+  /*
+   * Bottom drawer: fixed to the block-end edge between the sidebars (above the content, below
+   * them); the content pads for it.
+   */
+  .dx-main-drawer {
+    @apply fixed grid grid-rows-[min-content_1fr] border-t border-separator overflow-hidden;
+    --surface-bg: var(--dx-surface-chrome);
+    background-color: var(--surface-bg);
+    inset-block-end: env(safe-area-inset-bottom);
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    z-index: 6;
+    transition-property: inset-inline-start, inset-inline-end;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+
+    @media (width >= theme(--breakpoint-lg)) {
+      &[data-sidebar-left-state='collapsed'] {
+        inset-inline-start: var(--dx-l0-size);
+      }
+      &[data-sidebar-left-state='expanded'] {
+        inset-inline-start: var(--dx-nav-sidebar-size);
+      }
+      &[data-sidebar-right-state='collapsed'] {
+        inset-inline-end: var(--dx-r0-size);
+      }
+      &[data-sidebar-right-state='expanded'] {
+        inset-inline-end: var(--dx-complementary-sidebar-size);
+      }
+    }
+  }
+
+  .dx-main-drawer-handle {
+    @apply h-1 cursor-row-resize bg-transparent hover:bg-focus-ring-subtle;
+    touch-action: none;
+  }
+
+  /*
+   * The edge strip a swipe opens a sidebar from. Touch only: under a mouse a strip along the edge
+   * takes the clicks aimed at whatever sits there, and an edge swipe is a touch gesture.
+   */
+  .dx-main-swipe-area {
+    @apply hidden;
+    @media (pointer: coarse) {
+      @apply block;
+    }
+  }
+
   /**
    * Main content padding.
    */
@@ -211,6 +260,10 @@
     scroll-padding-inline-start: 0;
     padding-inline-end: 0;
     scroll-padding-inline-end: 0;
+    /* `Main.Content` sets the variable from the drawer's height (0 when closed) so content reflows above it. */
+    /* The drawer sits above the bottom safe area, so the reserved space includes it. */
+    padding-block-end: calc(var(--main-drawer-height, 0rem) + env(safe-area-inset-bottom));
+    scroll-padding-block-end: calc(var(--main-drawer-height, 0rem) + env(safe-area-inset-bottom));
 
     @media (width >= theme(--breakpoint-lg)) {
       &[data-sidebar-left-state='collapsed'] {

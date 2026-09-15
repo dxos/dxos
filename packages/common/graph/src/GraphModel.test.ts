@@ -10,8 +10,8 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import * as GraphModel from './GraphModel';
-import * as GraphNode from './GraphNode';
+import * as GraphModel from './GraphModel.ts';
+import * as GraphNode from './GraphNode.ts';
 
 const TestNode = GraphNode.GraphNode.mapFields(Struct.assign({ value: Schema.String }));
 

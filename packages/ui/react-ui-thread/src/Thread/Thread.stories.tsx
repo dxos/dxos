@@ -11,8 +11,8 @@ import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { createMessages, getStoryMetadata } from '../testing';
-import { Thread } from './Thread';
+import { createMessages, getStoryMetadata } from '../testing.ts';
+import { Thread } from './Thread.tsx';
 
 const IDENTITY = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
 

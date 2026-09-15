@@ -6,7 +6,7 @@ import { type ReactNode } from 'react';
 
 import { type Label } from '#translations';
 
-import { type ClassNameValue } from './theme';
+import { type ClassNameValue } from './theme.ts';
 
 /** Shared presentation fields for menu actions and group triggers. */
 export type MenuItemChrome = {

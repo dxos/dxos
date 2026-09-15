@@ -8,8 +8,8 @@ import React from 'react';
 import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Action } from '../Panel';
-import { Viewport, useViewportContext } from './Viewport';
+import { Action } from '../Panel/index.ts';
+import { Viewport, useViewportContext } from './Viewport.tsx';
 
 type StorybookViewportProps = {};
 

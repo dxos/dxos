@@ -4,7 +4,7 @@
 
 import { Obj } from '@dxos/echo';
 
-import { type Adapter, type Lens } from './wire-lens';
+import { type Adapter, type Lens } from './wire-lens.ts';
 
 //
 // The runner executes a declarative {@link Lens} against a live ECHO object, both directions. It applies
@@ -193,7 +193,7 @@ export const encode = async (object: Obj.Unknown, lens: Lens): Promise<Record<st
     }
   }
   if (lens.migration) {
-    const { migrate } = await import('./wasm');
+    const { migrate } = await import('./wasm.ts');
     return migrate({
       sourceLexicon: lens.migration.sourceLexicon,
       targetLexicon: lens.migration.targetLexicon,
@@ -209,7 +209,7 @@ export const encode = async (object: Obj.Unknown, lens: Lens): Promise<Record<st
 export const decode = async (record: Record<string, unknown>, lens: Lens): Promise<Record<string, unknown>> => {
   let source = record;
   if (lens.migration) {
-    const { migrate } = await import('./wasm');
+    const { migrate } = await import('./wasm.ts');
     source = await migrate({
       sourceLexicon: lens.migration.targetLexicon,
       targetLexicon: lens.migration.sourceLexicon,

@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { RecoveryCodeDialog } from './RecoveryCodeDialog';
+import { RecoveryCodeDialog } from './RecoveryCodeDialog.tsx';
 
 const DefaultStory = () => {
   const client = useClient();

@@ -18,10 +18,10 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
 
-import { NotFound } from '../app';
-import { Translations } from '../app';
-import { AppAnnotation } from '../echo';
-import * as DeckSpec from './DeckSpec';
+import { NotFound } from '../app/index.ts';
+import { Translations } from '../app/index.ts';
+import { AppAnnotation } from '../echo/index.ts';
+import * as DeckSpec from './DeckSpec.ts';
 
 //
 //
@@ -69,6 +69,13 @@ export const getDynamicLabel = createFactory(
 //
 // Constants and stable callbacks.
 //
+
+/**
+ * Whether a workspace sits in the rail's pinned region rather than among the space tabs. Declared by
+ * the workspace itself through its disposition, so any workspace opts in by placing itself there.
+ */
+export const isPinnedWorkspace = (node: Pick<AppGraphNode.Node, 'properties'>): boolean =>
+  AppGraphNode.hasDisposition(node, ['pin-end', 'pin-start', 'user-account']);
 
 export const CACHEABLE_PROPS: string[] = ['label', 'icon', 'role'];
 export const ACCEPT_ECHO_CLASS: Set<string> = new Set(['echo']);
@@ -327,6 +334,12 @@ export const makeCompanion = <TData = string>({
   },
 });
 
+/**
+ * When the deck mounts a companion's surface: `always`, only while it is the `selected` companion
+ * (the default), or only while selected in an expanded sidebar (`open`).
+ */
+export type DeckCompanionMount = 'always' | 'selected' | 'open';
+
 /** Build a deck-level (workspace-wide) companion panel node. */
 export const makeDeckCompanion = <TData = any>({
   id,
@@ -335,6 +348,7 @@ export const makeDeckCompanion = <TData = any>({
   data,
   position,
   joyride,
+  mount,
 }: {
   id: string;
   label: Translations.Label;
@@ -342,6 +356,7 @@ export const makeDeckCompanion = <TData = any>({
   data: TData;
   position?: Position.Position;
   joyride?: string;
+  mount?: DeckCompanionMount;
 }): AppGraphNode.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
@@ -352,6 +367,7 @@ export const makeDeckCompanion = <TData = any>({
     disposition: 'hidden',
     ...(position !== undefined && { position }),
     ...(joyride !== undefined && { joyride }),
+    ...(mount !== undefined && { mount }),
   },
 });
 

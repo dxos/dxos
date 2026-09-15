@@ -10,9 +10,9 @@ import { DEFAULT_INPUT } from '@dxos/conductor';
 import { Card } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { Box, type BoxActionHandler } from './common';
-import { type SurfaceShape } from './surface-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box, type BoxActionHandler } from './common/index.ts';
+import { type SurfaceShape } from './surface-def.ts';
 
 export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) => {
   const { runtime } = useComputeNodeState(shape);

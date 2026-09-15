@@ -6,9 +6,9 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import type * as ObservabilityExtension from '../../ObservabilityExtension';
-import { type Envelope, isEnvelope } from './envelope';
-import { extensions } from './extension';
+import type * as ObservabilityExtension from '../../ObservabilityExtension.ts';
+import { type Envelope, isEnvelope } from './envelope.ts';
+import { extensions } from './extension.ts';
 
 const setup = async (overrides: Partial<Parameters<typeof extensions>[0]> = {}) => {
   const published: Envelope[] = [];

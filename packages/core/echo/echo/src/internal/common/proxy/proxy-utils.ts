@@ -4,9 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { defineHiddenProperty } from './define-hidden-property';
-import { createPropertyDeleteError, createPropertySetError } from './errors';
-import { type ReactiveHandler } from './proxy-types';
+import { defineHiddenProperty } from './define-hidden-property.ts';
+import { createPropertyDeleteError, createPropertySetError } from './errors.ts';
+import { type ReactiveHandler } from './proxy-types.ts';
 
 /**
  * Carries a proxy on its own target, so `value[symbolProxy] === value` identifies a proxy: read through

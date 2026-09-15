@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './commands';
-export * from './model';
-export * from './plan';
-export * from './system';
+export * from './commands.ts';
+export * from './model.ts';
+export * from './plan.ts';
+export * from './system.ts';

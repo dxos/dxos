@@ -13,8 +13,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defaultMap } from '@dxos/util';
 
-import { type FeedFactory, FeedFactoryService, type FeedOptions } from './feed-factory';
-import { type FeedWrapper } from './feed-wrapper';
+import { type FeedFactory, FeedFactoryService, type FeedOptions } from './feed-factory.ts';
+import { type FeedWrapper } from './feed-wrapper.ts';
 
 export interface FeedStoreOptions<T extends {}> {
   factory: FeedFactory<T>;
@@ -128,6 +128,8 @@ export const FeedStoreLayer = (): Layer.Layer<FeedStoreService, never, FeedFacto
     FeedStoreService,
     Effect.gen(function* () {
       const factory = yield* FeedFactoryService;
-      return new FeedStore({ factory });
+      const store = new FeedStore({ factory });
+      yield* Effect.addFinalizer(() => Effect.promise(() => store.close()));
+      return store;
     }),
   );

@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { QueryLogsRequestSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
 
-import { LoggingServiceImpl } from './logging-service';
+import { LoggingServiceImpl } from './logging-service.ts';
 
 describe('LoggingService', () => {
   let loggingService: LoggingServiceImpl;

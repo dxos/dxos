@@ -13,8 +13,8 @@ import { useClient } from '@dxos/react-client';
 
 import { ScriptOperation } from '#types';
 
-import { type Template } from '../templates';
-import { deployScript } from '../util';
+import { type Template } from '../templates/index.ts';
+import { deployScript } from '../util/index.ts';
 
 type DeploymentStatus = 'idle' | 'pending' | 'success' | 'error';
 

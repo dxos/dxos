@@ -8,8 +8,8 @@ import { describe, it, test } from 'vitest';
 import { Filter, Tag } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { QueryDSL } from './gen';
-import { type BuildResult, QueryBuilder, normalizeInput } from './query-builder';
+import { QueryDSL } from './gen/index.ts';
+import { type BuildResult, QueryBuilder, normalizeInput } from './query-builder.ts';
 
 // TODO(burdon): Ref/Relation traversal.
 

@@ -23,7 +23,7 @@ export class IMetadataStoreService extends EffectContext.Tag('...')<
 export const SqliteMetadataStoreLayer = (): Layer.Layer<
   IMetadataStoreService,
   never,
-  SqlClient.SqlClient | SqlTransactionTag
+  SqlClient.SqlClient
 > => Layer.effect(IMetadataStoreService, Effect.gen(function* () { ... }));
 ```
 
@@ -33,11 +33,11 @@ Status: `done` | `todo`
 
 ### Storage / persistence
 
-| Component                                | Tag                     | Layer                           | Options | Requirements                  | Status |
-| ---------------------------------------- | ----------------------- | ------------------------------- | ------- | ----------------------------- | ------ |
-| `IMetadataStore` / `SqliteMetadataStore` | `IMetadataStoreService` | `SqliteMetadataStoreLayer()`    | —       | `SqlClient \| SqlTransaction` | done   |
-| `KeyringApi` / `SqliteKeyring`           | `KeyringApiService`     | `SqliteKeyringLayer()`          | —       | `SqlClient \| SqlTransaction` | done   |
-| `SqliteStorage`                          | `SqliteStorageService`  | `SqliteStorageLayer({ path? })` | `path?` | `SqlClient \| SqlTransaction` | done   |
+| Component                                | Tag                     | Layer                           | Options | Requirements | Status |
+| ---------------------------------------- | ----------------------- | ------------------------------- | ------- | ------------ | ------ |
+| `IMetadataStore` / `SqliteMetadataStore` | `IMetadataStoreService` | `SqliteMetadataStoreLayer()`    | —       | `SqlClient`  | done   |
+| `KeyringApi` / `SqliteKeyring`           | `KeyringApiService`     | `SqliteKeyringLayer()`          | —       | `SqlClient`  | done   |
+| `SqliteStorage`                          | `SqliteStorageService`  | `SqliteStorageLayer({ path? })` | `path?` | `SqlClient`  | done   |
 
 ### Feeds
 
@@ -52,7 +52,7 @@ Status: `done` | `todo`
 | Component                      | Tag                              | Layer                                                                    | Options                  | Requirements                                                              | Status |
 | ------------------------------ | -------------------------------- | ------------------------------------------------------------------------ | ------------------------ | ------------------------------------------------------------------------- | ------ |
 | `SpaceManager`                 | `SpaceManagerService`            | `SpaceManagerLayer({ disableP2pReplication? })`                          | `disableP2pReplication?` | `FeedStoreService`, `SwarmNetworkManagerService`, `IMetadataStoreService` | done   |
-| `EchoHost`                     | `EchoHostService`                | `EchoHostLayer({ ...callbacks, useSubduction?, assignQueuePositions? })` | callbacks, flags         | `SqlClient \| SqlTransaction`                                             | done   |
+| `EchoHost`                     | `EchoHostService`                | `EchoHostLayer({ ...callbacks, useSubduction?, assignQueuePositions? })` | callbacks, flags         | `SqlClient`                                                               | done   |
 | `MeshEchoReplicator`           | `AutomergeReplicatorService`     | `MeshEchoReplicatorLayer()`                                              | —                        | —                                                                         | done   |
 | `EchoEdgeSubductionReplicator` | `EdgeAutomergeReplicatorService` | `EchoEdgeSubductionReplicatorLayer({ disableSharePolicy? })`             | `disableSharePolicy?`    | `EdgeConnectionService`, `EdgeHttpClientService`                          | done   |
 
@@ -69,17 +69,17 @@ Status: `done` | `todo`
 | `EdgeAgentManager`             | `EdgeAgentManagerService`             | `EdgeAgentManagerLayer({ edgeFeatures? })`                            | edge features                                             | `DataSpaceManagerService`, `IdentityProviderService`, `EdgeHttpClientService?`                                                                                                                            | done   |
 | `CrossDeviceSpaceSynchronizer` | `CrossDeviceSpaceSynchronizerService` | `CrossDeviceSpaceSynchronizerLayer`                                   | —                                                         | `DataSpaceManagerService`                                                                                                                                                                                 | done   |
 | `IdentityProvider`             | `IdentityProviderService`             | supplied at runtime (e.g. `identityProviderFromManager`)              | —                                                         | —                                                                                                                                                                                                         | done   |
-| `FeedSyncer`                   | `FeedSyncerService`                   | `FeedSyncerLayer({ peerId, syncNamespaces, getSpaceIds, ...tuning })` | peer/sync config                                          | `SqlClient \| SqlTransaction`, `FeedStoreService` (@dxos/feed), `EdgeConnectionService`                                                                                                                   | done   |
+| `FeedSyncer`                   | `FeedSyncerService`                   | `FeedSyncerLayer({ peerId, syncNamespaces, getSpaceIds, ...tuning })` | peer/sync config                                          | `SqlClient`, `FeedStoreService` (@dxos/feed), `EdgeConnectionService`                                                                                                                                     | done   |
 
 ### External inputs (provided by host, not constructed inside ServiceContext)
 
-| Component             | Tag                                               | Notes                      |
-| --------------------- | ------------------------------------------------- | -------------------------- |
-| `SwarmNetworkManager` | `SwarmNetworkManagerService`                      | host-provided              |
-| `SignalManager`       | `SignalManagerService`                            | todo                       |
-| `EdgeConnection`      | `EdgeConnectionService`                           | host-provided              |
-| `EdgeHttpClient`      | `EdgeHttpClientService`                           | host-provided              |
-| `RuntimeProvider`     | ambient via `SqlClient` + `SqlTransaction` layers | not a ServiceContext field |
+| Component             | Tag                               | Notes                      |
+| --------------------- | --------------------------------- | -------------------------- |
+| `SwarmNetworkManager` | `SwarmNetworkManagerService`      | host-provided              |
+| `SignalManager`       | `SignalManagerService`            | todo                       |
+| `EdgeConnection`      | `EdgeConnectionService`           | host-provided              |
+| `EdgeHttpClient`      | `EdgeHttpClientService`           | host-provided              |
+| `RuntimeProvider`     | ambient via the `SqlClient` layer | not a ServiceContext field |
 
 ## Target layer stack (sketch)
 
@@ -93,7 +93,7 @@ const ServiceContextLive = Layer.mergeAll(
   SpaceManagerLayer({ disableP2pReplication }),
   EchoHostLayer({ peerIdProvider, getSpaceKeyByRootDocumentId, syncFeed, getSyncState, useSubduction }),
   // ...identity, invitations, data-space layers
-).pipe(Layer.provideMerge(SqlTransaction.layer), Layer.provideMerge(sqliteLayer));
+).pipe(Layer.provideMerge(sqliteLayer));
 ```
 
 ## Open questions

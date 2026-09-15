@@ -20,8 +20,8 @@ import {
   useRegistryPluginProvider,
   useRemotePluginIds,
   useVersionPicker,
-} from '../../hooks';
-import { getPluginPath } from '../../paths';
+} from '../../hooks/index.ts';
+import { getPluginPath } from '../../paths.ts';
 
 export type PluginArticleProps = { subject: Plugin.Plugin };
 
@@ -101,7 +101,9 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   return (
     <PluginDetail
       plugin={plugin}
-      scope={scope.available ? <PluginScope synced={scope.synced} onSyncedChange={scope.setSynced} /> : undefined}
+      scope={
+        scope.available ? <PluginScope synced={scope.synced} onPin={scope.pin} onUnpin={scope.unpin} /> : undefined
+      }
       enabled={enabled}
       installing={actions.installing}
       updating={actions.updating}

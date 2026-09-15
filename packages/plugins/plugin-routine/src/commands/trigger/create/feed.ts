@@ -17,8 +17,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Ref, Feed as Feed$ } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { Enabled, Feed, Input } from '../options';
-import { printTrigger, promptForSchemaInput, selectFeed, selectFunction } from '../util';
+import { Enabled, Feed, Input } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFeed, selectFunction } from '../util.ts';
 
 export const feed = Command.make(
   'feed',
@@ -57,7 +57,7 @@ export const feed = Command.make(
       // Always prompt for enabled if functionId is not provided.
       const enabled = yield* Option.match(options.functionId, {
         onNone: () =>
-          Prompt.confirm({
+          Prompt.Confirm({
             message: 'Enable the trigger?',
             initial: true,
           }).pipe(Prompt.run),

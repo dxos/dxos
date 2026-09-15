@@ -4,8 +4,8 @@
 
 import { afterEach, describe, test } from 'vitest';
 
-import { HeyGenProvider } from './heygen-provider';
-import { MissingApiKeyError, ProviderFailureError } from './heygen-provider-types';
+import { MissingApiKeyError, ProviderFailureError } from './heygen-provider-types.ts';
+import { HeyGenProvider } from './heygen-provider.ts';
 
 describe('HeyGenProvider', () => {
   const originalFetch = globalThis.fetch;

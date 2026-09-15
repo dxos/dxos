@@ -18,8 +18,8 @@ The following extension dialects are used in this document.
 | `op`   | `org.dxos.mdl.op@1.0`     |
 | `op@1.1` | `org.dxos.mdl.op@1.1`   |
 | `feat` | `org.dxos.mdl.feat@1.0`   |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
 | `test` | `org.dxos.mdl.test@1.0`   |
-| `flow` | `org.dxos.mdl.flow@1.0`   |
 
 ## Operations
 
@@ -111,7 +111,7 @@ feat F-1: Self-introspection from skill
 ## Acceptance
 
 ```mdl
-test T-1: Count by level
+scenario T-1: Count by level
   given: log store with mixed-level entries
   when: queryComposerLogs is called with { groupBy: 'level' }
   then:
@@ -121,7 +121,7 @@ test T-1: Count by level
 ```
 
 ```mdl
-test T-2: Top messages by frequency
+scenario T-2: Top messages by frequency
   given: log store with many duplicated messages
   when: queryComposerLogs is called with
         { groupBy: 'message', topK: 10, aggregate: 'count' }
@@ -135,15 +135,15 @@ test T-2: Top messages by frequency
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-doctor is not in `getDefaults` or the dev-only default set (see
 `packages/apps/composer-app/src/plugin-defs.tsx`) — it is OFF by default. It contributes no UI
-surface at all, only the `queryComposerLogs` tool, so the flow is a single agent-invoked query.
+surface at all, only the `queryComposerLogs` tool, so the test is a single agent-invoked query.
 
 ```mdl
-flow QA-1: Query the browser tab's own log store
+test QA-1: Query the browser tab's own log store
   desc: The plugin's entire surface — ask the assistant a question that requires reading its own NDJSON log store back.
   actors: agent
   covers: [F-1.1, F-1.6, F-1.9, T-1]
@@ -153,7 +153,7 @@ flow QA-1: Query the browser tab's own log store
     - plugin-doctor is enabled — it is OFF by default
     - the browser tab has produced at least one log entry at each of a few levels (true after
       any normal session)
-  test:
+  steps:
     - name: Group log entries by level
       do: Ask the assistant "how many log entries of each level have been recorded this session?"
       invoke: [op:queryComposerLogs] { groupBy: "level", aggregate: "count" }
@@ -187,7 +187,7 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
 ```

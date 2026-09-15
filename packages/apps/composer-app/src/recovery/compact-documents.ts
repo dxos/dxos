@@ -9,7 +9,7 @@ import {
   compactDocumentsEpochMigration,
 } from '@dxos/migrations';
 
-import { getRecoveryClient } from './boot-client';
+import { getRecoveryClient } from './boot-client.ts';
 
 export type RecoveryCompactDocumentsOptions = CompactDocumentsOptions & {
   /** Defaults to the first space in the profile. */

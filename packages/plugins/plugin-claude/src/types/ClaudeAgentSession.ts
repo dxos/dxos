@@ -10,8 +10,8 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { AccessToken } from '@dxos/link';
 
-import { ANTHROPIC_SOURCE } from '../constants';
-import * as ClaudeManagedAgent from './ClaudeManagedAgent';
+import { ANTHROPIC_SOURCE } from '../constants.ts';
+import * as ClaudeManagedAgent from './ClaudeManagedAgent.ts';
 
 /**
  * Names that change how the container itself runs rather than naming a secret the agent reads —

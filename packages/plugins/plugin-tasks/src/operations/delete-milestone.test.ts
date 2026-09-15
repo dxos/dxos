@@ -9,9 +9,9 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
-import deleteMilestone from './delete-milestone';
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
+import deleteMilestone from './delete-milestone.ts';
 
 describe('delete-milestone', () => {
   it.effect('releases its tasks to the backlog instead of deleting them', () =>

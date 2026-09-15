@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
-import { DeckManager } from './plugins';
+import { DeckManager } from './plugins/index.ts';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
@@ -21,9 +21,9 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
-// `GraphPath.pinnedWorkspaceId('dxos:plugin-registry')`, restated so this page-object does not import
-// the registry plugin (its module graph reaches packages that fail to load under playwright's loader).
-const REGISTRY_WORKSPACE = '!dxos:plugin-registry';
+// `REGISTRY_ID`, restated so this page-object does not import the registry plugin: its module graph
+// reaches packages that fail to load under playwright's loader.
+const REGISTRY_WORKSPACE = 'dxos:registry';
 
 // `UrlPath.WORKSPACE_KEY` — the pair-chain anchor segment, restated for the same reason.
 const WORKSPACE_KEY = 'w';
@@ -60,6 +60,7 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Collection: 'org.dxos.type.collection',
   Document: 'org.dxos.type.document',
   Mailbox: 'org.dxos.type.mailbox',
+  Project: 'org.dxos.type.project',
   Table: 'org.dxos.type.table',
 };
 
@@ -139,24 +140,20 @@ export class AppManager {
     return this.page.getByTestId('navtree.workspace.visible');
   }
 
-  /**
-   * Waits out the boot-time navigation to the default space, which lands seconds after `init()`
-   * returns and replaces whatever route ran in the meantime. Boot navigates more than once, so this
-   * waits for the URL to stop moving rather than for its first arrival.
-   */
+  /** Waits out the boot-time navigation to the default space, which `init()` returns ahead of. */
   async waitForDefaultWorkspace(): Promise<void> {
     await this.#waitForBoot(DEFAULT_WORKSPACE_URL);
   }
 
-  /**
-   * Waits out the same boot navigation for a device that has just joined an existing identity. Such
-   * a device stops at the inviter's workspace root, never reaching `/home`, hence the looser pattern.
-   */
+  /** The same, for a device that has just joined an existing identity. */
   async waitForJoinedWorkspace(): Promise<void> {
     await this.#waitForBoot(JOINED_WORKSPACE_URL);
   }
 
-  /** Arrive at `url`, then wait for boot to stop navigating away from it. */
+  /**
+   * Arrive at `url`, then wait for boot to stop navigating away from it. Boot navigates more than
+   * once, so the test waits for the URL to stop moving rather than for its first arrival.
+   */
   async #waitForBoot(url: RegExp): Promise<void> {
     let lastNavigation = Date.now();
     const onNavigated = (frame: Frame) => {
@@ -529,39 +526,6 @@ export class AppManager {
     await expect(item).toBeVisible();
     await item.click();
     await expect(item).toHaveAttribute('aria-selected', 'true');
-  }
-
-  /** The scope toggle group in a settings panel's heading: one item per scope, the active one pressed. */
-  getSettingsScopeToggle(scope: 'synced' | 'local'): Locator {
-    return this.page.getByTestId(`settingsScope.${scope}`);
-  }
-
-  /** Takes the open settings panel off the account. */
-  async useSettingsForThisDeviceOnly(): Promise<void> {
-    const local = this.getSettingsScopeToggle('local');
-    await expect(local).toBeVisible();
-    await local.click();
-    await expect(local).toHaveAttribute('data-state', 'on');
-  }
-
-  /**
-   * Rejoins the account for the open settings panel, keeping the account's values. The confirmation
-   * only appears when the two sides differ, so the dialog is dismissed only if it opened.
-   */
-  async rejoinAccountSettings(): Promise<void> {
-    await this.getSettingsScopeToggle('synced').click();
-    const keepShared = this.page.getByTestId('settingsScope.keepShared');
-    if (await keepShared.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await keepShared.click();
-    }
-    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
-  }
-
-  /** Rejoins the account but publishes this device's values to it, from the conflict dialog. */
-  async rejoinAccountSettingsKeepingLocal(): Promise<void> {
-    await this.getSettingsScopeToggle('synced').click();
-    await this.page.getByTestId('settingsScope.keepLocal').click();
-    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
   }
 
   /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */

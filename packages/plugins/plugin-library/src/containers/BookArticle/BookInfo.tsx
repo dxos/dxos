@@ -213,7 +213,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               onValuesChanged={handleChange}
             >
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Root>
           </section>

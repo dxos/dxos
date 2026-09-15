@@ -16,7 +16,7 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import type * as Scene from './scene';
+import type * as Scene from './scene.ts';
 
 //
 // Drawing model. Plain data (one discriminated tree) — the intermediate model between the app

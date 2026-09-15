@@ -25,9 +25,9 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { useTestTableModel } from '../../testing';
-import { Table } from '../../types';
-import { Table as TableComponent } from './Table';
+import { useTestTableModel } from '../../testing/index.ts';
+import { Table } from '../../types/index.ts';
+import { Table as TableComponent } from './Table.tsx';
 
 const Example = Schema.Struct({
   // TODO(wittjosiah): Should be title. Currently name to work with default label.

@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Plugin from './plugin';
-import * as PluginAssetCache from './plugin-asset-cache';
-import * as UrlLoader from './url-loader';
+import * as PluginAssetCache from './plugin-asset-cache.ts';
+import * as Plugin from './plugin.ts';
+import * as UrlLoader from './url-loader.ts';
 
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test' });
 

@@ -128,7 +128,6 @@ its build emits no standalone `.d.ts`, and a library's ambient declaration leaks
 ```ts
 migrate = Effect.fn('<Store>.migrate')(() =>
   Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
     Effect.withSpan('<Store>.migrate'),
@@ -136,21 +135,18 @@ migrate = Effect.fn('<Store>.migrate')(() =>
 );
 ```
 
-Three parts that all matter:
+Two parts that both matter:
 
-- **`SqlTransaction.clientLayer`** — the migrator wraps its work in `SqlClient.withTransaction`,
-  which emits literal `BEGIN` / `COMMIT`; workerd forbids those. This layer swaps in a client whose
-  `withTransaction` delegates to the `SqlTransaction` service, which each platform supplies
-  correctly (edge backs it with `ctx.storage.transaction()`). **Omit it and the store cannot start
-  in a Durable Object.**
 - **`catchTag('MigrationError')`** — a malformed bundled manifest is a defect, not something a
   caller recovers from. Dying keeps `migrate`'s error channel at `SqlError`. `Effect.asVoid` alone
   does **not** narrow the error channel.
 - **`Migrator.make({})`** — not the platform `SqliteMigrator` entry points, which additionally
   require `FileSystem`/`Path`/`CommandExecutor` and cannot run in the browser.
 
-The store's requirements gain `SqlTransaction`, so test layers need
-`SqlTransaction.layer.pipe(Layer.provideMerge(client))`.
+The migrator wraps its work in `SqlClient.withTransaction`, which emits literal `BEGIN` / `COMMIT`
+— forbidden in workerd. A Durable Object therefore builds `@effect/sql-sqlite-do`'s client with
+`storage: ctx.storage` rather than `db: ctx.storage.sql`, which backs `withTransaction` with
+`ctx.storage.transaction()`; built with `db` alone the client refuses to transact at all.
 
 ### Tests
 

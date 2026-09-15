@@ -11,8 +11,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
-import { buildArchive, histogram } from '../testing';
-import * as SampleSpace from './SampleSpace';
+import { buildArchive, histogram } from '../testing/index.ts';
+import * as SampleSpace from './SampleSpace.ts';
 
 const ORG_SEEDS = [
   { key: 'acme', name: 'Acme' },

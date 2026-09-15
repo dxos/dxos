@@ -6,7 +6,7 @@ import { OPFS_SQLITE_DB_FILENAME, createSqliteProfileArchive, encodeProfileArchi
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import { downloadBlob } from '@dxos/util';
 
-import { verifyOpfsSqliteImport } from './opfs-import-verify';
+import { verifyOpfsSqliteImport } from './opfs-import-verify.ts';
 
 const DB_NAME = OPFS_SQLITE_DB_FILENAME;
 

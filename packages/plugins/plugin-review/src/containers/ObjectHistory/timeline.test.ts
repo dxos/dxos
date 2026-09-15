@@ -17,7 +17,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { Branch, Version } from '@dxos/versioning';
 
-import { BRANCH_TIP_PREFIX, MAIN_BRANCH, NOW_COMMIT_ID, commitToSelection, createTimelineModel } from './timeline';
+import { BRANCH_TIP_PREFIX, MAIN_BRANCH, NOW_COMMIT_ID, commitToSelection, createTimelineModel } from './timeline.ts';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',

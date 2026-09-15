@@ -7,15 +7,15 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
-import { toSpaceMemberRole } from '@dxos/client-services';
 import { performInvitation } from '@dxos/client-services/testing';
 import { createInitializedClientsWithContext } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 describe('Spaces/member-management', () => {
   test('admins can remove members', async () => {
@@ -73,13 +73,13 @@ describe('Spaces/member-management', () => {
     expect(space1.members.get().length).to.eq(3);
     const space3 = getClientSpace(client3, space1);
 
-    await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE);
+    await waitHasStatus([space1, space3], client2, SpaceMember_PresenceState.ONLINE);
     await updateRole(space1, client1, client2, SpaceMember_Role.REMOVED, { waitUpdated: [space1, space3] });
-    await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.OFFLINE);
+    await waitHasStatus([space1, space3], client2, SpaceMember_PresenceState.OFFLINE);
     await client2.mesh.updateConfig(ConnectionState.OFFLINE);
     await client2.mesh.updateConfig(ConnectionState.ONLINE);
     await expect(
-      waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE, { timeout: 500 }),
+      waitHasStatus([space1, space3], client2, SpaceMember_PresenceState.ONLINE, { timeout: 500 }),
     ).rejects.toBeInstanceOf(Error);
   });
 
@@ -90,14 +90,14 @@ describe('Spaces/member-management', () => {
     expect(space1.members.get().length).to.eq(3);
     const space3 = getClientSpace(client3, space1);
 
-    await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE);
+    await waitHasStatus([space1, space3], client2, SpaceMember_PresenceState.ONLINE);
     await updateRole(space1, client1, client2, SpaceMember_Role.REMOVED, { waitUpdated: [space1, space3] });
-    await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.OFFLINE);
+    await waitHasStatus([space1, space3], client2, SpaceMember_PresenceState.OFFLINE);
 
     await client2.mesh.updateConfig(ConnectionState.OFFLINE);
     await updateRole(space1, client1, client2, SpaceMember_Role.EDITOR);
     await client2.mesh.updateConfig(ConnectionState.ONLINE);
-    await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE);
+    await waitHasStatus([space1, space3], client2, SpaceMember_PresenceState.ONLINE);
 
     // Editors can't invite members.
     const { error } = await performInvitation({ host: getClientSpace(client2, space1), guest: client3.spaces })[0];
@@ -133,7 +133,7 @@ const updateRole = async (
 ) => {
   const echoSpace = host.spaces.get().find((s) => s.key.equals(space.key))!;
   await echoSpace.updateMemberRole({
-    memberKey: target.halo.identity.get()!.identityKey,
+    memberKey: requirePublicKey(target.halo.identity.get()!.identityKey),
     newRole,
   });
   if (options?.waitUpdated?.length) {
@@ -142,19 +142,21 @@ const updateRole = async (
 };
 
 const findMember = (space: Space, client: Client) => {
-  return space.members.get().find((m) => m.identity.identityKey.equals(client.halo.identity.get()!.identityKey));
+  return space.members
+    .get()
+    .find((m) =>
+      toPublicKey(m.identity?.identityKey)?.equals(requirePublicKey(client.halo.identity.get()!.identityKey)),
+    );
 };
 
 const waitHasRole = async (spaceOrMany: Space | Space[], client: Client, role: SpaceMember_Role) => {
-  // The member's role is read back through SpacesService, which still serves protobuf.js shapes.
-  const memberRole = toSpaceMemberRole(role);
-  return waitForMemberState(spaceOrMany, client, (m) => m?.role === memberRole);
+  return waitForMemberState(spaceOrMany, client, (m) => m?.role === role);
 };
 
 const waitHasStatus = async (
   spaceOrMany: Space | Space[],
   client: Client,
-  status: SpaceMember.PresenceState,
+  status: SpaceMember_PresenceState,
   options?: { timeout: number },
 ) => {
   return waitForMemberState(spaceOrMany, client, (m) => m?.presence === status, options);

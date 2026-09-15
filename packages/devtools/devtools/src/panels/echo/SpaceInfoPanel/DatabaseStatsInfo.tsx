@@ -8,7 +8,7 @@ import type { Space } from '@dxos/client/echo';
 import type { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { JsonView } from '../../../components';
+import { JsonView } from '../../../components/index.ts';
 
 interface DatabaseStatsInfoProps {
   space: Space;
@@ -45,7 +45,7 @@ export const DatabaseStatsInfo = ({ space }: DatabaseStatsInfoProps) => {
   return (
     <div className='p-2 text-sm'>
       <p className='text-base'>Database stats</p>
-      <JsonView data={stats} />
+      <JsonView data={stats} filter={false} />
     </div>
   );
 };

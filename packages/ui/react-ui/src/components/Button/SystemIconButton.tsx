@@ -19,8 +19,8 @@ import { downloadBlob } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { IconButton, type IconButtonProps } from './IconButton';
-import { ToggleIconButton, type ToggleIconButtonProps } from './ToggleIconButton';
+import { IconButton, type IconButtonProps } from './IconButton.tsx';
+import { ToggleIconButton, type ToggleIconButtonProps } from './ToggleIconButton.tsx';
 
 // Static presets fix the icon and default the label; callers can still override `label`.
 type StaticPresetProps = Omit<IconButtonProps, 'icon' | 'label'> & { label?: string };

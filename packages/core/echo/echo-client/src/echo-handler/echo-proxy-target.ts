@@ -9,9 +9,9 @@ import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { EventId } from '@dxos/echo/internal';
 
-import type * as Doc from '../automerge/Doc';
-import type { ObjectCore } from '../core-db';
-import { type EchoArray } from './echo-array';
+import type * as Doc from '../automerge/Doc.ts';
+import type { ObjectCore } from '../core-db/index.ts';
+import { type EchoArray } from './echo-array.ts';
 
 /** Global symbols so proxy targets work across Vite bundle chunks (host vs import-map plugin). */
 export const symbolPath = Symbol.for('@dxos/echo/internal/ProxyPath');
@@ -19,7 +19,7 @@ export const symbolNamespace = Symbol.for('@dxos/echo/internal/ProxyNamespace');
 export const symbolInternals = Symbol.for('@dxos/echo/internal/ProxyInternals');
 
 // Re-export TargetKey from core-db so echo-handler callers only need this module.
-export { TargetKey } from '../core-db';
+export { TargetKey } from '../core-db/index.ts';
 
 /**
  * Generic proxy target type for ECHO proxy objects.
@@ -65,7 +65,7 @@ export type ProxyTarget = {
 // two layers: it imports EchoDatabase and exposes a typed getter.
 // ---------------------------------------------------------------------------
 
-import type { EchoDatabase } from '../proxy-db';
+import type { EchoDatabase } from '../proxy-db/index.ts';
 
 /**
  * Typed accessor for the EchoDatabase stored on an ObjectCore.

@@ -16,21 +16,21 @@ import { ConnectorCoordination, ConnectorEvents, ConnectorSpec } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export * from './connector-coordinator';
+export * from './connector-coordinator/index.ts';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [ConnectorSpec.Connector],
   environments: ['node'],
 });
 export const BuiltinConnectors = Capability.lazyModule(
   'BuiltinConnectors',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connectors'),
+  () => import('./connectors.ts'),
 );
 // `#commands` resolves to `commands.browser.ts` under the browser: `connector oauth` needs a Bun
 // callback server, so only headless runtimes get the real command graph.
 export const Commands = AppCapability.commands(() => import('#commands'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: ['node'],
 });
 export const OAuthRedirect = Capability.lazyModule(
@@ -41,21 +41,21 @@ export const OAuthRedirect = Capability.lazyModule(
     activatesOn: ConnectorEvents.Start,
     environments: [],
   },
-  () => import('./oauth-redirect'),
+  () => import('./oauth-redirect.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const RoutineTemplate = Capability.lazyModule(
   'RoutineTemplate',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-  () => import('./routine-template'),
+  () => import('./routine-template.ts'),
 );
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

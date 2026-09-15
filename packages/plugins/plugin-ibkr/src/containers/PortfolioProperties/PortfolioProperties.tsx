@@ -14,8 +14,8 @@ import { Form } from '@dxos/react-ui-form';
 
 import { Ibkr } from '#types';
 
-import { meta } from '../../meta';
-import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from '../../sync';
+import { meta } from '../../meta.ts';
+import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from '../../sync.ts';
 
 export type PortfolioPropertiesProps = AppSurface.ObjectPropertiesProps<Ibkr.Portfolio>;
 
@@ -52,12 +52,12 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
   }, [db, subject, syncTrigger, operations, setSyncEnabled]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('daily-sync.label')}</Field.Label>
         <Field.Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={handleToggleSync} />
       </Field.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

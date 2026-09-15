@@ -9,7 +9,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useAudioStream } from '../../hooks';
+import { useAudioStream } from '../../hooks/index.ts';
 
 export type Point = { x: number; y: number };
 

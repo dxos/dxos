@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { type TaskPlacement, resolveIndent, resolveNudge, resolveOutdent, resolveTaskPlacement } from './hierarchy';
+import { type TaskPlacement, resolveIndent, resolveNudge, resolveOutdent, resolveTaskPlacement } from './hierarchy.ts';
 
 describe('resolveTaskPlacement', () => {
   test('above a task takes its parent and anchors on it', ({ expect }) => {

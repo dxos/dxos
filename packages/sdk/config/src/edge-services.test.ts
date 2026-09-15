@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { Config } from './config';
-import { EdgeServiceName, getEdgeServiceEndpoint } from './edge-services';
+import { Config } from './config.ts';
+import { EdgeServiceName, getEdgeServiceEndpoint } from './edge-services.ts';
 
 const configWithEdge = (url: string) => new Config({ runtime: { services: { edge: { url } } } });
 

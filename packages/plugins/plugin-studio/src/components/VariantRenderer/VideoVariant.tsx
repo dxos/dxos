@@ -8,7 +8,7 @@ import { MediaPlayer } from '@dxos/react-ui';
 
 import { type VariantContent } from '#surfaces';
 
-import { useVariantSource } from '../../hooks';
+import { useVariantSource } from '../../hooks/index.ts';
 
 export type VideoVariantProps = {
   variant: VariantContent;

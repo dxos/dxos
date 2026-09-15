@@ -13,9 +13,9 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 
@@ -26,10 +26,10 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
 });
 
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 
 export const Translations = AppCapability.translations(translations);

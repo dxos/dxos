@@ -11,11 +11,11 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { log } from '@dxos/log';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import * as AiService from '../../AiService';
-import * as Provider from '../../Provider';
-import { CalculatorLayer, CalculatorToolkit } from '../../testing/calculator';
-import * as OllamaResolver from './OllamaResolver';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import * as AiService from '../../AiService.ts';
+import * as Provider from '../../Provider.ts';
+import { CalculatorLayer, CalculatorToolkit } from '../../testing/calculator.ts';
+import * as OllamaResolver from './OllamaResolver.ts';
 
 const MODEL = 'com.openai.model.gpt-oss-20b.default';
 

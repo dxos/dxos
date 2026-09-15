@@ -14,8 +14,8 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { Blog, BloggerCapabilities, Publisher } from '#types';
 
-import { SyncPosts } from './definitions';
-import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support';
+import { SyncPosts } from './definitions.ts';
+import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support.ts';
 
 /** Reports sync progress; `total` is an upper bound (posts to reconcile + remote drafts). */
 export type SyncProgress = (current: number, total: number) => void;

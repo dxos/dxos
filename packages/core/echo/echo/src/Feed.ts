@@ -14,16 +14,16 @@ import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Database from './Database';
-import type * as Entity from './Entity';
-import type * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import * as Scope from './Scope';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Database from './Database.ts';
+import type * as Entity from './Entity.ts';
+import type * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import * as Scope from './Scope.ts';
+import * as Type from './Type.ts';
 
 /**
  * Runtime schema for a Feed object.

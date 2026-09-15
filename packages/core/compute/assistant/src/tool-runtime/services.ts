@@ -22,7 +22,7 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { RefFromLLM } from '../util';
+import { RefFromLLM } from '../util/index.ts';
 
 export const makeToolResolverFromOperations = <R = never>({
   toolkit: extraToolkit = OpaqueToolkit.empty,
@@ -244,12 +244,12 @@ const toolCache = new WeakMap<Operation.Definition.Any, Tool.Any>();
  * Parameter schema for an operation that takes no input.
  *
  * Spelled as a record with an uninhabited value type rather than `Schema.Struct({})` because v4
- * emits an empty struct as `{anyOf: [{type: 'object'}, {type: 'array'}]}`, whose object branch
- * declares no `additionalProperties`. A provider's strict tool mode rejects that outright
+ * emits an empty struct as `{not: {type: 'null'}}` — the bare `object` keyword, which states
+ * neither `type` nor `additionalProperties`. A provider's strict tool mode rejects that outright
  * ("For 'object' type, 'additionalProperties' must be explicitly set to false"), and one bad tool
  * fails the whole request. A `Never` value type admits no keys, so this emits
  * `{type: 'object', additionalProperties: false}` — the same shape, and valid under strict.
- * A JSON-schema annotation cannot express this: v4 honours only a fixed annotation whitelist.
+ * A JSON-schema annotation cannot express this: v4 honours such an annotation only on a check.
  */
 const EMPTY_PARAMETERS_SCHEMA = Schema.Record(Schema.String, Schema.Never);
 

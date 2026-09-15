@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Tracer from 'effect/Tracer';
 
-import { runAndForwardErrors, unwrapExit } from './internal/errors';
-import { makeGlobalTracer } from './otel';
+import { runAndForwardErrors, unwrapExit } from './internal/errors.ts';
+import { makeGlobalTracer } from './otel.ts';
 
 let defaultTracer: Context.Context<never> | undefined;
 

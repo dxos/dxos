@@ -24,6 +24,14 @@ export default Capability.makeModule(
           { operation: ProjectOperation.DelegateTaskToChat, input: { tasks: [Ref.make(task)] } },
         ],
       },
+      {
+        id: 'copy-prompt',
+        label: 'Copy prompt',
+        icon: 'ph--clipboard-text--regular',
+        // Applies to every task for the same reason as the action above: any task can be handed to
+        // an agent outside the app, and the operation copies what it renders.
+        createInvocations: (task) => [{ operation: ProjectOperation.CopyTaskPrompt, input: { task: Ref.make(task) } }],
+      },
     ]);
   }),
 );

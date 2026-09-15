@@ -6,8 +6,8 @@ import { expect, test } from '@playwright/test';
 
 import { random } from '@dxos/random';
 
-import { AppManager } from './app-manager';
-import { Markdown, Thread } from './plugins';
+import { AppManager } from './app-manager.ts';
+import { Markdown, Thread } from './plugins/index.ts';
 
 random.seed(0);
 

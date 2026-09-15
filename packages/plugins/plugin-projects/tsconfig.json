@@ -94,6 +94,9 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -122,6 +125,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-routine"

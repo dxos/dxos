@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { rmSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -10,6 +11,7 @@ import { Client } from '@dxos/client';
 import { TestBuilder, TestSchema, performInvitation } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
 describe('Client', () => {
@@ -107,7 +109,7 @@ describe('Client', () => {
       // Create identity.
       await client.initialize();
       expect(client.halo.identity.get()).not.to.exist;
-      const identity = await client.halo.createIdentity({ displayName });
+      const identity = await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName }));
       expect(client.halo.identity.get()).to.deep.eq(identity);
       await client.destroy();
     }
@@ -117,7 +119,9 @@ describe('Client', () => {
       await client.initialize();
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
-      await expect(client.halo.createIdentity({ displayName })).rejects.toBeInstanceOf(Error);
+      await expect(client.halo.createIdentity(create(ProfileDocumentSchema, { displayName }))).rejects.toBeInstanceOf(
+        Error,
+      );
     }
     {
       // Reset storage.
@@ -128,7 +132,7 @@ describe('Client', () => {
       // TODO(wittjosiah): This functionality is currently disabled because it was unreliable.
       // Start again.
       // expect(client.halo.identity.get()).to.eq(null);
-      // await client.halo.createIdentity({ displayName });
+      // await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName }));
       // expect(client.halo.identity).to.exist;
       // await client.destroy();
     }
@@ -145,13 +149,15 @@ describe('Client', () => {
 
     await client.initialize();
     onTestFinished(() => client.destroy());
-    await client.halo.createIdentity({ displayName: 'reset-check' });
+    await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'reset-check' }));
     await client.destroy();
 
     // After closing, identity must have been persisted to SQLite — attempting
     // to create another identity (when one already exists) should reject.
     await client.initialize();
-    await expect(client.halo.createIdentity({ displayName: 'another' })).rejects.toBeInstanceOf(Error);
+    await expect(
+      client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'another' })),
+    ).rejects.toBeInstanceOf(Error);
 
     // Reset should clear all SQLite storage.
     await client.reset();
@@ -250,7 +256,7 @@ describe('Client', () => {
 
     await using services = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client = await new Client({ services }).initialize();
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
     expect(client.halo.identity.get()?.profile?.displayName).toEqual('test-user');
 
     await client.addTypes([TestSchema.TextV0Type]);

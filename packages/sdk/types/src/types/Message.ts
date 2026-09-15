@@ -10,8 +10,8 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type MakeOptional } from '@dxos/util';
 
-import * as Actor from './Actor';
-import * as ContentBlock from './ContentBlock';
+import * as Actor from './Actor.ts';
+import * as ContentBlock from './ContentBlock.ts';
 
 /**
  * A file or object attached to a message, separate from its (textual/streamed) `blocks`. The

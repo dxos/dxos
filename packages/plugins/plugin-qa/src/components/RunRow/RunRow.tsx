@@ -9,8 +9,8 @@ import { Icon } from '@dxos/react-ui';
 
 import { type TestRun } from '#types';
 
-import { RunResults } from '../RunResults';
-import { StatusBadge } from '../StatusBadge';
+import { RunResults } from '../RunResults/index.ts';
+import { StatusBadge } from '../StatusBadge/index.ts';
 
 export type RunRowProps = {
   run: TestRun.TestRun;

@@ -14,6 +14,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    sample: 'src/sample/index.ts',
     translations: 'src/translations.ts',
     Debug: 'src/types/Debug.ts',
     DebugEvents: 'src/types/DebugEvents.ts',

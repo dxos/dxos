@@ -13,8 +13,8 @@ import { getTypeURIFromQuery } from '@dxos/schema';
 import { type GeoMarker } from '@dxos/solid-ui-geo';
 import { getDeep } from '@dxos/util';
 
-import { GlobeControl } from '../Globe';
-import { MapControl } from '../Map';
+import { GlobeControl } from '../Globe/index.ts';
+import { MapControl } from '../Map/index.ts';
 
 type MapSurfaceProps = {
   data?: { subject: Map.Map };

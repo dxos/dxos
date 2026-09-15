@@ -2,4 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './ElevationProvider';
+export * from './ElevationProvider.tsx';

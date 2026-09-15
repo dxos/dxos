@@ -12,12 +12,12 @@ import * as Schema from 'effect/Schema';
 import { type Config, EdgeServiceName, getEdgeServiceEndpoint, getEnvString } from '@dxos/config';
 import type * as Observability from '@dxos/observability/Observability';
 
-import { SupportForbiddenError, SupportSubmitError } from '../errors';
-import type * as SupportOperation from './SupportOperation';
+import { SupportForbiddenError, SupportSubmitError } from '../errors.ts';
+import type * as SupportOperation from './SupportOperation.ts';
 
 export const SupportReportResult = Schema.Struct({
-  ticketId: Schema.String,
-  threadUrl: Schema.optional(Schema.String),
+  ticketId: Schema.optional(Schema.String),
+  threadUrl: Schema.String,
 });
 
 export type SupportReportResult = Schema.Schema.Type<typeof SupportReportResult>;
@@ -127,7 +127,7 @@ export const submitSupportReport = ({
     }
 
     const result = yield* decodeBody(SupportReportResult, response);
-    if (includeLogs) {
+    if (includeLogs && result.ticketId) {
       yield* flushLogs(observability, { ticketId: result.ticketId });
     }
     return result;

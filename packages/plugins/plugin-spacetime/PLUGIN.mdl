@@ -14,10 +14,10 @@ and ECHO for collaborative persistence of scenes and objects.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -410,7 +410,7 @@ feat FR-7: Boolean Operations
 ## Acceptance
 
 ```mdl
-test T-FR-1.1: Create scene
+scenario T-FR-1.1: Create scene
   given: Composer is open
   when: user creates a new Spacetime article
   then:
@@ -420,7 +420,7 @@ test T-FR-1.1: Create scene
 ```
 
 ```mdl
-test T-FR-3.5: Multi-select ordering
+scenario T-FR-3.5: Multi-select ordering
   given: object selection mode active, no selection
   when: user clicks A, then Shift+clicks B, then Shift+clicks C
   then:
@@ -429,7 +429,7 @@ test T-FR-3.5: Multi-select ordering
 ```
 
 ```mdl
-test T-FR-4.2.3: Snap during move
+scenario T-FR-4.2.3: Snap during move
   given: Object is selected, move tool active
   when: user drags while holding Shift
   then:
@@ -438,7 +438,7 @@ test T-FR-4.2.3: Snap during move
 ```
 
 ```mdl
-test T-FR-7.2: Boolean subtract
+scenario T-FR-7.2: Boolean subtract
   given: Objects [A, B] selected in order, A is primary
   when: user invokes subtract
   then:
@@ -449,7 +449,7 @@ test T-FR-7.2: Boolean subtract
 ```
 
 ```mdl
-test T-FR-8: Keyboard scope
+scenario T-FR-8: Keyboard scope
   given: focus is in a text input (not canvas)
   when: user presses "m" or "e" or "x"
   then: no tool action fires
@@ -457,17 +457,17 @@ test T-FR-8: Keyboard scope
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a scene, add an object, and export it
+test QA-1: Create a scene, add an object, and export it
   desc: |
     The core CAD round-trip. None of the steps below have a runtime `invoke` binding — the ops
     documented above (`createScene`, `addObject`, `booleanSubtract`, `exportSTL`, …) are
     descriptive of engine behavior, not registered Operations: no `org.dxos.operation.spacetime.*`
     key exists anywhere in `src` (grepped for `DXN.make` and `Operation.make` — only the ECHO
-    types `Scene` and `Object` register keys, both `org.dxos.type.*`). The whole flow is therefore
+    types `Scene` and `Object` register keys, both `org.dxos.type.*`). The whole test is therefore
     `actors: human`, per Field Rule 2 — a drag on the 3D canvas is not something a debug-port
     invoke can stand in for.
   actors: human
@@ -478,12 +478,12 @@ flow QA-1: Create a scene, add an object, and export it
     - space: a space is open
     - plugin-spacetime is enabled — it ships in the "experimental" set (`plugin-defs.tsx`) and is
       OFF by default; it is not listed in `getDefaults`
-    - no Scene named "QA Scene" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Scene named "QA Scene" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the scene
       do: In the navtree, click + on the space and choose Spacetime (Scene). Name it "QA Scene".
       expect: a Scene article opens showing a single default cube Object
-      note: NO invoke — see the flow desc.
+      note: NO invoke — see the test desc.
     - name: Add a second object
       do: Using the toolbar's object-template picker, add a sphere primitive to the scene.
       expect: a second Object (sphere) appears in the scene and in the outliner
@@ -500,7 +500,7 @@ flow QA-1: Create a scene, add an object, and export it
     - name: Delete the scene
       do: Right-click "QA Scene" in the navtree and choose Delete.
       expect: the row leaves the navtree and its plank closes
-      note: NO invoke — no step captures a Scene reference to bind, per the flow desc.
+      note: NO invoke — no step captures a Scene reference to bind, per the test desc.
 ```
 
 ---
@@ -529,8 +529,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

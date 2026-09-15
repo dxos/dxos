@@ -18,9 +18,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { MAX_MIN_INTERVAL_SECONDS, clampSchedule, fromCron, scheduleIntervalSeconds, scheduleToCron } from './cron';
-import { type Day, Days } from './days';
-import { describeSchedule } from './describe-schedule';
+import { MAX_MIN_INTERVAL_SECONDS, clampSchedule, fromCron, scheduleIntervalSeconds, scheduleToCron } from './cron.ts';
+import { type Day, Days } from './days.ts';
+import { describeSchedule } from './describe-schedule.ts';
 
 //
 // Value model.

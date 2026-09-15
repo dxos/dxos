@@ -12,11 +12,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { json } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
-import { templateLanguage } from '../codemirror';
-import { type Node, TemplateParseError, parse, select } from '../index';
-import { Template, createReactRenderer } from './renderer';
-import { Editor, OperationLog, Workbench } from './testing';
-import { type SequencedLogEntry } from './useSystem';
+import { templateLanguage } from '../codemirror/index.ts';
+import { type Node, TemplateParseError, parse, select } from '../index.ts';
+import { Template, createReactRenderer } from './renderer.tsx';
+import { Editor, OperationLog, Workbench } from './testing/index.ts';
+import { type SequencedLogEntry } from './useSystem.ts';
 
 //
 // SPIKE story. Four columns, left to right: the type the template is parameterized by, an instance

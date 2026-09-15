@@ -4,13 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { analyze, errors } from './diagnostics';
-import type * as Scene from './scene';
-import { CLASS_DIAGRAM } from './testing';
-import * as UmlEngine from './uml-engine';
-import * as UmlGrid from './uml-grid';
-import * as UmlRules from './uml-rules';
-import * as UmlSearch from './uml-search';
+import { analyze, errors } from './diagnostics.ts';
+import type * as Scene from './scene.ts';
+import { CLASS_DIAGRAM } from './testing.ts';
+import * as UmlEngine from './uml-engine.ts';
+import * as UmlGrid from './uml-grid.ts';
+import * as UmlRules from './uml-rules.ts';
+import * as UmlSearch from './uml-search.ts';
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));

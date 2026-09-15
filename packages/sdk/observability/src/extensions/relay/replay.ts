@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Observability from '../../Observability';
-import { type Envelope, type SerializedError } from './envelope';
+import type * as Observability from '../../Observability.ts';
+import { type Envelope, type SerializedError } from './envelope.ts';
 
 let current: string | undefined;
 

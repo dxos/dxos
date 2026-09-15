@@ -9,8 +9,8 @@ import { render } from 'ink';
 import process from 'process';
 import React from 'react';
 
-import { App } from './components';
-import { OctokitContext } from './hooks';
+import { App } from './components/index.ts';
+import { OctokitContext } from './hooks/index.ts';
 
 // TODO(burdon): Start of tool to monitor/log workflows.
 // TODO(burdon): See `@dxos/mission-control`.

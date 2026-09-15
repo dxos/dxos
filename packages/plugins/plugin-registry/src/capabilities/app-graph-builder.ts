@@ -20,8 +20,8 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
-import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories';
-import { REGISTRY_ID } from '../paths';
+import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories.ts';
+import { REGISTRY_ID } from '../paths.ts';
 
 /**
  * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it

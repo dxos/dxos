@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as ProviderSkill } from './provider-skill';
+export { default as ProviderSkill } from './provider-skill.ts';

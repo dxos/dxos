@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { wireTriggers } from '../../util';
+import { wireTriggers } from '../../util/index.ts';
 import {
   FrequencyDefaults,
   Schedule,
@@ -26,8 +26,8 @@ import {
   cronToSchedule,
   scheduleToCron,
   toCron,
-} from '../Schedule';
-import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
+} from '../Schedule/index.ts';
+import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector.tsx';
 
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
@@ -309,13 +309,14 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
   const values = useFormValues<TriggerFormInput>('TriggerEditor.TriggerSection', TRIGGER_PATH);
   const kind = values?.kind;
 
+  // The card pads itself: `Form.Fields` renders its rows bare, so any inset the kind's fields get is this one.
   return (
-    <div className={mx('flex flex-col', kind && 'pb-2 dx-card-surface border border-separator rounded-xs')}>
+    <div className={mx('flex flex-col', kind && 'px-2 pb-2 dx-card-surface border border-separator rounded-xs')}>
       {kind ? (
         <>
           <div className='flex items-center'>
             <Field.Root>
-              <Field.Label classNames='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
+              <Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
             </Field.Root>
             {!readonly && (
               <IconButton
@@ -328,14 +329,14 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
               />
             )}
           </div>
-          <Form.FieldSet path={TRIGGER_PATH} schema={TriggerForm} classNames='px-2' />
+          <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
         </>
       ) : (
-        <Form.FieldSet path={TRIGGER_PATH} schema={TriggerForm} />
+        <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
       )}
 
       {/* Currently, email triggers have no configuration; surface an explanatory note instead of an empty body. */}
-      {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
+      {kind === 'email' && <p className='text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
     </div>
   );
 };

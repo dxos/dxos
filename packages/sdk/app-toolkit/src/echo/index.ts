@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as AppAnnotation from './AppAnnotation';
-export * as AppMigrations from './AppMigrations';
-export * as AppSpace from './AppSpace';
-export * as Query from './Query';
-export * as TypeOptions from './TypeOptions';
+export * as AppAnnotation from './AppAnnotation.ts';
+export * as AppMigrations from './AppMigrations.ts';
+export * as AppSpace from './AppSpace.ts';
+export * as Query from './Query.ts';
+export * as TypeOptions from './TypeOptions.ts';

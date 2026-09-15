@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DebugPortSettings } from './DebugPortSettings';
+import { DebugPortSettings } from './DebugPortSettings.tsx';
 
 const DEBUG_PORT_ORIGIN = 'http://127.0.0.1:9321';
 

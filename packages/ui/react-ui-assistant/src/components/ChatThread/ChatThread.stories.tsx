@@ -13,9 +13,9 @@ import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { translations } from '../../translations';
-import { type ChatThreadEvent, type ChatView } from '../../types';
-import { ChatThread, type ChatThreadController } from './ChatThread';
+import { translations } from '../../translations.ts';
+import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { ChatThread, type ChatThreadController } from './ChatThread.tsx';
 
 /**
  * The canonical assistant thread: `ChatThread` end to end — the view-typed renderer, the real

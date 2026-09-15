@@ -12,8 +12,8 @@ import { type Stage } from '@dxos/pipeline';
 import { FactStore, type RDF, generateQuery } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
-import { type StoreError } from '../errors';
-import { QuestionStore } from '../stores';
+import { type StoreError } from '../errors.ts';
+import { QuestionStore } from '../stores/index.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 

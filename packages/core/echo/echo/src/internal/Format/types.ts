@@ -6,8 +6,8 @@ import type * as JSONSchema from 'effect/JsonSchema';
 
 import { SchemaAST } from '@dxos/effect';
 
-import { createAnnotationHelper } from '../Annotation';
-import { type JsonSchemaType } from '../JsonSchema';
+import { createAnnotationHelper } from '../Annotation/index.ts';
+import { type JsonSchemaType } from '../JsonSchema/index.ts';
 
 // TODO(burdon): Rename PropertyType.
 // Effect 4 consolidated the individual draft-07 node interfaces into one `JsonSchema` model.

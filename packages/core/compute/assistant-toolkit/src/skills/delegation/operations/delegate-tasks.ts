@@ -11,7 +11,7 @@ import { Database, Obj } from '@dxos/echo';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { DelegateTasks } from './definitions';
+import { DelegateTasks } from './definitions.ts';
 
 /**
  * Delegates existing checklist tasks: each selected task is assigned to an agent and queued, and

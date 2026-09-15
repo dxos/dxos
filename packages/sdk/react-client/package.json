@@ -54,6 +54,7 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",

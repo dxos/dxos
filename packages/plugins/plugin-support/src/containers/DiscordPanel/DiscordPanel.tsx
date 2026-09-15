@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { DiscordComponent } from './DiscordComponent';
+import { DiscordComponent } from './DiscordComponent.tsx';
 
 export const DiscordPanel = () => (
   <DiscordComponent.Root>

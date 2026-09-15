@@ -10,8 +10,8 @@ import { useAttention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
-import { type PdfApi, PdfCanvas, type PdfCanvasState, type PdfFit } from '../PdfCanvas';
-import { PreviewContext, type PreviewPaged, usePreview } from './PreviewContext';
+import { type PdfApi, PdfCanvas, type PdfCanvasState, type PdfFit } from '../PdfCanvas/index.ts';
+import { PreviewContext, type PreviewPaged, usePreview } from './PreviewContext.ts';
 
 //
 // Root

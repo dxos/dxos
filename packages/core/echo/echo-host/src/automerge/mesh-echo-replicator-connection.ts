@@ -4,15 +4,21 @@
 
 import * as A from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
+import { SyncMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type { AutomergeReplicatorConnection, ShouldAdvertiseProps, ShouldSyncCollectionProps } from './echo-replicator';
+import type {
+  AutomergeReplicatorConnection,
+  ShouldAdvertiseProps,
+  ShouldSyncCollectionProps,
+} from './echo-replicator.ts';
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 
@@ -51,7 +57,7 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
         invariant(this._isEnabled, 'Writing to a disabled connection');
         try {
           logSendSync(message);
-          await this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) });
+          await this.replicatorExtension.sendSyncMessage(create(SyncMessageSchema, { payload: cbor.encode(message) }));
         } catch (err) {
           controller.error(err);
           this._disconnectIfEnabled();

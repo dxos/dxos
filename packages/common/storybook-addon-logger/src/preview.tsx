@@ -9,7 +9,7 @@ import { addons } from 'storybook/preview-api';
 
 import { LogBuffer, LogLevel, log } from '@dxos/log';
 
-import { DOWNLOAD_EVENT, LOGS_DATA_EVENT } from './constants';
+import { DOWNLOAD_EVENT, LOGS_DATA_EVENT } from './constants.ts';
 
 /** Default DX log level for Storybook preview (matches toolbar item values). */
 const DEFAULT_LOG_LEVEL = String(LogLevel.INFO);

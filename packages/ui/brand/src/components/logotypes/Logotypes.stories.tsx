@@ -8,9 +8,9 @@ import React, { type PropsWithChildren } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { DXOSHorizontalType } from './DXOSHorizontalType';
-import { DXOSType } from './DXOSType';
-import { DXOSVerticalType } from './DXOSVerticalType';
+import { DXOSHorizontalType } from './DXOSHorizontalType.tsx';
+import { DXOSType } from './DXOSType.tsx';
+import { DXOSVerticalType } from './DXOSVerticalType.tsx';
 
 const Icon = () => null;
 

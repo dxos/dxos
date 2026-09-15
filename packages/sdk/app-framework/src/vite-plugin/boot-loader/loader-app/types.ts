@@ -89,11 +89,13 @@ export type BootLoaderConfig = {
   rootId?: string;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
+  /** A CSS filter over the mark — how a channel recolours the released artwork without its own file. */
+  markFilter?: string;
   /** Initial status text rendered before the host fires its first `status(...)`. */
   status?: string;
   /**
-   * URL of the icon sprite the activation row's `<use href>` resolves against. A static asset
-   * rather than a bundle import, so the loader can reference it before any app JS loads.
+   * URL of the icon sprite the activation row draws from, fetched at mount and inlined. A static
+   * asset rather than a bundle import, so the loader can request it before any app JS loads.
    */
   spritePath?: string;
 };

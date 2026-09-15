@@ -14,7 +14,7 @@ import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
+import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid.tsx';
 
 const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
 
@@ -107,7 +107,6 @@ const ComboboxContentWithFiltering = () => {
           <Combobox.Item key={value} value={value} label={value} />
         ))}
       </Combobox.List>
-      <Combobox.Arrow />
     </Combobox.Content>
   );
 };

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Any } from '@bufbuild/protobuf/wkt';
+
 import { type Stream } from '@dxos/async';
 import { type Context } from '@dxos/context';
-
-import { type CompatOptions } from './buf/shape-compat.ts';
 
 /**
  * The RPC service contract, shared by the buf-backed descriptor in `./buf/service.ts` and the
@@ -25,13 +25,10 @@ export type RequestOptions = {
 /**
  * The still-packed request/response envelope a backend moves.
  *
- * `type_url` is snake_case because that is the shape the compat layer produces; it becomes buf's
- * `typeUrl` when the shape-compat layer retires, not before.
+ * `google.protobuf.Any` itself rather than a structural twin of it, so an envelope is the same type
+ * wherever it travels — a generated message field, a signalling payload, or an RPC frame.
  */
-export type AnyEnvelope = {
-  type_url: string;
-  value: Uint8Array;
-};
+export type AnyEnvelope = Any;
 
 /** A message tagged with its own type name, as an `Any` field decodes to. */
 export type TaggedType<TYPES extends {}, Name extends keyof TYPES> = TYPES[Name] & { '@type': Name };
@@ -48,21 +45,18 @@ export type ServiceProvider<Service> = Service | (() => Service) | (() => Promis
 
 /**
  * What a service bundle needs of a descriptor, so a bundle can hold either implementation.
- *
- * The options are the compat layer's, not protobuf.js's: they exist only while a codec still has to
- * reproduce protobuf.js's substituted shapes, and go when it does.
  */
 export interface ServiceDescriptorLike<Service> {
   /** Fully-qualified proto service name, the key a bundle routes on. */
   readonly name: string;
   /** Builds a client whose methods encode onto `backend` and decode its responses. */
-  createClient(backend: ServiceBackend, encodingOptions?: CompatOptions): Service;
+  createClient(backend: ServiceBackend): Service;
   /**
    * Builds a backend that decodes onto `handlers` and encodes what they return.
    *
-   * `NoInfer` keeps `createClient` the single source of `Service`: a descriptor built against
-   * `@dxos/codec-protobuf`'s own structurally-identical `ServiceProvider` would otherwise make a
-   * bundle infer the provider union here instead of the service.
+   * `NoInfer` keeps `createClient` the single source of `Service`: a descriptor whose own
+   * structurally-identical `ServiceProvider` would otherwise make a bundle infer the provider
+   * union here instead of the service.
    */
-  createServer(handlers: ServiceProvider<NoInfer<Service>>, encodingOptions?: CompatOptions): ServiceBackend;
+  createServer(handlers: ServiceProvider<NoInfer<Service>>): ServiceBackend;
 }

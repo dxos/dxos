@@ -6,7 +6,7 @@ import React, { type CSSProperties, forwardRef, useImperativeHandle, useState } 
 
 import { mx } from '@dxos/ui-theme';
 
-import { type GhostController, type GhostProps, useGhost, useGhostController } from './ghost-renderer';
+import { type GhostController, type GhostProps, useGhost, useGhostController } from './ghost-renderer.tsx';
 
 export const Ghost = forwardRef<GhostController, Partial<GhostProps>>(
   ({ classNames, frame, ...props }, forwardedRef) => {

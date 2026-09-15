@@ -8,7 +8,7 @@ import { addEventListener } from '@dxos/async';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
-import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext';
+import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext.ts';
 
 export type EditorPreviewProviderProps = PropsWithChildren<{
   onLookup?: (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
@@ -29,24 +29,29 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
-      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card.
+      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card — after
+      // a grace period, so the pointer may already have opened another anchor by then. Only the
+      // anchor currently shown may close the popover; a stale close from the one just left is dropped.
       if (event.state === false) {
+        if (event.trigger !== triggerRef.current) {
+          return;
+        }
         activationRef.current++;
         setOpen(false);
         return;
       }
 
       const sequence = ++activationRef.current;
-      const { dxn, label, trigger } = event;
+      const { eid, label, trigger } = event;
       setValue((value) => ({
         ...value,
-        link: { label, dxn },
+        link: { label, eid },
         pending: true,
       }));
 
       triggerRef.current = trigger;
       queueMicrotask(() => setOpen(true));
-      void onLookup?.({ label, dxn }).then((target) => {
+      void onLookup?.({ label, eid }).then((target) => {
         if (sequence !== activationRef.current) {
           return;
         }

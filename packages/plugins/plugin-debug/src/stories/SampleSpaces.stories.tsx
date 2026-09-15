@@ -19,7 +19,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
 import { translations } from '#translations';
 
-import * as DebugPlugin from '../DebugPlugin';
+import * as DebugPlugin from '../DebugPlugin.ts';
 
 /**
  * Picking a sample space and watching it land.

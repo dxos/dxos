@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -13,25 +14,31 @@ import { Client } from '@dxos/client';
 import { type Space, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
 import {
   type DataSpace,
+  DataSpaceManagerService,
+  IdentityManagerService,
+  InvitationsHandlerService,
   InvitationsManager,
+  InvitationsManagerService,
   InvitationsServiceImpl,
   MetadataStore,
-  type ServiceContext,
   createAdmissionKeypair,
 } from '@dxos/client-services';
 import {
   type PerformInvitationProps,
   type Result,
+  type ServiceContext,
   createIdentity,
   createPeers,
   performInvitation,
 } from '@dxos/client-services/testing';
 import { InvitationsProxy } from '@dxos/client/invitations';
+import { type LocalClientServices } from '@dxos/client/local';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
@@ -42,6 +49,7 @@ import {
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 const closeAfterTest = async (peer: ServiceContext) => {
@@ -58,8 +66,8 @@ const successfulInvitation = async ({
   hostResult: { invitation: hostInvitation, error: hostError },
   guestResult: { invitation: guestInvitation, error: guestError },
 }: {
-  host: ServiceContext;
-  guest: ServiceContext;
+  host: InvitationPeer;
+  guest: InvitationPeer;
   hostResult: Result;
   guestResult: Result;
 }) => {
@@ -112,7 +120,25 @@ const successfulInvitation = async ({
   }
 };
 
-const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [ServiceContext, ServiceContext]) => {
+/** What the invitation flows need from a peer, whether a test ServiceContext or a client's stack. */
+type InvitationPeer = Pick<
+  ServiceContext,
+  'invitations' | 'invitationsManager' | 'networkManager' | 'dataSpaceManager' | 'identityManager'
+>;
+
+/** The invitation components of a client running its services in-process. */
+const peerFromClient = (client: Client): InvitationPeer => {
+  const { stack } = client.services as LocalClientServices;
+  return {
+    invitations: EffectContext.get(stack, InvitationsHandlerService),
+    invitationsManager: EffectContext.get(stack, InvitationsManagerService),
+    networkManager: EffectContext.get(stack, SwarmNetworkManagerService),
+    dataSpaceManager: EffectContext.get(stack, DataSpaceManagerService),
+    identityManager: EffectContext.get(stack, IdentityManagerService),
+  };
+};
+
+const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [InvitationPeer, InvitationPeer]) => {
   test('no auth', async () => {
     const [host, guest] = getPeers();
     const [hostResult, guestResult] = await Promise.all(performInvitation(getProps()));
@@ -662,7 +688,7 @@ describe('Invitations', () => {
       await host.initialize();
       await guest.initialize();
 
-      await host.halo.createIdentity({ displayName: 'Peer' });
+      await host.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer' }));
 
       onTestFinished(async () => {
         await Promise.all([host.destroy()]);
@@ -674,7 +700,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: host.halo, guest: guest.halo }),
-      () => [(host.services as any).host.context, (guest.services as any).host.context],
+      () => [peerFromClient(host), peerFromClient(guest)],
     );
   });
 
@@ -689,8 +715,8 @@ describe('Invitations', () => {
       guest = new Client({ services: testBuilder.createLocalClientServices() });
       await host.initialize();
       await guest.initialize();
-      await host.halo.createIdentity({ displayName: 'Peer 1' });
-      await guest.halo.createIdentity({ displayName: 'Peer 2' });
+      await host.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer 1' }));
+      await guest.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer 2' }));
 
       onTestFinished(async () => {
         await Promise.all([host.destroy()]);
@@ -704,7 +730,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: space, guest: guest.spaces }),
-      () => [(host.services as any).host.context, (guest.services as any).host.context],
+      () => [peerFromClient(host), peerFromClient(guest)],
     );
   });
 });
@@ -726,11 +752,11 @@ const expectErrorState = async (args: {
 };
 
 const createInvitationsApi = async (
-  context: ServiceContext,
+  context: InvitationPeer,
   metadata: MetadataStore = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
 ) => {
   const manager = new InvitationsManager(context.invitations, metadata);
-  manager.setInvitationHandlerFactory((invitation) => context.getInvitationHandler(invitation));
+  manager.setInvitationHandlerFactory((invitation) => context.invitationsManager.getInvitationHandler(invitation));
   // InvitationsProxy consumes the Promise/Stream shaped proto service; bridge the effect-rpc Handlers
   // impl in-process (no wire hop) and derive the proto surface from it. The endpoint is kept open for
   // the whole file (torn down in afterAll) so fire-and-forget teardown calls (e.g. invitation cancel)

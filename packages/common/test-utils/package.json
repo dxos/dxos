@@ -17,6 +17,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./claude-agent": {
+      "source": "./src/claude-agent.ts",
+      "types": "./dist/types/src/claude-agent.d.ts",
+      "import": "./dist/lib/claude-agent.mjs"
+    },
     "./playwright": {
       "source": "./src/playwright.ts",
       "types": "./dist/types/src/playwright.d.ts",

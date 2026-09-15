@@ -15,9 +15,14 @@ import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { BYOK_HEADER } from '@dxos/protocols';
 
-import { type EdgeHttpClient } from './edge-http-client';
+import { type EdgeAiService, type EdgeHttpClient } from './edge-http-client.ts';
 
 export type GetEdgeHttpClient = () => EdgeHttpClient;
+
+export type EdgeAiHttpClientOptions = {
+  /** Upstream service; defaults to Anthropic. */
+  readonly service?: EdgeAiService;
+};
 
 /**
  * Thrown by {@link EdgeAiHttpClient} when an AI request carrying {@link BYOK_HEADER} is rejected
@@ -94,17 +99,17 @@ const readStreamBody = (stream: ReadableStream<Uint8Array>): Effect.Effect<strin
 
 /**
  * An `@effect/platform` {@link HttpClient.HttpClient} that routes requests through the
- * authenticated EDGE AI endpoint via {@link EdgeHttpClient.anthropicAiRequest}, instead of
+ * authenticated EDGE AI endpoint via {@link EdgeHttpClient.aiRequest}, instead of
  * fetching the AI service directly.
  *
- * Provide this layer in place of `FetchHttpClient.layer` when constructing an Anthropic client,
- * e.g. `AnthropicClient.layer({ apiUrl: 'http://edge' }).pipe(Layer.provide(EdgeAiHttpClient.layer(() => edgeClient)))`.
- * The `apiUrl` host is a sentinel; only the request path is forwarded (see `anthropicAiRequest`).
+ * Provide this layer in place of `FetchHttpClient.layer` when constructing a provider client, e.g.
+ * `AnthropicClient.layer({ apiUrl: 'http://edge' }).pipe(Layer.provide(EdgeAiHttpClient.layer(() => edgeClient)))`.
+ * The `apiUrl` host is a sentinel; only the request path is forwarded (see `aiRequest`).
  *
  * Modeled on `FunctionsAiHttpClient` in `@dxos/functions`.
  */
 export class EdgeAiHttpClient {
-  static make = (getClient: GetEdgeHttpClient) =>
+  static make = (getClient: GetEdgeHttpClient, { service = 'anthropic' }: EdgeAiHttpClientOptions = {}) =>
     HttpClient.make((request, url, signal, fiber) => {
       const edgeClient = getClient();
       const options: RequestInit = fiber.context.mapUnsafe.get(FetchHttpClient.RequestInit.key) ?? {};
@@ -117,12 +122,14 @@ export class EdgeAiHttpClient {
       const send = (body: BodyInit | undefined) =>
         Effect.tryPromise({
           try: () =>
-            edgeClient.anthropicAiRequest(
+            edgeClient.aiRequest(
+              service,
               new Request(url, {
                 ...options,
                 method: request.method,
                 headers,
-                body: patchAnthropicMessagesRequestBody(body),
+                // Fine-grained tool streaming is an Anthropic Messages API extension.
+                body: service === 'anthropic' ? patchAnthropicMessagesRequestBody(body) : body,
                 signal,
               }),
             ),
@@ -152,7 +159,7 @@ export class EdgeAiHttpClient {
                         response: httpResponse,
                         cause: new ByokError({
                           status: response.status,
-                          provider: 'anthropic.com',
+                          provider: service,
                           message: body?.error?.message ?? 'Authentication failed',
                         }),
                       }),
@@ -203,6 +210,6 @@ export class EdgeAiHttpClient {
       return send(undefined);
     });
 
-  static layer = (getClient: GetEdgeHttpClient) =>
-    Layer.succeed(HttpClient.HttpClient, EdgeAiHttpClient.make(getClient));
+  static layer = (getClient: GetEdgeHttpClient, options?: EdgeAiHttpClientOptions) =>
+    Layer.succeed(HttpClient.HttpClient, EdgeAiHttpClient.make(getClient, options));
 }

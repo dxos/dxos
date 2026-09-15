@@ -35,7 +35,7 @@ import { type Comment } from '@dxos/ui-editor/types';
 
 import { translations } from '#translations';
 
-import { Editor, type EditorController } from '../components';
+import { Editor, type EditorController } from '../components/index.ts';
 
 random.seed(123);
 

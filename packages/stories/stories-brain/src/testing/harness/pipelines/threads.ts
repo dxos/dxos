@@ -8,8 +8,8 @@ import { type AiService } from '@dxos/ai';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { generateText } from '../llm';
-import { type ModelVariant } from '../models';
+import { generateText } from '../llm.ts';
+import { type ModelVariant } from '../models.ts';
 
 export type MessageThread = {
   readonly threadId: string;

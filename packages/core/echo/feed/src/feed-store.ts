@@ -13,11 +13,10 @@ import { SpanAttributes } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { type Cypher, CypherError } from './cypher';
-import { PositionConflictError } from './errors';
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
+import { type Cypher, CypherError } from './cypher.ts';
+import { PositionConflictError } from './errors.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
@@ -89,14 +88,9 @@ export class FeedStore {
    * A database created before migration tracking existed already holds migration 1's tables, and
    * needs no special handling: every statement in it is `IF NOT EXISTS`, so it applies as a no-op
    * and is recorded like any other.
-   *
-   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
-   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd, where this runs inside
-   * a Durable Object.
    */
   migrate = Effect.fn('FeedStore.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      Effect.provide(SqlTransaction.clientLayer),
       // A MigrationError means the bundled manifest is malformed — a defect, not something a caller
       // can recover from — so it dies rather than widening this signature beyond SqlError.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
@@ -464,12 +458,11 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
     serverToken: string;
-  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
-      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
-      yield* sqlTransaction.withTransaction(
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql.withTransaction(
         Effect.gen(function* () {
-          const sql = yield* SqlClient.SqlClient;
           yield* sql`
             UPDATE blocks SET position = NULL
             WHERE feedPrivateId IN (
@@ -594,11 +587,7 @@ export class FeedStore {
    */
   append = (
     request: AppendRequest,
-  ): Effect.Effect<
-    AppendResponse,
-    SqlError.SqlError | CypherError,
-    SqlClient.SqlClient | SqlTransaction.SqlTransaction
-  > =>
+  ): Effect.Effect<AppendResponse, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
       if (!request.spaceId) {
         return yield* Effect.die(new Error('spaceId required for append'));
@@ -623,11 +612,9 @@ export class FeedStore {
         : request.blocks.map((block) => ({ data: block.data, encryptionKeyId: null, iv: null }));
 
       // Wrap in transaction to ensure atomicity when assigning positions.
-      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
-      const positions = yield* sqlTransaction.withTransaction(
+      const sql = yield* SqlClient.SqlClient;
+      const positions = yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
-          const sql = yield* SqlClient.SqlClient;
-
           // 1. Collect unique feed IDs and batch #ensureFeed calls.
           const feedKeys = new Map<string, { feedId: string }>();
           for (const block of request.blocks) {
@@ -759,7 +746,7 @@ export class FeedStore {
   appendLocal = Effect.fn('Feed.appendLocal')(
     (
       messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
-    ): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+    ): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
       Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 

@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { analyze } from './diagnostics';
-import { DEFAULT, type Layout, evaluate, framesApart, select } from './objective';
-import type * as Scene from './scene';
-import { GRID } from './uml-grid';
+import { analyze } from './diagnostics.ts';
+import { DEFAULT, type Layout, evaluate, framesApart, select } from './objective.ts';
+import type * as Scene from './scene.ts';
+import { GRID } from './uml-grid.ts';
 
 const box = (id: string, x: number, y: number, w = 64, h = 64): Scene.WorldObject => ({
   id,

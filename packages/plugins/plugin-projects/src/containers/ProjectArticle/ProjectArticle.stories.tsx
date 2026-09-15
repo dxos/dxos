@@ -17,7 +17,12 @@ import { useQuery } from '@dxos/echo-react';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { PreviewEvents } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
@@ -33,7 +38,7 @@ import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ProjectArticle } from './ProjectArticle';
+import { ProjectArticle } from './ProjectArticle.tsx';
 
 const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';
@@ -190,8 +195,15 @@ const meta = {
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
-        // Contributes the `#123` decoration; `project.repo` is what it resolves against.
+        // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
+        // spec is pruned without it, so delegating a task fails with "Chat not found".
+        RoutinePlugin.make(),
+        // Contributes the `#123` decoration (`project.repo` is what it resolves against), the link
+        // chips, and the resolver behind a chip's hover card; PreviewPlugin owns the popover and the
+        // fixture source answers the resolver without the network.
         GitHubPlugin.make(),
+        PreviewPlugin.make(),
+        FixtureLinkSourcePlugin(),
         ClientPlugin.make({
           types: [
             Project.Project,
@@ -218,6 +230,9 @@ const meta = {
         }),
         StorybookPlugin.make({}),
       ],
+      // Both start events at setup, so the markdown extensions and the link resolver are live before
+      // the first render.
+      setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
   ],
   parameters: {
@@ -250,6 +265,17 @@ export const Default: Story = {
   },
 };
 
+/** The article opened on its Tasks tab: the seeded set, its two tasks, and the delegate toolbar. */
+export const Tasks: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'tasks');
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
 /**
  * Each section is asserted by its content rather than its heading, since an invalid surface id is
  * dropped silently and leaves the heading rendering over an empty section.
@@ -270,6 +296,12 @@ export const Sections: Story = {
     // Artifacts: the section heading renders, and the seeded artifact's label resolves.
     await expect(canvas.findByText('Artifacts', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await findPainted(canvas, ARTIFACT_TITLE);
+
+    // The tabs are painted, not just present: a `w-full` sibling toolbar once squeezed the tablist
+    // to zero width, and its scroll container clipped both buttons while every query still found them.
+    const tablist = (await canvas.findByRole('tablist', undefined, { timeout: 10_000 })) as HTMLElement;
+    await waitFor(() => expect(tablist.clientWidth).toBeGreaterThanOrEqual(tablist.scrollWidth), { timeout: 10_000 });
+    await expect(tablist.getBoundingClientRect().width).toBeGreaterThan(0);
 
     // Tasks: behind its own toolbar tab, so switch to it. The task title is the load-bearing
     // assertion — an invalid surface id is dropped silently, leaving an empty panel.
@@ -363,10 +395,11 @@ export const DelegateCheckedTasks: Story = {
 
     // Checked in reverse reading order, so the assertion below distinguishes tick order from the
     // order the rows are shown in.
+    // Matched among all of the title's occurrences rather than expecting one: once the pipeline is
+    // open the chart names every lane too, so the title is on the page twice.
     const checkbox = async (title: string) => {
-      const row = (await canvas.findByText(title, undefined, { timeout: 10_000 })).closest(
-        '[data-testid="taskList.item"]',
-      );
+      const labels = await canvas.findAllByText(title, undefined, { timeout: 10_000 });
+      const row = labels.map((label) => label.closest('[data-testid="taskList.item"]')).find(Boolean);
       await expect(row).toBeTruthy();
       return within(row as HTMLElement).getByTestId('taskList.item.checkbox');
     };
@@ -389,8 +422,18 @@ export const DelegateCheckedTasks: Story = {
       { timeout: 10_000 },
     );
 
-    // The boxes clear with the work, so the toolbar is dead again.
+    // The boxes clear with the work, so the toolbar is dead again, and the session's chat filing
+    // itself under the project is what brings the pipeline into view under the ledger.
     await waitFor(() => expect(button).toBeDisabled(), { timeout: 10_000 });
+    await expect(
+      canvas.findByTestId('projectsPlugin.pipeline.chart', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+
+    // Re-checking rows the agent already holds arms nothing: a second click cannot fork them into
+    // another session.
+    await userEvent.click(await checkbox(TASK_TITLE));
+    await userEvent.click(await checkbox(LINK_TASK_TITLE));
+    await expect(button).toBeDisabled();
   },
 };
 

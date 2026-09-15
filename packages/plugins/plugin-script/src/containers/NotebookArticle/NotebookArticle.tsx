@@ -29,7 +29,7 @@ import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEd
 import { meta } from '#meta';
 import { Notebook } from '#types';
 
-import { ComputeGraph } from '../../notebook';
+import { ComputeGraph } from '../../notebook/index.ts';
 
 const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', 'org.dxos.skill.markdown'];
 

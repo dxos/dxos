@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
@@ -15,11 +16,10 @@ import {
   QueryInvitationsResponse_Type,
   QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type InvitationsService } from '@dxos/protocols/rpc';
+import { InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { fromBufDeviceProfileDocument } from '../services/credentials-codec';
-import { type InvitationsManager } from './invitations-manager';
+import { type InvitationsManager, InvitationsManagerService } from './invitations-manager.ts';
 
 /**
  * Adapts invitation service observable to client/service stream.
@@ -57,12 +57,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   ): EffectStream.Stream<Invitation, Error> {
     return EffectEx.streamFromEmitter<Invitation, Error>((emit) => {
       const ctx = Context.default();
-      // The profile ends up inside a signed device credential, so the manager keeps the
-      // protobuf.js shape and the buf request converts here, at the service boundary.
-      const invitation = this._invitationsManager.acceptInvitation(ctx, {
-        ...request,
-        deviceProfile: request.deviceProfile && fromBufDeviceProfileDocument(request.deviceProfile),
-      });
+      const invitation = this._invitationsManager.acceptInvitation(ctx, { ...request });
       invitation.subscribe(
         (value) => void emit.single(value),
         (err) => void emit.fail(err),
@@ -179,3 +174,8 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
     });
   }
 }
+
+export const InvitationsServiceLayer = Layer.effect(
+  InvitationsService.Tag,
+  Effect.map(InvitationsManagerService, (invitationsManager) => new InvitationsServiceImpl(invitationsManager)),
+);

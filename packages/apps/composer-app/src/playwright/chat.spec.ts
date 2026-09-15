@@ -6,8 +6,8 @@ import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
 
-import { AppManager } from './app-manager';
-import { Assistant } from './plugins';
+import { AppManager } from './app-manager.ts';
+import { Assistant } from './plugins/index.ts';
 
 if (process.env.DX_PWA !== 'false') {
   log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');

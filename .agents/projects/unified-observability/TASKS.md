@@ -1,6 +1,6 @@
 # Unified observability — Tasks
 
-_Resume: land dxos/dxos#12609 then #12939 (stacked), then Phase 3 in an edge worktree pinned to the merge commit. Uncommitted: none. Last: stacked on #12609, sync module replaced by the settings reactor._
+_Resume: land dxos/dxos#12939 (main merged, #12609 landed 2026-09-14), then repin edge (slot gale, branch claude/unified-observability-relay) to the merge commit and open the edge PR. Uncommitted: none. Last: merged main after #12609 landed._
 
 ## Phase 1: `@dxos/observability` on workerd (dxos)
 
@@ -26,8 +26,8 @@ pieces EDGE plugs into `otel-cf-workers`.
 
 ## Phase 2: settings-space opt-in (dxos, plugin-observability)
 
-Stacked on dxos#12609, whose generic binder syncs every plugin settings atom through the
-`AppSettings` object in the settings space.
+Built on dxos#12609 (landed 2026-09-14), whose generic binder syncs every plugin settings atom
+through the `AppSettings` object in the settings space.
 
 - [x] **`SettingsReactor` module** — follows the settings atom's `enabled` into the backends and
       the local mirror, so a change synced from another device applies like the toggle.

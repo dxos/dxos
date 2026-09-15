@@ -14,8 +14,8 @@ import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
 
-import { type EchoObjectItem, OutputPanel } from '../components';
-import { usePipelineStory } from './pipeline-context';
+import { type EchoObjectItem, OutputPanel } from '../components/index.ts';
+import { usePipelineStory } from './pipeline-context.ts';
 
 /**
  * Reads a space's facts from Brain's shared in-memory `FactStore`, re-querying whenever the store

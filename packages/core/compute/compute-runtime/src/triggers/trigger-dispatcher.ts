@@ -33,10 +33,10 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as ProcessManager from '../ProcessManager';
-import { filterReadyFeedItems } from './feed-position';
-import { createInvocationPayload } from './input-builder';
-import { type TriggerState, TriggerStateStore } from './trigger-state-store';
+import * as ProcessManager from '../ProcessManager.ts';
+import { filterReadyFeedItems } from './feed-position.ts';
+import { createInvocationPayload } from './input-builder.ts';
+import { type TriggerState, TriggerStateStore } from './trigger-state-store.ts';
 
 export type TimeControl = 'natural' | 'manual';
 

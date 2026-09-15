@@ -20,8 +20,8 @@ import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 
-import { createEdgeClient } from './edge-client';
-import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot';
+import { createEdgeClient } from './edge-client.ts';
+import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot.ts';
 
 /**
  * EDGE implementation of {@link RemoteProcessManager.Control}: the seven compute-service process

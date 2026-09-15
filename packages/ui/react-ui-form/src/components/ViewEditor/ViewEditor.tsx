@@ -42,8 +42,8 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 import { type FormFieldMap, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { FieldEditor } from '../FieldEditor';
-import { CompactIconButton, Form, FormFieldHeader, FormFieldLabel, type FormRootProps } from '../Form';
+import { FieldEditor } from '../FieldEditor/index.ts';
+import { CompactIconButton, Form, FormFieldHeader, FormFieldLabel, type FormRootProps } from '../Form/index.ts';
 
 export type ViewEditorProps = ThemedClassName<
   {
@@ -226,7 +226,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
                   </Banner.Content>
                 </Banner.Root>
               )}
-              <Form.FieldSet />
+              <Form.Fields />
               {type && (
                 <FieldList
                   type={type}

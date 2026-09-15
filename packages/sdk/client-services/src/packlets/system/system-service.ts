@@ -4,56 +4,89 @@
 
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
-import { type Event } from '@dxos/async';
-import { type Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
-import { type Platform } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Event, MulticastObservable } from '@dxos/async';
+import { type Config, ConfigService } from '@dxos/config';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
+import { SwarmNetworkManagerService } from '@dxos/network-manager';
+import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { type SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
-import { type Diagnostics } from '../diagnostics';
-import { getPlatform } from '../services/platform';
+import { type Diagnostics, createDiagnosticsFromHandlers } from '../diagnostics/index.ts';
+import { IdentityManagerService } from '../identity/index.ts';
+import { Closing, Reset, StackOpened, WipingStorage } from '../services/events.ts';
+import { type RpcServicesContext, rpcHandlersFromStack } from '../services/handlers.ts';
+import { getPlatform } from '../services/platform.ts';
+import { DataSpaceManagerService } from '../spaces/index.ts';
 
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;
-  statusUpdate: Event<void>;
-  getCurrentStatus: () => SystemStatus;
   getDiagnostics: () => Promise<Partial<Diagnostics['services']>>;
-  onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
-  onReset: () => MaybePromise<void>;
+  /** The embedder's bus, which outlives the stack; a reset is the `Closing → WipingStorage → Reset` chain on it. */
+  bus: EffectEvent.BusService;
 };
 
+/**
+ * The one client service that exists while the host is closed: it reports and drives the host's
+ * status and performs a reset. The host pushes its status in via {@link setStatus}.
+ */
 export class SystemServiceImpl implements SystemService.Handlers {
-  private readonly '_config'?: SystemServiceOptions['config'];
-  private readonly '_statusUpdate': SystemServiceOptions['statusUpdate'];
-  private readonly '_getCurrentStatus': SystemServiceOptions['getCurrentStatus'];
-  private readonly '_onUpdateStatus': SystemServiceOptions['onUpdateStatus'];
-  private readonly '_onReset': SystemServiceOptions['onReset'];
-  private readonly '_getDiagnostics': SystemServiceOptions['getDiagnostics'];
+  /** A client asked for the host to become this status; the host decides what to do about it. */
+  readonly 'statusRequested' = new Event<SystemStatus>();
 
-  'constructor'({
-    config,
-    statusUpdate,
-    getDiagnostics,
-    onUpdateStatus,
-    getCurrentStatus,
-    onReset,
-  }: SystemServiceOptions) {
-    this._config = config;
-    this._statusUpdate = statusUpdate;
-    this._getCurrentStatus = getCurrentStatus;
-    this._getDiagnostics = getDiagnostics;
-    this._onUpdateStatus = onUpdateStatus;
-    this._onReset = onReset;
+  readonly #statusChanged = new Event<SystemStatus>();
+  readonly #status = MulticastObservable.from(this.#statusChanged, SystemStatus.INACTIVE);
+  readonly #options: SystemServiceOptions;
+  #resetting = false;
+
+  'constructor'(options: SystemServiceOptions) {
+    this.#options = options;
+  }
+
+  get 'status'(): SystemStatus {
+    return this.#status.get();
+  }
+
+  /**
+   * Reports the host's status to subscribers. Ignored once a reset is under way: that status is
+   * final because the app reloads.
+   */
+  'setStatus'(status: SystemStatus): void {
+    if (this.#resetting) {
+      return;
+    }
+    this.#statusChanged.emit(status);
+  }
+
+  /**
+   * Runs the reset chain: the embedder closes the stack, wipes its storage, and reloads. Reports
+   * inactive first so the app falls back at once, and that status is never cleared because the app
+   * reloads.
+   */
+  'reset'(): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      log.info('resetting...');
+      this.#resetting = true;
+      this.#statusChanged.emit(SystemStatus.INACTIVE);
+      // `Closing` tears the stack down under this very call, and under any request another session
+      // has in flight: component finalizers are not re-entrant against live traffic. That holds only
+      // because every embedder shuts down or reloads immediately after `Reset` below — a reset that
+      // left the worker serving would need a gate that fails new requests from here on.
+      yield* EffectEvent.emit(Closing, undefined);
+      yield* EffectEvent.emit(WipingStorage, undefined);
+      log.info('reset');
+      yield* EffectEvent.emit(Reset, undefined);
+    }).pipe(Effect.provideService(EffectEvent.Bus, this.#options.bus));
   }
 
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
     return Effect.tryPromise({
-      try: async () => (await this._config?.())?.values ?? create(ConfigSchema, {}),
+      try: async () => (await this.#options.config?.())?.values ?? create(ConfigSchema, {}),
       catch: (error) => error as Error,
     });
   }
@@ -67,7 +100,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
   > {
     return Effect.tryPromise({
       try: async () => {
-        const diagnostics = await this._getDiagnostics();
+        const diagnostics = await this.#options.getDiagnostics();
         return {
           timestamp: new Date(),
           diagnostics: JSON.parse(
@@ -93,12 +126,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
   }
 
   ['SystemService.updateStatus']({ status }: SystemService.UpdateStatusRequest): Effect.Effect<void, Error> {
-    return Effect.tryPromise({
-      try: async () => {
-        await this._onUpdateStatus(status);
-      },
-      catch: (error) => error as Error,
-    });
+    return Effect.sync(() => this.statusRequested.emit(status));
   }
 
   // TODO(burdon): Standardize interval option in stream request?
@@ -107,26 +135,49 @@ export class SystemServiceImpl implements SystemService.Handlers {
     Error
   > {
     return EffectEx.streamFromEmitter<SystemService.QueryStatusResponse, Error>((emit) => {
-      const update = () => {
-        void emit.single({ status: this._getCurrentStatus() });
-      };
-
-      update();
-      const unsubscribe = this._statusUpdate.on(() => update());
-      const i = setInterval(update, interval);
+      const subscription = this.#status.subscribe((status) => void emit.single({ status }));
+      // Clients treat a silent stream as a dead worker, so the current status is repeated.
+      const heartbeat = setInterval(() => void emit.single({ status: this.#status.get() }), interval);
       return Effect.sync(() => {
-        clearInterval(i);
-        unsubscribe();
+        clearInterval(heartbeat);
+        subscription.unsubscribe();
       });
     });
   }
 
   ['SystemService.reset'](): Effect.Effect<void, Error> {
-    return Effect.tryPromise({
-      try: async () => {
-        await this._onReset();
-      },
-      catch: (error) => error as Error,
-    });
+    return this.reset();
   }
 }
+
+/**
+ * Serves the {@link SystemService} over the stack's domain handlers: active once the stack has
+ * opened, inactive when the layer is torn down, and resetting over the embedder's bus.
+ */
+export const SystemServiceLayer: Layer.Layer<
+  SystemService.Tag,
+  never,
+  | RpcServicesContext
+  | ConfigService
+  | EffectEvent.Bus
+  | IdentityManagerService
+  | DataSpaceManagerService
+  | SwarmNetworkManagerService
+> = Layer.effect(
+  SystemService.Tag,
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const bus = yield* EffectEvent.Bus;
+    const stack = yield* Effect.context<
+      RpcServicesContext | IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService
+    >();
+    const service = new SystemServiceImpl({
+      config: () => config,
+      getDiagnostics: () => createDiagnosticsFromHandlers(() => rpcHandlersFromStack(stack), stack, config),
+      bus,
+    });
+    yield* EffectEvent.on(StackOpened, () => Effect.sync(() => service.setStatus(SystemStatus.ACTIVE)));
+    yield* Effect.addFinalizer(() => Effect.sync(() => service.setStatus(SystemStatus.INACTIVE)));
+    return service;
+  }),
+);

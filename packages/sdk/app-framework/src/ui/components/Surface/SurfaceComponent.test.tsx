@@ -10,15 +10,15 @@ import { describe, test, vi } from 'vitest';
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { ActivationEvents, Capabilities } from '../../../common';
-import * as Role from '../../../common/Role';
-import { Capability, Plugin } from '../../../core';
-import { createTestApp } from '../../../testing/harness';
-import { render } from '../../../testing/react';
-import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent';
-import { setSurfaceDebug } from './SurfaceDebug';
-import { surfaceMetrics } from './SurfaceMetrics';
-import { type Definition, create, makeFilter } from './types';
+import { ActivationEvents, Capabilities } from '../../../common/index.ts';
+import * as Role from '../../../common/Role.ts';
+import { Capability, Plugin } from '../../../core/index.ts';
+import { createTestApp } from '../../../testing/harness.ts';
+import { render } from '../../../testing/react.tsx';
+import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent.tsx';
+import { setSurfaceDebug } from './SurfaceDebug.tsx';
+import { surfaceMetrics } from './SurfaceMetrics.ts';
+import { type Definition, create, makeFilter } from './types.ts';
 
 // Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
 const flushMetrics = () =>

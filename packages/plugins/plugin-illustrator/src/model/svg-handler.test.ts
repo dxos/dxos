@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type ContentMap, applyCommands } from './content';
-import { SvgHandler } from './svg-handler';
+import { type ContentMap, applyCommands } from './content.ts';
+import { SvgHandler } from './svg-handler.ts';
 
 describe('svg-handler', () => {
   test('round-trips the object ref, including through upsert-elements', ({ expect }) => {

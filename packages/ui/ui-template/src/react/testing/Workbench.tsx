@@ -16,7 +16,7 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
-import { type SequencedLogEntry } from '../useSystem';
+import { type SequencedLogEntry } from '../useSystem.ts';
 
 //
 // Workbench

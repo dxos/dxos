@@ -27,10 +27,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
-import type { ProcessNotFoundError } from './errors';
-import { ProcessManagerService } from './process-manager-service';
-import type * as ProcessManager from './ProcessManager';
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
+import type { ProcessNotFoundError } from './errors.ts';
+import { ProcessManagerService } from './process-manager-service.ts';
+import type * as ProcessManager from './ProcessManager.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 
 export interface OperationFiber<T> {
   pid: Process.ID;
@@ -85,8 +85,12 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
                 }
                 case Process.State.TERMINATED:
                   return yield* Effect.die('Operation was terminated');
-                default:
+                case Process.State.SUCCEEDED:
                   return yield* Effect.die('Process produced no output');
+                default:
+                  // Outputs close on a live process only when the manager suspends it (app shutdown):
+                  // the invocation was cut short rather than answered, which is an interruption.
+                  return yield* Effect.interrupt;
               }
             }),
         }),

@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
 import { ContentBlock, File } from '@dxos/types';
 
-import * as FileCapabilities from './FileCapabilities';
+import * as FileCapabilities from './FileCapabilities.ts';
 
 export const Create = Operation.make({
   meta: { key: DXN.make('org.dxos.operation.file.create'), name: 'Create File', icon: 'ph--file--regular' },

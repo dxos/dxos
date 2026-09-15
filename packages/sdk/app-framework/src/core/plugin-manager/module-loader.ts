@@ -16,14 +16,14 @@ import * as Semaphore from 'effect/Semaphore';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { Capabilities } from '../../common';
-import * as ActivationEvent from '../activation-event';
-import * as Capability from '../capability';
-import * as CapabilityManager from '../capability-manager';
-import { CapabilityNotFoundError, ProvidesMismatchError } from '../errors';
-import * as Plugin from '../plugin';
-import { type ManagerState } from './manager-state';
-import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
+import { Capabilities } from '../../common/index.ts';
+import * as ActivationEvent from '../activation-event.ts';
+import * as CapabilityManager from '../capability-manager.ts';
+import * as Capability from '../capability.ts';
+import { CapabilityNotFoundError, ProvidesMismatchError } from '../errors.ts';
+import * as Plugin from '../plugin.ts';
+import { type ManagerState } from './manager-state.ts';
+import { type PluginFailurePhase, PluginTimeoutError } from './manager-types.ts';
 
 /**
  * Yields the host's event loop before a module body runs. Effect's scheduler drains its run queue

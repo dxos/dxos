@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { AgentResponse, CredentialPage, EventPage, SessionResponse, VaultResponse } from './types';
+import { AgentResponse, CredentialPage, EventPage, SessionResponse, VaultResponse } from './types.ts';
 
 describe('response schemas', () => {
   const decodeAgent = Schema.decodeUnknownOption(AgentResponse);

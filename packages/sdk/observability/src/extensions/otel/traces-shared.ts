@@ -7,8 +7,8 @@ import { ROOT_CONTEXT, SpanStatusCode, type Tracer, context as otelContext, prop
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, type TracingBackend } from '@dxos/tracing';
 
-import { type OtelOptions } from './otel';
-import type * as OtelSpanSink from './OtelSpanSink';
+import { type OtelOptions } from './otel.ts';
+import type * as OtelSpanSink from './OtelSpanSink.ts';
 
 export type OtelTracesOptions = OtelOptions & {
   /**
@@ -46,6 +46,7 @@ export const makeTracingBackend = (tracer: Tracer): TracingBackend => ({
 
     return {
       end: (endTime?: number) => span.end(endTime),
+      setAttributes: (attributes: Record<string, any>) => span.setAttributes(attributes),
       setError: (err: unknown) => {
         if (err instanceof Error) {
           span.recordException(err);

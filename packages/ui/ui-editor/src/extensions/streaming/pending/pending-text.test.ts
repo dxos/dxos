@@ -6,7 +6,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { isBusy } from '../../state/busy';
+import { isBusy } from '../../state/busy.ts';
 import {
   appendPendingText,
   cancelPending,
@@ -16,7 +16,7 @@ import {
   pendingTextState,
   setPendingAnchor,
   setPendingInterim,
-} from './pending-text';
+} from './pending-text.ts';
 
 const createView = (doc: string): EditorView =>
   new EditorView({ state: EditorState.create({ doc, extensions: [pendingText()] }) });

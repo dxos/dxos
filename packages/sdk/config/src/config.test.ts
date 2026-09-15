@@ -8,9 +8,9 @@ import { describe, expect, test } from 'vitest';
 
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { Config, mapFromKeyValues, mapToKeyValues } from './config';
-import { EDGE_URLS } from './edge-services';
-import { configPreset } from './preset';
+import { Config, mapFromKeyValues, mapToKeyValues } from './config.ts';
+import { EDGE_URLS } from './edge-services.ts';
+import { configPreset } from './preset.ts';
 // @ts-ignore
 import defaults from './testing/defaults.js';
 // @ts-ignore

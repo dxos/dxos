@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './ForeignKeys';
+export * from './ForeignKeys.tsx';

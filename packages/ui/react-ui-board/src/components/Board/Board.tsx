@@ -38,8 +38,8 @@ import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { BoardCell, type BoardCellProps } from './BoardCell';
-import { BoardContextProvider, type SelectionMode, useBoardContext } from './BoardContext';
+import { BoardCell, type BoardCellProps } from './BoardCell.tsx';
+import { BoardContextProvider, type SelectionMode, useBoardContext } from './BoardContext.ts';
 import {
   type Bounds,
   type DropResolver,
@@ -48,7 +48,7 @@ import {
   type GridPosition,
   type Layout,
   pushToFit,
-} from './engine';
+} from './engine.ts';
 import {
   type GridCellSize,
   type Rect,
@@ -59,7 +59,7 @@ import {
   getRowCount,
   gridBounds,
   viewportCenterAnchor,
-} from './geometry';
+} from './geometry.ts';
 
 /** Duration (ms) of the zoom-anchor and recenter scroll animations. */
 const ANIMATION_DURATION = 200;

@@ -22,7 +22,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SpaceGenerator } from './SpaceGenerator';
+import { SpaceGenerator } from './SpaceGenerator.tsx';
 
 /** Live list of every object in the space — updates as the generator creates objects. */
 const ObjectList = ({ space }: { space: Parameters<typeof SpaceGenerator>[0]['space'] }) => {

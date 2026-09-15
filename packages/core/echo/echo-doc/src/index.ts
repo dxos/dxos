@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as AddOnlySet from './AddOnlySet';
-export * as Doc from './Doc';
-export { Edit, applyEdits } from './edits';
+export * as AddOnlySet from './AddOnlySet.ts';
+export * as Doc from './Doc.ts';
+export { Edit, applyEdits } from './edits.ts';
 export {
   AbstractStoreAdapter,
   type BaseElement,
   type Batch,
   Modified,
   type StoreAdapterOptions,
-} from './store-adapter';
+} from './store-adapter.ts';

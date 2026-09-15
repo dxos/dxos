@@ -13,11 +13,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { range } from '@dxos/util';
 
-import { createTestSqliteRuntime } from '../testing';
-import { TestReplicationNetwork } from '../testing';
-import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host';
-import { type EchoNetworkAdapter } from './echo-network-adapter';
-import { deriveCollectionIdFromSpaceId } from './space-collection';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { TestReplicationNetwork } from '../testing/index.ts';
+import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host.ts';
+import { type EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {

@@ -8,7 +8,7 @@ import { Event, type Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { Framer } from './framer';
+import { Framer } from './framer.ts';
 
 const MAX_CHUNK_SIZE = 8192;
 

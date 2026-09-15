@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button } from '../components/Button';
-import { Toolbar } from '../components/Toolbar';
-import { withLayout, withTheme } from '../testing';
-import { Show } from './Show';
-import { Switch } from './Switch';
+import { Button } from '../components/Button/index.ts';
+import { Toolbar } from '../components/Toolbar/index.ts';
+import { withLayout, withTheme } from '../testing/index.ts';
+import { Show } from './Show.tsx';
+import { Switch } from './Switch.tsx';
 
 type Task = { title: string };
 

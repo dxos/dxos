@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
@@ -17,13 +18,13 @@ import {
   ContactBookSchema,
   ContactSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type ContactsService } from '@dxos/protocols/rpc';
+import { ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { toBufProfileDocument } from '../services/credentials-codec';
-import { type SpaceManager } from '../space';
-import { type DataSpaceManager } from '../spaces';
-import { type IdentityManager } from './identity-manager';
+import { StackReadinessService } from '../services/stack-readiness.ts';
+import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
+import { type IdentityManager, IdentityManagerService } from './identity-manager.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
   'constructor'(
@@ -84,14 +85,14 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
         }
         const existing = acc.get(memberInfo.key);
         if (existing != null) {
-          existing.profile ??= toBufProfileDocument(memberInfo.profile);
+          existing.profile ??= memberInfo.profile;
           existing.commonSpaces.push(fromPublicKey(spaceKey));
         } else {
           acc.set(
             memberInfo.key,
             buf.create(ContactSchema, {
               identityKey: fromPublicKey(memberInfo.key),
-              profile: toBufProfileDocument(memberInfo.profile),
+              profile: memberInfo.profile,
               commonSpaces: [fromPublicKey(spaceKey)],
             }),
           );
@@ -101,3 +102,16 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
     return buf.create(ContactBookSchema, { contacts: [...contacts.values()] });
   }
 }
+
+export const ContactsServiceLayer = Layer.effect(
+  ContactsService.Tag,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    const spaceManager = yield* SpaceManagerService;
+    const dataSpaceManager = yield* DataSpaceManagerService;
+    const readiness = yield* StackReadinessService;
+    return new ContactsServiceImpl(identityManager, spaceManager, () =>
+      readiness.initialized.wait().then(() => dataSpaceManager),
+    );
+  }),
+);

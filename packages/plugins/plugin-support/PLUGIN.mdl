@@ -39,10 +39,10 @@ The following extension dialects are used in this document.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -289,7 +289,7 @@ feat F-5: GitHub Issue Submission
 ## Acceptance
 
 ```mdl
-test T-1: Create a ticket
+scenario T-1: Create a ticket
   given: user is in a space
   when: createTicket invoked with title "Echo sync hung"
   then:
@@ -299,7 +299,7 @@ test T-1: Create a ticket
 ```
 
 ```mdl
-test T-2: Resolve a ticket
+scenario T-2: Resolve a ticket
   given: an open Ticket
   when: resolveTicket invoked with resolution "Restarted client"
   then:
@@ -308,7 +308,7 @@ test T-2: Resolve a ticket
 ```
 
 ```mdl
-test T-3: SupportArticle renders ticket
+scenario T-3: SupportArticle renders ticket
   given: a Ticket with title and body
   when: SupportArticle is rendered
   then:
@@ -318,7 +318,7 @@ test T-3: SupportArticle renders ticket
 ```
 
 ```mdl
-test T-4: Resolve button updates status
+scenario T-4: Resolve button updates status
   given: SupportArticle is shown for an open Ticket
   when: user clicks the Resolve button
   then:
@@ -326,7 +326,7 @@ test T-4: Resolve button updates status
 ```
 
 ```mdl
-test T-5: Mark in progress
+scenario T-5: Mark in progress
   given: an open Ticket
   when: markInProgress invoked (via assistant or UI button)
   then:
@@ -334,7 +334,7 @@ test T-5: Mark in progress
 ```
 
 ```mdl
-test T-6: Reopen a resolved ticket
+scenario T-6: Reopen a resolved ticket
   given: a resolved Ticket shown in SupportArticle
   when: user clicks the Reopen button
   then:
@@ -343,11 +343,11 @@ test T-6: Reopen a resolved ticket
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a support ticket and resolve it
+test QA-1: Create a support ticket and resolve it
   desc: The core ticket lifecycle round-trip — create, mark in progress, resolve, read back.
   actors: agent
   covers: [F-1.1, F-1.2, F-1.3, F-1.4, T-1, T-2, T-5]
@@ -355,8 +355,8 @@ flow QA-1: Create a support ticket and resolve it
   given:
     - an identity exists
     - space: a space is open
-    - no Ticket titled "QA Ticket" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Ticket titled "QA Ticket" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the ticket
       do: In the navtree, click + on the space and choose Support Ticket. Title it "QA Ticket".
       invoke: [op:createTicket] { title: "QA Ticket", body: "Echo sync hung" }
@@ -381,7 +381,7 @@ flow QA-1: Create a support ticket and resolve it
 ```
 
 ```mdl
-flow QA-2: Send one-shot feedback via the help companion
+test QA-2: Send one-shot feedback via the help companion
   desc: The `--help` companion's PostHog feedback path — no ECHO object is created.
   actors: both
   covers: [F-4.1, F-4.2, F-4.3]
@@ -389,7 +389,7 @@ flow QA-2: Send one-shot feedback via the help companion
   given:
     - an identity exists
     - the deck `--help` companion is available (SupportPlugin is a core plugin, always enabled)
-  test:
+  steps:
     - name: Open the help companion
       do: Click the `?` / help affordance to open the `--help` companion.
       expect: the FeedbackForm renders with type, severity, title and body fields

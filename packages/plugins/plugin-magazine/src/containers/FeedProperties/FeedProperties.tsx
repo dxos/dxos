@@ -76,7 +76,7 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
   }, [invokePromise, db]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('feed-sync.label')}</Field.Label>
         <Flex align='center'>
@@ -92,7 +92,7 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
           )}
         </Flex>
       </Field.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

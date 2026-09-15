@@ -13,9 +13,9 @@ import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { DXN } from '@dxos/keys';
 
-import * as AiService from './AiService';
-import * as AiTelemetry from './AiTelemetry';
-import { AiModelNotAvailableError } from './errors';
+import * as AiService from './AiService.ts';
+import * as AiTelemetry from './AiTelemetry.ts';
+import { AiModelNotAvailableError } from './errors.ts';
 
 const telemetryLayer = Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer());
 

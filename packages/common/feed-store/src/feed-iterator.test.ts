@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { latch } from '@dxos/async';
 
-import { FeedIterator } from './feed-iterator';
-import { TestItemBuilder } from './testing';
+import { FeedIterator } from './feed-iterator.ts';
+import { TestItemBuilder } from './testing/index.ts';
 
 describe('FeedIterator', () => {
   test('reads blocks in order', async () => {

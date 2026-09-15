@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent as ActivationEvent$ } from '../core';
+import { ActivationEvent as ActivationEvent$ } from '../core/index.ts';
 
 /**
  * Fired when the app is started.

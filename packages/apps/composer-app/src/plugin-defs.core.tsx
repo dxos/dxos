@@ -35,7 +35,7 @@ import * as SupportPlugin from '@dxos/plugin-support/SupportPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import { isTruthy } from '@dxos/util';
 
-import { downloadLogs } from './util';
+import { downloadLogs } from './util/index.ts';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
@@ -164,7 +164,7 @@ export const getCorePlugins = ({
       invitationUrlHandler: false,
     }),
     StatusBarPlugin.make(),
-    SupportPlugin.make({ helpSteps: () => import('./util/help').then(({ steps }) => steps) }),
+    SupportPlugin.make({ helpSteps: () => import('./util/help.ts').then(({ steps }) => steps) }),
     ThemePlugin.make({
       appName: 'Composer',
       platform: isMobile ? 'mobile' : 'desktop',

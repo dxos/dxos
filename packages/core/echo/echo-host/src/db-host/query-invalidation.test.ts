@@ -11,12 +11,12 @@ import { TestSchema } from '@dxos/echo/testing';
 import { IndexEngine } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
-import { AutomergeHost } from '../automerge';
-import { QueryExecutor } from '../query/query-executor';
-import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint';
-import { SpaceStateManager } from './space-state-manager';
+import { AutomergeHost } from '../automerge/index.ts';
+import { QueryExecutor } from '../query/query-executor.ts';
+import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
+import { SpaceStateManager } from './space-state-manager.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers

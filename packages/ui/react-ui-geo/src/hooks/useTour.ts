@@ -5,9 +5,9 @@
 import { geoInterpolate, geoPath } from 'd3';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 
-import { type LatLngLiteral } from '../types';
-import { type StyleSet, geoToPosition } from '../util';
-import type { GlobeController } from './context';
+import { type LatLngLiteral } from '../types.ts';
+import { type StyleSet, geoToPosition } from '../util/index.ts';
+import type { GlobeController } from './context.ts';
 
 const defaultDuration = 1_500;
 

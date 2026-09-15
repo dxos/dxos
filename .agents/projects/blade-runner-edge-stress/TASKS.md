@@ -96,6 +96,20 @@ blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md); what was measu
 
 ## Follow-ups
 
+- [x] **`POST /identity/agents/create` + `/ws` failing on preview (2026-09-10 nightly)** — RESOLVED.
+      Root cause: `dxos/dxos#12990` (protobuf.js → buf migration, 2026-09-09 15:34 UTC) changed the
+      wire format blade-runner's VP presentations carry; `dxos/edge`'s deployed catalog lagged it,
+      so every `edgeAuth`-gated route (not just `createAgent`) failed to decode incoming
+      presentations. Fixed by `dxos/edge#1044` (catalog bump, deployed 07:21 UTC 2026-09-10);
+      confirmed recovered via live `curl` and SigNoz zero-500s from ~12:00 UTC onward. Nothing to
+      patch in either repo for the outage itself — only the harness's error-logging gap it exposed
+      (`describeError` now wraps `runPlanner`'s top-level catch).
+- [ ] **Cross-repo wire-format skew is a standing risk, not a one-off** — `dxos/dxos` main can break
+      `dxos/edge`'s pinned deployment on any protocol-level change, for every client built from
+      `dxos/dxos` main, until someone notices and bumps the catalog (as happened here, ~16 hours
+      after the breaking merge). No mechanism catches this automatically today. Out of scope for
+      blade-runner to fix; flagging for whoever owns the release/catalog-bump process to judge
+      whether it's worth a canary or a faster bump cadence.
 - [ ] **Finding 6** — a document is discovered but never delivered; five reproductions, two of them
       in CI, one in the edge repo's own `automerge.node.test.ts`. This is what keeps the nightly soak
       red, and it is a product defect, not a harness one.

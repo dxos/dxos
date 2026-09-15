@@ -12,7 +12,7 @@ import { Database, Entity, Obj } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { getProjectChatPath } from '../paths';
+import { getProjectChatPath } from '../paths.ts';
 
 /**
  * Places a project's chats on that project's Chats branch. Without this a project chat resolves

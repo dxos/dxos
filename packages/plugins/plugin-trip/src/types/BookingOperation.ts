@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import * as BookingSearch from './BookingSearch';
+import * as BookingSearch from './BookingSearch.ts';
 
 /**
  * Searches for bookings (flights, …) across the enabled `BookingService`s. The handler resolves

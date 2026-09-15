@@ -7,13 +7,13 @@ import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
 
-import * as Entity from './Entity';
-import { SnapshotKindId } from './internal';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import * as Relation from './Relation';
-import { TestSchema } from './testing';
-import type * as Type from './Type';
+import * as Entity from './Entity.ts';
+import { SnapshotKindId } from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
+import * as Relation from './Relation.ts';
+import { TestSchema } from './testing/index.ts';
+import type * as Type from './Type.ts';
 
 describe('Obj', () => {
   describe('make', () => {
@@ -627,6 +627,56 @@ describe('Obj', () => {
       // property read, so identity comparison would re-fire here every time (see `elementEquals`).
       Obj.update(obj, (obj) => {
         obj.name = 'Dana';
+      });
+      expect(fires).toBe(baseline + 1);
+    });
+
+    test('a ref-valued property keeps its uri and re-fires only on a different target', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const orgA = Obj.make(TestSchema.Organization, { name: 'A' });
+      const orgB = Obj.make(TestSchema.Organization, { name: 'B' });
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [], employer: Ref.make(orgA) });
+
+      const employerAtom = Obj.atomProperty(obj, 'employer');
+      let fires = 0;
+      registry.subscribe(employerAtom, () => {
+        fires++;
+      });
+      // The snapshot must stay a usable ref: a shallow spread drops `uri`, which is a prototype
+      // getter over a private field, and every consumer reading the DXN off it sees `undefined`.
+      expect(registry.get(employerAtom)?.uri.toString()).toBe(Ref.make(orgA).uri.toString());
+      const baseline = fires;
+
+      // Unrelated writes are silent — refs compare by URI, not identity.
+      Obj.update(obj, (obj) => {
+        obj.name = 'Bob';
+      });
+      expect(fires).toBe(baseline);
+
+      Obj.update(obj, (obj) => {
+        obj.employer = Ref.make(orgB);
+      });
+      expect(fires).toBe(baseline + 1);
+      expect(registry.get(employerAtom)?.uri.toString()).toBe(Ref.make(orgB).uri.toString());
+    });
+
+    test('a ref-valued property re-fires when only the inlined target is dropped', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const org = Obj.make(TestSchema.Organization, { name: 'A' });
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [], employer: Ref.make(org) });
+
+      const employerAtom = Obj.atomProperty(obj, 'employer');
+      let fires = 0;
+      registry.subscribe(employerAtom, () => {
+        fires++;
+      });
+      registry.get(employerAtom);
+      const baseline = fires;
+
+      // Same URI, different value: the inlined target is part of the ref's encoded form, so dropping
+      // it is a change the consumer must see rather than one the URI comparison swallows.
+      Obj.update(obj, (obj) => {
+        obj.employer = Ref.make(org).noInline();
       });
       expect(fires).toBe(baseline + 1);
     });

@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 
 import { TableOperation } from '#types';
 
-import { exportRows } from './export-rows-format';
+import { exportRows } from './export-rows-format.ts';
 
 const handler: Operation.WithHandler<typeof TableOperation.ExportRows> = TableOperation.ExportRows.pipe(
   Operation.withHandler(

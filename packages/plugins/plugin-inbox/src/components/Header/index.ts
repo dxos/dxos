@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Header';
+export * from './Header.tsx';

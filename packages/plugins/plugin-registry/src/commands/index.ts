@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './plugin';
-export * from './registry';
+export * from './plugin/index.ts';
+export * from './registry/index.ts';

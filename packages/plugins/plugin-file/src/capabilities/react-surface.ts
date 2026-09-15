@@ -14,8 +14,8 @@ import { File } from '@dxos/types';
 import { FileArticle, FileProperties, FileSettings } from '#containers';
 import { meta } from '#meta';
 
-import { FileAction } from '../types/FileCapabilities';
-import { FileUploadField } from './FileUploadField';
+import { FileAction } from '../types/FileCapabilities.ts';
+import { FileUploadField } from './FileUploadField.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './TextTooltip';
-export { useTooltipContext } from './TooltipContext';
+export * from './TextTooltip.tsx';
+export { useTooltipContext } from './TooltipContext.ts';
 
-export * from './Tooltip';
-export * from './tooltipContent';
+export * from './Tooltip.tsx';
+export * from './tooltipContent.ts';

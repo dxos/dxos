@@ -41,27 +41,23 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, defaultMap } from '@dxos/util';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
 import {
   type CollectionState,
   CollectionSynchronizer,
   diffCollectionStateForPeer,
   subsetRemoteToLocal,
-} from './collection-synchronizer';
-import { type DocumentLease, DocumentLeaseRegistry } from './document-lease';
-import { type EchoDataMonitor } from './echo-data-monitor';
-import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
-import { type HandleQueryState, getHandleState } from './handle-state';
-import { tryGetSpaceIdFromCollectionId } from './space-collection';
-import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter';
+} from './collection-synchronizer.ts';
+import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
+import { type EchoDataMonitor } from './echo-data-monitor.ts';
+import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
+import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
+import { type HandleQueryState, getHandleState } from './handle-state.ts';
+import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
+import { SqliteHeadsStore } from './sqlite-heads-store.ts';
+import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -70,7 +66,7 @@ export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | u
 const SUBDUCTION_SERVICE_NAME = 'dxos-subduction';
 
 export type AutomergeHostProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   dataMonitor?: EchoDataMonitor;
 
   /**
@@ -194,7 +190,7 @@ const MIN_RESIDENT_DOCUMENTS = 256;
  * level and never reach the Subduction sedimentree layer.
  */
 export class AutomergeHost extends Resource {
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
@@ -513,7 +509,7 @@ export class AutomergeHost extends Resource {
    * Creates automerge_chunks and automerge_heads tables if they do not exist.
    * Must be called (via RuntimeProvider.runPromise) before opening the host.
    */
-  get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> {
+  get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     return this._storage.migrate.pipe(Effect.andThen(this._headsStore.migrate));
   }
 
@@ -570,6 +566,25 @@ export class AutomergeHost extends Resource {
   async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.removeReplicator(replicator);
+  }
+
+  /**
+   * automerge-repo's `findWithProgress` does not re-issue a parked DocumentQuery; repo-wide,
+   * `shareConfigChanged` clears `all-failed` entries and the heal backoff, then re-syncs.
+   */
+  kickStalledSync(): void {
+    this._repo.shareConfigChanged();
+  }
+
+  /**
+   * Re-drives one document's Subduction sync round, re-arming its heal loop.
+   *
+   * {@link kickStalledSync} only revives `all-failed`/`no-peers` entries, so it cannot move a
+   * sedimentree Subduction already considers settled — which is the state a document sits in when
+   * its heads stay behind the sync server with no round in flight.
+   */
+  resyncDocument(documentId: DocumentId): void {
+    this._repo.resyncSubduction(documentId);
   }
 
   /**
@@ -806,8 +821,8 @@ export class AutomergeHost extends Resource {
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen({ self: this }, function* () {
-        const transaction = yield* SqlTransaction.SqlTransaction;
-        yield* transaction.withTransaction(
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql.withTransaction(
           Effect.gen({ self: this }, function* () {
             yield* this._headsStore.remove(documentId);
             yield* this._storage.removeRangeEffect([documentId]);

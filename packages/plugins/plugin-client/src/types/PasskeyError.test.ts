@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as PasskeyError from './PasskeyError';
+import * as PasskeyError from './PasskeyError.ts';
 
 describe('passkey errors', () => {
   // The native (Tauri) bridge rejects with a plain string rather than a DOMException, and

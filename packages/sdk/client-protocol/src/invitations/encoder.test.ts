@@ -16,7 +16,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { PrivateKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 
-import { InvitationEncoder } from './encoder';
+import { InvitationEncoder } from './encoder.ts';
 
 const CREATED = new Date(1739956589 * 1000);
 

@@ -10,12 +10,12 @@ import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useId, useThemeContext } from '@dxos/react-ui';
 
-import { Viewport } from '../../components';
-import { ConfirmReset } from '../../steps';
-import { stepStyles } from '../../styles';
-import { JoinHeading } from './JoinHeading';
-import { useJoinMachine } from './joinMachine';
-import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
+import { Viewport } from '../../components/index.ts';
+import { ConfirmReset } from '../../steps/index.ts';
+import { stepStyles } from '../../styles/index.ts';
+import { JoinHeading } from './JoinHeading.tsx';
+import { useJoinMachine } from './joinMachine.ts';
+import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps.ts';
 import {
   AdditionMethodChooser,
   IdentityAdded,
@@ -23,7 +23,7 @@ import {
   InvitationAuthenticator,
   InvitationInput,
   InvitationRescuer,
-} from './steps';
+} from './steps/index.ts';
 
 // TODO(burdon): Needs to be reimplemented.
 export const JoinPanelImpl = ({
@@ -433,10 +433,14 @@ export const JoinPanel = ({
   const onHaloDone = useCallback(() => {
     propsOnDone?.({
       identityKey:
-        joinState.context.identity?.identityKey ?? toPublicKey(joinState.context.halo.invitation?.identityKey) ?? null,
+        toPublicKey(joinState.context.identity?.identityKey) ??
+        toPublicKey(joinState.context.halo.invitation?.identityKey) ??
+        null,
       swarmKey: toPublicKey(joinState.context.halo.invitation?.swarmKey) ?? null,
       spaceKey:
-        joinState.context.identity?.spaceKey ?? toPublicKey(joinState.context.halo.invitation?.spaceKey) ?? null,
+        toPublicKey(joinState.context.identity?.spaceKey) ??
+        toPublicKey(joinState.context.halo.invitation?.spaceKey) ??
+        null,
       target: joinState.context.halo.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);

@@ -4,7 +4,7 @@
 
 import { type Ref, type RefCallback, useCallback } from 'react';
 
-import { mergeRefs } from './useForwardedRef';
+import { mergeRefs } from './useForwardedRef.ts';
 
 export type PossibleRef<T> = Ref<T> | undefined;
 

@@ -10,12 +10,12 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, PublicKey } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Query from './Query';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Query from './Query.ts';
+import * as Type from './Type.ts';
 
 /**
  * Stored field metadata (e.g., for UX).

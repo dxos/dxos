@@ -7,9 +7,9 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Arrow } from './svg';
-import { createPath } from './svg-path';
-import { testId } from './util';
+import { createPath } from './svg-path.ts';
+import { Arrow } from './svg.tsx';
+import { testId } from './util.ts';
 
 const DefaultStory = () => (
   <svg className='border border-separator w-[30rem] h-[400px]'>

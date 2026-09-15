@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { PLACES, TripBuilder } from './builder';
+import { PLACES, TripBuilder } from './builder.ts';
 
 describe('TripBuilder', () => {
   // Mirrors `TripArticle`'s Default story seed exactly, down to the airline codes and `confirmed`

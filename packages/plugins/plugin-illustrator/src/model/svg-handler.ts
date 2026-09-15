@@ -9,9 +9,9 @@
 // there is no renderer-native encoding to compile to. See `docs/DESIGN.md`.
 //
 
-import { makeBuilder } from './builder';
-import { type ContentHandler, type ContentMap, type ReadWorldObject } from './content';
-import type * as Scene from './scene';
+import { makeBuilder } from './builder.ts';
+import { type ContentHandler, type ContentMap, type ReadWorldObject } from './content.ts';
+import type * as Scene from './scene.ts';
 
 /** Discriminates the base `Drawing.Canvas` as SVG-rendered scene content. */
 export const SVG_SCHEMA = 'dxos.org/svg/1';

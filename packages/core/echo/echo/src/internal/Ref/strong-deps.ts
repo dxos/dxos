@@ -4,10 +4,10 @@
 
 import { EID, type SpaceId, type URI } from '@dxos/keys';
 
-import { EntityKind } from '../common/types/entity';
-import { RelationSourceDXNId, RelationTargetDXNId } from '../common/types/model-symbols';
-import { ParentId, TypeId } from '../common/types/typename';
-import { getObjectEchoUri } from '../Entity/util';
+import { EntityKind } from '../common/types/entity.ts';
+import { RelationSourceDXNId, RelationTargetDXNId } from '../common/types/model-symbols.ts';
+import { ParentId, TypeId } from '../common/types/typename.ts';
+import { getObjectEchoUri } from '../Entity/util.ts';
 
 /**
  * Normalized view of the references that make up an entity's strong-dependency set, store-agnostic

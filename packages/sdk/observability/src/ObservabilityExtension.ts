@@ -9,7 +9,7 @@ import type * as Effect from 'effect/Effect';
 import { type CleanupFn } from '@dxos/async';
 import { type MetricObserver } from '@dxos/tracing';
 
-export * from './extensions';
+export * from './extensions/index.ts';
 
 /**
  * Kind of observability extension.

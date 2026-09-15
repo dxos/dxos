@@ -19,10 +19,10 @@ import {
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { AutomergeHost } from '../automerge';
-import { createTestSqliteRuntime } from '../testing';
-import { EchoHost } from './echo-host';
-import { SpaceStateManager } from './space-state-manager';
+import { AutomergeHost } from '../automerge/index.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { EchoHost } from './echo-host.ts';
+import { SpaceStateManager } from './space-state-manager.ts';
 
 describe('SpaceStateManager and EchoHost persistent space store', () => {
   test('SpaceStateManager persists and restores space root mappings', async () => {

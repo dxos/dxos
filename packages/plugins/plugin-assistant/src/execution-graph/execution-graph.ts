@@ -20,7 +20,7 @@ import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
 
-import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree';
+import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree.ts';
 
 /**
  * Branch name for top-level operation invocations.
@@ -671,8 +671,13 @@ const spanTreeToCommits = (
       builder.addCommit({
         id: `running:${process.pid}`,
         branch: process.pid,
+        // Falls back to the tail of main: a completed request collapses onto main, leaving the
+        // agent's own branch empty, and a parentless spinner draws as a second, disconnected root.
         parents: builder.computeParents(
-          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+          CommitSelector.firstOf(
+            CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+            CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last())),
+          ),
         ),
         icon: ICONS.agentRequestRunning.icon,
         level: ICONS.agentRequestRunning.level,

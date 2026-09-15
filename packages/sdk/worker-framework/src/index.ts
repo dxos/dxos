@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as RpcTiming from './RpcTiming';
-export * as WorkerProtocol from './WorkerProtocol';
-export * from './errors';
+export * as RpcTiming from './RpcTiming.ts';
+export * as WorkerProtocol from './WorkerProtocol.ts';
+export * from './errors.ts';

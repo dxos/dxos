@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Event, MulticastObservable } from '@dxos/async';
 
-import { useMulticastObservable } from './useMulticastObservable';
+import { useMulticastObservable } from './useMulticastObservable.ts';
 
 describe('useMulticastObservable', () => {
   test('observes value', async () => {

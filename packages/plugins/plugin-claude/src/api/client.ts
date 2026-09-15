@@ -16,8 +16,8 @@ import {
   REQUEST_RETRIES,
   REQUEST_RETRY_DELAY,
   REQUEST_TIMEOUT_MS,
-} from '../constants';
-import { ClaudeAgentApiError } from '../errors';
+} from '../constants.ts';
+import { ClaudeAgentApiError } from '../errors.ts';
 import {
   type AgentConfig,
   AgentResponse,
@@ -30,7 +30,7 @@ import {
   Ignored,
   SessionResponse,
   VaultResponse,
-} from './types';
+} from './types.ts';
 
 /**
  * A retry is safe on a GET, which changes nothing; on a POST it is safe only where the server says

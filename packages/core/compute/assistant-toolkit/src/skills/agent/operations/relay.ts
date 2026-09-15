@@ -16,7 +16,7 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { Relay } from './definitions';
+import { Relay } from './definitions.ts';
 
 /**
  * The relay pattern (plugin-projects PLAN.md phase C): one trigger per subscribed feed runs this
@@ -54,7 +54,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
 
         // The durable session is bound to the chat, so it recovers its steering (and its queue)
         // from the chat itself on every rehydration.
-        const session = yield* getSession(chat);
+        const session = yield* getSession(chat, { location: chat.remote ? 'edge' : 'local' });
         const content = prompt ?? JSON.stringify(event);
         yield* session.submitPrompt([{ _tag: 'text', text: content, disposition: 'synthetic' }]);
       },

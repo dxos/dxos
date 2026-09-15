@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as ChessPositionIndex from './ChessPositionIndex';
+import * as ChessPositionIndex from './ChessPositionIndex.ts';
 
 /**
  * Personal chess opening/position review for a single player.

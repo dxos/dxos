@@ -10,9 +10,9 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { createEnvironment, createSession, createVault, createVaultCredential } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession, ClaudeManagedAgent } from '#types';
 
-import { DEFAULT_ENVIRONMENT_NAME, SESSION_VAULT_PREFIX } from '../constants';
-import { getApiKey, toVaultCredentials } from '../credentials';
-import { AgentNotDeployedError } from '../errors';
+import { DEFAULT_ENVIRONMENT_NAME, SESSION_VAULT_PREFIX } from '../constants.ts';
+import { getApiKey, toVaultCredentials } from '../credentials.ts';
+import { AgentNotDeployedError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> = ClaudeAgentOperation.StartSession.pipe(
   Operation.withHandler(

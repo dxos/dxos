@@ -7,7 +7,7 @@ import React, { type ReactElement, type ReactNode } from 'react';
 import { Icon, composable, composableProps } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
-import { listTheme } from '../List.theme';
+import { listTheme } from '../List.theme.ts';
 
 /**
  * Presentational row layout: a rail-sized leading icon centered on the primary line, with an

@@ -11,21 +11,24 @@ import { meta } from '#meta';
 export type PluginScopeProps = {
   /** Whether this plugin's enabled state follows the account rather than being pinned here. */
   synced: boolean;
-  onSyncedChange: (synced: boolean) => void;
+  /** Keep this plugin's state on this device. */
+  onPin: () => void;
+  /** Hand this plugin's state back to the account. */
+  onUnpin: () => void;
 };
 
 /** Whether one plugin's enabled state follows the account or is pinned to this device. */
-export const PluginScope = ({ synced, onSyncedChange }: PluginScopeProps) => {
+export const PluginScope = ({ synced, onPin, onUnpin }: PluginScopeProps) => {
   const { t } = useTranslation(meta.profile.key);
   const handleValueChange = useCallback(
     (value: string) => {
       if (value === 'shared' && !synced) {
-        onSyncedChange(true);
+        onUnpin();
       } else if (value === 'local' && synced) {
-        onSyncedChange(false);
+        onPin();
       }
     },
-    [onSyncedChange, synced],
+    [onPin, onUnpin, synced],
   );
 
   return (

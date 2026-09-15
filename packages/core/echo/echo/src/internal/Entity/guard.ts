@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Entity from '../../Entity';
-import { KindId, SnapshotKindId } from '../common/types';
+import type * as Entity from '../../Entity.ts';
+import { KindId, SnapshotKindId } from '../common/types/index.ts';
 
 /**
  * Returns true if the value is an ECHO entity instance (object or relation).

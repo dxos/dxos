@@ -15,7 +15,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { SupportSettings } from './SupportSettings';
+import { SupportSettings } from './SupportSettings.tsx';
 
 type StoryArgs = {
   settings: Settings.Settings;

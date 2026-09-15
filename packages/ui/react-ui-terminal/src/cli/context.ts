@@ -9,10 +9,10 @@ import * as Path from 'effect/Path';
 import type * as Command from 'effect/unstable/cli/Command';
 import * as ChildProcessSpawner from 'effect/unstable/process/ChildProcessSpawner';
 
-import type { XtermBridge } from './bridge';
-import * as XtermConsole from './console';
-import * as XtermStdio from './stdio';
-import * as XtermTerminal from './terminal';
+import type { XtermBridge } from './bridge.ts';
+import * as XtermConsole from './console.ts';
+import * as XtermStdio from './stdio.ts';
+import * as XtermTerminal from './terminal.ts';
 
 /**
  * The browser counterpart to `BunServices.layer`.

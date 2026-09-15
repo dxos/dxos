@@ -5,9 +5,9 @@
 import { type CommandDefinition, type HotkeyCommand, type HotkeyStore, normalizeHotkey } from '@zag-js/hotkeys';
 import { useCallback, useEffect, useId, useRef, useSyncExternalStore } from 'react';
 
-import { holdHotkeyScope, hotkeyStore } from './hotkey-store';
+import { holdHotkeyScope, hotkeyStore } from './hotkey-store.ts';
 
-export * from './hotkey-store';
+export * from './hotkey-store.ts';
 
 export type UseHotkeysCommand = Omit<CommandDefinition, 'id'> & {
   /** Identifies the command across renders; generated when omitted. */

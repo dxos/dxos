@@ -24,6 +24,7 @@ import {
   ClientRpcServer,
   type ClientServicesHandlers,
   type ClientServicesRpc,
+  layerClientServicesServer,
   makeClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -47,12 +48,12 @@ import {
   QueryInvitationsResponse_Type,
   QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 
-import { remainingLifetimeSeconds } from '../spaces/data-space-manager';
+import { remainingLifetimeSeconds } from '../spaces/data-space-manager.ts';
 
 //
 // Helpers & Schema for test suite 2
@@ -421,4 +422,136 @@ describe('effect-rpc tests', () => {
         }),
       ),
     ));
+});
+
+describe('session server (layerClientServicesServer)', () => {
+  const serveOnPort = (
+    port: MessagePort,
+    // The per-service handler layers resolve their tag, which types as `any` through `toLayer`.
+    handlers: Layer.Layer<any, never, any>,
+  ): Effect.Effect<void, never, Scope.Scope> =>
+    Effect.asVoid(
+      Layer.build(
+        layerClientServicesServer(handlers).pipe(
+          Layer.provide(
+            RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
+          ),
+          Layer.orDie,
+        ),
+      ),
+    );
+
+  const serveOverChannel = (
+    // The per-service handler layers resolve their tag, which types as `any` through `toLayer`.
+    handlers: Layer.Layer<any, never, any>,
+  ): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
+    Effect.gen(function* () {
+      const { port1, port2 } = yield* makeMessageChannel();
+      yield* Layer.build(
+        layerClientServicesServer(handlers).pipe(
+          Layer.provide(
+            RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port2))),
+          ),
+          Layer.orDie,
+        ),
+      );
+      return yield* makeClientServicesRpc(port1);
+    });
+
+  test('serves a unary rpc from a service tag', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const rpc = yield* serveOverChannel(
+            SystemService.Rpcs.toLayer(SystemService.Tag).pipe(
+              Layer.provide(
+                Layer.succeed(
+                  SystemService.Tag,
+                  mockService<SystemService.Handlers>({
+                    ['SystemService.getConfig']: () => Effect.succeed(create(ConfigSchema, {})),
+                  }),
+                ),
+              ),
+            ),
+          );
+          const config = yield* rpc['SystemService.getConfig'](undefined);
+          expect(config).toBeDefined();
+        }),
+      ),
+    );
+  });
+
+  test('serves a streaming rpc whose stream emits from a callback registration', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const impl = mockService<SystemService.Handlers>({
+            ['SystemService.queryStatus']: () =>
+              EffectEx.streamFromEmitter<SystemService.QueryStatusResponse, Error>((emit) => {
+                emit.single({ status: SystemStatus.ACTIVE });
+              }),
+          });
+          const stack = Context.make(SystemService.Tag, impl);
+          const rpc = yield* serveOverChannel(
+            SystemService.Rpcs.toLayer(SystemService.Tag).pipe(Layer.provide(Layer.succeedContext(stack))),
+          );
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.take(1), Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
+
+  // Mirrors the worker session: the tab opens its client before the worker has built the server.
+  test('serves a streaming rpc to a client that connected before the server was built', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const { port1, port2 } = yield* makeMessageChannel();
+          const scope = yield* Effect.scope;
+          const rpcPromise = EffectEx.runPromise(makeClientServicesRpc(port1).pipe(Scope.provide(scope)));
+          yield* Effect.sleep('50 millis');
+          yield* serveOnPort(
+            port2,
+            SystemService.Rpcs.toLayer(SystemService.Tag).pipe(
+              Layer.provide(
+                Layer.succeed(
+                  SystemService.Tag,
+                  mockService<SystemService.Handlers>({
+                    ['SystemService.queryStatus']: () => Stream.make({ status: SystemStatus.ACTIVE }),
+                  }),
+                ),
+              ),
+            ),
+          );
+          const rpc = yield* Effect.promise(() => rpcPromise);
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.take(1), Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
+
+  test('serves a streaming rpc from a service tag', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const rpc = yield* serveOverChannel(
+            SystemService.Rpcs.toLayer(SystemService.Tag).pipe(
+              Layer.provide(
+                Layer.succeed(
+                  SystemService.Tag,
+                  mockService<SystemService.Handlers>({
+                    ['SystemService.queryStatus']: () => Stream.make({ status: SystemStatus.ACTIVE }),
+                  }),
+                ),
+              ),
+            ),
+          );
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
 });

@@ -5,11 +5,10 @@
 import { describe, expect, it } from 'tstyche';
 
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SubscribeToSpacesResponse as LegacyResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { useSpacesInfo } from '../../../hooks';
-import { type PipelineTableProps } from './PipelineTable';
-import { SpaceProperties } from './SpaceProperties';
+import { useSpacesInfo } from '../../../hooks/index.ts';
+import { type PipelineTableProps } from './PipelineTable.tsx';
+import { SpaceProperties } from './SpaceProperties.tsx';
 
 // Carrier group A: `DevtoolsHost.subscribeToSpaces` moved to `bufMessage`, so these pin the type the
 // carrier hands over rather than the annotation the panels happen to write.
@@ -37,9 +36,5 @@ describe('SubscribeToSpacesResponse.SpaceInfo (group A)', () => {
     expect(info.timeframe).type.not.toBeAssignableTo<{ totalMessages: () => number } | undefined>();
     expect(info.timeframe?.frames[0].feedKey).type.toBe<Uint8Array | undefined>();
     expect(info.timeframe?.$typeName).type.toBe<'dxos.echo.timeframe.TimeframeVector' | undefined>();
-  });
-
-  it('is no longer the protobuf.js type', () => {
-    expect<LegacyResponse['spaces']>().type.not.toBeAssignableTo<SubscribeToSpacesResponse_SpaceInfo[]>();
   });
 });

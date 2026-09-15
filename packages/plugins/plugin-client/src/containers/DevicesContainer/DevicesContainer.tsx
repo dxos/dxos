@@ -49,11 +49,11 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
       <Form.Root variant='settings'>
         <Form.Viewport scroll>
           <Form.Content>
-            <Form.Section
-              title={t('devices-verbose.label', { ns: meta.profile.key })}
+            <Form.FieldSet
+              label={t('devices-verbose.label', { ns: meta.profile.key })}
               description={t('devices.description', { ns: meta.profile.key })}
             >
-              <Form.Group>
+              <Form.FieldSet>
                 <div role='group' className='min-w-0'>
                   <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
                   <Listbox.Root>
@@ -70,26 +70,34 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
                     <DeviceInvitation createInvitationUrl={createInvitationUrl} />
                   </div>
                 )}
-              </Form.Group>
-            </Form.Section>
-            <Form.Section title={t('logout-section.title')} description={t('logout-section.description')}>
-              <Form.Field label={t('logout.label')} description={t('logout.description')}>
+              </Form.FieldSet>
+            </Form.FieldSet>
+            <Form.FieldSet label={t('logout-section.title')} description={t('logout-section.description')}>
+              <Form.Field standalone label={t('logout.label')} description={t('logout.description')}>
                 <Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
                   {t('logout.label')}
                 </Button>
               </Form.Field>
-            </Form.Section>
+            </Form.FieldSet>
             {identityTestActions && (
-              <Form.Section
-                title={t('identity-test-section.title')}
+              <Form.FieldSet
+                label={t('identity-test-section.title')}
                 description={t('identity-test-section.description')}
               >
-                <Form.Field label={t('recover-identity.label')} description={t('recover-identity.description')}>
+                <Form.Field
+                  standalone
+                  label={t('recover-identity.label')}
+                  description={t('recover-identity.description')}
+                >
                   <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
                     {t('recover-identity.label')}
                   </Button>
                 </Form.Field>
-                <Form.Field label={t('join-new-identity.label')} description={t('join-new-identity.description')}>
+                <Form.Field
+                  standalone
+                  label={t('join-new-identity.label')}
+                  description={t('join-new-identity.description')}
+                >
                   <Button
                     variant='destructive'
                     onClick={handleJoinNewIdentity}
@@ -98,7 +106,7 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
                     {t('join-new-identity.label')}
                   </Button>
                 </Form.Field>
-              </Form.Section>
+              </Form.FieldSet>
             )}
           </Form.Content>
         </Form.Viewport>

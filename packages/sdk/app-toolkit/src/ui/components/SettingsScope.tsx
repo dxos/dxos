@@ -7,44 +7,41 @@ import React, { useCallback, useState } from 'react';
 import { AlertDialog, Button, ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { useSettingsScope } from '../hooks';
+import { useSettingsScope } from '../hooks/index.ts';
 
 export type SettingsScopeProps = {
   /** Settings prefix the control scopes — a plugin key, or one of the app-level namespaces. */
   prefix: string;
 };
 
-/**
- * Whether a settings panel follows the account or stays on this device. Belongs in the heading row
- * of a settings panel's first section, via `Form.Section`'s `actions` slot.
- */
+/** Whether a settings panel follows the account or stays on this device. */
 export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
   const { t } = useTranslation(osTranslations);
-  const { available, synced, setSynced, getConflicts } = useSettingsScope(prefix);
+  const { available, synced, takeLocal, rejoinAccount, getConflicts } = useSettingsScope(prefix);
   const [conflicts, setConflicts] = useState<readonly string[]>([]);
 
   const handleValueChange = useCallback(
     (value: string) => {
       if (value === 'local' && synced) {
-        setSynced(false);
+        takeLocal();
       } else if (value === 'synced' && !synced) {
         const conflicting = getConflicts();
         if (conflicting.length === 0) {
-          setSynced(true);
+          rejoinAccount();
         } else {
           setConflicts(conflicting);
         }
       }
     },
-    [getConflicts, setSynced, synced],
+    [getConflicts, rejoinAccount, synced, takeLocal],
   );
 
   const handleResolve = useCallback(
     (adopt: 'shared' | 'local') => {
-      setSynced(true, { adopt });
+      rejoinAccount({ adopt });
       setConflicts([]);
     },
-    [setSynced],
+    [rejoinAccount],
   );
 
   if (!available) {

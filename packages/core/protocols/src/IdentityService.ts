@@ -12,10 +12,10 @@ import { IdentitySchema, RecoverIdentityRequestSchema } from './buf/proto/gen/dx
 import {
   CredentialSchema,
   DeviceProfileDocumentSchema,
+  IdentityRecovery_Kind,
   PresentationSchema,
   ProfileDocumentSchema,
 } from './buf/proto/gen/dxos/halo/credentials_pb.ts';
-import { IdentityRecovery } from './proto/gen/dxos/halo/credentials.ts';
 import { bufMessage, serviceError } from './service-rpc.ts';
 import { publicKey } from './service-schemas.ts';
 
@@ -56,7 +56,7 @@ export const RecoveryCredentialData = Schema.Struct({
   /**
    * How the recovery key is held.
    */
-  kind: Schema.optional(Schema.Enum(IdentityRecovery.Kind)),
+  kind: Schema.optional(Schema.Enum(IdentityRecovery_Kind)),
 });
 export interface RecoveryCredentialData extends Schema.Schema.Type<typeof RecoveryCredentialData> {}
 

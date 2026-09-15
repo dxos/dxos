@@ -14,7 +14,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as ProfileOf from './ProfileOf';
+import * as ProfileOf from './ProfileOf.ts';
 
 /**
  * Downloads an external image URL, uploads it to the DXOS image service, and

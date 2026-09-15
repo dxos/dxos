@@ -18,10 +18,10 @@ import {
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { TestBuilder, type TestPeer } from '../testing';
-import { type InvitationProtocol } from './invitation-protocol';
-import { InvitationsHandler } from './invitations-handler';
-import { SpaceInvitationProtocol } from './space-invitation-protocol';
+import { TestBuilder, type TestPeer } from '../testing/index.ts';
+import { type InvitationProtocol } from './invitation-protocol.ts';
+import { InvitationsHandler } from './invitations-handler.ts';
+import { SpaceInvitationProtocol } from './space-invitation-protocol.ts';
 
 interface PeerSetup {
   ctx: Context;

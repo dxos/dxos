@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { snapshotExtractor } from './snapshot';
-import { type Extractor, type ExtractorContext } from './types';
+import { snapshotExtractor } from './snapshot.ts';
+import { type Extractor, type ExtractorContext } from './types.ts';
 
-export * from './snapshot';
-export * from './types';
+export * from './snapshot.ts';
+export * from './types.ts';
 
 const extractors = new Map<string, Extractor>([[snapshotExtractor.name, snapshotExtractor]]);
 

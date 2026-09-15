@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import * as OtelMetricsSink from './OtelMetricsSink';
+import * as OtelMetricsSink from './OtelMetricsSink.ts';
 
 const defaultInit: OtelMetricsSink.Init = {
   type: 'otel-metrics-init',

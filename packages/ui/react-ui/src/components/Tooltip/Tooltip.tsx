@@ -29,10 +29,11 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 import { useControllableState } from '@dxos/react-hooks';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
+import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
 import {
   DEFAULT_DELAY_DURATION,
   TOOLTIP_NAME,
@@ -41,7 +42,7 @@ import {
   type TooltipSide,
   type TooltipStateAttribute,
   useTooltipContext,
-} from './TooltipContext';
+} from './TooltipContext.ts';
 
 //
 // Provider
@@ -99,11 +100,23 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
   }, []);
 
   const contentId = useId();
+  // The machine copies `positioning` when it opens or switches trigger, so the side must be rendered before that event.
+  const [placement, setPlacement] = useState<TooltipSide>('top');
+  const placementRef = useRef(placement);
+  const prepareTrigger = useCallback((value: string) => {
+    const side = registry.current.get(value)?.side ?? 'top';
+    if (placementRef.current !== side) {
+      placementRef.current = side;
+      flushSync(() => setPlacement(side));
+    }
+  }, []);
+
   const tooltip = useTooltip({
     open,
     onOpenChange: ({ open: next }) => setOpen(next),
     openDelay: delayDuration,
     interactive: !disableHoverableContent,
+    positioning: { placement },
     // A trigger's DOM id is its value, which is how the machine finds the active one to position at.
     ids: { content: contentId, trigger: (value) => value ?? '' },
   });
@@ -112,14 +125,16 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
   activeValueRef.current = tooltip.triggerValue;
 
   const active = tooltip.triggerValue ? registry.current.get(tooltip.triggerValue) : undefined;
-  const placement = active?.side ?? 'top';
+
+  // The open trigger's side can change without an event to forward, so reposition in place.
+  const activeSide = active?.side ?? 'top';
   useEffect(() => {
-    if (open) {
-      tooltip.reposition({ placement });
+    if (open && placementRef.current !== activeSide) {
+      placementRef.current = activeSide;
+      setPlacement(activeSide);
+      apiRef.current?.reposition({ placement: activeSide });
     }
-    // The api identity changes every render; the placement is what matters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, placement]);
+  }, [open, activeSide]);
 
   const stateAttribute: TooltipStateAttribute = open ? 'delayed-open' : 'closed';
 
@@ -155,10 +170,11 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
       apiRef,
       contentId,
       register,
+      prepareTrigger,
       onOpen: () => apiRef.current?.setOpen(true),
       onClose: () => apiRef.current?.setOpen(false),
     }),
-    [contentId, register],
+    [contentId, register, prepareTrigger],
   );
 
   const { tx } = useThemeContext();
@@ -206,14 +222,18 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
     { onInteract, delayDuration: _delayDuration, side, content, id: idProp, asChild, ...triggerProps },
     forwardedRef,
   ) => {
-    const { apiRef, register } = useTooltipContext(TRIGGER_NAME);
+    const { apiRef, register, prepareTrigger } = useTooltipContext(TRIGGER_NAME);
     const generatedId = useId();
     const value = idProp ?? generatedId;
 
     useLayoutEffect(() => register(value, { content, side }), [register, value, content, side]);
 
     // The machine's own trigger handlers, fetched at event time so nothing here subscribes to it.
-    const machine = useCallback(() => apiRef.current?.getTriggerProps({ value }), [apiRef, value]);
+    // Any forwarded event may open or switch the tooltip, so the trigger is prepared before each one.
+    const machine = useCallback(() => {
+      prepareTrigger(value);
+      return apiRef.current?.getTriggerProps({ value });
+    }, [apiRef, value, prepareTrigger]);
 
     return (
       <ark.button

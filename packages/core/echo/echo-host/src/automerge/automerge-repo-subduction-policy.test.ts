@@ -24,7 +24,7 @@ import {
   reconnectAdapters,
   waitForQueryState,
   waitForSubductionSave,
-} from './subduction-test-utils';
+} from './subduction-test-utils.ts';
 
 // SubductionPolicy: characterizing client-only gates.
 //

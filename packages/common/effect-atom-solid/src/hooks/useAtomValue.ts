@@ -6,7 +6,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomModule from 'effect/unstable/reactivity/Atom';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { useRegistry } from '../registry';
+import { useRegistry } from '../registry.ts';
 
 /**
  * A value that may be a static value or a reactive accessor.

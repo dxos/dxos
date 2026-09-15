@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type SemanticQuery, buildSparql } from './query-builder';
-import { parseSparqlToQuery } from './sparql-to-query';
+import { type SemanticQuery, buildSparql } from './query-builder.ts';
+import { parseSparqlToQuery } from './sparql-to-query.ts';
 
 describe('parseSparqlToQuery', () => {
   test('round-trips buildSparql for each query field', ({ expect }) => {

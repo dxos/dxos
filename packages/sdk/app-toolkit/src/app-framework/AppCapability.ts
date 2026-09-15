@@ -12,9 +12,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
 
-import { type Translations } from '../app';
-import * as AppActivationEvents from './AppActivationEvents';
-import * as AppCapabilities from './AppCapabilities';
+import { type Translations } from '../app/index.ts';
+import * as AppActivationEvents from './AppActivationEvents.ts';
+import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
  * Type of a maker built by {@link Capability$.moduleMaker}, spelled out explicitly (rather than
@@ -262,6 +262,32 @@ export const schema = (
   }
   return Capability$.inlineModule(options?.name ?? 'schema', spec, () =>
     Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
+  );
+};
+
+/** Module contributing guided tours. */
+export const tour = (
+  tours: AppCapabilities.Tour | ReadonlyArray<AppCapabilities.Tour>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.Tour> = Array.isArray(tours) ? tours : [tours];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour',
+    { provides: [AppCapabilities.Tour], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.Tour, values)]),
+  );
+};
+
+/** Module contributing steps into other plugins' tours. */
+export const tourFragment = (
+  fragments: AppCapabilities.TourFragment | ReadonlyArray<AppCapabilities.TourFragment>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.TourFragment> = Array.isArray(fragments) ? fragments : [fragments];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour-fragment',
+    { provides: [AppCapabilities.TourFragment], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.TourFragment, values)]),
   );
 };
 

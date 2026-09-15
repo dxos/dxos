@@ -13,9 +13,9 @@ import {
   DEEPSEEK_MODEL_ENV,
   DEFAULT_HARNESS_BIN,
   DEFAULT_RUN_TIMEOUT_MS,
-} from '../../constants';
-import { RunHarness } from './definitions';
-import { buildRunCommand } from './harness-command';
+} from '../../constants.ts';
+import { RunHarness } from './definitions.ts';
+import { buildRunCommand } from './harness-command.ts';
 
 export default RunHarness.pipe(
   Operation.withHandler(

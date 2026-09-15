@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './ActionMenu';
-export * from './ActionToolbar';
+export * from './ActionMenu.tsx';
+export * from './ActionToolbar.tsx';

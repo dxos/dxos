@@ -31,7 +31,7 @@ import {
 
 import { translationKey } from '#translations';
 
-import { type EditorMenuGroup, type EditorMenuItem, getMenuItem } from './menu';
+import { type EditorMenuGroup, type EditorMenuItem, getMenuItem } from './menu.ts';
 
 export type EditorMenuProviderProps = PropsWithChildren<{
   // Provided as a getter (not a value prop) so the live `EditorView` is never carried in a React prop that
@@ -103,8 +103,8 @@ export const EditorMenuProvider = ({
       root,
       DX_ANCHOR_ACTIVATE as any,
       (event: DxAnchorActivate) => {
-        const { trigger, dxn } = event;
-        if (!dxn) {
+        const { trigger, eid } = event;
+        if (!eid) {
           triggerRef.current = trigger as HTMLButtonElement;
           if (onActivate) {
             const view = getViewRef.current?.();

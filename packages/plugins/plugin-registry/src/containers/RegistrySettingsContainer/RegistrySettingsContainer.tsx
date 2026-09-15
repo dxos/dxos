@@ -59,7 +59,7 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
       onEnableDev={onEnableDev}
       onDisableDev={onDisableDev}
       pluginScopeLocal={pluginScope.available ? !pluginScope.synced : undefined}
-      onPluginScopeLocalChange={(local) => pluginScope.setSynced(!local)}
+      onPluginScopeLocalChange={(local) => (local ? pluginScope.takeLocal() : pluginScope.rejoinAccount())}
     />
   );
 };

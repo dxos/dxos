@@ -17,12 +17,12 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [AppCapabilities.AppGraph],
   environments: ['node'],
 });
-export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.devtoolsOverview'],
 });
 export const SetupDevtools = Capability.inlineModule('setup-devtools', { provides: [] }, () =>

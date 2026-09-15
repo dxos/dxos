@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 
 import { createKeyPair } from '@dxos/crypto';
 
-import { type ValueCodec, createCodecEncoding } from './crypto';
-import { HypercoreFactory } from './hypercore-factory';
+import { type ValueCodec, createCodecEncoding } from './crypto.ts';
+import { HypercoreFactory } from './hypercore-factory.ts';
 
 type TestItem = {
   key: string;

@@ -96,14 +96,12 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         );
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Field.Root>
-              <Field.Input
-                value={getValue()}
-                onChange={handleChange}
-                placeholder={t('display-name-input.placeholder')}
-                classNames='w-64 max-w-full min-w-0'
-              />
-            </Field.Root>
+            <Field.Input
+              value={getValue()}
+              onChange={handleChange}
+              placeholder={t('display-name-input.placeholder')}
+              classNames='w-64 max-w-full min-w-0'
+            />
           </Form.Field>
         );
       },
@@ -111,7 +109,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Form.Field label={label} description={t('icon.description')}>
+          <Form.Field standalone label={label} description={t('icon.description')}>
             <IconPicker
               value={getValue()}
               onChange={handleChange}
@@ -125,7 +123,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Form.Field label={label} description={t('hue.description')}>
+          <Form.Field standalone label={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
           </Form.Field>
         );
@@ -133,18 +131,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       // Read-only: the membership policy is written into the genesis credential at creation.
       private: ({ label, getValue }) => (
         <Form.Field label={label} description={t('private.description')}>
-          <Field.Root>
-            <Field.Switch checked={getValue()} disabled classNames='justify-self-end' />
-          </Field.Root>
+          <Field.Switch checked={getValue()} disabled classNames='justify-self-end' />
         </Form.Field>
       ),
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
           <Form.Field label={label} description={t('edge-replication.description')}>
-            <Field.Root>
-              <Field.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
-            </Field.Root>
+            <Field.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
           </Form.Field>
         );
       },
@@ -198,15 +192,15 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section
-            title={t('space-properties-settings-verbose.label')}
+          <Form.FieldSet
+            label={t('space-properties-settings-verbose.label')}
             description={t('space-properties-settings.description', { ns: meta.profile.key })}
           >
-            <Form.FieldSet />
-          </Form.Section>
+            <Form.Fields />
+          </Form.FieldSet>
 
-          <Form.Section title={t('space-controls.title')} description={t('space-controls.description')}>
-            <Form.Field label={t('space-id.title')} description={t('space-id.description')}>
+          <Form.FieldSet label={t('space-controls.title')} description={t('space-controls.description')}>
+            <Form.Field standalone label={t('space-id.title')} description={t('space-id.description')}>
               <Flex gap='sm' align='center'>
                 <Field.Root>
                   <Field.Input value={space.id} disabled classNames='flex-1 font-mono text-xs' />
@@ -221,7 +215,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                 />
               </Flex>
             </Form.Field>
-            <Form.Field label={t('backup-space.title')} description={t('backup-space.description')}>
+            <Form.Field standalone label={t('backup-space.title')} description={t('backup-space.description')}>
               <Menu.Root>
                 <Menu.Trigger asChild>
                   <Button>
@@ -237,18 +231,19 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                 </Menu.Content>
               </Menu.Root>
             </Form.Field>
-            <Form.Field label={t('repair-space.title')} description={t('repair-space.description')}>
+            <Form.Field standalone label={t('repair-space.title')} description={t('repair-space.description')}>
               <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
             </Form.Field>
-            <Form.Field label={t('reset-home.title')} description={t('reset-home.description')}>
+            <Form.Field standalone label={t('reset-home.title')} description={t('reset-home.description')}>
               <Button onClick={handleResetHome}>{t('reset-home.label')}</Button>
             </Form.Field>
-          </Form.Section>
+          </Form.FieldSet>
 
-          <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
+          <Form.FieldSet label={t('danger-zone.title')} description={t('danger-zone.description')}>
             {/* Shown but disabled on the default space: hiding it reads as "this space cannot be
                 deleted" rather than "pick a different default space first". */}
             <Form.Field
+              standalone
               label={t('delete-space.title')}
               description={isDefaultSpace ? t('delete-default-space.description') : t('delete-space.description')}
             >
@@ -284,7 +279,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                 </Dialog.Portal>
               </Dialog.Root>
             </Form.Field>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

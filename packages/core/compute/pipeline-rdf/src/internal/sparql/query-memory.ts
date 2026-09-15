@@ -4,11 +4,11 @@
 
 import { DataFactory, type Store } from 'n3';
 
-import { type Fact } from '../../types';
-import { FACT, entityIri, prov, sx } from '../vocab';
-import { triplesToFacts } from './mapping';
-import { normalizePredicate } from './normalize-predicate';
-import { type SemanticQuery } from './query-builder';
+import { type Fact } from '../../types/index.ts';
+import { FACT, entityIri, prov, sx } from '../vocab.ts';
+import { triplesToFacts } from './mapping.ts';
+import { normalizePredicate } from './normalize-predicate.ts';
+import { type SemanticQuery } from './query-builder.ts';
 
 const { literal, namedNode } = DataFactory;
 

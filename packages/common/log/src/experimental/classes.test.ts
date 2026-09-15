@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { log } from '../log';
-import { debugInfo, ownershipClass } from './ownership';
+import { log } from '../log.ts';
+import { debugInfo, ownershipClass } from './ownership.ts';
 
 describe('classes', function () {
   test('field instance', function () {

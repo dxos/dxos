@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseExtractPayload } from './extract';
+import { parseExtractPayload } from './extract.ts';
 
 describe('parseExtractPayload', () => {
   test('salvages the JSON object from reasoning-wrapped model output', ({ expect }) => {

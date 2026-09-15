@@ -8,9 +8,9 @@ import { DEFAULT_INPUT } from '@dxos/conductor';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
-import { useComputeNodeState } from '../hooks';
-import { Box } from './common';
-import { type JsonShape, type JsonTransformShape } from './json-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box } from './common/index.ts';
+import { type JsonShape, type JsonTransformShape } from './json-def.ts';
 
 //
 // Component

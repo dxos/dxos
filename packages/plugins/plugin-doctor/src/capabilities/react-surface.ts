@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { DiagnosticsPanel } from '#containers';
 
-import { DIAGNOSTICS_DECK_COMPANION_ID } from './app-graph-builder';
+import { DIAGNOSTICS_DECK_COMPANION_ID } from './app-graph-builder.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

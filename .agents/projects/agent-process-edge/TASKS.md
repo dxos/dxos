@@ -301,3 +301,284 @@ AgentService, or Operation.Service".
       manager rather than a `ProcessManager.Service` injection. 12/12.
 - [ ] `Operation.Service` is the other place the review names as a unifying layer; nothing there
       dispatches on local vs remote yet, so it is untouched.
+
+## Phase 8 — the model round trip (session of 2026-09-08)
+
+The one remaining item from Phase 5's `resume` ("the agent model round trip needs the memoized
+Anthropic fixture") turned out to sit behind FIVE defects, each hiding the next. Diagnosed against a
+new round-trip test rather than by reading: every hypothesis reached from source alone was wrong.
+
+### Runtime defects fixed (dxos, commit c78bea1b12 + working tree)
+
+- [x] **`RemoteProcessManager` is a required dependency of `AgentService.layer`**, not an optional
+      read. A `LayerSpec` stack never has a tag its spec does not require in context, so
+      `Effect.serviceOption` always came back empty and every `location: 'edge'` session failed with
+      "no RemoteProcessManager is available" while the app had materialised one all along. Hosts
+      without EDGE satisfy it with `RemoteProcessManager.layerNoop`.
+- [x] **`EdgeProcessManager.fromClient` supplies the process-control surface.** It was cancel-only,
+      deferring to a `forSpace` that exists nowhere in the repo, so the manager an app builds lacked
+      `spawn`/`list` entirely ("offers no process control").
+- [x] **A `Process` definition declares the schemas its data model needs** (`Process.types`), and the
+      host registers them with the process's database. `FunctionContext._open` does the registering;
+      passing `types` to the constructor alone was inert, which cost a full cycle to notice.
+      `SessionStore` reads the conversation with a TYPED query, so on a host that registered nothing
+      the agent appended a prompt and read the queue back empty — a lost write, in appearance.
+- [x] **A fresh agent no longer completes on its first empty-queue wake** (`turnRan`). `onSpawn`
+      discards what it inherits, so a new process always starts empty; treating that as "work
+      drained" ended the agent ~50ms after spawn, and the prompt it was spawned for then landed on a
+      finished handle and was dropped with a warning.
+- [x] **Read-your-writes over an eventually-consistent queue read.** A hosted process's feed read is
+      served by the space INDEX: the agent appends a prompt and its own read, 11ms later, returns
+      empty; the index catches up ~3ms after that, but the agent has already gone idle and nothing
+      looks again. `onAlarm` now re-arms a short alarm while a write it made is unread (bounded by
+      `MAX_UNSEEN_WRITE_WAKES`), instead of concluding the queue is drained. Locally this never
+      reproduces — the same read is served from the resident feed handle.
+
+### Harness defect (edge, working tree) — the actual blocker for fixtures
+
+- [x] **`pruneAbsentTargets` silently pruned every function-valued service binding.** It derives a
+      target worker from `binding.name`, and a FUNCTION has a `.name`, so
+      `createMemoizedAnthropicHandler()`, `stubFetch('HUB_SERVICE')` and friends resolved to a
+      target that is not hosted and were dropped from the worker's env. Miniflare 4 accepts
+      `(request, miniflare) => Response` as a binding value, so the declarations were always valid —
+      they just never arrived. This is why `MEMOIZED_AI_INFERENCE_SERVICE` was absent from
+      compute-service's env (verified by dumping `this.env` inside the DO).
+
+**Consequence beyond this project: the memoized-AI path was broken for ROUTINES too**, not just
+hosted agents. `ai.node.test.ts` is tagged `manual`, so nothing exercised it. Worth checking whether
+any other harness behaviour depended on a pruned stub.
+
+### Test infrastructure added (edge)
+
+- [x] `POST /compute/processes/:spaceId/:pid/drain` behind `testEndpoint()`, plus
+      `harness.drainProcess()`: runs a hosted process until it stops recording events, the same
+      shape as the `/db/test/…/drain` barrier for replication and indexing. A process advances on
+      wall-clock alarms, so a test that waits turns a lost wake-up into a timeout instead of a
+      failure — which is exactly how the read-your-writes bug read for several rounds.
+- [x] `ProcessManager.Handle.requestAlarm` (optional — a handle for a process in another runtime
+      cannot arm that runtime's timer, so `RemoteProcessHandle` does not implement it).
+- [x] `agent-process.node.test.ts` grew from lifecycle-only to five tests: reply, context across two
+      turns, a tool call through a bound skill, and a self-wake on a due alarm (deliberately NOT
+      drained, so a broken alarm mirror still fails).
+- [x] Every test that reads the conversation first asserts it can SEE a message written through
+      EDGE's own queue route. Three earlier revisions read the feed via `exec-query`/`Scope.feed`
+      and via the peer, and both reported an empty feed for messages that demonstrably existed. A
+      silent probe turns a working agent into a phantom bug; it produced three confident, wrong
+      diagnoses this session before the control existed.
+- [x] Assertions match only ASSISTANT-role messages. Matching the conversation at large passed on
+      the prompt itself (`/paris/i` is in the question) and on an alarm record carrying its own
+      reminder text — two false positives that briefly showed green.
+
+### Where it stands
+
+- `answers a prompt` gets as far as a real model call: prompt enqueued, retry wakes the agent,
+  message dequeued, turn begins, `AnthropicClient.createMessageStream` reached. It then fails
+  because the fixture store is unreachable — the `pruneAbsentTargets` fix above is written but was
+  never run against the suite.
+- `_mirrorAlarm` also treats a past-due recorded alarm as not-pending (a stale due-time made every
+  later `setAlarm` a no-op). Kept on its own merits; it was NOT the bug it was written for.
+- Debugging channel that finally worked: `packages/services/edge/edge-test.log` (JSONL, file sink
+  defaults to `debug`; set `DX_TEST_FILE`). The agent's own `log()` lines were on disk the whole
+  time — `agent onInput enqueued to feed` / `agent onAlarm empty queue` answered in one look what
+  four rounds of source-reading got wrong. Read it FIRST.
+
+### Next
+
+- [ ] Run the suite with the `pruneAbsentTargets` fix; record the memoized fixtures
+      (`ALLOW_LLM_GENERATION=1`), then confirm the suite is green with generation OFF.
+- [ ] The tool/skill test needs the real operation handler set on the host — the standing
+      `handlerSet: OperationHandlerSet.empty` TODO in `ProcessObject`. Expect it to fail until then.
+- [ ] Strip the remaining scaffolding: the `DO env probe` log in `ProcessObject`.
+- [ ] Revert edge's `package.json` / `pnpm-lock.yaml` (`pnpm link-packages` `file:` overrides) before
+      landing, per the existing blocker note.
+
+## Phase 9 — the fixture path, and what it uncovered (session of 2026-09-08b)
+
+Phase 8 ended with the `pruneAbsentTargets` fix "written but never run". Running it took two more
+harness defects, and then the agent got far enough to expose a real runtime bug.
+
+### Confirmed from Phase 8
+
+- [x] **`pruneAbsentTargets` works.** `MEMOIZED_AI_INFERENCE_SERVICE` reaches compute-service; the
+      prompt is enqueued, the agent wakes, dequeues, and begins a turn. Everything Phase 8 fixed in
+      dxos (`c78bea1b`, `c99c328f`) holds up under a real run.
+
+### Harness defects found and fixed (edge)
+
+- [x] **`AI_SERVICE` was bound to the real `ai-service` worker** (`test-worker.ts`), so a hosted
+      agent's model call demanded a live `ANTHROPIC_API_KEY` — the invariant every one of these
+      tests died on. The comment above the binding already described the opposite, and
+      `stripAnthropicProxyPrefix` sat 50 lines up referenced by nothing: the binding was the one
+      part of that fix never applied. Now `memoizedAnthropicHandler` through the strip helper.
+- [x] **`drain` was missing from `ProcessObject`'s `rpcMethods`**, so `lazyDurableObject` never
+      forwarded it and the barrier answered 500 in ~2ms — before doing any work. Verbatim the
+      pitfall `edge/CLAUDE.md` marks CRITICAL. This is why two tests sat at the 120s timeout: they
+      were waiting on wall-clock alarms with no barrier at all, which is the exact scenario the
+      barrier was added to remove. Now 200.
+
+### Tool operations now dispatch to operation-service (edge)
+
+- [x] `ProcessObject` ran on `OperationHandlerSet.empty`, so an agent's tool call had no handler.
+      `makeOperationServiceHandlerSet` dispatches each handler body over the existing
+      `OPERATION_SERVICE` binding, under the same invocation timeout as the function-invoker path.
+      Only `getHandlerFor` is served: `Process.fromOperation` already holds the caller's definition
+      and uses the resolved entry solely to invoke its handler, and tools resolve from the space's
+      `PersistentOperation` records (`makeToolResolverFromOperations`) rather than from the set — so
+      the synchronous `definitions()`, which a remote registry an RPC away cannot answer, is unused.
+      Resolution is optimistic; an unhosted key fails with operation-service's own message.
+
+### THE OPEN BUG: a handled message is never acked
+
+A hosted agent now answers a real prompt through EDGE — the context test returns `reply: 'Paris'`.
+But the agent's own log shows **the same message id handled over and over**:
+
+```
+14:38:22.223 agent onAlarm handling {"tag":"message","id":"01M20Q9AQ2ASCTPA9N56TZKDNM"}
+14:38:25.657 agent onAlarm handling {"tag":"message","id":"01M20Q9AQ2ASCTPA9N56TZKDNM"}
+14:38:29.126 agent onAlarm handling {"tag":"message","id":"01M20Q9AQ2ASCTPA9N56TZKDNM"}   (×5)
+```
+
+The dequeue does not consume the entry, so the agent re-runs the same turn indefinitely. This is
+what burns the fixture store (one prompt → a dozen recorded conversations, each a longer history)
+and what keeps `answers a prompt` at the timeout. It is very likely the same ground the
+`agent-feed-messages` project covers (atomic dequeue by echoing the item with an `AckAnnotation` and
+removing the original) — check there before writing a fix.
+
+- [x] **Root cause: the ack is a feed APPEND, read back through the same eventually-consistent
+      index.** `SessionStore.ack` marks the item `ConsumedAnnotation` and re-appends it; the hosted
+      process's next `loadPending` is served by the space INDEX, which has not caught up, so the
+      wake re-reads the un-acked original and redelivers it. This is the SAME read-your-writes
+      hazard Phase 8 fixed for the enqueue side (`onAlarm empty queue with an unread write`) — that
+      fix covers "my write is not visible yet", not "the entry I just acked is still visible". The
+      ~3.5s spacing between repeated handlings matches the re-arm cadence, each wake re-reading a
+      stale index. Never reproduces locally: the same read is served from the resident feed handle.
+- [ ] Fix it. Shape that matches the existing remedy: have the process remember the ids it acked in
+      its own durable KV and hold them out of `loadPending` until the index catches up, mirroring
+      `MAX_UNSEEN_WRITE_WAKES`. Confirm against `agent-feed-messages` first — its whole subject is
+      making this dequeue atomic (echo the item with an `AckAnnotation`, remove the original), which
+      would replace this mechanism rather than extend it.
+- [ ] `agent work complete, succeeding` fires after a single turn in one run — re-check `turnRan`
+      against the non-acking queue, since "drained" is being decided from a queue that never shrinks.
+
+### Also open
+
+- [ ] **Second prompt on one conversation produces no reply.** The context test's turn 1 answers
+      `Paris`; turn 2 ("what country did I just ask about") adds nothing — `replies()` stays `Paris`.
+      Probably a consequence of the ack bug, but confirm rather than assume.
+- [ ] **The alarm wake produces no reply.** The `Alarm` record is in the queue with a `wakeAt`, and
+      no assistant message follows it.
+- [ ] **`session.waitForCompletion()` looks like it never resolves for a hosted session** — the one
+      test that calls it (`answers a prompt`) times out where the same prompt succeeds under
+      `drainProcess` in the context test. Verify before chasing anything else in that test.
+- [ ] **A passing test for the `DatabaseSkill` tool, asserted on its SIDE EFFECT — the object the
+      tool created, never the reply text.** A reply claiming success is only the model's word, and a
+      text match also passes on the prompt echoed back. The tool test is already written this way
+      (it waits for a `Person` whose `fullName` contains "Ada"), so what is missing is not the test
+      but the test PASSING: it times out at 150s, and the run log shows zero dispatches through
+      `makeOperationServiceHandlerSet` and zero `invokeOperation` RPCs, so no tool has ever executed
+      on a hosted agent. This is the acceptance criterion for remote tool execution — do not call
+      that feature done on a green reply test.
+- [ ] `Failed to get handler to worker` (workerd RPC) alongside a failing `accountLookupViaHubService`
+      that fails open — the `HUB_SERVICE` stub is not resolving an entrypoint. Breaks nothing today,
+      but it is the same class as `pruneAbsentTargets`.
+
+### Fixture store
+
+Left UNCOMMITTED on purpose. Every recording so far ran with the agent looping, so the ~95 entries
+under `.store/conversations/` encode repeated turns. Re-record from a clean `git clean -f
+.store/conversations/` once the ack bug is fixed, then confirm green with generation OFF.
+
+### Environment notes (cloud sandbox)
+
+- `DX_ANTHROPIC_API_KEY` is present; the memo server already falls back to it, so recording needs
+  only `ALLOW_LLM_GENERATION=1` (no `.secrets/` handoff).
+- `git push` in dxos needs `git-lfs` installed (`apt-get install -y git-lfs`) or the pre-push hook
+  fails on the missing binary.
+- Full bootstrap is ~30 min: `.config/claude-code-setup.sh` in both repos, `moon exec :build` in
+  dxos, then `pnpm link-packages` in edge.
+
+## Phase 10 — what the hosted agent still cannot do (session of 2026-09-08b, continued)
+
+Six runtime defects fixed this session, each found by driving the real hosted agent rather than by
+reading (the edge suite went 1/5 to 3/5):
+
+- [x] A handled queue entry is never retired — the ack is a feed append read back through the
+      eventually-consistent index, so the same turn re-ran forever. Durable `AckedEntriesCell`.
+- [x] A tool result reported inside its turn kept `pendingWork` true with nothing left to arm a
+      wake, so `waitForCompletion` hung on any tool-using agent.
+- [x] `unseenWrites` was a count, so a resumed process dequeuing an older entry zeroed the budget
+      while its own prompt was unread. Held by id now.
+- [x] A second prompt on one session was dropped ("input dropped (already finished)"). `submitPrompt`
+      re-enters `getSession`, and asks the MANAGER whether the process is alive — the handle's own
+      status is a client-side snapshot that still read RUNNING 175ms after the host had succeeded.
+- [x] The retry budget being spent fell through to completion, discarding a prompt the index had not
+      caught up to. Stays resident instead.
+- [x] Tests this branch broke: `Chat.test` field list, `delegate-task-to-chat` and the
+      `ProjectArticle` stories missing `RoutinePlugin` (which provides the now-required
+      `RemoteProcessManager`), and the `queue-scripted` hang above.
+
+### THE OPEN BLOCKER: a hosted agent has no tools
+
+`a hosted agent calls a tool from a bound skill` still fails, and the operation dispatch path has
+never executed — `dispatching operation to operation-service` is 0 in every run. The agent's own log
+says why:
+
+```
+run query results {"resolver":"SpaceQuerySource","count":0, ... Filter.type(contextBinding) ...}
+sync complete {"skills":0,"skillKeys":"[]"}
+toolkit {"tools":"[]"}
+```
+
+The `AiContext.Binding` the client appends to the feed is NOT visible to the hosted process, so no
+skill resolves and every turn runs with an empty toolkit. In the whole edge log, every mention of
+`contextBinding` is a QUERY — the record itself never appears on the host side.
+
+**A wrong turn worth recording:** this looked like the Phase-8 defect one layer over (a typed query
+on a host that registered nothing), so `AiContext.Binding` and `Skill` were added to the process's
+declared `types`. That did NOT fix it — with the types registered the query still returns 0. The
+change is defensible on its own (the process does query those types) but it is not the cause, and
+`f14e477a`'s message overstates it. Do not treat that commit as the fix.
+
+- [x] **Established: the binding does NOT reach EDGE — and neither does anything else the client
+      writes to that feed.** A control added to the tool test reads the conversation through EDGE's
+      own queue route right after `syncToEdge`, and gets `[]`:
+      `AssertionError: expected '[]' to contain 'contextBinding'`. The feed is EMPTY, not merely
+      missing the binding. So this is a replication/seeding problem at the point the test binds the
+      skill, NOT a type-registration or tool-resolution one.
+- [x] **Seeding fixed (edge `a277eab`): the binding is now on EDGE and the skill RESOLVES.**
+      `IndexQuerySource count: 1`, then
+      `sync complete {skills: 1, skillKeys: ["org.dxos.skill.database"]}`. The test seeds through
+      EDGE's queue route instead of a client `Feed.append`, and carries the control permanently.
+- [x] **RESOLVED: the hosted agent now gets its tools.** The last link was the tool INDEX, not the
+      binding: `makeToolResolverFromOperations` builds it from `Operation.PersistentOperation`
+      records read through the SPACE registry, while `DatabaseSkill`'s operations live in
+      operation-service's plugin registry. The fix needed no dxos API change at all — `FunctionContext`
+      already accepts `toolkits` and turns them into the `OpaqueToolkitProvider` that `AgentProcess`
+      already requires as a service, and edge was passing only `types`. Edge now projects
+      `operation-service`'s `listOperations` records into that toolkit, with handlers dispatching
+      back over the same RPC the handler set uses.
+      Two seams were tried first and rejected: an `AgentProcess` `{ toolkit }` option is unreachable
+      (the process is resolved by key, never constructed by the host), and `Operation.Service` offers
+      only invoke/schedule, no listing. Note `toolkit.toLayer(record)` typechecks without the
+      `as any` that both in-repo dynamic-toolkit precedents (`McpToolkit`, `session/toolkit.ts`) use.
+- [x] **RESOLVED: a self-scheduled alarm now wakes the agent.** The `setAlarm` RPC handler wrote the
+      `Alarm` record and then armed from a `loadPending` read of it — the same eventually-consistent
+      index this project guards everywhere else — so a wake whose record had not landed armed nothing
+      and nothing looked again. Unlike `onInput`/`enqueueMessage` it registered no unseen write. It
+      now arms from the record `sessionStore.setAlarm` returns, tracked until a read confirms the
+      index has it.
+- [x] **The alarm test was non-deterministic by construction.** `wakeUpPrompt` renders the due time
+      into the prompt, so `wakeAt = now + 1s` gave the turn a different request hash every run and no
+      model fixture could ever match; it passed only while recording. `wakeAt` is now a fixed past
+      instant — already-due fires just as promptly. Caught only by forcing the replay: moon had been
+      serving a cached pass.
+
+Two leads were tried BEFORE the seeding fix and both failed; do not repeat them: declaring
+`AiContext.Binding`/`Skill` in the process's `types` (f14e477a), and registering
+`AiContext.Binding` on the test peer (edge 3631bad). Neither changes the empty read, because
+the record is not on EDGE to be typed or queried in the first place. Start from why
+`Feed.append` + `db.flush` + `syncToEdge` leaves EDGE's queue empty here, while the same
+helpers make a message visible in the tests that DO pass (`assertConversationReadable`) — the
+difference between those paths is the whole lead.
+
+- [ ] The alarm self-wake test also still fails; not investigated since the ack work.

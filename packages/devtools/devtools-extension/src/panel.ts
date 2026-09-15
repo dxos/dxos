@@ -6,7 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { waitForClientHook } from './dxos-hook';
+import { waitForClientHook } from './dxos-hook.ts';
 
 log('Initialize panel starting...');
 

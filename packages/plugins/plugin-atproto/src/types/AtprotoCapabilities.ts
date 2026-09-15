@@ -9,7 +9,7 @@ import { Connection } from '@dxos/link';
 
 import { meta } from '#meta';
 
-import type * as AtprotoRepo from '../services/AtprotoRepo';
+import type * as AtprotoRepo from '../services/AtprotoRepo.ts';
 
 /**
  * Builds an {@link AtprotoRepo.Service} layer for a connection. The default (live) factory resolves

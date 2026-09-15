@@ -20,8 +20,8 @@ import { invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type NoHandlerError, RunAgainError } from './errors';
-import type { Operation } from './index';
+import { type NoHandlerError, RunAgainError } from './errors.ts';
+import type { Operation } from './index.ts';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.

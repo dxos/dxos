@@ -8,9 +8,9 @@ import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
-import { type FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
-import { TestItemBuilder } from './testing';
-import { type FeedBlock } from './types';
+import { type FeedBlockSelector, FeedSetIterator } from './feed-set-iterator.ts';
+import { TestItemBuilder } from './testing/index.ts';
+import { type FeedBlock } from './types.ts';
 
 // Random selector.
 const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>

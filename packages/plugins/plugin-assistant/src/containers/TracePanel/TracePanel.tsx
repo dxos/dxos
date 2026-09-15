@@ -32,8 +32,8 @@ import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
-import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter';
-import { useTraceMenu } from './useTraceMenu';
+import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter.ts';
+import { useTraceMenu } from './useTraceMenu.ts';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 
@@ -150,7 +150,10 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
             />
           </div>
 
-          <div className='min-w-0'>
+          {/* Rows, not a block: `ScrollContainer.Root` fills its parent (`dx-expand` resolves `h-full`
+              against it), so in a block box it would take the whole track and hang its own height
+              below the label rather than scrolling — the overflow is then clipped by the panel. */}
+          <div className='grid grid-rows-[min-content_1fr] min-w-0 min-h-0'>
             <Field.Root>
               <Field.Label classNames='px-1'>Trace</Field.Label>
             </Field.Root>

@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SignalMessageTable } from './SignalMessageTable';
+import { SignalMessageTable } from './SignalMessageTable.tsx';
 
 const meta = {
   title: 'devtools/devtools/SignalMessageTable',

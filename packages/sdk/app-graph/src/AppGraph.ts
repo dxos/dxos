@@ -19,8 +19,8 @@ import { type MakeOptional, shallowEqual } from '@dxos/util';
 
 import { scheduleTask } from '#scheduler';
 
-import * as Node from './AppGraphNode';
-import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util';
+import * as Node from './AppGraphNode.ts';
+import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util.ts';
 
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module

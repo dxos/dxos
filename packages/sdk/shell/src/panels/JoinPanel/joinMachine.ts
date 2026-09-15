@@ -25,8 +25,8 @@ import {
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
 
-import { type FailReason } from '../../types';
-import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';
+import { type FailReason } from '../../types/index.ts';
+import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps.ts';
 
 type InvitationKindContext = Partial<{
   failReason: FailReason | null;

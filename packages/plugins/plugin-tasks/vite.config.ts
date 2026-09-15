@@ -18,6 +18,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     Journal: 'src/types/Journal.ts',
     OutlineOperation: 'src/types/OutlineOperation.ts',
+    RemoteSessionOperation: 'src/types/RemoteSessionOperation.ts',
     TaskOperation: 'src/types/TaskOperation.ts',
     TasksCapabilities: 'src/types/TasksCapabilities.ts',
     TasksEvents: 'src/types/TasksEvents.ts',

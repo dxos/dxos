@@ -13,7 +13,7 @@ import type { Database, Obj, Type } from '@dxos/echo';
 import { meta } from '#meta';
 import { type DrawingBuilder } from '#model';
 
-import type * as Drawing from './Drawing';
+import type * as Drawing from './Drawing.ts';
 
 /**
  * A drawing variant contribution. Each renderer plugin (tldraw, excalidraw, ...) contributes one

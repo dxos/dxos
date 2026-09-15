@@ -4,7 +4,9 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
+  - ts-test-storybook
   - pack
+  - storybook
 
 tasks:
   check-module-structure:

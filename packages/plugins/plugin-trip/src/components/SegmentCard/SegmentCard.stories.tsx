@@ -12,8 +12,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TripBuilder } from '#testing';
 import { translations } from '#translations';
 
-import { type SegmentCardAction, type SegmentCardActionHandler, SegmentTile } from './SegmentCard';
-import { FlightEditableCard } from './SegmentEditableCard';
+import { type SegmentCardAction, type SegmentCardActionHandler, SegmentTile } from './SegmentCard.tsx';
+import { FlightEditableCard } from './SegmentEditableCard.tsx';
 
 const buildSegments = () =>
   new TripBuilder()

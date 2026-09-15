@@ -15,8 +15,8 @@ import {
   buildSpanTree,
   collectSpanTreeEventsCategorically,
   flattenSpanTree,
-} from './span-tree';
-import { collectTraceEvents, withMeta } from './testing';
+} from './span-tree.ts';
+import { collectTraceEvents, withMeta } from './testing/index.ts';
 
 const NoteEvent = Trace.EventType('note', {
   schema: Schema.Struct({

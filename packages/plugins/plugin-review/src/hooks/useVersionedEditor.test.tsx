@@ -21,8 +21,8 @@ import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { useVersionedEditor } from './useVersionedEditor';
-import { useVersioning } from './useVersioning';
+import { useVersionedEditor } from './useVersionedEditor.ts';
+import { useVersioning } from './useVersioning.ts';
 
 /**
  * Headless harness for the editor-binding lifecycle: drives the SAME hook pipeline the markdown

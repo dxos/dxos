@@ -11,9 +11,9 @@ import { Database, DXN, Ref, Tag } from '@dxos/echo';
 // Person is referenced in Actor.Actor's inferred type; importing it keeps that type nameable.
 import { Actor, type Person } from '@dxos/types';
 
-import * as TestCase from './TestCase';
-import * as TestPlan from './TestPlan';
-import * as TestRun from './TestRun';
+import * as TestCase from './TestCase.ts';
+import * as TestPlan from './TestPlan.ts';
+import * as TestRun from './TestRun.ts';
 
 export const CreatePlan = Operation.make({
   meta: {

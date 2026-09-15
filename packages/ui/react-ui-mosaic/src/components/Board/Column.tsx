@@ -21,12 +21,12 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
-import { Focus } from '../Focus';
-import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
-import { BoardColumnProvider, useBoardColumn } from './BoardColumnContext';
-import { useBoard } from './BoardContext';
-import { BoardItem } from './Item';
+import { useContainerDebug, useEventHandlerAdapter } from '../../hooks/index.ts';
+import { Focus } from '../Focus/index.ts';
+import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic/index.ts';
+import { BoardColumnProvider, useBoardColumn } from './BoardColumnContext.ts';
+import { useBoard } from './BoardContext.ts';
+import { BoardItem } from './Item.tsx';
 
 type BoardColumnProps<TColumn = any> = Pick<
   MosaicTileProps<TColumn>,

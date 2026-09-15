@@ -9,7 +9,7 @@ import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { TextBlock } from './TextBlock';
+import { TextBlock } from './TextBlock.tsx';
 
 const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: number }) => {
   const [text, setText] = useState('');

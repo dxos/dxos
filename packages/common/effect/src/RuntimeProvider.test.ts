@@ -7,7 +7,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import * as RuntimeProvider from './RuntimeProvider';
+import * as RuntimeProvider from './RuntimeProvider.ts';
 
 describe('RuntimeProvider', () => {
   test('traces an effect run through a context that carries no tracer', async () => {

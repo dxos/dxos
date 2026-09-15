@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './mock-ai';
+export * from './mock-ai.ts';

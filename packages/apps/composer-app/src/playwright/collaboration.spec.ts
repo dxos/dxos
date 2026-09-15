@@ -4,8 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
-import { AppManager } from './app-manager';
-import { Markdown } from './plugins';
+import { AppManager } from './app-manager.ts';
+import { Markdown } from './plugins/index.ts';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await host.shareSpace();

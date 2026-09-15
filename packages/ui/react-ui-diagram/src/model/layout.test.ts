@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { FLOWCHART, projectMermaid } from '../testing';
-import { type Graph, type Node } from '../types';
-import { GRID, layout } from './layout';
+import { FLOWCHART, projectMermaid } from '../testing/index.ts';
+import { type Graph, type Node } from '../types/index.ts';
+import { GRID, layout } from './layout.ts';
 
 const resolve = (source = FLOWCHART): Map<string, Node> => {
   const { graph } = projectMermaid(source);

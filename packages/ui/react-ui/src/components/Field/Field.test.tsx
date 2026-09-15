@@ -6,9 +6,9 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeAll, describe, test, vi } from 'vitest';
 
-import { ThemeProvider } from '../../providers';
-import { defaultTx } from '../../theme';
-import { Field } from './Field';
+import { ThemeProvider } from '../../providers/index.ts';
+import { defaultTx } from '../../theme/index.ts';
+import { Field } from './Field.tsx';
 
 const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider tx={defaultTx}>{children}</ThemeProvider>;
 

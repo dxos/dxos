@@ -5,12 +5,12 @@
 import { invariant } from '@dxos/invariant';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import type * as Obj from '../../Obj';
-import { makeObject } from '../common/proxy';
-import { ParentId, getSchema, getStaticTypeSchema, getType } from '../common/types';
-import { getMeta } from '../common/types/meta';
-import { type InternalObjectProps } from '../Entity/model';
-import { Ref } from '../Ref';
+import type * as Obj from '../../Obj.ts';
+import { makeObject } from '../common/proxy/index.ts';
+import { ParentId, getSchema, getStaticTypeSchema, getType } from '../common/types/index.ts';
+import { getMeta } from '../common/types/meta.ts';
+import { type InternalObjectProps } from '../Entity/model.ts';
+import { Ref } from '../Ref/index.ts';
 
 /**
  * Clones an object or relation.

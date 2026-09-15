@@ -22,7 +22,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Blog } from '#types';
 
-import { PublicationArticle } from './PublicationArticle';
+import { PublicationArticle } from './PublicationArticle.tsx';
 
 const POST_COUNT = 3;
 

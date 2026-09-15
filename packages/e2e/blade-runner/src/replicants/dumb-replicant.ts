@@ -5,7 +5,7 @@
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { ReplicantRegistry } from '../env';
+import { ReplicantRegistry } from '../env/index.ts';
 
 export class DumbReplicant {
   constructor() {

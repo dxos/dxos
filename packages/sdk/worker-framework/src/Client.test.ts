@@ -7,11 +7,11 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 
-import * as Client from './Client';
-import { WorkerConnectionError } from './errors';
-import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks';
-import * as Worker from './Worker';
-import * as WorkerProtocol from './WorkerProtocol';
+import * as Client from './Client.ts';
+import { WorkerConnectionError } from './errors.ts';
+import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks.ts';
+import * as Worker from './Worker.ts';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 /**
  * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request
@@ -118,6 +118,7 @@ const makeConnection = (
     maxLeaderFailures: options.maxLeaderFailures,
     onPersistentFailure: (error) => failures.push(error),
     onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
+      postRunnerReady(workerToClient);
       connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
       return { close: async () => {} };
     },
@@ -125,12 +126,25 @@ const makeConnection = (
   return { connection, connected: connectedTrigger.wait(), failures };
 };
 
-describe('Connection multi-client', () => {
-  const uniqueKeys = () => {
-    const id = crypto.randomUUID();
-    return { leaderLockKey: `test-leader-${id}`, storageLockKey: `test-storage-${id}` };
-  };
+/**
+ * Stands in for the tab's rpc runner by posting the ready frame effect's worker protocol sends on
+ * start-up (`@effect/platform-browser`'s `BrowserWorkerRunner`, a bare `[0]`).
+ *
+ * The worker's client transport over the reverse port awaits that frame uninterruptibly, so without
+ * it a session scope cannot close (DESIGN.md D18). Read it as protocol, not as a magic number: if
+ * effect changes the frame, sessions stop closing and nothing points back here.
+ */
+const postRunnerReady = (port: MessagePort): void => {
+  port.start();
+  port.postMessage([0]);
+};
 
+const uniqueKeys = () => {
+  const id = crypto.randomUUID();
+  return { leaderLockKey: `test-leader-${id}`, storageLockKey: `test-storage-${id}` };
+};
+
+describe('Connection multi-client', () => {
   test('leader and a late-joining follower both connect', async () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -272,9 +286,8 @@ describe('Connection multi-client', () => {
       leaderLockKey: keys.leaderLockKey,
       leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
       onConnect: async () => {
-        // Fails only after the worker has handed out ports and claimed the clientId — the shape of a
-        // handle that rejects before `WorkerService.start` registers a tab-liveness lock, so nothing
-        // on the tab side will ever close the session the worker is holding.
+        // Fails only after the worker has handed out ports and claimed the clientId, so the worker is
+        // holding a session for an attempt this tab has given up on.
         if (++attempts === 1) {
           throw new Error('TEST: transient connect failure');
         }
@@ -446,5 +459,151 @@ describe('Connection multi-client', () => {
           onConnect: async () => ({ close: async () => {} }),
         }),
     ).toThrow('maxLeaderFailures must be a positive integer');
+  });
+});
+
+/**
+ * A worker whose runtime records the lifetime of every scope the framework hands it: the runtime
+ * scope and one scope per session.
+ */
+const createRecordingWorker = (storageLockKey: string) => {
+  const sessionsOpened: string[] = [];
+  const sessionsClosed: string[] = [];
+  const sessionOpenedEvent = new Event<string>();
+  const sessionClosedEvent = new Event<string>();
+  const runtimeClosed = new Trigger();
+  let shutdown: (() => void) | undefined;
+
+  const createWorker = () => {
+    const channel = new MessageChannel();
+    channel.port1.start();
+    Worker.run({
+      endpoint: {
+        postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
+        addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
+        removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
+        close: () => channel.port1.close(),
+      },
+      storageLockKey,
+      createRuntime: ({ requestShutdown }) =>
+        Effect.gen(function* () {
+          shutdown = requestShutdown;
+          yield* Effect.addFinalizer(() => Effect.sync(() => runtimeClosed.wake()));
+          return {
+            // Acquires into the session scope and returns; the framework decides when it ends.
+            createSession: ({ clientId }) =>
+              Effect.gen(function* () {
+                sessionsOpened.push(clientId);
+                sessionOpenedEvent.emit(clientId);
+                yield* Effect.addFinalizer(() =>
+                  Effect.sync(() => {
+                    sessionsClosed.push(clientId);
+                    sessionClosedEvent.emit(clientId);
+                  }),
+                );
+              }),
+          };
+        }),
+    });
+    return channel.port2 as WorkerProtocol.WorkerOrPort;
+  };
+
+  return {
+    createWorker,
+    sessionsOpened,
+    sessionsClosed,
+    // The worker posts the session ports before it builds the session, so a connected tab does not
+    // imply the runtime has recorded the session yet.
+    sessionOpened: (clientId: string) =>
+      sessionsOpened.includes(clientId)
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            const off = sessionOpenedEvent.on((opened) => {
+              if (opened === clientId) {
+                off();
+                resolve();
+              }
+            });
+          }),
+    sessionClosed: (clientId: string) =>
+      sessionsClosed.includes(clientId)
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            const off = sessionClosedEvent.on((closed) => {
+              if (closed === clientId) {
+                off();
+                resolve();
+              }
+            });
+          }),
+    runtimeClosed: () => runtimeClosed.wait(),
+    requestShutdown: () => shutdown?.(),
+  };
+};
+
+describe('Worker session lifetime', () => {
+  test('a session stays open while its tab is connected', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(connection.clientId), 5_000);
+    expect(worker.sessionsOpened).toEqual([connection.clientId]);
+    await sleep(200);
+    expect(worker.sessionsClosed).toEqual([]);
+  });
+
+  test('closing a tab releases its session lock, which closes its session scope', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection: leader } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await leader.close();
+    });
+    await asyncTimeout(leader.open(), 10_000);
+
+    // A follower, so closing it does not also terminate the worker.
+    const { connection: follower } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    await asyncTimeout(follower.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(follower.clientId), 5_000);
+    expect(worker.sessionsOpened).toContain(follower.clientId);
+
+    await follower.close();
+    await asyncTimeout(worker.sessionClosed(follower.clientId), 5_000);
+    expect(worker.sessionsClosed).toEqual([follower.clientId]);
+  });
+
+  test('worker shutdown closes every session scope before the runtime scope', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection: leader } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await leader.close();
+    });
+    await asyncTimeout(leader.open(), 10_000);
+    const { connection: follower } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await follower.close();
+    });
+    await asyncTimeout(follower.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(leader.clientId), 5_000);
+    await asyncTimeout(worker.sessionOpened(follower.clientId), 5_000);
+
+    const order: string[] = [];
+    void worker.sessionClosed(leader.clientId).then(() => order.push('session'));
+    void worker.sessionClosed(follower.clientId).then(() => order.push('session'));
+    void worker.runtimeClosed().then(() => order.push('runtime'));
+
+    worker.requestShutdown();
+    await asyncTimeout(worker.runtimeClosed(), 5_000);
+    await sleep(0);
+    expect(order).toEqual(['session', 'session', 'runtime']);
   });
 });

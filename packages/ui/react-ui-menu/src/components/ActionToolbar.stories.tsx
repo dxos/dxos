@@ -14,11 +14,11 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { MenuBuilder } from '../builder';
-import { type ActionGraphProps, useMenuActions, useMenuBuilder } from '../hooks';
-import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
-import { ActionMenu } from './ActionMenu';
-import { ActionToolbar } from './ActionToolbar';
+import { MenuBuilder } from '../builder.ts';
+import { type ActionGraphProps, useMenuActions, useMenuBuilder } from '../hooks/index.ts';
+import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing/index.ts';
+import { ActionMenu } from './ActionMenu.tsx';
+import { ActionToolbar } from './ActionToolbar.tsx';
 
 random.seed(1234);
 

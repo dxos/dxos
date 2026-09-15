@@ -5,8 +5,8 @@
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
+import { type GraphLayoutNode } from '../types.ts';
+import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector.ts';
 
 export type GraphLatticeProjectorOptions = GraphRadialProjectorOptions & {
   /** Reserved space around the lattice (screen pixels). */

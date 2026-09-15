@@ -5,10 +5,10 @@
 import { type Event } from '@dxos/async';
 import { ChangeKeyId, EventId, batchEvents, canonicalOf, getProxyHandler } from '@dxos/echo/internal';
 
-import type { Doc } from '../automerge';
-import type { ObjectCore } from '../core-db';
-import { type EchoReactiveHandler } from './echo-handler';
-import { symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
+import type { Doc } from '../automerge/index.ts';
+import type { ObjectCore } from '../core-db/index.ts';
+import { type EchoReactiveHandler } from './echo-handler.ts';
+import { symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target.ts';
 
 export class EchoArray<T> extends Array<T> {
   static override get [Symbol.species]() {

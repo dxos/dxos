@@ -1,5 +1,4 @@
 ---
-# multiple-changesets: stacked on #12609, whose changeset describes the settings sync; this one describes observability on workerd and is read separately.
 '@dxos/observability': minor
 '@dxos/plugin-observability': minor
 ---

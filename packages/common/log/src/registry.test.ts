@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { createLogFileRegistry } from './registry';
+import { createLogFileRegistry } from './registry.ts';
 
 describe('LogFileRegistry', () => {
   test('registers unique files, returned sorted', ({ expect }) => {

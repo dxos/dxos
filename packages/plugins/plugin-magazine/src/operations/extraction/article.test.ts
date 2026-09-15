@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { extractArticle, pruneTrailingChrome } from './article';
+import { extractArticle, pruneTrailingChrome } from './article.ts';
 
 describe('extractArticle', () => {
   test('returns empty result for empty input', async () => {

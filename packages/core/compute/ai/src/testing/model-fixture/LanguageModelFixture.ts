@@ -26,8 +26,8 @@ import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
-import * as AiService from '../../AiService';
-import { withoutToolCallParsing } from '../../util';
+import * as AiService from '../../AiService.ts';
+import { withoutToolCallParsing } from '../../util/index.ts';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
@@ -274,8 +274,38 @@ const remapStoredResponse = (
     }
   }
 
-  return replaceTokens(storedResponse, mapping) as readonly unknown[];
+  // Coalesced first: a provider streams arguments in small chunks that split an id across deltas,
+  // and a token replaced per string never matches a split one.
+  return replaceTokens(
+    mapping.size > 0 ? coalesceDeltas(storedResponse) : storedResponse,
+    mapping,
+  ) as readonly unknown[];
 };
+
+const DELTA_TYPES = new Set(['text-delta', 'reasoning-delta', 'tool-params-delta']);
+
+/** Merges consecutive stream deltas of one part into a single delta; consumers concatenate them anyway. */
+const coalesceDeltas = (response: readonly unknown[]): unknown[] => {
+  const merged: unknown[] = [];
+  for (const part of response) {
+    const previous = merged.at(-1);
+    if (isDelta(part) && isDelta(previous) && previous.type === part.type && previous.id === part.id) {
+      merged[merged.length - 1] = { ...previous, delta: previous.delta + part.delta };
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged;
+};
+
+const isDelta = (part: unknown): part is { type: string; id: string; delta: string } =>
+  typeof part === 'object' &&
+  part !== null &&
+  'type' in part &&
+  typeof part.type === 'string' &&
+  DELTA_TYPES.has(part.type) &&
+  'delta' in part &&
+  typeof part.delta === 'string';
 
 /**
  * Internal seams exposed for unit testing the dynamic-value matching/substitution logic.
@@ -389,7 +419,7 @@ export const layer = (
   );
 
 type MakeProps = {
-  upstreamModel: LanguageModel.Service;
+  upstreamModel: LanguageModel.LanguageModel;
   modelName: string;
   testFilePath: string;
   allowGeneration: boolean;
@@ -397,11 +427,11 @@ type MakeProps = {
 };
 
 /**
- * Builds the replaying {@link LanguageModel.Service}: each turn is looked up in the store by request
+ * Builds the replaying {@link LanguageModel.LanguageModel}: each turn is looked up in the store by request
  * hash and replayed; on a miss it errors, unless `allowGeneration` is set, when it calls the upstream
  * model and records the turn.
  */
-export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
+export const make = (options: MakeProps): Effect.Effect<LanguageModel.LanguageModel> => {
   const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? DEFAULT_DYNAMIC_VALUE_PATTERNS);
   const store = new FixtureStore(options.testFilePath, dynamicMatcher);
 

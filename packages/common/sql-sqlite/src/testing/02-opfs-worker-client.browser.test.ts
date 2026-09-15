@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { describe, expect, test } from 'vitest';
 
-import * as OpfsPool from '../OpfsPool';
-import * as SqliteClient from '../SqliteClient';
+import * as OpfsPool from '../OpfsPool.ts';
+import * as SqliteClient from '../SqliteClient.ts';
 import {
   copySqliteSnapshot,
   createSerializedDatabase,
   runWithOpfsSqliteClient,
   seedExportPoolImportAndHypercoreWrite,
-} from './opfs-test-helpers';
+} from './opfs-test-helpers.ts';
 
 describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true }, () => {
   test('runs CRUD via SqliteClient and OPFS worker', async () => {

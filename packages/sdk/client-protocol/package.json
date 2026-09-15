@@ -30,6 +30,7 @@
     "src"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",

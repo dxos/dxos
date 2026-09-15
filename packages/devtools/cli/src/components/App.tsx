@@ -20,8 +20,8 @@ import { RegistryProvider } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
-import { type Theme } from '../theme';
-import { type LogBuffer } from '../util';
+import { type Theme } from '../theme.ts';
+import { type LogBuffer } from '../util/index.ts';
 
 export type KeyHandler = {
   hint: string;

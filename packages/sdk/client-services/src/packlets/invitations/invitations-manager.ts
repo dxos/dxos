@@ -15,6 +15,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -27,14 +28,14 @@ import {
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
-import type { InvitationProtocol } from './invitation-protocol';
-import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
-import { fromBufInvitation, toBufInvitation } from './utils';
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata/index.ts';
+import { StackOpened } from '../services/events.ts';
+import type { InvitationProtocol } from './invitation-protocol.ts';
+import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
 
 /**
  * Effect service tag for {@link InvitationsManager}.
@@ -78,7 +79,10 @@ export class InvitationsManager {
     this._invitationHandlerFactory = getHandler;
   }
 
-  private _getHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+  /**
+   * Resolves the protocol for an invitation kind; throws until a factory has been wired.
+   */
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
     invariant(this._invitationHandlerFactory, 'Invitation handler factory not set.');
     return this._invitationHandlerFactory(invitation);
   }
@@ -95,7 +99,7 @@ export class InvitationsManager {
       }
     }
 
-    const handler = this._getHandler(options);
+    const handler = this.getInvitationHandler(options);
     const invitationError = handler.checkCanInviteNewMembers();
     if (invitationError != null) {
       throw invitationError;
@@ -144,7 +148,7 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation(ctx, { ...toBufInvitation(persistentInvitation), persistent: false });
+        return this.createInvitation(ctx, { ...persistentInvitation, persistent: false });
       });
       const cInvitations = await Promise.all(loadTasks);
 
@@ -175,7 +179,7 @@ export class InvitationsManager {
       return existingInvitation;
     }
 
-    const handler = this._getHandler(options);
+    const handler = this.getInvitationHandler(options);
     const {
       ctx: invitationCtx,
       invitation,
@@ -222,7 +226,7 @@ export class InvitationsManager {
         await this._metadataStore.removeInvitation(invitationId);
       }
       if (created.get().type === Invitation_Type.DELEGATED) {
-        const handler = this._getHandler(created.get());
+        const handler = this.getInvitationHandler(created.get());
         await handler.cancelDelegation(created.get());
       }
       await created.cancel();
@@ -376,7 +380,7 @@ export class InvitationsManager {
       const delegationCredentialId = await handler.delegate(invitation);
       changeStream.next({ ...invitation, delegationCredentialId: fromPublicKey(delegationCredentialId) });
     } else if (invitation.persistent) {
-      await this._metadataStore.addInvitation(fromBufInvitation(invitation));
+      await this._metadataStore.addInvitation(invitation);
       this.saved.emit(invitation);
     }
   }
@@ -407,13 +411,23 @@ export class InvitationsManager {
 export const InvitationsManagerLayer = (): Layer.Layer<
   InvitationsManagerService,
   never,
-  InvitationsHandlerService | IMetadataStoreService
+  EffectEvent.Bus | InvitationsHandlerService | IMetadataStoreService
 > =>
   Layer.effect(
     InvitationsManagerService,
     Effect.gen(function* () {
       const invitationsHandler = yield* InvitationsHandlerService;
       const metadataStore = yield* IMetadataStoreService;
-      return new InvitationsManager(invitationsHandler, metadataStore);
+      const invitationsManager = new InvitationsManager(invitationsHandler, metadataStore);
+
+      const ctx = yield* EffectEx.contextFromScope();
+      yield* EffectEvent.on(
+        StackOpened,
+        Effect.fn('InvitationsManager.onStackOpened')(function* () {
+          const loaded = yield* Effect.promise(() => invitationsManager.loadPersistentInvitations(ctx));
+          log('loaded persistent invitations', { count: loaded.invitations.length });
+        }),
+      );
+      return invitationsManager;
     }),
   );

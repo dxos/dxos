@@ -14,7 +14,7 @@ import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtens
 import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
 import { getHostPlatform, isNonNullable } from '@dxos/util';
 
-import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
+import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants.ts';
 
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';

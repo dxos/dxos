@@ -15,7 +15,37 @@ projects:
     tasks: .agents/projects/unified-observability/TASKS.md
     design: .agents/projects/unified-observability/DESIGN.md
     prs: [12939]
-    resume: 'dxos/dxos#12939 is stacked on #12609 (settings sync); land #12609 then #12939. Phase 3, the EDGE PR, needs an edge worktree slot (all 5 held) and the merge commit on pkg.pr.new.'
+    resume: 'dxos/dxos#12939 has main merged (#12609 landed 2026-09-14); land it. Phase 3 is written on edge branch claude/unified-observability-relay in slot gale, pinned to pkg.pr.new d7a49709; repin to the merge commit and open the edge PR.'
+  - name: plugin-debug
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-14
+    summary: 'DebugPanel becomes a graph application: a hidden root/debug category rendered by a navtree inside the floating panel (never the main navtree or the deck), console/logs as nodes, devtools/debug trees moved off the System group; phase 2 splits devtools into global vs per-space attachments.'
+    tasks: .agents/projects/plugin-debug/TASKS.md
+    design: packages/plugins/plugin-debug/docs/DESIGN.md
+    prs: [13087, 13095, 13110]
+    resume: "PR #13087 MERGED (phases 1-2). PR #13095 MERGED 2026-09-14 (squash 92395321fc) — phase 3 (docked panel, design §5) plus: console/logs under Debug (pristine panel opens Debug → Console), devtools panel fixes (JsonView on Syntax with JSONPath filter, Storage full width, Client → Logs, table translations, Debug before DevTools), every tool row an Accordion.Item (Accordion gained `disabled`), ComboboxField shows a stored value's catalogue label, Help companion prefers the plugin contributing a CreateObjectEntry, studio Generate busy state from the progress monitor, subtle row hover 0.025 (the per-surface value in components/surface.css is the effective one — the theme-level token is shadowed), drawer clamp owned by DeckSchema (headless handler must not load react-ui). CI note: knip once flagged deus gen/mdl.terms.ts as unused — a race with prebuild-lezer regenerating it; retry, or import the terms from syntax.ts like echo-query if it recurs. NEXT: TASKS.md follow-ups (devtools SpaceList/SpaceInfo dead links, cross-tab mode sync, headless deck test, devtools panel i18n, the two Logs panels)."
+  - name: plugin-studio
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-13
+    summary: 'Extend plugin-studio with more generation providers; first plugin-higgsfield (Connector + image/video GenerationService against api.higgsfield.ai), modelled on plugin-heygen.'
+    tasks: .agents/projects/plugin-studio/TASKS.md
+    design: .agents/projects/plugin-studio/DESIGN.md
+    prs: []
+    resume: 'PR #13078 open (Check via Depot). Landed on the branch: plugin-higgsfield (image + Soul→DoP video), Studio on Projects (template, no Studio section), Storyboard/Frame + accordion article + player, studio skill + ops, stories-assistant Studio story (scripted passes; live produced real Higgsfield stills/clips twice, then edge disconnects). NEXT: address review, land; follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake).'
+  - name: task-visualization
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-11
+    summary: 'Visualize the tasks a project delegates to the assistant on a time axis (gantt): document the delegation flow, make "Assign to agent" idempotent with a stop, join trace events to sessions and sessions to tasks, and build the data structure + component + storybook.'
+    tasks: .agents/projects/task-visualization/TASKS.md
+    design: .agents/projects/task-visualization/DESIGN.md
+    prs: [13069]
+    resume: 'Draft PR #13069 open with FLOW.md, idempotent delegation, delegationSpawned event, buildSessionTimeline, Gantt prototype. NEXT: user decides FLOW.md §7.1 (orphan sweep fails delegated tasks) and §6 stop semantics; then the companion panel wiring (useTraceMessages + ProcessMonitor → buildSessionTimeline → Gantt) and a fresh trace fixture via dxosDumpTrace().'
   - name: echo-plain-objects
     status: active
     user: dmaretskyi
@@ -44,8 +74,28 @@ projects:
     summary: 'Run dxos/compute `Process` instances (AgentProcess first, plus a trivial test process) inside Cloudflare Durable Objects so Composer can start an agent chat that lives on EDGE and keeps running with the client closed.'
     tasks: .agents/projects/agent-process-edge/TASKS.md
     design: .agents/projects/agent-process-edge/DESIGN.md
-    prs: [12765, 971]
-    resume: "Phases 1-5 are DONE; both PRs open. #12765 (dxos): ProcessProtocol wire types, RemoteProcessManager.Control, RemoteProcessManagerAdapter + RemoteProcessHandle presenting an EDGE host as a local ProcessManager.Manager, EdgeProcessControl transport, AgentProcess/AgentProcessOptions and FunctionContext exported. dxos/edge#971: the ProcessObject DO (one per process, ProcessManagerImpl over DO storage, process alarm mirrored onto the platform alarm), the closed registry now including AGENT_PROCESS_KEY with the eight-service assembly via FunctionContext, the per-space process index, all seven routes incl. RPC via RpcServer.toHttpEffect, and THREE green suites: processes.node.test.ts 9 (routes), process-api.node.test.ts 6 (official ProcessManager/Handle/ProcessMonitor APIs), agent-process.node.test.ts 1 (AgentService.getSession spawns an agent on EDGE, the monitor tree sees it, terminate drops it). Key decision (D1): the EDGE surface GROWS INTO ProcessManager.Manager, not a parallel API. Two host findings worth keeping: ProcessManagerImpl provides ProcessOperationInvoker.Service ONLY when constructed with a handler set (and filters that tag out of external services, so a resolver can never supply it) - the host passes OperationHandlerSet.empty; and an agent's target Feed must have replicated to EDGE before the spawn, since Database.resolve runs on the host. Both branches carry main merged in (dxos 00939b33, edge f2c28ff); edge's CI moved to .depot/ workflows on main. BLOCKER: edge CI is red on every job at pnpm install (ENOENT .local-pack/*.tgz) because the branch carries pnpm link-packages file: overrides - deliberate and authorised for iteration, commented on the PR. To land: publish #12765, bump edge's dxos catalog, then git checkout -- package.json && pnpm install to drop the overrides. REMAINING: the agent model round trip needs the memoized Anthropic fixture; space-membership authz on the process routes; hosting the real operation handler set so agent tool calls execute on EDGE."
+    prs: [12765, 971, 12995, 1030]
+    resume: "Phases 1-9 DONE; Phase 10 is the live one. A hosted agent now ANSWERS PROMPTS AND KEEPS CONTEXT ACROSS TURNS on EDGE — the edge suite went 1/5 to 3/5. Getting there took six runtime fixes, all pushed on claude/dxos-resume-agent-process-edge-tzmiei (dxos#12995, edge#1030), each found by driving the real hosted agent rather than by reading: (1) a handled queue entry was never retired, because the ack is a feed append read back through the eventually-consistent index, so the same turn re-ran forever — durable AckedEntriesCell; (2) a tool result reported inside its turn kept pendingWork true with nothing left to arm a wake, hanging waitForCompletion on any tool-using agent; (3) unseenWrites was a count, so a resumed process dequeuing an older entry zeroed the budget while its own prompt was unread — held by id now; (4) a second prompt on one session was dropped ('input dropped (already finished)'), and the first fix for it was insufficient because the handle's status is a client-side snapshot — liveness now asks the MANAGER; (5) spending the retry budget fell through to COMPLETION, discarding a prompt the index had not caught up to — stays resident instead; (6) assorted tests this branch broke (Chat field list, delegate-task-to-chat and the ProjectArticle stories missing RoutinePlugin, the queue-scripted hang). Model fixtures for assistant-toolkit regenerated and replay-verified (85 passed); hosted-turn fixtures committed in edge (3 entries, where the looping agent used to produce ~95). THE ONE THING STILL NOT WORKING is the point of the whole tool path: a hosted agent gets toolkit: [] and NO OPERATION HAS EVER DISPATCHED. That chain is now fully mapped in TASKS.md Phase 10 — the binding reaches EDGE and the skill RESOLVES (skills: 1, org.dxos.skill.database) after edge a277eab seeds it through EDGE's queue route instead of a client Feed.append (a client append left the feed EMPTY on the host; the test now carries that control permanently). What remains is the tool INDEX: makeToolResolverFromOperations builds from Operation.PersistentOperation records in the SPACE registry, and the hosted run logs zero of them, because DatabaseSkill's operations live in operation-service's plugin registry instead. Decide which side moves. DEAD ENDS, do not repeat: declaring AiContext.Binding/Skill in the process types (f14e477a — its commit message overstates, it did NOT fix the toolkit), and registering AiContext.Binding on the test peer (edge 3631bad). EDGE CI IS RED for a cross-repo reason, not a defect: compute-service:build cannot see requestAlarm/Process.types, which exist only in unlanded dxos#12995 — the fix is a catalog bump to a pkg.pr.new build of that branch (dispatched; see the standing comment on edge#1030). Sandbox notes: DX_ANTHROPIC_API_KEY is set so recording needs only ALLOW_LLM_GENERATION=1; dxos push needs apt-get install -y git-lfs; CI is DEPOT not GitHub Actions, so use the depot-ci skill (the GitHub API returns empty logs); the link-packages file: overrides in edge package.json/pnpm-lock.yaml must be reverted before landing. DEBUGGING: read the JSONL agent log first (DX_TEST_FILE) — toolkit/sync-complete/onAlarm lines answered in one look what source-reading got wrong repeatedly."
+  - name: coding-space-template
+    status: active
+    user: dmytro
+    host: cloud-sandbox
+    created: 2026-09-10
+    summary: "Rework plugin-debug's one RUNNABLE sample space — the space a reader executes rather than reads. Subject moves from a chatroom on Workers (whose definition of done is two browser tabs, unrelated to Composer) to a chess engine exposed as an MCP server on one Worker, so the run ends inside Composer with a chat calling the deployed service. Reshaped so nothing mid-run needs an account: DeepSeek V4 Pro through the DXOS edge instead of an Anthropic key, the assistant coding directly in a remote sandbox instead of a Claude managed agent, wrangler's unauthenticated deploy instead of a Cloudflare login, and GitHub moved to the last stage."
+    tasks: .agents/projects/coding-space-template/TASKS.md
+    design: .agents/projects/coding-space-template/DESIGN.md
+    prs: [13038]
+    resume: 'PR #13038 OPEN (https://github.com/dxos/dxos/pull/13038). The template is rewritten and the plan was EXECUTED: the chess MCP Worker is built, deployed with wrangler deploy --temporary on no Cloudflare account, and answering initialize/tools/list/both tools over the wire (best_move returns Bxc6 in 1.4s on the seeded position) - kept in reference/chess-mcp/. Running it corrected three template claims (TASKS.md 2a); two review rounds corrected six more (2b/2c), the notable ones being the claim URL being filed as a project artifact though it is a bearer credential, claiming needing to come AFTER the last redeploy since a claimed account is one the unauthenticated agent cannot update, stage four being unreachable in a default Composer because ChessPlugin is enabled nowhere by default, and two vacuous test assertions replaced with one derived from definition.schemas - which then caught that Project.make builds an Outline none of the three sample spaces declared. Test 4/4, oxfmt clean, CodeRabbit returned no actionable comments on the last two pushes. Live Composer VERIFIED by screenshot: the create-space dialog lists the template and the created space has 41 objects with the project and five stages (published at https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-09-10-chess-mcp-template/). THE ONE THING NOT DONE is the demo VIDEO, and the cause is measured rather than guessed: Composer shared-worker leader election has a fixed 15s deadline and ffmpeg capture (~60% of a core, of four) pushes it past that, so the app shows its fatal dialog; with no capture the same walkthrough boots in 24s and completes. Six attempts found and fixed three other real causes on the way - orphaned chromium starving the box, contention with a moon build, and a stale vite dep pre-bundle serving a pre-#13036 @dxos/protocols. The recorder and that write-up are kept in reference/demo/. A box with more cores gets the video with no change to the template.'
+  - name: esm-imports-migration
+    status: active
+    user: dmytro
+    host: cloud-sandbox
+    created: 2026-09-01
+    summary: 'Repo-wide codemod converting relative TS/TSX imports/exports/dynamic-imports to explicit filesystem-accurate extensions (./foo.ts, ./dir/index.tsx), matching tsconfig.base.json rewriteRelativeImportExtensions.'
+    tasks: .agents/projects/esm-imports-migration/TASKS.md
+    design: .agents/projects/esm-imports-migration/DESIGN.md
+    prs: [12893]
+    resume: "scripts/migrate-esm-imports.ts rewrote 7118 files repo-wide, idempotent, 0 unresolved. PR #12893 open; user said 'keep spinning until ci passes', then 'make green'. Fixed FIVE real regressions the migration exposed: (1) protobuf-compiler substitutions-parser.ts (ts-morph vendored TS rejects .ts-extensioned imports). (2) .config/knip.ts (traversal misses extensioned dynamic import()). (3) composer-app vite.config.ts (DX_PLUGIN_SET alias matched only the bare specifier). (4) THREE oxlint rules (dxos-subpath-exports, import-as-namespace, dxos-package-imports) had a resolveModule() that always appended an extension, breaking already-extensioned specifiers -- fixed with an early-return. (5) A FOURTH instance of the exact same bug, in packages/sdk/app-framework/src/plugin-cli/ts-util.ts resolveRelativeModule(), used by dx-plugin gen: an already-extensioned barrel re-export (export * from './x/index.ts', exactly what this migration produces) silently dropped that capability from every generated per-env barrel. plugin-space NavigationHandler and plugin-connector Coordinator both hit it (also plugin-client, plugin-file-system) -- either alone crashes the CLI plugin manager at startup for EVERY command. THIS was the real, deterministic cause of Check/test shard=1 staying red on every commit (two earlier flaky-test theories, echo-host and a client-e2e spaces.test.ts race, were both dead ends -- documented and abandoned in PR comments). Verified: cli:test 23 failing -> 0; full-repo :build/:lint/:check-module-structure/:test-types clean. Merged main THREE times now (moved ~20, then ~25, then ~50 commits during this PR) -- each merge took theirs on every conflict (real upstream logic vs. this branch's extension-only edits) then re-ran the codemod; also dropped this session's own plugin-assistant queue-while-processing implementation in favor of the superset landed by main's agent-feed-messages project (same UX, feed-backed, tested -- see that entry). protobuf-compiler and codec-protobuf packages were removed entirely by main's own protobufjs-to-buf migration during the third sync, so the fix in (1)/(4)'s protobuf-compiler half is now moot -- deleted along with the rest of the package, not reapplied. Check/check and Model Fixture are green as of the second sync. NEXT: watch PR #12893 for shard=1 on this push (main may still move again) and for review."
   - name: sample-spaces
     status: active
     user: burdon
@@ -84,8 +134,27 @@ projects:
     summary: 'Adoption of @ark-ui/react (Zag state machines) — Phase 1 rebuilt Tree in @dxos/react-ui-list on ark TreeView (APG keymap, machine-owned focus and ARIA); Phase 7 rebuilt react-ui-task on it; Phase 16 plans the migration of @dxos/react-ui itself from Radix to Ark (packages/ui/react-ui/docs/MIGRATION.md).'
     tasks: .agents/projects/ark/TASKS.md
     design: packages/ui/react-ui-list/docs/TREE.md
-    prs: [12873, 12890, 12902, 12961, 12971, 12987]
-    resume: 'PRs #12873 and #12890 MERGED (12890 on 2026-09-02: react-ui-task rebuilt on the Tree, Phases 7/14/15 done, three CI regressions fixed at root cause). NOW PLANNING Phase 16 — migrating @dxos/react-ui from Radix to Ark: the plan is packages/ui/react-ui/docs/MIGRATION.md (commit 8a81160f5b; inventory of all 42 components, Radix-to-Ark primitive map and gaps, scaffolding used by 28 sibling packages, six landable phases). Its Phase 0 — port Carousel, Editable, Splitter, Stepper — is IN FLIGHT as background task task_2d437290 on its own worktree from main; do not duplicate it. Calendar and DatePicker are NOT hand-built (react-aria-components) and are a decision, not a port. Phase 1 (own the scaffolding in react-primitives) is the recommended next step and is worth doing regardless. STILL OPEN from earlier: Phase 13 checkbox selection + delegate-to-agent in plugin-projects/plugin-tasks; Phase 15 follow-up re-routing the promoted link through something the host owns; the ProcessTree collapse-height defect; withPluginManager stories not seeding in the agent browser. UNOWNED: Tree drag is native HTML5 DnD and does not fire from touch in iPhone WKWebView (Tauri mobile) — verify on device before planning. Bundle and maintenance numbers are in MIGRATION.md Appendix A; do not re-measure.'
+    prs:
+      [
+        12873,
+        12890,
+        12902,
+        12961,
+        12971,
+        12987,
+        12998,
+        13003,
+        13007,
+        13024,
+        13030,
+        13031,
+        13032,
+        13050,
+        13051,
+        13052,
+        13053,
+      ]
+    resume: "PR #13053 OPEN, auto-merge armed (combobox popover dismisses again: no id override on the content, trigger stops forcing open, Combobox.Arrow removed and rendered by Content; JSON card toggle top-aligned + Syntax ScrollArea + story; stories-assistant enables MarkdownPlugin). #13052 MERGED 2026-09-11T01:23Z (Hello Worker sample space; projects->tidepool rename). #13051 MERGED 2026-09-11T00:17Z (stories-assistant project attention + trace panel scroll). #13050 MERGED 2026-09-10T23:58Z (brand channels own their colours; boot loader recolours mark+ring by channel filter; activation row is a flex row translated as a group on an eased count; Stepper renamed Steps). #13032 MERGED 2026-09-10 (cards on the base level, dialogs on raised). #13031 MERGED 2026-09-10T00:41Z (outline link followed on click/Enter/Space; task card resolves via getPropertyMetaAnnotation reading through an optional property; deck popover card fallback). PR #13030 MERGED 2026-09-09T22:04Z (Toc, Tour + WelcomeTour off react-joyride, Main dismissal rests at collapsed, primary tinted zone); #13024 (Main step 1) MERGED 2026-09-09. NEXT, in order of the ledger: Main STEP 2 as its own PR = push layout at lg on Drawer push's clip-and-sheet (delete dx-main-content-padding / dx-main-intrinsic-size / --main-sidebar-width; move useMainSize, focus.css data-sidebar-*-state, DeckViewport vars onto the clips; decide the rail = collapsed as Drawer.Content size switching rail↔sidebar); the WKWebView touch check for Main step 1 is the user's. Then the Toc consumer (rehype-slug on MarkdownView + a Toc.Nav beside it). Local gotcha after merging main across the protobuf→buf change: delete the gitignored packages/core/protocols/src/proto/gen or protocols:build fails and dependents keep stale dist. Boot graph: +35 KB this PR, 0.35 MB headroom — accepted. STILL OPEN: Phase 13 checkbox selection + delegate-to-agent; Phase 15 promoted-link re-route; Phase 5 decisions (RAC, Stepper→Steps)."
   - name: ui-theme-tree
     status: active
     user: burdon
@@ -126,17 +195,6 @@ projects:
     design: .agents/projects/client-edge-audit/DESIGN.md
     prs: [12598]
     resume: 'PR #12598 OPEN (https://github.com/dxos/dxos/pull/12598) — watch Check to green. Phase 1 audit in DESIGN.md (boot path was already URL-gated everywhere; echo/halo/common have zero direct network calls; observability has 2 consent-gating bugs). Phase 2 verified by packages/sdk/client/src/client/client-offline.test.ts — empty Config boots, DB round-trips, ZERO network calls (fetch/WebSocket/isomorphic-ws intercepted) and ZERO WARN+ logs, green first run; only SDK fix needed was ipdata missing-key warn→debug. Phase 3 removed every SDK read-time edge-endpoint default: by revised decision the CLI first-run profile WRITES its endpoints (hub/edge/ICE/IPFS via defaultProfileEndpoints, DX_LOCAL_DEV forks edge to main.dxos.network per #12658) and no code path substitutes them on load (hub commands error when the profile lacks a hub URL), configPreset omit-when-unset (no implicit main), EDGE_SERVICE_DEFAULTS deleted (getEdgeServiceEndpoint returns string|undefined, pinned by no-default-endpoints.test.ts), plus CLI hub ?? fallbacks, DEFAULT_VAULT_URL, DEFAULT_IMAGE_SERVICE_URL, DEFAULT_INTROSPECT_MCP_URL, GptRealtime/plugin-wnfs localhost:8787, devtools halo.dxos.org target; ~10 consumers updated to handle absence (clear error at use / unconfigured UI state / skip), composer dx.yml gained the introspect entry. Full-repo :build green, touched-package tests+lint+format green. NEXT: drive PR #12598 review + Check to green and land, then Phase 4 backlog in TASKS.md: proxyFetchLegacy cors.dxos.network through config, optional capability contributions (module-loader warn), observability consent gating, plugin-script ??"" masking, react-edge-client removal, files: allowlists.'
-  - name: project-tasks
-    status: active
-    user: burdon
-    host: burdon-mbp-2092
-    created: 2026-08-25
-    summary: 'Agent delegation and task management over the two-forms model — make the delegation loop (supervisor -> durable Task in a TaskSet -> sub-agent -> fold-back) work live and be visible in the UI.'
-    tasks: .agents/projects/project-tasks/TASKS.md
-    design: .agents/projects/project-tasks/DESIGN.md
-    prs: [12752, 12784, 12787, 12839, 12847]
-    resume: "#12752, #12784, #12787 and #12839 are MERGED onto main (#12839 squashed as 0132aab498 on 2026-08-29). IN FLIGHT: PR #12847, open on this branch — Task.Event narrowed to created|updated with an optional description, plus the ledger entries; everything else the branch carries is already on main. #12839 turned TaskList.Create into TaskList.Edit — a detail pane that creates when nothing is selected and edits the selection otherwise, title as an input, description as a held-open markdown editor, with a density=sm Save/Cancel toolbar on the title line (both leave the pane; neither may take focus, since the fields commit on blur). It also fixed three things worth remembering: the markdown bundle needs createBasicExtensions (else white-space: pre, no wrap, no undo) AND createThemeExtensions (else CodeMirror's invisible 1px black caret); Toolbar.Root declared density as a CSS class only while Button/Input stamp data-density from React context, and that stamp shadows the variable the class sets around them, so a toolbar's density reached no control ANYWHERE in the app until Toolbar.Root started providing the context too; and destroying a CodeMirror field fires a blur, which commits, so a revert wrote the very text it discarded. NOTE main has since refactored TaskList further in #12840 (mosaic): TaskPatch is now TaskEdit/TaskDraft and Root gained a `selectable` prop — read the current file, not this session's memory of it. NEXT: pick from Phase 3 (terminal-status dates, extension-contributed tabs, cancel/delete, the joined delegation+TaskSet story). KNOWN: `#nnn` stays plain text in the ProjectArticle story because corePlugins() mounts no MarkdownPlugin. TOOLING: CI is on Depot — use `gh pr checks <n>`; Depot job logs need a browser login, so reproduce failures locally."
-
   - name: hardware-devices
     status: active
     user: burdon
@@ -216,6 +274,16 @@ projects:
     design: .agents/projects/client-startup-timeout/DESIGN.md
     prs: [12564]
     resume: 'PR #12564 OPEN (CI green) — the boot write amplification is FIXED and the Phase 0 blocker is CLOSED: the "existing subduction patch" never existed (every historical automerge-repo patch back to #10752 leaves the save path untouched; PR #12064 was a false lead — it builds a plain Repo with no initSubduction so it never exercises SubductionSource). The real fix is upstream automerge/automerge-repo#712, ported into our pinned .40 dist patch: mirror the attach-time hash scan into knownHashes. Verified across 3 classified boots — subduction-commits/fragments inserts on boot are now ZERO. Also landed: indexer per-pass reads halved (heads scan captured once per IndexEngine.update and shared across fts5+reverseRef, cursor rows batched per source; indexCursor 4->2 and automerge_heads 2->1 per run, batched query returning 2024 rows = 1012 docs x 2 indexes) and index-run instrumentation (reasons/durationMs/invalidates). KEY NEW FINDINGS: (1) remaining boot writes are ALL subduction-remote-heads — 515 writes against 0 reads of that key family, ~93% for documents that never attach, so the per-attach replay cannot cover them; same cold-start-blind cache defect one layer over (#lastRemoteHeads). (2) Idle index churn was 79% of boot SQL: 68 passes, ALL reporting zero work, flat ~4/s even with zero replication; instrumentation attributes them to rpc-update-indexes (the TAB drives indexing over RPC) with invalidates:false, so it is NOT a host-side invalidation loop. Main''s idle-poll-backoff (TriggerDispatcher reactive + poll backoff) may already fix the driver — re-measure before spending more. (3) app.log interleaves tab/shared-worker/dedicated-worker and survives reloads; filter on the new `i` instance field or counts merge multiple boots and look like regressions. NEXT: networking deferral (Phase 3) in a follow-up PR — diff preserved at .agents/projects/client-startup-timeout/defer-networking.patch; only the edge dial needs an explicit gate since subduction defers while the socket is not CONNECTED and feed sync restarts from onReconnected.'
+  - name: client-services-dissolve-host
+    status: paused
+    user: dmaretskyi
+    host: Dmytros-MacBook-Pro-M4
+    created: 2026-09-14
+    summary: 'Dissolve ClientServicesHost into ClientServicesLayer + event-driven layer lifecycle; every embedder composes the stack; worker runtime and worker-framework session/runtime lifetimes become scopes owned by the framework; WorkerService replaced by a framework-level tab session lock.'
+    tasks: .agents/projects/client-services-dissolve-host/TASKS.md
+    design: .agents/projects/client-services-dissolve-host/DESIGN.md
+    prs: [13094]
+    resume: 'PAUSED 2026-09-15 with uncommitted Phase 4 work (framework-owned session scope, tab session lock, WorkerService removal; worker-framework tests 13/13 green) — see TASKS.md resume line for the two typecheck fixes needed before commit. No suites beyond worker-framework run since e6b1bcdbf4; CI not re-checked. NEXT: finish Phase 4, run suites (Phase 5), cleanup (Phase 6), rewrite changeset, land.'
   - name: client-services-effect-rpc
     status: active
     user: root
@@ -348,8 +416,35 @@ projects:
     summary: New core plugin for interactive long-running processes (Routines, Agents, artifacts); Project type succeeds Topic; obviates plugin-sidekick.
     tasks: packages/plugins/plugin-projects/docs/TASKS.md
     design: packages/plugins/plugin-projects/docs/DESIGN.md
-    prs: [12335, 12365, 12370, 12383, 12386, 12389, 12431, 12440, 12442, 12444]
-    resume: 'PRs #12431 + #12440 MERGED (2026-08-01 / 2026-08-03) — Milestone 5 Phases 1+3 + Phase 2 CORE + Phase 4 DXOS SIDE all landed on main. #12442 (story rename WithSubAgentsTest1/2) and #12444 (DESIGN.md corrections) also merged. CHECKLIST-LOOP PLAY COVERAGE now in CI (stories-assistant/Chat.stories.tsx): WithPlanningScripted proves the title-keyed upsert rewrites in place rather than duplicating; WithSubAgentsTest2 proves delegation adds an unchecked item and onComplete checks it off. Both assert against real objects (space query -> Outline.parseChecklist via an onInit space capture + polling helper) because no surface in those layouts renders the outline; live counterparts WithPlanning/WithSubAgentsTest1 stay tags: [!test]. PITFALL: a scripted story must end with NO open checklist items, or the end-of-request plan reminder consumes an extra scripted turn and the story flakes. GAP: no promote-task verb, so outside delegation the agent still cannot create a durable Task. Earlier, from #12431: TaskSet (org.dxos.type.taskSet@0.2.0) replaces ExternalProject; containment/hierarchy = ECHO parent edge (NO Task.taskSet field — REVISED from the backref plan; one tree TaskSet->Task->sub-Task, Query.children() returns roots, children() does NOT re-emit on property changes — use Filter.type + getParent filter for reactive label maps); Task 0.2.0 assignee: Actor +failed/cancelled; Project 0.3.0 goals/outline/taskSets (ARRAY — revised from single ref); Outline -> @dxos/types with checklist markdown grammar (parseChecklist/upsertChecklistItems/hasOpenItems) + promotion helpers; Plan REMOVED entirely (two-forms model, DESIGN.md § Product model: markdown = fluid, Task/TaskSet = durable, promotion links; Chat.outline scratch, project chats write project outline via parent edge; delegation IS promotion — durable agent Task, supervisor reconciles children, onComplete checks off the markdown line; no agentPid on tasks); planning skill edits checklist markdown (title-keyed); plugin-outliner RENAMED plugin-tasks (PRIVATE — new npm name, no trusted publisher); TaskOperation verbs taskCreate/taskUpdate/taskComplete/taskAssign; @dxos/react-ui-task (private) reusable TaskList with CRUD callbacks + AssigneeChip, TaskSetArticle composes it over TaskOperation; ProjectArticle Goals (read-only) + Tasks (per-TaskSet Section surface embed) sections. NO MIGRATIONS (user: nothing deployed). NEXT: Phase 2 remainder (templates scaffold/adopt TaskSet — scaffold = create+link native TaskSet at project creation, adopt = link an existing synced mirror; app-graph task nodes; goals authoring UI; stories-projects play test; kanban adoption = separate PR). Phase 4 DXOS SIDE MERGED in PR #12440 (McpToolAnnotation + taskList/projectList/projectGet/projectUpdate/outlineGet/outlineUpdate, all annotated, serialize guards assert the annotation round-trips; projectCreate/createChat/createRoutine are NOT projectable — they resolve Capability.Service) — remaining Phase 4 is the edge projection plus the invokeOperation-identity prereq from the 2026-08-01 mcp-space-service review, Phase 5 dogfood (mapping table in MILESTONE-5.md §8: TASKS.md IS the Outline, DESIGN.md a Project artifact, $track -> taskCreate; promote TASKS.md into Composer at acceptance). Follow-ups in TASKS.md: TaskList trace-activity re-correlation via a Process annotation carrying the task ref; reactive parent-project outline in ChatTaskList; promotion eval; M4 leftovers (galleries width collapse, table-tool gap decision a/b/c, tagged scaffold errors, UC-A/UC-B Live). Standing: context/artifact model decision owed; URL binding for project chats needs Josiah. Process note: do NOT pin a worktree in this pointer — each session works in its harness-assigned worktree.'
+    prs:
+      [
+        12335,
+        12365,
+        12370,
+        12383,
+        12386,
+        12389,
+        12431,
+        12440,
+        12442,
+        12444,
+        12595,
+        12675,
+        12677,
+        12735,
+        12736,
+        12752,
+        12784,
+        12787,
+        12839,
+        12847,
+        12918,
+        13016,
+        13028,
+        13077,
+        13109,
+      ]
+    resume: 'Folded in the project-tasks stream (task delegation + execution; design notes in docs/DELEGATION.md, ledger section "Task delegation and execution" in TASKS.md) on 2026-09-13. #13077 MERGED 2026-09-14 (per-task session gantt, boot-loader sprite, tree-branch clip). IN FLIGHT: PR #13109 from the same branch — delegation stays on the ledger + pipeline lane opens its chat, invoker shutdown interrupt, trigger card inset; watch Check + review. Prior delegation PRs MERGED: #12752 #12784 #12787 #12839 #12847. Plugin side as before: M6 Phases 1-2 MERGED as #12595; follow-ups #12675 #12677 #12735 #12736 #12918 #13016 #13028 merged. NEXT: land #13109; then delegation backlog — terminal-status dates (the timeline now consumes them), extension-contributed tabs, cancel/delete, the joined delegation+TaskSet story — and M6 Phase 3 (outline-first skill rule + promote-task verb + promotion eval). TOOLING: CI is on Depot — `gh pr checks <n>`; depot CLI needs DEPOT_TOKEN, else reproduce locally. Do NOT pin a worktree in this pointer.'
   - name: illustrator-scene-dsl
     status: active
     user: burdon
@@ -482,11 +577,12 @@ projects:
     user: josiah
     host: remote
     created: 2026-07-30
-    summary: ECHO-level deterministic object merging keyed on identity key (meta key + version) — duplicates from uncoordinated per-peer space initialization merge into a min-id winner with redirects and reference rewriting.
+    summary: ECHO-level deterministic object merging keyed on `meta.convergenceKey` — duplicates from uncoordinated per-peer space initialization merge into a min-id winner with redirects and reference rewriting.
     tasks: .agents/projects/object-merging/TASKS.md
     design: .agents/projects/object-merging/DESIGN.md
-    prs: []
-    resume: 'Research COMPLETE and committed (DESIGN.md) on branch claude/echo-object-merging-research-dqtjx1 (no PR by request). Decisions so far: merge only distinct-id duplicates (collision class 2); same-id-two-docs stays an error (no deterministic ids — rejected, §4.5); merge direction = deterministic ordering, winner = min EntityId. Next: design review of the 5 open questions in DESIGN.md §7 (identity field, version matching, merge-policy pluggability, where the merge runs, relation scope), then Phase 0 spike (§6).'
+    prs: [12410, 12412]
+    resume: 'WORKER-SIDE MERGING LIVE on branch claude/project-object-merging-bdjgum, PR #12412 (draft). Identity field is meta.convergenceKey (renamed from naturalKey 2026-08-13 after dmaretskyi review; singletonKey declined — DESIGN §4.4 + decision log). Public API: NONE beyond the meta field itself (accessors dropped 2026-08-31 — assign meta.convergenceKey inside Entity.update). §4.11 IMPLEMENTED 2026-08-31: worker rewrites references index-driven — ConvergenceKeyMerger gained queryReferrers (IndexEngine.queryReverseRef joined to lookupByRecordIds in echo-host.ts), rewrites EncodedReferences at indexed propPaths to the chain-resolved winner after tombstones and on every #foldRedirected pass (late-referrer residual accepted, DESIGN §4.11.4); db.mergeDuplicates() and the whole client merge executor DELETED (no Filter.everything() remains); merge core (MergeCandidate/mergeCandidates/toMergeCandidate/findMergeDuplicates) moved to echo-host/src/db-host/merge-core.ts with its unit suite, @dxos/echo/internal keeps only resolveMergeRedirect; e2e suites re-targeted to the worker (state read via getObjectCore, partial views staged through cores). Worker deps: loadDoc (DocumentLease-shaped MergeDocumentRef, disposed per group), flushDoc, queryByConvergenceKeys, queryReferrers. Intents in ConvergenceKeyIntentStore joining the indexing transaction; index-name-versioned cursors (fts6/reverseRef2); migrations renumbered around main (entity-meta 0007_convergence_key after two rounds of main additions, tracker 0003_retire_pre_convergence_key_cursors). Merged with main 2026-08-31 (document leases, queue positions, depot CI). ALL GREEN: echo, echo-host (incl. 6 rewrite unit tests), echo-client, echo-client-e2e (26 merge/convergence), index-core. NEXT per TASKS: singleton/ensure APIs vs Phase-2 db.ensure (dmaretskyi sketch noted), plugin-doctor duplicates diagnostic, property-based determinism (§5.3), relation endpoints (ObjectCore.setSource/setTarget), collaborative-text policy (§4.6 High risk once documents are in scope), merge-function shape on real types before Phase 4. Phase 3b (relations/types as subjects) and §7 Q3 pluggability still open.'
+
   - name: object-deduplication
     status: active
     user: burdon
@@ -637,23 +733,23 @@ projects:
     summary: Extend the DEUS pattern-specification language (`.mdl`) — core syntax, the standard dialect, and the DXOS domain dialect — plus the CodeMirror extension that has to follow any syntax change.
     tasks: packages/reflect/deus/TASKS.md
     design: packages/reflect/deus/docs/DESIGN.md
-    prs: []
-    resume: "Phase 1 (Deus.QA) BUILT: lang/qa.mdl defines flow + step with nine execution rules, the
-      DESIGN.md section draws the test/flow boundary, .agents/skills/running-qa-flows is the agent-side
-      contract, /dxos:qa (dxos plugin, scripts/list-flows.mjs) lists and runs them, and the
-      agent-startable debug port works end to end (DX_DEBUG_PORT -> vite define -> main.tsx ->
-      temp/debug-port.json sidecar; started from main.tsx, NOT plugin-debug, which a plain local serve
-      leaves disabled). markdown QA-1 passes 4/4 and has been run three times; markdown QA-2/QA-3 and
-      chess QA-1 are authored but status: unverified. Also landed on this branch: the MenuExtension
-      capability letting plugins contribute slash-menu commands (one group per plugin, entries name an
-      Operation not a callback) with plugin-debug''s InsertLoremIpsum as the first contributor, and two
-      table-insert fixes in ui-editor. KEY FINDINGS, all in TASKS.md: the pass rate never told us
-      anything (QA-1 was 4/4 while two of four asserts were vacuous); requires: cannot predict
-      runnability so the runner always uses the invoker with a spaceId; any part of a flow without a
-      dual face diverges (cleanup was prose and the two actors picked different mechanisms); and the
-      op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
-      and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
-      PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
+    prs: [12986]
+    resume: "HANDOFF 2026-09-09 from the Default-env session to a DXOS-env session (the only kind that can run
+      the app). PR #12986 is OPEN on claude/composer-qa-framework-50u4gz at d14ef3af or later: main merged,
+      CodeRabbit's 19 findings triaged (10 fixed + resolved, 9 left open as pre-existing spec content for the
+      sweep; triage comment on the PR). Smoke run 1 (report testing/reports/2026-09-09-2047-smoke.md): app:QA-1
+      10/11, after.2 space.delete timed out because the headless helper's Chromium had no proxy flags — fixed in
+      testing/bin/qa-browser.mjs. Smoke run 2 (testing/reports/2026-09-09-2315-smoke.md, session 'qa -- take 2'): 9/11 under the
+      tightened asserts — proxy fix held (0 resets, errors empty through steps), after.2 failed again on a
+      dropped EDGE socket with the identical stranded space, so the DataSpaceManager._tombstoneSpace
+      ordering defect is confirmed app-side. NEXT, in order: (1) fix PR for space.delete (close before
+      tombstone, or tolerate a failed close and still delete + drop the proxy), verified by smoke 11/11;
+      (2) land #12986 — check the Check run
+      and CodeRabbit's re-review, no changeset needed; (3) run --tag nightly (QA-2, QA-3, markdown QA-1/2 are
+      unverified transcriptions and will need corrections like QA-1 did); (4) create the qa branch from main and
+      register the Routines per agents/routines/*.md in the DXOS environment; (5) spec-sync 'sweep 8', which
+      also clears the 8 open review findings; (6) move PLUGIN.mdl files to plugin-xxx/spec/ as its own PR. Full
+      list: packages/reflect/deus/TASKS.md Phase 2 'Later'. Skills to read first: composer-qa, cloud-sandbox."
   - name: agent-composer-introspection
     status: active
     user: burdon
@@ -712,5 +808,6 @@ ended:
     summary: 'Replace protobuf.js (@dxos/codec-protobuf, @dxos/protobuf-compiler) with buf (@bufbuild/protobuf, protoc-gen-es) and delete both packages, by converting each consumer to buf types rather than re-homing the protobuf.js type surface.'
     tasks: .agents/projects/protobufjs-to-buf/TASKS.md
     design: .agents/projects/protobufjs-to-buf/DESIGN.md
-    prs: [12833, 12857]
+    notes: .agents/projects/protobufjs-to-buf/EDGE-ASSERTION-TYPE-URL.md
+    prs: [12833, 12857, 12990]
     resume: 'DIRECTION SET BY dmaretskyi 2026-08-31: change the consumers, do not re-home the types — codec-protobuf dies with protobuf.js so nothing it exports needs a new address. This SUPERSEDES PR #12857 (closed, not merged), which extracted the transport vocabulary into a new @dxos/codec package and added a Compat<T> type deriving the protobuf.js shape from buf types; both preserved the compat shapes and the unconverted consumers, and the new package needed publishing before anything could land (the packaging trap: private fails check-public-dependencies, public fails check-packages-published). #12833 IS MERGED (b4ceea28) and completed thread #8, the last milestone-sized thread; its two Buffer-view fixes are the reason the DESIGN.md Buffer rule exists. Teardown is now sliced by consumer, see the audit table: A value codecs (DONE this PR — Codec/EncodingOptions out of hypercore/feed-store/client-services, createCodecEncoding takes a structural ValueCodec<T>, packages declaring the dependency 11 -> 8); B the Any envelope (messaging 4, rpc 3, blade-runner 2, gossip 1 — legacy {type_url,value} to buf {$typeName,typeUrl,value}); C the RPC seam (RequestOptions/ServiceBackend/ServiceProvider/ServiceDescriptorLike — MUST fix protobuf-compiler file-generator.ts first or the next prebuild re-adds the import, and lands with B since ServiceBackend.call is typed on Any); D the generated barrel (deleted, not migrated). Two items are real type fixes not import swaps: echo-client repo-proxy.ts initialValue-as-Struct hides an unconstrained create<T> and constraining it ripples through the public API (interfaces are not assignable to Record<string,unknown>), and pipeline/codec.ts is the signed feed-block replication path wanting cross-version fixtures. CI HAZARD carried from #12857: Check/test shard=3 failed on three consecutive heads including a freshly merged base while shards 0-2 were green; Depot exposes no log (empty check output, no Actions run id, get_job_logs 404) and no re-run, and the four storybook suites reproduced locally (plugin-search/inbox/terra/file) all pass in isolation, so it was never root-caused. Also unresolved: the DXOS MCP server is unauthorized in this session, so the space-side project record was never reconciled.'

@@ -14,8 +14,9 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
@@ -26,7 +27,7 @@ import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
-import { filterItems, getParent, resolveMigrationOperation } from '../../util';
+import { filterItems, getParent, resolveMigrationOperation } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -57,6 +58,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
+    // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
+    // token no loader recognizes stays `unknown` forever, so only a confirmed `exists` withholds
+    // the message and the sidebar is never blank.
+    const tabPresence = useNavigationPresence(graph, tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab);
+    const tabUnavailable = tab !== DeckSchema.DEFAULT_DECK_ID && tabPresence !== 'exists';
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
@@ -319,6 +325,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           id={GraphNode.RootId}
           root={AppGraph.getRoot(graph)}
           tab={tab}
+          unavailable={tabUnavailable}
           open={layout.sidebarOpen}
           ref={forwardedRef}
         />

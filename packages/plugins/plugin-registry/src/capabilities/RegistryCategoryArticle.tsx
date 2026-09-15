@@ -10,8 +10,8 @@ import { useSettingsDivergedKeys } from '@dxos/app-toolkit/ui';
 
 import { RegistryArticle } from '#containers';
 
-import { type PluginPredicate, getCategoryPredicate } from '../categories';
-import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
+import { type PluginPredicate, getCategoryPredicate } from '../categories.ts';
+import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks/index.ts';
 
 /**
  * Resolves the {@link PluginPredicate} for a registry category against the live plugin list.

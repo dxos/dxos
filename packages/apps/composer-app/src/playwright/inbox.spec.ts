@@ -4,8 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
-import { AppManager } from './app-manager';
-import { Inbox, installInboxMock } from './plugins';
+import { AppManager } from './app-manager.ts';
+import { Inbox, installInboxMock } from './plugins/index.ts';
 
 // The PWA service worker breaks `page.route` interception; require it disabled.
 if (process.env.DX_PWA !== 'false') {

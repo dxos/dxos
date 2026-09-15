@@ -9,7 +9,7 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import moveMilestone from './move-milestone';
+import moveMilestone from './move-milestone.ts';
 
 describe('move-milestone', () => {
   it.effect('inserts before the anchor, since array order is the milestone sequence', () =>

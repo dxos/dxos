@@ -21,8 +21,8 @@ import {
   liveDocument,
   resolvablePendingSpaces,
   token,
-} from './model';
-import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, runCheckpoint } from './system';
+} from './model.ts';
+import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, runCheckpoint } from './system.ts';
 
 //
 // What the system can do. Each command below is one declaration: its arguments (the schema, which

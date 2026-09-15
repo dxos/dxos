@@ -10,7 +10,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { OtelTraces } from './traces-workerd';
+import { OtelTraces } from './traces-workerd.ts';
 
 describe('OtelTraces (workerd)', () => {
   afterEach(() => {

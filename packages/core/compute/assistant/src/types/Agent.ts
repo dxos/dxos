@@ -14,9 +14,9 @@ import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 
-import type * as Harness from '../session/Harness';
-import { HarnessContextError } from '../util/errors';
-import * as Chat from './Chat';
+import type * as Harness from '../session/Harness.ts';
+import { HarnessContextError } from '../util/errors.ts';
+import * as Chat from './Chat.ts';
 
 /**
  * An agent identity: a personality (attribution DID) plus its preset payload (instructions with
@@ -30,8 +30,8 @@ import * as Chat from './Chat';
  * the Agent *schema*, which core plugins reference for operation definitions, so the runtime loads
  * only when an agent operation actually runs.
  */
-const aiContextRuntime = () => import('../session/AiContext');
-const harnessRuntime = () => import('../session/Harness');
+const aiContextRuntime = () => import('../session/AiContext.ts');
+const harnessRuntime = () => import('../session/Harness.ts');
 
 export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent', '0.2.0'))(
   Schema.Struct({

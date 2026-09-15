@@ -15,11 +15,11 @@ import {
 } from '@dxos/protocols';
 import { SpacesService } from '@dxos/protocols/rpc';
 
-import { detectSpaceArchiveFormat } from './archive-format';
-import { buildDatabaseDirectoryFromObjects, readSerializedSpaceArchive } from './serialized-space-reader';
-import { objectStructureToObjJson, orderObjJsonFields } from './serialized-space-writer';
-import { extractSpaceArchive } from './space-archive-reader';
-import { SpaceArchiveWriter } from './space-archive-writer';
+import { detectSpaceArchiveFormat } from './archive-format.ts';
+import { buildDatabaseDirectoryFromObjects, readSerializedSpaceArchive } from './serialized-space-reader.ts';
+import { objectStructureToObjJson, orderObjJsonFields } from './serialized-space-writer.ts';
+import { extractSpaceArchive } from './space-archive-reader.ts';
+import { SpaceArchiveWriter } from './space-archive-writer.ts';
 
 describe('SpaceArchive', () => {
   describe('SpaceArchiveWriter', () => {

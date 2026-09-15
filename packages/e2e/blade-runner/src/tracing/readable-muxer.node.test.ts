@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { range } from '@dxos/util';
 
-import { ReadableMuxer } from './readable-muxer';
+import { ReadableMuxer } from './readable-muxer.ts';
 
 describe('ReadableMuxer', () => {
   test('Mux 3 streams together', async () => {

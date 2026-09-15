@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { SpaceId } from '@dxos/keys';
 
-import { type ToolFailure, failure } from './failure';
+import { type ToolFailure, failure } from './failure.ts';
 
 export const idParameter = Schema.optional(SpaceId).annotate({
   description:

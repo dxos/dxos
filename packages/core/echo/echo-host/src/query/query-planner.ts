@@ -7,8 +7,8 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, type URI } from '@dxos/keys';
 
-import { QueryError } from './errors';
-import { QueryPlan } from './plan';
+import { QueryError } from './errors.ts';
+import { QueryPlan } from './plan.ts';
 
 /**
  * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.

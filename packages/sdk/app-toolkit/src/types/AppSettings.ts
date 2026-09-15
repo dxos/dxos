@@ -24,19 +24,11 @@ export const Pin = Schema.Struct({
 
 /**
  * Which settings this device keeps to itself, by namespace. Absent means the namespace follows the
- * account entirely.
- *
- * Records only WHICH settings are pinned. The values themselves are already in each namespace's own
- * local store, which is what the app renders from, so a second copy could only go stale.
+ * account entirely. Records only WHICH: the values are in each namespace's own local store.
  */
 export const DeviceSettings = Schema.Record(Schema.String, Schema.mutableKey(Pin));
 
-/**
- * App configuration that replicates across a user's devices.
- *
- * A singleton in the settings space (`AppSpace.SETTINGS_SPACE_TAG`), which is hidden and
- * membership-locked; see {@link DeviceSettings} for what stays on the device.
- */
+/** App configuration that replicates across a user's devices. */
 export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos.app.type.settings', '0.1.0'))(
   Schema.Struct({
     /** Values in effect on every device unless a device pins them. */
@@ -44,14 +36,20 @@ export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos
   }),
 ) {}
 
-/** Create an empty settings object. */
-export const make = (): AppSettings => Obj.make(AppSettings, { shared: {} });
+/** Create an empty settings object. Keyed by its typename, so copies created on separate devices merge. */
+export const make = (): AppSettings => {
+  const settings = Obj.make(AppSettings, { shared: {} });
+  Obj.update(settings, (settings) => {
+    Obj.getMeta(settings).convergenceKey = Type.getTypename(AppSettings);
+  });
+  return settings;
+};
 
 /** Create an empty device layer, for the local store's initial value. */
 export const makeDeviceSettings = (): DeviceSettings => ({});
 
 /** Mutable field values for one namespace. */
-export type Values = Record<string, any>;
+export type Values = Record<string, unknown>;
 
 /** Values for every namespace, keyed by namespace id. Mutable counterpart of {@link Namespaces}. */
 export type Namespaces = Record<string, Values>;
@@ -70,6 +68,10 @@ export const INSTALLED_NAMESPACE = 'org.dxos.app-framework.plugins.installed';
 
 /** Value shape stored under {@link INSTALLED_NAMESPACE}. */
 export type InstalledPlugin = { id: string; url: string; version?: string };
+
+/** Whether a stored value is an install the loader can act on. */
+export const isInstalledPlugin = (value: unknown): value is InstalledPlugin =>
+  typeof value === 'object' && value !== null && 'url' in value && typeof value.url === 'string';
 
 /** Shape the resolution helpers read: the replicated layer paired with this device's pins. */
 export type Snapshot = {
@@ -98,10 +100,7 @@ export const isKeySynced = (settings: Snapshot, namespace: string, key: string):
 
 /**
  * The values in effect on this device: `local` overlaid with the shared values, except where this
- * device pins a key and keeps its own.
- *
- * `local` is the namespace's own store — both the base for keys the account has no opinion on, and
- * the source for pinned ones.
+ * device pins a key. `local` is the namespace's own store.
  */
 export const resolve = (settings: Snapshot, namespace: string, local: Values = {}): Values => {
   const resolved: Values = { ...local, ...settings.shared[namespace] };
@@ -120,16 +119,21 @@ export type Draft = {
   local: DeviceSettings;
 };
 
-const namespaceOf = (container: Namespaces, namespace: string): Values => (container[namespace] ??= {});
+/**
+ * The namespace's record, created empty if absent.
+ *
+ * Read back rather than returned from the assignment: `??=` yields the plain object it assigned, and
+ * `container` is an ECHO proxy in a live draft, so writing through that would land on a detached
+ * object and lose the first key in every new namespace.
+ */
+const namespaceOf = (container: Namespaces, namespace: string): Values => {
+  container[namespace] ??= {};
+  return container[namespace];
+};
 
 const pinOf = (draft: Draft, namespace: string): Pin => (draft.local[namespace] ??= { local: false, keys: [] });
 
-/**
- * Route a write to the account, or record that this device keeps the key.
- *
- * A pinned key's value is not stored here: it is already in the namespace's own store, which is
- * where every reader gets it from.
- */
+/** Route a write to the account, or record that this device keeps the key. */
 export const setValue = (draft: Draft, namespace: string, key: string, value: unknown): void => {
   if (isSynced(draft, namespace) && !isPinned(draft, namespace, key)) {
     namespaceOf(draft.shared, namespace)[key] = value;
@@ -145,42 +149,35 @@ export const setValue = (draft: Draft, namespace: string, key: string, value: un
 /** Stop sharing `key`, and drop any pin, so it falls back to the namespace's own store. */
 export const clearValue = (draft: Draft, namespace: string, key: string): void => {
   delete draft.shared[namespace]?.[key];
-  unpin(draft, namespace, key);
+  unpinKey(draft, namespace, key);
 };
 
 /** Which side wins for the keys that {@link conflictingKeys} reports, when rejoining the account. */
 export type Adopt = 'shared' | 'local';
 
-export type SetSyncedOptions = {
-  /** Pin every key in `local` when leaving. Omit to diverge from the next write on. */
-  freeze?: boolean;
-  /** Which side wins when rejoining, for the keys {@link conflictingKeys} reports. */
-  adopt?: Adopt;
+/**
+ * Take a namespace off the account for this device. Lossless, and no other device is touched.
+ *
+ * `freeze` pins every key in `local`, so the switch is a visible no-op; without it the namespace
+ * diverges from the next write on.
+ */
+export const takeLocal = (draft: Draft, namespace: string, local: Values, { freeze = false } = {}): void => {
+  draft.local[namespace] = {
+    local: true,
+    keys: freeze ? Object.keys(local) : getPinnedKeys(draft, namespace).slice(),
+  };
 };
 
 /**
- * Turn sharing of a namespace on or off for this device.
- *
- * `local` is the namespace's own store, which holds the values either direction acts on.
+ * Hand a namespace back to the account — the one direction that can discard a value, and only for
+ * the keys {@link conflictingKeys} reports, where `adopt` picks the side that survives.
  */
-export const setSynced = (
+export const rejoinAccount = (
   draft: Draft,
   namespace: string,
-  synced: boolean,
   local: Values,
-  { freeze, adopt = 'shared' }: SetSyncedOptions = {},
+  { adopt = 'shared' }: { adopt?: Adopt } = {},
 ): void => {
-  if (!synced) {
-    draft.local[namespace] = {
-      local: true,
-      keys: freeze ? Object.keys(local) : getPinnedKeys(draft, namespace).slice(),
-    };
-    return;
-  }
-
-  // A pinned key the account does not hold is adopted whichever side wins: the account has no
-  // competing opinion, so nothing is lost by keeping it. `adopt` decides only the rest, which is
-  // what {@link conflictingKeys} reports and what the reader was asked about.
   const shared = namespaceOf(draft.shared, namespace);
   for (const key of getPinnedKeys(draft, namespace)) {
     if (key in local && (adopt === 'local' || !(key in shared))) {
@@ -191,25 +188,16 @@ export const setSynced = (
   delete draft.local[namespace];
 };
 
-/**
- * Pin one key to this device, or hand it back to the account.
- *
- * Nothing is copied either way: pinning records the key, and the value it pins is the one already in
- * the namespace's own store.
- */
-export const setKeySynced = (draft: Draft, namespace: string, key: string, synced: boolean): void => {
-  if (synced) {
-    unpin(draft, namespace, key);
-    return;
-  }
-
+/** Keep one key on this device — the per-key counterpart of {@link takeLocal}. */
+export const pinKey = (draft: Draft, namespace: string, key: string): void => {
   const pin = pinOf(draft, namespace);
   if (!pin.keys.includes(key)) {
     pin.keys.push(key);
   }
 };
 
-const unpin = (draft: Draft, namespace: string, key: string): void => {
+/** Hand one key back to the account — the per-key counterpart of {@link rejoinAccount}. */
+export const unpinKey = (draft: Draft, namespace: string, key: string): void => {
   const pin = draft.local[namespace];
   if (!pin) {
     return;
@@ -234,10 +222,8 @@ export const conflictingKeys = (settings: Snapshot, namespace: string, local: Va
 };
 
 /**
- * Route every changed key of a resolved-value edit to its owning layer.
- *
- * A dropped key is cleared only where the write would have reached the account anyway. Dropping a
- * key this device keeps is a local event, and the account's value is not this device's to delete.
+ * Route every changed key of a resolved-value edit to its owning layer. A dropped key is cleared
+ * only where the write would have reached the account anyway.
  */
 export const applyResolved = (draft: Draft, namespace: string, before: Values, after: Values): void => {
   for (const key of changedKeys(before, after)) {

@@ -17,7 +17,7 @@ import { Organization, Outline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { AgentProperties } from './AgentProperties';
+import { AgentProperties } from './AgentProperties.tsx';
 
 const DefaultStory = () => {
   const { space } = useClientStory();

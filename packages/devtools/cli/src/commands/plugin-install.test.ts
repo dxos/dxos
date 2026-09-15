@@ -9,7 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { runDx, withIsolatedHome } from '../testing';
+import { runDx, withIsolatedHome } from '../testing/index.ts';
 
 /**
  * End-to-end subprocess tests for `dx plugin add` / `remove` against a fixture plugin — a directory

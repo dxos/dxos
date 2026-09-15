@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { type EditableActivation } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { MarkdownEditable } from './MarkdownEditable';
+import { MarkdownEditable } from './MarkdownEditable.tsx';
 
 type StoryArgs = {
   initialValue?: string;

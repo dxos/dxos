@@ -1,0 +1,13 @@
+/**
+ * Tour
+ *
+ * The machine positions every part inline; the theme layers and paints them. The one rule the
+ * page needs: a step's target is marked `data-tour-highlighted` while the step shows, and a row
+ * whose controls appear on hover shows them for the tour.
+ */
+
+@layer dx-components {
+  [data-tour-highlighted] {
+    --controls-opacity: 1;
+  }
+}

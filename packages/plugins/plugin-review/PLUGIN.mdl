@@ -35,11 +35,11 @@ The following extension dialects are used in this document.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## External types & capabilities
 
@@ -525,7 +525,7 @@ feat F-7: Independence & testability
 Each DESIGN.md invariant names its enforcing test; the primary suites are:
 
 ```mdl
-test T-1: Shared scenarios (both tiers)
+scenario T-1: Shared scenarios (both tiers)
   given: The scenario definitions in src/testing/scenarios.ts
   when: Run headless (src/testing/scenarios.test.tsx) and as storybook plays (Scenario*Test)
   then: |
@@ -535,43 +535,43 @@ test T-1: Shared scenarios (both tiers)
     dropdown selection; a multi-word bold wrap is ONE atomic suggestion; a suggested table is a
     clean block insertion; a table-cell edit stays inside the cell.
 
-test T-2: Same-view swap
+scenario T-2: Same-view swap
   given: The DocumentVersioning / SuggestingSwapTest play
   when: Suggesting is entered, typed into, and exited through the real dropdown
   then: One .cm-content DOM node and one EditorView across the whole round-trip; the caret survives;
     the edit lands on the branch as a tracked change and renders as the user's suggestion on exit.
 
-test T-3: Lifecycle model
+scenario T-3: Lifecycle model
   given: The deriveBinding and applyViewModeSelection tables (review-lifecycle.test.ts)
   when: Every posture/selection/resolution combination is derived
   then: Subjects, keys, editability and loading match the tables; a stale readonly view mode cannot
     survive into Suggesting.
 
-test T-4: Branch reconciliation (I-2)
+scenario T-4: Branch reconciliation (I-2)
   given: An existing suggestion branch with a stale anchor (main advanced), edited or not
   when: Suggesting is re-entered (find-or-create)
   then: The SAME branch id is returned; main's progress is folded in (CRDT); the author's edits
     survive; main's text never renders as the author's deletion.
 
-test T-5: Diff-layer invariants (ui-editor review suite)
+scenario T-5: Diff-layer invariants (ui-editor review suite)
   given: diffHunks / pairMarkupHunks / rebaseHunks / cherryPickHunk unit tests
   then: Hunks are minimal; word replaces keep word granularity; delimiter pairs coalesce and apply
     atomically; a doc insertion at a trailing pure-insert anchor stays behind the proposal; applying
     every hunk reconstructs the proposal.
 
-test T-6: Per-author visibility (F2.7)
+scenario T-6: Per-author visibility (F2.7)
   given: The AuthorVisibilityTest play (two seeded authors)
   when: One author is toggled off and back on in the companion
   then: That author's overlay and cards disappear and return; the other author is untouched; the
     branches survive.
 
-test T-7: Comment/agent behaviour
+scenario T-7: Comment/agent behaviour
   given: The comment operation and trigger-gate unit tests
   then: Auto mode responds once per user message; mention mode gates on @name; assistant messages
     and resolved threads never trigger; delete/restore round-trips; runner failures keep the user's
     message and emit `comments.agent.failed`.
 
-test T-8: Walkthroughs
+scenario T-8: Walkthroughs
   given: TEST-PLAN.md F1–F6 against the DocumentVersioning / CommentsArticle stories
   then: The agent pre-runs every automatable step headlessly; a human pass confirms feel (latency,
     flicker, hover) that assertions cannot.
@@ -579,11 +579,11 @@ test T-8: Walkthroughs
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Comment on a document, reply, and resolve
+test QA-1: Comment on a document, reply, and resolve
   desc: The comment-thread round-trip — anchor a thread on a document, reply, then resolve it.
   actors: agent
   covers: [F-5.1, F-5.3, T-1, T-7]
@@ -595,8 +595,8 @@ flow QA-1: Comment on a document, reply, and resolve
     - doc: a Markdown document named "QA Review Doc" exists in the collection (created via
       plugin-markdown's [op:createDraft] and placed with `space.addObject`, per its own QA-1)
     - no comment thread anchored to "QA Review Doc" exists — ABORT rather than reusing one this
-      flow did not create
-  test:
+      test did not create
+  steps:
     - name: Create a comment thread
       do: Select a word in the editor and click the comment icon in the selection popover.
       invoke: org.dxos.operation.review.create { subject: $given.doc, anchor: "typo", name: "QA thread" }

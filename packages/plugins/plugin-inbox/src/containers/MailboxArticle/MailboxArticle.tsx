@@ -52,17 +52,17 @@ import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { POPOVER_SAVE_FILTER } from '../../constants';
-import { messageMatchesQuery } from '../../util';
-import { InitializeMailbox } from './InitializeMailbox';
+import { POPOVER_SAVE_FILTER } from '../../constants.ts';
+import { messageMatchesQuery } from '../../util/index.ts';
+import { InitializeMailbox } from './InitializeMailbox.tsx';
 import {
   buildMailboxSelection,
   buildSystemTagSelection,
   buildThreadSemiJoin,
   getFilterTagUris,
   getSearchText,
-} from './mailbox-search';
-import { MailboxFilter } from './MailboxFilter';
+} from './mailbox-search.ts';
+import { MailboxFilter } from './MailboxFilter.tsx';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;

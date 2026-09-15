@@ -23,8 +23,8 @@ import { Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { App, render } from '../../components';
-import { theme } from '../../theme';
+import { App, render } from '../../components/index.ts';
+import { theme } from '../../theme.ts';
 import {
   type AiChatServices,
   Provider,
@@ -33,32 +33,36 @@ import {
   operationHandlers,
   toolkits,
   types,
-} from '../../util';
-import { Chat } from './components';
-import { runNonInteractive } from './non-interactive';
-import { ChatProcessor } from './processor';
+} from '../../util/index.ts';
+import { Chat } from './components/index.ts';
+import { runNonInteractive } from './non-interactive.ts';
+import { ChatProcessor } from './processor.ts';
 
 export const chat = Command.make(
   'chat',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    debug: Options.boolean('debug').pipe(Options.withDescription('Show console to see logs.'), Options.withAlias('d')),
-    provider: Options.choice('provider', Provider.literals).pipe(
+    debug: Options.Boolean('debug').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Show console to see logs.'),
+      Options.withAlias('d'),
+    ),
+    provider: Options.Literals('provider', Provider.literals).pipe(
       Options.withDescription('AI provider to use.'),
       Options.withAlias('p'),
       Options.withDefault('edge'),
     ),
-    model: Options.string('model').pipe(
+    model: Options.String('model').pipe(
       Options.withDescription('Model to use.'),
       Options.withAlias('m'),
       Options.optional,
     ),
-    skills: Options.string('skill').pipe(
+    skills: Options.String('skill').pipe(
       Options.withDescription('Skills to include in the chat context.'),
       Options.withAlias('b'),
       Options.atLeast(0),
     ),
-    prompt: Options.string('prompt').pipe(
+    prompt: Options.String('prompt').pipe(
       Options.withDescription(
         'When set, runs the agent loop non-interactively with this prompt and exits — no TUI. Combine with --json to get structured object output.',
       ),

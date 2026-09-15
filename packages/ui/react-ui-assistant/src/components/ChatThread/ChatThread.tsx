@@ -22,11 +22,11 @@ import {
 } from '@dxos/react-ui-feed';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { assistantRegistry } from '../../registry';
-import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer';
-import { translationKey } from '../../translations';
-import { type ChatThreadEvent, type ChatView } from '../../types';
-import { MessageChrome, MessageChromeProvider } from '../MessageChrome';
+import { assistantRegistry } from '../../registry.tsx';
+import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
+import { translationKey } from '../../translations.ts';
+import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { MessageChrome, MessageChromeProvider } from '../MessageChrome/index.ts';
 
 //
 // Context
@@ -209,15 +209,15 @@ const ScrollToBottom = () => {
 
   return (
     <IconButton
-      icon='ph--arrow-down--regular'
-      iconOnly
-      label={t('scroll-to-bottom.label')}
       variant='primary'
-      size={4}
+      icon='ph--arrow-line-down--regular'
+      iconOnly
+      density='sm'
+      label={t('scroll-to-bottom.label')}
       disabled={atEnd}
       aria-hidden={atEnd}
       classNames={[
-        'absolute bottom-2 right-4 z-10 transition-opacity duration-300',
+        'absolute bottom-2 left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300',
         atEnd && 'opacity-0 pointer-events-none',
       ]}
       data-testid='assistant.thread.scroll-to-bottom'

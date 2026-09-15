@@ -9,10 +9,10 @@ import { type IdentityIndex } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { type Actor, Organization, Person } from '@dxos/types';
 
-import { extractDomain, isFreeMailDomain, organizationNameFromDomain } from './domain';
-import { normalizeEmail } from './identity';
-import { getIdentityIndex } from './resolver';
-import { type SenderSignals, shouldExtractContact } from './selection';
+import { extractDomain, isFreeMailDomain, organizationNameFromDomain } from './domain.ts';
+import { normalizeEmail } from './identity.ts';
+import { getIdentityIndex } from './resolver.ts';
+import { type SenderSignals, shouldExtractContact } from './selection.ts';
 
 export type BuildContactOptions = {
   /** Message signals feeding the extraction gate; omit when the caller has already decided. */

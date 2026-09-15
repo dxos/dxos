@@ -8,8 +8,8 @@ import type * as OtelMetricsSink from '@dxos/observability/OtelMetricsSink';
 import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 // Not the `../util` barrel: it re-exports config, pulling @dxos/client into this bundle.
-import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
-import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
+import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
+import { type ObservabilityWorkerMessage } from '../util/worker-log-processor.ts';
 
 const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 

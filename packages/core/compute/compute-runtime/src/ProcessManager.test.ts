@@ -38,13 +38,13 @@ import { invariant } from '@dxos/invariant';
 import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
-import { ProcessStore } from './process-store';
-import * as ProcessManager from './ProcessManager';
-import * as ProcessMonitor from './ProcessMonitor';
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
-import * as RemoteProcessManager from './RemoteProcessManager';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
-import { TestDatabaseLayer } from './testing';
+import { ProcessStore } from './process-store.ts';
+import * as ProcessManager from './ProcessManager.ts';
+import * as ProcessMonitor from './ProcessMonitor.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import { TestDatabaseLayer } from './testing/index.ts';
 
 //
 // Test services (for unit tests without full ECHO stack).
@@ -251,6 +251,17 @@ const makeSumAggregator = () =>
         onAlarm: () => Effect.void,
         onChildEvent: () => Effect.void,
       }),
+  );
+
+/** Succeeds on its first input without producing an output. */
+const makeSucceedingExecutable = () =>
+  Process.make({ key: 'test.succeeding', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.void,
+      onInput: () => Effect.sync(() => ctx.succeed()),
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
   );
 
 /**
@@ -1134,6 +1145,38 @@ describe('ProcessOperationInvoker', () => {
       const fiber = yield* invoker.invokeFiber(Failing, undefined);
       const output = yield* fiber.await;
       expect(Result.getOrUndefined(Exit.findDefect(output))).toEqual('Test Error');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a finished process reads as terminal by the time its outputs close',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSucceedingExecutable());
+      // The first read after the stream ends is what the invoker bases its verdict on.
+      const collector = yield* handle.subscribeOutputs().pipe(
+        Stream.runDrain,
+        Effect.map(() => handle.status.state),
+        Effect.forkChild,
+      );
+      yield* handle.submitInput(undefined);
+      expect(yield* Fiber.join(collector)).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'an invocation still running at shutdown is interrupted, not a defect',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
+      SlowChildGate.completeDeferred = yield* Deferred.make<void>();
+      const fiber = yield* invoker.invokeFiber(SlowChild, { value: 1 });
+      // The handler is mid-flight when the app goes away.
+      yield* Queue.take(SlowChildGate.taskSignal);
+      yield* manager.shutdown();
+      const output = yield* fiber.await;
+      expect(Exit.isFailure(output) && Cause.hasInterruptsOnly(output.cause)).toEqual(true);
     }, Effect.provide(TestLayer)),
   );
 });

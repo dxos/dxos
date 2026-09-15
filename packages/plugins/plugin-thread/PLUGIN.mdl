@@ -19,7 +19,7 @@ The following extension dialects are used in this document.
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -77,11 +77,11 @@ feat F-2: Thread chat
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a channel and send a message
+test QA-1: Create a channel and send a message
   desc: The core thread round-trip — create a Channel, send a message, read it back from the feed.
   actors: both
   covers: [F-1.1]
@@ -89,8 +89,8 @@ flow QA-1: Create a channel and send a message
   given:
     - identityDid: an identity exists, its DID used as the message `sender`
     - space: a space is open
-    - no Channel named "QA Channel" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Channel named "QA Channel" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the channel
       do: In the navtree, click + on the space and choose Channel. Name it "QA Channel".
       invoke: [op:CreateChannel] { spaceId: $given.space.id, name: "QA Channel" }
@@ -122,14 +122,14 @@ flow QA-1: Create a channel and send a message
 ```
 
 ```mdl
-flow QA-2: Default "General" channel on space creation
+test QA-2: Default "General" channel on space creation
   desc: The lifecycle hook that seeds every new space with a channel — no user gesture involved.
   actors: agent
   covers: []
   status: unverified
   given:
     - an identity exists
-  test:
+  steps:
     - name: Create a new space
       do: Click "Create space" (or invoke the equivalent action).
       invoke: org.dxos.operation.space.create {}
@@ -141,7 +141,7 @@ flow QA-2: Default "General" channel on space creation
       expect: a Channel named "General" exists in the root collection of the new space
       note: |
         NO separate `invoke` — `org.dxos.plugin.thread.operation.onCreateSpace` is a lifecycle
-        hook the space-creation pipeline runs itself, not something this flow calls directly; this
+        hook the space-creation pipeline runs itself, not something this test calls directly; this
         step only verifies the effect.
       assert: |
         return (await $created.space.db.query(dxos.Filter.type(Channel)).run())

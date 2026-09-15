@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { OperationInvoker } from '@dxos/operation';
 
-import { type MappedEvent, listen } from './invocation-listener';
+import { type MappedEvent, listen } from './invocation-listener.ts';
 
 const Rename = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.rename') },

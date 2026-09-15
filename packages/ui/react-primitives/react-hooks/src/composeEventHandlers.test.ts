@@ -4,7 +4,7 @@
 
 import { describe, expect, test, vi } from 'vitest';
 
-import { composeEventHandlers } from './composeEventHandlers';
+import { composeEventHandlers } from './composeEventHandlers.ts';
 
 describe('composeEventHandlers', () => {
   test('skips ours when the consumer prevented default', () => {

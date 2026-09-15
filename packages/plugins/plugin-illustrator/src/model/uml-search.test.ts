@@ -6,11 +6,11 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import type * as Scene from './scene';
-import { parse } from './uml';
-import { measureCell } from './uml-grid';
-import { buildGroups, inheritanceTreeRule, linearChainRule, packGroups, resolveRects } from './uml-rules';
-import { compile, scoreLayout, searchPlacement } from './uml-search';
+import type * as Scene from './scene.ts';
+import { measureCell } from './uml-grid.ts';
+import { buildGroups, inheritanceTreeRule, linearChainRule, packGroups, resolveRects } from './uml-rules.ts';
+import { compile, scoreLayout, searchPlacement } from './uml-search.ts';
+import { parse } from './uml.ts';
 
 /** The reference shape: a chain A→B→C→D plus a hierarchy Z <|- X, Z <|- Y linked into it. */
 const SOURCE = trim`
