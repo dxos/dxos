@@ -95,7 +95,6 @@ const formStyles = tv({
       },
     },
     {
-      // The first section starts flush with the top of the form, where the space now lives.
       variant: 'default',
       depth: 'root',
       class: {
