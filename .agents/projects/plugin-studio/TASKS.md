@@ -65,6 +65,14 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Shared `GenerationService.fieldOptions` → cached combobox (`ProviderOptionsField`); HeyGen migrated, Higgsfield static image list.
 - [ ] Higgsfield model catalogue from the API once it exposes one.
 
+### Observed 2026-09-15 (Composer, project/task session)
+
+- [ ] Task list (plugin-tasks): constrain the height of the inline task editor, and enable
+      `dx-preview` object links in it, as the description's markdown view already does.
+- [ ] Chat session: render inline ECHO object links (find or add the storybook story that exercises
+      links in a chat thread to test against).
+- [ ] Task list toolbar: add a text filter.
+
 ### Observed 2026-09-14 (Composer, studio session)
 
 - [x] Frame companion **Generate** loses its spinning state when navigating away and back — busy now
