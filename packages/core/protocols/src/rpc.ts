@@ -21,4 +21,3 @@ export * as NetworkService from './NetworkService.ts';
 export * as QueryService from './QueryService.ts';
 export * as SpacesService from './SpacesService.ts';
 export * as SystemService from './SystemService.ts';
-export * as WorkerService from './WorkerService.ts';

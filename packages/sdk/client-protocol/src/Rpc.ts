@@ -10,7 +10,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
+import type * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { RpcTiming } from '@dxos/worker-framework';
@@ -77,6 +79,45 @@ export const makeClient = <G>(
     group,
     options,
   );
+
+/**
+ * Re-tags a handler layer for the same rpcs carrying {@link RpcTiming.Middleware}.
+ *
+ * `Rpc.AddMiddleware` changes the handler tags' type but not the handlers: a timed server dispatches
+ * to the very values the untimed one takes, and effect-rpc offers no way to say that in the type.
+ */
+const asTimedHandlers = <Rpcs extends Rpc.Any, R>(
+  handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
+): Layer.Layer<
+  | Rpc.ToHandler<Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>>
+  | Rpc.ServicesServer<Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>>,
+  never,
+  R
+> => handlers as never;
+
+/**
+ * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
+ * ambient {@link RpcServer.Protocol} for the life of the layer.
+ */
+export const serverLayer = <Rpcs extends Rpc.Any, R>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
+  options?: ServeOptions,
+): Layer.Layer<never, never, RpcServer.Protocol | R> => {
+  const serverOptions = {
+    disableTracing: options?.disableTracing ?? true,
+    concurrency: options?.concurrency ?? ('unbounded' as const),
+  };
+  if (!RpcTiming.isEnabled(options?.timing)) {
+    return RpcServer.layer(group, serverOptions).pipe(Layer.provide(handlers));
+  }
+
+  return RpcServer.layer(RpcTiming.applyMiddleware(group), serverOptions).pipe(
+    Layer.provide(
+      Layer.merge(asTimedHandlers(handlers), RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing))),
+    ),
+  );
+};
 
 export type GroupServer = {
   open(): Promise<void>;

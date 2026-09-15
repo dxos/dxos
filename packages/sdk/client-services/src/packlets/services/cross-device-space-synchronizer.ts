@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { type Context, type Lifecycle, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { EffectEx, Event } from '@dxos/effect';
 import { assertState } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { requirePublicKey } from '@dxos/protocols/buf';
@@ -15,6 +16,7 @@ import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type Identity } from '../identity/index.ts';
 import { DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
+import { DataSpacesReady } from './events.ts';
 
 /**
  * Replicates cross-device space membership and deletion credentials from the halo space.
@@ -127,11 +129,22 @@ export const createCrossDeviceSpaceSynchronizer = (dataSpaceManager: DataSpaceMa
 export const CrossDeviceSpaceSynchronizerLayer: Layer.Layer<
   CrossDeviceSpaceSynchronizerService,
   never,
-  DataSpaceManagerService
+  Event.Bus | DataSpaceManagerService
 > = Layer.effect(
   CrossDeviceSpaceSynchronizerService,
   Effect.gen(function* () {
     const dataSpaceManager = yield* DataSpaceManagerService;
-    return createCrossDeviceSpaceSynchronizer(dataSpaceManager);
+    const synchronizer = createCrossDeviceSpaceSynchronizer(dataSpaceManager);
+
+    const ctx = yield* EffectEx.contextFromScope();
+    yield* Effect.addFinalizer(() => Effect.promise(async () => synchronizer.close?.()));
+    yield* Event.on(
+      DataSpacesReady,
+      Effect.fn('CrossDeviceSpaceSynchronizer.onDataSpacesReady')(function* ({ identity }) {
+        synchronizer.setIdentity(identity);
+        yield* Effect.promise(async () => synchronizer.open?.(ctx));
+      }),
+    );
+    return synchronizer;
   }),
 );

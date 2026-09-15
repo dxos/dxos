@@ -3,9 +3,12 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type ReactNode, memo, useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -31,6 +34,8 @@ import { type Milestone, Task, type TaskSet } from '@dxos/types';
 import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
+
+import { getProjectChatPath } from '../../paths.ts';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
@@ -60,7 +65,8 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [tab, setTab] = useState<Tab>('overview');
-  const { invokePromise } = useOperationInvoker();
+  const invoker = useOperationInvoker();
+  const { invokePromise } = invoker;
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // The pipeline reads the space's trace feed, which is addressed by space rather than database.
@@ -104,12 +110,33 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     setShowPipeline((show) => !show);
   }, []);
 
-  // The reader is taken to the pipeline as the session starts, so the first events land in view.
-  const handleDelegated = useCallback(() => {
-    clearChecked();
-    setTab('tasks');
-    setShowPipeline(true);
-  }, [clearChecked]);
+  const handleDelegated = useCallback(() => clearChecked(), [clearChecked]);
+
+  // A session starting is what the chart is for, so a delegation run from this app — the toolbar or
+  // a row's menu — brings the pipeline into view. Read off the invoker's own events rather than
+  // inferred from the chat query, which also emits as a project's history hydrates and would open
+  // the chart on every project that has ever had a session.
+  useEffect(() => {
+    const fiber = Effect.runFork(
+      Stream.fromPubSub(invoker.invocations).pipe(
+        Stream.filter(
+          (event) => event.operation.meta.key.toString() === ProjectOperation.DelegateTaskToChat.meta.key.toString(),
+        ),
+        Stream.runForEach((event) =>
+          Effect.sync(() => {
+            const chat: unknown = event.output?.chat;
+            if (Obj.instanceOf(Chat.Chat, chat) && Chat.peekProject(chat)?.id === subject.id) {
+              setTab('tasks');
+              setShowPipeline(true);
+            }
+          }),
+        ),
+      ),
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+  }, [invoker, subject.id]);
 
   const menuActions = useToolbarActions({
     project: subject,
@@ -120,6 +147,23 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     onDelegated: handleDelegated,
     onTogglePipeline: togglePipeline,
   });
+
+  // A session lane on the chart is the way into its chat. The project's own path helper, not the
+  // navigation resolver: the resolver answers with the assistant's Chats section, which lists only
+  // unparented chats, so that path names a node the deck cannot render.
+  const handleSelectChat = useCallback(
+    (chat: Chat.Chat) => {
+      if (!db) {
+        return;
+      }
+      void invokePromise(LayoutOperation.Open, {
+        subject: [getProjectChatPath(db.spaceId, subject.id, chat.id)],
+        pivotId: attendableId,
+        navigation: 'immediate',
+      });
+    },
+    [invokePromise, db, subject.id, attendableId],
+  );
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -264,7 +308,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Splitter.Panel>
               <Splitter.Handle />
               <Splitter.Panel position='end'>
-                {space && <ProjectPipeline space={space} project={subject} tasks={tasks} />}
+                {space && (
+                  <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
+                )}
               </Splitter.Panel>
             </Splitter.Root>
           )}

@@ -554,6 +554,36 @@ export const TaskStatusChanged = EventType('task.statusChanged', {
 });
 
 /**
+ * An agent put a question to a person and stopped on it. Paired with {@link QuestionAnswered}, the
+ * two bound the stretch a task spent blocked on someone else — the one gap in a session's timeline
+ * that is not the agent's own latency.
+ */
+export const QuestionAsked = EventType('question.asked', {
+  schema: Schema.Struct({
+    questionId: Obj.ID,
+    /** The question as put to the reader. */
+    text: Schema.String,
+    /** The task the question blocks. */
+    taskId: Schema.optional(Obj.ID),
+    /** How many pre-baked answers were offered; free-form is always available besides these. */
+    options: Schema.optional(Schema.Number),
+  }),
+  isEphemeral: false,
+});
+
+/** A person answered a {@link QuestionAsked}. */
+export const QuestionAnswered = EventType('question.answered', {
+  schema: Schema.Struct({
+    questionId: Obj.ID,
+    text: Schema.String,
+    taskId: Schema.optional(Obj.ID),
+    /** What the reader answered — a chosen option's title, or free-form text. */
+    answer: Schema.String,
+  }),
+  isEphemeral: false,
+});
+
+/**
  * Human-readable status update emitted by an agent or operation.
  */
 export const StatusUpdate = EventType('status.update', {

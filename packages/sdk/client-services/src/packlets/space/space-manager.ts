@@ -12,6 +12,7 @@ import { Trigger, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { Event } from '@dxos/effect';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,6 +26,7 @@ import { type Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { NetworkReady } from '../services/events.ts';
 import { CredentialRetrieverExtension } from './admission-discovery-extension.ts';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol.ts';
 import { Space } from './space.ts';
@@ -196,18 +198,29 @@ export type SpaceManagerLayerOptions = Pick<SpaceManagerProps, 'disableP2pReplic
  */
 export const SpaceManagerLayer = (
   options: SpaceManagerLayerOptions = {},
-): Layer.Layer<SpaceManagerService, never, FeedStoreService | SwarmNetworkManagerService | IMetadataStoreService> =>
+): Layer.Layer<
+  SpaceManagerService,
+  never,
+  Event.Bus | FeedStoreService | SwarmNetworkManagerService | IMetadataStoreService
+> =>
   Layer.effect(
     SpaceManagerService,
     Effect.gen(function* () {
       const feedStore = yield* FeedStoreService;
       const networkManager = yield* SwarmNetworkManagerService;
       const metadataStore = yield* IMetadataStoreService;
-      return new SpaceManager({
+      const spaceManager = new SpaceManager({
         feedStore,
         networkManager,
         metadataStore,
         disableP2pReplication: options.disableP2pReplication,
       });
+
+      yield* Effect.addFinalizer(() => Effect.promise(() => spaceManager.close()));
+      yield* NetworkReady.pipe(
+        Event.handler(() => Effect.promise(() => spaceManager.open())),
+        Event.subscribe,
+      );
+      return spaceManager;
     }),
   );

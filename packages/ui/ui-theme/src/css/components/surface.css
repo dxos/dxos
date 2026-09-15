@@ -164,7 +164,7 @@
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
     );
     --color-hover-surface-subtle: oklch(
-      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.01) c h
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.025) c h
     );
     --color-current-surface: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.06) c h

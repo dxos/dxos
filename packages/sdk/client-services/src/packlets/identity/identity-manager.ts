@@ -20,6 +20,7 @@ import {
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -56,6 +57,7 @@ import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { IdentityLoaded, StorageReady } from '../services/events.ts';
 import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space/index.ts';
 import { openCredentialsDocument } from '../spaces/credentials-document-store.ts';
 import { createAuthProvider } from './authenticator.ts';
@@ -586,7 +588,7 @@ export const IdentityManagerLayer = (
 ): Layer.Layer<
   IdentityManagerService,
   never,
-  IMetadataStoreService | KeyringApiService | FeedStoreService | SpaceManagerService
+  EffectEvent.Bus | IMetadataStoreService | KeyringApiService | FeedStoreService | SpaceManagerService
 > =>
   Layer.effect(
     IdentityManagerService,
@@ -596,7 +598,7 @@ export const IdentityManagerLayer = (
       const feedStore = yield* FeedStoreService;
       const spaceManager = yield* SpaceManagerService;
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
-      return new IdentityManager({
+      const identityManager = new IdentityManager({
         metadataStore,
         keyring,
         feedStore,
@@ -604,5 +606,16 @@ export const IdentityManagerLayer = (
         edgeConnection: Option.getOrUndefined(edgeConnection),
         ...options,
       });
+
+      const ctx = yield* EffectEx.contextFromScope();
+      yield* Effect.addFinalizer(() => Effect.promise(() => identityManager.close(Context.default())));
+      yield* EffectEvent.on(
+        StorageReady,
+        Effect.fn('IdentityManager.onStorageReady')(function* () {
+          yield* Effect.promise(() => identityManager.open(ctx));
+          yield* EffectEvent.emit(IdentityLoaded, { identity: identityManager.identity });
+        }),
+      );
+      return identityManager;
     }),
   );

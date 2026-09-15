@@ -18,6 +18,7 @@ import { DXN, SpaceId } from '@dxos/keys';
 import { McpToolkit } from '@dxos/mcp-client';
 
 import { startMcpHost } from './mcp-host.ts';
+import * as McpLatency from './McpLatency.ts';
 
 const SPACE = SpaceId.random();
 
@@ -104,6 +105,45 @@ describe('startMcpHost', () => {
         yield* Stream.runDrain(results);
 
         expect(invocations).to.deep.equal([{ key: `dxn:${KEY}`, input: { title: 'Ship' }, spaceId: SPACE }]);
+      }).pipe(Effect.scoped),
+    );
+  });
+
+  test('the latency probe times the same surface from the outside', async ({ expect }) => {
+    const { context } = stubInvoker();
+
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const registry = makeRegistry({ initial: [...Operation.serializable([CreateTask]), definition.make()] });
+        const { url } = yield* startMcpHost({
+          skills: [definition],
+          spaceIds: [SPACE],
+          context: () => context,
+          registry: () => registry,
+        });
+
+        const report = yield* Effect.promise(() =>
+          McpLatency.probe({
+            target: 'local',
+            url,
+            probes: [
+              { tool: 'queryOperations', args: { query: 'task' } },
+              { tool: 'invokeOperation', args: { key: KEY, input: { title: 'Ship' }, spaceId: SPACE } },
+            ],
+            iterations: 2,
+            warmup: 1,
+          }),
+        );
+
+        // Two probes at two timed iterations each, and the warm-up excluded — the shape of the
+        // report is the contract; the numbers themselves are whatever the machine gives.
+        expect(report.samples.length).to.equal(4);
+        expect(report.stats['*'].errors).to.equal(0);
+        expect(report.stats.queryOperations.count).to.equal(2);
+        // Keyed by the operation, not by the tool: every verb goes through `invokeOperation`, so a
+        // row named after the tool would average them into one meaningless figure.
+        expect(report.stats[`invokeOperation:${KEY}`].count).to.equal(2);
+        expect(report.stats['*'].p95).to.be.at.least(0);
       }).pipe(Effect.scoped),
     );
   });

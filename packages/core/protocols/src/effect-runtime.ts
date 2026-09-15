@@ -9,6 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
 
 import { EffectEx } from '@dxos/effect';
+import { throwUnhandledError } from '@dxos/util';
 
 import { RpcClosedError, TimeoutError } from './errors/index.ts';
 
@@ -61,6 +62,7 @@ export type StreamSubscription<A> = {
  * Subscribes to a service-rpc stream with callback semantics matching the protobuf `Stream`.
  * Returns a cleanup function that interrupts the underlying subscription; the fiber is a daemon
  * so it survives being forked from a short-lived effect, and cleanup is the sole owner.
+ * A throwing `onData` is rethrown as an unhandled error and the subscription keeps delivering.
  */
 export const subscribeStream = <A>(
   runtime: Context.Context<never>,
@@ -80,7 +82,16 @@ export const subscribeStream = <A>(
     }
   };
   const fiber = stream.pipe(
-    Stream.runForEach((value) => Effect.sync(() => onData(value))),
+    Stream.runForEach((value) =>
+      Effect.sync(() => {
+        try {
+          onData(value);
+        } catch (err) {
+          // Callers rarely pass `onError`, so ending the stream here would hide the subscriber's bug.
+          throwUnhandledError(err instanceof Error ? err : new Error(String(err)));
+        }
+      }),
+    ),
     Effect.matchCause({
       onFailure: (cause) => finish(Cause.hasInterruptsOnly(cause) ? undefined : EffectEx.causeToError(cause)),
       onSuccess: () => finish(),

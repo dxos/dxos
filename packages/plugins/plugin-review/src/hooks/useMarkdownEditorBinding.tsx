@@ -6,7 +6,7 @@ import { Compartment, type Extension } from '@codemirror/state';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -41,10 +41,12 @@ export const useMarkdownEditorBinding: MarkdownCapabilities.UseEditorBinding = (
 }) => {
   const identity = useIdentity();
   const versioning = useVersioning(object);
-  // The accepted base (`main`) the review overlays diff against; subscribed so it tracks keystrokes.
-  const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
-  const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
-  const mainContent = docContent ?? textContent;
+  const mainText = useResolveRef(
+    Obj.instanceOf(Markdown.Document, object) ? object.content : Obj.instanceOf(Text.Text, object) ? object : undefined,
+  );
+  const ambientSuggesting = versioning.selection.kind === 'current' && versioning.mode === 'suggesting';
+  const [liveMainContent] = useObject(ambientSuggesting ? mainText : undefined, 'content');
+  const mainContent = ambientSuggesting ? liveMainContent : mainText?.content;
 
   const editor = useVersionedEditor({ object, versioning, identity, mainContent, diffView, viewMode, id });
   const review = useReviewExtensions({ object, versioning, editor, identity, mainContent, diffView });
