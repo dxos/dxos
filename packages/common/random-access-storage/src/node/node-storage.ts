@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import raf from 'random-access-file';
 import { type RandomAccessStorage } from 'random-access-storage';
 
-import { AbstractStorage, type DiskInfo, type Storage, StorageType, wrapFile } from '../common';
+import { AbstractStorage, type DiskInfo, type Storage, StorageType, wrapFile } from '../common/index.ts';
 
 /**
  * Storage interface implementation for Node.

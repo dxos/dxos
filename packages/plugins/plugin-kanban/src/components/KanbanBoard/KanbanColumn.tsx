@@ -10,7 +10,7 @@ import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 import { useKanbanItemEventHandler } from '#hooks';
 import { KanbanConstants, KanbanLayout } from '#types';
 
-import { type KanbanColumnProps, useKanbanBoard } from './context';
+import { type KanbanColumnProps, useKanbanBoard } from './context.ts';
 
 export { type KanbanColumnProps };
 

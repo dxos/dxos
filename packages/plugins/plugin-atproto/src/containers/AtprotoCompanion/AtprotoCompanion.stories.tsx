@@ -25,9 +25,9 @@ import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/sche
 import { translations } from '#translations';
 import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
-import { hashRecord } from '../../hash';
-import * as AtprotoRepo from '../../services/AtprotoRepo';
-import { AtprotoCompanion } from './AtprotoCompanion';
+import { hashRecord } from '../../hash.ts';
+import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
+import { AtprotoCompanion } from './AtprotoCompanion.tsx';
 
 const NOTE_COLLECTION = 'com.example.note';
 

@@ -16,7 +16,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
 
-import { FeedWrapper } from './feed-wrapper';
+import { FeedWrapper } from './feed-wrapper.ts';
 
 export type FeedFactoryOptions = {
   root: Directory;

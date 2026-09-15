@@ -17,8 +17,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { Cron, Enabled, Input, TriggerId } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
+import { Cron, Enabled, Input, TriggerId } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util.ts';
 
 export const timer = Command.make(
   'timer',

@@ -10,7 +10,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { onCleanup } from 'solid-js';
 
-import { useRegistry } from '../registry';
+import { useRegistry } from '../registry.ts';
 
 const flattenExit = <A, E>(exit: Exit.Exit<A, E>): A => {
   if (Exit.isSuccess(exit)) {

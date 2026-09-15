@@ -9,7 +9,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { BaseError } from '@dxos/errors';
 
-import { type McpSession, McpSession as McpSessionSchema, loadSession, sessionDir } from './client';
+import { type McpSession, McpSession as McpSessionSchema, loadSession, sessionDir } from './client.ts';
 
 export class McpSessionError extends BaseError.extend('McpSessionError', 'MCP session error') {}
 

@@ -4,8 +4,8 @@
 
 /// <reference lib="webworker" />
 
-import { writePoolSqlitePayload } from '../internal/opfs-pool-sync';
-import * as OpfsPool from '../OpfsPool';
+import { writePoolSqlitePayload } from '../internal/opfs-pool-sync.ts';
+import * as OpfsPool from '../OpfsPool.ts';
 
 type PoolWorkerMessage = ['write', id: number, data: Uint8Array] | ['close'];
 

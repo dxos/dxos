@@ -4,4 +4,4 @@
 
 import { lazy } from 'react';
 
-export const SpacetimeArticle = lazy(() => import('./SpacetimeArticle'));
+export const SpacetimeArticle = lazy(() => import('./SpacetimeArticle/index.ts'));

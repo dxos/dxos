@@ -8,7 +8,7 @@
 // broken by ignoring DFS back edges so a loop cannot push a node below its own successors.
 //
 
-import type * as Scene from './scene';
+import type * as Scene from './scene.ts';
 
 export type LayoutEdge = {
   from: string;

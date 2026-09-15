@@ -9,11 +9,11 @@ import { type Density } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../testing';
-import { Tooltip } from '../Tooltip';
-import { Button } from './Button';
-import { IconButton, type IconButtonProps } from './IconButton';
-import { SystemIconButton } from './SystemIconButton';
+import { withTheme } from '../../testing/index.ts';
+import { Tooltip } from '../Tooltip/index.ts';
+import { Button } from './Button.tsx';
+import { IconButton, type IconButtonProps } from './IconButton.tsx';
+import { SystemIconButton } from './SystemIconButton.tsx';
 
 const DefaultStory = (props: IconButtonProps) => {
   return (
@@ -113,11 +113,11 @@ const SystemStory = () => {
           )}
         />
         <SystemPresetRow
-          name='Expander'
+          name='Disclosure'
           button={(props) => (
-            <SystemIconButton.Expander
-              active={state.expander}
-              onClick={() => setState((prev) => ({ ...prev, expander: !prev.expander }))}
+            <SystemIconButton.Disclosure
+              active={state.disclosure}
+              onClick={() => setState((prev) => ({ ...prev, disclosure: !prev.disclosure }))}
               {...props}
             />
           )}

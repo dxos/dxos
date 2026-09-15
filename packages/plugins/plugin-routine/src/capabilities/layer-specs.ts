@@ -253,10 +253,11 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
 );
 
 /**
- * Application-scoped remote (EDGE) process manager, providing the progress meter's cancel control.
- * Uses the EDGE implementation whenever an edge service is configured — cancel is addressed by trigger
- * id + space, so it is not space-scoped — otherwise a read-only no-op. Resolved by the progress trace
- * sink to route an edge-run trigger's cancel; the aggregate {@link TriggerMonitor} view is unaffected.
+ * Application-scoped remote (EDGE) process manager: the progress meter's cancel control and the
+ * process-control surface an agent asked for with `location: 'edge'` is spawned on. Uses the EDGE
+ * implementation whenever an edge service is configured, otherwise a read-only no-op. One instance
+ * serves every space — both cancel and process control take the space they address — so this stays
+ * application-scoped even though processes are per-space.
  */
 const RemoteProcessManagerSpec = LayerSpec.make(
   {

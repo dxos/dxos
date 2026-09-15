@@ -9,9 +9,17 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Outline, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
+import { Outline, RemoteSession, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
+import { Position } from '@dxos/util';
 
-import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog, TaskSetArticle } from '#containers';
+import {
+  JournalArticle,
+  OutlineArticle,
+  OutlineCard,
+  QuickEntryDialog,
+  RemoteSessionCard,
+  TaskSetArticle,
+} from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal } from '#types';
 
@@ -35,6 +43,13 @@ export default Capability.makeModule(() =>
         ),
         component: JournalArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'card.remoteSession',
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.CardContent, RemoteSession.RemoteSession),
+        component: RemoteSessionCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
         id: 'article.outline',

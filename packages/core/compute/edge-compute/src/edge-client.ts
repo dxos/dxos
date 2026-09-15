@@ -32,13 +32,16 @@ export type UploadWorkerArgs = {
   assets: Record<string, Uint8Array>;
 };
 
-/** @deprecated Migrate to `client.edge`. */
+/**
+ * Resolves the configured EDGE url and binds the client to the current identity.
+ *
+ * @deprecated Migrate to `client.edge`.
+ */
 export const createEdgeClient = (client: Client): EdgeHttpClient => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge is not configured.');
   const edgeClient = new EdgeHttpClient(edgeUrl);
-  const edgeIdentity = createEdgeIdentity(client);
-  edgeClient.setIdentity(edgeIdentity);
+  edgeClient.setIdentity(createEdgeIdentity(client));
   return edgeClient;
 };
 

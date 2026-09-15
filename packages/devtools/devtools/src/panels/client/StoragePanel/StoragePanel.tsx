@@ -10,9 +10,9 @@ import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { DropdownMenu, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Icon, Menu, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
-import { Bitbar, JsonView } from '../../../components';
+import { Bitbar, JsonView } from '../../../components/index.ts';
 
 // TODO(burdon): Rewrite this panel as a table.
 
@@ -175,46 +175,47 @@ export const StoragePanel = () => {
             Refresh
           </Toolbar.Button>
           <div className='grow' />
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
+          <Menu.Root>
+            <Menu.Trigger asChild>
               <Toolbar.Button>Reset Storage</Toolbar.Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content side='top'>
-                <DropdownMenu.Viewport>
-                  <DropdownMenu.Item
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Content side='top'>
+                <Menu.Viewport>
+                  <Menu.Item
                     onClick={async () => {
                       await services?.SystemService?.reset();
                       location.reload();
                     }}
                   >
                     Confirm Reset Storage?
-                  </DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+                  </Menu.Item>
+                </Menu.Viewport>
+                <Menu.Arrow />
+              </Menu.Content>
+            </Menu.Portal>
+          </Menu.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-cols-2 divide-x divide-separator'>
-        <DataTree items={items} onSelect={setSelected} />
+      {/* The tree takes the full width; a selected feed's detail opens beneath it. */}
+      <Panel.Content
+        classNames={selectedValue?.kind === 'feed' ? 'grid grid-rows-2 divide-y divide-separator' : 'grid'}
+      >
+        <ScrollArea.Root thin orientation='all'>
+          <ScrollArea.Viewport>
+            <DataTree items={items} onSelect={setSelected} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
 
-        {selectedValue && (
-          <ScrollArea.Root thin>
-            <ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
-              {selectedValue.kind === 'feed' && (
-                <>
-                  <Bitbar
-                    value={selectedValue.feed.downloaded ?? new Uint8Array()}
-                    length={Math.ceil(selectedValue.feed.length ?? 0)}
-                    className='m-2'
-                  />
-                  <JsonView data={selectedValue.feed} />
-                </>
-              )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+        {selectedValue?.kind === 'feed' && (
+          <div className='grid grid-rows-[min-content_1fr] min-h-0'>
+            <Bitbar
+              value={selectedValue.feed.downloaded ?? new Uint8Array()}
+              length={Math.ceil(selectedValue.feed.length ?? 0)}
+              className='m-2'
+            />
+            <JsonView data={selectedValue.feed} filter={false} />
+          </div>
         )}
       </Panel.Content>
     </Panel.Root>

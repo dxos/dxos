@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { SupportArticle as default } from './SupportArticle';
+export { SupportArticle as default } from './SupportArticle.tsx';

@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 
 import { InboxOperation } from '#types';
 
-import { renderMarkdown } from '../util';
+import { renderMarkdown } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.ReadEmail> = InboxOperation.ReadEmail.pipe(
   Operation.withHandler(

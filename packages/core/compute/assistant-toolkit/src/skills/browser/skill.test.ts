@@ -21,8 +21,8 @@ import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOper
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { Person } from '@dxos/types';
 
-import { ChatContextHandlers, ChatContextSkill } from '../chat-context';
-import BrowserSkill from './skill';
+import { ChatContextHandlers, ChatContextSkill } from '../chat-context/index.ts';
+import BrowserSkill from './skill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

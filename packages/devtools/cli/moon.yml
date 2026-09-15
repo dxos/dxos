@@ -10,7 +10,7 @@ tasks:
   # to live in a react-ui package. None of them were visible without tracing the graph.
   check-module-structure:
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --from src/bin.ts
       --to "{react,react-dom}"
       --conditions node
@@ -27,8 +27,8 @@ tasks:
       timeout: 120
   # Bundles the CLI into per-platform executables. This is the CLI's real build
   # artifact, but it is intentionally NOT named `build` and the project is not
-  # tagged `ts-build`/`ts-vite-build` — that keeps `cli` out of the `^:build` /
-  # `#ts-build:build` fan-out (e.g. storybook serve no longer waits on it).
+  # tagged `ts-vite-build` — that keeps `cli` out of the `^:build` /
+  # `#ts-vite-build:build` fan-out (e.g. storybook serve no longer waits on it).
   # Type-checking is provided by the `typecheck` tag's `build` task.
   bundle:
     command: bun
@@ -44,6 +44,8 @@ tasks:
       - bunfig.toml
       - package.json
       - LICENSE
+      # Baked into the binary, so a change to it has to invalidate the cached artifact.
+      - $DX_CLI_POSTHOG_API_KEY
       # The pinned bun version is part of the artifact — 1.3.4 produced binaries that leaked `--smol`
       # into `process.argv`, so a bump has to invalidate the cache.
       - /.prototools

@@ -7,7 +7,7 @@ import * as Routine from '@dxos/compute/Routine';
 import type * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 
-import { runInstructionsRef } from './run-instructions';
+import { runInstructionsRef } from './run-instructions.ts';
 
 /** Strip a stale `instructions` binding from a trigger input. */
 const withoutInstructions = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
@@ -57,18 +57,16 @@ export const makeRoutine = ({
   trigger?: Trigger.Trigger;
 }): Routine.Routine => {
   const routine = Routine.make({ ...props, triggers });
-  // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
+  // `SetParent` on `spec.instructions` / `triggers` makes each write declare the parent edge too.
   if (instructions) {
     Obj.update(routine, (routine) => {
       routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
     });
-    Obj.setParent(instructions, routine);
   }
   if (trigger) {
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));
     });
-    Obj.setParent(trigger, routine);
   }
   // Wire every attached trigger (singular or `triggers`) from the action; preserves template-provided
   // input. Gated on `spec`: with no action yet, wiring would null out pre-set trigger runnables.

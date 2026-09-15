@@ -8,8 +8,8 @@ import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { setupConfig } from '../util';
-import { initAutomergeWasm } from '../util/automerge-wasm';
+import { initAutomergeWasm } from '../util/automerge-wasm.ts';
+import { setupConfig } from '../util/index.ts';
 
 let bootedClient: Client | undefined;
 
@@ -41,7 +41,6 @@ export const bootRecoveryClient = async (): Promise<Client> => {
           signalTelemetryEnabled: false,
           edgeFeatures: {
             feedReplicator: false,
-            echoReplicator: false,
             subductionReplicator: false,
             signaling: false,
             agents: false,

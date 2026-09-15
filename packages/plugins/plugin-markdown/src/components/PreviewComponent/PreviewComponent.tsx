@@ -4,7 +4,8 @@
 
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import { Surface, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -14,11 +15,11 @@ import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { type XmlWidgetProps } from '@dxos/ui-editor';
+import { type WidgetProps } from '@dxos/ui-editor';
 
-import { parseEmbedLabel } from './parse-embed-label';
+import { parseEmbedLabel } from './parse-embed-label.ts';
 
-// Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](dxn)`.
+// Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](eid)`.
 
 const formatEmbedLabel = (baseLabel: string, height?: number): string =>
   height != null ? `${baseLabel}|${height}` : baseLabel;
@@ -49,13 +50,13 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
   }
 };
 
-export type PreviewComponentProps = XmlWidgetProps<{
+export type PreviewComponentProps = WidgetProps<{
   db?: Database.Database;
-  dxn: string;
+  eid: string;
   label: string;
   block?: boolean;
   suggest?: boolean;
-  onOpen?: (dxn: URI.URI) => void;
+  onOpen?: (eid: URI.URI) => void;
   /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
   isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
 }>;
@@ -63,18 +64,22 @@ export type PreviewComponentProps = XmlWidgetProps<{
 /**
  * Registry-backed block widget for URL-scheme preview slots.
  * Replaces the addBlockContainer callback pattern.
- * Used as the Component entry in a urlSchemes XmlWidgetDef.
+ * Used as the `image` widget of `objectLinks()`.
  */
 export const PreviewComponent = ({
   db,
-  dxn,
+  eid,
   label: labelProp,
   view,
   range,
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
-  const { invokePromise } = useOperationInvoker();
+  // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
+  // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
+  // first document render. The invoker is only the open-click fallback; absence is tolerable.
+  const invoker = useOptionalCapability(Capabilities.OperationInvoker);
+  const invokePromise = invoker?.invokePromise;
 
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
   const defaultIsSurfaceAvailable = Surface.useIsAvailable();
@@ -83,10 +88,12 @@ export const PreviewComponent = ({
 
   // Resolve relative to the containing document's own database so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
-  const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
+  const uri = useMemo(() => (eid ? URI.make(eid) : undefined), [eid]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
-  const subject = useObject(object);
+  // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
+  // instanceOf check fail, so embeds rendered nothing.
+  const [subject] = useObject(object);
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
@@ -99,8 +106,8 @@ export const PreviewComponent = ({
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
   const extrinsic = size !== 'min-content';
   const data = useMemo(
-    () => (subject ? { subject, attendableId: dxn, extrinsic } : undefined),
-    [subject, dxn, extrinsic],
+    () => (subject ? { subject, attendableId: eid, extrinsic } : undefined),
+    [subject, eid, extrinsic],
   );
   useEffect(() => {
     setSize(height != null ? height / remSize : 'min-content');
@@ -121,7 +128,7 @@ export const PreviewComponent = ({
       const doc = view.state.doc.toString();
       let open = -1;
       let close = -1;
-      const marker = `](${dxn})`;
+      const marker = `](${eid})`;
       for (let at = doc.indexOf(marker); at >= 0; at = doc.indexOf(marker, at + marker.length)) {
         const start = doc.lastIndexOf('![', at);
         if (start >= 0 && (open < 0 || Math.abs(start - range.from) < Math.abs(open - range.from))) {
@@ -134,7 +141,7 @@ export const PreviewComponent = ({
       }
 
       const { baseLabel: currentBaseLabel } = parseEmbedLabel(doc.slice(open + 2, close));
-      const insert = `![${formatEmbedLabel(currentBaseLabel, Math.round(next * remSize))}](${dxn})`;
+      const insert = `![${formatEmbedLabel(currentBaseLabel, Math.round(next * remSize))}](${eid})`;
       view.dispatch({ changes: { from: open, to: close + marker.length, insert } });
       // After the resized box has laid out, bring its top into frame — but only if that top scrolled
       // out of view. Scroll the element itself (not the CM view) so it works whichever ancestor
@@ -145,7 +152,7 @@ export const PreviewComponent = ({
         }
       });
     },
-    [view, range, dxn, remSize],
+    [view, range, eid, remSize],
   );
 
   const handleOpen = useCallback(
@@ -169,70 +176,73 @@ export const PreviewComponent = ({
     [uri, object, onOpen, invokePromise],
   );
 
-  if (!uri || !object || !data) {
-    return null;
-  }
+  if (uri && object && data) {
+    const objectIcon = Obj.getIcon(object);
+    const objectLabel = Obj.getLabel(object);
 
-  const objectIcon = Obj.getIcon(object);
-  const objectLabel = Obj.getLabel(object);
+    // Section preview.
+    if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
+      return (
+        <div
+          className='relative grid scroll-mt-16'
+          style={sizeStyle(size, 'vertical')}
+          {...resizeAttributes}
+          ref={containerRef}
+        >
+          <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
+            <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+          </div>
 
-  // Section preview.
-  if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
-    return (
-      <div
-        className='relative grid scroll-mt-16'
-        style={sizeStyle(size, 'vertical')}
-        {...resizeAttributes}
-        ref={containerRef}
-      >
-        <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
-          <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
-        </div>
+          <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
+            <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
+              {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
+              {objectLabel}
+            </span>
+          </div>
 
-        <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
-          <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
-            {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
-            {objectLabel}
-          </span>
-        </div>
-        <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-          <IconButton
-            density='sm'
-            icon='ph--arrow-square-out--regular'
-            iconOnly
-            label='Open'
-            variant='ghost'
-            onClick={handleOpen}
+          <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
+            <IconButton
+              density='sm'
+              icon='ph--arrow-square-out--regular'
+              iconOnly
+              label='Open'
+              variant='ghost'
+              onClick={handleOpen}
+            />
+          </div>
+
+          <ResizeHandle
+            side='block-end'
+            fallbackSize={FALLBACK_SIZE}
+            minSize={MIN_SIZE}
+            size={size}
+            onSizeChange={handleResize}
           />
         </div>
+      );
+    }
 
-        <ResizeHandle
-          side='block-end'
-          fallbackSize={FALLBACK_SIZE}
-          minSize={MIN_SIZE}
-          size={size}
-          onSizeChange={handleResize}
-        />
-      </div>
-    );
+    // Card preview.
+    if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
+      return (
+        <div>
+          <Card.Root>
+            <Card.Header>
+              <Card.Block />
+              <Card.Title>{objectLabel}</Card.Title>
+            </Card.Header>
+            <Card.Body>
+              <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+            </Card.Body>
+          </Card.Root>
+        </div>
+      );
+    }
   }
 
-  // Card preview.
-  if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
-    return (
-      <div>
-        <Card.Root>
-          <Card.Header>
-            <Card.Block />
-            <Card.Title>{objectLabel}</Card.Title>
-          </Card.Header>
-          <Card.Body>
-            <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-          </Card.Body>
-        </Card.Root>
-      </div>
-    );
-  }
-
-  return null;
+  return (
+    <span className='bg-card-surface text-sm border border-separator rounded-sm p-1'>
+      Invalid object: <span className='font-mono'>{eid}</span>
+    </span>
+  );
 };

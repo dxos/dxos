@@ -2,15 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './bridge-rpc';
-export * from './config';
-export * as Rpc from './Rpc';
-export type * from './echo';
-export type * from './halo';
-export * from './invitations';
-export * from './service';
-export * from './service-rpc';
-export type * from './shell';
-export * from './space';
-export * from './timeouts';
-export * from './types';
+export * from './bridge-rpc.ts';
+export * from './config.ts';
+export * as Rpc from './Rpc.ts';
+export type * from './echo.ts';
+export type * from './halo.ts';
+export * from './invitations/index.ts';
+export * from './service.ts';
+export * from './service-rpc.ts';
+export type * from './shell.ts';
+export * from './space.ts';
+export * from './timeouts.ts';
+export * from './types/index.ts';

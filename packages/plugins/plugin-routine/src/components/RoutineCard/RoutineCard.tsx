@@ -12,7 +12,7 @@ import { Card, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { cronToSchedule, describeSchedule } from '../Schedule';
+import { cronToSchedule, describeSchedule } from '../Schedule/index.ts';
 
 export type RoutineCardProps = AppSurface.ObjectCardProps<Routine.Routine>;
 

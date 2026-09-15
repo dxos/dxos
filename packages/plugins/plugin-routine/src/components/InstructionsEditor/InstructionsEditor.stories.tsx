@@ -16,7 +16,7 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { InstructionsEditor } from './InstructionsEditor';
+import { InstructionsEditor } from './InstructionsEditor.tsx';
 
 const types = [Instructions.Instructions, Skill.Skill, Text.Text];
 

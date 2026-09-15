@@ -5,6 +5,7 @@
 import { describe, test } from '@effect/vitest';
 
 import * as Operation from '@dxos/compute/Operation';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { SpaceOperationHandlerSet } from '#operations';
@@ -54,8 +55,8 @@ describe('operation serialization', () => {
     const addObject = handlers.find(
       (handler) => DXN.getName(handler.meta.key) === 'org.dxos.operation.space.addObject',
     );
-    expect(addObject).toBeDefined();
-    const record = Operation.serialize(addObject!);
+    invariant(addObject);
+    const record = Operation.serialize(addObject);
     const branches = record.inputSchema?.properties?.object?.anyOf ?? [];
     const draft = branches.find((branch) => branch.properties?.['@type'] != null);
     expect(draft?.additionalProperties).toBe(true);
@@ -67,9 +68,9 @@ describe('operation serialization', () => {
       .filter((handler) => PROJECTED_KEYS.includes(DXN.getName(handler.meta.key)))
       .map((handler) => {
         const record = Operation.serialize(handler);
-        return [DXN.getName(handler.meta.key).split('.').at(-1), Operation.getMutation(record)] as const;
+        return [DXN.getName(handler.meta.key).split('.').at(-1) ?? '', Operation.getMutation(record)] as const;
       })
-      .sort(([a], [b]) => a!.localeCompare(b!));
+      .sort(([a], [b]) => a.localeCompare(b));
 
     expect(projected).toEqual([
       ['addObject', 'write'],

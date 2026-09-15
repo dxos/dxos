@@ -140,10 +140,6 @@ export const segmentAtPosition = (state: EditorState, position: number, side: Se
 const vocabMark = (stale: boolean) =>
   Decoration.mark({ class: ['cm-segment', 'cm-segment-vocab', stale && 'cm-segment-stale'].filter(Boolean).join(' ') });
 
-const hoverMark = (kind: string) => Decoration.mark({ class: `cm-segment cm-segment-hover cm-segment-${kind}` });
-
-const selectedMark = (kind: string) => Decoration.mark({ class: `cm-segment cm-segment-selected cm-segment-${kind}` });
-
 /**
  * Decorations from segment state.
  *
@@ -171,12 +167,20 @@ const decorations = (side: SegmentSide) =>
 
     const hoveredSegment = hovered && segments.find((segment) => segment.id === hovered);
     if (hoveredSegment && hoveredSegment.id !== selected) {
-      push(hoveredSegment, hoverMark(hoveredSegment.kind), 1);
+      push(
+        hoveredSegment,
+        Decoration.mark({ class: `cm-segment cm-segment-hover cm-segment-${hoveredSegment.kind}` }),
+        1,
+      );
     }
 
     const selectedSegment = selected && segments.find((segment) => segment.id === selected);
     if (selectedSegment) {
-      push(selectedSegment, selectedMark(selectedSegment.kind), 2);
+      push(
+        selectedSegment,
+        Decoration.mark({ class: `cm-segment cm-segment-selected cm-segment-${selectedSegment.kind}` }),
+        2,
+      );
     }
 
     marks.sort((a, b) => a.from - b.from || a.order - b.order || a.to - b.to);

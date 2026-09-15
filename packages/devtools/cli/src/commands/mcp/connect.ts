@@ -12,17 +12,16 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { BaseError } from '@dxos/errors';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
-import { authorize, initialize, saveSession } from './client';
+import { authorize, initialize, saveSession } from './client.ts';
 
 class McpConnectError extends BaseError.extend('McpConnectError', 'MCP connect failed') {}
 
 export const connect = Command.make(
   'connect',
   {
-    url: Args.string('url').pipe(
-      Args.withDescription('MCP server URL (e.g. https://mcp-space-service.dxos.workers.dev).'),
-    ),
+    url: Args.string('url').pipe(Args.withDescription('MCP server URL (e.g. https://mcp.dxos.network).')),
     spaceId: Options.string('space-id').pipe(
       Options.withDescription('Space(s) to bring into the session context; repeatable. Defaults to the first space.'),
       Options.atLeast(0),
@@ -56,7 +55,7 @@ export const connect = Command.make(
       try: () =>
         authorize({
           serverUrl: url,
-          identityKey: identity.identityKey.toHex(),
+          identityKey: requirePublicKey(identity.identityKey).toHex(),
           spaceIds,
           haloSpaceId: Option.getOrUndefined(haloSpaceId),
         }),

@@ -17,7 +17,7 @@ import { EID, PublicKey } from '@dxos/keys';
 import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
 import { FeedService } from '@dxos/protocols/rpc';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 describe('Feed', () => {
   let builder: EchoTestBuilder;

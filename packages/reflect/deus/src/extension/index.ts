@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { mdl, mdlBlockDescription } from './language';
-export { mdlLint } from './lint';
-export { mdlComplete } from './complete';
+export { mdl, mdlBlockDescription } from './language.ts';
+export { mdlLint } from './lint.ts';
+export { mdlComplete } from './complete.ts';

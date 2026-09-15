@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { deriveResultMapping } from './deriveMapping';
-import { extractResults } from './extractResults';
+import { deriveResultMapping } from './deriveMapping.ts';
+import { extractResults } from './extractResults.ts';
 
 // Mirrors AutoTrader's real results DOM: <li data-advertid> cards wrapping a titled link + image.
 const card = (index: number) => `

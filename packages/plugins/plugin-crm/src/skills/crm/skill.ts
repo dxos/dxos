@@ -10,7 +10,7 @@ import { trim } from '@dxos/util';
 import { type ResearchSource, defaultResearchSources } from '#sources';
 import { CrmOperation } from '#types';
 
-import { CRM_SKILL_KEY as SKILL_KEY } from '../keys';
+import { CRM_SKILL_KEY as SKILL_KEY } from '../keys.ts';
 
 /**
  * Skill instructions are deliberately thin: entity shapes, dedup, and profile structure are owned
@@ -63,11 +63,9 @@ export const makeCrmSkill = (researchSources: ReadonlyArray<ResearchSource> = de
     }),
   });
 
-const make = () => makeCrmSkill();
-
 const skill: Skill.Definition = {
   key: SKILL_KEY,
-  make,
+  make: makeCrmSkill,
 };
 
 export default skill;

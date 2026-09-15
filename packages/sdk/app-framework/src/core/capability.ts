@@ -11,10 +11,10 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { DXN } from '@dxos/keys';
 
-import type * as ActivationEvent from './activation-event';
-import type * as CapabilityManager from './capability-manager';
-import { CapabilityNotFoundError } from './errors';
-import type * as Plugin from './plugin';
+import type * as ActivationEvent from './activation-event.ts';
+import type * as CapabilityManager from './capability-manager.ts';
+import { CapabilityNotFoundError } from './errors.ts';
+import type * as Plugin from './plugin.ts';
 
 //
 // Capability Service Layer

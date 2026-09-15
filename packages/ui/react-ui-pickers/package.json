@@ -24,10 +24,10 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@emoji-mart/data": "catalog:",
     "@emoji-mart/react": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
     "emoji-mart": "catalog:"
   },
   "devDependencies": {

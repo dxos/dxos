@@ -9,8 +9,8 @@ import { Database } from '@dxos/echo';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { EdgarFetchError, EdgarTickerNotFoundError, InstrumentMissingSymbolError } from '../errors';
-import { fetchEdgarFundamentals } from '../services';
+import { EdgarFetchError, EdgarTickerNotFoundError, InstrumentMissingSymbolError } from '../errors.ts';
+import { fetchEdgarFundamentals } from '../services/index.ts';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.GetInstrumentFundamentals> =
   IbkrOperation.GetInstrumentFundamentals.pipe(

@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 
-import { PipelinePanel } from '../components';
-import { PIPELINE_RUN, usePipelineStory } from './pipeline-context';
+import { PipelinePanel } from '../components/index.ts';
+import { PIPELINE_RUN, usePipelineStory } from './pipeline-context.ts';
 
 /** CENTER: the pipeline picker + run controls. Triggers the run; status/progress come from the monitor. */
 export const PipelineModule = () => {

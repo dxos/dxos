@@ -9,7 +9,7 @@ import { Blob, Database, Error, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import * as File from './File';
+import * as File from './File.ts';
 
 describe('File', () => {
   let builder: EchoTestBuilder;

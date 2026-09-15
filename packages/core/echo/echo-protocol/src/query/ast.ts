@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { EID, EntityId, URI } from '@dxos/keys';
 
-import { ForeignKey } from '../foreign-key';
+import { ForeignKey } from '../foreign-key.ts';
 
 // Type identifier URI — either a DXN (typename) or an EID (stored-schema-as-object).
 // Matches the URI written into an object's `system.type` (see `getSchemaURI`). Null

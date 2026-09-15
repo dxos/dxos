@@ -6,8 +6,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { AppAnnotation } from '../echo';
-import * as DeckSpec from './DeckSpec';
+import { AppAnnotation } from '../echo/index.ts';
+import * as DeckSpec from './DeckSpec.ts';
 
 const mailbox: DeckSpec.DeckSpec = {
   levels: [{ key: 'mailbox', size: 'fill' }, { key: 'message', size: 'fill' }, { key: 'attachment' }],

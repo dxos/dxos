@@ -19,7 +19,7 @@ import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 
 import { Mailbox } from '#types';
 
-import { seedMailboxBinding } from '../testing/sync-fixture';
+import { seedMailboxBinding } from '../testing/sync-fixture.ts';
 
 const TEST_SOURCE = 'test.mail';
 

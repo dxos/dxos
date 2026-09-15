@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { FACE_UPS, faceBasis, unitOnFace } from './cubed-sphere';
+import { FACE_UPS, faceBasis, unitOnFace } from './cubed-sphere.ts';
 
 describe('cubed-sphere', () => {
   test('has six faces', ({ expect }) => {

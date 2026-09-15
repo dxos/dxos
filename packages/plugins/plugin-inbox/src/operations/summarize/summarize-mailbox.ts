@@ -18,10 +18,10 @@ import { log } from '@dxos/log';
 import { Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
-import { isAiUnavailableCause } from '../extractor/ai-gate';
-import { withMailboxLock } from '../mailbox-lock';
+import * as InboxOperation from '../../types/InboxOperation.ts';
+import * as Mailbox from '../../types/Mailbox.ts';
+import { isAiUnavailableCause } from '../extractor/ai-gate.ts';
+import { withMailboxLock } from '../mailbox-lock.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 

@@ -21,7 +21,7 @@ import { trim } from '@dxos/util';
 
 import { InboxOperation, Mailbox } from '#types';
 
-import { renderMarkdown } from '../util';
+import { renderMarkdown } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = InboxOperation.ClassifyEmail.pipe(
   Operation.withHandler(

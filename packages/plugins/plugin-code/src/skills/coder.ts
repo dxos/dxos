@@ -32,10 +32,11 @@ const operations = [
  * get_package, list_symbols, find_symbol, get_symbol) to look up DXOS and
  * Composer APIs while authoring code.
  *
- * TODO(burdon): Make configurable via plugin Settings once EDGE deployment
- * URL is finalized.
+ * Addressed through the EDGE entrypoint, like every other service; a skill definition has no access
+ * to the client config, so the environment is pinned here rather than resolved.
+ * TODO(burdon): Make configurable via plugin Settings.
  */
-const INTROSPECT_MCP_URL = 'https://edge.dxos.workers.dev/introspect/mcp';
+const INTROSPECT_MCP_URL = 'https://dxos.network/introspect/mcp';
 
 const make = () =>
   Skill.make({

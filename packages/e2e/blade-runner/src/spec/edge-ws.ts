@@ -5,9 +5,9 @@
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { WsReplicant } from '../replicants/ws-replicant';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { WsReplicant } from '../replicants/ws-replicant.ts';
 
 export type EdgeWsTestSpec = {
   platform: Platform;
@@ -25,7 +25,7 @@ export class EdgeWs implements TestPlan<EdgeWsTestSpec, EdgeWsResult> {
     return {
       platform: 'nodejs',
       messageAmount: 1,
-      endpoint: 'wss://edge.dxos.workers.dev',
+      endpoint: 'wss://dev.dxos.network',
       waitForResponses: false,
     };
   }

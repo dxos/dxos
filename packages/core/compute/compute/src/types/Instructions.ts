@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Skill from './Skill';
+import * as Skill from './Skill.ts';
 
 /** A sentinel command the model recognizes in chat (e.g. `$track <text>`). */
 export const Command = Schema.Struct({
@@ -34,7 +34,9 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
     output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotate({
       description: 'Output schema',
     }),
+    /** Owned body: `SetParent` cascades it and deep-clones it with the instructions. */
     text: Ref.Ref(Text.Text).pipe(
+      Annotation.SetParent.set(true),
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
       Schema.annotate({ title: 'Instructions', description: 'Describe what the agent should do in each session.' }),
     ),
@@ -77,7 +79,7 @@ export const make = ({
   commands,
 }: MakeProps): Instructions => {
   const body = Text.make({ content: text ?? '' });
-  const instructions = Obj.make(Instructions, {
+  return Obj.make(Instructions, {
     name,
     description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
@@ -87,8 +89,4 @@ export const make = ({
     objects,
     commands,
   });
-  // The body is owned by the instructions: it cascade-deletes with it and is cloned alongside it under
-  // `Obj.clone(..., { deep: 'parent' })`.
-  Obj.setParent(body, instructions);
-  return instructions;
 };

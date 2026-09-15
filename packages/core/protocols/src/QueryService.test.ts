@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { QueryResponseSchema, QueryResultSchema } from './buf/proto/gen/dxos/echo/query_pb.ts';
 import * as QueryService from './QueryService.ts';
-import { protoMessage } from './service-rpc.ts';
+import { bufMessage } from './service-rpc.ts';
 
 describe('QueryService wire schema', () => {
   test('round-trips a >8KB documentJson containing an astral character', () => {
@@ -40,14 +42,16 @@ describe('QueryService wire schema', () => {
     expect(() => JSON.parse(decoded.results?.[0]?.documentJson ?? '')).not.toThrow();
   });
 
-  // A plain `Uint8Array`, as arrives over the browser worker MessagePort, takes protobufjs's JS
+  // A plain `Uint8Array`, as arrives over the browser worker MessagePort, took protobufjs's JS
   // Reader rather than Node's native BufferReader, which is the path that corrupted this payload.
-  test('the protoMessage codec no longer corrupts the same payload on the browser Reader path', () => {
+  test('the wire codec no longer corrupts the same payload on the browser Reader path', () => {
     const documentJson = buildLargeString();
-    const message = protoMessage('dxos.echo.query.QueryResponse');
-    const encoded = Schema.encodeSync(message)({
-      results: [{ id: 'obj1', spaceId: 'space1', rank: 0, documentJson }],
-    });
+    const message = bufMessage(QueryResponseSchema);
+    const encoded = Schema.encodeSync(message)(
+      create(QueryResponseSchema, {
+        results: [create(QueryResultSchema, { id: 'obj1', spaceId: 'space1', rank: 0, documentJson })],
+      }),
+    );
 
     const decoded = Schema.decodeSync(message)(new Uint8Array(encoded));
     expect(decoded.results?.[0]?.documentJson).toEqual(documentJson);

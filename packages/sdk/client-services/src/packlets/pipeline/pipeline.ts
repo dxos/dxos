@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
@@ -10,13 +12,14 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { fromTimeframe } from '@dxos/protocols/buf';
+import { type FeedMessage, type FeedMessage_Payload, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { createMappedFeedWriter } from './feeds';
-import { createMessageSelector } from './message-selector';
-import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
+import { createMappedFeedWriter } from './feeds.ts';
+import { createMessageSelector } from './message-selector.ts';
+import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock.ts';
 
 export type WaitUntilReachedTargetProps = {
   /**
@@ -177,7 +180,7 @@ export class PipelineState {
 // TODO(mykola): Extract to `@dxos/echo-protocol`
 export interface PipelineAccessor {
   state: PipelineState;
-  writer: FeedWriter<FeedMessage.Payload>;
+  writer: FeedWriter<FeedMessage_Payload>;
 }
 
 /**
@@ -229,8 +232,12 @@ export class Pipeline implements PipelineAccessor {
   // Inbound feed stream.
   private _feedSetIterator?: FeedSetIterator<FeedMessage>;
 
+  // Woken (and re-armed) each time `_initIterator` swaps the iterator, so a consumer parked on a
+  // finished generator of the previous instance can move to the new one.
+  private _iteratorChanged = new Trigger();
+
   // Outbound feed writer.
-  private _writer: FeedWriter<FeedMessage.Payload> | undefined;
+  private _writer: FeedWriter<FeedMessage_Payload> | undefined;
 
   private _isStopping = false;
   private _isStarted = false;
@@ -241,7 +248,7 @@ export class Pipeline implements PipelineAccessor {
     return this._state;
   }
 
-  get writer(): FeedWriter<FeedMessage.Payload> {
+  get writer(): FeedWriter<FeedMessage_Payload> {
     invariant(this._writer, 'Writer not set.');
     return this._writer;
   }
@@ -259,7 +266,7 @@ export class Pipeline implements PipelineAccessor {
   async addFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
     this._feeds.set(feed.key, feed);
 
-    if (this._feedSetIterator) {
+    if (this._feedSetIterator && !this._feedSetIterator.hasFeed(feed.key)) {
       await this._feedSetIterator.addFeed(feed);
     }
 
@@ -272,11 +279,9 @@ export class Pipeline implements PipelineAccessor {
     invariant(!this._writer, 'Writer already set.');
     invariant(feed.properties.writable, 'Feed must be writable.');
 
-    this._writer = createMappedFeedWriter<FeedMessage.Payload, FeedMessage>(
-      (payload: FeedMessage.Payload) => ({
-        timeframe: this._timeframeClock.timeframe,
-        payload,
-      }),
+    this._writer = createMappedFeedWriter<FeedMessage_Payload, FeedMessage>(
+      (payload: FeedMessage_Payload) =>
+        create(FeedMessageSchema, { timeframe: fromTimeframe(this._timeframeClock.timeframe), payload }),
       feed.createFeedWriter(),
     );
   }
@@ -372,11 +377,16 @@ export class Pipeline implements PipelineAccessor {
     let lastFeedSetIterator = this._feedSetIterator;
     let iterable = lastFeedSetIterator[Symbol.asyncIterator]();
 
+    // Iteration counter to make a busy loop visible in debug logs.
+    let iteration = 0;
     while (!this._isStopping) {
+      iteration += 1;
+      log('consume iteration', { iteration });
       await this._pauseTrigger.wait();
 
       // Iterator might have been changed while we were waiting for the processing to complete.
       if (lastFeedSetIterator !== this._feedSetIterator) {
+        log('consume: iterator changed while paused', { iteration });
         invariant(this._feedSetIterator, 'Iterator not initialized.');
         lastFeedSetIterator = this._feedSetIterator;
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
@@ -386,13 +396,28 @@ export class Pipeline implements PipelineAccessor {
       const { done, value } = await iterable.next();
       if (!done) {
         const block = value ?? failUndefined();
+        log('consume block', { iteration, feedKey: PublicKey.from(block.feedKey).truncate(), seq: block.seq });
         this._processingTrigger.reset();
         this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
         yield block;
         this._processingTrigger.wake();
         this._timeframeClock.updateTimeframe();
+      } else if (!this._isStopping) {
+        // The generator ended while the pipeline is not stopping: it was obtained before `start()`
+        // set the iterator running, or the iterator is being swapped by `setCursor`. Polling the
+        // finished generator would spin the microtask queue forever (starving the whole thread),
+        // so wait for the iterator to (re)start or be replaced, then take a fresh generator.
+        log('consume: generator ended; waiting for iterator restart or swap', { iteration });
+        if (lastFeedSetIterator === this._feedSetIterator) {
+          await Promise.race([lastFeedSetIterator.waitUntilRunning(), this._iteratorChanged.wait()]);
+        }
+        invariant(this._feedSetIterator, 'Iterator not initialized.');
+        lastFeedSetIterator = this._feedSetIterator;
+        iterable = lastFeedSetIterator[Symbol.asyncIterator]();
+        log('consume: resuming with fresh generator', { iteration });
       }
     }
+    log('consume: stopped', { iteration });
 
     // TODO(burdon): Test re-entrant?
     this._isBeingConsumed = false;
@@ -424,6 +449,13 @@ export class Pipeline implements PipelineAccessor {
       stallTimeout: 1000,
     });
 
+    {
+      // Wake consumers parked on the previous iterator's finished generator; re-arm for the next swap.
+      const changed = this._iteratorChanged;
+      this._iteratorChanged = new Trigger();
+      changed.wake();
+    }
+
     this._feedSetIterator.stalled.on((iterator) => {
       log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`, {
         currentTimeframe: this._timeframeClock.timeframe,
@@ -433,7 +465,11 @@ export class Pipeline implements PipelineAccessor {
     });
 
     for (const feed of this._feeds.values()) {
-      await this._feedSetIterator.addFeed(feed);
+      // A concurrent `addFeed` (e.g. a feed admission processed during startup) may have already
+      // registered this feed on the new iterator, whose `addFeed` throws on duplicates.
+      if (!this._feedSetIterator.hasFeed(feed.key)) {
+        await this._feedSetIterator.addFeed(feed);
+      }
     }
   }
 }

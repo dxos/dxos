@@ -7,8 +7,8 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { Domino } from '@dxos/ui';
 
-import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection';
-import { type Block, type BlockExtent } from './types';
+import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection.ts';
+import { type Block, type BlockExtent } from './types.ts';
 
 export type BlockDragOptions = {
   /**
@@ -16,6 +16,8 @@ export type BlockDragOptions = {
    * the gutter, drop-index, and preview geometry stay unambiguous.
    */
   getBlocks: (state: EditorState) => Block[];
+  /** Whether a block gets a grip; a block that fails still selects and moves with a selection. */
+  canDrag?: (state: EditorState, block: Block) => boolean;
   /**
    * Moves the blocks at `sourceIndices` to the slot before `dropIndex` (the end of the document when
    * `dropIndex === blocks.length`), preserving their relative order, as a single edit. `indent` (from
@@ -184,11 +186,17 @@ const activeBlockIndex = (state: EditorState, getBlocks: BlockDragOptions['getBl
 
 // Builds a grip element (outer `dx-button` + inner phosphor glyph). Shared by the floating overlay and the
 // drag preview; callers attach behavior and position it.
+// Builds a grip element: a control-sized box (the row's hit area, as `Field.Block` centres a control in a
+// row) around a 24px button holding the glyph, the shape of a form's disclosure button. Shared by the floating overlay and the drag preview;
+// callers attach behavior and position the box.
 const createGripElement = (): HTMLElement =>
   Domino.of('div')
-    .classNames('dx-button aspect-square cm-blockDragHandle')
-    .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
-    .append(Domino.of('div').classNames('cm-blockDragHandleIcon').append(Domino.svg(GRIP_ICON))).root;
+    .classNames('cm-blockDragHandle')
+    .append(
+      Domino.of('div')
+        .classNames('grid size-6 place-items-center rounded-xs hover:bg-hover-surface')
+        .append(Domino.of('div').classNames('cm-blockDragHandleIcon').append(Domino.svg(GRIP_ICON))),
+    ).root;
 
 //
 // The in-progress drag's decorations, or `null` when idle: each dragged block (with its trailing blank
@@ -789,11 +797,17 @@ const dragTheme = EditorView.theme({
     cursor: 'grab',
     // `left`/`top` name the centre point; the browser centres the real box on it, whatever its size.
     transform: 'translate(-50%, -50%)',
+    // A control-sized box centring the button, so the hit area matches a row control.
+    display: 'grid',
+    placeItems: 'center',
+    width: 'var(--dx-control)',
+    height: 'var(--dx-control)',
   },
   '.cm-blockDragHandleIcon': {
     display: 'grid',
     placeContent: 'center',
-    fontSize: '16px',
+    // `size-3`: the glyph is 1em.
+    fontSize: '0.75rem',
     color: 'var(--color-description, currentColor)',
     opacity: '0.4',
     transition: 'opacity 0.2s',
@@ -858,6 +872,7 @@ const dragTheme = EditorView.theme({
  */
 export const createBlockDrag = ({
   getBlocks,
+  canDrag,
   moveBlocks,
   clampX = true,
   getExtent,
@@ -871,7 +886,7 @@ export const createBlockDrag = ({
     hoveredBlockField,
     createHoverPlugin(getBlocks, dragPlugin),
     dragPlugin,
-    createGripOverlay(getBlocks, dragPlugin),
+    createGripOverlay(getBlocks, dragPlugin, canDrag),
   ];
 };
 
@@ -885,6 +900,7 @@ export const createBlockDrag = ({
 const createGripOverlay = (
   getBlocks: BlockDragOptions['getBlocks'],
   dragPlugin: ReturnType<typeof createDragPlugin>,
+  canDrag?: BlockDragOptions['canDrag'],
 ): Extension =>
   ViewPlugin.fromClass(
     class {
@@ -944,7 +960,10 @@ const createGripOverlay = (
           return [];
         }
         const block = getBlocks(view.state)[index];
-        const coords = block && view.coordsAtPos(block.from);
+        if (!block || (canDrag && !canDrag(view.state, block))) {
+          return [];
+        }
+        const coords = view.coordsAtPos(block.from);
         const scrollRect = view.scrollDOM.getBoundingClientRect();
         // Drop the grip when its first row is scrolled out of the editor viewport.
         if (!coords || coords.bottom <= scrollRect.top || coords.top >= scrollRect.bottom) {

@@ -20,14 +20,13 @@ export class Organization extends Type.makeObject<Organization>(DXN.make('com.ex
 
 export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.person', '0.1.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.check(Schema.isMinLength(1))).annotate({ title: 'Full name' }),
-    ignore: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     active: Schema.optional(Schema.Boolean.annotate({ title: 'Active' })),
+    name: Schema.String.pipe(Schema.check(Schema.isMinLength(1))).annotate({ title: 'Full name' }),
+    hidden: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false))), // Don't render.
     address: Schema.optional(
       Schema.Struct({
         street: Schema.String,
         city: Schema.String,
-        // TODO(burdon): Constrain input control.
         state: Schema.String.pipe(Schema.check(Schema.isMinLength(2)), Schema.check(Schema.isMaxLength(2))).annotate({
           title: 'State',
           description: 'State code',

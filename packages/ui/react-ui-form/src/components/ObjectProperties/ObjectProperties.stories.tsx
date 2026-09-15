@@ -18,8 +18,8 @@ import { Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing';
-import { ObjectProperties } from './ObjectProperties';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing/index.ts';
+import { ObjectProperties } from './ObjectProperties.tsx';
 
 //
 // Test-only schemas exercising a non-Tag ref-array. `Article.authors` is the

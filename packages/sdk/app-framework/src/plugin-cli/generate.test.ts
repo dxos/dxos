@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { generate } from './generate';
+import { generate } from './generate.ts';
 
 /**
  * Writes a throwaway plugin package and runs the generator over it. File-in/file-out is the whole

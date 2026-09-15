@@ -20,17 +20,22 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
-import * as Database from '../../Database';
-import type * as Type from '../../Type';
+import * as Database from '../../Database.ts';
+import type * as Type from '../../Type.ts';
 import {
   ReferenceAnnotationId,
   getSchemaURI,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../Annotation/annotations';
-import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
-import { type JsonSchemaType } from '../JsonSchema';
-import * as RefAtoms from './atoms';
+} from '../Annotation/annotations.ts';
+import {
+  type AnyEntity,
+  type AnyProperties,
+  type UnknownTypeSchema,
+  getStaticTypeSchema,
+} from '../common/types/index.ts';
+import { type JsonSchemaType } from '../JsonSchema/index.ts';
+import * as RefAtoms from './atoms.ts';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -190,8 +195,19 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
+   * @deprecated A read with side effects (triggers loading, registers a resolution callback) that
+   * can also throw. Use {@link peek} for a side-effect-free synchronous read, {@link load} to
+   * resolve asynchronously, or the ref's atom for reactive access.
    */
   get target(): T | undefined;
+
+  /**
+   * @returns The target when it is already materialized: the pinned target, or a side-effect-free
+   * working-set lookup. Never throws and never triggers loading — the synchronous counterpart of
+   * {@link tryLoad}. A just-added object can resolve here before it has settled into its own
+   * document; callers that need a settled document must load instead.
+   */
+  peek(): T | undefined;
 
   /**
    * @returns Promise that will resolves with the target object.
@@ -546,6 +562,23 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
+  peek(): T | undefined {
+    if (this.#target) {
+      return this.#target;
+    }
+    if (!this.#resolver) {
+      return undefined;
+    }
+    try {
+      return this.#resolver.resolveSync(this.#uri, false, undefined) as T | undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * @inheritdoc
+   */
   get isAvailable(): boolean {
     return this.#target !== undefined || this.#resolver !== undefined;
   }
@@ -630,8 +663,8 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * Effect Hash trait. Required for MutableHashMap-based caches (e.g., Atom.family)
    * to deduplicate Ref instances that point to the same object.
-   * ECHO proxies return new RefImpl instances on every property access,
-   * so without this, each access would create a separate cache entry.
+   * ECHO proxies mint a new RefImpl whenever the object changes,
+   * so without this, each one would create a separate cache entry.
    */
   [Hash.symbol](): number {
     return Hash.hash(this.#uri.toString());

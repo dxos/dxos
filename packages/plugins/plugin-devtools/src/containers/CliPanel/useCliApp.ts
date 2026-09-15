@@ -14,7 +14,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { CommandConfig, type CommandServices } from '@dxos/cli-util';
-import { type Client, ClientService, ConfigService } from '@dxos/client';
+import { type Client, fromClient, fromConfig } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 
@@ -86,8 +86,8 @@ export const useCliApp = (client: Client) => {
     // Annotated so a service this host owes is a build error naming it, rather than a
     // "Service not found" the first time someone runs the command that needed it.
     const hostLayer: Layer.Layer<CommandServices, never, never> = Layer.mergeAll(
-      ClientService.fromClient(client),
-      ConfigService.fromConfig(client.config),
+      fromClient(client),
+      fromConfig(client.config),
       Layer.succeed(Plugin.Service, manager),
       Layer.succeed(Capability.Service, manager.capabilities),
       operationLayer,

@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { applyCommands } from '#model';
 import { Excalidraw } from '#types';
 
-import { ExcalidrawArticle } from './ExcalidrawArticle';
+import { ExcalidrawArticle } from './ExcalidrawArticle.tsx';
 
 const FLOWCHART = `
 flowchart TB

@@ -41,6 +41,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/mcp-server": "workspace:*",
+    "@dxos/observability": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -81,6 +82,7 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
     "@opentui/core-darwin-arm64": "catalog:",
     "@opentui/core-darwin-x64": "catalog:",
     "@opentui/core-linux-arm64": "catalog:",

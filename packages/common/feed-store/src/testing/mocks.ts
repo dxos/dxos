@@ -6,7 +6,7 @@ import { Event, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
-import type { FeedWriter, WriteOptions, WriteReceipt } from '../feed-writer';
+import type { FeedWriter, WriteOptions, WriteReceipt } from '../feed-writer.ts';
 
 /**
  * Mock writer collects and emits messages.

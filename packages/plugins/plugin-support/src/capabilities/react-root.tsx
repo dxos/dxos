@@ -7,31 +7,15 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 
-import { WelcomeTour } from '#components';
+import { GuidedTourContainer } from '#containers';
 import { meta } from '#meta';
-import { HelpCapabilities, Tour } from '#types';
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* (steps?: Tour.Step[]) {
-    return Capability.contribute(Capabilities.ReactRoot, {
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contribute(Capabilities.ReactRoot, {
       id: meta.profile.key,
-      root: () => {
-        const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
-        return (
-          <WelcomeTour
-            steps={steps ?? []}
-            running={state.running}
-            onRunningChanged={(newState) => {
-              updateState((s) => ({ ...s, running: newState }));
-              if (!newState) {
-                updateState((s) => ({ ...s, showHints: false }));
-              }
-            }}
-          />
-        );
-      },
-    });
-  }),
+      root: () => <GuidedTourContainer />,
+    }),
+  ),
 );

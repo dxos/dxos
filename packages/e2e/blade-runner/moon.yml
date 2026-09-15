@@ -4,9 +4,13 @@ tags:
   - ts-vite-build
   - ts-test
 tasks:
-  # TODO(wittjosiah): Actually run build here.
+  # No bundle of its own — plans are run straight from TypeScript with `node --import tsx`, which is
+  # why `pnpm run-tests` points at a `dist/` that never existed. The dependency edge is the point:
+  # it builds the SDK packages a plan imports, so one `moon run blade-runner:build` readies a run.
   build:
     command: 'true'
+    deps:
+      - '^:build'
     options:
       mergeArgs: replace
       mergeInputs: replace

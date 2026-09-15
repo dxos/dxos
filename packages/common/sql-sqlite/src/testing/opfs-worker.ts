@@ -6,7 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as OpfsWorker from '../OpfsWorker';
+import * as OpfsWorker from '../OpfsWorker.ts';
 
 const DB_NAME = 'DXOS';
 

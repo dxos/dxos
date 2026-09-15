@@ -9,11 +9,9 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
-import deleteMilestone from './delete-milestone';
-
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
+import deleteMilestone from './delete-milestone.ts';
 
 describe('delete-milestone', () => {
   it.effect('releases its tasks to the backlog instead of deleting them', () =>
@@ -33,6 +31,6 @@ describe('delete-milestone', () => {
       expect(taskSet.milestones).toHaveLength(0);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
       expect(task.milestone).toBeUndefined();
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });

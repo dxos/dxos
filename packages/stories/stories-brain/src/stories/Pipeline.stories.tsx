@@ -68,10 +68,10 @@ import {
   type OutputDetail,
   type PipelineInfo,
   type StatItem,
-} from '../components';
-import { PIPELINE_RUN, PipelineStoryContext } from '../modules';
-import { StoryRole } from '../modules';
-import { StoryModulesPlugin } from '../testing/modules';
+} from '../components/index.ts';
+import { PIPELINE_RUN, PipelineStoryContext } from '../modules/index.ts';
+import { StoryRole } from '../modules/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 const OWNER_EMAIL = 'alice@example.com';
 

@@ -6,7 +6,7 @@
 
 import * as ActivationEvent$ from '@dxos/app-framework/ActivationEvent';
 
-import * as AppCapabilities from './AppCapabilities';
+import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
  * Fired when plugin state is ready.

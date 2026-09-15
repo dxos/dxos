@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import { decodeInput, isQuitInput } from './input';
+import { decodeInput, isQuitInput } from './input.ts';
 
 describe('decodeInput', () => {
   test('decodes printable characters', ({ expect }) => {

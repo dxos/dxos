@@ -10,8 +10,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
-import { MessageStore } from '../stores';
-import { detectTopics, salientTokens } from './detect-topics';
+import { MessageStore } from '../stores/index.ts';
+import { detectTopics, salientTokens } from './detect-topics.ts';
 
 const at = (minutesPastTen: number): string =>
   new Date(Date.UTC(2026, 5, 1, 10, 0, 0) + minutesPastTen * 60_000).toISOString();

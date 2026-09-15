@@ -16,7 +16,7 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
 
-import { type ConnectionTestError } from '../errors';
+import { type ConnectionTestError } from '../errors.ts';
 
 /** Descriptor for one remote target returned by discovery operations. */
 export const RemoteTarget = Schema.Struct({
@@ -255,6 +255,19 @@ export type ConnectorEntry = {
    * declares {@link oauth} — the user is offered a reauthenticate action on failure.
    */
   testConnection?: TestConnection;
+  /**
+   * Non-secret facts about this connection, listed in its settings — the bucket and endpoint of an
+   * S3 connection, the host of an IMAP one. Answers "which account is this?" without making the
+   * user re-derive it from an opaque `source` hostname, and gives a failed test something concrete
+   * to be read against.
+   *
+   * Implementations MUST NOT return anything secret. `AccessToken.token` is off limits; `account`
+   * and `source` are fine, being non-secret identifiers by definition.
+   */
+  describeConnection?: (input: {
+    accessToken: AccessToken.AccessToken;
+    connection: Connection.Connection;
+  }) => ReadonlyArray<{ label: string; value: string }>;
 };
 
 /**

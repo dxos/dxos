@@ -11,16 +11,16 @@ import { DXN, type EntityId } from '@dxos/keys';
 
 // Type-only imports (erased at runtime — no import cycle); `internal` may depend
 // on the top-level `Obj` / `Type` API at the type level only.
-import type * as Obj from '../../Obj';
-import type * as Type from '../../Type';
+import type * as Obj from '../../Obj.ts';
+import type * as Type from '../../Type.ts';
 import {
   type TypeAnnotation,
   TypeAnnotationId,
   getEntityKind,
   getSchemaTypename,
   getTypeIdentifierAnnotation,
-} from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
+} from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -31,7 +31,7 @@ import {
   RelationTargetId,
   type UnknownTypeSchema,
   getStaticTypeSchema,
-} from '../common/types';
+} from '../common/types/index.ts';
 
 export {
   ATTR_RELATION_SOURCE,
@@ -42,8 +42,8 @@ export {
   RelationTargetId,
 };
 
-import { toJsonSchema } from '../JsonSchema';
-import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
+import { toJsonSchema } from '../JsonSchema/index.ts';
+import { type EchoTypeSchema, makeEchoTypeSchema } from './entity.ts';
 
 /**
  * Source and target props on relations.

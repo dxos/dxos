@@ -7,11 +7,13 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
-import { ATTR_TYPE } from '@dxos/echo/internal';
-import type { EntityId, SpaceId } from '@dxos/keys';
+import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
+import { SpanAttributes } from '@dxos/effect';
+import type { EntityId, SpaceId, URI } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type IndexCursor, IndexTracker } from './index-tracker';
+import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
+import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import {
   type EntityMeta,
   EntityMetaIndex,
@@ -20,10 +22,12 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
+  type QueueRef,
   type QueueWindow,
+  type Referrer,
   ReverseRefIndex,
   type ReverseRefQuery,
-} from './indexes';
+} from './indexes/index.ts';
 
 /**
  * Result of a single indexing pass over a data source.
@@ -79,6 +83,21 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
 };
 
 /**
+ * The convergence key an indexed object contributes to the merge trigger, if any.
+ *
+ * Queue (feed) entities are out of merge scope — they have no automerge document to merge — and
+ * relations are excluded: they are not merge subjects (endpoints would not be reconciled). The
+ * empty string is not a key; grouping on it would merge unrelated entities.
+ */
+const convergenceKeyOf = (obj: IndexerObject): string | undefined => {
+  if (!obj.documentId || (obj.data as Record<string, unknown>)[ATTR_RELATION_SOURCE] !== undefined) {
+    return undefined;
+  }
+  const convergenceKey = (obj.data[ATTR_META] as { convergenceKey?: string } | undefined)?.convergenceKey;
+  return typeof convergenceKey === 'string' && convergenceKey.length > 0 ? convergenceKey : undefined;
+};
+
+/**
  * Cursor into indexable data-source.
  */
 export interface DataSourceCursor {
@@ -119,6 +138,9 @@ export interface IndexEngineParams {
   objectMetaIndex: EntityMetaIndex;
   ftsIndex: FtsIndex;
   reverseRefIndex: ReverseRefIndex;
+
+  /** Defaults to a fresh store; injectable for tests. */
+  convergenceKeyIntents?: ConvergenceKeyIntentStore;
 }
 
 export class IndexEngine {
@@ -126,12 +148,14 @@ export class IndexEngine {
   readonly #objectMetaIndex: EntityMetaIndex;
   readonly #ftsIndex: FtsIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
+  readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
 
   constructor(params?: IndexEngineParams) {
     this.#tracker = params?.tracker ?? new IndexTracker();
     this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
     this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
+    this.#convergenceKeyIntents = params?.convergenceKeyIntents ?? new ConvergenceKeyIntentStore();
   }
 
   migrate() {
@@ -140,6 +164,7 @@ export class IndexEngine {
       yield* this.#objectMetaIndex.migrate();
       yield* this.#ftsIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
+      yield* this.#convergenceKeyIntents.migrate();
     });
   }
 
@@ -157,10 +182,21 @@ export class IndexEngine {
     return this.#reverseRefIndex.query(query);
   }
 
+  /**
+   * Referrers of one target in one space, joined to the object metadata for the referrer's
+   * document (see {@link ReverseRefIndex.queryReferrers}).
+   */
+  queryReferrers(
+    spaceId: SpaceId,
+    targetDXN: URI.URI,
+  ): Effect.Effect<readonly Referrer[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#reverseRefIndex.queryReferrers({ spaceId, targetDXN });
+  }
+
   queryAll(query: {
     spaceIds: readonly SpaceId[];
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
     window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
@@ -172,6 +208,39 @@ export class IndexEngine {
    */
   querySnapshotsJSON(recordIds: number[]) {
     return this.#ftsIndex.querySnapshotsJSON(recordIds);
+  }
+
+  /**
+   * Live rows carrying any of the given convergence keys in one space — the detection point-lookup
+   * for convergence-key merging.
+   */
+  queryByConvergenceKeys(
+    spaceId: SpaceId,
+    convergenceKeys: readonly string[],
+  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryByConvergenceKeys(spaceId, convergenceKeys);
+  }
+
+  /**
+   * Pending convergence-key merge intents (see {@link ConvergenceKeyIntentStore.record}).
+   */
+  takeConvergenceKeyIntents(): Effect.Effect<
+    { maxId: number; intents: Map<SpaceId, Set<string>> },
+    SqlError.SqlError,
+    SqlClient.SqlClient
+  > {
+    return this.#convergenceKeyIntents.take();
+  }
+
+  /**
+   * Clear a serviced convergence-key intent up to the id returned by {@link takeConvergenceKeyIntents}.
+   */
+  clearConvergenceKeyIntents(
+    spaceId: SpaceId,
+    convergenceKey: string,
+    upToId: number,
+  ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#convergenceKeyIntents.clear(spaceId, convergenceKey, upToId);
   }
 
   queryType(
@@ -195,7 +264,7 @@ export class IndexEngine {
     typeDxns: readonly EntityMeta['typeDXN'][];
     inverted?: boolean;
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
     window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
@@ -207,7 +276,7 @@ export class IndexEngine {
     createdAfter?: number;
     createdBefore?: number;
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryByTimeRange(query);
   }
@@ -270,7 +339,7 @@ export class IndexEngine {
           return recordIds.length;
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'));
+    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 
   update(
@@ -295,10 +364,10 @@ export class IndexEngine {
         done: doneFtsIndex,
         objects: ftsObjects,
       } = yield* this.#update(ctx, this.#ftsIndex, dataSource, {
-        indexName: 'fts5',
+        indexName: 'fts6',
         spaceId: opts.spaceId,
         limit: opts.limit,
-        cursors: cursorsByIndex.get('fts5') ?? [],
+        cursors: cursorsByIndex.get('fts6') ?? [],
       });
       result.updated += updatedFtsIndex;
       result.done = result.done && doneFtsIndex;
@@ -309,10 +378,10 @@ export class IndexEngine {
         done: doneReverseRefIndex,
         objects: reverseRefObjects,
       } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
-        indexName: 'reverseRef',
+        indexName: 'reverseRef2',
         spaceId: opts.spaceId,
         limit: opts.limit,
-        cursors: cursorsByIndex.get('reverseRef') ?? [],
+        cursors: cursorsByIndex.get('reverseRef2') ?? [],
       });
       result.updated += updatedReverseRefIndex;
       result.done = result.done && doneReverseRefIndex;
@@ -324,6 +393,7 @@ export class IndexEngine {
       // stale heads and silently skip documents changed in between.
       Effect.ensuring(Effect.sync(() => dataSource.endPass?.())),
       Effect.withSpan('IndexEngine.update'),
+      SpanAttributes.annotateSpace(opts.spaceId),
     );
   }
 
@@ -361,6 +431,22 @@ export class IndexEngine {
         return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
       }
 
+      // Convergence keys in this batch, deduplicated — recorded as durable merge intents inside the
+      // transaction below, atomically with the cursor advance that would otherwise be the only
+      // record that these writes were ever seen.
+      const intents: { spaceId: SpaceId; convergenceKey: string }[] = [];
+      const seenIntents = new Set<string>();
+      for (const obj of objects) {
+        const convergenceKey = convergenceKeyOf(obj);
+        if (convergenceKey !== undefined) {
+          const composite = JSON.stringify([obj.spaceId, convergenceKey]);
+          if (!seenIntents.has(composite)) {
+            seenIntents.add(composite);
+            intents.push({ spaceId: obj.spaceId, convergenceKey });
+          }
+        }
+      }
+
       // Writes run INSIDE the transaction for atomicity.
       return yield* sqlTransaction.withTransaction(
         Effect.gen({ self: this }, function* () {
@@ -369,6 +455,8 @@ export class IndexEngine {
 
           // Look up recordIds for the objects.
           yield* this.#objectMetaIndex.lookupRecordIds(objects);
+
+          yield* this.#convergenceKeyIntents.record(intents);
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(
@@ -383,6 +471,6 @@ export class IndexEngine {
           return { updated: objects.length, done: false, objects };
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#update'));
+    }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 }

@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { mx } from './mx';
-import { bridgeTv, tv } from './tv';
+import { mx } from './mx.ts';
+import { bridgeTv, tv } from './tv.ts';
 
 describe('tv', () => {
   test('resolves standard tailwind conflicts like mx', ({ expect }) => {

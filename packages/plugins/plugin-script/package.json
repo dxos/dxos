@@ -59,7 +59,11 @@
       "types": "./dist/types/src/skills/index.d.ts",
       "default": "./dist/lib/skills.mjs"
     },
-    "#testing": "./src/testing/index.ts",
+    "#testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/testing.mjs"
+    },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -202,6 +206,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
@@ -219,7 +224,6 @@
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",
     "@octokit/core": "catalog:",
-    "@radix-ui/react-compose-refs": "catalog:",
     "@typescript/typescript6": "catalog:",
     "@typescript/vfs": "catalog:",
     "@valtown/codemirror-continue": "catalog:",

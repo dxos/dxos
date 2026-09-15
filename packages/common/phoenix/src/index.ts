@@ -6,5 +6,5 @@
 // Copyright (C) 2010 Charlie Robbins & the Contributors
 //
 
-export * from './phoenix';
-export * from './watchdog';
+export * from './phoenix.ts';
+export * from './watchdog.ts';

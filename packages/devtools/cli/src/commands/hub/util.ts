@@ -11,7 +11,6 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import path from 'node:path';
 
 import { ConfigService } from '@dxos/client';
-import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { withRetry } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
 import { type EdgeEnvelope } from '@dxos/protocols';
@@ -20,7 +19,13 @@ export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error'
 
 const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
-  return config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
+  const url = config.values?.runtime?.services?.hub?.url;
+  if (!url) {
+    // The CLI writes a hub URL into every profile it creates, so an absent one means the profile
+    // was edited — report that rather than silently substituting a DXOS-operated host.
+    return yield* Effect.fail(new HubApiError({ message: 'Hub URL is not configured (runtime.services.hub.url).' }));
+  }
+  return url;
 });
 
 /**

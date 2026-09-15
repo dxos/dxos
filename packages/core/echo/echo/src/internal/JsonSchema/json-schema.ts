@@ -15,25 +15,25 @@ import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import type * as Type from '../../Type';
-import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
+import type * as Type from '../../Type.ts';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
 import {
   ANY_OBJECT_TYPENAME,
   ANY_OBJECT_VERSION,
   EntityKind,
   EntityKindSchema,
   getStaticTypeSchema,
-} from '../common/types';
-import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
+} from '../common/types/index.ts';
+import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref/index.ts';
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations.ts';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
   getNormalizedEchoAnnotations,
-} from './json-schema-type';
+} from './json-schema-type.ts';
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
@@ -179,16 +179,20 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
   }
   // Recursive: `Schema.optional` is not idempotent in v4, so an already-optional field made optional
   // again nests as `(T | undefined) | undefined` and one pass would leave the inner union behind.
-  return defined.length === 1
-    ? SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {})
-    : new SchemaAST.Union(
-        defined.map(stripUndefinedMember),
-        ast.mode,
-        ast.annotations,
-        ast.checks,
-        ast.encoding,
-        ast.context,
-      );
+  if (defined.length === 1) {
+    const member = SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {});
+    // A check written for `T | undefined` still holds for `T`.
+    return ast.checks ? Schema.make<Schema.Top>(member).check(...ast.checks).ast : member;
+  }
+  return new SchemaAST.Union(
+    defined.map(stripUndefinedMember),
+    ast.mode,
+    ast.annotations,
+    ast.checks,
+    ast.encoding,
+    ast.context,
+    ast.encodingChecks,
+  );
 };
 
 /**
@@ -774,12 +778,16 @@ const inlineAllOfDeep = (node: any): any => {
   // `anyOf` collapses run first: they merge a branch up, and that branch carries the `allOf` wrapper
   // `inlineAllOf` has to flatten.
   const inlined = collapseEchoRef(inlineAllOf(collapseNumberUnion(restoreOpenRecord(restoreEmptyObject(node)))));
+  // Recursed into a copy, never `inlined` itself: the collapse helpers pass a node through unchanged
+  // when there is nothing to collapse, so `inlined` can still BE the caller's node — and that node can
+  // be live stored schema, which normalizing must not rewrite in place.
+  const result: any = { ...inlined };
   for (const [key, value] of Object.entries(inlined)) {
     if (value && typeof value === 'object') {
-      inlined[key] = inlineAllOfDeep(value);
+      result[key] = inlineAllOfDeep(value);
     }
   }
-  return inlined;
+  return result;
 };
 
 const normalizeJsonSchema = (jsonSchema: Types.DeepMutable<JsonSchemaType>): Types.DeepMutable<JsonSchemaType> => {

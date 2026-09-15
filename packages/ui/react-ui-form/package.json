@@ -12,8 +12,16 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types.ts",
+      "types": "./dist/types/src/types.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -49,6 +57,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -61,7 +70,6 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:"
   },
   "devDependencies": {
@@ -78,7 +86,6 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tabster": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

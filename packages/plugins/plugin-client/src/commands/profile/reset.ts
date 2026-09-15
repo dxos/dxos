@@ -13,7 +13,7 @@ import { CommandConfig, print } from '@dxos/cli-util';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { ConfigService } from '@dxos/config';
 
-import { printProfileReset } from './util';
+import { printProfileReset } from './util.ts';
 
 export const reset = Command.make(
   'reset',

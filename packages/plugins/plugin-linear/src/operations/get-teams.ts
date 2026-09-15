@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { LinearOperation } from '#types';
 
-import { LinearApi } from '../services';
+import { LinearApi } from '../services/index.ts';
 
 /**
  * Discovery only — list Linear teams reachable from the connection's token.
@@ -43,10 +43,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = Li
           description: team.description ?? undefined,
         }));
         return { targets };
-      }).pipe(
-        Effect.provide(Database.layer(db)),
-        Effect.provide(LinearApi.LinearCredentials.fromConnection(connection)),
-      );
+      }).pipe(Effect.provide(Database.layer(db)), Effect.provide(LinearApi.fromConnection(connection)));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

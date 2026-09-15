@@ -2,22 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
+import { createContext } from '@dxos/react-hooks';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
+import { ActionToolbar, type ActionToolbarProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { Header } from '../Header';
-import { MarkdownViewer } from '../MarkdownViewer';
-import { type ViewMode } from '../ViewMode';
-import { EventBodyEditor } from './EventBodyEditor';
-import { EventDetails } from './EventDetails';
-import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
+import { Header } from '../Header/index.ts';
+import { MarkdownViewer } from '../MarkdownViewer/index.ts';
+import { type ViewMode } from '../ViewMode/index.ts';
+import { EventBodyEditor } from './EventBodyEditor.tsx';
+import { EventDetails } from './EventDetails.tsx';
+import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar.tsx';
 
 //
 // Context
@@ -68,7 +68,7 @@ type EventToolbarProps = Pick<
   UseEventToolbarActionsProps,
   'graph' | 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete' | 'editing'
 > &
-  Pick<MenuRootProps, 'alwaysActive'>;
+  Pick<ActionToolbarProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
   ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
@@ -86,11 +86,13 @@ const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
     });
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        alwaysActive={alwaysActive}
+        {...composableProps(props)}
+        ref={forwardedRef}
+      />
     );
   },
 );

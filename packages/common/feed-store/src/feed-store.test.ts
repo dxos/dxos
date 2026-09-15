@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { TestItemBuilder } from './testing';
+import { TestItemBuilder } from './testing/index.ts';
 
 describe('FeedStore', () => {
   test('creates feeds', async () => {

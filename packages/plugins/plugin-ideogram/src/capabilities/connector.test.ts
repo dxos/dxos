@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_SOURCE } from '../constants';
-import { createIdeogramConnectorEntry } from './connector';
+import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_SOURCE } from '../constants.ts';
+import { createIdeogramConnectorEntry } from './connector.ts';
 
 describe('ideogram connector', () => {
   const entry = createIdeogramConnectorEntry();

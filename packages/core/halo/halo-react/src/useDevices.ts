@@ -10,7 +10,7 @@ import { useMemo } from 'react';
 
 import { Identity } from '@dxos/halo';
 
-import { useHaloServices } from './HaloProvider';
+import { useHaloServices } from './HaloProvider.tsx';
 
 const EMPTY: readonly Identity.DeviceInfo[] = [];
 

@@ -9,9 +9,9 @@ import React, { useEffect } from 'react';
 import { DXN } from '@dxos/keys';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Capabilities } from '../../../common';
-import { Capability, Plugin } from '../../../core';
-import { useApp } from '../../hooks';
+import { Capabilities } from '../../../common/index.ts';
+import { Capability, Plugin } from '../../../core/index.ts';
+import { useApp } from '../../hooks/index.ts';
 
 // Minimal plugin that contributes a ReactRoot.
 const TestPlugin = Plugin.define<{ error?: boolean }>(

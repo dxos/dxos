@@ -23,7 +23,7 @@ import { trim } from '@dxos/util';
 
 import { AgentIdentity, CommentCapabilities } from '#types';
 
-const DEFAULT_MODEL = 'com.anthropic.model.claude-sonnet-4-6.default';
+const DEFAULT_MODEL = 'com.anthropic.model.claude-sonnet-5.default';
 
 const baseInstructions = trim`
   You are a helpful assistant participating in a comment thread on a document.

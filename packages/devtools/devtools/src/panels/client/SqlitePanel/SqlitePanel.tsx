@@ -10,7 +10,7 @@ import { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } from '
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Icon, Input, Panel, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Field, Icon, Panel, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
 
 const TABLES_QUERY = "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;";
@@ -348,23 +348,23 @@ export const SqlitePanel = () => {
 
         <div className='flex flex-col h-full overflow-hidden'>
           <div className='flex flex-col gap-2 p-2 border-b border-separator'>
-            <Input.Root>
-              <Input.Label>SQL</Input.Label>
-              <Input.TextArea
+            <Field.Root>
+              <Field.Label>SQL</Field.Label>
+              <Field.Textarea
                 value={query}
                 onChange={({ target }) => setQuery(target.value)}
                 classNames='min-h-24 font-mono text-xs'
               />
-            </Input.Root>
-            <Input.Root>
-              <Input.Label>Params (JSON array)</Input.Label>
-              <Input.TextInput
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>Params (JSON array)</Field.Label>
+              <Field.Input
                 value={params}
                 onChange={({ target }) => setParams(target.value)}
                 placeholder='[]'
                 classNames='font-mono text-xs'
               />
-            </Input.Root>
+            </Field.Root>
           </div>
 
           {error && <div className='p-2 text-sm text-red-500 font-mono'>{error}</div>}

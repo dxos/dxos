@@ -1,8 +1,7 @@
+import { createContext } from '@dxos/react-hooks';
 //
 // Copyright 2023 DXOS.org
 //
-
-import { createContext } from '@radix-ui/react-context';
 
 // Kept out of `Column.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so the context and hook exported beside them force a full page reload on every edit.

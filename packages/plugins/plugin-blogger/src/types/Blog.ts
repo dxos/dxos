@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
@@ -11,7 +12,7 @@ import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotatio
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
-import { PublisherService } from './BloggerCapabilities';
+import { PublisherService } from './BloggerCapabilities.ts';
 
 /** Publication lifecycle of a post: local-only `draft` vs synced-to-a-publisher `published`. */
 export const PostStatus = Schema.Literals(['draft', 'published']);
@@ -29,8 +30,9 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
     status: PostStatus.pipe(FormInputAnnotation.set(false)),
     outline: Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
-      .annotate({ description: 'Post outline and/or instructions.' }),
-    content: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
+      .annotate({ description: 'Post outline and/or instructions.' })
+      .pipe(Annotation.SetParent.set(true)),
+    content: Ref.Ref(Markdown.Document).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'indigo' }),
@@ -46,12 +48,14 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
 const resolvePublicationConnectorIds = (
   object: Obj.Unknown,
   capabilities: CapabilityManager.CapabilityManager,
+  get: Atom.AtomContext,
 ): readonly string[] => {
   if (!Obj.instanceOf(Publication, object)) {
     return [];
   }
-  const connectorIds = capabilities
-    .getAll(PublisherService)
+  // Through the atom, so the Connect action appears once the publishers activate after the graph's
+  // first run.
+  const connectorIds = get(capabilities.atom(PublisherService))
     .flat()
     .map((service) => service.connectorId);
   return Array.from(new Set(connectorIds));
@@ -65,7 +69,8 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
     name: Schema.optional(Schema.String),
     instructions: Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
-      .annotate({ description: 'Publication instructions.' }),
+      .annotate({ description: 'Publication instructions.' })
+      .pipe(Annotation.SetParent.set(true)),
     posts: Schema.Array(Ref.Ref(Post)).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name']),
@@ -88,22 +93,18 @@ export const makePost = ({
 }: { name?: string; description?: string; content?: string } = {}): Post => {
   const outline = Text.make();
   const body = Markdown.make({ content });
-  const post = Obj.make(Post, {
+  // The outline and body are owned (`SetParent`): both cascade-delete with the post.
+  return Obj.make(Post, {
     name,
     description,
     status: 'draft',
     outline: Ref.make(outline),
     content: Ref.make(body),
   });
-  Obj.setParent(outline, post);
-  Obj.setParent(body, post);
-  return post;
 };
 
 /** Creates a `Publication` with a fresh instructions text and no posts. */
 export const makePublication = ({ name }: { name?: string } = {}): Publication => {
   const instructions = Text.make();
-  const publication = Obj.make(Publication, { name, instructions: Ref.make(instructions), posts: [] });
-  Obj.setParent(instructions, publication);
-  return publication;
+  return Obj.make(Publication, { name, instructions: Ref.make(instructions), posts: [] });
 };

@@ -9,8 +9,8 @@ import { afterEach, describe, test } from 'vitest';
 
 import { InvalidConfigError } from '@dxos/protocols';
 
-import { FILE_DEFAULTS, FILE_ENVS } from '../types';
-import { Defaults, Envs } from './index';
+import { FILE_DEFAULTS, FILE_ENVS } from '../types.ts';
+import { Defaults, Envs } from './index.ts';
 
 const basePaths: string[] = [];
 

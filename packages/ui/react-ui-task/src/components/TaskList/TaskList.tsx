@@ -2,60 +2,111 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import React, { Fragment, type KeyboardEvent, type PropsWithChildren, useCallback, useMemo, useState } from 'react';
+import React, {
+  type KeyboardEvent,
+  type MouseEvent,
+  type PropsWithChildren,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { useObject } from '@dxos/echo-react';
+import { Filter, Obj } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import {
+  Button,
+  DxAnchorActivate,
+  Field,
   Icon,
+  IconBlock,
   IconButton,
-  IconButtonProps,
-  Input,
   Tag,
+  Toolbar,
   composable,
   composableProps,
+  createContext,
+  toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
-import { type Actor, type Task, TaskSet } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { useCardHover } from '@dxos/react-ui-card';
+import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
+import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
+import {
+  ActionMenu,
+  type MenuAction,
+  type MenuItem,
+  createMenuAction,
+  executeMenuAction,
+  fallbackIcon,
+} from '@dxos/react-ui-menu';
+import { type Actor, Question, RemoteSession, Task } from '@dxos/types';
+import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
+import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
+import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons.ts';
+import { type TaskDescriptionProps } from './TaskDescription.tsx';
+import { TaskTreeContent } from './TaskTreeContent.tsx';
+import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
+
+const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
+
+//
+// Context — a plain `createContext` context from `@dxos/react-hooks` (un-scoped); nesting task lists has no meaning today.
+//
+
 const TASK_LIST_NAME = 'TaskList.Root';
-
-/** Linear-style status groups, most active first. */
-export const STATUS_ORDER: Task.Status[] = ['started', 'todo', 'done', 'failed', 'cancelled'];
-
-/** Fallback status labels. */
-const DEFAULT_STATUS_LABELS: Record<Task.Status, string> = {
-  started: 'Started',
-  todo: 'To Do',
-  done: 'Done',
-  failed: 'Failed',
-  cancelled: 'Cancelled',
-};
-
-export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' | 'estimate' | 'assignee'>>;
-
-//
-// Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
-//
 
 type TaskListContextValue = {
   tasks: readonly Task.Task[];
   groupByStatus: boolean;
   showGroupLabels: boolean;
   showOrdinals: boolean;
-  statusLabel: (status: Task.Status) => string;
-  onTaskCreate?: (title: string) => void;
-  onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
-  onTaskDelete?: (task: Task.Task) => void;
-  onTaskSelect?: (task: Task.Task) => void;
+  showDescription: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
+  /** Render each task's estimate beside the priority control. */
+  showEstimates: boolean;
+  hierarchical: boolean;
+  /** Paint the tree's drop bands on every row (development affordance). */
+  debug: boolean;
+  /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
+  showGutter: boolean;
+  /**
+   * The row's column template, built once from the options so the tree's rows and the edit pane
+   * lay out on the same named tracks (`gutter`, `status`, `title`, `chips`, `estimate`, `priority`,
+   * `actions`).
+   */
+  gridTemplateColumns: string;
+  selected?: string;
+  /** Ids of the checked rows — the set an action acts on, distinct from the current row. */
+  checked: ReadonlySet<string>;
+  /** Whether a branch's sub-tasks are hidden, and the toggle that flips it. */
+  isCollapsed: (id: string) => boolean;
+  onCollapseToggle: (id: string) => void;
+  /** Ids of the task being dragged and its sub-tasks — lifted out of the list for the drag's duration. */
+  dragging: ReadonlySet<string>;
+  onDraggingChange: (task: Task.Task | undefined) => void;
+  onTaskCreate?: (task: Task.Draft) => void;
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+  getTaskActions?: (task: Task.Task) => MenuItem[];
+  /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */
+  onTaskSelect?: (task: Task.Task | undefined) => void;
+  /** Toggles a row's membership of the checked set; defined only when the host wired checkboxes. */
+  onTaskCheck?: (task: Task.Task) => void;
+  onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
 };
 
 const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);
+
+/** Shared empty set, so a list with nothing in flight does not allocate one per render. */
+const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
+
+/** Shared empty map, for a tree rendered without the ordinal gutter. */
+const EMPTY_ORDINALS: ReadonlyMap<string, number> = new Map<string, number>();
 
 //
 // Root — headless context provider. Renders no DOM.
@@ -63,51 +114,218 @@ const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValu
 
 type TaskListRootProps = PropsWithChildren<{
   tasks: readonly Task.Task[];
-  /** Group rows into status sections (Linear order); flat list otherwise. */
+
+  //
+  // Structure.
+  //
+
+  /**
+   * Group rows into status sections (Linear order); flat list otherwise.
+   */
   groupByStatus?: boolean;
+  /**
+   * Render the set as the tree it stores (`Task.parentTask`), not as status groups — the two are
+   * mutually exclusive, since a tree regrouped by status is no longer a tree.
+   */
+  hierarchical?: boolean;
+  /**
+   * Ids of the branches whose sub-tasks are hidden (controlled). Collapsed rather than expanded
+   * ids, because a branch is open by default: tracking the expanded set would render a task's new
+   * first sub-task hidden, the moment adding it made its parent a branch. Per viewer and per list —
+   * a collapsed branch is not a property of the work — so this is state, not stored on the object.
+   */
+  collapsed?: ReadonlySet<string>;
+
+  //
+  // Selection.
+  //
+
+  /**
+   * Selected task id (controlled); omit to let the list track the last row clicked.
+   */
+  selected?: string;
+  /**
+   * Makes the list selectable without a controlled `selected` or an `onTaskSelect` — for a host
+   * whose selection consumers (e.g. `Edit`) live inside the list's own context.
+   */
+  selectable?: boolean;
+  /**
+   * Ids of the checked rows (controlled, and only meaningful with `onTaskCheck`). Deliberately
+   * separate from `selected`: the current row is where the reader is, the checked set is what an
+   * action will act on, and a row is routinely both.
+   */
+  checked?: ReadonlySet<string>;
+
+  //
+  // What a row shows.
+  //
+
+  /** Paint the tree's drop bands on every row (development affordance). */
+  debug?: boolean;
   /** Render the status heading above each group; grouping order is kept either way. */
   showGroupLabels?: boolean;
-  /** Number rows by their position in `tasks` (set order), so tasks can be referenced by ordinal. */
+  /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
   showOrdinals?: boolean;
-  /** i18n hook for group headings; defaults to English labels. */
-  statusLabel?: (status: Task.Status) => string;
-  /** Enables `Create`; called with the trimmed title. */
-  onTaskCreate?: (title: string) => void;
-  /** Enables the done toggle. Every mutation is delegated — the list never writes. */
-  onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
-  /** Enables the per-row delete affordance. */
-  onTaskDelete?: (task: Task.Task) => void;
-  /** Row click. */
-  onTaskSelect?: (task: Task.Task) => void;
+  /** Render each task's estimate beside the priority control. Off by default. */
+  showEstimates?: boolean;
+  /**
+   * Render each task's description under its title; rows grow to fit. Off by default, so a
+   * single-line list (e.g. the chat strip) keeps one row per task.
+   */
+  showDescription?: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
+
+  //
+  // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
+  //
+
+  /**
+   * Trailing menu for a row. One item renders as a plain icon button, several as a `…` menu, none as
+   * nothing — so delete is an ordinary contributed action rather than a special case of its own.
+   */
+  getTaskActions?: (task: Task.Task) => MenuItem[];
+  /**
+   * Enables `Create`; called with a draft carrying at least the trimmed title.
+   */
+  onTaskCreate?: (task: Task.Draft) => void;
+  /**
+   * Enables the row's edit controls. Every mutation is delegated.
+   */
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+  /**
+   * Row click, and `Escape` — which passes `undefined`, since a reader needs a way back out of a
+   * selection. Wiring it (or `selected`) makes the list selectable, so the row shows as selected.
+   */
+  onTaskSelect?: (task: Task.Task | undefined) => void;
+  /**
+   * Enables the gutter checkbox, called with the row toggled. The host owns the set — this list is
+   * embedded in surfaces whose toolbars read the same selection — so nothing is tracked here.
+   */
+  onTaskCheck?: (task: Task.Task) => void;
+  /**
+   * Enables restructuring by drag and by keyboard; called with the one move the gesture means.
+   * `MoveTask` takes exactly this pair, so a drop is a single mutation rather than a re-parent
+   * followed by a reposition.
+   */
+  onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
+  /**
+   * Enables collapsing/expanding a task's sub-tasks; called with the new set of collapsed ids.
+   */
+  onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
 }>;
 
 const TaskListRoot = ({
   children,
   tasks,
   groupByStatus = true,
+  debug = false,
   showGroupLabels = true,
   showOrdinals = false,
-  statusLabel = (status) => DEFAULT_STATUS_LABELS[status],
+  showDescription = false,
+  descriptionComponents,
+  showEstimates = false,
+  hierarchical = false,
+  collapsed,
+  selected: selectedProp,
+  selectable: selectableProp,
+  checked = EMPTY_IDS,
+  getTaskActions,
   onTaskCreate,
   onTaskUpdate,
-  onTaskDelete,
   onTaskSelect,
-}: TaskListRootProps) => (
-  <TaskListProvider
-    tasks={tasks}
-    groupByStatus={groupByStatus}
-    showGroupLabels={showGroupLabels}
-    showOrdinals={showOrdinals}
-    statusLabel={statusLabel}
-    onTaskCreate={onTaskCreate}
-    onTaskUpdate={onTaskUpdate}
-    onTaskDelete={onTaskDelete}
-    onTaskSelect={onTaskSelect}
-  >
-    {/* Both roots are headless, so the pair renders no DOM of its own. */}
-    <Listbox.Root>{children}</Listbox.Root>
-  </TaskListProvider>
-);
+  onTaskCheck,
+  onTaskMove,
+  onCollapsedChange,
+}: TaskListRootProps) => {
+  // Uncontrolled by default: a host that only wants the click callback still gets the selected
+  // styling, and one that owns the selection passes `selected`.
+  const [selectedState, setSelectedState] = useState<string | undefined>(selectedProp);
+  const selected = selectedProp ?? selectedState;
+  const selectable = selectableProp ?? (!!onTaskSelect || selectedProp !== undefined);
+
+  const handleValueChange = useCallback(
+    (id: string) => {
+      setSelectedState(id);
+      const task = tasks.find((task) => task.id === id);
+      if (task) {
+        onTaskSelect?.(task);
+      }
+    },
+    [tasks, onTaskSelect],
+  );
+
+  // Passing `undefined` clears the selection — what `Escape` on a row and the edit pane's buttons do.
+  const handleSelect = useCallback(
+    (task: Task.Task | undefined) => {
+      setSelectedState(task?.id);
+      onTaskSelect?.(task);
+    },
+    [onTaskSelect],
+  );
+
+  // The hook owns the controlled/uncontrolled Set state machine; its trigger/panel ids are not
+  // used, because a sub-task is a sibling row in the same grid rather than a region the toggle
+  // could point `aria-controls` at — `aria-expanded` on the row carries the disclosure instead.
+  const disclosure = useListDisclosure({
+    mode: 'multi',
+    ...(collapsed !== undefined || onCollapsedChange ? { value: collapsed } : {}),
+    defaultValue: new Set<string>(),
+    onValueChange: onCollapsedChange,
+  });
+  const isCollapsed = useCallback((id: string) => disclosure.bind(id).expanded, [disclosure]);
+  const onCollapseToggle = useCallback((id: string) => disclosure.bind(id).toggle(), [disclosure]);
+
+  // A dragged task leaves the list while it is in flight — it is in the reader's hand, shown in the
+  // drag preview — so the rows close up over the gap it came from. Its sub-tasks go with it: they
+  // travel with their parent and are part of the same preview.
+  const [draggingTask, setDraggingTask] = useState<Task.Task>();
+  const dragging = useMemo(() => (draggingTask ? subtreeIds(tasks, draggingTask) : EMPTY_IDS), [tasks, draggingTask]);
+
+  // The checkbox shares the ordinal's gutter, so a checkable list reserves the track even when it
+  // shows no numbers. A movable one does not: the whole row is the drag source, and a track held
+  // for a handle that no longer exists only pushed every title one square right.
+  const showGutter = showOrdinals || !!onTaskCheck;
+  const gridTemplateColumns = useMemo(
+    () => buildGridTemplate({ toggle: hierarchical, showGutter, showEstimates, hasActions: !!getTaskActions }),
+    [hierarchical, showGutter, showEstimates, getTaskActions],
+  );
+
+  return (
+    <TaskListProvider
+      tasks={tasks}
+      gridTemplateColumns={gridTemplateColumns}
+      // Not gated on `!hierarchical` any more: the tree expresses a status group as a `group` node,
+      // so grouping and hierarchy are a choice rather than mutually exclusive capabilities.
+      groupByStatus={groupByStatus}
+      showGroupLabels={showGroupLabels}
+      showOrdinals={showOrdinals}
+      showDescription={showDescription}
+      descriptionComponents={descriptionComponents}
+      showEstimates={showEstimates}
+      hierarchical={hierarchical}
+      debug={debug}
+      showGutter={showGutter}
+      isCollapsed={isCollapsed}
+      selected={selected}
+      checked={checked}
+      dragging={dragging}
+      getTaskActions={getTaskActions}
+      onDraggingChange={setDraggingTask}
+      onCollapseToggle={onCollapseToggle}
+      onTaskCreate={onTaskCreate}
+      onTaskUpdate={onTaskUpdate}
+      onTaskSelect={selectable ? handleSelect : undefined}
+      onTaskCheck={onTaskCheck}
+      onTaskMove={onTaskMove}
+    >
+      {/* Both roots are headless, so the pair renders no DOM of its own. */}
+      <Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>
+        {children}
+      </Listbox.Root>
+    </TaskListProvider>
+  );
+};
 
 TaskListRoot.displayName = 'TaskList.Root';
 
@@ -121,7 +339,7 @@ type TaskListViewportProps = ComposableProps;
 const TaskListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   return (
-    <Listbox.Viewport {...rest} classNames={mx('min-w-0', className)} ref={forwardedRef}>
+    <Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} ref={forwardedRef}>
       {children}
     </Listbox.Viewport>
   );
@@ -133,61 +351,131 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 // Content — the rows, grouped by status when the root says so.
 //
 
+/** Ordinals stop at 99: the gutter is sized for two digits. */
+const MAX_ORDINAL = 99;
+
 /**
- * The rows and the create row are separate grids (the create row sits outside the scrolling
- * viewport), so their leading gutters — ordinal, then status — are declared once here: only
- * matching templates keep the `+` under the status control and the input under the titles.
- * Tailwind scans for whole class names, hence four literals rather than a composed prefix. The
- * status gutter is `1.5rem` because that is the width of the `density='sm'` icon button it holds;
- * a narrower track makes the button overflow it and align left instead of centring.
+ * One column template per list, built from its options and shared by the tree's rows and the edit
+ * pane (the create row sits outside the scrolling viewport, in a grid of its own), so the pane's
+ * icon sits under the rows' status controls and its field starts where their titles do.
+ *
+ * Every fixed track is one control — the rail-item square each cell's `IconBlock` holds — and a
+ * track exists only when its option is on, so a cell is never rendered into a track that is not
+ * there and no track is held empty. Cells flow into the tracks in DOM order; the names are for the
+ * pane and the description, which place themselves.
  */
-const GRID_COLS = {
-  content: 'grid-cols-[1.5rem_1fr_min-content_min-content_2rem]',
-  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_min-content_2rem]',
-  create: 'grid-cols-[1.5rem_1fr]',
-  createWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr]',
+type GridTrack = readonly [name: string | undefined, size: string, endName?: string];
+
+const buildGridTemplate = ({
+  toggle,
+  showGutter,
+  showEstimates,
+  hasActions,
+}: {
+  /** A hierarchical list has branches to disclose; a flat one holds no square for a chevron. */
+  toggle: boolean;
+  showGutter: boolean;
+  showEstimates: boolean;
+  hasActions: boolean;
+}): string => {
+  const candidates: (GridTrack | false)[] = [
+    toggle && [undefined, 'var(--dx-control)'],
+    showGutter && ['gutter', 'var(--dx-control)'],
+    ['status', 'var(--dx-control)'],
+    ['title', 'minmax(0, 1fr)'],
+    // Capped at half the row: `min-content` let one long artifact tag push the title to nothing;
+    // the cell scrolls what does not fit and the title truncates instead.
+    ['chips', 'fit-content(50%)', 'chips-end'],
+    showEstimates && ['estimate', 'var(--dx-control)'],
+    ['priority', 'var(--dx-control)'],
+    hasActions && ['actions', 'var(--dx-control)'],
+  ];
+  const tracks = candidates.filter((track): track is GridTrack => !!track);
+  // A line carries all its names in one bracket: `[tree-row-start] [status]` with no track between
+  // is invalid and silently drops the whole declaration, which is what happens the moment the
+  // toggle track is omitted — so the first track's name joins the row's own.
+  return tracks
+    .map(([name, size], index) => {
+      // A track's `endName` belongs to the line that follows it, which is the same line the next
+      // track's own name sits on — so it is emitted here rather than by the track that declares it.
+      const names = [index === 0 && 'tree-row-start', tracks[index - 1]?.[2], name].filter(Boolean).join(' ');
+      return `${names ? `[${names}] ` : ''}${size}`;
+    })
+    .concat(`[${['tree-row-end', tracks.at(-1)?.[2]].filter(Boolean).join(' ')}]`)
+    .join(' ');
 };
 
 type TaskListContentProps = ComposableProps;
 
 const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
-  const { tasks, groupByStatus, showGroupLabels, showOrdinals, statusLabel } = useTaskListContext('TaskList.Content');
-  // Ordinals follow the set's canonical order, not the grouped display order, so a task keeps its
-  // number as it moves between status groups.
-  const ordinals = useMemo(() => new Map(tasks.map((task, index) => [task.id, index + 1])), [tasks]);
-  const groups = useMemo(() => {
-    if (!groupByStatus) {
-      return tasks.length > 0 ? [{ status: undefined, tasks }] : [];
-    }
+  const { t } = useTranslation(translationKey);
+  const {
+    tasks,
+    groupByStatus,
+    hierarchical,
+    selected,
+    checked,
+    dragging,
+    debug,
+    showGroupLabels,
+    showOrdinals,
+    showDescription,
+    descriptionComponents,
+    showGutter,
+    gridTemplateColumns,
+    isCollapsed,
+    onCollapseToggle,
+    onTaskCheck,
+    onTaskSelect,
+    onTaskUpdate,
+    onTaskMove,
+  } = useTaskListContext('TaskList.Content');
+  // Collapsed ids live in `Root`; read through the callback so a flip still recomputes.
+  const collapsed = useMemo(() => new Set(tasks.map((task) => task.id).filter(isCollapsed)), [tasks, isCollapsed]);
 
-    return STATUS_ORDER.map((status) => ({
-      status,
-      tasks: tasks.filter((task) => (task.status ?? 'todo') === status),
-    })).filter((group) => group.tasks.length > 0);
-  }, [tasks, groupByStatus]);
+  // Grouping and hierarchy are alternatives: a status group holds its tasks flat, because a
+  // sub-task's status need not match its parent's.
+  const grouping = !hierarchical && groupByStatus && showGroupLabels ? STATUS_ORDER : undefined;
 
+  // Numbered down the list as rendered, 1..N. Flat either way: an ordinal names a task ("run 3"),
+  // where a `1.2.1` path would renumber a whole branch.
+  const ordinals = useMemo(() => {
+    const ordered = grouping
+      ? grouping.flatMap((status) => tasks.filter((task) => (task.status ?? 'todo') === status))
+      : hierarchical
+        ? flattenVisibleTasks(buildTaskForest(tasks), collapsed)
+        : tasks;
+    // A dragged row and its sub-tasks are hidden rather than unmounted, so they are still in
+    // `ordered` — numbering them would leave gaps in the column the reader can actually see.
+    const visible = dragging.size > 0 ? ordered.filter((task) => !dragging.has(task.id)) : ordered;
+    // Past 99 the number outgrows the gutter, so it is dropped rather than shrunk.
+    return new Map(visible.flatMap((task, index) => (index < MAX_ORDINAL ? [[task.id, index + 1] as const] : [])));
+  }, [tasks, collapsed, grouping, hierarchical, dragging]);
+
+  // One path: every mode renders through `Tree`. A flat list is a tree of depth one, and a status
+  // group is a `group` node the machine splices out of its own topology.
   return (
-    <Listbox.Content
-      {...composableProps(props, {
-        // Row height lives on the auto rows — an `h-8` on the grid itself would size the whole
-        // list to one row and let the rest overflow invisibly.
-        classNames: mx(
-          'group grid auto-rows-[2rem] gap-x-2 items-center w-full min-w-0',
-          showOrdinals ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
-        ),
-      })}
-      aria-label='Tasks'
-      ref={forwardedRef}
-    >
-      {groups.map(({ status, tasks }) => (
-        <Fragment key={status ?? 'all'}>
-          {status && showGroupLabels && <TaskListGroupLabel>{statusLabel(status)}</TaskListGroupLabel>}
-          {tasks.map((task) => (
-            <TaskListItem key={task.id} task={task} ordinal={showOrdinals ? ordinals.get(task.id) : undefined} />
-          ))}
-        </Fragment>
-      ))}
-    </Listbox.Content>
+    <TaskTreeContent
+      descriptionComponents={descriptionComponents}
+      debug={debug}
+      hierarchical={hierarchical}
+      groupByStatus={grouping}
+      tasks={tasks}
+      collapsed={collapsed}
+      showGutter={showGutter}
+      gridTemplateColumns={gridTemplateColumns}
+      ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
+      selected={selected}
+      checked={checked}
+      showDescription={showDescription}
+      renderTrailing={TaskTreeTrailing}
+      translationKey={translationKey}
+      onCollapseToggle={onCollapseToggle}
+      onTaskCheck={onTaskCheck}
+      onTaskSelect={onTaskSelect}
+      onTaskUpdate={onTaskUpdate}
+      onTaskMove={onTaskMove}
+    />
   );
 });
 
@@ -204,183 +492,554 @@ const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, f
   return (
     <div
       {...rest}
-      className={mx('col-span-full pt-3 pb-1 text-xs text-subdued uppercase', className)}
+      className={mx('col-span-full min-h-(--dx-control) flex items-center text-sm text-description', className)}
       ref={forwardedRef}
     >
-      {children}
+      <span>{children}</span>
     </div>
   );
 });
 
 TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 
-//
-// Item — one row. Exported so a host can render its own selection of tasks.
-//
+/**
+ * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows
+ * (`XS`…`XL`), and two ordinal ramps side by side would be read as one. Rendered on every row so
+ * setting an estimate never depends on discovering a hover affordance, and falling back to
+ * {@link UNSET_ICON} when unset — the same dot the priority column shows, so a row with neither set
+ * reads as two empty controls rather than a dash beside a dot.
+ */
+const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
+  const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
+  const estimate = task.estimate;
+  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
-const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
-  todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
-  started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
-  done: { icon: 'ph--check--regular', classNames: 'text-success-text' },
-  failed: { icon: 'ph--x--regular', classNames: 'text-error-text' },
-  cancelled: { icon: 'ph--x--regular', classNames: 'text-error-text' },
-};
+  if (!onTaskUpdate) {
+    return <IconBlock classNames={estimateTextStyle(estimate)}>{label}</IconBlock>;
+  }
 
-type TaskListItemProps = ComposableProps<{ task: Task.Task; ordinal?: number }>;
-
-const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: number }>(
-  ({ task, ordinal, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
-    const { tasks, onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
-    const { className, ...rest } = composableProps(props);
-
-    // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
-    // so a rename elsewhere (task form, agent, sync) would otherwise leave the row stale.
-    const [snapshot] = useObject(task);
-    const current = snapshot ?? task;
-
-    const done = current.status === 'done';
-    const error = current.status === 'failed';
-
-    // Virtual: an open task whose dependencies (resolved within the set) are not all done.
-    const blocked = (current.status ?? 'todo') === 'todo' && !TaskSet.isTaskReady(tasks, task);
-    // A started agent task is actively being worked by a sub-agent (started is stamped at spawn),
-    // so it spins; a human-started task keeps the static glyph.
-    const active = current.status === 'started' && current.assignee?.role === 'assistant';
-    const { icon, classNames: iconClassNames } = active
-      ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
-      : STATUS_ICONS[current.status ?? 'todo'];
-
-    const handleToggle = useCallback(
-      () => onTaskUpdate?.(task, { status: done ? 'todo' : 'done' }),
-      [onTaskUpdate, task, done],
-    );
-
-    return (
-      <Listbox.Item
-        {...rest}
-        id={task.id}
-        data-testid='taskList.item'
-        // `px-0`: a subgrid's own inline padding shrinks its first and last tracks, so the listbox
-        // item's default inset would push the status control off the column the create row's `+`
-        // sits in. The list's inset belongs to the host, not the row.
-        classNames={mx('group col-span-full grid grid-cols-subgrid px-0', className)}
-        ref={forwardedRef}
-      >
-        {ordinal !== undefined && (
-          <div className='flex items-center justify-center'>
-            <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='tabular-nums'>
-              {ordinal}
-            </Tag>
-          </div>
-        )}
-        {onTaskUpdate ? (
-          <IconButton
-            classNames={mx('justify-self-center', iconClassNames)}
-            variant='ghost'
-            density='sm'
-            icon={icon}
-            iconOnly
-            label={done ? t('mark-todo.label') : t('mark-done.label')}
-            onClick={handleToggle}
-          />
-        ) : (
-          <span className='grid place-items-center justify-self-center'>
-            <Icon icon={icon} classNames={iconClassNames} size={4} />
-            <span className='sr-only'>{t(`status-${current.status ?? 'todo'}.label`)}</span>
-          </span>
-        )}
-        <span
-          className={mx('flex items-center gap-1 min-w-0', onTaskSelect && 'cursor-pointer')}
-          onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}
-        >
-          <span className='truncate'>{current.title}</span>
-        </span>
-        {current.assignee ? <TaskListAssignee assignee={current.assignee} /> : <div />}
-        <div className='flex items-center gap-1'>
-          {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
-          {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
-        </div>
-        {onTaskDelete && (
-          <CompactIconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            label={t('delete-task.label')}
-            classNames='invisible group-hover:visible'
-            onClick={() => onTaskDelete(task)}
-          />
-        )}
-      </Listbox.Item>
-    );
-  },
-);
-
-TaskListItem.displayName = 'TaskList.Item';
-
-// TODO(burdon): Reconcile with `CompactIconButton` from `react-ui-form`.
-const CompactIconButton = (props: IconButtonProps) => {
   return (
-    <span className='grid size-8 shrink-0 place-items-center'>
-      <IconButton variant='ghost' iconOnly density='sm' {...props} />
-    </span>
+    <>
+      <IconBlock>
+        <ActionMenu
+          actions={[Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+            createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
+              label: title,
+              checked: (estimate ?? 'none') === id,
+            }),
+          )}
+        >
+          <Button
+            variant='ghost'
+            data-testid='taskList.item.estimate'
+            classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+            onClick={(event: MouseEvent) => event.stopPropagation()}
+          >
+            {label}
+          </Button>
+        </ActionMenu>
+      </IconBlock>
+    </>
   );
 };
+
+TaskEstimateControl.displayName = 'TaskList.EstimateControl';
+
+/**
+ * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
+ * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
+ * — it is a different kind of statement from "how much", and a filled mark carries that.
+ *
+ * The glyph is also the control: it opens a menu to set the level. It renders on every row —
+ * including one with no priority, which shows a dot — so setting a priority never depends on
+ * discovering a hover affordance.
+ */
+const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
+  const { t } = useTranslation(translationKey);
+  const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
+  const priority = task.priority ?? undefined;
+  const icon = priorityIcon(priority);
+  const styles = priorityTextStyle(priority);
+
+  if (!onTaskUpdate) {
+    // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
+    // in the same column its neighbours use, so the list reads as one column and not a ragged one.
+    return (
+      <IconBlock square>
+        <Icon icon={icon} classNames={mx('shrink-0', styles)} />
+      </IconBlock>
+    );
+  }
+
+  return (
+    <IconBlock>
+      <ActionMenu
+        actions={[Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
+          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
+            label: t(`priority-${id}.label`),
+            icon: optionIcon,
+            iconClassNames: priorityTextStyle(id),
+            checked: priority === id,
+          }),
+        )}
+      >
+        <IconButton
+          variant='ghost'
+          icon={icon}
+          iconOnly
+          label={t('task-priority.label')}
+          data-testid='taskList.item.priority'
+          iconClassNames={styles}
+          onClick={(event) => event.stopPropagation()}
+        />
+      </ActionMenu>
+    </IconBlock>
+  );
+};
+
+/** Trailing cells of a tree row — the same content the flat row puts after its title. */
+const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
+  const { t } = useTranslation(translationKey);
+  const { showEstimates } = useTaskListContext('TaskList.TreeTrailing');
+  const task = item.task;
+  // Subscribed for the same reason as the heading: priority, estimate and assignee are property
+  // edits, which do not change the task array the model is built from.
+  const [snapshot] = useObject(task);
+  const current = snapshot ?? task;
+  if (!task || !current) {
+    return null;
+  }
+
+  return (
+    <>
+      {/* Direct children of the row's subgrid, flowing into the `chips`, `estimate`, `priority` and
+          `actions` tracks in this order — `buildGridTemplate` declares a track only when its option
+          is on, and the matching cell is omitted on the same condition, so the two never drift.
+          Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own
+          a column; every control after it is one rail-item square and needs no wrapper. */}
+      {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
+          reach overflow on its end side, and `justify-end` spills the excess off the start. */}
+      <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
+        <TaskListItemArtifacts task={task} />
+        {current.assignee && <TaskListAssignee assignee={current.assignee} />}
+      </div>
+      {showEstimates && <TaskEstimateControl task={task} />}
+      <TaskPriorityIcon task={task} />
+      <TaskListItemActions task={task} />
+    </>
+  );
+};
+
+//
+// Item actions — the trailing cell of a row.
+//
+
+// The row drives `--controls-opacity` on hover, focus and selection, so its controls reveal
+// together. The previous `group-hover/row:visible` named a group that only the flat row declared —
+// once rows became tree rows nothing matched it and the actions stayed hidden even on hover.
+const ROW_ACTION_CLASSNAMES = hoverableControlItem;
+
+const isMenuAction = (item: MenuItem): item is MenuAction => 'data' in item && typeof item.data === 'function';
+
+/**
+ * A row's contributed actions. One is a plain button — a `…` menu hiding a single item costs a click
+ * to discover nothing — and several collapse into the overflow menu, matching the nav tree's rows.
+ */
+const TaskListItemActions = ({ task }: { task: Task.Task }) => {
+  const { t } = useTranslation(translationKey);
+  const { getTaskActions } = useTaskListContext('TaskList.ItemActions');
+  const actions = useMemo(() => getTaskActions?.(task) ?? [], [getTaskActions, task]);
+
+  if (actions.length === 0) {
+    return null;
+  }
+
+  const [only] = actions;
+  if (actions.length === 1 && isMenuAction(only)) {
+    return (
+      <IconBlock>
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon={only.properties?.icon ?? fallbackIcon}
+          label={toLocalizedString(only.properties?.label, t)}
+          data-testid={only.properties?.testId}
+          classNames={ROW_ACTION_CLASSNAMES}
+          onClick={(event) => {
+            // The row is the selection target; running its action must not also select it.
+            event.stopPropagation();
+            void executeMenuAction(only);
+          }}
+        />
+      </IconBlock>
+    );
+  }
+
+  return (
+    <IconBlock>
+      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+      <ActionMenu actions={actions}>
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--dots-three-vertical--regular'
+          label={t('task-actions.label')}
+          data-testid='taskList.item.actions'
+          classNames={ROW_ACTION_CLASSNAMES}
+          onClick={(event) => event.stopPropagation()}
+        />
+      </ActionMenu>
+    </IconBlock>
+  );
+};
+
+TaskListItemActions.displayName = 'TaskList.ItemActions';
+
+/**
+ * What a task produced, one tag each. Queried rather than read off `ref.target`: on a cold load the
+ * targets are not in memory yet, and a sync read would leave the row permanently empty.
+ */
+const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
+  const db = Obj.getDatabase(task);
+  const ids = useMemo(
+    () =>
+      (task.artifacts ?? []).flatMap((ref) => {
+        const id = Task.refEntityId(ref);
+        return id ? [id] : [];
+      }),
+    [task.artifacts],
+  );
+  const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
+  // Without a database — a story, a preview — the refs were made from objects already in hand, so
+  // their targets resolve synchronously and the row still shows what the task produced.
+  const artifacts = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+
+  return (
+    <>
+      {artifacts.map((artifact) => (
+        <ArtifactTag key={artifact.id} artifact={artifact} />
+      ))}
+    </>
+  );
+};
+
+TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
+
+/**
+ * One artifact, as a tag that opens the object's preview card — the row names what the task
+ * produced, and the reader wants to see it without leaving the list.
+ *
+ * Click, not hover or focus: the tag sits inside a listbox option, where a tab stop of its own would
+ * split the row into several arrow-key stops, and a hover card would fire while the pointer crosses
+ * the row on its way somewhere else.
+ *
+ * A {@link Question.Question} also opens on hover: it is not something the task produced but the
+ * reason it is stopped, so it should not need a click to find. `useCardHover`'s grace period
+ * answers the objection above. No tab stop is added — that half of the objection still stands, so
+ * the tag carries no `button` role either: a role promising keyboard activation that a
+ * non-focusable element cannot deliver is worse than none. A question is answered from its card in
+ * the conversation, which is keyboard-operable throughout.
+ */
+const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
+  const tagRef = useRef<HTMLSpanElement>(null);
+  const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
+  const question = Obj.instanceOf(Question.Question, artifact);
+  // Keyed on the URI string, not the object: `useCardHover` cancels its timer whenever `open`
+  // changes, and the live query re-identifies the artifact on every tick, so an object dependency
+  // means any re-render inside the hover delay swallows the hover.
+  const uri = Obj.getURI(artifact);
+  const openCard = useCallback(() => {
+    const trigger = tagRef.current;
+    trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: uri, label, kind: 'card' }));
+  }, [uri, label]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, question);
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLSpanElement>) => {
+      // The row is an option: without this the click selects the task as well as opening the card.
+      event.stopPropagation();
+      openCard();
+    },
+    [openCard],
+  );
+
+  return (
+    <Tag
+      ref={tagRef}
+      hue='amber'
+      classNames='cursor-pointer'
+      onClick={handleClick}
+      onPointerEnter={question ? startHover : undefined}
+      onPointerLeave={question ? cancelHover : undefined}
+    >
+      {label}
+    </Tag>
+  );
+};
+
+ArtifactTag.displayName = 'TaskList.ArtifactTag';
 
 //
 // Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
 //
 
-type TaskListCreateProps = ComposableProps<{ placeholder?: string }>;
+type TaskListEditProps = ComposableProps<{
+  /** Placeholder for the title field when nothing is selected (the create case). */
+  placeholder?: string;
+  /**
+   * Edit a description under the title — the selected task's, or the new task's when creating, so a
+   * task can be added with one. Off by default, matching `Root`'s `showDescription`: a markdown
+   * field is several rows tall wherever it appears, which a single-line strip has no room for.
+   */
+  showDescription?: boolean;
+  /** Placeholder for the description field. */
+  descriptionPlaceholder?: string;
+  /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
+  descriptionExtensions?: MarkdownEditableProps['extensions'];
+  /**
+   * Lay the pane out on the list's own column template, so the title field starts where the rows'
+   * titles do and the icon sits under their status controls. Off by default: a pane used away from
+   * a list (a dialog, a story) has no columns to line up with.
+   */
+  grid?: boolean;
+}>;
 
-const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
-  ({ placeholder = 'Add task', ...props }, forwardedRef) => {
-    const { onTaskCreate, showOrdinals } = useTaskListContext('TaskList.Create');
+/**
+ * The detail half of the list: it edits whichever task is selected, and creates one when none is.
+ *
+ * Editing lives here rather than in the row because a row is 32px of shared subgrid — a field
+ * opening inside it moves everything around it. A pane below the list has room to be a field.
+ */
+const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
+  (
+    {
+      placeholder = 'Add task',
+      showDescription = false,
+      descriptionPlaceholder = 'Add a description',
+      descriptionExtensions,
+      grid,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    const { t } = useTranslation(translationKey);
+    const descriptionRef = useRef<MarkdownEditableController>(null);
+    const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns } =
+      useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
-    const [title, setTitle] = useState('');
-    const handleKeyDown = useCallback(
+
+    const task = useMemo(() => tasks.find(({ id }) => id === selected), [tasks, selected]);
+    // Subscribe to the selected task so the pane follows a rename made anywhere else.
+    const [snapshot] = useObject(task);
+    const current = snapshot ?? task;
+
+    // The create row's description, mirrored out of the field. A ref rather than state because the
+    // create reads it in the same tick it commits the field, and `useEditable` calls back
+    // synchronously — a `setState` would still hold the previous render's text.
+    const draftDescription = useRef('');
+    // Bumped after a create, to rebuild the held-open editor empty. The field is uncontrolled while
+    // creating (there is no task to read from), so clearing it means remounting it.
+    const [createEpoch, setCreateEpoch] = useState(0);
+
+    const [draft, setDraft] = useState('');
+    // The pane is a view onto whichever task is selected, so switching tasks replaces the text it
+    // holds rather than carrying the previous one's across. The description ref is cleared here too:
+    // the field remounts empty on the way back to creating, but `commit()` on an already-empty field
+    // never calls back — so text abandoned before a selection would otherwise ride along, unseen,
+    // into the next task created.
+    //
+    // State rather than a ref for the previous id (React's adjust-state-on-prop-change pattern): a
+    // render React abandons leaves a ref already mutated, so the retry would skip the reset and the
+    // pane would keep the previous task's text.
+    const [editingId, setEditingId] = useState<string | undefined>(undefined);
+    if (editingId !== current?.id) {
+      setEditingId(current?.id);
+      setDraft(current?.title ?? '');
+      draftDescription.current = '';
+    }
+
+    const commitTitle = useCallback(() => {
+      const title = draft.trim();
+      if (task && current) {
+        if (title.length > 0 && title !== current.title) {
+          onTaskUpdate?.(task, { title });
+        }
+      } else if (title.length > 0) {
+        // Nothing has committed the description yet — it is held open and the reader is in the
+        // title — so commit it here, before assembling the draft it belongs to.
+        descriptionRef.current?.commit();
+        const description = draftDescription.current.trim();
+        onTaskCreate?.({ title, ...(description.length > 0 && { description }) });
+        setDraft('');
+        draftDescription.current = '';
+        setCreateEpoch((epoch) => epoch + 1);
+      }
+    }, [draft, task, current, onTaskCreate, onTaskUpdate]);
+
+    // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
+    // and half a title would become one — clicking the list, the thread, or anywhere else would
+    // leave a stray behind. Creating takes Enter or Save, which are the deliberate acts.
+    const handleTitleBlur = useCallback(() => {
+      if (task && current) {
+        commitTitle();
+      }
+    }, [task, current, commitTitle]);
+
+    const handleTitleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLInputElement>) => {
-        const trimmed = title.trim();
-        if (event.key === 'Enter' && trimmed.length > 0) {
-          onTaskCreate?.(trimmed);
-          setTitle('');
+        if (event.key === 'Enter') {
+          commitTitle();
         }
       },
-      [title, onTaskCreate],
+      [commitTitle],
     );
 
-    if (!onTaskCreate) {
+    // Writes both fields and leaves, as cancelling does — the pane drops back to creating either
+    // way, and only what it did with the pending text differs. Creating commits the description
+    // itself (it is part of the draft), so this only has to for an edit.
+    const handleSave = useCallback(() => {
+      commitTitle();
+      if (task && current) {
+        descriptionRef.current?.commit();
+      }
+      onTaskSelect?.(undefined);
+    }, [commitTitle, task, current, onTaskSelect]);
+
+    // Throws away the pending edit and leaves: the pane drops back to creating, which is the same
+    // exit Escape on a row gives. Reverting first, since deselecting unmounts the fields. An
+    // abandoned create is cleared rather than reverted — a blur may already have committed text into
+    // the field, and reverting would restore exactly that.
+    const handleCancel = useCallback(() => {
+      if (task && current) {
+        descriptionRef.current?.revert();
+      } else {
+        draftDescription.current = '';
+        setCreateEpoch((epoch) => epoch + 1);
+      }
+      setDraft('');
+      onTaskSelect?.(undefined);
+    }, [task, current, onTaskSelect]);
+
+    // Nothing to create with and nothing to edit: the pane has no purpose.
+    if (!onTaskCreate && !(current && onTaskUpdate)) {
       return null;
     }
 
+    // On the list's template the pane has the rows' columns: the ordinal gutter it leaves empty, the
+    // status column takes the icon, and the title column takes the field — which is what puts the
+    // caret where the rows' titles start. Off it, the pane keeps a template of its own.
     return (
+      // One grid, not a row of grids: the title and the description line up column for column, and
+      // the toolbar can sit on the title line while coming LAST in the DOM — so Tab runs title →
+      // description → buttons rather than stopping at a button on the way to the text.
       <div
         {...rest}
-        data-testid='taskList.create'
-        className={mx(
-          'grid gap-x-2 items-center w-full min-w-0 h-8',
-          showOrdinals ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
-          className,
-        )}
+        data-testid='taskList.edit'
+        className={mx('grid w-full min-w-0 shrink-0', !grid && 'grid-cols-[2rem_1fr_min-content]', className)}
+        // On the list's own template the pane's cells name their tracks, so the icon sits under the
+        // rows' status controls and the field under their titles whatever the list's options are;
+        // the toggle and gutter tracks stay empty.
+        style={grid ? { gridTemplateColumns } : undefined}
         ref={forwardedRef}
       >
-        {showOrdinals && <span />}
-        <Icon icon='ph--plus--regular' size={4} classNames='justify-self-center text-subdued' />
-        <Input.Root>
-          <Input.TextInput
+        <span
+          className={mx(
+            'flex items-center justify-center h-(--dx-control)',
+            // Placed explicitly: with a gutter the pane leaves that track empty, and implicit
+            // placement would drop the icon into it.
+            grid ? 'col-[status]' : 'col-start-1',
+          )}
+        >
+          <Icon icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'} classNames='text-subdued' />
+        </span>
+        <Field.Root>
+          <Field.Input
             variant='subdued'
-            classNames='px-0'
-            placeholder={placeholder}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            onKeyDown={handleKeyDown}
+            classNames={mx('px-0', grid && 'col-start-[title] -col-end-2')}
+            data-testid='taskList.edit.title'
+            placeholder={current ? t('task-title.placeholder') : placeholder}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={handleTitleKeyDown}
+            onBlur={handleTitleBlur}
           />
-        </Input.Root>
+        </Field.Root>
+        {showDescription && (current ? onTaskUpdate : onTaskCreate) && (
+          <span
+            data-testid='taskList.edit.description'
+            // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
+            // description left to auto-place would take the cell it vacates and fall into the icon
+            // column — a field one word wide.
+            className={mx('flex min-w-0 -col-end-2', grid ? 'col-start-[title]' : 'col-start-2')}
+          >
+            {/* A description is markdown, so it is edited as markdown. `editing` is held open —
+                the pane IS the editor, so there is nothing to click into — and the key remounts
+                it per task, since a field held open never re-reads its subject.
+                Creating, the field is uncontrolled: there is no task to read a value from, so it
+                holds the draft itself until the create collects it. */}
+            <MarkdownEditable
+              key={current?.id ?? `create-${createEpoch}`}
+              ref={descriptionRef}
+              classNames='text-sm'
+              editing
+              multiline
+              placeholder={descriptionPlaceholder}
+              extensions={descriptionExtensions}
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
+              // land the reader in the description instead of the list.
+              autoFocus={false}
+              {...(current && { value: current.description ?? '' })}
+              onValueChange={(description) => {
+                if (task && current) {
+                  onTaskUpdate?.(task, { description });
+                } else {
+                  draftDescription.current = description;
+                }
+              }}
+            />
+          </span>
+        )}
+        {/* The description is held open with no blur to commit it, so the pane needs to say
+            explicitly what happens to the pending text. Both buttons keep focus where it is
+            (`preventDefault` on mousedown): the fields commit on blur, so a button that took focus
+            would commit before its own handler ran — and Cancel could never mean anything.
+            Placed on the title line explicitly; its place in the DOM is what orders Tab.
+
+            Hidden while the add row is untouched: with nothing typed there is nothing to save and
+            nothing to cancel, and two dead controls on an empty row read as a form to fill in
+            rather than a place to type. */}
+        {(current || draft.trim().length > 0) && (
+          <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] p-0 bg-transparent'>
+            {/* Only when editing an existing task: the create row has nothing to set a priority on
+                until it is saved. */}
+            {task && <TaskPriorityIcon task={task} />}
+            <Toolbar.IconButton
+              variant='ghost'
+              iconOnly
+              icon='ph--check--regular'
+              data-testid='taskList.edit.save'
+              label={t('save-task.label')}
+              onClick={handleSave}
+              onMouseDown={(event) => event.preventDefault()}
+            />
+            <Toolbar.IconButton
+              variant='ghost'
+              iconOnly
+              icon='ph--x--regular'
+              data-testid='taskList.edit.cancel'
+              label={t('cancel-edit.label')}
+              onClick={handleCancel}
+              onMouseDown={(event) => event.preventDefault()}
+            />
+          </Toolbar.Root>
+        )}
       </div>
     );
   },
 );
 
-TaskListCreate.displayName = 'TaskList.Create';
+TaskListEdit.displayName = 'TaskList.Edit';
 
 //
 // Assignee — actor-aware chip: a Person ref resolves to the contact's name; otherwise fall back to
@@ -390,28 +1049,71 @@ TaskListCreate.displayName = 'TaskList.Create';
 type TaskListAssigneeProps = { assignee: Actor.Actor };
 
 const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
+  const tagRef = useRef<HTMLSpanElement>(null);
   const [contact] = useObject(assignee.contact);
+  // An agent's actor stands for its session rather than a person, so the pill names the harness the
+  // session belongs to — `agent` alone says an assistant owns the task, never which run did.
+  const [session] = useObject(assignee.subject);
+  const harness = session && Obj.instanceOf(RemoteSession.RemoteSession, session) ? session : undefined;
+  const sessionLabel = harness && RemoteSession.harnessName(harness);
+  // The harness's own mark when it has one, so a Claude Code session is recognisable at a glance;
+  // the sparkle stays the generic "an assistant owns this" fallback.
+  const icon = (harness && RemoteSession.harnessIcon(harness)) ?? 'ph--sparkle--regular';
   const label =
     contact?.fullName ??
+    sessionLabel ??
     assignee.name ??
     assignee.email ??
     (assignee.identityDid ? shortDid(assignee.identityDid) : undefined);
   const agent = assignee.role === 'assistant';
+
+  // Hover, not click, because the session is context for the row rather than a place to navigate to:
+  // the reader wants to know which run owns the task while their eye is already on it. The grace
+  // period is what keeps that from firing as the pointer crosses the row on its way elsewhere —
+  // the objection recorded on `ArtifactTag`, which opens a destination and so stays on click.
+  const openCard = useCallback(() => {
+    const trigger = tagRef.current;
+    if (!trigger || !session) {
+      return;
+    }
+    trigger.dispatchEvent(
+      new DxAnchorActivate({
+        trigger,
+        eid: Obj.getURI(session).toString(),
+        label: label ?? '',
+        kind: 'card',
+        // Without this the popover falls back to the type's placeholder ("New item"), since a
+        // session's label prop is its title and the harness reports none.
+        title: harness?.title ?? label,
+      }),
+    );
+  }, [session, harness, label]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!session);
+
   if (!label && !agent) {
     return null;
   }
 
   return (
-    <Tag hue={agent ? 'purple' : 'indigo'}>
-      {agent && <Icon icon='ph--sparkle--regular' size={3} classNames='inline-block me-1' />}
+    <Tag
+      ref={tagRef}
+      hue={agent ? 'purple' : 'indigo'}
+      // Focus as well as hover: the card is the only place the row says which run owns the task, so
+      // a pointer-only trigger puts that out of reach of a keyboard or a touch device.
+      tabIndex={session ? 0 : undefined}
+      onPointerEnter={startHover}
+      onPointerLeave={cancelHover}
+      onFocus={startHover}
+      onBlur={cancelHover}
+      classNames={session && 'cursor-help'}
+    >
+      {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}
       {label ?? 'agent'}
     </Tag>
   );
 });
 
 TaskListAssignee.displayName = 'TaskList.Assignee';
-
-const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
 //
 // TaskList
@@ -422,17 +1124,15 @@ export const TaskList = {
   Viewport: TaskListViewport,
   Content: TaskListContent,
   GroupLabel: TaskListGroupLabel,
-  Item: TaskListItem,
-  Create: TaskListCreate,
+  Edit: TaskListEdit,
   Assignee: TaskListAssignee,
 };
 
 export type {
   TaskListAssigneeProps,
   TaskListContentProps,
-  TaskListCreateProps,
+  TaskListEditProps,
   TaskListGroupLabelProps,
-  TaskListItemProps,
   TaskListRootProps,
   TaskListViewportProps,
 };

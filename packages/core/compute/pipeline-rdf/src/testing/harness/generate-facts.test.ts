@@ -12,10 +12,10 @@ import { fileURLToPath } from 'node:url';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { FactStoreLive } from '../../store';
-import { type ExtractDocument } from '../../types';
-import { queuedAiService } from '../index';
-import { generateFacts } from './generate-facts';
+import { FactStoreLive } from '../../store/index.ts';
+import { type ExtractDocument } from '../../types/index.ts';
+import { queuedAiService } from '../index.ts';
+import { generateFacts } from './generate-facts.ts';
 
 // Realistic source text — the input a real connector (Gmail/Discord) would feed in.
 const SOURCE_DOCS: readonly ExtractDocument[] = [

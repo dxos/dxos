@@ -56,12 +56,18 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
     const { default: Inspect } = await import('vite-plugin-inspect');
     const { default: solidPlugin } = await import('vite-plugin-solid');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
+    const { default: importSource } = await import('@dxos/vite-plugin-import-source');
 
     return mergeConfig(config, {
       plugins: [
         isTrue(process.env.DX_INSPECT) && Inspect(),
 
         DxosLogPlugin(),
+
+        // `@dxos/**` and package-internal `#*` imports resolve to the `source` condition, as the react
+        // storybook does: a story then shows an edit to another package on save, rather than whatever
+        // that package's dist held when it was last built.
+        importSource({ include: ['@dxos/**', '#*'] }),
 
         solidPlugin(),
 

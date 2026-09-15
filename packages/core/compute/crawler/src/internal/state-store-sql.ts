@@ -10,10 +10,10 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { StateError } from '../errors';
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store';
-import type * as StateStore from '../StateStore';
-import type * as Type from '../types';
+import { StateError } from '../errors.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store/index.ts';
+import type * as StateStore from '../StateStore.ts';
+import type * as Type from '../types.ts';
 
 /**
  * Applies any migrations this database has not recorded yet.

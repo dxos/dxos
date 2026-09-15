@@ -10,12 +10,12 @@ import * as Schema from 'effect/Schema';
 
 import { DXN } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Database from './Database';
-import * as Error from './Error';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Database from './Database.ts';
+import * as Error from './Error.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Type from './Type.ts';
 
 /**
  * Inline blob data: bytes stored directly on the ECHO object.
@@ -84,7 +84,7 @@ export const Storage = { inline: 'inline', edge: 'edge' } as const;
 export type Storage = (typeof Storage)[keyof typeof Storage];
 
 /**
- * URI schemes claimed by core backends (see `BlobBackend.schemes` in `@dxos/echo-protocol`).
+ * URI schemes claimed by core backends (see `BlobBackend.schemes` in `@dxos/blob`).
  *
  * `ni` marks an {@link https://www.rfc-editor.org/rfc/rfc6920 RFC 6920} Named Information URI whose
  * authority is empty and whose path carries a registered hash-algorithm name plus a base64url-encoded

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { Encoder, decode as cborDecode } from 'cbor-x';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -17,13 +18,14 @@ import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { bufferToArray } from '@dxos/util';
 
-import { FeedSyncer } from './feed-syncer';
+import { FeedSyncer } from './feed-syncer.ts';
 
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 
@@ -57,15 +59,15 @@ const createEdgeConnection = ({
     identityDid: 'did:halo:client-identity',
     peerKey: 'client-peer',
     isOpen: true,
-    status: {
-      state: EdgeStatus.ConnectionState.CONNECTED,
+    status: create(EdgeStatusSchema, {
+      state: EdgeStatus_ConnectionState.CONNECTED,
       rtt: 0,
       uptime: 0,
       rateBytesUp: 0,
       rateBytesDown: 0,
       messagesSent: 0,
       messagesReceived: 0,
-    },
+    }),
     setIdentity: () => {},
     // Reports CONNECTED above, so the syncer's initial round runs without waiting for a dial.
     startNetworking: () => {},

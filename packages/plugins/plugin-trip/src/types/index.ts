@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Booking from './Booking';
-export * as BookingOperation from './BookingOperation';
-export * as BookingSearch from './BookingSearch';
-export * as Place from './Place';
-export * as Routing from './Routing';
-export * as RoutingOperation from './RoutingOperation';
-export * as Segment from './Segment';
-export * as Trip from './Trip';
-export * as TripCapabilities from './TripCapabilities';
-export * as TripEvents from './TripEvents';
-export * as TripOperation from './TripOperation';
+export * as Booking from './Booking.ts';
+export * as BookingOperation from './BookingOperation.ts';
+export * as BookingSearch from './BookingSearch.ts';
+export * as Place from './Place.ts';
+export * as Routing from './Routing.ts';
+export * as RoutingOperation from './RoutingOperation.ts';
+export * as Segment from './Segment.ts';
+export * as Trip from './Trip.ts';
+export * as TripCapabilities from './TripCapabilities.ts';
+export * as TripEvents from './TripEvents.ts';
+export * as TripOperation from './TripOperation.ts';

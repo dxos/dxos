@@ -15,9 +15,9 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { ObjectsTree, ObjectViewer } from '../../../components';
-import { DevtoolsContextProvider } from '../../../hooks';
-import { ObjectsPanel } from './ObjectsPanel';
+import { ObjectsTree, ObjectViewer } from '../../../components/index.ts';
+import { DevtoolsContextProvider } from '../../../hooks/index.ts';
+import { ObjectsPanel } from './ObjectsPanel.tsx';
 
 random.seed(1);
 

@@ -8,7 +8,7 @@ import { Feed, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { toSpaceStats } from './stats';
+import { toSpaceStats } from './stats.ts';
 
 describe('toSpaceStats', () => {
   let builder: EchoTestBuilder;

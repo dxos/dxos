@@ -12,8 +12,8 @@ import { EffectEx } from '@dxos/effect';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { Builder } from '../testing/builder';
-import * as Mailbox from './Mailbox';
+import { Builder } from '../testing/builder.ts';
+import * as Mailbox from './Mailbox.ts';
 
 describe('Mailbox tags', () => {
   let builder: EchoTestBuilder;
@@ -93,8 +93,7 @@ describe('Mailbox annotations', () => {
     await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(db))));
 
     // The annotation feed is provisioned on first use (like the tag index), not at mailbox creation.
-    const annotations = db.add(Feed.make());
-    Obj.setParent(annotations, mailbox);
+    const annotations = db.add(Feed.make({ [Obj.Parent]: mailbox }));
     Obj.update(mailbox, (mailbox) => {
       mailbox.annotations = Ref.make(annotations);
     });

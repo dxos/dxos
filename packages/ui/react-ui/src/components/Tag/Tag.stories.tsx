@@ -8,8 +8,8 @@ import React from 'react';
 import { hues } from '@dxos/ui-types';
 import { type ChromaticPalette, type MessageValence } from '@dxos/ui-types';
 
-import { withLayout, withTheme } from '../../testing';
-import { Tag } from './Tag';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Tag } from './Tag.tsx';
 
 const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];
 

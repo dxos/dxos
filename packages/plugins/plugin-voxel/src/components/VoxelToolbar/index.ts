@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { VoxelToolbar, type VoxelToolbarProps } from './VoxelToolbar';
+export { VoxelToolbar, type VoxelToolbarProps } from './VoxelToolbar.tsx';

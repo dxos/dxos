@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { scanIdioms } from '../idioms';
+import { scanIdioms } from '../idioms/index.ts';
 import {
   type PackageSymbols,
   type PluginRecord,
@@ -13,8 +13,8 @@ import {
   extractSymbols,
   loadCache,
   saveCache,
-} from '../indexer';
-import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from '../query';
+} from '../indexer/index.ts';
+import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from '../query/index.ts';
 import {
   type Capability,
   type Idiom,
@@ -31,7 +31,7 @@ import {
   type SymbolInclude,
   type SymbolKind,
   type SymbolMatch,
-} from '../types';
+} from '../types.ts';
 
 export type IntrospectorOptions = {
   /**

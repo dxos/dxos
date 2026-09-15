@@ -31,14 +31,14 @@ import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
-import { makeCreateObjectEntryForDatabaseType } from '../../../util';
+import { makeCreateObjectEntryForDatabaseType } from '../../../util/index.ts';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   DATABASE_SECTION_TYPE,
   SCHEMA_NODE_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
   buildViewIndex,
-} from './shared';
+} from './shared.ts';
 
 //
 // Extension Factory
@@ -382,15 +382,19 @@ const createSchemaActions = ({
                 const result = yield* createObjectFn({}, { db: space.db }).pipe(
                   Effect.provideService(Capability.Service, capabilities),
                 );
-                const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
-                  query: { uri: Obj.getURI(result.object) },
-                });
-                const navigationTarget = targets[0];
-                if (navigationTarget) {
-                  yield* Operation.invoke(LayoutOperation.Open, {
-                    subject: [navigationTarget.path],
-                    navigation: 'immediate',
+                // Nothing to navigate to when the create only starts the work and the object
+                // arrives out of band (see `CreateObjectResult.object`).
+                if (result.object) {
+                  const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
+                    query: { uri: Obj.getURI(result.object) },
                   });
+                  const navigationTarget = targets[0];
+                  if (navigationTarget) {
+                    yield* Operation.invoke(LayoutOperation.Open, {
+                      subject: [navigationTarget.path],
+                      navigation: 'immediate',
+                    });
+                  }
                 }
               }
             }),

@@ -6,9 +6,9 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Filter from './Filter';
-import * as Obj from './Obj';
-import { TestSchema } from './testing/test-schema';
+import * as Filter from './Filter.ts';
+import * as Obj from './Obj.ts';
+import { TestSchema } from './testing/test-schema.ts';
 
 describe('Filter timestamp builders', () => {
   test('updated({ after }) produces correct AST', () => {

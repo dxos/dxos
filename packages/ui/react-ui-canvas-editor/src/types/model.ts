@@ -8,7 +8,7 @@ import { isProxy } from '@dxos/echo/internal';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { type MakeOptional } from '@dxos/util';
 
-import { type Connection, type Shape } from './schema';
+import { type Connection, type Shape } from './schema.ts';
 
 export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.AbstractGraphModel<
   S,

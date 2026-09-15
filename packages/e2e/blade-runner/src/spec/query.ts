@@ -8,9 +8,9 @@ import { type QueryResult } from '@dxos/echo-client';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type SchedulerEnv } from '../env';
-import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { EchoReplicant } from '../replicants/echo-replicant';
+import { type SchedulerEnv } from '../env/index.ts';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { EchoReplicant } from '../replicants/echo-replicant.ts';
 
 type QueryTestSpec = {
   platform: Platform;

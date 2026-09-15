@@ -2,18 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
-import { schema } from '@dxos/protocols/proto';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
 
-import { SwarmNetworkManager } from '../network-manager';
-import { FullyConnectedTopology } from '../topology';
+type BridgeService = BufService<typeof BridgeServiceDesc>;
+
+import { SwarmNetworkManager } from '../network-manager.ts';
+import { FullyConnectedTopology } from '../topology/index.ts';
 import {
   MemoryTransportFactory,
   RtcTransportProxyFactory,
@@ -21,8 +27,8 @@ import {
   type TransportFactory,
   TransportKind,
   createRtcTransportFactory,
-} from '../transport';
-import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
+} from '../transport/index.ts';
+import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol.ts';
 
 export type TestBuilderOptions = {
   transport?: TransportKind;
@@ -73,7 +79,9 @@ export class TestPeer {
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
-    this._networkManager.setPeerInfo({ identityDid: `did:halo:${peerId.toHex()}`, peerKey: peerId.toHex() });
+    this._networkManager.setPeerInfo(
+      create(PeerSchema, { identityDid: `did:halo:${peerId.toHex()}`, peerKey: peerId.toHex() }),
+    );
   }
 
   // TODO(burdon): Move to TestBuilder.
@@ -97,24 +105,18 @@ export class TestPeer {
           this._proxy = createProtoRpcPeer({
             port: proxyPort,
             requested: {
-              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+              BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
             },
             noHandshake: true,
-            encodingOptions: {
-              preserveAny: true,
-            },
           });
 
           this._service = createProtoRpcPeer({
             port: servicePort,
             exposed: {
-              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+              BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
             },
             handlers: { BridgeService: new RtcTransportService() },
             noHandshake: true,
-            encodingOptions: {
-              preserveAny: true,
-            },
           });
 
           transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
@@ -193,7 +195,10 @@ export class TestSwarmConnection {
   async join(topology = new FullyConnectedTopology()): Promise<this> {
     await this.peer._networkManager.joinSwarm(Context.default(), {
       topic: this.topic,
-      peerInfo: { peerKey: this.peer.peerId.toHex(), identityDid: `did:halo:${this.peer.peerId.toHex()}` },
+      peerInfo: create(PeerSchema, {
+        peerKey: this.peer.peerId.toHex(),
+        identityDid: `did:halo:${this.peer.peerId.toHex()}`,
+      }),
       protocolProvider: this.protocol.factory,
       topology,
     });

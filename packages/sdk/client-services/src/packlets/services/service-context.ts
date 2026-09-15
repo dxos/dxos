@@ -9,7 +9,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import {
-  EchoEdgeReplicatorLayer,
   EchoEdgeSubductionReplicatorLayer,
   EchoHostLayer,
   EchoHostService,
@@ -30,41 +29,41 @@ import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents';
+import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents/index.ts';
+import {
+  EdgeIdentityRecoveryManagerLayer,
+  EdgeIdentityRecoveryManagerService,
+} from '../identity/identity-recovery-manager.ts';
 import {
   IdentityManagerLayer,
   type IdentityManagerProps,
   IdentityManagerService,
   IdentityProviderService,
   identityProviderFromManager,
-} from '../identity';
-import {
-  EdgeIdentityRecoveryManagerLayer,
-  EdgeIdentityRecoveryManagerService,
-} from '../identity/identity-recovery-manager';
+} from '../identity/index.ts';
 import {
   type InvitationConnectionProps,
   InvitationsHandlerLayer,
   InvitationsHandlerService,
   InvitationsManagerLayer,
   InvitationsManagerService,
-} from '../invitations';
-import { IMetadataStoreService, SqliteMetadataStore, SqliteMetadataStoreLayer } from '../metadata';
-import { valueEncoding } from '../pipeline';
-import { SpaceManagerLayer, SpaceManagerService } from '../space';
+} from '../invitations/index.ts';
+import { IMetadataStoreService, SqliteMetadataStore, SqliteMetadataStoreLayer } from '../metadata/index.ts';
+import { valueEncoding } from '../pipeline/index.ts';
+import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import {
   DataSpaceManagerLayer,
   type DataSpaceManagerRuntimeProps,
   DataSpaceManagerService,
   SigningContextProviderLayer,
   SigningContextProviderService,
-} from '../spaces';
+} from '../spaces/index.ts';
 import {
   CrossDeviceSpaceSynchronizerLayer,
   CrossDeviceSpaceSynchronizerService,
-} from './cross-device-space-synchronizer';
-import { FeedSyncerLayer } from './feed-syncer';
-import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage';
+} from './cross-device-space-synchronizer.ts';
+import { FeedSyncerLayer } from './feed-syncer.ts';
+import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -166,13 +165,7 @@ export const ServiceContextLayer = (
     syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
   }).pipe(
     Layer.provideMerge(core),
-    Layer.provideMerge(
-      options.edgeFeatures?.subductionReplicator
-        ? EchoEdgeSubductionReplicatorLayer()
-        : options.edgeFeatures?.echoReplicator
-          ? EchoEdgeReplicatorLayer()
-          : Layer.empty,
-    ),
+    Layer.provideMerge(options.edgeFeatures?.subductionReplicator ? EchoEdgeSubductionReplicatorLayer() : Layer.empty),
     Layer.provideMerge(
       Layer.mergeAll(
         Layer.succeed(EdgeConnectionService, edgeConnection),

@@ -14,7 +14,7 @@ import {
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
 
-import { type GeoControlProps } from '../types';
+import { type GeoControlProps } from '../types.ts';
 
 export type MapControlProps = GeoControlProps & MapViewportProps & MapRootProps;
 

@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 
-import { type DeployState } from './deploy';
+import { type DeployState } from './deploy.ts';
 
 export type ScriptToolbarState = Partial<DeployState>;
 

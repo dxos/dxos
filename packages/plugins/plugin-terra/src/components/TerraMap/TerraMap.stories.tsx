@@ -7,17 +7,17 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 import { Terra, TerraObject } from '#types';
 
-import { seaRadius } from '../../engine';
-import { SimEngine, type SimObject, buildNavGrid, pickReachableTarget, toGeo } from '../../sim';
-import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
-import { TelemetryPanel, type TelemetryRow } from '../TelemetryPanel';
-import { TerraMap } from './TerraMap';
+import { seaRadius } from '../../engine/index.ts';
+import { SimEngine, type SimObject, buildNavGrid, pickReachableTarget, toGeo } from '../../sim/index.ts';
+import { STORY_ATTENDABLE_ID, withAttention } from '../../testing/index.ts';
+import { TelemetryPanel, type TelemetryRow } from '../TelemetryPanel/index.ts';
+import { TerraMap } from './TerraMap.tsx';
 
 /**
  * The map is an overview of slow-moving objects, not a cockpit view: sampling the sim at ~15Hz
@@ -163,29 +163,25 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
   const telemetry = useMemo(() => buildTelemetry(objects, seaRadius(values)), [objects, values]);
 
   return (
-    <Menu.Root {...menuActions} attendableId={STORY_ATTENDABLE_ID}>
-      <Panel.Root role='article'>
-        <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <div className='relative grow overflow-hidden'>
-            <TerraMap
-              objects={objects}
-              config={values}
-              terrain={terrain}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-            />
-            <div className='absolute bottom-2 right-2 z-10'>
-              <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
-            </div>
+    <Panel.Root role='article'>
+      <Panel.Toolbar asChild classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={STORY_ATTENDABLE_ID} />
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <div className='relative grow overflow-hidden'>
+          <TerraMap
+            objects={objects}
+            config={values}
+            terrain={terrain}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+          <div className='absolute bottom-2 right-2 z-10'>
+            <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -9,7 +9,7 @@ import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { ExtractedQuestionStore, MessageStore, QuestionStore } from '../stores';
+import { ExtractedQuestionStore, MessageStore, QuestionStore } from '../stores/index.ts';
 
 export { type Fixture, THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer } from '@dxos/crawler/testing';
 

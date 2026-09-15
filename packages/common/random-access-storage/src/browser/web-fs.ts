@@ -10,7 +10,7 @@ import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { Directory, type DiskInfo, type File, type Storage, StorageType, getFullPath } from '../common';
+import { Directory, type DiskInfo, type File, type Storage, StorageType, getFullPath } from '../common/index.ts';
 
 /**
  * Web file systems.

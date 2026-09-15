@@ -25,7 +25,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import * as AiService from '../AiService';
+import * as AiService from '../AiService.ts';
 import {
   AiServiceTestingPreset,
   CalculatorLayer,
@@ -33,7 +33,7 @@ import {
   LanguageModelFixture,
   hasToolCall,
   testingLayer,
-} from './index';
+} from './index.ts';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
@@ -187,7 +187,7 @@ describe('LanguageModel', () => {
           }),
         );
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
@@ -252,7 +252,7 @@ describe('LanguageModel', () => {
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
       Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
@@ -323,7 +323,7 @@ describe('LanguageModel', () => {
 const TestLayer = Layer.mergeAll(
   testingLayer,
   CalculatorLayer,
-  AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+  AiService.model('com.anthropic.model.claude-sonnet-5.default'),
 ).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
 // TODO(wittjosiah): GeoPoint breaks Anthropic validation.

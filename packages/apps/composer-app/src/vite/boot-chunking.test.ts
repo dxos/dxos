@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type ModuleGraph, bootChunking, computeBootPartition, toBootModuleId } from './boot-chunking';
+import { type ModuleGraph, bootChunking, computeBootPartition, toBootModuleId } from './boot-chunking.ts';
 
 const ENTRY = '/repo/packages/apps/app/src/main.tsx';
 

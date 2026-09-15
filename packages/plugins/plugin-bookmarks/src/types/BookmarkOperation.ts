@@ -12,7 +12,7 @@ import { Database, DXN, Ref } from '@dxos/echo';
 import * as PageAction from '@dxos/plugin-crx/PageAction';
 import { Text } from '@dxos/schema';
 
-import * as Bookmark from './Bookmark';
+import * as Bookmark from './Bookmark.ts';
 
 export const AddFromSnapshot = Operation.make({
   meta: {

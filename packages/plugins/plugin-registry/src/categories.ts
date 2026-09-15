@@ -44,6 +44,51 @@ export const getCategoryPredicate = (
   }
 };
 
+export type RegistryCategory = {
+  id: string;
+  labelKey: string;
+  icon: string;
+  testId: string;
+};
+
+export const REGISTRY_CATEGORIES: readonly RegistryCategory[] = [
+  {
+    id: 'bundled',
+    labelKey: 'bundled-plugins.label',
+    icon: 'ph--squares-four--regular',
+    testId: 'pluginRegistry.bundled',
+  },
+  {
+    id: 'installed',
+    labelKey: 'installed-plugins.label',
+    icon: 'ph--check--regular',
+    testId: 'pluginRegistry.installed',
+  },
+  {
+    id: 'recommended',
+    labelKey: 'recommended-plugins.label',
+    icon: 'ph--star--regular',
+    testId: 'pluginRegistry.recommended',
+  },
+  {
+    id: 'labs',
+    labelKey: 'labs-plugins.label',
+    icon: 'ph--flask--regular',
+    testId: 'pluginRegistry.labs',
+  },
+  {
+    id: 'registry',
+    labelKey: 'registry-plugins.label',
+    icon: 'ph--users-three--regular',
+    testId: 'pluginRegistry.registry',
+  },
+];
+
+export const getPopulatedCategories = (
+  count: (category: string) => number,
+): readonly (RegistryCategory & { count: number })[] =>
+  REGISTRY_CATEGORIES.map((category) => ({ ...category, count: count(category.id) })).filter(({ count }) => count > 0);
+
 /** Set of plugin ids known to originate from a remote URL (not bundled). */
 export const getRemotePluginIds = (): ReadonlySet<string> =>
   new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));

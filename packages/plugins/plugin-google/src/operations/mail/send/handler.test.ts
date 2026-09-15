@@ -14,7 +14,7 @@ import { Message } from '@dxos/types';
 
 import { GoogleMail } from '#apis';
 
-import { GoogleCredentials } from '../../../services/google-credentials';
+import { GoogleCredentials } from '../../../services/google-credentials.ts';
 
 const TestLayer = Layer.mergeAll(
   credentialsLayerConfig([

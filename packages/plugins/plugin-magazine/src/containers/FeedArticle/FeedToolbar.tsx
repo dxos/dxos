@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -39,13 +39,9 @@ export const FeedToolbar = ({ attendableId, onSync }: FeedToolbarProps) => {
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Toolbar asChild>
-        <Menu.Toolbar>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Panel.Toolbar>
-    </Menu.Root>
+    <Panel.Toolbar asChild>
+      <ActionToolbar {...menuActions} attendableId={attendableId} />
+    </Panel.Toolbar>
   );
 };
 

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import * as Trace from './Trace';
+import * as Trace from './Trace.ts';
 
 // DX-1125: the swarm broadcast tag/filter/wire helpers. The tag format is a cross-repo contract —
 // the edge producer (functions-service) derives the same strings independently, so these lock it in.

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { createContext } from '@dxos/react-hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 
@@ -13,34 +13,30 @@ import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-import { AreaSelectField } from './AreaSelectField';
-import type { FeedbackPluginOption } from './types';
+import { AreaSelectField } from './AreaSelectField.tsx';
+import type { FeedbackPluginOption } from './types.ts';
 
 const FEEDBACK_FORM = 'FeedbackForm';
 
-/**
- * A form submit handler. `Form.Root` exposes a single `onSave`; the active submit button records
- * its handler here (in click-capture, before submit fires) so the form routes to it.
- */
+/** Resolves to whether the report was filed; the form clears only when it was. */
 export type FeedbackSubmitHandler = (
   values: SupportOperation.SupportRequest,
   meta: FormUpdateMeta<SupportOperation.SupportRequest>,
-) => void | Promise<void>;
+) => boolean | Promise<boolean>;
 
 type FeedbackFormContextValue = {
-  submitHandlerRef: RefObject<FeedbackSubmitHandler | undefined>;
+  pending: boolean;
 };
 
 const [FeedbackFormProvider, useFeedbackFormContext] = createContext<FeedbackFormContextValue>(FEEDBACK_FORM);
 
 export type FeedbackFormRootProps = PropsWithChildren<{
+  onSubmit: FeedbackSubmitHandler;
   hidden?: { version?: string };
   plugins?: ReadonlyArray<FeedbackPluginOption>;
 }>;
 
 const baseDefaults: SupportOperation.SupportRequest = {
-  type: 'bug',
-  severity: 'Medium priority',
   title: '',
   body: '',
   image: false,
@@ -51,14 +47,12 @@ const baseDefaults: SupportOperation.SupportRequest = {
 // Root
 //
 
-/**
- * Headless provider + `Form.Root` for support feedback. Compose `Form.Viewport` / `Form.Content` /
- * `Form.FieldSet` with `FeedbackForm.*` action parts; each action part takes its own callback so the
- * behaviour lives with the affordance.
- */
-const FeedbackFormRoot = ({ children, hidden, plugins }: FeedbackFormRootProps) => {
-  // The active submit button writes its handler here before `Form.Root` fires `onSave`.
-  const submitHandlerRef = useRef<FeedbackSubmitHandler | undefined>(undefined);
+const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormRootProps) => {
+  // Submission is async (screenshot capture, PostHog/Discord round-trip); surface it so the form
+  // cannot be double-submitted while it runs.
+  const [pending, setPending] = useState(false);
+
+  const [formKey, setFormKey] = useState(0);
 
   // Override the `area` field with a richer plugin picker. The closure captures
   // the runtime plugin list so the schema itself stays static — much cleaner
@@ -90,14 +84,22 @@ const FeedbackFormRoot = ({ children, hidden, plugins }: FeedbackFormRootProps) 
         ...values,
         version: values.version ?? hidden?.version,
       };
-      await submitHandlerRef.current?.(submitted, formMeta);
+      setPending(true);
+      try {
+        if (await onSubmit(submitted, formMeta)) {
+          setFormKey((key) => key + 1);
+        }
+      } finally {
+        setPending(false);
+      }
     },
-    [hidden?.version],
+    [onSubmit, hidden?.version],
   );
 
   return (
-    <FeedbackFormProvider submitHandlerRef={submitHandlerRef}>
+    <FeedbackFormProvider pending={pending}>
       <Form.Root
+        key={formKey}
         schema={SupportOperation.SupportRequest}
         defaultValues={defaultValues}
         fieldMap={fieldMap}
@@ -149,116 +151,30 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
-//
-// Submit capture
-//
+const noteClassNames = 'text-xs text-description text-center px-2 py-1';
 
-type SubmitCaptureProps = PropsWithChildren<{
-  handler: FeedbackSubmitHandler;
-}>;
-
-/**
- * Records the active submit handler in capture phase before `Form.Submit` fires.
- */
-const FeedbackFormSubmitCapture = ({ handler, children }: SubmitCaptureProps) => {
-  const { submitHandlerRef } = useFeedbackFormContext(`${FEEDBACK_FORM}.SubmitCapture`);
-
-  return <div onClickCapture={() => (submitHandlerRef.current = handler)}>{children}</div>;
-};
-
-FeedbackFormSubmitCapture.displayName = `${FEEDBACK_FORM}.SubmitCapture`;
-
-//
-// SubmitPosthog
-//
-
-export type FeedbackFormSubmitPosthogProps = {
-  onSubmit: FeedbackSubmitHandler;
+export type FeedbackFormSubmitProps = {
   disabled?: boolean;
 };
 
-const FeedbackFormSubmitPosthog = ({ onSubmit, disabled }: FeedbackFormSubmitPosthogProps) => {
+const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { submitHandlerRef } = useFeedbackFormContext(`${FEEDBACK_FORM}.SubmitPosthog`);
-
-  // Primary action: default a keyboard (Enter) submit to PostHog until another button is clicked —
-  // but never while disabled (e.g. feedback survey unavailable).
-  useEffect(() => {
-    if (disabled) {
-      if (submitHandlerRef.current === onSubmit) {
-        submitHandlerRef.current = undefined;
-      }
-      return;
-    }
-    submitHandlerRef.current ??= onSubmit;
-  }, [disabled, onSubmit, submitHandlerRef]);
+  const { pending } = useFeedbackFormContext(`${FEEDBACK_FORM}.Submit`);
 
   return (
-    <FeedbackFormSubmitCapture handler={onSubmit}>
+    <>
+      <p className={noteClassNames}>{t('public-report.description')}</p>
       <Form.Submit
-        icon='ph--paper-plane-tilt--regular'
-        label={t('send-feedback.label')}
-        disabled={disabled || undefined}
+        classNames={pending ? '[&_svg]:animate-spin' : undefined}
+        icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
+        label={pending ? t('sending-feedback.label') : t('send-feedback.label')}
+        disabled={disabled || pending || undefined}
       />
-    </FeedbackFormSubmitCapture>
+    </>
   );
 };
 
-FeedbackFormSubmitPosthog.displayName = `${FEEDBACK_FORM}.SubmitPosthog`;
-
-//
-// SubmitGitHub
-//
-
-export type FeedbackFormSubmitGitHubProps = {
-  onSubmit?: FeedbackSubmitHandler;
-  disabled?: boolean;
-};
-
-const FeedbackFormSubmitGitHub = ({ onSubmit, disabled }: FeedbackFormSubmitGitHubProps) => {
-  const { t } = useTranslation(meta.profile.key);
-
-  if (!onSubmit) {
-    return null;
-  }
-
-  return (
-    <FeedbackFormSubmitCapture handler={onSubmit}>
-      <Form.Submit
-        icon='ph--github-logo--regular'
-        label={t('create-github-issue.label')}
-        disabled={disabled || undefined}
-      />
-    </FeedbackFormSubmitCapture>
-  );
-};
-
-FeedbackFormSubmitGitHub.displayName = `${FEEDBACK_FORM}.SubmitGitHub`;
-
-//
-// SubmitDiscord
-//
-
-export type FeedbackFormSubmitDiscordProps = {
-  onSubmit?: FeedbackSubmitHandler;
-  disabled?: boolean;
-};
-
-const FeedbackFormSubmitDiscord = ({ onSubmit, disabled }: FeedbackFormSubmitDiscordProps) => {
-  const { t } = useTranslation(meta.profile.key);
-
-  if (!onSubmit) {
-    return null;
-  }
-
-  return (
-    <FeedbackFormSubmitCapture handler={onSubmit}>
-      <Form.Submit icon='ph--discord-logo--regular' label={t('ask-for-help.label')} disabled={disabled || undefined} />
-    </FeedbackFormSubmitCapture>
-  );
-};
-
-FeedbackFormSubmitDiscord.displayName = `${FEEDBACK_FORM}.SubmitDiscord`;
+FeedbackFormSubmit.displayName = `${FEEDBACK_FORM}.Submit`;
 
 //
 // DiscordPresence
@@ -280,7 +196,7 @@ const FeedbackFormDiscordPresence = ({ discordPresence }: FeedbackFormDiscordPre
   }
 
   return (
-    <p className='text-xs text-description text-center px-2 py-1'>
+    <p className={noteClassNames}>
       {t('discord-presence-online.label')}{' '}
       {[
         discordPresence.communityOnline > 0 &&
@@ -302,8 +218,6 @@ FeedbackFormDiscordPresence.displayName = `${FEEDBACK_FORM}.DiscordPresence`;
 export const FeedbackForm = {
   Root: FeedbackFormRoot,
   DownloadLogs: FeedbackFormDownloadLogs,
-  SubmitPosthog: FeedbackFormSubmitPosthog,
-  SubmitGitHub: FeedbackFormSubmitGitHub,
-  SubmitDiscord: FeedbackFormSubmitDiscord,
+  Submit: FeedbackFormSubmit,
   DiscordPresence: FeedbackFormDiscordPresence,
 };

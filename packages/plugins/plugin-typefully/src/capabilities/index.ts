@@ -18,7 +18,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export const Connector = Capability.lazyModule(
   'TypefullyConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
@@ -29,6 +29,6 @@ export const PluginAsset = AppCapability.pluginAsset({
 export const PublisherService = Capability.lazyModule(
   'TypefullyPublisherService',
   { provides: [BloggerCapabilities.PublisherService], activatesOn: BloggerEvents.Start },
-  () => import('./publisher-service'),
+  () => import('./publisher-service.ts'),
 );
 export const Translations = AppCapability.translations(translations);

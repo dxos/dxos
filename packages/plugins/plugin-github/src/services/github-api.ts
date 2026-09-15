@@ -17,14 +17,16 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { GITHUB_API_BASE } from '../constants';
+import { GITHUB_API_BASE } from '../constants.ts';
 
-/** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
+/** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. Empty means anonymous. */
 type GitHubCredentialsValue = {
   token: string;
 };
 
 const ACCEPT = 'application/vnd.github+json';
+/** Serves a pull request as the unified diff git would produce, rather than as JSON. */
+const DIFF_ACCEPT = 'application/vnd.github.v3.diff';
 const API_VERSION = '2022-11-28';
 const USER_AGENT = '@dxos/plugin-github';
 
@@ -113,6 +115,28 @@ const GitHubIssueSchema = Schema.Struct({
 });
 export type GitHubIssue = Schema.Schema.Type<typeof GitHubIssueSchema>;
 
+/** GET /repos/{owner}/{repo}/pulls/{number} — the pull-request view, which alone carries the diff size and merge state. */
+const GitHubPullSchema = Schema.Struct({
+  id: Schema.Number,
+  number: Schema.Number,
+  title: Schema.String,
+  body: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  state: Schema.String,
+  draft: Schema.Boolean.pipe(Schema.optional),
+  merged: Schema.Boolean.pipe(Schema.optional),
+  merged_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  user: Schema.NullOr(GitHubUserSchema).pipe(Schema.optional),
+  labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),
+  additions: Schema.Number.pipe(Schema.optional),
+  deletions: Schema.Number.pipe(Schema.optional),
+  // `sha` pins the commit a derived artefact (a generated walkthrough) describes; `ref` is a branch
+  // name and moves under it.
+  base: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+  head: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+});
+export type GitHubPull = Schema.Schema.Type<typeof GitHubPullSchema>;
+
 const GitHubCommentSchema = Schema.Struct({
   id: Schema.Number,
   body: Schema.NullOr(Schema.String).pipe(Schema.optional),
@@ -131,7 +155,7 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  * Layer-based credentials service. Mirrors `TrelloCredentials`: every API call
  * pulls the token from this service rather than threading it through as an
  * explicit parameter, so callers compose a single
- * `Effect.provide(GitHubApi.GitHubCredentials.fromConnection(ref))` at the
+ * `Effect.provide(GitHubApi.fromConnection(ref))` at the
  * operation boundary.
  *
  * Token sourcing: an operation invoked with a `Connection` composes
@@ -141,28 +165,28 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  */
 export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHubCredentialsValue>()(
   '@dxos/plugin-github/GitHubCredentials',
-) {
-  /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      GitHubCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return { token: accessToken.token };
-      }),
-    );
+) {}
 
-  /** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      GitHubCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
-}
+/** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    GitHubCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return { token: accessToken.token };
+    }),
+  );
+
+/** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    GitHubCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
 
 //
 // Request pipeline
@@ -199,10 +223,11 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError
   return status === 429 || (status >= 500 && status <= 599);
 };
 
-const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue) =>
+/** Anonymous when the token is empty: a bare `Bearer` header is rejected where no header is rate-limited. */
+const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue, accept = ACCEPT) =>
   req.pipe(
-    HttpClientRequest.setHeader('Authorization', `Bearer ${creds.token}`),
-    HttpClientRequest.setHeader('Accept', ACCEPT),
+    (req) => (creds.token ? HttpClientRequest.setHeader(req, 'Authorization', `Bearer ${creds.token}`) : req),
+    HttpClientRequest.setHeader('Accept', accept),
     HttpClientRequest.setHeader('X-GitHub-Api-Version', API_VERSION),
     HttpClientRequest.setHeader('User-Agent', USER_AGENT),
   );
@@ -229,6 +254,33 @@ const githubRequest = <T>(build: () => HttpClientRequest.HttpClientRequest, sche
     return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
+        while: shouldRetry,
+      }),
+      Effect.scoped,
+    );
+  });
+
+/**
+ * Fetch a response GitHub serves as text rather than JSON — the `diff` media type, which has no
+ * schema to decode against.
+ *
+ * The timeout is longer than `githubRequest`'s because a diff is the whole change rather than a
+ * summary of it. GitHub answers 406 rather than truncating when a pull request exceeds its own
+ * limits (roughly 300 files or 20k lines), which `filterStatusOk` surfaces as a typed failure.
+ */
+const githubText = (build: () => HttpClientRequest.HttpClientRequest, accept: string): GitHubEffect<string> =>
+  Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
+    const httpClient = yield* HttpClient.HttpClient;
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+      HttpClient.filterStatusOk,
+    );
+    return yield* clientNoTracer.execute(withAuth(build(), creds, accept)).pipe(
+      Effect.flatMap((res) => res.text),
+      Effect.timeout('60 seconds'),
       Effect.retry({
         schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
@@ -378,6 +430,46 @@ export const fetchRepoIssues = (
     }
     return req;
   }, GitHubIssueSchema);
+
+/** GET /repos/{owner}/{repo}. */
+export const fetchRepo = (owner: string, repo: string): GitHubEffect<GitHubRepo> =>
+  githubRequest(
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
+    GitHubRepoSchema,
+  );
+
+/** GET /repos/{owner}/{repo}/issues/{number} — an issue, or the issue view of a pull request. */
+export const fetchIssue = (owner: string, repo: string, number: number): GitHubEffect<GitHubIssue> =>
+  githubRequest(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${number}`,
+      ),
+    GitHubIssueSchema,
+  );
+
+/** GET /repos/{owner}/{repo}/pulls/{number}. */
+export const fetchPullRequest = (owner: string, repo: string, number: number): GitHubEffect<GitHubPull> =>
+  githubRequest(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}`,
+      ),
+    GitHubPullSchema,
+  );
+
+/**
+ * GET /repos/{owner}/{repo}/pulls/{number} as a unified diff — the same bytes `git diff` would
+ * produce, which is what a generated walkthrough splices its chunks from.
+ */
+export const fetchPullRequestDiff = (owner: string, repo: string, number: number): GitHubEffect<string> =>
+  githubText(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}`,
+      ),
+    DIFF_ACCEPT,
+  );
 
 /**
  * GET /repos/{owner}/{repo}/milestones — `state=all` so closed milestones stay mirrored (the

@@ -6,9 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { Sandbox } from '#types';
-
-import { CreateSandbox, DownloadFile, Exec, UploadFile } from './functions';
+import { Sandbox, SandboxOperation } from '#types';
 
 const make = () =>
   Skill.make({
@@ -16,7 +14,12 @@ const make = () =>
     name: 'Sandbox',
     agentCanEnable: true,
     tools: Skill.toolDefinitions({
-      operations: [CreateSandbox, Exec, UploadFile, DownloadFile],
+      operations: [
+        SandboxOperation.CreateSandbox,
+        SandboxOperation.Exec,
+        SandboxOperation.UploadFile,
+        SandboxOperation.DownloadFile,
+      ],
     }),
     instructions: Template.make({
       source: trim`
@@ -25,6 +28,8 @@ const make = () =>
         You can create sandboxes, run shell commands inside them, upload files from ECHO into a sandbox,
         and download files from a sandbox back into ECHO.
         The sandbox service is lazily initialized: the container starts on first use.
+        A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds).
+        A command that is cut off has not finished.
       `,
     }),
   });

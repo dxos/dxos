@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
-import { ClipboardContext } from './ClipboardContext';
+import { ClipboardContext } from './ClipboardContext.ts';
 
 export const ClipboardProvider = ({ children }: PropsWithChildren<{}>) => {
   const [textValue, setInternalTextValue] = useState('');

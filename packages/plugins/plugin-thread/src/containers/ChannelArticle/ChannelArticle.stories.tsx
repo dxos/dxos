@@ -27,7 +27,7 @@ import { Channel, Message, Thread } from '@dxos/types';
 import { ThreadPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle';
+import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle.tsx';
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const DefaultStory = ({ roomId }: ChannelArticleProps) => {
@@ -60,11 +60,11 @@ const meta = {
             runtime: {
               services: {
                 edge: {
-                  url: 'https://edge.dxos.workers.dev/',
+                  url: 'https://dev.dxos.network/',
                 },
                 iceProviders: [
                   {
-                    urls: 'https://edge.dxos.workers.dev/ice',
+                    urls: 'https://dxos.network/ice',
                   },
                 ],
               },

@@ -32,9 +32,9 @@ import { SpaceOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
 import { SpaceCapabilities } from '#types';
 
-import { MergePreview } from '../MergePreview/MergePreview';
-import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack';
-import { TypeArticle } from './TypeArticle';
+import { MergePreview } from '../MergePreview/MergePreview.tsx';
+import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack.tsx';
+import { TypeArticle } from './TypeArticle.tsx';
 
 /**
  * Type that opts in to a content preview card via `CardAnnotation`.

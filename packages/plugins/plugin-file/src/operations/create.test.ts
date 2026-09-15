@@ -17,7 +17,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
 
-import { FileTooLargeError, UnsupportedFileTypeError } from './create';
+import { FileTooLargeError, UnsupportedFileTypeError } from './create.ts';
 
 describe('FileOperation.Create', () => {
   test('uploads a small PNG to the default (inline) backend', async ({ expect }) => {
@@ -93,6 +93,8 @@ describe('FileOperation.Create', () => {
     }
   });
 
+  // `text/html` rather than `text/plain`: plain text is accepted now, and HTML is the type the
+  // allowlist most needs to keep out — a stored HTML file served from the blob origin executes.
   test('rejects unsupported MIME types', async ({ expect }) => {
     const { harness, defaultSpace } = await setup();
     await using _harness = harness;
@@ -100,7 +102,7 @@ describe('FileOperation.Create', () => {
     const error = await harness.runPromise(
       Operation.invoke(
         FileOperation.Create,
-        { file: makeFile('notes.txt', 'text/plain', new Uint8Array(8)), db: defaultSpace.db },
+        { file: makeFile('page.html', 'text/html', new Uint8Array(8)), db: defaultSpace.db },
         { spaceId: defaultSpace.id },
       ).pipe(Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause)))),
     );

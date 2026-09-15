@@ -13,9 +13,9 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { ObjectViewer, Placeholder, Searchbar } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState } from '../../../hooks';
+import { ObjectViewer, Placeholder, Searchbar } from '../../../components/index.ts';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsState } from '../../../hooks/index.ts';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -204,8 +204,8 @@ export const ObjectsPanel = (props: { space?: Space }) => {
             </div>
           </div>
 
-          <div className='dx-container grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
-            <div className='p-1 min-h-0 overflow-auto'>
+          <div className='dx-expand grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
+            <div className='p-1 overflow-auto'>
               {selected ? (
                 <ObjectViewer
                   object={selectedVersionObject ?? selected}

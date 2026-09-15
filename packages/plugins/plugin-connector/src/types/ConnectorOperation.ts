@@ -16,17 +16,17 @@ import { AccessToken, Connection } from '@dxos/link';
 export const CreateConnection = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.connector.createConnection'),
-    name: 'Create Connection',
+    name: 'Create connection',
     description: 'Creates a new Connection bound to an existing AccessToken.',
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
-      description: 'The access token this Connection uses to authenticate to its service.',
-    }),
     name: Schema.String.annotate({
       description: 'Optional user-friendly label.',
     }).pipe(Schema.optional),
+    accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
+      description: 'The access token this Connection uses to authenticate to its service.',
+    }),
   }),
   output: Type.getSchema(Connection.Connection),
 });

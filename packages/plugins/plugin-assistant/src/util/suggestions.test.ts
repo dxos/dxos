@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseSuggestions } from './suggestions';
+import { parseSuggestions } from './suggestions.ts';
 
 describe('parseSuggestions', () => {
   test('returns [] for empty / undefined input', ({ expect }) => {

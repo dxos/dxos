@@ -16,7 +16,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { Scene } from '@babylonjs/core/scene';
 
-import { defaultConfig, generatePlanet, palette, type Planet, type Vec3 } from './planet';
+import { defaultConfig, generatePlanet, palette, type Planet, type Vec3 } from './planet.ts';
 
 const canvas = document.getElementById('app') as HTMLCanvasElement;
 const engine = new Engine(canvas, true, { adaptToDeviceRatio: true });

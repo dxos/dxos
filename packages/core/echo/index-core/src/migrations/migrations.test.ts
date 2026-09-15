@@ -13,14 +13,14 @@ import { test } from 'vitest';
 
 import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
-import { MIGRATIONS as FTS } from './fts';
+import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
-import { MIGRATIONS as REVERSE_REF } from './reverse-ref';
+import { MIGRATIONS as FTS } from './fts/index.ts';
 import reverseRefInit from './reverse-ref/0001_init.sql?raw';
-import { MIGRATIONS as TRACKER } from './tracker';
+import { MIGRATIONS as REVERSE_REF } from './reverse-ref/index.ts';
 import trackerInit from './tracker/0001_init.sql?raw';
+import { MIGRATIONS as TRACKER } from './tracker/index.ts';
 
 const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
 
@@ -49,6 +49,7 @@ const objectMetaColumns = Effect.gen(function* () {
 });
 
 const DESIRED_COLUMNS = [
+  'convergenceKey',
   'createdAt',
   'deleted',
   'documentId',
@@ -97,7 +98,7 @@ describe('index-core migrations', () => {
 
 describe('objectMeta vintages', () => {
   // The three database vintages in the field. All must converge on the shape the code consumes and
-  // produces — the INSERT writes all 14 non-key columns and `SELECT *` reads them back.
+  // produces — the INSERT writes all 15 non-key columns and `SELECT *` reads them back.
   it.effect('fresh database gets the desired shape, and the column back-fill no-ops', () =>
     Effect.gen(function* () {
       expect(yield* migrateEntityMeta).toEqual(ENTITY_META_IDS);

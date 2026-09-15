@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './layer';
+export * from './layer.ts';

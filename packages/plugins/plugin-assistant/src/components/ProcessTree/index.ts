@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { ProcessTree, type ProcessTreeProps } from './ProcessTree';
+export { ProcessTree, type ProcessTreeProps } from './ProcessTree.tsx';

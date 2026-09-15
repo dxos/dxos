@@ -8,11 +8,14 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
+import { AgentService } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { ContentBlock, Question } from '@dxos/types';
 
 export const CreateChat = Operation.make({
   meta: {
@@ -120,6 +123,76 @@ export const EnsureCompanionChat = Operation.make({
     persisted: Schema.Boolean,
   }),
 });
+
+/**
+ * Runs `prompt` as a turn on an existing chat, for a caller starting one on the chat's behalf
+ * (delegation, a routine) rather than a reader typing it.
+ *
+ * The session is created with the model the chat's own UI would use — resolved from the assistant
+ * settings — because `AgentService` binds the model to the agent process at spawn and tears that
+ * process down when a later caller asks for a different one. A turn started on any other model
+ * therefore interrupts itself the moment the reader opens the chat.
+ */
+export const RunPromptInChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.runPromptInChat'),
+    name: 'Run Prompt in Chat',
+    icon: 'ph--chat-text--regular',
+    // An agent already runs inside a session; handing it one that starts another is a footgun.
+    skipRegistry: true,
+  },
+  services: [Capability.Service, Database.Service, AgentService],
+  input: Schema.Struct({
+    chat: Schema.optional(Type.getSchema(Chat.Chat)),
+    // The object whose companion chat should run the prompt — the way to name a companion chat that
+    // has not been persisted yet, which a caller outside the page (an agent) cannot hold.
+    companionTo: Schema.optional(Obj.Unknown),
+    prompt: Schema.String,
+    /**
+     * How the turn is attributed. `synthetic` marks a prompt the system raised on the reader's
+     * behalf — a resumed agent must be able to tell one from something a person typed, since only
+     * the latter is an instruction it owes an answer to.
+     *
+     * @default 'user'
+     */
+    disposition: Schema.optional(ContentBlock.Disposition),
+  }),
+  output: Schema.Void,
+});
+
+/**
+ * Records a reader's answer to a {@link Question.Question} and resumes the conversation that asked it.
+ *
+ * The resume is a synthetic prompt naming the question rather than the answer itself: the answer is
+ * already durable on the object, and an agent that reads it back there sees whatever the reader
+ * actually chose — including an edit made after the fact — rather than a copy frozen into a message.
+ */
+export const AnswerQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.answerQuestion'),
+    name: 'Answer Question',
+    description: 'Answer a question an agent asked, and resume the conversation that asked it.',
+    icon: 'ph--question--regular',
+    // The asker is the agent; handing it the tool to answer itself is a footgun.
+    skipRegistry: true,
+  },
+  // Not `Capability.Service`: the resume goes through `RunPromptInChat`, which declares the
+  // services it needs itself, so requiring them here too would fail a caller that only records.
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    question: Type.getSchema(Question.Question),
+    answer: Schema.String.annotate({ description: "The chosen option's title, or free-form text." }),
+  }),
+  output: Schema.Struct({
+    /** False when the answer was blank, or the question was already answered — nothing was written. */
+    accepted: Schema.Boolean,
+    /**
+     * Whether the asking conversation was woken. Separate from `accepted` because the answer is
+     * durable either way, and conflating them would show a resumed agent that is still blocked.
+     */
+    resumed: Schema.Boolean,
+  }),
+}).pipe(Operation.mutation('write'));
 
 export const SkillForm = Schema.Struct({
   key: Schema.String,

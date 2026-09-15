@@ -12,12 +12,12 @@ import { EffectEx } from '@dxos/effect';
 import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
-import { MIGRATIONS as CHUNKS, MIGRATIONS_TABLE as CHUNKS_TABLE } from './chunks';
 import chunksInit from './chunks/0001_init.sql?raw';
-import { MIGRATIONS as HEADS, MIGRATIONS_TABLE as HEADS_TABLE } from './heads';
+import { MIGRATIONS as CHUNKS, MIGRATIONS_TABLE as CHUNKS_TABLE } from './chunks/index.ts';
 import headsInit from './heads/0001_init.sql?raw';
-import { MIGRATIONS as SPACE_STATE, MIGRATIONS_TABLE as SPACE_STATE_TABLE } from './space-state';
+import { MIGRATIONS as HEADS, MIGRATIONS_TABLE as HEADS_TABLE } from './heads/index.ts';
 import spaceStateInit from './space-state/0001_init.sql?raw';
+import { MIGRATIONS as SPACE_STATE, MIGRATIONS_TABLE as SPACE_STATE_TABLE } from './space-state/index.ts';
 
 const STORES = [
   { name: 'chunks', init: chunksInit, manifest: CHUNKS, table: CHUNKS_TABLE },

@@ -1,6 +1,6 @@
 ---
 name: effect
-description: Effect in DXOS: the pinned copy in node_modules, and the house rules that override it. Use when writing or changing Effect code, composing test layer stacks, working with Schema or SchemaAST, or reading pre-migration code.
+description: Use when writing or changing Effect code, composing test layer stacks, working with Schema or SchemaAST, or reading pre-migration code.
 ---
 
 # Effect in DXOS

@@ -12,7 +12,7 @@ import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Event } from '@dxos/types';
 
-import { EventCard } from './EventCard';
+import { EventCard } from './EventCard.tsx';
 
 random.seed(1234);
 

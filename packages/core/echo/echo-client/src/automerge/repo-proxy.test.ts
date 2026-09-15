@@ -7,13 +7,13 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Record from 'effect/Record';
 import * as Scope from 'effect/Scope';
+import * as EffectStream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, sleep, yieldToEventLoop } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-host';
+import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -23,9 +23,9 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createTmpPath } from '../testing';
-import { type DocHandleProxy } from './doc-handle-proxy';
-import { RepoProxy } from './repo-proxy';
+import { createTmpPath } from '../testing/index.ts';
+import { type DocHandleProxy } from './doc-handle-proxy.ts';
+import { RepoProxy } from './repo-proxy.ts';
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {
@@ -41,7 +41,7 @@ describe('RepoProxy', () => {
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
     invariant(hostHandle);
     log.break();
-    await hostHandle.whenReady();
+    await hostHandle.waitUntilReady();
 
     log.break();
     const receivedChange = new Trigger();
@@ -318,7 +318,7 @@ describe('RepoProxy', () => {
     await receiveChanges();
     await handle.whenReady();
     expect(handle.doc()?.host).to.equal(numberOfUpdates);
-    await hostHandle.whenReady();
+    await hostHandle.waitUntilReady();
     expect(handle.doc()?.client).to.equal(numberOfUpdates);
   });
 
@@ -336,7 +336,7 @@ describe('RepoProxy', () => {
 
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url!);
     invariant(hostHandle);
-    await hostHandle.whenReady();
+    await hostHandle.waitUntilReady();
     await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
 
@@ -376,9 +376,9 @@ describe('RepoProxy', () => {
       }),
     );
 
-    for (const handle of hostHandles) {
-      await handle.whenReady();
-      await expect.poll(() => handle.doc()?.text, { timeout: 1000 }).toEqual(text);
+    for (const lease of hostHandles) {
+      await lease.waitUntilReady();
+      await expect.poll(() => lease.doc()?.text, { timeout: 1000 }).toEqual(text);
     }
   });
 
@@ -439,9 +439,127 @@ describe('RepoProxy', () => {
       await expect.poll(async () => handle.doc()?.text2, { timeout: 1000 }).toEqual(text2);
     }
   });
+
+  test('integrates a large host batch in order, yielding between slices', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    // Enough Automerge loading that one batch cannot fit in a single slice.
+    const count = 300;
+    const handles = Array.from({ length: count }, () => clientRepo.create<{ text: string }>());
+    await Promise.all(handles.map((handle) => handle.whenReady()));
+    const payload = 'x'.repeat(4_000);
+    const updates = handles.map((handle) => {
+      const documentId = handle.documentId;
+      invariant(documentId);
+      return { documentId, mutation: A.save(A.from({ text: payload })) };
+    });
+
+    const integrated: number[] = [];
+    const allIntegrated = new Trigger();
+    handles.forEach((handle, index) =>
+      handle.on('change', () => {
+        integrated.push(index);
+        if (integrated.length === count) {
+          allIntegrated.wake();
+        }
+      }),
+    );
+
+    // A turn of the event loop taken while the batch is still being integrated is the yield.
+    let integratedWhenLoopTurned = -1;
+    void yieldToEventLoop().then(() => {
+      integratedWhenLoopTurned = integrated.length;
+    });
+    clientRepo._receiveUpdate({ updates });
+    expect(integrated.length).toBeGreaterThan(0);
+    expect(integrated.length).toBeLessThan(count);
+
+    await allIntegrated.wait({ timeout: 5_000 });
+    expect(integrated).toEqual(handles.map((_, index) => index));
+    expect(integratedWhenLoopTurned).toBeGreaterThan(0);
+    expect(integratedWhenLoopTurned).toBeLessThan(count);
+  });
+
+  test('re-subscribes after the host drops the subscription', async () => {
+    const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
+
+    droppable.dropSubscription.wake();
+    await expect.poll(() => droppable.subscribeCount, { timeout: 5000 }).toEqual(2);
+
+    const text = 'Hello World!';
+    clientHandle.change((doc: { text: string }) => {
+      doc.text = text;
+    });
+    await clientRepo.flush();
+
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    await expect.poll(() => hostHandle.doc()?.text, { timeout: 5000 }).toEqual(text);
+  });
+
+  test('flush during a dropped subscription delivers the write', async () => {
+    const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
+
+    // Race the write against subscription recovery: `flush` must not resolve until the replacement
+    // subscription has taken the mutation, since a short-lived writer closes right after it.
+    droppable.dropSubscription.wake();
+    const text = 'written mid-drop';
+    clientHandle.change((doc: { text: string }) => {
+      doc.text = text;
+    });
+    await clientRepo.flush();
+
+    // No polling: `flush` resolving is the delivery guarantee under test.
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    expect(hostHandle.doc()?.text).toEqual(text);
+  });
 });
 
-const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runtime']) => {
+/**
+ * A repo whose document handle is registered with a first subscription that
+ * {@link DroppableDataService.dropSubscription} ends on demand.
+ */
+const setupWithDroppableSubscription = async () => {
+  let droppable: DroppableDataService | undefined;
+  const { dataService, host } = await setup(undefined, (props) => (droppable = new DroppableDataService(props)));
+  invariant(droppable);
+
+  const [clientRepo] = createProxyRepos(dataService);
+  await openAndClose(clientRepo);
+
+  const clientHandle = clientRepo.create<{ text: string }>();
+  await clientHandle.whenReady();
+  await clientRepo.flush();
+
+  return { droppable, host, clientRepo, clientHandle };
+};
+
+/**
+ * Ends the first `subscribe` stream on demand, so the host runs the finalizer that forgets the
+ * subscription while the client stays connected — the shape that made every later call on that
+ * subscription id fail with "Subscription not found".
+ */
+class DroppableDataService extends DataServiceImpl {
+  readonly 'dropSubscription' = new Trigger();
+  'subscribeCount' = 0;
+
+  override ['DataService.subscribe'](request: DataService.SubscribeRequest) {
+    const stream = super['DataService.subscribe'](request);
+    return this.subscribeCount++ === 0
+      ? stream.pipe(EffectStream.interruptWhen(Effect.promise(() => this.dropSubscription.wait())))
+      : stream;
+  }
+}
+
+const setup = async (
+  runtime?: ReturnType<typeof createTestSqliteRuntime>['runtime'],
+  createDataService: (props: DataServiceProps) => DataService.Handlers = (props) => new DataServiceImpl(props),
+) => {
   if (!runtime) {
     const handle = createTestSqliteRuntime();
     onTestFinished(() => handle.dispose());
@@ -450,7 +568,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
   const host = new AutomergeHost({ runtime });
   await openAndClose(host);
 
-  const dataServiceImpl = new DataServiceImpl({
+  const dataServiceImpl = createDataService({
     automergeHost: host,
     spaceStateManager: new SpaceStateManager({ runtime }),
     updateIndexes: async () => {},
@@ -480,7 +598,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
   );
 
   const refreshCollectionState = async () => {
-    const documentIds = Record.keys(host.handles);
+    const documentIds = host.loadedDocumentIds;
     log('refreshCollectionState', { documentIds });
     await host.updateLocalCollectionState('default', documentIds);
   };

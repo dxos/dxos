@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as SpacePlugin from './SpacePlugin';
-export * from './errors';
+export * as SpacePlugin from './SpacePlugin.ts';
+export * from './errors.ts';
 export * from '#meta';
 export * from '#types';
-export * from './util';
+export * from './util/index.ts';

@@ -10,9 +10,9 @@ import { generatePath, useNavigate } from 'react-router-dom';
 import { Config, defs } from '@dxos/config';
 import { ClientProvider, createClientServices } from '@dxos/react-client';
 
-import { getConfig } from '../config';
-import { Todo, TodoList, createTodoList } from '../types';
-import { Main } from './Main';
+import { getConfig } from '../config.ts';
+import { Todo, TodoList, createTodoList } from '../types.ts';
+import { Main } from './Main.tsx';
 
 // Dedicated-worker client services. A coordinator SharedWorker elects a single leader tab that owns
 // the dedicated Worker hosting the ECHO services; follower tabs proxy through it.

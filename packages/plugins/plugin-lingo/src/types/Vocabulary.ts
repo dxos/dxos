@@ -10,7 +10,7 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation, CollectionItemAnnotation } from '@dxos/schema';
 
-import * as Language from './Language';
+import * as Language from './Language.ts';
 
 /**
  * A named deck of words for one language ("Chapter 3", "News vocabulary", …).

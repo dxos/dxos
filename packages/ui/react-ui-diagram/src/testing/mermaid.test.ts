@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { FLOWCHART } from './flowchart';
-import { projectMermaid } from './mermaid';
+import { FLOWCHART } from './flowchart.ts';
+import { projectMermaid } from './mermaid.ts';
 
 describe('projectMermaid', () => {
   test('projects nodes, groups and containment', ({ expect }) => {

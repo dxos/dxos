@@ -17,9 +17,9 @@ import {
   type AutomergeReplicator,
   type AutomergeReplicatorContext,
   type ShouldAdvertiseProps,
-} from './echo-replicator';
-import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
-import { getSpaceIdFromCollectionId } from './space-collection';
+} from './echo-replicator.ts';
+import { MeshReplicatorConnection } from './mesh-echo-replicator-connection.ts';
+import { getSpaceIdFromCollectionId } from './space-collection.ts';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-host.
 

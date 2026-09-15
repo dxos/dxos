@@ -8,8 +8,8 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { withAuthorization } from '@dxos/compute-runtime';
 
-import { JmapApiError } from '../../errors';
-import { JmapCredentials } from '../../services/jmap-credentials';
+import { JmapApiError } from '../../errors.ts';
+import { JmapCredentials } from '../../services/jmap-credentials.ts';
 import {
   MAIL_CAPABILITIES,
   REQUEST_RETRY,
@@ -18,7 +18,7 @@ import {
   getMethodResponse,
   jmapRequest,
   shouldRetry,
-} from '../Jmap/api';
+} from '../Jmap/api.ts';
 import {
   type EmailAddress,
   EmailChangesResult,
@@ -28,7 +28,7 @@ import {
   EmailSubmissionSetResult,
   IdentityGetResult,
   MailboxGetResult,
-} from './types';
+} from './types.ts';
 
 /**
  * Resolved per-request context: the session `apiUrl`, the mail account id, and (optionally) the

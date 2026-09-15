@@ -10,7 +10,7 @@ import { describe } from 'vitest';
 import { Space } from '@dxos/halo';
 import { SpaceId } from '@dxos/keys';
 
-import { currentOf, makeClientLayer } from './testing';
+import { currentOf, makeClientLayer } from './testing.ts';
 
 describe('Spaces', () => {
   it.effect(

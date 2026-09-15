@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Point } from './types';
+import { type Point } from './types.ts';
 
 /**
  * Creates an array of points on the the circumference of two circles.

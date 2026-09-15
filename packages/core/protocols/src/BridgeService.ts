@@ -6,7 +6,18 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import {
+  BridgeEventSchema,
+  CloseRequestSchema,
+  ConnectionRequestSchema,
+  DataRequestSchema,
+  DetailsRequestSchema,
+  DetailsResponseSchema,
+  SignalRequestSchema,
+  StatsRequestSchema,
+  StatsResponseSchema,
+} from './buf/proto/gen/dxos/mesh/bridge_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 
 /**
  * Effect RPC definitions for the WebRTC transport bridge (`dxos.mesh.bridge.BridgeService`).
@@ -17,31 +28,31 @@ import { protoMessage, serviceError } from './service-rpc.ts';
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('open', {
-    payload: protoMessage('dxos.mesh.bridge.ConnectionRequest'),
-    success: protoMessage('dxos.mesh.bridge.BridgeEvent'),
+    payload: bufMessage(ConnectionRequestSchema),
+    success: bufMessage(BridgeEventSchema),
     error: serviceError,
     stream: true,
   }),
   Rpc.make('sendSignal', {
-    payload: protoMessage('dxos.mesh.bridge.SignalRequest'),
+    payload: bufMessage(SignalRequestSchema),
     error: serviceError,
   }),
   Rpc.make('sendData', {
-    payload: protoMessage('dxos.mesh.bridge.DataRequest'),
+    payload: bufMessage(DataRequestSchema),
     error: serviceError,
   }),
   Rpc.make('close', {
-    payload: protoMessage('dxos.mesh.bridge.CloseRequest'),
+    payload: bufMessage(CloseRequestSchema),
     error: serviceError,
   }),
   Rpc.make('getDetails', {
-    payload: protoMessage('dxos.mesh.bridge.DetailsRequest'),
-    success: protoMessage('dxos.mesh.bridge.DetailsResponse'),
+    payload: bufMessage(DetailsRequestSchema),
+    success: bufMessage(DetailsResponseSchema),
     error: serviceError,
   }),
   Rpc.make('getStats', {
-    payload: protoMessage('dxos.mesh.bridge.StatsRequest'),
-    success: protoMessage('dxos.mesh.bridge.StatsResponse'),
+    payload: bufMessage(StatsRequestSchema),
+    success: bufMessage(StatsResponseSchema),
     error: serviceError,
   }),
 ).prefix('BridgeService.') {}

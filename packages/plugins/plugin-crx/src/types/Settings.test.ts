@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as Settings from './Settings';
+import * as Settings from './Settings.ts';
 
 describe('Settings', () => {
   test('applies documented defaults when fields are absent', ({ expect }) => {

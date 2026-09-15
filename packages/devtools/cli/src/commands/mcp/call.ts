@@ -12,8 +12,8 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 
-import { McpProtocolError, ToolCallResult, initialize, request } from './client';
-import { requireSession, serverUrlOption } from './util';
+import { McpProtocolError, ToolCallResult, initialize, request } from './client.ts';
+import { requireSession, serverUrlOption } from './util.ts';
 
 export const call = Command.make(
   'call',

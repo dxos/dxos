@@ -11,8 +11,8 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { log } from '@dxos/log';
 
-import { AiToolNotFoundError } from '../errors';
-import { type ToolId } from './tool';
+import { AiToolNotFoundError } from '../errors.ts';
+import { type ToolId } from './tool.ts';
 
 /**
  * Resolves tool definitions.
@@ -33,7 +33,7 @@ export class ToolResolverService extends Context.Service<
 
   static resolveToolkit: (
     ids: ToolId[],
-  ) => Effect.Effect<Toolkit.Toolkit<any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
+  ) => Effect.Effect<Toolkit.Toolkit<Record<string, Tool.Any>>, AiToolNotFoundError, ToolResolverService> = (ids) =>
     Effect.gen(function* () {
       const tools = yield* Effect.forEach(ids, (id) =>
         ToolResolverService.resolve(id).pipe(

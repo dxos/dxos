@@ -1,0 +1,159 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type EditorView } from '@codemirror/view';
+import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
+import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import {
+  type DebugNode,
+  type ThemeExtensionsOptions,
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  debugTree,
+  documentSlots,
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+import { isNonNullable } from '@dxos/util';
+
+import { type EditorController, createEditorController } from '../../components/index.ts';
+import { type UseTextEditorProps, useTextEditor } from '../../hooks/index.ts';
+
+// Type definitions.
+export type DebugMode = 'raw' | 'tree' | 'raw+tree';
+
+const defaultId = 'editor-' + PublicKey.random().toHex().slice(0, 8);
+
+export type EditorStoryArgs = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection' | 'extensions'> &
+  Pick<ThemeExtensionsOptions, 'slots'> & {
+    debug?: DebugMode;
+    debugCustom?: (view: EditorView) => ReactNode;
+    text?: string;
+    object?: Obj.OfShape<TestSchema.Expando>;
+    readOnly?: boolean;
+    placeholder?: string;
+    lineNumbers?: boolean;
+    monospace?: boolean;
+    onReady?: (view: EditorView) => void;
+  };
+
+export const EditorStory = forwardRef<EditorController, EditorStoryArgs>(
+  ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
+    const controllerRef = useRef<EditorController>(null);
+    const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
+    const view = controllerRef.current?.view;
+
+    const attentionAttrs = useAttentionAttributes('test-panel');
+    const [tree, setTree] = useState<DebugNode>();
+    const [object] = useState(Obj.make(TestSchema.Expando, { content: text ?? '' }));
+
+    const extensions = useMemo(
+      () => (debug ? [extensionsProp, debugTree(setTree)].filter(isNonNullable) : extensionsProp),
+      [debug, extensionsProp],
+    );
+
+    return (
+      <div className={mx('dx-expand grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+        <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
+
+        {debug && (
+          <div
+            className='grid h-full auto-rows-fr border-l border-separator divide-y divide-subdued-separator overflow-hidden'
+            {...attentionAttrs}
+          >
+            {view && debugCustom?.(view)}
+            {(debug === 'raw' || debug === 'raw+tree') && (
+              <pre className='p-1 text-xs text-green-800 dark:text-green-200 overflow-auto'>
+                {view?.state.doc.toString()}
+              </pre>
+            )}
+            {(debug === 'tree' || debug === 'raw+tree') && (
+              <Syntax.Root data={tree}>
+                <Syntax.Content>
+                  <Syntax.Filter />
+                  <Syntax.Viewport>
+                    <Syntax.Code classNames='p-1 text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+
+/**
+ * Default story component.
+ */
+const EditorComponent = forwardRef<EditorController, EditorStoryArgs>(
+  (
+    {
+      id = defaultId,
+      text,
+      object,
+      readOnly,
+      placeholder = 'New document.',
+      lineNumbers,
+      monospace,
+      scrollTo,
+      selection,
+      extensions,
+      slots = documentSlots,
+      onReady,
+    },
+    forwardedRef,
+  ) => {
+    invariant(object);
+    const { themeMode } = useThemeContext();
+    const attentionAttrs = useAttentionAttributes(id);
+    const { parentRef, focusAttributes, view } = useTextEditor(
+      () => ({
+        id,
+        scrollTo,
+        selection,
+        initialValue: text,
+        extensions: [
+          createBasicExtensions({
+            lineNumbers,
+            placeholder,
+            readOnly,
+            scrollPastEnd: true,
+            search: true,
+          }),
+          createThemeExtensions({
+            monospace,
+            slots,
+            syntaxHighlighting: true,
+            themeMode,
+          }),
+          createMarkdownExtensions(),
+          extensions || [],
+        ],
+      }),
+      [id, object, extensions, themeMode],
+    );
+
+    // External controller.
+    useImperativeHandle(forwardedRef, () => {
+      return createEditorController(view);
+    }, [id, view]);
+
+    useEffect(() => {
+      if (view) {
+        onReady?.(view);
+      }
+    }, [view]);
+
+    return <div ref={parentRef} className='flex overflow-hidden' {...attentionAttrs} {...focusAttributes} />;
+  },
+);

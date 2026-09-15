@@ -152,7 +152,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
   }, [db, updateColumns]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <FormFieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
@@ -186,7 +186,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
                       onValuesChanged={handleColumnValuesChanged(column)}
                     >
                       <Form.Content>
-                        <Form.FieldSet />
+                        <Form.Fields />
                       </Form.Content>
                     </Form.Root>
                     <ViewEditor
@@ -208,7 +208,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
           </OrderedList.Content>
         )}
       </OrderedList.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

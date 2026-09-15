@@ -5,7 +5,7 @@
 import { type NetworkStatus } from '@dxos/client/mesh';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 /**
  * Creates a network status subscription.

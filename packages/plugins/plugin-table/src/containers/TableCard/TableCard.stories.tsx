@@ -20,7 +20,7 @@ import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { TableCard } from './TableCard';
+import { TableCard } from './TableCard.tsx';
 
 random.seed(1234);
 

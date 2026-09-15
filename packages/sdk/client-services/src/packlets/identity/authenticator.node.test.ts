@@ -11,7 +11,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier, createAuthProvider } from './authenticator';
+import { TrustedKeySetAuthVerifier, createAuthProvider } from './authenticator.ts';
 
 describe('identity/authenticator', () => {
   test('verifies credentials', async () => {

@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SwarmController, Topology } from '@dxos/network-manager';
-import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { InvitationOptions_Role } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { ComplexSet } from '@dxos/util';
 
 /**
@@ -36,7 +36,7 @@ export class InvitationTopology implements Topology {
    */
   private _seenPeers = new ComplexSet<PublicKey>(PublicKey.hash);
 
-  constructor(private readonly _role: InvitationOptions.Role) {}
+  constructor(private readonly _role: InvitationOptions_Role) {}
 
   init(controller: SwarmController): void {
     invariant(!this._controller, 'Already initialized.');
@@ -48,7 +48,7 @@ export class InvitationTopology implements Topology {
     const { ownPeerId, candidates, connected, allPeers } = this._controller.getState();
 
     // guests don't initiate connections
-    if (this._role === InvitationOptions.Role.GUEST) {
+    if (this._role === InvitationOptions_Role.GUEST) {
       return;
     }
 
@@ -82,6 +82,6 @@ export class InvitationTopology implements Topology {
   }
 
   toString(): string {
-    return `InvitationTopology(${this._role === InvitationOptions.Role.GUEST ? 'guest' : 'host'})`;
+    return `InvitationTopology(${this._role === InvitationOptions_Role.GUEST ? 'guest' : 'host'})`;
   }
 }

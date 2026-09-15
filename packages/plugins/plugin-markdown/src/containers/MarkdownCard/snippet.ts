@@ -10,7 +10,7 @@ export type SnippetOptions = {
    * Maximum height of the editor as a CSS length; overflowing content is hidden. Shorter content
    * renders at its natural height, so the snippet grows with the document up to this cap.
    * Container units (`cqi`) resolve against the nearest inline-size container — put
-   * `dx-inline-size-container` on the wrapper to cap relative to the card's width.
+   * `dx-container-type-inline-size` on the wrapper to cap relative to the card's width.
    */
   maxHeight: string;
   /** Zoom factor applied to the editor (e.g. 0.5 renders at 50%). @default 1 */

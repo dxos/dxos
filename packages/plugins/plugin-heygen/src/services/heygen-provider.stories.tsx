@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { Button, Input } from '@dxos/react-ui';
+import { Button, Field } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type GenerationOption } from './heygen-provider-types';
-import { makeHeyGenProvider } from './heygen-service';
+import { type GenerationOption } from './heygen-provider-types.ts';
+import { makeHeyGenProvider } from './heygen-service.ts';
 
 type Kind = 'avatars' | 'voices';
 
@@ -136,17 +136,17 @@ const ProviderHarness = () => {
   };
 
   return (
-    <div className='dx-container flex flex-col gap-4 p-4 max-w-[40rem]'>
-      <Input.Root>
-        <Input.Label>HeyGen API key</Input.Label>
-        <Input.TextInput
+    <div className='dx-expand flex flex-col gap-4 p-4 max-w-[40rem]'>
+      <Field.Root>
+        <Field.Label>HeyGen API key</Field.Label>
+        <Field.Input
           type='password'
           noAutoFill
           placeholder='Paste API key'
           value={apiKey}
           onChange={(event) => setApiKey(event.target.value)}
         />
-      </Input.Root>
+      </Field.Root>
       <div className='flex gap-2'>
         <Button disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
           {busy === 'avatars' ? 'Loading avatars…' : 'List avatars'}
@@ -159,7 +159,7 @@ const ProviderHarness = () => {
         </Button>
       </div>
 
-      <div className='dx-expander flex flex-col gap-2 overflow-y-auto'>
+      <div className='dx-expand flex flex-col gap-2 overflow-y-auto'>
         {raw?.data !== undefined && <JsonHighlighter data={raw.data} />}
         {raw?.message && <span className='text-sm text-description'>{raw.message}</span>}
         {outcomes.map((outcome, index) => (

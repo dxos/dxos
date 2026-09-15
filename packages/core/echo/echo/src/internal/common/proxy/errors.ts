@@ -40,3 +40,10 @@ export const createPropertyDeleteError = (prop: string | symbol): MutationOutsid
 export const createArrayMethodError = (method: string): MutationOutsideChangeContextError => {
   return new MutationOutsideChangeContextError(`call array.${method}()`, `mutableObj.array.${method}(...);`);
 };
+
+/**
+ * Create an error for attempting a text CRDT mutation outside of a change context.
+ */
+export const createTextMethodError = (method: string): MutationOutsideChangeContextError => {
+  return new MutationOutsideChangeContextError(`call Text.${method}()`, `Text.${method}(mutableObj, path, ...);`);
+};

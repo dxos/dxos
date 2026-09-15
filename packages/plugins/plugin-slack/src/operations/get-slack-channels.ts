@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { SlackOperation } from '#types';
 
-import { SlackApi } from '../services';
+import { SlackApi } from '../services/index.ts';
 
 /**
  * Friendly label for a Slack conversation, derived from its type:
@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.GetSlackChannels> = S
           },
         }));
         return { targets };
-      }).pipe(Effect.provide(SlackApi.SlackCredentials.fromConnection(connection)));
+      }).pipe(Effect.provide(SlackApi.fromConnection(connection)));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

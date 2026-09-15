@@ -8,7 +8,7 @@ import { EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { search } from './exa';
+import { search } from './exa.ts';
 
 describe.skip('Search', () => {
   describe('Query-based', () => {

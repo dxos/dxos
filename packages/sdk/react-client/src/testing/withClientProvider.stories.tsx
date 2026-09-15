@@ -10,9 +10,9 @@ import { log } from '@dxos/log';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { useClient } from '../client';
-import { type Space, useSpaces } from '../echo';
-import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from './withClientProvider';
+import { useClient } from '../client/index.ts';
+import { type Space, useSpaces } from '../echo/index.ts';
+import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from './withClientProvider.tsx';
 
 const SpaceInfo = ({ space }: { space: Space }) => {
   const name = space.isOpen ? space.properties.name : '';

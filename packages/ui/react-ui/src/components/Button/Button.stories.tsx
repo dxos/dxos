@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
-import { withLayoutVariants } from '../../testing';
-import { Icon } from '../Icon';
-import { Button, ButtonGroup, type ButtonProps } from './Button';
+import { withTheme } from '../../testing/index.ts';
+import { withLayoutVariants } from '../../testing/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Button, ButtonGroup, type ButtonProps } from './Button.tsx';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (

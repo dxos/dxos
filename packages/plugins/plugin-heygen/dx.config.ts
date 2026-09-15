@@ -18,7 +18,7 @@ export default Config2.make({
       kind-specific request config. The credential is resolved at generation time via CredentialsService.
       This plugin is headless — it contributes services only and has no UI surfaces.
     `,
-    icon: { key: 'ph--film-reel--regular', hue: 'fuchsia' },
+    icon: { key: 'ph--circles-three--regular', hue: 'blue' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-heygen',
     dependsOn: ['org.dxos.plugin.studio'],
     tags: ['labs'],

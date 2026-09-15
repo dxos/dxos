@@ -17,9 +17,9 @@ import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
-import { type Client } from '../client';
-import { SpaceState } from '../echo';
-import { type DebugPortController, getDebugPortController } from './debug-port-controller';
+import { type Client } from '../client/index.ts';
+import { SpaceState } from '../echo/index.ts';
+import { type DebugPortController, getDebugPortController } from './debug-port-controller.ts';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -223,7 +223,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     };
 
     hook.openDevtoolsApp = async () => {
-      const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
+      // No default target: when no remote source is configured the devtools app decides on its own.
+      const vault = client.config?.values.runtime?.client?.remoteSource;
 
       // Check if we're serving devtools locally on the usual port.
       let hasLocalDevtools = false;
@@ -236,7 +237,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       const devtoolsApp = hasLocalDevtools
         ? 'http://localhost:5174/'
         : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
-      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
+      const devtoolsUrl = vault ? `${devtoolsApp}?target=${vault}` : devtoolsApp;
       window.open(devtoolsUrl, '_blank');
     };
 

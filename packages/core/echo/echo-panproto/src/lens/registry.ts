@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 
-import { type AnyLens } from './types';
+import { type AnyLens } from './types.ts';
 
 //
 // Static lens registry. `lensesFor` answers "how else can I view this object"; `sourcesFor` answers

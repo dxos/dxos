@@ -10,7 +10,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { InvocationTraceContainer } from './InvocationTraceContainer';
+import { InvocationTraceContainer } from './InvocationTraceContainer.tsx';
 
 const TARGETS = ['Airtable Webhook', 'Discord Bot', 'Email Processor', 'Slack Notifier', 'Data Sync'];
 

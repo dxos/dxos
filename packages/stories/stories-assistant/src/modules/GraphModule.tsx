@@ -17,7 +17,7 @@ import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { ResearchInputQueue } from '../testing';
+import { ResearchInputQueue } from '../testing/index.ts';
 
 export const GraphModule = () => {
   const space = useActiveSpace();

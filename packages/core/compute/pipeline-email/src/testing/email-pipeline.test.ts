@@ -30,18 +30,18 @@ import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/te
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest';
-import { commitmentLedger } from '../corpus/ledger';
-import { type Summarizer } from '../corpus/prompts';
-import { buildRollups } from '../corpus/rollups';
-import { clusterThreads, materializeTopics, summarizeTopics } from '../corpus/topics';
-import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index';
-import { buildThreads } from '../internal/threads';
-import { type FactIndexer, extractFactsStage } from '../stages/extract-facts';
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts';
-import { Thread } from '../types';
-import { emailToMessage } from './email-fixtures';
-import { parquetSource } from './parquet';
+import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest.ts';
+import { commitmentLedger } from '../corpus/ledger.ts';
+import { type Summarizer } from '../corpus/prompts.ts';
+import { buildRollups } from '../corpus/rollups.ts';
+import { clusterThreads, materializeTopics, summarizeTopics } from '../corpus/topics.ts';
+import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index.ts';
+import { buildThreads } from '../internal/threads.ts';
+import { type FactIndexer, extractFactsStage } from '../stages/extract-facts.ts';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts.ts';
+import { Thread } from '../types/index.ts';
+import { emailToMessage } from './email-fixtures.ts';
+import { parquetSource } from './parquet.ts';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) lives under ROOT_DIR with
 // layout `${ROOT_DIR}/data/train-*.parquet`. ROOT_DIR defaults to the local checkout produced by

@@ -2,17 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import path from 'node:path';
 
 import { sleep } from '@dxos/async';
-import { type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { type IndexConfig, IndexConfigSchema, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 
-import { TraceReader } from '../analysys/traces';
-import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { EdgeReplicant } from '../replicants/edge-replicant';
+import { TraceReader } from '../analysys/traces.ts';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { EdgeReplicant } from '../replicants/edge-replicant.ts';
 
 export type EdgeTestSpec = {
   platform: Platform;
@@ -61,8 +62,8 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
       },
       maxDocumentsPerInvocation: 5_000,
       simultaneousInvocations: false,
-      indexing: { enabled: false, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
-      config: {
+      indexing: create(IndexConfigSchema, { enabled: false, indexes: [{ kind: IndexKind_Kind.SCHEMA_MATCH }] }),
+      config: create(ConfigSchema, {
         runtime: {
           client: {
             edgeFeatures: {
@@ -75,16 +76,16 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
           services: {
             agentHosting: {
               type: 'AGENTHOSTING_API',
-              // server: 'https://edge.dxos.workers.dev/v1alpha1/',
+              // server: 'https://dev.dxos.network/v1alpha1/',
               server: 'http://localhost:8787/v1alpha1/',
             },
             edge: {
-              // url: 'https://edge.dxos.workers.dev',
+              // url: 'https://dev.dxos.network',
               url: 'http://localhost:8787',
             },
           },
         },
-      },
+      }),
     };
   }
 

@@ -16,15 +16,15 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AiSession } from '@dxos/assistant';
-import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
+import * as ChatSchema from '@dxos/assistant/Chat';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { App, render } from '../../components';
-import { theme } from '../../theme';
+import { App, render } from '../../components/index.ts';
+import { theme } from '../../theme.ts';
 import {
   type AiChatServices,
   Provider,
@@ -33,10 +33,10 @@ import {
   operationHandlers,
   toolkits,
   types,
-} from '../../util';
-import { Chat } from './components';
-import { runNonInteractive } from './non-interactive';
-import { ChatProcessor } from './processor';
+} from '../../util/index.ts';
+import { Chat } from './components/index.ts';
+import { runNonInteractive } from './non-interactive.ts';
+import { ChatProcessor } from './processor.ts';
 
 export const chat = Command.make(
   'chat',

@@ -8,12 +8,12 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as Pipeline from '../Pipeline';
-import * as Stage from '../Stage';
-import { renderBenchmark, runBenchmark } from './benchmark';
-import { captureSink } from './capture';
-import { instrument } from './instrument';
-import { useMetrics } from './metrics';
+import * as Pipeline from '../Pipeline.ts';
+import * as Stage from '../Stage.ts';
+import { renderBenchmark, runBenchmark } from './benchmark.ts';
+import { captureSink } from './capture.ts';
+import { instrument } from './instrument.ts';
+import { useMetrics } from './metrics.ts';
 
 describe('benchmark framework', () => {
   test('instrument records per-stage counters and latency, even when items are dropped', async ({ expect }) => {

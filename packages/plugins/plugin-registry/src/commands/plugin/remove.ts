@@ -10,9 +10,9 @@ import * as Command from 'effect/unstable/cli/Command';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig } from '@dxos/cli-util';
 
-import { loadPlugins, savePlugins } from '../../storage';
-import { removeAssets } from '../../util';
-import { PluginNotFoundError, PluginNotRemovableError } from './errors';
+import { loadPlugins, savePlugins } from '../../storage.ts';
+import { removeAssets } from '../../util/index.ts';
+import { PluginNotFoundError, PluginNotRemovableError } from './errors.ts';
 
 export const handler = Effect.fn(function* ({ id }: { id: string }) {
   const { json, profile } = yield* CommandConfig;

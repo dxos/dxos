@@ -12,8 +12,8 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
-import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
+import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry.ts';
+import { TestBuilder, createMockedComputeRuntimeProvider } from './testing/index.ts';
 
 const AddDefinition = Operation.make({
   meta: {

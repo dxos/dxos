@@ -8,6 +8,62 @@
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/track.sh\""
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "plugin:dxos:composer",
+            "tool": "invokeOperation",
+            "input": {
+              "key": "org.dxos.operation.tasks.recordSession",
+              "input": {
+                "sessionId": "${session_id}",
+                "worktree": "${cwd}"
+              }
+            },
+            "statusMessage": "Reporting session to Composer"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "plugin:dxos:composer",
+            "tool": "invokeOperation",
+            "input": {
+              "key": "org.dxos.operation.tasks.recordSession",
+              "input": {
+                "sessionId": "${session_id}",
+                "lastMessage": "${last_assistant_message}"
+              }
+            },
+            "statusMessage": "Checking in to Composer"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "logout|prompt_input_exit|other",
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "plugin:dxos:composer",
+            "tool": "invokeOperation",
+            "input": {
+              "key": "org.dxos.operation.tasks.recordSession",
+              "input": {
+                "sessionId": "${session_id}",
+                "state": "finished"
+              }
+            },
+            "statusMessage": "Closing session in Composer"
+          }
+        ]
       }
     ]
   }

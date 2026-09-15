@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as Language from './Language';
-import * as Vocabulary from './Vocabulary';
+import * as Language from './Language.ts';
+import * as Vocabulary from './Vocabulary.ts';
 
 export const PartOfSpeech = Schema.Literals([
   'noun',
@@ -110,7 +110,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * stamps a `dueAt` on it, since the last interval is what a card in the final box would wait, but
  * reaching `BOX_COUNT` is what takes it out of the drill.
  */
-export const isDue = (word: Word, now: Date): boolean =>
+export const isDue = (word: Pick<Word, 'progress'>, now: Date): boolean =>
   (word.progress?.box ?? 0) < BOX_COUNT &&
   (!word.progress?.dueAt || new Date(word.progress.dueAt).getTime() <= now.getTime());
 

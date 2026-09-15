@@ -8,8 +8,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useMemo } from 'react';
 
-import { type AlignState } from './align';
-import { type StyleState } from './style';
+import { type AlignState } from './align.ts';
+import { type StyleState } from './style.ts';
 
 export type ToolbarState = Partial<StyleState & AlignState>;
 export type ToolbarStateAtom = Atom.Writable<ToolbarState>;

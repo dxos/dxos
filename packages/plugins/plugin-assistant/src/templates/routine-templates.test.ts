@@ -11,8 +11,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { dailyDigest } from './daily-digest';
-import { researchBrief } from './research-brief';
+import { dailyDigest } from './daily-digest.ts';
+import { researchBrief } from './research-brief.ts';
 
 const templates = [
   { template: researchBrief, skillCount: 4 },

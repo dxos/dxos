@@ -9,12 +9,12 @@ import { createRoot } from 'react-dom/client';
 
 import { log } from '@dxos/log';
 
-import { Options, Root } from './components';
+import { Options, Root } from './components/index.ts';
 
 const OptionsApp = () => {
   return (
     <Root name='options'>
-      <div className='absolute inset-0 flex justify-center overflow-hidden dx-modal-surface'>
+      <div className='dx-fullscreen flex justify-center overflow-hidden dx-modal-surface'>
         <div className='dx-document dx-base-surface'>
           <Options />
         </div>

@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { type DatabaseInfo } from '../../../../hooks';
-import { type CustomPanelProps, Panel } from '../../Panel';
-import { Table, type TableProps, Unit } from '../Table';
+import { type DatabaseInfo } from '../../../../hooks/index.ts';
+import { type CustomPanelProps, Panel } from '../../Panel.tsx';
+import { Table, type TableProps, Unit } from '../Table.tsx';
 
 export const ReplicatorPanel = ({ database, ...props }: CustomPanelProps<{ database?: DatabaseInfo }>) => {
   const interval = database?.dataStats?.meta?.rateAverageOverSeconds

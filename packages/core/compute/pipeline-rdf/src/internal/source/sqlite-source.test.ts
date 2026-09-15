@@ -11,8 +11,8 @@ import { DataFactory, type Quad } from 'n3';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { migrate } from '../sqlite/schema';
-import { insertQuads, makeSqliteSource } from './sqlite-source';
+import { migrate } from '../sqlite/schema.ts';
+import { insertQuads, makeSqliteSource } from './sqlite-source.ts';
 
 const { namedNode, literal } = DataFactory;
 const TestLayer = SqlTransaction.layer.pipe(

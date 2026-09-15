@@ -4,12 +4,14 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Tooltip } from './Tooltip';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Tooltip } from './Tooltip.tsx';
 
 type StoryArgs = {
   tooltips: { label: string; content: string }[];
@@ -74,5 +76,46 @@ export const StressTest: Story = {
       }),
       { count: 32 },
     ),
+  },
+};
+
+/**
+ * Hovering a trigger opens the one tooltip at that trigger, describing only it; moving to another
+ * trigger hands the tooltip over.
+ */
+export const TestHover: Story = {
+  args: {
+    tooltips: [
+      { label: 'First', content: 'First tip' },
+      { label: 'Second', content: 'Second tip' },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [first, second] = canvas.getAllByRole('button');
+
+    await userEvent.hover(first);
+    const tooltip = await waitFor(async () => {
+      const element = document.querySelector<HTMLElement>('[role="tooltip"]');
+      await expect(element).not.toBeNull();
+      invariant(element);
+      return element;
+    });
+    await waitFor(() => expect(tooltip.textContent).toContain('First tip'));
+    await expect(first.getAttribute('aria-describedby')).toContain(tooltip.id);
+    await expect(second.getAttribute('aria-describedby')).toBeNull();
+    // Positioned beside the trigger rather than left at the portal's origin.
+    await waitFor(async () => {
+      const rect = tooltip.getBoundingClientRect();
+      const anchor = first.getBoundingClientRect();
+      await expect(rect.width).toBeGreaterThan(0);
+      await expect(Math.abs(rect.left + rect.width / 2 - (anchor.left + anchor.width / 2))).toBeLessThan(anchor.width);
+    });
+
+    await userEvent.unhover(first);
+    await userEvent.hover(second);
+    await waitFor(() => expect(second.getAttribute('aria-describedby')).toBeTruthy());
+    await waitFor(() => expect(document.querySelector('[role="tooltip"]')?.textContent).toContain('Second tip'));
+    await expect(first.getAttribute('aria-describedby')).toBeNull();
   },
 };

@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
-import { AiUsageQuotaError, parseError } from '../../processor';
+import { AiUsageQuotaError, parseError } from '../../processor/index.ts';
 
 type FailureToastProps = {
   /**
@@ -75,7 +75,7 @@ type Story = StoryObj<typeof meta>;
 export const QuotaExceeded: Story = {
   args: {
     rawError:
-      'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST https://edge.dxos.workers.dev/ai/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}',
+      'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST https://dev.dxos.network/ai/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}',
   },
 };
 

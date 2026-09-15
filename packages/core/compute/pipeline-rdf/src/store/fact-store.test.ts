@@ -9,9 +9,9 @@ import * as Layer from 'effect/Layer';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { type Fact } from '../types';
-import { FactStore } from './fact-store';
-import * as FactStoreLive from './fact-store-live';
+import { type Fact } from '../types/index.ts';
+import * as FactStoreLive from './fact-store-live.ts';
+import { FactStore } from './fact-store.ts';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },

@@ -24,7 +24,7 @@ import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 import { useGraphModel } from '#hooks';
 import { Graph } from '#types';
 
-import { Lattice } from './Lattice';
+import { Lattice } from './Lattice.tsx';
 
 const generator = random as any as ValueGenerator;
 

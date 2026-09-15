@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Flowchart } from './flowchart';
+import { Flowchart } from './flowchart.ts';
 
 describe('Mermaid builder', () => {
   test('Flowchart', () => {

@@ -5,7 +5,7 @@
 import { bind } from 'bind-event-listener';
 import { useEffect, useRef } from 'react';
 
-import { useCanvasContext } from './useCanvasContext';
+import { useCanvasContext } from './useCanvasContext.ts';
 
 export type DragOptions = {
   // TODO(burdon): Add constraints?

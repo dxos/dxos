@@ -11,7 +11,7 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { type IndexCursor, IndexTracker } from './index-tracker';
+import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 
 const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(

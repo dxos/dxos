@@ -8,8 +8,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 
-import { RECOVERY_CODE_DIALOG } from '../constants';
-import { CreateRecoveryCode } from './definitions';
+import { RECOVERY_CODE_DIALOG } from '../constants.ts';
+import { CreateRecoveryCode } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof CreateRecoveryCode> = CreateRecoveryCode.pipe(
   Operation.withHandler(

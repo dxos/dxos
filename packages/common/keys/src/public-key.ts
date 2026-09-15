@@ -16,7 +16,7 @@ import {
 } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 
-import { randomBytes } from './random-bytes';
+import { randomBytes } from './random-bytes.ts';
 
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;

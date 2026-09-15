@@ -9,7 +9,7 @@ import { Focus } from '@dxos/react-ui';
 
 import { Result } from '#types';
 
-import { ResultCard } from '../ResultCard';
+import { ResultCard } from '../ResultCard/index.ts';
 
 export type ResultTileProps = {
   result: Result.Result;

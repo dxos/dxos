@@ -11,34 +11,20 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
-import { DebugStatus, LogStatus, StatsPanel, Wireframe } from '#containers';
+import { DebugPanelDrawer, DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
 
-import { DebugCapabilities } from '../types/Debug';
+import { DebugCapabilities } from '../types/Debug.ts';
 import {
+  DebugConsoleArticle,
   DebugSettingsSurface,
-  LoggerSurface,
   ObjectDebugSurface,
   SpaceGeneratorSurface,
   SpaceObjectsSurface,
-} from './DebugSurfaces';
-
-type SpaceDebug = {
-  type: string;
-  space: Space;
-};
-
-const isSpaceDebug = (data: unknown): data is SpaceDebug =>
-  typeof data === 'object' &&
-  data !== null &&
-  'type' in data &&
-  data.type === DebugNodes.SpaceType &&
-  'space' in data &&
-  isSpace(data.space);
+} from './DebugSurfaces.tsx';
 
 type ReactSurfaceOptions = {
   logStore?: IdbLogStore;
@@ -59,9 +45,9 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        filter: AppSurface.subject(AppSurface.Article, isSpaceDebug),
+        filter: AppSurface.literal(AppSurface.Article, DebugNodes.SpaceType),
         component: SpaceGeneratorSurface,
-        props: ({ role, data: { subject } }) => ({ role, space: subject.space }),
+        props: ({ role }) => ({ role }),
       }),
       Surface.create({
         id: 'wireframe',
@@ -83,6 +69,16 @@ export default Capability.makeModule(
           object: subject,
           classNames: 'row-span-2 overflow-hidden',
         }),
+      }),
+      Surface.create({
+        id: 'console',
+        filter: AppSurface.literal(AppSurface.Article, DebugNodes.Console),
+        component: DebugConsoleArticle,
+      }),
+      Surface.create({
+        id: 'logsArticle',
+        filter: AppSurface.literal(AppSurface.Article, DebugNodes.Logs),
+        component: LoggerPanel,
       }),
       Surface.create({
         id: 'objectDebug',
@@ -107,12 +103,17 @@ export default Capability.makeModule(
       Surface.create({
         id: 'logs',
         filter: Surface.makeFilter(AppSurface.deckCompanion('logs')),
-        component: LoggerSurface,
+        component: LoggerPanel,
       }),
       Surface.create({
-        id: 'logStatus',
+        id: 'debugPanelStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: LogStatus,
+        component: DebugPanelStatus,
+      }),
+      Surface.create({
+        id: 'debugDrawer',
+        filter: Surface.makeFilter(AppSurface.Drawer),
+        component: DebugPanelDrawer,
       }),
       Surface.create({
         id: 'statsPanel',

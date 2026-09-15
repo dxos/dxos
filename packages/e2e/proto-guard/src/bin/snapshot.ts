@@ -10,9 +10,9 @@ import { hideBin } from 'yargs/helpers';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 
-import { generateSnapshot } from '../generate-snapshot';
-import { type SnapshotDescription, SnapshotsRegistry } from '../snapshots-registry';
-import { EXPECTED_JSON_DATA, SNAPSHOT_DIR, SNAPSHOTS_DIR, getBaseDataDir } from '../util';
+import { generateSnapshot } from '../generate-snapshot.ts';
+import { type SnapshotDescription, SnapshotsRegistry } from '../snapshots-registry.ts';
+import { EXPECTED_JSON_DATA, SNAPSHOT_DIR, SNAPSHOTS_DIR, getBaseDataDir } from '../util.ts';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.

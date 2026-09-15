@@ -20,7 +20,7 @@ import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { createFilename } from '@dxos/util';
 
-import { type DataSpace } from '../spaces/data-space';
+import { type DataSpace } from '../spaces/data-space.ts';
 
 const SERIALIZED_SPACE_VERSION = 1;
 
@@ -95,7 +95,7 @@ export const writeSerializedSpaceArchive = async (
 ): Promise<SpacesService.SpaceArchive> => {
   const { space, echoHost, exportedBy } = options;
 
-  const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
+  const rootUrl = space.automergeSpaceState.lastEpoch?.assertion.automergeRoot;
   assertState(rootUrl, 'Space does not have a root URL');
   const databaseRoot = space.databaseRoot;
   assertState(databaseRoot, 'Space database root is not ready');
@@ -108,13 +108,12 @@ export const writeSerializedSpaceArchive = async (
   collectObjectsFromDoc(rootDoc, objects);
 
   for (const linkedUrl of databaseRoot.getAllLinkedDocuments()) {
-    const handle = await echoHost.loadDoc<DatabaseDirectory>(Context.default(), linkedUrl as AutomergeUrl);
-    if (!handle) {
+    using lease = await echoHost.loadDoc<DatabaseDirectory>(Context.default(), linkedUrl as AutomergeUrl);
+    if (!lease) {
       log.warn('linked document handle not available; skipping', { url: linkedUrl });
       continue;
     }
-    const doc = handle.doc();
-    collectObjectsFromDoc(doc, objects);
+    collectObjectsFromDoc(lease.doc(), objects);
   }
 
   // Export queue/feed messages for every Feed object in the space.

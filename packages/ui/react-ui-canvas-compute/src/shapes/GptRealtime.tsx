@@ -9,7 +9,7 @@ import { useConfig } from '@dxos/react-client';
 import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { type GptRealtimeShape } from './gpt-realtime-def';
+import { type GptRealtimeShape } from './gpt-realtime-def.ts';
 
 export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
   const [isLive, setIsLive] = useState(false);
@@ -17,6 +17,11 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
   const config = useConfig();
 
   const start = async () => {
+    const edgeUrl = config.values.runtime?.services?.edge?.url;
+    if (!edgeUrl) {
+      log.error('EDGE services are not configured (runtime.services.edge.url); realtime AI is unavailable.');
+      return;
+    }
     setIsLive(true);
 
     try {
@@ -46,7 +51,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
 
       // Send offer to backend and get answer. AI is served through edge's /ai/* proxy;
       // the configured edge URL uses a ws(s) scheme, so swap it for http(s).
-      const aiServiceUrl = new URL('/ai/rtc-connect', config.values.runtime?.services?.edge?.url ?? DEFAULT_EDGE_URL);
+      const aiServiceUrl = new URL('/ai/rtc-connect', edgeUrl);
       aiServiceUrl.protocol = aiServiceUrl.protocol.replace('ws', 'http');
       const response = await fetch(aiServiceUrl, {
         method: 'POST',
@@ -136,5 +141,3 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
     </div>
   );
 };
-
-const DEFAULT_EDGE_URL = 'http://localhost:8787';

@@ -10,7 +10,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
-import { createIntrospector } from '../introspector';
+import { createIntrospector } from '../introspector/index.ts';
 
 const REAL = process.env.INTROSPECT_REAL === '1';
 const __dirname = dirname(fileURLToPath(import.meta.url));

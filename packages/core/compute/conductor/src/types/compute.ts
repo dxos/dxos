@@ -13,8 +13,8 @@ import * as Trace from '@dxos/compute/Trace';
 import type { Database, Registry } from '@dxos/echo';
 import { mapValues } from '@dxos/util';
 
-import { type ComputeNodeContext } from './compute-events';
-import { type ComputeNode, type ComputeNodeMeta } from './graph';
+import { type ComputeNodeContext } from './compute-events.ts';
+import { type ComputeNode, type ComputeNodeMeta } from './graph.ts';
 
 //
 // Errors

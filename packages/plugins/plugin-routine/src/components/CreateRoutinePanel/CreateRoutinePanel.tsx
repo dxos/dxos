@@ -19,7 +19,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { meta } from '#meta';
 import { RoutineCapabilities, RoutineEvents } from '#types';
 
-import { RoutineForm } from '../RoutineForm';
+import { RoutineForm } from '../RoutineForm/index.ts';
 
 export type CreateRoutinePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to RoutineCapabilities.Template. */
@@ -140,7 +140,7 @@ export const CreateRoutinePanel = ({
         onCancel={() => setPendingTemplate(undefined)}
       >
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
           <Form.Actions submitLabel={t('continue.label')} submitIcon='ph--arrow-right--regular' />
         </Form.Content>
       </Form.Root>

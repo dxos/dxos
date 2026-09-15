@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
@@ -28,3 +29,184 @@ export const InsertLoremIpsum = Operation.make({
   // operation layer to the editor.
   services: [Capability.Service],
 });
+
+const LayoutSummary = Schema.Struct({
+  mode: Schema.String,
+  sidebarOpen: Schema.Boolean,
+  complementarySidebarOpen: Schema.Boolean,
+  dialogOpen: Schema.Boolean,
+  workspace: Schema.String,
+  active: Schema.Array(Schema.String).annotate({
+    description: 'Graph path ids of the open planks — the ids layout open/close operations accept.',
+  }),
+  inactive: Schema.Array(Schema.String),
+  scrollIntoView: Schema.optional(Schema.String),
+});
+
+const SubjectSummary = Schema.Struct({
+  id: Schema.optional(Schema.String),
+  dxn: Schema.optional(Schema.String),
+  typename: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+  text: Schema.optional(Schema.String).annotate({
+    description: 'The current text of a markdown document, so an edit can be judged without the editor.',
+  }),
+});
+
+const ActionSummary = Schema.Struct({
+  id: Schema.String,
+  label: Schema.optional(Schema.String),
+  icon: Schema.optional(Schema.String),
+  disabled: Schema.optional(Schema.Boolean),
+  operation: Schema.optional(Schema.String).annotate({
+    description: 'Operation DXN embedded in the action id — invokable via the operation invoker.',
+  }),
+  group: Schema.optional(Schema.Boolean),
+});
+
+const CommentMessageSummary = Schema.Struct({
+  id: Schema.String,
+  sender: Schema.optional(Schema.String),
+  text: Schema.optional(Schema.String),
+});
+
+const CommentThreadSummary = Schema.Struct({
+  id: Schema.String,
+  anchorId: Schema.String.annotate({
+    description: 'Id of the `AnchoredTo` relation that ties the thread to the subject.',
+  }),
+  anchor: Schema.optional(Schema.String),
+  status: Schema.optional(Schema.String),
+  messages: Schema.Array(CommentMessageSummary),
+});
+
+const PlankSummary = Schema.Struct({
+  id: Schema.String,
+  label: Schema.optional(Schema.String),
+  type: Schema.optional(Schema.String),
+  subject: Schema.optional(SubjectSummary),
+  actions: Schema.Array(ActionSummary),
+  comments: Schema.optional(Schema.Array(CommentThreadSummary)).annotate({
+    description: "Comment threads anchored to the plank's subject, when it is a database object.",
+  }),
+});
+
+const SurfaceSummary = Schema.Struct({
+  id: Schema.optional(Schema.String),
+  role: Schema.optional(Schema.String),
+  component: Schema.optional(Schema.String),
+});
+
+const SpaceSummary = Schema.Struct({
+  id: Schema.String,
+  name: Schema.optional(Schema.String),
+  state: Schema.String.annotate({ description: 'The `SpaceState` name, e.g. `SPACE_READY`.' }),
+  default: Schema.optional(Schema.Boolean),
+});
+
+const ToastSummary = Schema.Struct({
+  title: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  actions: Schema.Array(Schema.String).annotate({ description: "Labels of the toast's buttons." }),
+});
+
+const ErrorSummary = Schema.Struct({
+  timestamp: Schema.Number,
+  message: Schema.optional(Schema.String),
+  error: Schema.optional(Schema.String),
+  file: Schema.optional(Schema.String),
+});
+
+/**
+ * One JSON document describing the live UI state — layout, attention, open planks with their
+ * subjects and reachable actions, mounted surfaces, and plugin counts — so an agent can infer what
+ * the user sees and what it can do without screenshots. See app-framework/docs/INTROSPECTION.md.
+ */
+export const Snapshot = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.debug.snapshot'),
+    name: 'UI Snapshot',
+    description:
+      'Returns a JSON snapshot of the live UI state: layout (mode, sidebars, open planks), attended ' +
+      'items, each open plank with its subject object and the actions the UI offers for it (with ' +
+      'their operation keys) and the comment threads on it, the mounted surfaces, the spaces, the visible toasts, the errors ' +
+      'logged since `since` (a timestamp; default: the last minute), and plugin counts. Read-only.',
+    icon: 'ph--camera--regular',
+  },
+  services: [Capability.Service, Plugin.Service],
+  input: Schema.Struct({
+    since: Schema.optional(Schema.Number).annotate({
+      description: 'Only errors logged at or after this unix timestamp (ms) are reported.',
+    }),
+  }),
+  output: Schema.Struct({
+    layout: Schema.optional(LayoutSummary),
+    attention: Schema.Array(Schema.String),
+    planks: Schema.Array(PlankSummary),
+    surfaces: Schema.Array(SurfaceSummary),
+    spaces: Schema.Array(SpaceSummary),
+    toasts: Schema.Array(ToastSummary),
+    errors: Schema.Array(ErrorSummary),
+    plugins: Schema.Struct({
+      installed: Schema.Number,
+      enabled: Schema.Number,
+      active: Schema.Number,
+    }),
+  }),
+}).pipe(Operation.mutation('none'));
+
+/**
+ * Undoes the last undoable operation — what the notification toast's **Undo** button does — so an
+ * agent driving the app through operations can exercise the undo path it cannot click.
+ */
+export const Undo = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.debug.revertLast'),
+    name: 'Revert last operation',
+    description: 'Undoes the last undoable operation, as the undo toast does. Fails when there is nothing to undo.',
+    icon: 'ph--arrow-counter-clockwise--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    undone: Schema.Boolean,
+  }),
+});
+
+const SampleSpaceSummary = Schema.Struct({
+  id: Schema.String,
+  label: Schema.String,
+  description: Schema.optional(Schema.String),
+});
+
+/**
+ * Fills a space with one of the themed sample data sets plugins contribute, so an agent driving the
+ * debug port can seed a realistic space without clicking through the generator panel.
+ */
+export const CreateSampleSpace = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.debug.createSampleSpace'),
+    name: 'Create Sample Space',
+    description:
+      'Creates a new space and fills it with a themed sample data set. Call without `id` to list ' +
+      'what is available without creating anything; the listing is the only way to learn the ids.',
+    icon: 'ph--dice-five--regular',
+  },
+  // The contributing modules are demand-gated, so the handler fires the activation event itself.
+  services: [Capability.Service, Plugin.Service],
+  input: Schema.Struct({
+    id: Schema.optional(Schema.String).annotate({
+      description: 'Sample space id. Omit to list the available sets without creating anything.',
+    }),
+  }),
+  output: Schema.Struct({
+    applied: Schema.optional(SampleSpaceSummary).annotate({
+      description: 'The set that was written; absent when listing.',
+    }),
+    spaceId: Schema.optional(Schema.String),
+    subject: Schema.optional(Schema.Array(Schema.String)).annotate({
+      description: 'Navigation path of the new space, for a follow-up open.',
+    }),
+    available: Schema.Array(SampleSpaceSummary),
+  }),
+}).pipe(Operation.mutation('write'));

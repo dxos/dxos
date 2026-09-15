@@ -29,7 +29,7 @@ The following extension dialects are used in this document.
 |----------|------------------------------|
 | `module` | `org.dxos.mdl.module@1.0`    |
 | `feat`   | `org.dxos.mdl.feat@1.0`      |
-| `test`   | `org.dxos.mdl.test@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
 
 ## Modules
 
@@ -250,7 +250,7 @@ feat F-6: Coordinator strategies
 ## Acceptance
 
 ```mdl
-test T-1: Single leader hosts the worker
+scenario T-1: Single leader hosts the worker
   given: two tabs opening a Client.Connection against the same leaderLockKey
   when: both complete their initial connection
   then:
@@ -260,7 +260,7 @@ test T-1: Single leader hosts the worker
 ```
 
 ```mdl
-test T-2: Follower reconnects after leader death
+scenario T-2: Follower reconnects after leader death
   given: a follower connected to a worker hosted by a leader tab
   when: the leader tab is terminated
   then:
@@ -270,7 +270,7 @@ test T-2: Follower reconnects after leader death
 ```
 
 ```mdl
-test T-3: Duplicate sessions are de-duplicated
+scenario T-3: Duplicate sessions are de-duplicated
   given: a running worker and a follower client
   when: the follower sends request-port repeatedly (e.g. on each heartbeat)
   then:
@@ -309,8 +309,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

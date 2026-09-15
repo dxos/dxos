@@ -13,10 +13,10 @@ import { SheetOperation } from '#types';
 // without stopping a bundler walking into the React surface behind it.
 
 export const SheetOperationHandlerSet = OperationHandlerSet.lazy([
-  SheetOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
-  SheetOperation.DropAxis.pipe(Operation.lazyHandler(() => import('./drop-axis'))),
-  SheetOperation.GetValues.pipe(Operation.lazyHandler(() => import('./get-values'))),
-  SheetOperation.InsertAxis.pipe(Operation.lazyHandler(() => import('./insert-axis'))),
-  SheetOperation.RestoreAxis.pipe(Operation.lazyHandler(() => import('./restore-axis'))),
-  SheetOperation.SetValues.pipe(Operation.lazyHandler(() => import('./set-values'))),
+  SheetOperation.Create.pipe(Operation.lazyHandler(() => import('./create.ts'))),
+  SheetOperation.DropAxis.pipe(Operation.lazyHandler(() => import('./drop-axis.ts'))),
+  SheetOperation.GetValues.pipe(Operation.lazyHandler(() => import('./get-values.ts'))),
+  SheetOperation.InsertAxis.pipe(Operation.lazyHandler(() => import('./insert-axis.ts'))),
+  SheetOperation.RestoreAxis.pipe(Operation.lazyHandler(() => import('./restore-axis.ts'))),
+  SheetOperation.SetValues.pipe(Operation.lazyHandler(() => import('./set-values.ts'))),
 ]);

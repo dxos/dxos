@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Panel } from '@dxos/react-ui';
 
-import { JsonView } from '../../../components';
-import { useMetadata } from '../../../hooks';
+import { JsonView } from '../../../components/index.ts';
+import { useMetadata } from '../../../hooks/index.ts';
 
 export const MetadataPanel = () => {
   const metadata = useMetadata();

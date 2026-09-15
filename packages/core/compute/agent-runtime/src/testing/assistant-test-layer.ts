@@ -12,8 +12,9 @@ import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
-import { Harness } from '@dxos/assistant';
+import { type AiServicePreset, TestAiService } from '@dxos/ai/testing';
+import { Alarm, Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import { ServiceNotAvailableError } from '@dxos/compute';
 import {
   FeedTraceSink,
@@ -41,11 +42,11 @@ import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 
-import { AgentService as AgentServiceRuntime } from '../agent-service';
-import { traceSinkPrettyLayer } from './trace-pretty-print';
+import { AgentService as AgentServiceRuntime } from '../agent-service/index.ts';
+import { traceSinkPrettyLayer } from './trace-pretty-print.ts';
 
 interface TestLayerOptions {
-  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+  aiServicePreset?: AiServicePreset;
 
   /**
    * Overrides the AI service entirely (e.g. a scripted model for deterministic e2e tests).
@@ -99,6 +100,7 @@ export type AssistantTestServices =
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
+  | RemoteProcessManager.Service
   | ProcessManager.ProcessOperationInvoker.Service
   | Process.ProcessMonitorService
   | AtomRegistry.AtomRegistry
@@ -116,7 +118,7 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
   // provider its preset registers a resolver for.
@@ -124,7 +126,7 @@ export const AssistantTestLayer = (
     options.provider ?? (options.aiServicePreset === 'ollama' ? Provider.ollama.id : Provider.edge.id);
 
   const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
-  agentOptions.model ??= resolvedModel;
+  agentOptions.defaultModel ??= resolvedModel;
   agentOptions.provider ??= resolvedProvider;
 
   // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but
@@ -139,9 +141,11 @@ export const AssistantTestLayer = (
     Layer.provideMerge(captureAgentService(agentServiceHolder)),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(ProcessMonitor.layer),
+    Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
+    // Below `AgentService` in the chain, which now requires the remote manager too: a local test
+    // stack has no EDGE, so both the monitor's remote half and `location: 'edge'` see nothing.
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
-    Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     // Order matters: in a `provideMerge` chain each layer's *requirements* are satisfied only by
     // layers added later (whose outputs feed it). `captureProcessManager` needs the manager, the
@@ -232,7 +236,7 @@ export const AssistantTestServiceResolverLayer = (
             // operation resolution runs.
             const agentService = agentServiceHolder.current;
             if (!agentService) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.AgentService.key));
+              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.key));
             }
             return agentService;
           }),
@@ -268,12 +272,20 @@ export const AssistantTestBaseLayer = ({
     Instructions.Instructions,
     Operation.PersistentOperation,
     Feed.Feed,
+    // The agent process runs on a chat, so every session — bare ones included — persists one.
+    Chat.Chat,
     Trigger.Trigger,
     Tag.Tag,
+    Alarm.Alarm,
   );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
+    // A skill referenced by its registry URI resolves through the DATABASE's registry (production
+    // wires that up via plugin-instructions' `RegistrySync`), which is not the `Registry.Service`
+    // seeded below — so a seeded skill has to land in both, or such a ref silently resolves to
+    // nothing and the conversation loses the skill.
+    Layer.provideMerge(seedDatabaseRegistry(skills)),
     Layer.provideMerge(
       TestDatabaseLayer({
         spaceKey: 'fixed',
@@ -302,6 +314,18 @@ export const AssistantTestBaseLayer = ({
   );
 };
 
+/** Registers the seeded skills with the database's registry, so their registry-URI refs resolve. */
+const seedDatabaseRegistry = (skills: readonly Skill.Skill[]): Layer.Layer<never, never, Database.Service> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      if (skills.length === 0) {
+        return;
+      }
+      const { db } = yield* Database.Service;
+      db.registry.add(skills);
+    }),
+  );
+
 const AssistantTestTracingLayer = (
   mode: 'noop' | 'console' | 'pretty' | 'feed',
 ): Layer.Layer<FeedTraceSink.FeedTraceSink | Trace.TraceSink, never, Database.Service> =>
@@ -320,10 +344,11 @@ export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerD
 export const AssistantTestLayerWithTriggers = (
   options: TestLayerWithTriggersOptions,
 ): Layer.Layer<AssistantTestServicesWithTriggers, never, TestContextService> =>
-  Layer.mergeAll(
-    AssistantTestLayer(options),
-    TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
-      Layer.provide(AtomRegistry.layer),
-    ),
-    TriggerStateStore.layerMemory,
-  ) as any;
+  // `Layer.provideMerge` (not `Layer.mergeAll`) at each step: `mergeAll` unions requirements without
+  // letting sibling layers discharge one another, so `TriggerDispatcher`'s own dependency on
+  // `TriggerStateStore`/`ProcessManager.Service`/`Database.Service` needs threading explicitly.
+  TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
+    Layer.provide(AtomRegistry.layer),
+    Layer.provideMerge(TriggerStateStore.layerMemory),
+    Layer.provideMerge(AssistantTestLayer(options)),
+  );

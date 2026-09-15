@@ -4,6 +4,6 @@
 
 export type { ThemedClassName } from '@dxos/ui-types';
 
-export * from './mobile';
-export * from './slots';
-export * from './usePx';
+export * from './mobile.ts';
+export * from './slots.ts';
+export * from './usePx.ts';

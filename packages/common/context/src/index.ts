@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './context';
-export * from './context-disposed-error';
-export * from './promise-utils';
-export * from './resource';
-export * from './trace-context';
+export * from './context.ts';
+export * from './context-disposed-error.ts';
+export * from './promise-utils.ts';
+export * from './resource.ts';
+export * from './trace-context.ts';

@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 
 import { useAudioStream, usePipeline } from '#hooks';
 
-import { DebugInfo } from './DebugInfo';
+import { DebugInfo } from './DebugInfo.tsx';
 
 export type VoiceProps = {
   active?: boolean;

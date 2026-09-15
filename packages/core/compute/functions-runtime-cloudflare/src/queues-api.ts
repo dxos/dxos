@@ -6,7 +6,7 @@ import { type AnyEntity } from '@dxos/echo/Type';
 import { type EID, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import type { ServiceContainer } from './internal';
+import type { ServiceContainer } from './internal/index.ts';
 
 export interface QueuesQueryResult {
   objects: AnyEntity[];
