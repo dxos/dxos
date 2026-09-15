@@ -64,8 +64,13 @@
           }
           try {
             const key = 'dxos.composer.boot-asset-failure';
-            const attempts = (JSON.parse(localStorage.getItem(key) ?? 'null')?.attempts ?? 0) + 1;
-            localStorage.setItem(key, JSON.stringify({ url: href, page: location.href, at: Date.now(), attempts }));
+            const attempts = (Number(JSON.parse(localStorage.getItem(key) ?? 'null')?.attempts) || 0) + 1;
+            // Origin and path only: page URLs carry invitation codes in their query.
+            const page = location.origin + location.pathname;
+            localStorage.setItem(
+              key,
+              JSON.stringify({ url: url.origin + url.pathname, page, at: Date.now(), attempts }),
+            );
             if (attempts === 1) {
               location.replace(location.href);
             }

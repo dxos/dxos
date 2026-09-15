@@ -2,24 +2,43 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+
 import { log } from '@dxos/log';
 import type * as Observability from '@dxos/observability/Observability';
 
 import { BOOT_ASSET_FAILURE_KEY } from './constants.ts';
 
-type BootAssetFailure = { url: string; page: string; at: number; attempts: number };
+const BootAssetFailure = Schema.Struct({
+  url: Schema.String,
+  page: Schema.String,
+  at: Schema.Number,
+  attempts: Schema.Number,
+});
+
+const decodeBootAssetFailure = Schema.decodeUnknownOption(Schema.fromJsonString(BootAssetFailure));
 
 type WebProcessTermination = { at: number; visible: boolean; hostUptimeMs: number };
 
 /** Platforms whose host registers `take_web_process_terminations`. */
 const DESKTOP_PLATFORMS = ['linux', 'macos', 'windows'];
 
+/** Origin and path only: page URLs carry invitation codes in their query, and older records kept it. */
+const originAndPath = (value: string): string => {
+  if (!URL.canParse(value)) {
+    return '';
+  }
+  const url = new URL(value);
+  return `${url.origin}${url.pathname}`;
+};
+
 /** Takes the failure the inline script in `index.html` recorded, so it is reported once. */
-const takeBootAssetFailure = (): BootAssetFailure | undefined => {
+const takeBootAssetFailure = (): typeof BootAssetFailure.Type | undefined => {
   try {
     const raw = localStorage.getItem(BOOT_ASSET_FAILURE_KEY);
     localStorage.removeItem(BOOT_ASSET_FAILURE_KEY);
-    return raw ? JSON.parse(raw) : undefined;
+    return raw === null ? undefined : Option.getOrUndefined(decodeBootAssetFailure(raw));
   } catch (error) {
     log.catch(error);
     return undefined;
@@ -46,7 +65,12 @@ export const reportPreviousBootFailures = async (
   const now = Date.now();
   const failure = takeBootAssetFailure();
   if (failure) {
-    const attributes = { url: failure.url, page: failure.page, attempts: failure.attempts, ageMs: now - failure.at };
+    const attributes = {
+      url: originAndPath(failure.url),
+      page: originAndPath(failure.page),
+      attempts: failure.attempts,
+      ageMs: now - failure.at,
+    };
     log.warn('boot asset failed to load in an earlier boot', attributes);
     observability.events.captureEvent('composer.boot.asset-failed', attributes);
   }
