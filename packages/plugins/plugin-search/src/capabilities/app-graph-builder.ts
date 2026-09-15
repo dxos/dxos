@@ -3,6 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -12,10 +14,25 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { type Client } from '@dxos/react-client';
 import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 import { SearchOperation } from '#types';
+
+// The Client capability lands before `initialize()` resolves, and `client.spaces` throws until it does.
+const initializedFamily = Atom.family((client: Client) =>
+  Atom.make((get) => {
+    if (!client.initialized) {
+      void client.waitUntilInitialized().then(() => get.setSelf(true));
+    }
+    return client.initialized;
+  }),
+);
+
+// Keyed by reference: the family's structural key reads every accessor on the client, including the throwing ones.
+// TODO(wittjosiah): Factor out.
+const initializedAtom = (client: Client): Atom.Atom<boolean> => initializedFamily(Equal.byReferenceUnsafe(client));
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -29,26 +46,23 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'spaceSearch',
         match: GraphNodeMatcher.whenRoot,
-        connector: (node, get) =>
-          Effect.gen(function* () {
+        connector: (_node, get) =>
+          Effect.sync(() => {
             const [client] = get(clientAtom);
-            if (!client) {
-              return [];
-            }
             const [layoutAtom] = get(layoutCapabilityAtom);
             const layout = layoutAtom ? get(layoutAtom) : undefined;
             const spaceId = layout?.workspace ? GraphPath.getSpaceIdFromPath(layout.workspace) : undefined;
-            const space = spaceId ? client.spaces.get(spaceId) : null;
+            const space = client && spaceId && get(initializedAtom(client)) ? client.spaces.get(spaceId) : undefined;
 
             return [
               AppNode.makeDeckCompanion({
                 id: Attention.linkedSegment('search'),
                 label: ['search.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
-                data: space,
+                data: space ?? null,
               }),
             ];
-          }).pipe(Effect.orDie),
+          }),
       }),
       AppGraphBuilder.createExtension({
         id: 'root',
