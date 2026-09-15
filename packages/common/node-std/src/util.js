@@ -13,4 +13,7 @@ export { callbackify, debuglog, format, inspect, promisify, stripVTControlCharac
 // comparison Node's version performs.
 export const isDeepStrictEqual = (actual, expected) => deepEqual(actual, expected, { strict: true });
 
-export default util;
+// Assigned onto the polyfill rather than spread into a new object: `export default` has to keep the
+// polyfill's identity and its non-enumerable members, and this is the one member the named exports
+// above provide that `util/` itself does not.
+export default Object.assign(util, { isDeepStrictEqual });
