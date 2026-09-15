@@ -5,6 +5,7 @@
 import { type ComponentType, lazy } from 'react';
 
 import { type DebugConsoleProps } from './DebugConsole/index.ts';
+import { type DebugPanelDrawerProps } from './DebugPanelDrawer/index.ts';
 import { type DebugPanelStatusProps } from './DebugPanelStatus/index.ts';
 
 export const DebugConsole: ComponentType<DebugConsoleProps> = lazy(() =>
@@ -13,6 +14,9 @@ export const DebugConsole: ComponentType<DebugConsoleProps> = lazy(() =>
 export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel/index.ts'));
 export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings/index.ts'));
 export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel/index.ts'));
+export const DebugPanelDrawer: ComponentType<DebugPanelDrawerProps> = lazy(() =>
+  import('./DebugPanelDrawer/index.ts').then((module) => ({ default: module.DebugPanelDrawer })),
+);
 export const DebugPanelStatus: ComponentType<DebugPanelStatusProps> = lazy(() =>
   import('./DebugPanelStatus/index.ts').then((module) => ({ default: module.DebugPanelStatus })),
 );

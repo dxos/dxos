@@ -568,6 +568,9 @@ export const DocumentTitle: Role.Role<DocumentTitleData<unknown>> = Role.make('o
 /** Role token for the `statusIndicator` role (was `status-indicator`). */
 export const StatusIndicator: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.statusIndicator');
 
+/** The deck's bottom drawer; one contributor renders at a time. */
+export const Drawer: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.drawer');
+
 /**
  * Slot for the devtools-overview sub-surface. Defined here (not in plugin-devtools) so public
  * contributor plugins can target it without depending on the private devtools plugin.

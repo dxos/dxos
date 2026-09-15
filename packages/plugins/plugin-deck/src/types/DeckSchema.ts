@@ -93,6 +93,14 @@ export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean
   fullscreen ? 'solo--fullscreen' : deck.active.length > 1 ? 'multi' : 'solo';
 
 // Persisted plugin state (stored in KVS/localStorage).
+/**
+ * Bottom-drawer height range in rem. Declared here, not read from `@dxos/react-ui`, because the
+ * `UpdateDrawer` handler runs in the headless (node/workerd) entry, which must not load React.
+ */
+export const DRAWER_DEFAULT_HEIGHT = 24;
+export const DRAWER_MIN_HEIGHT = 8;
+export const DRAWER_MAX_HEIGHT = 64;
+
 export const StoredDeckState = Schema.Struct({
   sidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
   /**
@@ -107,6 +115,10 @@ export const StoredDeckState = Schema.Struct({
    * {@link getCompanionSelection} for the platform-correct read.
    */
   complementarySidebarPanel: Schema.optional(Schema.String),
+  /** Openness of the bottom drawer; optional so state persisted before it existed still decodes. */
+  drawerState: Schema.optional(Schema.Literals(['open', 'closed'])),
+  /** Drawer height in rem; absent falls back to {@link DRAWER_DEFAULT_HEIGHT}. */
+  drawerHeight: Schema.optional(Schema.Number),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
   decks: Schema.mutableKey(

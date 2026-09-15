@@ -4,7 +4,7 @@ name: DebugPlugin
 version: 0.1.0
 ---
 
-Developer debugging utilities for `DXOS` Composer — a floating debug panel (console, log viewer, and every developer tool as a navtree), synthetic-object generation, a per-object Debug companion, a space-objects browser, a wireframe overlay, and a transient-stats panel. The panel is a navtree over a hidden `root/debug` app-graph category that this plugin contributes; the Devtools inspector (`org.dxos.plugin.devtools`) attaches its tree there too. Nothing under `root/debug` appears in the main navtree, opens in the deck, or has a URL.
+Developer debugging utilities for `DXOS` Composer — a debug panel (console, log viewer, and every developer tool as a navtree) docked as the deck's bottom drawer or floated as a window, synthetic-object generation, a per-object Debug companion, a space-objects browser, a wireframe overlay, and a transient-stats panel. The panel is a navtree over a hidden `root/debug` app-graph category that this plugin contributes; the Devtools inspector (`org.dxos.plugin.devtools`) attaches its tree there too. Nothing under `root/debug` appears in the main navtree, opens in the deck, or has a URL.
 
 ## Extensions
 
@@ -34,11 +34,17 @@ type DebugPluginOptions
 ```
 
 ```mdl
+type DebugPanelMode
+  literals: docked | floating   # docked = the deck's bottom drawer (default); floating = a FloatingPanel window
+```
+
+```mdl
 type DebugPanelViewState
-  desc: Persisted (localStorage) so a debugging session survives the reloads it provokes; the floating window's open/closed state is not part of it.
+  desc: Persisted (localStorage) so a debugging session survives the reloads it provokes; the floating window's open/closed state is not part of it (the drawer's is deck state).
   fields:
     nodeId?: string             # qualified id of the selected page (e.g. root/debug/devtools/client/config)
     open: string[]              # path keys of the expanded branches
+    mode?: DebugPanelMode       # which host shows the panel; absent reads as docked
     position?: Point            # where the floating panel was last dragged
     size?: Size                 # the size the floating panel was last resized to
 ```
@@ -58,9 +64,9 @@ feat DebugCategory
 
 | Node                        | Type                | Article                    |
 |-----------------------------|---------------------|----------------------------|
-| `root/debug/console`        | `DebugNodes.Console`| Console (agent debug shell)|
-| `root/debug/logs`           | `DebugNodes.Logs`   | Log viewer                 |
-| `root/debug/debug`          | `DebugNodes.id`     | branch (no article)        |
+| `root/debug/debug`          | `DebugNodes.id`     | branch (no article); open with the console selected on a pristine panel |
+| `root/debug/debug/console`  | `DebugNodes.Console`| Console (agent debug shell)|
+| `root/debug/debug/logs`     | `DebugNodes.Logs`   | Log viewer                 |
 | `root/debug/debug/space`    | `DebugNodes.SpaceType` | Generate objects (active space) |
 | `root/debug/devtools/...`   | contributed by `org.dxos.plugin.devtools` | Client / HALO / ECHO / MESH / EDGE inspectors, App Graph, SDK Explorer, CLI |
 
@@ -69,38 +75,53 @@ feat DebugCategory
 ```mdl
 component DebugPanel
   desc: |
-    The debug surface in parts (`DebugPanel.Root` / `Sidebar` / `Main`), hosted by `DebugPanelStatus`
-    inside a `FloatingPanel` opened from the status bar. `Root` owns the selection and the expanded
-    branches (DebugPanelViewState); `Sidebar` is a `Tree` over `root/debug` via
-    `useGraphTreeModel` (`@dxos/plugin-graph/hooks`); `Main` renders the selected node's article
-    surface. Selecting a row never touches the deck, attention, or the URL.
+    The debug surface in parts (`DebugPanel.Root` / `Body` / `Sidebar` / `Main`) with two hosts
+    that share one `Root` context, so selection and open branches carry over when the panel moves:
+    `DebugPanelDrawer` renders it in the deck's bottom drawer (`AppSurface.Drawer`,
+    `org.dxos.role.drawer`) and `DebugPanelStatus` hosts it in a `FloatingPanel`. `Root` owns the
+    selection, the expanded branches and the mode (DebugPanelViewState); `Body` is the `Splitter`
+    over `Sidebar` — a `Tree` over `root/debug` via `useGraphTreeModel`
+    (`@dxos/plugin-graph/hooks`) — and `Main`, the selected node's article surface.
+    `DebugPanelHeader` is the title-bar control both hosts share: a dock/float switch
+    (`debugPanel.mode`) and, for the drawer, a close (`debugPanel.close`). Selecting a row never
+    touches the deck, attention, or the URL; the drawer is not a plank and never takes attention.
   props:
     contextId?: string          # view-state context; defaults to the status-rail singleton
   state:
     nodeId?: string             # selected page
     open: string[]              # expanded branch path keys
+    mode: DebugPanelMode        # docked (default) or floating
   actions:
     select(nodeId: string)      # a leaf shows its article; a branch (data: null) toggles instead
     setOpen(pathKey: string, isOpen: boolean)
+    setMode(mode: DebugPanelMode)  # float: close the drawer, open the window; dock: close the window, open the drawer
   layout: |
-    ┌─ FloatingPanel ──────────────────────────────────────┐
-    │ Debug                                          — ×  │
+    ┌─ Main.Drawer (docked, default) ──────────────────────┐
+    │ Debug                                          ⇱ ×  │
     ├─ Sidebar (Tree) ──┬─ Main (article surface) ────────┤
-    │ ▸ Console         │                                  │
-    │   Logs            │  Config JSON / log table /       │
-    │ ▾ DevTools        │  generator / ...                 │
-    │   ▾ Client        │                                  │
-    │       Config      │  (console and logs stay mounted  │
-    │ ▾ Debug           │   while another page is shown)   │
+    │ ▾ Debug           │                                  │
+    │   ▸ Console       │  Config JSON / log table /       │
+    │     Logs          │  generator / ...                 │
     │     Generate obj. │                                  │
+    │ ▾ DevTools        │  (console and logs stay mounted  │
+    │   ▾ Client        │   while another page is shown)   │
+    │       Config      │                                  │
     └───────────────────┴──────────────────────────────────┘
+    Floating: the same Sidebar/Main under a FloatingPanel title bar (⇲ dock, — minimize, ×).
 ```
 
 ## Features
 
 ```mdl
 feat DebugPanel
-  desc: A status-bar button opens the floating debug panel; its sidebar lists Console, Logs, DevTools, and Debug, and the selection and open branches persist across reloads.
+  desc: |
+    A status-bar button shows the debug panel: docked (the default) it toggles the deck's bottom
+    drawer via `LayoutOperation.UpdateDrawer`, so the planks reflow above it, its height is dragged
+    from the top edge and persists with the deck's layout, and fullscreen hides it; floating, it
+    opens the panel as a window over the app. The title bar's dock/float control moves the panel
+    between the two with the same tool selected. The sidebar lists Debug (Console, Logs, Generate
+    objects — a pristine panel opens Debug with the console selected) and DevTools, and the
+    selection, open branches, and mode persist across reloads.
 ```
 
 ```mdl

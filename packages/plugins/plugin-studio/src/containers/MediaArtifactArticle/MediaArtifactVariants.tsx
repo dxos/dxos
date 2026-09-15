@@ -16,19 +16,20 @@ import { VariantRenderer } from '#surfaces';
 import { type MediaArtifact } from '#types';
 
 /** A host's Play control, appended to the toolbar when given (a storyboard playing its frames). */
+// TDOO(burdon): Can we remove this?
 export type PlayControl = {
   disabled?: boolean;
   onPlay: () => void;
 };
+
+/** `'all'` gallery, or the index of a produced (frozen) variant. */
+type Selected = 'all' | number;
 
 export type MediaArtifactVariantsProps = ThemedClassName<{
   artifact: MediaArtifact.MediaArtifact;
   attendableId?: string;
   play?: PlayControl;
 }>;
-
-/** `'all'` gallery, or the index of a produced (frozen) variant. */
-type Selected = 'all' | number;
 
 /**
  * The produced side of a {@link MediaArtifact}: a toolbar with an "All" gallery tab and a tab per
@@ -99,6 +100,7 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId, play
     if (!target) {
       return;
     }
+
     Obj.update(artifact, (artifact) => {
       artifact.variants = (artifact.variants ?? []).filter((variant) => variant.target?.id !== target.id);
       if (artifact.cover?.target?.id === target.id) {
