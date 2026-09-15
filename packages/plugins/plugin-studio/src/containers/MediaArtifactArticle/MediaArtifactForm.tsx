@@ -85,11 +85,11 @@ export const MediaArtifactForm = ({
   // artifact's kind or generator changed since) is left out: its `model` names a job the new
   // provider's API rejects.
   const draft = useMemo(() => {
-    const generator = artifact.generator;
+    const generator = artifactSnapshot?.generator;
     const request = !generator || generator === provider?.id ? artifact.request : undefined;
     return Variant.make({ config: { ...(provider?.defaultRequest ?? {}), ...(request ?? {}) } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artifactId, provider?.id]);
+  }, [artifactId, provider?.id, artifactSnapshot?.generator]);
   // Observe the draft so edits (via the form) re-render for the Generate-enabled check.
   const [draftSnapshot] = useObject(draft);
   const [generating, setGenerating] = useState(false);

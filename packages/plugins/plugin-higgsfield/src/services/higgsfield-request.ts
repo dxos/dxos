@@ -43,18 +43,18 @@ export const HiggsfieldVideoConfig = Schema.Struct({
   prompt,
   // The animation follows its still's shape, so the ratio is the still's.
   aspectRatio,
+  imageArtifact: Schema.optional(
+    Ref.Ref(MediaArtifact.MediaArtifact).annotate({
+      title: 'Reference image',
+      description: 'A generated image whose cover is animated; used when no still URL is given.',
+    }),
+  ),
   imageUrl: Schema.optional(
     Schema.String.pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.URL),
       GenerationService.FileUrlAnnotation.set({ accept: 'image/*' }),
       Schema.annotate({ title: 'Still image', description: 'Image to animate; generated from the prompt when empty.' }),
     ),
-  ),
-  imageArtifact: Schema.optional(
-    Ref.Ref(MediaArtifact.MediaArtifact).annotate({
-      title: 'Reference image',
-      description: 'A generated image whose cover is animated; used when no still URL is given.',
-    }),
   ),
   imageModel: Schema.optional(
     Schema.String.annotate({ title: 'Image model', description: 'Image model used when no still is given.' }),

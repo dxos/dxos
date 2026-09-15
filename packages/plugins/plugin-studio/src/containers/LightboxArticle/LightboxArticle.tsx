@@ -92,7 +92,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
   // A snapshot, so a cell added or moved is a new value; reading `lightbox.layout` directly would
   // hand the memo the same proxy every render and the new cell never appears.
   const [boardLayout] = useObject(lightbox, 'layout');
-  const layout = useMemo<Layout>(() => ({ items: boardLayout.cells }), [boardLayout]);
+  const layout = useMemo<Layout>(() => ({ items: Lightbox.cells(lightbox) }), [lightbox, boardLayout]);
   const bounds = useMemo(
     () => ({ columns: boardLayout.size.width, rows: boardLayout.size.height }),
     [boardLayout.size.width, boardLayout.size.height],
@@ -143,7 +143,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
       Obj.update(lightbox, (lightbox) => {
         lightbox.items.push(Ref.make(artifact));
         lightbox.layout.cells[artifact.id] = {
-          ...(position ?? nextFreeCell(lightbox.layout.cells, bounds)),
+          ...(position ?? nextFreeCell(Lightbox.cells(lightbox), bounds)),
           w: CELL_SIZE,
           h: CELL_SIZE,
         };

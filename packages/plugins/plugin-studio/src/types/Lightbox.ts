@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { BoardLayout, defaultLayout } from '@dxos/react-ui-board/types';
+import { BoardLayout, type CellLayout, defaultLayout } from '@dxos/react-ui-board/types';
 
 import * as MediaArtifact from './MediaArtifact.ts';
 
@@ -31,3 +31,31 @@ export class Lightbox extends Type.makeObject<Lightbox>(DXN.make('org.dxos.type.
 /** Creates an empty {@link Lightbox} with the default board layout. */
 export const make = ({ name }: { name?: string } = {}): Lightbox =>
   Obj.make(Lightbox, { name, items: [], layout: defaultLayout });
+
+/** A cell as the first lightbox writer persisted it: spans under `width`/`height`, not `w`/`h`. */
+const LegacyCellLayout = Schema.Struct({
+  x: Schema.Number,
+  y: Schema.Number,
+  width: Schema.optional(Schema.Number),
+  height: Schema.optional(Schema.Number),
+});
+
+const decodeLegacyCell = Schema.decodeUnknownOption(LegacyCellLayout);
+
+/**
+ * The lightbox's cells with any legacy `width`/`height` spans carried to `w`/`h`, so the free-cell
+ * search and the board see a 2×2 cell as 2×2 rather than the default 1×1.
+ */
+export const cells = (lightbox: Lightbox): Record<string, CellLayout> =>
+  Object.fromEntries(
+    Object.entries(lightbox.layout.cells).map(([id, cell]) => {
+      if (cell.w !== undefined || cell.h !== undefined) {
+        return [id, cell];
+      }
+      const legacy = decodeLegacyCell(cell);
+      return [
+        id,
+        legacy._tag === 'Some' ? { x: cell.x, y: cell.y, w: legacy.value.width, h: legacy.value.height } : cell,
+      ];
+    }),
+  );

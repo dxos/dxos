@@ -5,7 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
+import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
 import {
   HIGGSFIELD_CONNECTOR_ID,
@@ -154,9 +154,15 @@ export const makeHiggsfieldVideoService = (
     // A reference artifact contributes its cover: the still the animation continues from.
     if (!imageUrl && config.imageArtifact && load) {
       const reference = await load(config.imageArtifact);
+      if (reference.kind !== 'image') {
+        throw new GenerationService.GenerationError('The reference artifact must be an image.');
+      }
       const cover = reference.cover ? await load(reference.cover) : undefined;
       if (!cover?.url) {
-        throw new Error('The reference image has no produced cover to animate.');
+        throw new GenerationService.GenerationError('The reference image has no produced cover to animate.');
+      }
+      if (cover.contentType && !cover.contentType.startsWith('image/')) {
+        throw new GenerationService.GenerationError(`The reference cover is ${cover.contentType}, not an image.`);
       }
       imageUrl = cover.url;
     }
