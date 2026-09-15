@@ -10,7 +10,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
+import type * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { RpcTiming } from '@dxos/worker-framework';
@@ -82,20 +84,31 @@ export const makeClient = <G>(
  * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
  * ambient {@link RpcServer.Protocol} for the life of the layer.
  */
-export const serverLayer = <G, R>(
-  group: G,
-  handlers: Layer.Layer<any, never, R>,
+export const serverLayer = <Rpcs extends Rpc.Any, R>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
   options?: ServeOptions,
 ): Layer.Layer<never, never, RpcServer.Protocol | R> => {
-  const timingEnabled = RpcTiming.isEnabled(options?.timing);
-  const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
-  const handlersLayer = timingEnabled
-    ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
-    : handlers;
-  return RpcServer.layer(asRpcGroup(rpcGroup), {
+  const serverOptions = {
     disableTracing: options?.disableTracing ?? true,
-    concurrency: options?.concurrency ?? 'unbounded',
-  }).pipe(Layer.provide(handlersLayer)) as Layer.Layer<never, never, RpcServer.Protocol | R>;
+    concurrency: options?.concurrency ?? ('unbounded' as const),
+  };
+  if (!RpcTiming.isEnabled(options?.timing)) {
+    return RpcServer.layer(group, serverOptions).pipe(Layer.provide(handlers));
+  }
+
+  // The timed group's rpcs carry the middleware in their type, so their handler tags are a distinct
+  // type from the caller's; the handlers themselves are the same values the untimed server takes.
+  const timed = RpcTiming.applyMiddleware(group);
+  type Timed = Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>;
+  return RpcServer.layer(timed, serverOptions).pipe(
+    Layer.provide(
+      Layer.merge(
+        handlers as unknown as Layer.Layer<Rpc.ToHandler<Timed> | Rpc.ServicesServer<Timed>, never, R>,
+        RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)),
+      ),
+    ),
+  );
 };
 
 export type GroupServer = {
