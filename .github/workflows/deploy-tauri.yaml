@@ -251,8 +251,6 @@ jobs:
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
           COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
-          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
-          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
@@ -428,8 +426,6 @@ jobs:
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
           COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
-          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
-          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
