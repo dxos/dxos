@@ -33,7 +33,6 @@ import {
   QueryService,
   SpacesService,
   SystemService,
-  WorkerService,
 } from '@dxos/protocols/rpc';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
 import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
@@ -55,11 +54,6 @@ export type ClientServicesTransport = MessagePortLike | RpcPort;
 /**
  * All client service RPCs served over a single connection.
  * Rpc tags are prefixed with the {@link ClientServices} key (e.g. `DataService.subscribe`).
- *
- * {@link WorkerService} (the tab→worker control channel: `start`/`stop`) is merged in here rather
- * than served over a second port: it runs in the same tab→worker direction as the service RPCs, so
- * it multiplexes over the same app {@link MessagePort}. Only the reverse-direction `BridgeService`
- * (worker→tab) needs its own port.
  */
 export class ClientServicesRpcs extends RpcGroup.make().merge(
   SystemService.Rpcs,
@@ -75,7 +69,6 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   ContactsService.Rpcs,
   EdgeAgentService.Rpcs,
   DevtoolsHost.Rpcs,
-  WorkerService.Rpcs,
 ) {}
 
 type ClientServicesRpcUnion = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
@@ -99,8 +92,6 @@ export type ClientServicesHandlers = {
   ContactsService: ContactsService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
-  // Provided per-session by the worker session (drives readiness/origin/lock), not by the host.
-  WorkerService: WorkerService.Handlers;
 };
 
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
@@ -321,8 +312,7 @@ export interface ClientServicesRpc
     FeedService.Client,
     ContactsService.Client,
     EdgeAgentService.Client,
-    DevtoolsHost.Client,
-    WorkerService.Client {}
+    DevtoolsHost.Client {}
 
 /**
  * Builds the effect-native {@link ClientServicesRpc} over a {@link MessagePort}.

@@ -55,9 +55,7 @@ export class TestWorkerFactory extends Resource {
           this._ctx.onDispose(() => requestShutdown());
 
           return {
-            // The framework hands the session its protocol layers via effect context. The WorkerRuntime
-            // session manages its own lifecycle, so the effect opens the session then blocks — the
-            // framework runs it for the session's lifetime.
+            // The framework hands the session its protocol layers via effect context and owns its lifetime.
             createSession: ({ isOwner }) =>
               Effect.gen(function* () {
                 const appProtocol = yield* RpcServer.Protocol;
@@ -66,7 +64,6 @@ export class TestWorkerFactory extends Resource {
                 if (isOwner) {
                   yield* runtime.connectWebrtcBridge(session);
                 }
-                yield* session.closed;
               }),
           };
         }),

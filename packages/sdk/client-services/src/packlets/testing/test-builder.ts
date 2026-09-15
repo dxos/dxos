@@ -215,7 +215,10 @@ export class ServiceContext {
         },
         signalManager: this.#options.signalManager,
         transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
-      }).pipe(Layer.provideMerge(RuntimeProvider.toLayer(this.#sql.contextEffect))),
+      }).pipe(
+        Layer.provideMerge(RuntimeProvider.toLayer(this.#sql.contextEffect)),
+        Layer.provide(Layer.succeed(Event.Bus, this.#bus)),
+      ),
     );
     try {
       this.#stack = await this.#runtime.context();

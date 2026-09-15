@@ -400,6 +400,9 @@ export class Connection extends Resource {
     // One attempt per run: the heartbeat-driven re-requests below belong to this same attempt, so
     // the worker keeps discarding them as duplicates rather than churning the session.
     const attempt = ++this.#connectAttempt;
+    // Held for this attempt's lifetime and handed to the worker, which ends the session when it
+    // releases — the only way the worker learns that this tab closed or died.
+    const sessionLockKey = `${this.#clientId}/session/${attempt}`;
 
     const handleLeaderStopped = async () => {
       log('worker-connection: lost connection');
@@ -411,6 +414,23 @@ export class Connection extends Resource {
     };
 
     try {
+      if (typeof navigator !== 'undefined' && typeof navigator.locks !== 'undefined') {
+        const granted = new Trigger();
+        const released = new Trigger();
+        ctx.onDispose(() => released.wake());
+        navigator.locks
+          .request(sessionLockKey, { signal: ctx.signal }, async () => {
+            granted.wake();
+            await released.wait();
+          })
+          .catch((err) => {
+            if (!isAbortError(err)) {
+              log.catch(err);
+            }
+          });
+        await granted.wait();
+      }
+
       log('worker-connection: requesting port from leader');
       this.#connectPhase = 'requesting-port';
       const result = await new Promise<
@@ -433,6 +453,7 @@ export class Connection extends Resource {
               type: 'request-port',
               clientId: this.#clientId,
               attempt,
+              sessionLockKey,
             });
           }
         });
@@ -450,6 +471,7 @@ export class Connection extends Resource {
           type: 'request-port',
           clientId: this.#clientId,
           attempt,
+          sessionLockKey,
         });
       });
 
@@ -680,7 +702,12 @@ class LeaderSession extends Resource {
           }
           break;
         case 'request-port':
-          this.#sendMessage({ type: 'start-session', clientId: msg.clientId, attempt: msg.attempt });
+          this.#sendMessage({
+            type: 'start-session',
+            clientId: msg.clientId,
+            attempt: msg.attempt,
+            sessionLockKey: msg.sessionLockKey,
+          });
           break;
         default:
           break;

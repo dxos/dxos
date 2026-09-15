@@ -74,10 +74,8 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         }
 
         return {
-          // The framework hands the session the forward (tab→worker) and reverse (worker→tab) protocol
-          // layers via effect context. The WorkerRuntime session manages its own lifecycle (it closes
-          // when the tab-liveness lock releases), so the effect opens the session then blocks — the
-          // framework runs it for the session's lifetime.
+          // The framework hands the session its protocol layers via effect context and owns its
+          // lifetime: the session scope closes when the tab goes away.
           createSession: ({ clientId, isOwner }) =>
             Effect.gen(function* () {
               const appProtocol = yield* RpcServer.Protocol;
@@ -88,7 +86,6 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
                 log('dedicated-worker: connecting webrtc bridge to owning client', { clientId });
                 yield* runtime.connectWebrtcBridge(session);
               }
-              yield* session.closed;
             }),
         };
       }),

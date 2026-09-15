@@ -289,7 +289,11 @@ export class LocalClientServices implements ClientServicesProvider {
         transportFactory: this._params.transportFactory,
         connectionLog: this._params.connectionLog,
         autoConnect: this._params.autoConnect,
-      }).pipe(Layer.provideMerge(sqliteLayerFromParams(this._params)), Layer.orDie),
+      }).pipe(
+        Layer.provideMerge(sqliteLayerFromParams(this._params)),
+        Layer.provide(Layer.succeed(EffectEvent.Bus, this._bus)),
+        Layer.orDie,
+      ),
     );
     this._runtime = runtime;
     this._stack = await runtime.context();

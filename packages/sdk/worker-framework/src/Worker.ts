@@ -30,7 +30,18 @@ const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePo
     ),
   );
 
+/**
+ * What {@link Options.createRuntime} returns: the worker-specific side of the session protocol.
+ */
 export type RuntimeHandle = {
+  /**
+   * Acquires the resources that serve one tab (RPC servers, clients) into the provided scope and
+   * returns; it does not wait for the session to end. The scope is the session's lifetime: the
+   * framework closes it when the tab's session lock releases (the tab closed or died), when a newer
+   * connect attempt from the same tab supersedes this one, or when the worker shuts down. The
+   * protocols in context are the tab→worker server transport and the worker→tab client transport,
+   * built into the same scope.
+   */
   createSession(args: {
     clientId: string;
     isOwner: boolean;
@@ -52,8 +63,10 @@ export type Options = {
    */
   displaceChannel?: string;
   /**
-   * Builds the runtime after receiving init config from the leader. The scope lives until the worker
-   * shuts down, so the runtime's teardown belongs in its finalizers.
+   * Builds the runtime after receiving init config from the leader. The provided scope is the
+   * runtime's lifetime: it stays open until the worker shuts down (displaced by a newer worker, or
+   * `requestShutdown` called), and every session scope is a child of it, so shutdown closes the
+   * sessions first and then the runtime. Put the runtime's teardown in its finalizers.
    */
   createRuntime: (args: {
     config: Record<string, any> | undefined;
@@ -89,7 +102,7 @@ export const run = ({
     log('lock acquired');
 
     let runtime: RuntimeHandle | undefined;
-    /** Owns the runtime; closed on shutdown. */
+    // The runtime's lifetime (see `Options.createRuntime`); every session scope is forked from it.
     const runtimeScope = Effect.runSync(Scope.make());
     let owningClientId: string;
     // Live session per client, keyed by the connect attempt that claimed it. `supersede` tears the
@@ -201,31 +214,43 @@ export const run = ({
             [clientToWorkerChannel.port1, workerToClientChannel.port1],
           );
 
-          log('dedicated-worker: creating session (waiting for handshake)', { clientId: message.clientId });
-          const sessionEffect = runtime
-            .createSession({
-              clientId: message.clientId,
-              isOwner: message.clientId === owningClientId,
-            })
-            .pipe(
-              Effect.provide(sessionProtocols(clientToWorkerChannel.port2, workerToClientChannel.port2)),
-              // `createSession` blocks for the session's lifetime, so this race is what ends it early
-              // when a newer attempt supersedes this one; `Effect.scoped` below then runs teardown.
-              Effect.raceFirst(Effect.promise(() => superseded.wait())),
-              Effect.ensuring(
-                Effect.sync(() => {
-                  log('dedicated-worker: session closed', { clientId: message.clientId, attempt });
-                  // Guarded: a superseded session finishes after the newer attempt claimed the slot,
-                  // and must not evict it.
-                  if (sessionsByClient.get(message.clientId)?.attempt === attempt) {
-                    sessionsByClient.delete(message.clientId);
-                  }
-                }),
-              ),
+          // The session's lifetime (see `RuntimeHandle.createSession`): a child of the runtime scope,
+          // closed below when the tab's session lock releases or a newer attempt supersedes this one.
+          const sessionScope = await EffectEx.runPromise(Scope.fork(runtimeScope));
+          const closeSession = async () => {
+            await EffectEx.runPromise(Scope.close(sessionScope, Exit.void)).catch((err) => log.catch(err));
+            log('dedicated-worker: session closed', { clientId: message.clientId, attempt });
+            // Guarded: a superseded session finishes after the newer attempt claimed the slot,
+            // and must not evict it.
+            if (sessionsByClient.get(message.clientId)?.attempt === attempt) {
+              sessionsByClient.delete(message.clientId);
+            }
+          };
+
+          log('dedicated-worker: creating session', { clientId: message.clientId });
+          try {
+            await EffectEx.runPromise(
+              Effect.gen(function* () {
+                const protocols = yield* Layer.build(
+                  sessionProtocols(clientToWorkerChannel.port2, workerToClientChannel.port2),
+                );
+                yield* runtime!
+                  .createSession({ clientId: message.clientId, isOwner: message.clientId === owningClientId })
+                  .pipe(Effect.provide(protocols));
+              }).pipe(Scope.provide(sessionScope)),
             );
-          // The session effect runs for the session's lifetime (createSession blocks until the
-          // session ends), so cleanup is handled by `Effect.ensuring` above rather than a log here.
-          await EffectEx.runPromise(sessionEffect.pipe(Effect.scoped));
+          } catch (err) {
+            log.catch(err);
+            await closeSession();
+            break;
+          }
+
+          const tabGone = message.sessionLockKey
+            ? navigator.locks.request(message.sessionLockKey, () => {
+                // Granted once the tab releases it.
+              })
+            : new Promise<never>(() => {});
+          void Promise.race([superseded.wait(), tabGone]).then(closeSession);
           break;
         }
 

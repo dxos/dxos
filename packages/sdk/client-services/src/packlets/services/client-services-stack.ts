@@ -80,7 +80,7 @@ export const ClientServicesLayer = ({
   transportFactory,
   connectionLog = true,
   autoConnect = true,
-}: ClientServicesLayerOptions): Layer.Layer<ClientServicesStackContext, never, ClientServicesSqlContext> =>
+}: ClientServicesLayerOptions): Layer.Layer<ClientServicesStackContext, never, ClientServicesSqlContext | Event.Bus> =>
   ClientServicesRpcLayer.pipe(
     Layer.provideMerge(
       ServiceStack({
@@ -91,6 +91,7 @@ export const ClientServicesLayer = ({
       }),
     ),
     Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
+    // TODO(dmaretskyi): Those 2 should remain as layer deps, not parameters.
     Layer.provideMerge(Layer.succeed(ConfigService, config)),
     Layer.provideMerge(Layer.succeed(Event.Bus, bus)),
     Layer.orDie,
