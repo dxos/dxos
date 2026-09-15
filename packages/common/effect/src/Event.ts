@@ -9,6 +9,8 @@ import * as Layer from 'effect/Layer';
 import * as Pipeable from 'effect/Pipeable';
 import * as Scope from 'effect/Scope';
 
+import { invariant } from '@dxos/invariant';
+
 // @import-as-namespace
 
 /**
@@ -96,23 +98,39 @@ type AnyHandler = {
 };
 
 export const makeBus = (): BusService => {
-  const subscribers = new Map<Any, Set<AnyHandler>>();
+  // Keyed by id, not by the event object: these events cross package and bundle boundaries, and a
+  // module instantiated twice (dual resolution, a dep-optimizer re-bundle, HMR) would otherwise give
+  // publisher and subscriber different objects for the same event and turn the cascade into a silent
+  // no-op. The registry holds the event it first saw, so a genuine id collision is loud instead.
+  const subscribers = new Map<string, { readonly event: Any; readonly handlers: Set<AnyHandler> }>();
 
   const bus: BusService = {
     subscribe: (handler) =>
       Effect.gen(function* () {
         const scope = yield* Effect.scope;
-        const handlers = subscribers.get(handler.event) ?? new Set<AnyHandler>();
-        subscribers.set(handler.event, handlers);
-        handlers.add(handler);
+        const entry = subscribers.get(handler.event.id) ?? { event: handler.event, handlers: new Set<AnyHandler>() };
+        // A duplicated module and a genuine id collision both present as two objects with one id, so
+        // identity cannot separate them; a differing strategy is the one inconsistency that can only
+        // be a collision, and it is worth failing on rather than dispatching two contracts as one.
+        invariant(
+          entry.event.strategy === handler.event.strategy,
+          `Event id collision: ${handler.event.id} is declared with two dispatch strategies`,
+        );
+        subscribers.set(handler.event.id, entry);
+        entry.handlers.add(handler);
         yield* Scope.addFinalizer(
           scope,
-          Effect.sync(() => void handlers.delete(handler)),
+          Effect.sync(() => {
+            entry.handlers.delete(handler);
+            if (entry.handlers.size === 0) {
+              subscribers.delete(handler.event.id);
+            }
+          }),
         );
       }),
     emit: (event, payload) =>
       Effect.gen(function* () {
-        const handlers = subscribers.get(event);
+        const handlers = subscribers.get(event.id)?.handlers;
         if (handlers === undefined) {
           return;
         }

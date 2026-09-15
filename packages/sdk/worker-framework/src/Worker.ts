@@ -261,7 +261,13 @@ export const run = ({
                   return new Promise<never>(() => {});
                 })
             : new Promise<never>(() => {});
-          void Promise.race([superseded.wait().then(() => tabGoneAbort.abort()), tabGone]).then(closeSession);
+          // The rejection path is explicit: `navigator.locks.request` can reject on its own (an
+          // opaque origin, the lock manager going away), and an unhandled one would leave the session
+          // open for the worker's life.
+          void Promise.race([superseded.wait().then(() => tabGoneAbort.abort()), tabGone]).then(closeSession, (err) => {
+            log.catch(err);
+            void closeSession();
+          });
           break;
         }
 

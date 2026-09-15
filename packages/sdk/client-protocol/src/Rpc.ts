@@ -81,10 +81,6 @@ export const makeClient = <G>(
   );
 
 /**
- * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
- * ambient {@link RpcServer.Protocol} for the life of the layer.
- */
-/**
  * Re-tags a handler layer for the same rpcs carrying {@link RpcTiming.Middleware}.
  *
  * `Rpc.AddMiddleware` changes the handler tags' type but not the handlers: a timed server dispatches
@@ -99,6 +95,10 @@ const asTimedHandlers = <Rpcs extends Rpc.Any, R>(
   R
 > => handlers as never;
 
+/**
+ * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
+ * ambient {@link RpcServer.Protocol} for the life of the layer.
+ */
 export const serverLayer = <Rpcs extends Rpc.Any, R>(
   group: RpcGroup.RpcGroup<Rpcs>,
   handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,

@@ -73,6 +73,10 @@ export class SystemServiceImpl implements SystemService.Handlers {
       log.info('resetting...');
       this.#resetting = true;
       this.#statusChanged.emit(SystemStatus.INACTIVE);
+      // `Closing` tears the stack down under this very call, and under any request another session
+      // has in flight: component finalizers are not re-entrant against live traffic. That holds only
+      // because every embedder shuts down or reloads immediately after `Reset` below — a reset that
+      // left the worker serving would need a gate that fails new requests from here on.
       yield* EffectEvent.emit(Closing, undefined);
       yield* EffectEvent.emit(WipingStorage, undefined);
       log.info('reset');

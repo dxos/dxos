@@ -295,43 +295,51 @@ export class LocalClientServices implements ClientServicesProvider {
       ),
     );
     this._runtime = runtime;
-    this._stack = await runtime.context();
-    // `StackOpened` resolves once every handler the cascade triggered has run.
-    await runtime.runPromise(
-      EffectEx.withContext(this._ctx)(
-        Effect.gen(function* () {
-          yield* EffectEvent.emit(HostEvents.Opening, undefined);
-          yield* EffectEvent.emit(HostEvents.StackOpened, undefined);
-        }),
-      ),
-    );
-
-    // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
-    this._busScope = Effect.runSync(Scope.make());
-    Effect.runSync(
-      Effect.gen({ self: this }, function* () {
-        yield* EffectEvent.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
-        yield* EffectEvent.on(HostEvents.WipingStorage, () =>
-          wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
-        );
-        yield* EffectEvent.on(HostEvents.Reset, () =>
-          Effect.promise(async () => {
-            this.closed.emit(undefined);
-            await this._params.callbacks?.onReset?.();
+    try {
+      this._stack = await runtime.context();
+      // `StackOpened` resolves once every handler the cascade triggered has run.
+      await runtime.runPromise(
+        EffectEx.withContext(this._ctx)(
+          Effect.gen(function* () {
+            yield* EffectEvent.emit(HostEvents.Opening, undefined);
+            yield* EffectEvent.emit(HostEvents.StackOpened, undefined);
           }),
-        );
-      }).pipe(Effect.provideService(EffectEvent.Bus, this._bus), Scope.provide(this._busScope)),
-    );
-    const handlers = handlersFromStack(this._stack);
-    this._isOpen = true;
+        ),
+      );
 
-    // Bridge the in-process Handlers to the effect-rpc client surface (no wire hop), then derive
-    // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
-    this._serviceScope = Effect.runSync(Scope.make());
-    this._rpc = await EffectEx.runPromise(
-      makeInProcessClientServicesRpc(() => handlers).pipe(Scope.provide(this._serviceScope)),
-    );
-    this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
+      // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
+      this._busScope = Effect.runSync(Scope.make());
+      Effect.runSync(
+        Effect.gen({ self: this }, function* () {
+          yield* EffectEvent.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
+          yield* EffectEvent.on(HostEvents.WipingStorage, () =>
+            wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
+          );
+          yield* EffectEvent.on(HostEvents.Reset, () =>
+            Effect.promise(async () => {
+              this.closed.emit(undefined);
+              await this._params.callbacks?.onReset?.();
+            }),
+          );
+        }).pipe(Effect.provideService(EffectEvent.Bus, this._bus), Scope.provide(this._busScope)),
+      );
+      const handlers = handlersFromStack(this._stack);
+
+      // Bridge the in-process Handlers to the effect-rpc client surface (no wire hop), then derive
+      // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
+      this._serviceScope = Effect.runSync(Scope.make());
+      this._rpc = await EffectEx.runPromise(
+        makeInProcessClientServicesRpc(() => handlers).pipe(Scope.provide(this._serviceScope)),
+      );
+      this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
+    } catch (err) {
+      // `_isOpen` is still false at this point, so `close()` would return before disposing
+      // anything: without this the runtime — and the OPFS worker its layer owns — leaks on every
+      // failed open.
+      await this._closeStack();
+      throw err;
+    }
+    this._isOpen = true;
 
     setIdentityTags({
       identityService: this._rpc,

@@ -415,20 +415,26 @@ export class Connection extends Resource {
 
     try {
       if (typeof navigator !== 'undefined' && typeof navigator.locks !== 'undefined') {
-        const granted = new Trigger();
+        const granted = new Trigger<Error | undefined>();
         const released = new Trigger();
         ctx.onDispose(() => released.wake());
         navigator.locks
           .request(sessionLockKey, { signal: ctx.signal }, async () => {
-            granted.wake();
+            granted.wake(undefined);
             await released.wait();
           })
           .catch((err) => {
             if (!isAbortError(err)) {
               log.catch(err);
             }
+            // The attempt waits on this trigger, so a rejection has to wake it — an already-aborted
+            // `ctx.signal` rejects immediately, and this attempt would otherwise never finish or fail.
+            granted.wake(err);
           });
-        await granted.wait();
+        const grantError = await granted.wait();
+        if (grantError) {
+          throw grantError;
+        }
       }
 
       log('worker-connection: requesting port from leader');

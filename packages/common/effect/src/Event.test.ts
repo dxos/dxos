@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Ref from 'effect/Ref';
 
 import * as Event from './Event.ts';
@@ -112,17 +113,30 @@ describe('Event bus', () => {
     }, Effect.provide(Event.busLayer)),
   );
 
+  // The id is the contract, not the object: a module instantiated twice must not split the bus.
   it.effect(
-    'keeps events with the same id apart',
+    'delivers to a handler subscribed through a separate event object with the same id',
     Effect.fn(function* ({ expect }) {
-      const Twin = Event.make<string>()('foo');
-      const seen = yield* Ref.make<string[]>([]);
+      const Twin = Event.make<number>()('foo');
+      const seen = yield* Ref.make<number[]>([]);
 
       yield* Event.subscribe(Event.handler(Twin, (payload) => Ref.update(seen, (items) => [...items, payload])));
 
       yield* Event.emit(Foo, 1);
 
-      expect(yield* Ref.get(seen)).to.deep.equal([]);
+      expect(yield* Ref.get(seen)).to.deep.equal([1]);
+    }, Effect.provide(Event.busLayer)),
+  );
+
+  it.effect(
+    'fails when one id is declared with two dispatch strategies',
+    Effect.fn(function* ({ expect }) {
+      const Twin = Event.make<number>()('foo', { strategy: 'serial' });
+
+      yield* Event.subscribe(Event.handler(Foo, () => Effect.void));
+      const result = yield* Effect.exit(Event.subscribe(Event.handler(Twin, () => Effect.void)));
+
+      expect(Exit.isFailure(result)).to.be.true;
     }, Effect.provide(Event.busLayer)),
   );
 

@@ -118,16 +118,25 @@ const makeConnection = (
     maxLeaderFailures: options.maxLeaderFailures,
     onPersistentFailure: (error) => failures.push(error),
     onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
-      // The worker's client transport over this port waits, uninterruptibly, for the tab's runner to
-      // acknowledge it; a real tab serves the port, so stand in for that here or the session scope
-      // cannot close.
-      workerToClient.start();
-      workerToClient.postMessage([0]);
+      postRunnerReady(workerToClient);
       connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
       return { close: async () => {} };
     },
   });
   return { connection, connected: connectedTrigger.wait(), failures };
+};
+
+/**
+ * Stands in for the tab's rpc runner by posting the ready frame effect's worker protocol sends on
+ * start-up (`@effect/platform-browser`'s `BrowserWorkerRunner`, a bare `[0]`).
+ *
+ * The worker's client transport over the reverse port awaits that frame uninterruptibly, so without
+ * it a session scope cannot close (DESIGN.md D18). Read it as protocol, not as a magic number: if
+ * effect changes the frame, sessions stop closing and nothing points back here.
+ */
+const postRunnerReady = (port: MessagePort): void => {
+  port.start();
+  port.postMessage([0]);
 };
 
 const uniqueKeys = () => {
