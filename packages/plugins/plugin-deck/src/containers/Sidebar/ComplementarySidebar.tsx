@@ -15,7 +15,7 @@ import { PlankLoading } from '#components';
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
 
-import { layoutAppliesTopbar } from '../../util/index.ts';
+import { isDeckCompanionMounted, layoutAppliesTopbar } from '../../util/index.ts';
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
@@ -58,15 +58,6 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     [state.complementarySidebarState, activeId, invokePromise, updateState],
   );
 
-  const data = useMemo(
-    () =>
-      activeCompanion && {
-        id: activeCompanion.id,
-        subject: activeCompanion.data,
-      },
-    [activeCompanion?.id, activeCompanion?.data],
-  );
-
   const hasPersistedPanel = current !== undefined;
   useEffect(() => {
     if (!hasPersistedPanel) {
@@ -80,7 +71,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
       {/* R0 Tabs */}
-      <Tabs.Root classNames='contents' orientation='vertical' value={internalValue}>
+      <Tabs.Root classNames='contents' orientation='vertical' value={internalValue} keepMounted>
         <div
           data-tauri-drag-region
           style={iconSize(5)}
@@ -125,20 +116,27 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         </div>
 
         {/* R1 Content. */}
-        {activeId &&
-          companions.map((companion) => (
-            <Tabs.Panel
-              key={Attention.getLinkedVariant(companion.id)}
-              value={Attention.getLinkedVariant(companion.id)}
-              classNames={[
-                'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
-              ]}
-              {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
-            >
-              <ComplementarySidebarPanel companion={companion} activeId={activeId} data={data} />
-            </Tabs.Panel>
-          ))}
+        {companions.map((companion) => (
+          <Tabs.Panel
+            key={Attention.getLinkedVariant(companion.id)}
+            value={Attention.getLinkedVariant(companion.id)}
+            classNames={[
+              'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
+              'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
+            ]}
+            {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
+          >
+            <ComplementarySidebarPanel
+              companion={companion}
+              mounted={isDeckCompanionMounted({
+                mount: companion.properties.mount,
+                variant: Attention.getLinkedVariant(companion.id),
+                selectedVariant: activeId,
+                sidebarState: state.fullscreen ? 'closed' : state.complementarySidebarState,
+              })}
+            />
+          </Tabs.Panel>
+        ))}
       </Tabs.Root>
     </Main.ComplementarySidebar>
   );
@@ -146,17 +144,14 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
 type ComplementarySidebarPanelProps = {
   companion: DeckCompanion;
-  activeId: string;
-  data?: {
-    id: string;
-    subject: any;
-  };
+  mounted: boolean;
 };
 
-const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
+const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const data = useMemo(() => ({ id: companion.id, subject: companion.data }), [companion.id, companion.data]);
 
-  if (Attention.getLinkedVariant(companion.id) !== activeId && !data) {
+  if (!mounted) {
     return null;
   }
 
