@@ -4299,6 +4299,9 @@ importers:
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../../plugins/plugin-debug
+      '@dxos/plugin-file':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-file
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../../../plugins/plugin-illustrator

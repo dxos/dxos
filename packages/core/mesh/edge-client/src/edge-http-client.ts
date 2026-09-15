@@ -385,6 +385,24 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
+   * Admits a completed direct upload into the content-addressed store, returning the key it landed
+   * under along with what the service actually received.
+   *
+   * The bytes were PUT straight to a signed URL by a third party — typically an agent's `curl` —
+   * so they never pass through this client; this call only tells the service to promote them. The
+   * size and content type come from the service for the same reason.
+   */
+  public async finalizeBlobUpload(
+    ctx: Context,
+    uploadId: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ key: string; size: number; contentType?: string }> {
+    const url = new URL(`/blob/upload/${encodeURIComponent(uploadId)}/finalize`, this.baseUrl);
+    const response = await this._callRaw(ctx, url, { ...args, method: 'POST', auth: args?.auth ?? true });
+    return (await response.json()) as { key: string; size: number; contentType?: string };
+  }
+
+  /**
    * Downloads bytes previously stored with {@link putBlob}. Returns `undefined` if `key` is not
    * found.
    */
