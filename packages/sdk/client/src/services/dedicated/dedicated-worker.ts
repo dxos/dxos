@@ -52,16 +52,6 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         const opfsAvailable = yield* probeOpfsAvailable;
         log('dedicated-worker: OPFS probe complete', { opfsAvailable });
 
-        const runtime = makeWorkerRuntime({
-          configProvider: Effect.succeed(config),
-          onStop: Effect.sync(() => {
-            log('dedicated-worker: WorkerRuntime onStop, closing self');
-            requestShutdown();
-          }),
-          automaticallyConnectWebrtc: false,
-          sqliteLayer: options.sqliteLayer ?? (opfsAvailable ? undefined : layerMemory),
-        });
-
         if (options.onBeforeStart) {
           log('dedicated-worker: running onBeforeStart');
           yield* Effect.promise(() => options.onBeforeStart!(config));
@@ -69,14 +59,21 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         }
 
         log('dedicated-worker: starting WorkerRuntime');
-        yield* runtime.start();
+        const runtime = yield* makeWorkerRuntime({
+          configProvider: Effect.succeed(config),
+          requestShutdown: Effect.sync(() => {
+            log('dedicated-worker: WorkerRuntime requested shutdown');
+            requestShutdown();
+          }),
+          automaticallyConnectWebrtc: false,
+          sqliteLayer: options.sqliteLayer ?? (opfsAvailable ? undefined : layerMemory),
+        });
         log('dedicated-worker: WorkerRuntime started');
         if (options.onStart) {
           yield* Effect.promise(() => options.onStart!(runtime.stack()));
         }
 
         return {
-          stop: () => runtime.stop(),
           // The framework hands the session the forward (tab→worker) and reverse (worker→tab) protocol
           // layers via effect context. The WorkerRuntime session manages its own lifecycle (it closes
           // when the tab-liveness lock releases), so the effect opens the session then blocks — the

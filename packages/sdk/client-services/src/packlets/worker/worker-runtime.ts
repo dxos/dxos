@@ -3,7 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
-import * as Context_ from 'effect/Context';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -59,7 +59,8 @@ const EDGE_NETWORKING_START_DELAY = '300 millis';
 
 export type WorkerRuntimeOptions = {
   configProvider: Effect.Effect<Config>;
-  onStop?: Effect.Effect<void>;
+  /** The runtime wants to terminate (its last session closed, or a reset finished); the embedder closes its scope. */
+  requestShutdown?: Effect.Effect<void>;
   /**
    * @default true
    */
@@ -82,17 +83,11 @@ export type WorkerRuntimeOptions = {
  * Effect service surface for the dedicated-worker runtime.
  *
  * Manages connections from proxies (in tabs): tabs make requests to the client services stack, and
- * provide a WebRTC gateway. Lifecycle (`start` / `stop`) is caller-driven — the worker framework
- * builds the runtime after receiving init config, then drives sessions for their lifetime — so these
- * are explicit programs rather than Layer finalizers.
+ * provide a WebRTC gateway. The runtime lives as long as the scope it was made in.
  */
 export interface WorkerRuntimeService {
-  /** Effect context of the running stack: every component and RPC handler. Present once started. */
-  readonly stack: () => Context_.Context<ClientServicesStackContext>;
-  /** Resolve config, open the stack, and signal readiness. Never fails: startup errors are surfaced to session callers via the readiness gate. */
-  readonly start: () => Effect.Effect<void>;
-  /** Tear down the stack, release the storage lock, and run `onStop`. Idempotent. */
-  readonly stop: () => Effect.Effect<void>;
+  /** Effect context of the running stack: every component and RPC handler. */
+  readonly stack: () => Context.Context<ClientServicesStackContext>;
   /** Open a new tab session over the supplied effect-rpc protocols and register it for WebRTC bridging. */
   readonly createSession: (props: CreateSessionProps) => Effect.Effect<WorkerSession>;
   /** Route the WebRTC bridge through the given session (or disconnect when `undefined`). */
@@ -102,140 +97,105 @@ export interface WorkerRuntimeService {
 /**
  * Context tag for the dedicated-worker runtime service. Provided by {@link layerWorkerRuntime}.
  */
-export class WorkerRuntime extends Context_.Service<WorkerRuntime, WorkerRuntimeService>()(
+export class WorkerRuntime extends Context.Service<WorkerRuntime, WorkerRuntimeService>()(
   '@dxos/client-services/WorkerRuntime',
 ) {}
 
 /**
- * Constructs the {@link WorkerRuntimeService}. The stack is built in {@link start} once config is
- * resolved: {@link ClientServicesLayer} over the worker's SQLite layer, in a scope of its own.
+ * Builds and opens the worker runtime: {@link ClientServicesLayer} over the worker's SQLite layer.
+ * Never fails: startup errors are surfaced to session callers via the readiness gate. Closing the
+ * scope tears everything down.
  */
 export const makeWorkerRuntime = ({
   configProvider,
-  onStop,
+  requestShutdown = Effect.void,
   automaticallyConnectWebrtc = true,
   sqliteLayer,
   memorySignalManagerContext,
-}: WorkerRuntimeOptions): WorkerRuntimeService => {
-  const transportFactory = new RtcTransportProxyFactory();
-  const ready = new Trigger<Error | undefined>();
-  const sessions = new Set<WorkerSession>();
-  const signalMetadataTags: any = { runtime: 'worker-runtime' };
+}: WorkerRuntimeOptions): Effect.Effect<WorkerRuntimeService, never, Scope.Scope> =>
+  Effect.gen(function* () {
+    const transportFactory = new RtcTransportProxyFactory();
+    const ready = new Trigger<Error | undefined>();
+    const sessions = new Set<WorkerSession>();
+    const signalMetadataTags: any = { runtime: 'worker-runtime' };
+    const scope = yield* Effect.scope;
 
-  /** Outlives the stack: the reset chain and session events run on it. */
-  const bus = Event.makeBus();
-  /** Holds the runtime's own handlers; closed by `stop`. */
-  const busScope = Effect.runSync(Scope.make());
+    /** Outlives the stack: the reset chain and session events run on it. */
+    const bus = Event.makeBus();
 
-  let stopped = false;
-  let sessionForNetworking: WorkerSession | undefined;
-  /** Owns the built stack; closing it runs every layer finalizer in reverse build order. */
-  let stackScope: Scope.Closeable | undefined;
-  let stack: Context_.Context<ClientServicesStackContext> | undefined;
-  let serviceScope: Scope.Closeable | undefined;
-  /** The deferred networking start, interrupted if the worker is torn down mid-grace-period. */
-  let networkingFiber: Fiber.Fiber<void> | undefined;
+    let sessionForNetworking: WorkerSession | undefined;
+    /** Owns the built stack; a reset closes it early, otherwise it closes with the runtime scope. */
+    const stackScope = yield* Scope.fork(scope);
+    let stack: Context.Context<ClientServicesStackContext> | undefined;
 
-  if (sqliteLayer) {
-    log.warn('Using testing SQLite layer');
-  }
-
-  const sqlite = SqlTransaction.layer.pipe(
-    Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer),
-    Layer.provideMerge(Reactivity.layer),
-    Layer.orDie,
-  );
-
-  /** Closes the stack scope, and with it the SQLite layer. Idempotent. */
-  const closeStack = Effect.gen(function* () {
-    const current = stackScope;
-    stackScope = undefined;
-    stack = undefined;
-    if (current) {
-      yield* Scope.close(current, Exit.void);
+    if (sqliteLayer) {
+      log.warn('Using testing SQLite layer');
     }
-  });
 
-  /** Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a reset gets here. */
-  const wipeStorage = wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie);
+    const sqlite = SqlTransaction.layer.pipe(
+      Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer),
+      Layer.provideMerge(Reactivity.layer),
+      Layer.orDie,
+    );
 
-  const services = (): Partial<ClientServicesHandlers> => (stack ? handlersFromStack(stack) : {});
-
-  const stop = (): Effect.Effect<void> =>
-    Effect.gen(function* () {
-      if (stopped) {
-        return;
-      }
-      stopped = true;
-      if (networkingFiber) {
-        yield* Fiber.interrupt(networkingFiber);
-      }
-      // Always run onStop, even if stack teardown fails — otherwise a failed close skips the shutdown signal.
-      yield* Effect.gen(function* () {
-        yield* closeStack;
-        if (serviceScope) {
-          yield* Scope.close(serviceScope, Exit.void);
-          serviceScope = undefined;
-        }
-        yield* Scope.close(busScope, Exit.void);
-      }).pipe(Effect.ensuring(onStop ?? Effect.void));
+    const closeStack = Effect.gen(function* () {
+      stack = undefined;
+      yield* Scope.close(stackScope, Exit.void);
     });
 
-  const connectBridge = (session: WorkerSession | undefined): void => {
-    sessionForNetworking = session;
-    transportFactory.setBridgeService(session?.bridgeService);
-  };
+    /** Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a reset gets here. */
+    const wipeStorage = wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie);
 
-  // Selects one of the existing sessions for WebRTC networking.
-  const reconnectWebrtc = Effect.sync(() => {
-    log('reconnecting webrtc...');
-    // Drop the current session if it has since closed.
-    if (sessionForNetworking && !sessions.has(sessionForNetworking)) {
-      sessionForNetworking = undefined;
-    }
-    if (!sessionForNetworking) {
-      connectBridge(Array.from(sessions).find((session) => session.bridgeService));
-    }
-  });
+    const services = (): Partial<ClientServicesHandlers> => (stack ? handlersFromStack(stack) : {});
 
-  // The runtime's own subscriptions: the reset chain and session bookkeeping.
-  Effect.runSync(
-    Effect.gen(function* () {
+    const connectBridge = (session: WorkerSession | undefined): void => {
+      sessionForNetworking = session;
+      transportFactory.setBridgeService(session?.bridgeService);
+    };
+
+    // Selects one of the existing sessions for WebRTC networking.
+    const reconnectWebrtc = Effect.sync(() => {
+      log('reconnecting webrtc...');
+      // Drop the current session if it has since closed.
+      if (sessionForNetworking && !sessions.has(sessionForNetworking)) {
+        sessionForNetworking = undefined;
+      }
+      if (!sessionForNetworking) {
+        connectBridge(Array.from(sessions).find((session) => session.bridgeService));
+      }
+    });
+
+    // The runtime's own subscriptions: the reset chain and session bookkeeping.
+    yield* Effect.gen(function* () {
       yield* Event.on(HostEvents.Closing, () => closeStack);
       yield* Event.on(HostEvents.WipingStorage, () => wipeStorage);
-      yield* Event.on(HostEvents.Reset, () => stop());
+      yield* Event.on(HostEvents.Reset, () => requestShutdown);
       yield* Event.on(
         SessionClosed,
         Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {
           sessions.delete(session);
           if (sessions.size === 0) {
             // Terminate the worker when all sessions are closed.
-            yield* stop();
+            yield* requestShutdown;
           } else if (automaticallyConnectWebrtc) {
             yield* reconnectWebrtc;
           }
         }),
       );
-    }).pipe(Effect.provideService(Event.Bus, bus), Scope.provide(busScope)),
-  );
+    }).pipe(Effect.provideService(Event.Bus, bus));
 
-  const start = (): Effect.Effect<void> =>
-    Effect.gen(function* () {
+    yield* Effect.gen(function* () {
       log('starting...');
-      log('worker-runtime: resolving config');
-      const resolvedConfig = yield* configProvider;
-      log('worker-runtime: config resolved');
-      const observabilityGroup = resolvedConfig.get('runtime.client.observabilityGroup');
+      const config = yield* configProvider;
+      const observabilityGroup = config.get('runtime.client.observabilityGroup');
       if (observabilityGroup) {
         signalMetadataTags.group = observabilityGroup;
       }
 
       log('worker-runtime: building client services stack');
-      const scope = yield* Scope.make();
-      stackScope = scope;
       const stackContext = yield* Layer.build(
         ClientServicesLayer({
-          config: resolvedConfig,
+          config,
           bus,
           // The dial is driven below once boot has drained, not on stack open.
           autoConnect: false,
@@ -243,12 +203,12 @@ export const makeWorkerRuntime = ({
           runtimeProps: { autoActivateSpaces: true },
           // Edge signaling is created by the platform layer from the edge connection; otherwise fall
           // back to an in-memory manager (KUBE `WebsocketSignalManager` removed).
-          signalManager: resolvedConfig.get('runtime.client.edgeFeatures')?.signaling
+          signalManager: config.get('runtime.client.edgeFeatures')?.signaling
             ? undefined
             : new MemorySignalManager(memorySignalManagerContext ?? new MemorySignalManagerContext()),
           transportFactory,
         }).pipe(Layer.provideMerge(sqlite)),
-      ).pipe(Scope.provide(scope));
+      ).pipe(Scope.provide(stackScope));
       stack = stackContext;
       log('worker-runtime: stack built, opening');
       // `StackOpened` resolves once every handler the cascade triggered has run.
@@ -261,12 +221,10 @@ export const makeWorkerRuntime = ({
       log('started');
 
       // Bridge the identity/devices Handlers to the effect-rpc client surface in-process.
-      const clientScope = yield* Scope.make();
-      serviceScope = clientScope;
       const [identityService, devicesService] = yield* Effect.all([
-        makeInProcessClient(IdentityService.Rpcs, Context_.get(stackContext, IdentityService.Tag)),
-        makeInProcessClient(DevicesService.Rpcs, Context_.get(stackContext, DevicesService.Tag)),
-      ]).pipe(Effect.provideService(Scope.Scope, clientScope));
+        makeInProcessClient(IdentityService.Rpcs, Context.get(stackContext, IdentityService.Tag)),
+        makeInProcessClient(DevicesService.Rpcs, Context.get(stackContext, DevicesService.Tag)),
+      ]);
       setIdentityTags({
         identityService,
         devicesService,
@@ -283,13 +241,14 @@ export const makeWorkerRuntime = ({
       log.info('worker-runtime: boot complete, scheduling networking start', {
         delay: EDGE_NETWORKING_START_DELAY,
       });
-      networkingFiber = yield* Effect.forkDetach(
+      const networkingFiber = yield* Effect.forkDetach(
         Effect.gen(function* () {
           yield* Effect.sleep(EDGE_NETWORKING_START_DELAY);
           log('worker-runtime: starting networking');
           yield* enableNetworking;
         }).pipe(Effect.provide(stackContext)),
       );
+      yield* Effect.addFinalizer(() => Fiber.interrupt(networkingFiber));
     }).pipe(
       Effect.catchCause((cause) =>
         Effect.gen(function* () {
@@ -301,55 +260,52 @@ export const makeWorkerRuntime = ({
       ),
     );
 
-  const createSession = ({
-    appProtocol,
-    systemProtocol,
-    shellPort,
-  }: CreateSessionProps): Effect.Effect<WorkerSession> =>
-    Effect.gen(function* () {
-      const session = new WorkerSession({
-        services,
-        bus,
-        appProtocol,
-        systemProtocol,
-        shellPort,
-        readySignal: ready,
+    const createSession = ({
+      appProtocol,
+      systemProtocol,
+      shellPort,
+    }: CreateSessionProps): Effect.Effect<WorkerSession> =>
+      Effect.gen(function* () {
+        const session = new WorkerSession({
+          services,
+          bus,
+          appProtocol,
+          systemProtocol,
+          shellPort,
+          readySignal: ready,
+        });
+
+        yield* session.open();
+        // A worker can only service one origin currently.
+        invariant(
+          !signalMetadataTags.origin || signalMetadataTags.origin === session.origin,
+          `worker origin changed from ${signalMetadataTags.origin} to ${session.origin}?`,
+        );
+        signalMetadataTags.origin = session.origin;
+        sessions.add(session);
+
+        if (automaticallyConnectWebrtc) {
+          yield* reconnectWebrtc;
+        }
+
+        return session;
       });
 
-      yield* session.open();
-      // A worker can only service one origin currently.
-      invariant(
-        !signalMetadataTags.origin || signalMetadataTags.origin === session.origin,
-        `worker origin changed from ${signalMetadataTags.origin} to ${session.origin}?`,
-      );
-      signalMetadataTags.origin = session.origin;
-      sessions.add(session);
-
-      if (automaticallyConnectWebrtc) {
-        yield* reconnectWebrtc;
-      }
-
-      return session;
-    });
-
-  return {
-    stack: () => {
-      invariant(stack, 'worker runtime not started');
-      return stack;
-    },
-    start,
-    stop,
-    createSession,
-    connectWebrtcBridge: (session) => Effect.sync(() => connectBridge(session)),
-  };
-};
+    return {
+      stack: () => {
+        invariant(stack, 'worker runtime not started');
+        return stack;
+      },
+      createSession,
+      connectWebrtcBridge: (session) => Effect.sync(() => connectBridge(session)),
+    } satisfies WorkerRuntimeService;
+  });
 
 /**
- * Layer providing the {@link WorkerRuntime} service. The service is constructed synchronously;
- * callers drive `start` / `stop` explicitly (see {@link WorkerRuntimeService}).
+ * Layer providing the {@link WorkerRuntime} service; the runtime lives as long as the layer.
  */
 export const layerWorkerRuntime = (options: WorkerRuntimeOptions): Layer.Layer<WorkerRuntime> =>
-  Layer.sync(WorkerRuntime, () => makeWorkerRuntime(options));
+  Layer.effect(WorkerRuntime, makeWorkerRuntime(options));
 
 const DB_NAME = 'DXOS';
 

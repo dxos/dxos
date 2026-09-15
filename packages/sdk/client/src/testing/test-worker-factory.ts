@@ -9,7 +9,6 @@ import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as Worker from '@dxos/worker-framework/Worker';
@@ -47,20 +46,15 @@ export class TestWorkerFactory extends Resource {
       storageLockKey: STORAGE_LOCK_KEY,
       createRuntime: ({ config: configValues, requestShutdown }) =>
         Effect.gen({ self: this }, function* () {
-          const runtime = makeWorkerRuntime({
+          const runtime = yield* makeWorkerRuntime({
             configProvider: Effect.sync(() => this._config ?? new Config(configValues ?? {})),
-            onStop: Effect.sync(() => {
-              messageChannel.port1.close();
-              requestShutdown();
-            }),
+            requestShutdown: Effect.sync(requestShutdown),
             automaticallyConnectWebrtc: false,
             sqliteLayer: sqliteLayerMemory,
           });
-          yield* runtime.start();
-          this._ctx.onDispose(() => EffectEx.runPromise(runtime.stop()));
+          this._ctx.onDispose(() => requestShutdown());
 
           return {
-            stop: () => runtime.stop(),
             // The framework hands the session its protocol layers via effect context. The WorkerRuntime
             // session manages its own lifecycle, so the effect opens the session then blocks — the
             // framework runs it for the session's lifetime.

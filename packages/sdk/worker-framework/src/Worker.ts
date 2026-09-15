@@ -5,8 +5,9 @@
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import type * as Scope from 'effect/Scope';
+import * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
@@ -30,7 +31,6 @@ const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePo
   );
 
 export type RuntimeHandle = {
-  stop?(): Effect.Effect<void>;
   createSession(args: {
     clientId: string;
     isOwner: boolean;
@@ -52,7 +52,8 @@ export type Options = {
    */
   displaceChannel?: string;
   /**
-   * Builds the runtime after receiving init config from the leader.
+   * Builds the runtime after receiving init config from the leader. The scope lives until the worker
+   * shuts down, so the runtime's teardown belongs in its finalizers.
    */
   createRuntime: (args: {
     config: Record<string, any> | undefined;
@@ -88,6 +89,8 @@ export const run = ({
     log('lock acquired');
 
     let runtime: RuntimeHandle | undefined;
+    /** Owns the runtime; closed on shutdown. */
+    const runtimeScope = Effect.runSync(Scope.make());
     let owningClientId: string;
     // Live session per client, keyed by the connect attempt that claimed it. `supersede` tears the
     // session down from this side — the only way to reclaim a slot whose tab abandoned it.
@@ -124,9 +127,7 @@ export const run = ({
       shuttingDown = true;
       log('worker shutting down');
       channel.close();
-      if (runtime?.stop) {
-        await EffectEx.runPromise(runtime.stop()).catch((err) => log.catch(err));
-      }
+      await EffectEx.runPromise(Scope.close(runtimeScope, Exit.void)).catch((err) => log.catch(err));
       endpoint.close?.();
       releaseLivenessLock();
       releaseStorageLock();
@@ -148,7 +149,7 @@ export const run = ({
           owningClientId = message.ownerClientId ?? message.clientId;
           log('worker init with config', { keys: Object.keys(message.config ?? {}) });
           runtime = await EffectEx.runPromise(
-            createRuntime({ config: message.config, requestShutdown }).pipe(Effect.scoped),
+            createRuntime({ config: message.config, requestShutdown }).pipe(Scope.provide(runtimeScope)),
           );
           log('dedicated-worker: runtime ready, posting ready');
           endpoint.postMessage({
