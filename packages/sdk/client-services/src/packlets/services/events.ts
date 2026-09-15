@@ -18,7 +18,10 @@ import { type Identity } from '../identity/index.ts';
 //   NetworkingEnabled                                        (auto-connect, or the embedder).
 //
 // Teardown has no events: each layer closes its component in its layer finalizer, so runtime
-// disposal unwinds the stack in reverse build order.
+// disposal unwinds the stack in reverse build order. A reset is the embedder's concern and runs on
+// the embedder's bus, which outlives the stack:
+//
+//   Closing → WipingStorage → Reset                          (system service; the embedder handles).
 //
 // Payloads carry facts only. Cancellation and tracing ride on the Effect: a layer that needs a DXOS
 // `Context` for a component takes one from its scope (`EffectEx.contextFromScope`), and the host
@@ -56,6 +59,15 @@ export const StackOpened = Event.make<void>()('client-services/StackOpened');
 
 /** Outbound networking may begin; emitted on `StackOpened` when auto-connecting, else by the embedder. */
 export const NetworkingEnabled = Event.make<void>()('client-services/NetworkingEnabled');
+
+/** A reset began: the embedder disposes the stack. */
+export const Closing = Event.make<void>()('client-services/Closing');
+
+/** The stack is gone: the embedder wipes persisted storage so the next open starts fresh. */
+export const WipingStorage = Event.make<void>()('client-services/WipingStorage');
+
+/** Storage is wiped; the embedder typically reloads. */
+export const Reset = Event.make<void>()('client-services/Reset');
 
 /** The local profile changed and should be broadcast to every open space. */
 export const ProfileUpdated = Event.make<{ profile: ProfileDocument }>()('client-services/ProfileUpdated');

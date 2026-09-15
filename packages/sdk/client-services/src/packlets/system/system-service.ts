@@ -8,7 +8,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Event, MulticastObservable } from '@dxos/async';
 import { type Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import { Event as EffectEvent, EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
@@ -16,17 +16,14 @@ import { SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
 import { type Diagnostics } from '../diagnostics/index.ts';
+import { Closing, Reset, WipingStorage } from '../services/events.ts';
 import { getPlatform } from '../services/platform.ts';
 
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;
   getDiagnostics: () => Promise<Partial<Diagnostics['services']>>;
-  /** Closes the host if it is open; the first step of a reset. */
-  close: () => Promise<void>;
-  /** Wipes persisted storage so the next open starts fresh; the second step of a reset. */
-  wipeStorage: () => Promise<void>;
-  /** Runs once storage is wiped; the embedder typically reloads. */
-  onReset?: () => MaybePromise<void>;
+  /** The embedder's bus, which outlives the stack; a reset is the `Closing → WipingStorage → Reset` chain on it. */
+  bus: EffectEvent.BusService;
 };
 
 /**
@@ -62,17 +59,20 @@ export class SystemServiceImpl implements SystemService.Handlers {
   }
 
   /**
-   * Closes the host, wipes its storage, and tells the embedder. Reports inactive first so the app
-   * falls back at once, and that status is never cleared because the app reloads.
+   * Runs the reset chain: the embedder closes the stack, wipes its storage, and reloads. Reports
+   * inactive first so the app falls back at once, and that status is never cleared because the app
+   * reloads.
    */
-  async 'reset'(): Promise<void> {
-    log.info('resetting...');
-    this.#resetting = true;
-    this.#statusChanged.emit(SystemStatus.INACTIVE);
-    await this.#options.close();
-    await this.#options.wipeStorage();
-    log.info('reset');
-    await this.#options.onReset?.();
+  'reset'(): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      log.info('resetting...');
+      this.#resetting = true;
+      this.#statusChanged.emit(SystemStatus.INACTIVE);
+      yield* EffectEvent.emit(Closing, undefined);
+      yield* EffectEvent.emit(WipingStorage, undefined);
+      log.info('reset');
+      yield* EffectEvent.emit(Reset, undefined);
+    }).pipe(Effect.provideService(EffectEvent.Bus, this.#options.bus));
   }
 
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
@@ -137,9 +137,6 @@ export class SystemServiceImpl implements SystemService.Handlers {
   }
 
   ['SystemService.reset'](): Effect.Effect<void, Error> {
-    return Effect.tryPromise({
-      try: () => this.reset(),
-      catch: (error) => error as Error,
-    });
+    return this.reset();
   }
 }

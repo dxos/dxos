@@ -5,8 +5,10 @@
 import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { type Trigger } from '@dxos/async';
@@ -63,7 +65,7 @@ import {
 } from '../invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
-import { Opening, StackOpened } from '../services/events.ts';
+import { Closing, Opening, StackOpened, WipingStorage } from '../services/events.ts';
 import {
   ClientServicesLayer,
   type ClientServicesStackContext,
@@ -111,6 +113,9 @@ export class ServiceContext {
       .pipe(Layer.orDie),
   );
   readonly #systemService: SystemServiceImpl;
+  readonly #bus = Event.makeBus();
+  /** Holds the reset handlers; closed by `destroy`. */
+  readonly #busScope = Effect.runSync(Scope.make());
   #runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
   #stack?: EffectContext.Context<ClientServicesStackContext>;
   #ctx?: Context;
@@ -121,9 +126,14 @@ export class ServiceContext {
     this.#systemService = new SystemServiceImpl({
       config: () => this.#config,
       getDiagnostics: () => createDiagnosticsFromHandlers(() => this.services, this.stack, this.#config),
-      close: () => this.close(),
-      wipeStorage: () => RuntimeProvider.runPromise(this.#sql.contextEffect)(wipeSqliteStorage),
+      bus: this.#bus,
     });
+    Effect.runSync(
+      Effect.gen({ self: this }, function* () {
+        yield* Event.on(Closing, () => Effect.promise(() => this.#closeStack()));
+        yield* Event.on(WipingStorage, () => Effect.promise(() => this.#sql.runPromise(wipeSqliteStorage)));
+      }).pipe(Effect.provideService(Event.Bus, this.#bus), Scope.provide(this.#busScope)),
+    );
   }
 
   get isOpen(): boolean {
@@ -207,6 +217,7 @@ export class ServiceContext {
     this.#runtime = ManagedRuntime.make(
       ClientServicesLayer({
         config: this.#config,
+        bus: this.#bus,
         runtimeProps: {
           invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
           ...this.#options.runtimeProps,
@@ -232,12 +243,13 @@ export class ServiceContext {
   }
 
   async reset(): Promise<void> {
-    await this.#systemService.reset();
+    await EffectEx.runPromise(this.#systemService.reset());
   }
 
   /** Disposes the SQLite runtime too; call once the context is no longer needed. */
   async destroy(): Promise<void> {
     await this.#closeStack();
+    await EffectEx.runPromise(Scope.close(this.#busScope, Exit.void));
     await this.#sql.dispose();
   }
 

@@ -159,6 +159,9 @@ export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
   private readonly _params: LocalClientServicesParams;
+  /** Outlives the stack: the reset chain runs on it after the stack is gone. */
+  private readonly _bus = EffectEvent.makeBus();
+  private _busScope?: Scope.Closeable;
   private _runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
   private _stack?: EffectContext.Context<ClientServicesStackContext>;
   private _systemService?: SystemServiceImpl;
@@ -221,6 +224,7 @@ export class LocalClientServices implements ClientServicesProvider {
       createCollectDiagnosticsBroadcastHandler,
       createDiagnostics,
       handlersFromStack,
+      wipeSqliteStorage,
     } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
@@ -228,6 +232,7 @@ export class LocalClientServices implements ClientServicesProvider {
     const runtime = ManagedRuntime.make(
       ClientServicesLayer({
         config,
+        bus: this._bus,
         runtimeProps: this._params.runtimeProps,
         signalManager: this._params.signalManager,
         transportFactory: this._params.transportFactory,
@@ -247,18 +252,28 @@ export class LocalClientServices implements ClientServicesProvider {
       ),
     );
 
-    // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
     const systemService = new SystemServiceImpl({
       config: () => config,
       getDiagnostics: async () => createDiagnostics(this.services, this.stack, config),
-      close: () => this._closeStack(),
-      wipeStorage: () => this._wipeStorage(),
-      onReset: async () => {
-        this.closed.emit(undefined);
-        await this._params.callbacks?.onReset?.();
-      },
+      bus: this._bus,
     });
     this._systemService = systemService;
+    // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
+    this._busScope = Effect.runSync(Scope.make());
+    Effect.runSync(
+      Effect.gen({ self: this }, function* () {
+        yield* EffectEvent.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
+        yield* EffectEvent.on(HostEvents.WipingStorage, () =>
+          wipeSqliteStorage.pipe(Effect.provide(this._sqliteLayer()), Effect.orDie),
+        );
+        yield* EffectEvent.on(HostEvents.Reset, () =>
+          Effect.promise(async () => {
+            this.closed.emit(undefined);
+            await this._params.callbacks?.onReset?.();
+          }),
+        );
+      }).pipe(Effect.provideService(EffectEvent.Bus, this._bus), Scope.provide(this._busScope)),
+    );
     const handlers = { SystemService: systemService, ...handlersFromStack(this._stack) };
     this._diagnosticsBroadcast = createCollectDiagnosticsBroadcastHandler(systemService);
     this._diagnosticsBroadcast.start();
@@ -290,6 +305,10 @@ export class LocalClientServices implements ClientServicesProvider {
 
     await this._closeStack();
 
+    if (this._busScope) {
+      await EffectEx.runPromise(Scope.close(this._busScope, Exit.void));
+      this._busScope = undefined;
+    }
     if (this._serviceScope) {
       await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
       this._serviceScope = undefined;
@@ -313,18 +332,11 @@ export class LocalClientServices implements ClientServicesProvider {
   }
 
   /**
-   * Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a
-   * reset gets here.
-   */
-  private async _wipeStorage(): Promise<void> {
-    const { wipeSqliteStorage } = await import('@dxos/client-services');
-    await EffectEx.runPromise(wipeSqliteStorage.pipe(Effect.provide(this._sqliteLayer()), Effect.orDie));
-  }
-
-  /**
-   * The SQLite layer for `runtime.client.storage.sqlite_mode`. The presence of `createOpfsWorker` or
+   * The SQLite layer for `runtime.client.storage.sqlite_mode`; a reset wipes storage over a fresh
+   * one, since the stack's is gone by then. The presence of `createOpfsWorker` or
    * `sqlitePath` does not influence the choice; a missing prerequisite throws instead of falling back.
    */
+  // TODO(dmaretskyi): Export the sqlite part of this into module-level layer def
   private _sqliteLayer(): Layer.Layer<
     SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
     unknown

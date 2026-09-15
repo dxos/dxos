@@ -51,6 +51,8 @@ export type ClientServicesSqlContext = SqlClient.SqlClient | SqlExport.SqlExport
 
 export type ClientServicesLayerOptions = {
   config: Config;
+  /** The embedder's bus: the stack subscribes to it for its lifetime and the embedder drives it. */
+  bus: Event.BusService;
   /** Overrides for the config-derived runtime props. */
   runtimeProps?: ServiceContextRuntimeProps;
   /** Overrides the config-derived signal manager; tests pass an in-memory one. */
@@ -82,12 +84,13 @@ export const runtimePropsFromConfig = (
 
 /**
  * The whole client services runtime as one layer: RPC handlers over the component stack over the
- * platform inputs, config, and the event bus, persisting through the SQL services provided beneath
- * it. Build it with `ManagedRuntime`, then emit `Opening` and `StackOpened` to boot; disposing the
+ * platform inputs, config, and the embedder's bus, persisting through the SQL services provided
+ * beneath it. Build it with `ManagedRuntime`, then emit `Opening` and `StackOpened` to boot; disposing the
  * runtime tears everything down in reverse.
  */
 export const ClientServicesLayer = ({
   config,
+  bus,
   runtimeProps,
   signalManager,
   transportFactory,
@@ -105,7 +108,7 @@ export const ClientServicesLayer = ({
     ),
     Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
     Layer.provideMerge(Layer.succeed(ConfigService, config)),
-    Layer.provideMerge(Event.busLayer),
+    Layer.provideMerge(Layer.succeed(Event.Bus, bus)),
     Layer.orDie,
   );
 

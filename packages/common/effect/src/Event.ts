@@ -63,7 +63,7 @@ export const make =
     strategy: options?.strategy ?? 'parallel',
   });
 
-interface BusService {
+export interface BusService {
   subscribe<E extends Any>(handler: Handler<E>): Effect.Effect<void, never, Scope.Scope>;
   emit<E extends Any>(event: E, payload: Payload<E>): Effect.Effect<void>;
 }

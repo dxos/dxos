@@ -13,18 +13,21 @@ import {
   PROXY_CONNECTION_TIMEOUT,
   makeBridgeServiceClientOverProtocol,
 } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import { Event } from '@dxos/effect';
 import { log, logInfo } from '@dxos/log';
 import { type BufService } from '@dxos/protocols/buf-service';
 import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { type WorkerService } from '@dxos/protocols/rpc';
-import { Callback, type MaybePromise } from '@dxos/util';
+
+import { SessionClosed } from './events.ts';
 
 type BridgeService = BufService<typeof BridgeServiceDesc>;
 
 export type WorkerSessionProps = {
   /** The client services handlers the runtime currently serves; read per request since they change with the stack. */
   services: () => Partial<ClientServicesHandlers>;
+  /** The runtime's bus; the session emits {@link SessionClosed} on it. */
+  bus: Event.BusService;
   /**
    * Reverse-direction (worker→tab) protocol serving the tab's {@link BridgeService} (WebRTC transport)
    * over effect-rpc. The worker is the client; the tab is the runner.
@@ -50,9 +53,8 @@ export class WorkerSession {
   private readonly _shellClientRpc?: ClientRpcServer;
   private readonly _startTrigger = new Trigger();
   private readonly _systemProtocol: RpcClient.Protocol['Service'];
+  readonly #bus: Event.BusService;
   #closeBridge?: () => Promise<void>;
-
-  public readonly onClose = new Callback<() => Promise<void>>();
 
   @logInfo
   public origin?: string;
@@ -84,8 +86,16 @@ export class WorkerSession {
       ).pipe(Effect.asVoid),
   };
 
-  constructor({ services: runtimeServices, systemProtocol, appProtocol, shellPort, readySignal }: WorkerSessionProps) {
+  constructor({
+    services: runtimeServices,
+    bus,
+    systemProtocol,
+    appProtocol,
+    shellPort,
+    readySignal,
+  }: WorkerSessionProps) {
     this._systemProtocol = systemProtocol;
+    this.#bus = bus;
 
     // Hold requests until the worker runtime is ready; propagate startup errors to callers.
     const onRequest = async () => {
@@ -126,14 +136,19 @@ export class WorkerSession {
       this.bridgeService = bridgeService;
       this.#closeBridge = close;
 
-      yield* Effect.promise(() => Promise.all([this._clientRpc.open(), this._maybeOpenShell()]));
+      yield* Effect.all([Effect.promise(() => this._clientRpc.open()), this.#maybeOpenShell()], {
+        concurrency: 'unbounded',
+      });
 
       // Wait until the tab calls `WorkerService.start` (conveys origin + liveness lock).
       yield* Effect.promise(() => this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT }));
 
       if (this.lockKey) {
-        void this._afterLockReleases(this.lockKey, () =>
-          EffectEx.runPromise(this.close()).catch((err) => log.catch(err)),
+        yield* Effect.forkDetach(
+          this.#afterLockReleases(this.lockKey).pipe(
+            Effect.andThen(this.close()),
+            Effect.tapCause((cause) => Effect.sync(() => log.catch(cause))),
+          ),
         );
       }
 
@@ -144,13 +159,10 @@ export class WorkerSession {
   close(): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       log.debug('closing...');
-      yield* Effect.promise(async () => {
-        try {
-          await this.onClose.callIfSet();
-        } catch (err: any) {
-          log.catch(err);
-        }
-      });
+      // A subscriber failing must not keep the transport open.
+      yield* Event.emit(SessionClosed, { session: this }).pipe(
+        Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
+      );
 
       yield* Effect.promise(() =>
         Promise.all([this._clientRpc.close(), this._shellClientRpc?.close(), this.#closeBridge?.()]),
@@ -158,22 +170,25 @@ export class WorkerSession {
       this.bridgeService = undefined;
       this.#closeBridge = undefined;
       log.debug('closed');
-    });
+    }).pipe(Effect.provideService(Event.Bus, this.#bus));
   }
 
-  private async _maybeOpenShell(): Promise<void> {
-    try {
-      this._shellClientRpc && (await this._shellClientRpc.open());
-    } catch {
-      log.info('No shell connected.');
+  #maybeOpenShell(): Effect.Effect<void> {
+    const shell = this._shellClientRpc;
+    if (!shell) {
+      return Effect.void;
     }
+    return Effect.tryPromise(() => shell.open()).pipe(
+      Effect.catch(() => Effect.sync(() => log.info('No shell connected.'))),
+    );
   }
 
-  private _afterLockReleases(lockKey: string, callback: () => MaybePromise<void>): Promise<void> {
-    return navigator.locks
-      .request(lockKey, () => {
+  /** Resolves once the tab's liveness lock is released, i.e. the tab is gone. */
+  #afterLockReleases(lockKey: string): Effect.Effect<void> {
+    return Effect.promise(() =>
+      navigator.locks.request(lockKey, () => {
         // No-op.
-      })
-      .then(callback);
+      }),
+    );
   }
 }

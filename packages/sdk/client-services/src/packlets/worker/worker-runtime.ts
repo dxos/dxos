@@ -18,7 +18,7 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { Trigger } from '@dxos/async';
 import { type ClientServicesHandlers } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
-import { EffectEx, Event } from '@dxos/effect';
+import { Event } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
@@ -45,6 +45,7 @@ import {
   wipeSqliteStorage,
 } from '../services/index.ts';
 import { SystemServiceImpl } from '../system/index.ts';
+import { SessionClosed } from './events.ts';
 import { WorkerSession } from './worker-session.ts';
 
 // Session transports are effect-rpc protocol layers handed over by the worker framework: appProtocol
@@ -54,7 +55,6 @@ export type CreateSessionProps = {
   appProtocol: RpcServer.Protocol['Service'];
   systemProtocol: RpcClient.Protocol['Service'];
   shellPort?: MessagePort;
-  onClose?: () => Promise<void>;
 };
 
 /**
@@ -135,6 +135,11 @@ export const makeWorkerRuntime = ({
   const sessions = new Set<WorkerSession>();
   const signalMetadataTags: any = { runtime: 'worker-runtime' };
 
+  /** Outlives the stack: the reset chain and session events run on it. */
+  const bus = Event.makeBus();
+  /** Holds the runtime's own handlers; closed by `stop`. */
+  const busScope = Effect.runSync(Scope.make());
+
   let stopped = false;
   let sessionForNetworking: WorkerSession | undefined;
   let config: Config | undefined;
@@ -170,22 +175,21 @@ export const makeWorkerRuntime = ({
   });
 
   /** Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a reset gets here. */
-  const wipeStorage = wipeSqliteStorage.pipe(Effect.provide(sqlite()));
+  const wipeStorage = wipeSqliteStorage.pipe(Effect.provide(sqlite()), Effect.orDie);
 
   const services = (): Partial<ClientServicesHandlers> => ({
     SystemService: systemService,
     ...(stack ? handlersFromStack(stack) : {}),
   });
 
+  // TODO(dmaretskyi): construct as layer (as other services are)
   const systemService = new SystemServiceImpl({
     config: () => config,
     getDiagnostics: () => {
       invariant(stack && config, 'worker runtime not started');
       return createDiagnosticsFromHandlers(services, stack, config);
     },
-    close: () => EffectEx.runPromise(closeStack),
-    wipeStorage: () => EffectEx.runPromise(wipeStorage),
-    onReset: () => EffectEx.runPromise(stop()),
+    bus,
   });
 
   const stop = (): Effect.Effect<void> =>
@@ -206,6 +210,7 @@ export const makeWorkerRuntime = ({
           yield* Scope.close(serviceScope, Exit.void);
           serviceScope = undefined;
         }
+        yield* Scope.close(busScope, Exit.void);
       }).pipe(Effect.ensuring(Effect.promise(async () => onStop?.())));
     });
 
@@ -226,6 +231,27 @@ export const makeWorkerRuntime = ({
     }
   });
 
+  // The runtime's own subscriptions: the reset chain and session bookkeeping.
+  Effect.runSync(
+    Effect.gen(function* () {
+      yield* Event.on(HostEvents.Closing, () => closeStack);
+      yield* Event.on(HostEvents.WipingStorage, () => wipeStorage);
+      yield* Event.on(HostEvents.Reset, () => stop());
+      yield* Event.on(
+        SessionClosed,
+        Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {
+          sessions.delete(session);
+          if (sessions.size === 0) {
+            // Terminate the worker when all sessions are closed.
+            yield* stop();
+          } else if (automaticallyConnectWebrtc) {
+            yield* reconnectWebrtc;
+          }
+        }),
+      );
+    }).pipe(Effect.provideService(Event.Bus, bus), Scope.provide(busScope)),
+  );
+
   const start = (): Effect.Effect<void> =>
     Effect.gen(function* () {
       log('starting...');
@@ -244,6 +270,7 @@ export const makeWorkerRuntime = ({
       const stackRuntime = ManagedRuntime.make(
         ClientServicesLayer({
           config: resolvedConfig,
+          bus,
           // The dial is driven below once boot has drained, not on stack open.
           autoConnect: false,
           // Auto-activate spaces that were previously active after leader changeover.
@@ -318,32 +345,15 @@ export const makeWorkerRuntime = ({
     appProtocol,
     systemProtocol,
     shellPort,
-    onClose,
   }: CreateSessionProps): Effect.Effect<WorkerSession> =>
     Effect.gen(function* () {
-      // 
       const session = new WorkerSession({
         services,
+        bus,
         appProtocol,
         systemProtocol,
         shellPort,
         readySignal: ready,
-      });
-
-      // When tab is closed or client is destroyed.
-      session.onClose.set(async () => {
-        await EffectEx.runPromise(
-          Effect.gen(function* () {
-            sessions.delete(session);
-            if (sessions.size === 0) {
-              // Terminate the worker when all sessions are closed.
-              yield* stop();
-            } else if (automaticallyConnectWebrtc) {
-              yield* reconnectWebrtc;
-            }
-          }),
-        );
-        await onClose?.();
       });
 
       yield* session.open();
