@@ -7,6 +7,7 @@
 import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 
+import { Annotation, type Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { type FormFieldMap } from '@dxos/react-ui-form';
 import { type OptionsLookupEntry } from '@dxos/react-ui-form/annotations';
@@ -54,6 +55,21 @@ export type GenerationProgress = {
   readonly total?: number;
 };
 
+/** What a file-backed request field accepts (an `<input type='file'>` `accept` pattern). */
+export const FileUrlOptions = Schema.Struct({ accept: Schema.optional(Schema.String) });
+export type FileUrlOptions = Schema.Schema.Type<typeof FileUrlOptions>;
+
+/**
+ * Marks a URL request field as one the user may fill by uploading a file: the studio form renders
+ * it with an Upload control that stores the file through the app's `FileUploader` and writes the
+ * resulting URL. The provider only ever sees a URL.
+ */
+export const FileUrlAnnotationId = 'org.dxos.plugin.studio.fileUrl';
+export const FileUrlAnnotation = Annotation.make({
+  id: FileUrlAnnotationId,
+  schema: FileUrlOptions,
+});
+
 /** One selectable value of a request field, as loaded by {@link GenerationService.fieldOptions}. */
 export type FieldOption = OptionsLookupEntry;
 
@@ -72,6 +88,11 @@ export interface GenerateOptions {
   readonly signal?: AbortSignal;
   /** Called as the provider makes progress; drives the studio progress monitor. */
   readonly onProgress?: (progress: GenerationProgress) => void;
+  /**
+   * Loads an object a request field references (a reference artifact); the config carries `Ref`s
+   * as the form wrote them, and only the studio's operation has the database to follow them.
+   */
+  readonly load?: <T>(ref: Ref.Ref<T>) => Promise<T>;
 }
 
 /**

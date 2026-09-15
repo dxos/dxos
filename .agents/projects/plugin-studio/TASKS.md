@@ -65,6 +65,20 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Shared `GenerationService.fieldOptions` → cached combobox (`ProviderOptionsField`); HeyGen migrated, Higgsfield static image list.
 - [ ] Higgsfield model catalogue from the API once it exposes one.
 
+### Observed 2026-09-15 (Composer, project/task session)
+
+- [ ] Task list (plugin-tasks): constrain the height of the inline task editor, and enable
+      `dx-preview` object links in it, as the description's markdown view already does.
+- [x] Chat session: inline ECHO object links — already rendered: `[label](echo://…)` in a text block
+      through `objectLinks()` in the feed Block extensions, and parsed `<object>` reference blocks
+      through the `<reference>` → `ReferenceWidget` chip; both carry the preview hover card. Test
+      against `plugins/plugin-assistant/components/Thread → Default` (its generator emits one link).
+      Embedded cards (`![label](echo://…)`) now render too: `objectImage` threads from
+      `ChatThread.Root` to the block's `objectLinks({ image })`, plugin-assistant supplies
+      `ObjectCardWidget` (header + `CardContent` surface). Open: a bare `echo://…` / `@echo://…`
+      outside markdown link syntax is the one shape nothing decorates.
+- [x] Task list toolbar: text filter (title/description, keeps a match's ancestors) on the standalone `TaskSetArticle`.
+
 ### Observed 2026-09-14 (Composer, studio session)
 
 - [x] Frame companion **Generate** loses its spinning state when navigating away and back — busy now

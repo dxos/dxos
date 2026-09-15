@@ -39,7 +39,15 @@ export type PreviewLinkResolver = {
    * instead of the whole address without knowing the URL's shape.
    */
   label?: (url: string) => string | undefined;
+  /**
+   * A leading icon for the URL — a pull request's, say — so a renderer's chip reads the same as the
+   * editor's without knowing the URL's shape.
+   */
+  icon?: (url: string) => PreviewLinkIcon | undefined;
 };
+
+/** An icon a chip leads with: the icon name and any classes that colour it. */
+export type PreviewLinkIcon = { icon: string; classNames?: string };
 
 /**
  * Multi capability: each contributing plugin provides one batch of resolvers. The popover asks
@@ -58,6 +66,17 @@ export const linkLabel = (resolvers: readonly PreviewLinkResolver[], url: string
     const name = match(url) ? label?.(url) : undefined;
     if (name) {
       return name;
+    }
+  }
+  return undefined;
+};
+
+/** The first icon a resolver offers for the URL, or undefined when none does. */
+export const linkIcon = (resolvers: readonly PreviewLinkResolver[], url: string): PreviewLinkIcon | undefined => {
+  for (const { match, icon } of resolvers) {
+    const found = match(url) ? icon?.(url) : undefined;
+    if (found) {
+      return found;
     }
   }
   return undefined;
