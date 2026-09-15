@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/unified-observability/TASKS.md
     design: .agents/projects/unified-observability/DESIGN.md
     prs: [12939]
-    resume: 'dxos/dxos#12939 has main merged (#12609 landed 2026-09-14); land it. Phase 3 is written on edge branch claude/unified-observability-relay in slot gale, pinned to pkg.pr.new d7a49709; repin to the merge commit and open the edge PR.'
+    resume: 'dxos/dxos#12939 is green with main merged; land it. The edge PR is open from branch claude/unified-observability-relay (slot gale), pinned to c5120d7f via pkg.pr.new; land it after, then repin its catalog to the dxos merge commit.'
   - name: plugin-debug
     status: active
     user: burdon
