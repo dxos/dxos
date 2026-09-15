@@ -145,7 +145,18 @@ runs:
     # Deliberately not `auto-install` on setup-toolchain: that installs everything pinned, and rust is a
     # 1.2 GB rustup toolchain that nothing in CI uses.
     - name: Install moon toolchains
-      run: moon setup
+      # Plugin and toolchain downloads from the registry can be reset mid-transfer, so the install is retried.
+      run: |
+        for attempt in 1 2 3; do
+          if moon setup; then
+            exit 0
+          else
+            status=$?
+          fi
+          echo "moon setup failed with exit code $status (attempt $attempt of 3)"
+          [ "$attempt" -lt 3 ] && sleep 10
+        done
+        exit "$status"
       shell: bash
 
     # `.github/Dockerfile` installs node and pnpm to bootstrap CI while moon installs them from

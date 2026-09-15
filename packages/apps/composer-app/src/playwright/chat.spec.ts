@@ -5,6 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
 
 import { AppManager } from './app-manager.ts';
 import { Assistant } from './plugins/index.ts';
@@ -35,8 +36,12 @@ test.describe('Chat', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   test('sends a message and receives a response', async () => {
@@ -45,6 +50,10 @@ test.describe('Chat', () => {
 
     await host.createSpace();
     await host.createObject({ type: 'Chat' });
+
+    // Opened from the navtree rather than relying on creation to leave it open: a navigation landing
+    // late replaces the deck's contents, and the chat is the only object in this space.
+    await host.navigateToObject(0);
 
     const assistant = new Assistant(Assistant.plank(host.page));
     await expect(assistant.prompt).toBeVisible();

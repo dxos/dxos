@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type SpaceSyncStateMap } from '@dxos/react-client/echo';
+
 export type Status =
   | 'saving-locally'
   | 'downloading'
@@ -55,3 +57,9 @@ export const getIcon = (status: Status) => {
       return 'ph--cloud-check--regular';
   }
 };
+
+/** Spaces whose EDGE sync state has local documents and none left to push; a space with no entry yet is not one. */
+export const getUploadedSpaceIds = (state: SpaceSyncStateMap): string[] =>
+  Object.entries(state)
+    .filter(([, peer]) => peer.localDocumentCount > 0 && peer.missingOnRemote === 0 && peer.differentDocuments === 0)
+    .map(([spaceId]) => spaceId);

@@ -24,7 +24,7 @@ const createServices = (config?: Config) =>
     ),
     {
       createDedicatedWorker: () =>
-        new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+        new Worker(new URL('../dedicated-worker.ts', import.meta.url), {
           type: 'module',
           name: 'dxos-client-worker',
         }),

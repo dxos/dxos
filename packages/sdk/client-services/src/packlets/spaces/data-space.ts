@@ -6,7 +6,16 @@ import { save } from '@automerge/automerge';
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
 
-import { Event, Mutex, scheduleTask, sleep, sleepWithContext, synchronized, trackLeaks } from '@dxos/async';
+import {
+  Event,
+  Mutex,
+  scheduleTask,
+  scheduleTaskInterval,
+  sleep,
+  sleepWithContext,
+  synchronized,
+  trackLeaks,
+} from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { credentialPayload } from '@dxos/credentials';
@@ -94,6 +103,13 @@ export type CreateEpochOptions = {
 };
 
 const ROOT_DOC_LOAD_ATTEMPT_TIMEOUT = 20_000;
+
+/**
+ * How often an in-flight attempt re-drives sync. A root that arrives at all arrives in about a
+ * second, so waiting out the attempt before the first nudge spends most of it on a document nothing
+ * is fetching.
+ */
+const ROOT_DOC_LOAD_NUDGE_INTERVAL = 3_000;
 
 const ROOT_DOC_LOAD_RETRY_INITIAL_DELAY = 1_000;
 const ROOT_DOC_LOAD_RETRY_MAX_DELAY = 30_000;
@@ -489,18 +505,28 @@ export class DataSpace {
    * Loads a space's root document, re-driving until it arrives or the space closes.
    *
    * `loadDoc` waits on the network with no deadline of its own, so a space whose root never
-   * arrives would wait forever. The retry bounds each attempt and re-drives the document between
-   * them: the repo-wide kick only revives `all-failed`/`no-peers` entries, and a root that stalls
-   * after its first bytes land leaves a settled entry that neither the kick nor a fresh
+   * arrives would wait forever. The retry bounds each attempt, and sync is re-driven throughout:
+   * the repo-wide kick only revives `all-failed`/`no-peers` entries, and a root that stalls after
+   * its first bytes land leaves a settled entry that neither the kick nor a fresh
    * `findWithProgress` re-issues.
    */
   async #loadRootDoc(rootUrl: AutomergeUrl): Promise<DocumentLease<DatabaseDirectory> | null> {
+    const documentId = parseAutomergeUrl(rootUrl).documentId;
+    const nudge = () => {
+      this._echoHost.automergeHost.kickStalledSync();
+      this._echoHost.automergeHost.resyncDocument(documentId);
+    };
+
     for (let attempt = 0, delay = ROOT_DOC_LOAD_RETRY_INITIAL_DELAY; !this._ctx.disposed; attempt++) {
+      const attemptCtx = this._ctx.derive();
       try {
         if (attempt > 0) {
-          this._echoHost.automergeHost.kickStalledSync();
-          this._echoHost.automergeHost.resyncDocument(parseAutomergeUrl(rootUrl).documentId);
+          nudge();
         }
+
+        // Nudging during the attempt rather than only between them: re-driving does not disturb an
+        // in-flight fetch, so there is nothing to gain by holding it back until the attempt expires.
+        scheduleTaskInterval(attemptCtx, async () => nudge(), ROOT_DOC_LOAD_NUDGE_INTERVAL);
 
         return await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', () =>
           this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl, {
@@ -524,6 +550,8 @@ export class DataSpace {
         });
         await sleepWithContext(this._ctx, delay);
         delay = Math.min(delay * 2, ROOT_DOC_LOAD_RETRY_MAX_DELAY);
+      } finally {
+        await attemptCtx.dispose();
       }
     }
 

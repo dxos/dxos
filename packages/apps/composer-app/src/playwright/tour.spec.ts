@@ -4,6 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { AppManager } from './app-manager.ts';
 import { Support } from './plugins/index.ts';
 
@@ -20,8 +22,12 @@ test.describe('Tour tests', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   test('the global tour runs from the Home help companion and advances', async () => {

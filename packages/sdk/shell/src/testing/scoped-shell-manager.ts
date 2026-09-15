@@ -6,6 +6,17 @@ import type { FrameLocator, Locator, Page } from '@playwright/test';
 
 type Scope = Locator | FrameLocator | Page;
 
+/**
+ * The rescuer renderings that end the flow. Its third, the connecting branch carrying
+ * `invitation-rescuer-cancel`, is not one: every invitation passes through it on the way to the auth
+ * code.
+ */
+const RESCUER_DEAD_ENDS =
+  "[data-testid='invitation-rescuer-reset']:visible, [data-testid='invitation-rescuer-blank-reset']:visible";
+
+/** Covers the swarm connection, introduction and authenticator handshake the guest waits through. */
+const AUTH_CODE_TIMEOUT = 30_000;
+
 /** @deprecated */
 export class ScopedShellManager {
   page!: Page;
@@ -59,17 +70,35 @@ export class ScopedShellManager {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
     const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
-    // The input is conditionally mounted by the invitation state machine, so a bare timeout cannot say
-    // whether the invitation stalled before this step; name what the shell is showing instead.
-    await input.waitFor({ state: 'visible' }).catch(async (err) => {
-      const showing = await peer
-        .locator('[data-testid]')
-        .evaluateAll((elements) => [...new Set(elements.map((element) => element.dataset.testid))].join(', '))
-        .catch(() => '(unavailable)');
-      throw new Error(`${type} invitation never reached the auth-code step; shell is showing: ${showing}`, {
-        cause: err,
+    // Every step stays mounted (`Viewport.View` marks inactive ones `invisible`), so the match has
+    // to be on `:visible` — DOM order resolves to a step the shell may never reach. `:visible` also
+    // tells the device rescuer from the space one: `Viewport.View` takes `id` as its view key and
+    // never renders it, so the two cannot be told apart by selector, and only one is ever active.
+    const settled = peer.locator(
+      `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:not([disabled]):visible, ` +
+        RESCUER_DEAD_ENDS,
+    );
+    await settled
+      .first()
+      .waitFor({ state: 'visible', timeout: AUTH_CODE_TIMEOUT })
+      .catch(async (err) => {
+        // `:visible`, for the same reason the wait above uses it: every step stays mounted, so the
+        // unfiltered set is the shell's whole vocabulary and names no step in particular.
+        const showing = await peer
+          .locator('[data-testid]:visible')
+          .evaluateAll((elements) => [...new Set(elements.map((element) => element.dataset.testid))].join(', '))
+          .catch(() => '(unavailable)');
+        throw new Error(`${type} invitation never reached the auth-code step; shell is showing: ${showing}`, {
+          cause: err,
+        });
       });
-    });
+    const rescuer = peer.locator(RESCUER_DEAD_ENDS);
+    if (await rescuer.first().isVisible()) {
+      const state = await rescuer
+        .evaluateAll((elements) => elements.map((element) => element.dataset.testid).join(', '))
+        .catch(() => '(unavailable)');
+      throw new Error(`${type} invitation stopped at the rescuer screen rather than the auth-code step: ${state}`);
+    }
     await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }

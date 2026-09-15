@@ -16,7 +16,28 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
+import { buildErrnoShim, errnoShimSupported } from './errno-shim.ts';
 import { Lock } from './lock.ts';
+import { RTC_TRACE_PREFIX, installRtcTrace } from './rtc-trace.ts';
+import { WEBKIT_RTC_EVENTS_FILE_ENV, startWebKitRtcEventCapture } from './webkit-rtc-events.ts';
+
+export * from './debug-log.ts';
+export { RTC_TRACE_PREFIX } from './rtc-trace.ts';
+
+/** Values that turn on a boolean `DX_E2E_*` knob. */
+const ENABLED = new Set(['1', 'true']);
+
+/** `DX_E2E_REPEAT_EACH`, a positive integer, or undefined when unset. */
+const repeatEachFromEnv = (): number | undefined => {
+  const value = process.env.DX_E2E_REPEAT_EACH;
+  if (value === undefined || value === '') {
+    return undefined;
+  }
+  if (!/^[1-9][0-9]*$/.test(value)) {
+    throw new Error(`DX_E2E_REPEAT_EACH must be a positive integer, got "${value}"`);
+  }
+  return Number(value);
+};
 
 const findWorkspaceRoot = (startDir: string): string => {
   let dir = resolve(startDir);
@@ -58,6 +79,32 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${packageDirName}.json`);
 
   const browser = process.env.PLAYWRIGHT_BROWSER || (process.env.CI ? 'all' : 'chromium');
+  const repeatEach = repeatEachFromEnv();
+  // DX_E2E_WEBKIT_RTC_EVENTS=1 captures WebKit's RTC event log per worker; each worker re-evaluates the config
+  // with TEST_WORKER_INDEX set, before its browser launches.
+  const workerIndex = process.env.TEST_WORKER_INDEX;
+  const webkitRtcEvents =
+    ENABLED.has(process.env.DX_E2E_WEBKIT_RTC_EVENTS ?? '') &&
+    workerIndex !== undefined &&
+    (browser === 'all' || browser === 'webkit')
+      ? startWebKitRtcEventCapture({
+          outputFile: join(
+            workspaceRoot,
+            'test-results/playwright/wkrtc',
+            packageDirName,
+            `events-${workerIndex}.ndjson`,
+          ),
+          details: { package: packageDirName, workerIndex, parallelIndex: process.env.TEST_PARALLEL_INDEX },
+        })
+      : undefined;
+  // x86_64 Linux WebKit: every captured boot crash faulted in the wasm in-place interpreter (IPInt) with a corrupted
+  // locals base or wasm PC; wasm OSR off is an unproven workaround for spurious Automerge traps (cf. oven-sh/bun#26366)
+  // and, with IPInt off, still disables BBQ-to-OMG loop OSR entry.
+  const disableWasmIPIntAndOSR = process.platform === 'linux' && process.arch === 'x64';
+  const errnoShim =
+    errnoShimSupported() && (browser === 'all' || browser === 'webkit')
+      ? buildErrnoShim(join(workspaceRoot, 'node_modules/.cache/dxos-test-utils'))
+      : undefined;
   // In the Claude Code cloud sandbox chromium needs a pinned executable, the egress proxy passed via
   // ARGS (Playwright's `proxy:` option drops its bypass list for non-default contexts), and a TLS 1.2
   // cap (see the cloud-sandbox skill). Gated so real dev/CI runs are never silently downgraded.
@@ -86,7 +133,18 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {
+        ...devices['Desktop Safari'],
+        launchOptions: {
+          // Replaces the browser's whole environment rather than extending it.
+          env: {
+            ...(disableWasmIPIntAndOSR ? { JSC_useWasmIPInt: 'false', JSC_useWasmOSR: 'false' } : {}),
+            ...definedEnv(),
+            ...(errnoShim ? { LD_PRELOAD: [errnoShim, process.env.LD_PRELOAD].filter(Boolean).join(':') } : {}),
+            ...(webkitRtcEvents ? { [WEBKIT_RTC_EVENTS_FILE_ENV]: webkitRtcEvents.fifoPath } : {}),
+          },
+        },
+      },
     },
   ].filter((project) => {
     return browser === 'all' || project.name === browser;
@@ -95,6 +153,7 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   return {
     testDir,
     outputDir: testResultOuputDir,
+    ...(repeatEach === undefined ? {} : { repeatEach }),
     // Playwright's default is 30s, which equals the action bound below — leaving a test no budget beyond
     // a single slow action. Storybook-backed suites also pay an on-demand story compile in the first
     // test's `beforeEach`, which alone exceeded 30s. Individual configs may still raise this.
@@ -135,6 +194,17 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   };
 };
 
+/** `process.env` without unset keys, the shape Playwright's launch `env` takes. */
+const definedEnv = (): Record<string, string> => {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined) {
+      env[key] = value;
+    }
+  }
+  return env;
+};
+
 export type SetupOptions = {
   url?: string;
   bridgeLogs?: boolean;
@@ -154,12 +224,19 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
 
   // Playwright opens a trace chunk on every live context at test start, so a context left behind by a
   // closed page is re-serialized into every later trace in that worker.
-  const close = async (): Promise<void> => {
-    await (ownsContext ? context.close() : page?.close());
+  // The reason becomes the rejection message of every call still pending on the page.
+  const dispose = async (reason: string): Promise<void> => {
+    await (ownsContext ? context.close({ reason }) : page?.close({ reason }));
   };
+  const close = (): Promise<void> => dispose(`${ownsContext ? 'context' : 'page'} closed by test teardown`);
 
   try {
     page = await context.newPage();
+
+    // DX_E2E_RTC_TRACE=1 logs the page's RTCPeerConnection calls and events to the console, which the trace records.
+    if (ENABLED.has(process.env.DX_E2E_RTC_TRACE ?? '')) {
+      await page.addInitScript(installRtcTrace, RTC_TRACE_PREFIX);
+    }
 
     if (viewportSize) {
       await page.setViewportSize(viewportSize);
@@ -200,9 +277,13 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
 
     return { context, page, close };
   } catch (err) {
-    // The caller never received `close`, so this is the only chance to dispose what got created. The
-    // setup error is the one worth reporting, so a failure to clean up does not displace it.
-    await close().catch(() => {});
+    // The caller never received `close`, so this is the only chance to dispose what got created; a
+    // disposal failure is reported with the setup error as its cause.
+    await dispose('page setup failed').catch((disposeErr: unknown) => {
+      throw Object.assign(new Error(`disposing a page whose setup failed also failed: ${String(disposeErr)}`), {
+        cause: err,
+      });
+    });
     throw err;
   }
 };

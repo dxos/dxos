@@ -7,7 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
@@ -20,7 +20,10 @@ import { openAndClose } from '@dxos/test-utils';
 import { compositeKey } from '@dxos/util';
 
 import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge/index.ts';
-import { EchoEdgeSubductionReplicator } from './echo-edge-subduction-replicator.ts';
+import {
+  EchoEdgeSubductionReplicator,
+  type EchoEdgeSubductionReplicatorProps,
+} from './echo-edge-subduction-replicator.ts';
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
 // (limited concurrency, signal-server timing). Re-enable once the suite
@@ -94,6 +97,35 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     await replicator.disconnect();
   });
 
+  // The repo swallows a handshake the edge rejects or drops, so a missing bind is the only sign of it.
+  test('restarts a connection whose handshake never binds a peer', async () => {
+    const { client } = await createClientServer();
+    const { context, connectionOpen } = createMockContext();
+    const replicator = await connectReplicator(client, context, { bindTimeout: 200 });
+
+    const waitForRestart = connectionOpen.waitForCount(2);
+    await replicator.connectToSpace(Context.default(), SpaceId.random());
+    await waitForRestart;
+  });
+
+  test('keeps a connection whose handshake binds a peer', async () => {
+    const { client } = await createClientServer();
+    const { context, openConnections, connectionOpen } = createMockContext();
+    const replicator = await connectReplicator(client, context, { bindTimeout: 200 });
+
+    const waitForOpen = connectionOpen.waitForCount(1);
+    await replicator.connectToSpace(Context.default(), SpaceId.random());
+    await waitForOpen;
+    openConnections[0].onPeerBound?.();
+
+    let reopened = 0;
+    connectionOpen.on(() => {
+      reopened++;
+    });
+    await sleep(1_000);
+    expect(reopened).toBe(0);
+  });
+
   describe('shouldAdvertise', () => {
     test('true if space document belongs to connection space', async () => {
       const { client } = await createClientServer();
@@ -135,11 +167,16 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     });
   });
 
-  const connectReplicator = async (client: EdgeClient, context: AutomergeReplicatorContext) => {
+  const connectReplicator = async (
+    client: EdgeClient,
+    context: AutomergeReplicatorContext,
+    props?: Pick<EchoEdgeSubductionReplicatorProps, 'bindTimeout'>,
+  ) => {
     // EdgeHttpClient functionality is not used by the subduction replicator.
     const replicator = new EchoEdgeSubductionReplicator({
       edgeConnection: client,
       edgeHttpClient: {} as EdgeHttpClient,
+      ...props,
     });
     await replicator.connect(Context.default(), context);
     onTestFinished(() => replicator.disconnect());

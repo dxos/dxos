@@ -11,20 +11,37 @@ export const Thread = {
     // The button's disabled state is driven by aspect, which updates via a
     // debounce after a CodeMirror selection dispatch. Wait until it is enabled.
     await expect(addButton).toBeEnabled();
+    // Object ids, not element ids: a thread's URI changes spelling when its draft persists.
+    const existing = await Thread.getThreads(page).evaluateAll((elements) =>
+      elements.map((element) => element.id.split('/').pop()),
+    );
     await addButton.click();
-    const currentThread = Thread.getCurrentThread(page);
-    // Wait for the newly-created draft thread to appear with aria-current="location". After the
-    // click, there is a brief window where React has not yet re-rendered the new draft thread into
-    // the DOM, so the locator resolves to nothing.
+    // The previous thread stays current until the new draft renders, so waiting for any current
+    // thread can hand back the old one and send the reply there. Wait for a thread that is new.
+    let threadId: string | undefined;
     try {
-      await currentThread.waitFor({ state: 'visible' });
+      const handle = await page.waitForFunction(
+        (previous) =>
+          Array.from(document.querySelectorAll('[data-testid=thread][aria-current="location"]'))
+            .map((element) => element.id.split('/').pop())
+            .find((objectId) => objectId && !previous.includes(objectId)),
+        existing,
+      );
+      threadId = await handle.jsonValue();
     } catch (err) {
-      // No current thread means the marker landed on nothing or on a DIFFERENT thread, which a bare
-      // locator timeout cannot separate; report every thread's marker state instead.
-      throw new Error(`no thread is current after creating a comment; threads: ${await Thread.describeThreads(page)}`, {
-        cause: err,
-      });
+      // Reports every thread's marker state, since a bare timeout cannot say whether the marker landed
+      // on nothing or stayed on an earlier thread.
+      throw new Error(
+        `no new thread is current after creating a comment; threads: ${await Thread.describeThreads(page)}`,
+        {
+          cause: err,
+        },
+      );
     }
+    if (!threadId) {
+      throw new Error(`the new current thread has no id; threads: ${await Thread.describeThreads(page)}`);
+    }
+    const currentThread = page.locator(`[data-testid=thread][id$="/${threadId}"]`);
     const input = Thread.getReplyInput(currentThread);
     await input.fill(comment);
     await input.press('Enter');

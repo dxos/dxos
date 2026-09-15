@@ -4,6 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { AppManager } from './app-manager.ts';
 
 test.describe('Collection tests', () => {
@@ -14,8 +16,12 @@ test.describe('Collection tests', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   test('create collection', async () => {
@@ -25,44 +31,54 @@ test.describe('Collection tests', () => {
     await expect(host.getObjectByName('New collection')).toHaveCount(1);
   });
 
-  test('re-order collections', async ({ browserName }) => {
-    // TODO(thure): Issue #7387: Firefox/Webkit is unable to click on the item actions menu, only in CI.
-    test.skip(browserName !== 'chromium');
+  test.describe(() => {
+    test.skip(
+      ({ browserName }) => browserName !== 'chromium',
+      'TODO(thure): Issue #7387: Firefox/Webkit is unable to click on the item actions menu, only in CI.',
+    );
 
-    await host.createSpace();
-    await host.createObject({ type: 'Collection' });
-    await host.createObject({ type: 'Collection' });
-    await host.expandSection('spacePlugin.collectionsSection');
-    await host.renameObject('Collection 1', 0);
-    await host.renameObject('Collection 2', 1);
+    test('re-order collections', async () => {
+      await host.createSpace();
+      await host.createObject({ type: 'Collection' });
+      await host.createObject({ type: 'Collection' });
+      await host.expandSection('spacePlugin.collectionsSection');
+      await host.renameObject('Collection 1', 0);
+      await host.renameObject('Collection 2', 1);
 
-    // Items are 32px tall.
-    await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 0, y: -15 });
+      // Items are 32px tall.
+      await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), {
+        instruction: 'reorder-above',
+        offset: { x: 0, y: -15 },
+      });
 
-    // Folders are now in reverse order.
-    await expect(host.getObject(0)).toContainText('Collection 2');
-    await expect(host.getObject(1)).toContainText('Collection 1');
+      // Folders are now in reverse order.
+      await expect(host.getObject(0)).toContainText('Collection 2');
+      await expect(host.getObject(1)).toContainText('Collection 1');
+    });
   });
 
-  test('drag object into collection', async ({ browserName }) => {
-    // TODO(wittjosiah): This test is quite flaky in webkit.
-    test.skip(browserName !== 'chromium');
+  test.describe(() => {
+    test.skip(({ browserName }) => browserName !== 'chromium', 'TODO(wittjosiah): This test is quite flaky in webkit.');
 
-    await host.createSpace();
-    await host.createObject({ type: 'Collection' });
-    await host.createObject({ type: 'Collection' });
-    await host.expandSection('spacePlugin.collectionsSection');
-    await host.renameObject('Collection 1', 0);
-    await host.renameObject('Collection 2', 1);
+    test('drag object into collection', async () => {
+      await host.createSpace();
+      await host.createObject({ type: 'Collection' });
+      await host.createObject({ type: 'Collection' });
+      await host.expandSection('spacePlugin.collectionsSection');
+      await host.renameObject('Collection 1', 0);
+      await host.renameObject('Collection 2', 1);
 
-    // Selected first: an unvisited collection takes the drop beside it rather than inside it.
-    await host.getObject(1).click();
-    await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), { x: 0, y: 0 });
-    // Collection 1 is now inside Collection 2: a row's `data-object-id` is the object's canonical
-    // graph path, so Collection 1's parent path is exactly Collection 2's path.
-    const collection1 = await host.getObjectByName('Collection 1').getAttribute('data-object-id');
-    const collection2 = await host.getObjectByName('Collection 2').getAttribute('data-object-id');
-    expect(collection1?.split('/').slice(0, -1).join('/')).toEqual(collection2);
+      // Selected first: an unvisited collection takes the drop beside it rather than inside it.
+      await host.getObject(1).click();
+      await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), {
+        instruction: 'make-child',
+      });
+      // Collection 1 is now inside Collection 2: a row's `data-object-id` is the object's canonical
+      // graph path, so Collection 1's parent path is exactly Collection 2's path.
+      const collection1 = await host.getObjectByName('Collection 1').getAttribute('data-object-id');
+      const collection2 = await host.getObjectByName('Collection 2').getAttribute('data-object-id');
+      expect(collection1?.split('/').slice(0, -1).join('/')).toEqual(collection2);
+    });
   });
 
   test('delete a collection', async () => {

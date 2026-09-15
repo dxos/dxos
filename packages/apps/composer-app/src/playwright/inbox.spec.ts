@@ -4,6 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
+
 import { AppManager } from './app-manager.ts';
 import { Inbox, installInboxMock } from './plugins/index.ts';
 
@@ -39,8 +41,12 @@ test.describe.skip('Inbox', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   // Create a JMAP-connected mailbox by driving the real credential form; provider HTTP is served by

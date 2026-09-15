@@ -421,8 +421,16 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     log('initializing...', { space: this.key });
     this._initializing = true;
-    await this._invitationsProxy.open();
-    await this._initializeDb(ctx);
+    try {
+      await this._invitationsProxy.open();
+      await this._initializeDb(ctx);
+    } catch (err) {
+      // A failed initialization settles both triggers so waiters observe it instead of pending.
+      const error = err instanceof Error ? err : new Error(String(err));
+      this._databaseInitialized.throw(error);
+      this._initializationComplete.throw(error);
+      throw err;
+    }
 
     this._initialized = true;
     this._initializing = false;

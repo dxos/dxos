@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -100,6 +101,39 @@ describe('DocHandleProxy', () => {
       expect(handle.doc()?.clientText).to.equal(clientText);
       expect(handle.doc()?.foreignPeerText).to.equal(foreignPeerText);
     }
+  });
+
+  test('a change listener that throws does not mark the document for rebuild', ({ expect }) => {
+    const host = A.change(A.init<{ text: string }>(), (doc) => {
+      doc.text = 'from host';
+    });
+    const handle = new DocHandleProxy<{ text: string }>({ onDelete: () => {} });
+    handle.on('change', () => {
+      throw new Error('listener failed');
+    });
+
+    expect(() => handle._integrateHostUpdate(A.save(host))).toThrow('listener failed');
+    expect(handle._isAwaitingRebuild()).toBe(false);
+    expect(handle.doc().text).toBe('from host');
+  });
+
+  test('a document awaiting rebuild is neither sent nor acknowledged until the host copy replaces it', ({ expect }) => {
+    const handle = new DocHandleProxy<{ text: string }>({ onDelete: () => {} });
+    handle.change((doc: { text: string }) => {
+      doc.text = 'unconfirmed';
+    });
+    handle._markForRebuild();
+
+    expect(handle._getPendingChanges()).toBeUndefined();
+    expect(handle._isAcknowledged()).toBe(false);
+
+    const host = A.change(A.init<{ text: string }>(), (doc) => {
+      doc.text = 'from host';
+    });
+    handle._rebuild(A.save(host));
+    expect(handle._isAwaitingRebuild()).toBe(false);
+    expect(handle.doc().text).toBe('from host');
+    expect(handle._isAcknowledged()).toBe(true);
   });
 });
 

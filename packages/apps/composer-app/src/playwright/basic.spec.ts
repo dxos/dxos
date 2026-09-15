@@ -7,6 +7,7 @@ import { expect, test } from '@playwright/test';
 import { log } from '@dxos/log';
 // TODO(wittjosiah): Importing this causes tests to fail.
 // import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
+import { captureDebugLogs } from '@dxos/test-utils/playwright';
 
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager.ts';
 import { Markdown, StackPlugin } from './plugins/index.ts';
@@ -24,16 +25,23 @@ test.describe('Basic tests', () => {
     await host.init();
   });
 
-  test.afterEach(async () => {
-    await host.close();
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
+    // Playwright runs `afterEach` even when `beforeEach` failed before the manager existed.
+    if (host !== undefined) {
+      await captureDebugLogs({ host }, testInfo);
+      await host.close();
+    }
   });
 
   test('create identity, space is created by default', async () => {
-    await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
-    // First run lands on Home, and onboarding seeds the README, so it appears under Recent.
+    // Onboarding seeds the default space and its README after the account appears, which is all
+    // `init` waits for, so every assertion here outlasts a boot rather than an interaction.
+    test.slow();
+
+    await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1, { timeout: 30_000 });
     const plank = host.deck.plank();
-    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible();
-    await expect(plank.locator.getByText('README')).toBeVisible();
+    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible({ timeout: 30_000 });
+    await expect(plank.locator.getByText('README')).toBeVisible({ timeout: 30_000 });
   });
 
   test('create space, which is displayed in tree', async () => {
@@ -91,27 +99,29 @@ test.describe('Basic tests', () => {
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
   });
 
-  test('logout', async ({ browserName }) => {
-    // Logout wipes storage and triggers a full page reload; post-reset boot (HTML + bundle parse +
-    // plugin manager + identity creation) consistently runs ~8-11s, which
-    // doesn't fit the default 60s test timeout comfortably alongside setup.
-    test.slow();
+  test.describe(() => {
+    test.skip(
+      ({ browserName }) => browserName !== 'chromium',
+      'TODO(wittjosiah): This test seems to be flaky in firefox & webkit.',
+    );
 
-    // TODO(wittjosiah): This test seems to be flaky in firefox & webkit.
-    if (browserName !== 'chromium') {
-      test.skip();
-    }
+    test('logout', async () => {
+      // Logout wipes storage and triggers a full page reload; post-reset boot (HTML + bundle parse +
+      // plugin manager + identity creation) consistently runs ~8-11s, which
+      // doesn't fit the default 60s test timeout comfortably alongside setup.
+      test.slow();
 
-    await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+      await host.createSpace();
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
 
-    await host.openUserDevices();
-    await host.logout();
-    // Wait for the reset to complete and attempt to reload.
-    await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
-    // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
-    // 30s gives ~3x headroom over the observed worst case.
-    // After reset the exemplar space is re-seeded alongside the default space.
-    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
+      await host.openUserDevices();
+      await host.logout();
+      // Wait for the reset to complete and attempt to reload.
+      await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
+      // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
+      // 30s gives ~3x headroom over the observed worst case.
+      // After reset the exemplar space is re-seeded alongside the default space.
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
+    });
   });
 });

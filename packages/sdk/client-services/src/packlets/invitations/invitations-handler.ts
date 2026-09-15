@@ -146,8 +146,9 @@ export class InvitationsHandler {
     }
     ctx.onDispose(() => _trace.spanEnd(hostSpanId));
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
+    const topology = new InvitationTopology(InvitationOptions_Role.HOST);
     // Called for every connecting peer.
-    const createExtension = (): InvitationHostExtension => {
+    const createExtension = (remotePeerId: PublicKey): InvitationHostExtension => {
       const extension = new InvitationHostExtension(guardedState.mutex, {
         get activeInvitation() {
           return ctx.disposed ? null : guardedState.current;
@@ -199,6 +200,7 @@ export class InvitationsHandler {
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'host', method: 'swarm' } });
               log('host invitation handler opened');
               admitted = true;
+              topology.retire(remotePeerId);
 
               if (!invitation.multiUse) {
                 await ctx.dispose();
@@ -225,6 +227,7 @@ export class InvitationsHandler {
           const stateChanged = guardedState.set(extension, Invitation_State.CONNECTING);
           if (err instanceof InvalidInvitationExtensionRoleError) {
             log('invalid role', { ...err.context });
+            topology.retire(remotePeerId);
             return;
           }
           if (err instanceof TimeoutError) {
@@ -267,7 +270,7 @@ export class InvitationsHandler {
 
     let swarmConnection: SwarmConnection;
     scheduleTask(ctx, async () => {
-      swarmConnection = await this._joinSwarm(ctx, invitation, InvitationOptions_Role.HOST, createExtension);
+      swarmConnection = await this._joinSwarm(ctx, invitation, InvitationOptions_Role.HOST, topology, createExtension);
       guardedState.set(null, Invitation_State.CONNECTING);
     });
   }
@@ -500,7 +503,13 @@ export class InvitationsHandler {
         // Timeout if no connection is established.
         scheduleTask(ctx, timeoutInactive, timeout);
 
-        await this._joinSwarm(ctx, invitation, InvitationOptions_Role.GUEST, createExtension);
+        await this._joinSwarm(
+          ctx,
+          invitation,
+          InvitationOptions_Role.GUEST,
+          new InvitationTopology(InvitationOptions_Role.GUEST),
+          createExtension,
+        );
         guardedState.set(null, Invitation_State.CONNECTING);
       }
     });
@@ -510,7 +519,8 @@ export class InvitationsHandler {
     ctx: Context,
     invitation: Invitation,
     role: InvitationOptions_Role,
-    extensionFactory: () => TeleportExtension,
+    topology: InvitationTopology,
+    extensionFactory: (remotePeerId: PublicKey) => TeleportExtension,
   ): Promise<SwarmConnection> {
     let label: string;
     if (role === InvitationOptions_Role.GUEST) {
@@ -525,9 +535,9 @@ export class InvitationsHandler {
     const swarmConnection = await this._networkManager.joinSwarm(ctx, {
       topic: swarmKey,
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-        teleport.addExtension('dxos.halo.invitations', extensionFactory());
+        teleport.addExtension('dxos.halo.invitations', extensionFactory(teleport.remotePeerId));
       }, this._connectionProps?.teleport),
-      topology: new InvitationTopology(role),
+      topology,
       label,
     });
     ctx.onDispose(() => swarmConnection.close(ctx));

@@ -21,6 +21,26 @@ const MAX_MESSAGE_SIZE = 64 * 1024;
 // The default Readable stream buffer size: https://nodejs.org/api/stream.html#implementing-a-readable-stream
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
+/** A peer sends a handful of frames before the channel opens; past that something is wrong. */
+const MAX_PREOPEN_MESSAGES = 64;
+
+/** Frames logged in each direction from a channel's start, where every session handshake travels. */
+export const LOGGED_FRAMES = 8;
+
+/** Copied rather than aliased: a buffered frame outlives the event that carried it. */
+const toFrame = (data: unknown): Buffer | string => {
+  if (data instanceof ArrayBuffer) {
+    return Buffer.from(new Uint8Array(data));
+  }
+  if (ArrayBuffer.isView(data)) {
+    return Buffer.from(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+  }
+  if (typeof data === 'string' || Buffer.isBuffer(data)) {
+    return data;
+  }
+  throw new Error(`Unsupported data-channel frame: ${typeof data}.`);
+};
+
 /**
  * A WebRTC connection data channel.
  * Manages a WebRTC connection to a remote peer using an abstract signalling mechanism.
@@ -32,8 +52,12 @@ export class RtcTransportChannel extends Resource implements Transport {
 
   private _channel: RTCDataChannel | undefined;
   private _stream: Duplex | undefined;
+  /** Frames delivered before {@link _stream} exists; nothing retransmits them. */
+  private _bufferedMessages: (Buffer | string)[] = [];
   private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
   private _isChannelCreationInProgress = false;
+  private _framesSent = 0;
+  private _framesReceived = 0;
 
   constructor(
     private readonly _connection: RtcPeerConnection,
@@ -60,7 +84,7 @@ export class RtcTransportChannel extends Resource implements Transport {
       .then((channel) => {
         if (this.isOpen) {
           this._channel = channel;
-          this._initChannel(this._channel);
+          this._initChannel(channel);
         } else {
           this._safeCloseChannel(channel);
         }
@@ -87,51 +111,53 @@ export class RtcTransportChannel extends Resource implements Transport {
       this._channel = undefined;
       this._stream = undefined;
     }
+    this._bufferedMessages.length = 0;
     this.closed.emit();
 
     log('closed');
   }
 
   private _initChannel(channel: RTCDataChannel): void {
-    Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
-      onopen: () => {
-        if (!this.isOpen) {
-          log.warn('channel opened in a closed transport', { topic: this._options.topic });
-          this._safeCloseChannel(channel);
-          return;
-        }
+    // Bytes rather than the default `blob`, whose async conversion lets two frames complete out of
+    // arrival order.
+    channel.binaryType = 'arraybuffer';
 
-        log('onopen');
-        const duplex = new Duplex({
-          read: () => {},
-          write: (chunk, encoding, callback) => {
-            return this._handleChannelWrite(chunk, callback);
-          },
-        });
-        duplex.pipe(this._options.stream).pipe(duplex);
-        this._stream = duplex;
-        this.connected.emit();
-      },
+    const open = () => {
+      // Both the event and the already-open check below can reach this; piping twice would duplicate
+      // every frame on the protocol stream.
+      if (this._stream) {
+        return;
+      }
+      if (!this.isOpen) {
+        log.warn('channel opened in a closed transport', { topic: this._options.topic });
+        this._safeCloseChannel(channel);
+        return;
+      }
+
+      log('onopen');
+      const duplex = new Duplex({
+        read: () => {},
+        write: (chunk, encoding, callback) => {
+          return this._handleChannelWrite(chunk, callback);
+        },
+      });
+      duplex.pipe(this._options.stream).pipe(duplex);
+      this._stream = duplex;
+      const buffered = this._bufferedMessages;
+      this._bufferedMessages = [];
+      buffered.forEach((message) => duplex.push(message));
+      this.connected.emit();
+    };
+
+    Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
+      onopen: open,
 
       onclose: async () => {
         log('onclose');
         await this.close();
       },
 
-      onmessage: async (event: MessageEvent) => {
-        if (!this._stream) {
-          log.warn('ignoring message on a closed channel');
-          return;
-        }
-
-        let data = event.data;
-        if (data instanceof ArrayBuffer) {
-          data = Buffer.from(data);
-        } else if (data instanceof Blob) {
-          data = Buffer.from(await data.arrayBuffer());
-        }
-        this._stream.push(data);
-      },
+      onmessage: (event: MessageEvent) => this._receive(event.data),
 
       onerror: (event: Event & any) => {
         if (this.isOpen) {
@@ -146,11 +172,42 @@ export class RtcTransportChannel extends Resource implements Transport {
         cb?.();
       },
     });
+
+    // A channel that was already open when these handlers were attached never dispatches `open`,
+    // leaving every frame to queue against a stream that is never created.
+    if (channel.readyState === 'open') {
+      open();
+    }
+  }
+
+  private _receive(data: unknown): void {
+    const frame = toFrame(data);
+    if (this._framesReceived++ < LOGGED_FRAMES) {
+      log('frame received', { topic: this._options.topic, bytes: frame.length, streamReady: !!this._stream });
+    }
+    if (this._stream) {
+      this._stream.push(frame);
+      return;
+    }
+    if (!this.isOpen) {
+      log.warn('ignoring message on a closed channel');
+      return;
+    }
+    // Nothing retransmits a frame that lands before the channel reports open, so it waits.
+    if (this._bufferedMessages.length >= MAX_PREOPEN_MESSAGES) {
+      this.errors.raise(new Error(`More than ${MAX_PREOPEN_MESSAGES} frames before the channel opened.`));
+      return;
+    }
+    this._bufferedMessages.push(frame);
   }
 
   private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback): Promise<void> {
-    if (!this._channel) {
-      log.warn('writing to a channel after a connection was closed');
+    // `send` throws once the channel leaves `open`, and raising that tears down the peer connection
+    // — including a replacement one — for bytes whose connection is already going away. `onclose`
+    // carries the close on its own. The callback still runs, or the stream never writes again.
+    if (this._channel?.readyState !== 'open') {
+      log('write dropped for a channel that is not open', { readyState: this._channel?.readyState });
+      callback();
       return;
     }
 
@@ -163,6 +220,9 @@ export class RtcTransportChannel extends Resource implements Transport {
 
     try {
       this._channel.send(chunk);
+      if (this._framesSent++ < LOGGED_FRAMES) {
+        log('frame sent', { topic: this._options.topic, bytes: chunk.length });
+      }
     } catch (err: any) {
       this.errors.raise(err);
       callback();

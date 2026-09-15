@@ -165,6 +165,92 @@ export const TestLifecycle: StoryObj = {
   },
 };
 
+const COUNTDOWN = 600;
+
+const CountdownStory = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Toast.Provider>
+      <Button onClick={() => setOpen(true)}>Show toast</Button>
+      <Toast.Viewport />
+      <Toast.Root open={open} onOpenChange={setOpen} duration={COUNTDOWN}>
+        <Toast.Title icon='ph--sparkle--regular'>Countdown toast</Toast.Title>
+      </Toast.Root>
+    </Toast.Provider>
+  );
+};
+
+const toastRoot = () => document.querySelector<HTMLElement>('[data-scope="toast"][data-part="root"]');
+
+const showCountdownToast = async (canvasElement: HTMLElement) => {
+  await userEvent.click(within(canvasElement).getByRole('button', { name: 'Show toast' }));
+  return waitFor(async () => {
+    const root = toastRoot();
+    await expect(root).toHaveAttribute('data-mounted');
+    if (!root) {
+      throw new Error('Toast root element not found');
+    }
+    return root;
+  });
+};
+
+/** Fraction of the countdown bar still filled, read off the element running the countdown animation. */
+const countdownRemaining = (root: HTMLElement) => {
+  const effect = root
+    .getAnimations({ subtree: true })
+    .find((animation) => animation instanceof CSSAnimation && animation.animationName === 'progress-countdown')?.effect;
+  const bar = effect instanceof KeyframeEffect ? effect.target : null;
+  const track = bar?.parentElement;
+  if (!bar || !track) {
+    throw new Error('Countdown bar not found');
+  }
+  return bar.getBoundingClientRect().width / track.getBoundingClientRect().width;
+};
+
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+const waitForClose = () =>
+  waitFor(async () => expect(toastRoot()?.getAttribute('data-state')).not.toBe('open'), { timeout: 4 * COUNTDOWN });
+
+/** A main-thread stall longer than the whole duration costs the countdown one frame, bar included. */
+export const TestCountdownStall: StoryObj = {
+  render: () => <CountdownStory />,
+  play: async ({ canvasElement }) => {
+    const root = await showCountdownToast(canvasElement);
+    const stallEnd = performance.now() + 1.5 * COUNTDOWN;
+    while (performance.now() < stallEnd) {
+      // Holds the main thread, as a frozen tab does.
+    }
+    await nextFrame();
+    await nextFrame();
+    await expect(root).toHaveAttribute('data-state', 'open');
+    const afterStall = countdownRemaining(root);
+    await expect(afterStall).toBeGreaterThan(0.5);
+    const resumed = performance.now();
+    // The bar runs down from where the stall left it while the toast stays up.
+    await waitFor(async () => expect(countdownRemaining(root)).toBeLessThan(afterStall - 0.2));
+    await expect(root).toHaveAttribute('data-state', 'open');
+    await waitForClose();
+    await expect(performance.now() - resumed).toBeGreaterThan(COUNTDOWN / 2);
+  },
+};
+
+/** The pointer over the toast holds the countdown and its bar; leaving runs it out. */
+export const TestCountdownHover: StoryObj = {
+  render: () => <CountdownStory />,
+  play: async ({ canvasElement }) => {
+    const root = await showCountdownToast(canvasElement);
+    await userEvent.hover(root);
+    await waitFor(async () => expect(root).toHaveAttribute('data-paused'));
+    const held = countdownRemaining(root);
+    await new Promise((resolve) => setTimeout(resolve, 2 * COUNTDOWN));
+    await expect(root).toHaveAttribute('data-state', 'open');
+    await expect(Math.abs(countdownRemaining(root) - held)).toBeLessThan(0.05);
+    await userEvent.unhover(root);
+    await waitForClose();
+  },
+};
+
 /** The pile: siblings scaled down behind the front toast, expanding into rows under the pointer. */
 export const TestPile: StoryObj = {
   render: () => <StackedStory overlap />,

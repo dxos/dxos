@@ -208,7 +208,8 @@ export class EntityManager implements IDatabaseBinding {
     ({ url, objectId }) => `${url}:${objectId}`,
   );
 
-  private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
+  /** Settles once the object's document is created, carrying the failure when it was not. */
+  private readonly _pendingDocumentCreations = new Map<string, Promise<{ error: unknown } | void>>();
 
   // ── Update scheduling ────────────────────────────────────────────────────
   private _objectsForNextDbUpdate = new Set<string>();
@@ -762,7 +763,7 @@ export class EntityManager implements IDatabaseBinding {
 
   async flush({ disk = true, indexes = true, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
-    await this._waitForPendingCreations();
+    const failedCreations = await this._waitForPendingCreations();
     if (disk) {
       await this._repoProxy.flush();
       await runServiceCall(
@@ -782,6 +783,11 @@ export class EntityManager implements IDatabaseBinding {
 
     if (updates) {
       await this._updateScheduler.runBlocking();
+    }
+
+    // Reported last, so a failed creation never keeps the database's other pending writes from the host.
+    if (failedCreations.length > 0) {
+      throw failedCreations[0];
     }
   }
 
@@ -1586,6 +1592,10 @@ export class EntityManager implements IDatabaseBinding {
           newDoc.links[objectId] = new A.RawString(url);
         });
       })
+      .catch((error: unknown) => {
+        log.error('object not bound: its document was not created', { objectId, err: error });
+        return { error };
+      })
       .finally(() => {
         this._pendingDocumentCreations.delete(objectId);
       });
@@ -1595,8 +1605,10 @@ export class EntityManager implements IDatabaseBinding {
     return spaceDocHandle;
   }
 
-  private async _waitForPendingCreations(): Promise<void> {
-    await Promise.all([...this._pendingDocumentCreations.values()]);
+  /** The failures of the document creations pending when called, once they have all settled. */
+  private async _waitForPendingCreations(): Promise<unknown[]> {
+    const results = await Promise.all([...this._pendingDocumentCreations.values()]);
+    return results.flatMap((result) => (result ? [result.error] : []));
   }
 
   private _clearHandleReferences(): string[] {

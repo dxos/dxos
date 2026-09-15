@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { type CleanupFn, Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
@@ -43,6 +43,9 @@ import { type MeshProxy } from '../mesh/mesh-proxy.ts';
 import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
+
+/** Longest a destroy waits for a database's pending writes to reach the host. */
+const DESTROY_FLUSH_TIMEOUT = 5_000;
 
 /**
  * This options object configures the DXOS Client.
@@ -83,6 +86,8 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
   private readonly _status = MulticastObservable.from(this._statusUpdate, null);
+  private readonly _fatalErrorUpdate = new Event<Error | null>();
+  private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
   private readonly _echoClient = new EchoClient();
 
@@ -215,6 +220,13 @@ export class Client {
    */
   get status(): MulticastObservable<SystemStatus | null> {
     return this._status;
+  }
+
+  /**
+   * Set when the system status stream fails after open; cleared only when the client reopens.
+   */
+  get fatalError(): MulticastObservable<Error | null> {
+    return this._fatalError;
   }
 
   /**
@@ -555,12 +567,15 @@ export class Client {
     }
 
     log('client._open: subscribing to system status...');
+    this._fatalErrorUpdate.emit(null);
+    let statusReceived = false;
     this._statusStreamCleanup = subscribeStream(
       this._effectRuntime,
       this._services.rpc['SystemService.queryStatus']({ interval: 3_000 }),
       {
         onData: ({ status }) => {
           log('client._open: status received', { status });
+          statusReceived = true;
           this._statusTimeout && clearTimeout(this._statusTimeout);
           trigger.wake(undefined);
 
@@ -571,8 +586,15 @@ export class Client {
         },
         onError: (err) => {
           log('client._open: status error', { err });
-          trigger.wake(err);
           this._statusUpdate.emit(null);
+          if (!statusReceived) {
+            trigger.wake(err);
+            return;
+          }
+
+          // Closing interrupts the stream rather than failing it, and nothing resubscribes it.
+          log.error('system status stream failed', { err });
+          this._fatalErrorUpdate.emit(err);
         },
         onClose: () => {
           trigger.wake(undefined);
@@ -639,7 +661,7 @@ export class Client {
       return;
     }
 
-    // TODO(burdon): Call flush?
+    await this._flushDatabases();
     await this._close();
     this._statusUpdate.emit(null);
     await this._ctx.dispose();
@@ -653,6 +675,20 @@ export class Client {
 
   async [Symbol.asyncDispose]() {
     await this.destroy();
+  }
+
+  /**
+   * Hands writes still pending to the host, so objects added just before the client is torn down (e.g. by a
+   * React StrictMode remount) are not lost. The bound only stops a dead host from holding destroy open.
+   */
+  private async _flushDatabases(): Promise<void> {
+    await Promise.all(
+      Array.from(this._echoClient.openDatabases, (db) =>
+        asyncTimeout(db.flush({ indexes: false }), DESTROY_FLUSH_TIMEOUT).catch((err) =>
+          log.warn('pending writes were not handed to the host before destroy', { spaceId: db.spaceId, err }),
+        ),
+      ),
+    );
   }
 
   private async _close(): Promise<void> {

@@ -5,7 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { EmptySchema } from '@bufbuild/protobuf/wkt';
 
-import { type Mutex, type MutexGuard, Trigger, scheduleTask } from '@dxos/async';
+import { type Mutex, type MutexGuard, Trigger, asyncTimeout, scheduleTask } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { randomBytes, verify } from '@dxos/crypto';
 import { InvariantViolation, invariant } from '@dxos/invariant';
@@ -88,6 +88,11 @@ export class InvitationHostExtension
    * Held to allow only one invitation flow at a time to be active.
    */
   private _invitationFlowLock: MutexGuard | null = null;
+  /**
+   * The last state THIS connection tried to set, as opposed to the invitation-wide shared state.
+   * Records the attempt, not the guard's acceptance, so the two can differ when a write was rejected.
+   */
+  private _lastSetState: Invitation_State = Invitation_State.INIT;
 
   constructor(
     private readonly _invitationFlowMutex: Mutex,
@@ -103,6 +108,11 @@ export class InvitationHostExtension
     });
   }
 
+  private _setState(state: Invitation_State): void {
+    this._lastSetState = state;
+    this._callbacks.onStateUpdate(state);
+  }
+
   public hasFlowLock(): boolean {
     return this._invitationFlowLock != null;
   }
@@ -115,6 +125,9 @@ export class InvitationHostExtension
         options: async (options) => {
           invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
+          if (options.role === InvitationOptions_Role.GUEST && this.hasFlowLock()) {
+            this._setState(Invitation_State.CONNECTED);
+          }
           this._remoteOptionsTrigger.wake();
           return create(EmptySchema, {});
         },
@@ -135,7 +148,7 @@ export class InvitationHostExtension
 
           log.verbose('guest introduced themselves', { guestProfile: profile });
           this.guestProfile = profile;
-          this._callbacks.onStateUpdate(Invitation_State.READY_FOR_AUTHENTICATION);
+          this._setState(Invitation_State.READY_FOR_AUTHENTICATION);
           this._challenge =
             invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
 
@@ -154,7 +167,7 @@ export class InvitationHostExtension
           let status = AuthenticationResponse_Status.OK;
 
           this._assertInvitationState([Invitation_State.AUTHENTICATING, Invitation_State.READY_FOR_AUTHENTICATION]);
-          this._callbacks.onStateUpdate(Invitation_State.AUTHENTICATING);
+          this._setState(Invitation_State.AUTHENTICATING);
 
           switch (invitation.authMethod) {
             case Invitation_AuthMethod.NONE: {
@@ -242,10 +255,11 @@ export class InvitationHostExtension
       log.verbose('host acquire lock');
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log.verbose('host lock acquired');
-      this._callbacks.onStateUpdate(Invitation_State.CONNECTING);
-      await this.rpc.InvitationHostService.options(
+      this._setState(Invitation_State.CONNECTING);
+      const optionsAcknowledged = this.rpc.InvitationHostService.options(
         create(InvitationOptionsSchema, { role: InvitationOptions_Role.HOST }),
       );
+      void optionsAcknowledged.catch(() => {});
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
@@ -258,7 +272,15 @@ export class InvitationHostExtension
           },
         });
       }
-      this._callbacks.onStateUpdate(Invitation_State.CONNECTED);
+      // Only while the flow is still where this method left it. When `options` and `introduce` are
+      // dispatched in one drain — the overtaking this whole path exists to survive — the handlers
+      // have already carried the state past CONNECTED, and re-emitting it here would rewind them.
+      if (this._lastSetState === Invitation_State.CONNECTING) {
+        this._setState(Invitation_State.CONNECTED);
+      }
+      // Bounded like the trigger above: a guest that never acknowledges must fail the invitation,
+      // not leave it displayed as live with `onOpen` never reached.
+      await cancelWithContext(this._ctx, asyncTimeout(optionsAcknowledged, OPTIONS_TIMEOUT));
       this._callbacks.onOpen(this._ctx, context);
     } catch (err: any) {
       if (this._invitationFlowLock != null) {
@@ -285,7 +307,8 @@ export class InvitationHostExtension
     if (!validStates.includes(invitation.state)) {
       scheduleTask(this._ctx, () => this.close());
       throw new InvariantViolation(
-        `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]`,
+        `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]` +
+          ` (this connection last attempted ${stateToString(this._lastSetState)}, holdsFlowLock=${this.hasFlowLock()})`,
       );
     }
   }

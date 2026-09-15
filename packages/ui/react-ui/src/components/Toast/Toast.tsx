@@ -20,6 +20,7 @@ import React, {
   forwardRef,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -27,7 +28,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useControllableState } from '@dxos/react-hooks';
+import { useControllableState, useDynamicRef } from '@dxos/react-hooks';
 
 import { translationKey } from '#translations';
 
@@ -50,6 +51,58 @@ const DEFAULT_DURATION = 5_000;
 
 /** Long enough for the exit transition in `toast.css` to finish before the machine drops the toast. */
 const REMOVE_DELAY = 150;
+
+/** A finite duration the machine never reaches, so it still tracks pause (`Infinity` starts paused). */
+const MACHINE_DURATION = Number.MAX_SAFE_INTEGER;
+
+/** Most a single frame charges a countdown, so a main-thread stall cannot run a toast out unseen. */
+const MAX_FRAME_MS = 100;
+
+/** Whether a toast's countdown is run by the host rather than passed to the machine as is. */
+const isTimed = (countdown: number) => Number.isFinite(countdown) && countdown > 0;
+
+type FrameCountdownProps = {
+  /** Milliseconds to run down; `undefined` for none. */
+  duration?: number;
+  paused: boolean;
+  /** Called with the milliseconds spent whenever they change. */
+  onFrame: (elapsed: number) => void;
+  /** Called every frame once the countdown has run out, until `duration` is withdrawn. */
+  onElapsed: () => void;
+};
+
+/** Runs `duration` down over animation frames while not `paused`, charging each frame at most `MAX_FRAME_MS`. */
+const useFrameCountdown = ({ duration, paused, onFrame, onElapsed }: FrameCountdownProps) => {
+  // Set in the commit that renders `paused`, so no frame after that commit is charged.
+  const pausedRef = useRef(paused);
+  useLayoutEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
+  const onFrameRef = useDynamicRef(onFrame);
+  const onElapsedRef = useDynamicRef(onElapsed);
+  useEffect(() => {
+    if (duration === undefined) {
+      return;
+    }
+    let elapsed = 0;
+    let previous: number | undefined;
+    let frame = requestAnimationFrame(function tick(now) {
+      if (previous !== undefined && !pausedRef.current) {
+        const next = Math.min(duration, elapsed + Math.min(Math.max(now - previous, 0), MAX_FRAME_MS));
+        if (next !== elapsed) {
+          elapsed = next;
+          onFrameRef.current(elapsed);
+        }
+      }
+      previous = now;
+      if (elapsed >= duration) {
+        onElapsedRef.current();
+      }
+      frame = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [duration, onFrameRef, onElapsedRef]);
+};
 
 //
 // Provider
@@ -95,12 +148,27 @@ type ToastViewportProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Toas
 const ToastHost = ({ entry }: { entry: ToastEntry }) => {
   const { tx } = useThemeContext();
   const toast = useToastPrimitiveContext();
-  const timed = Number.isFinite(entry.countdown) && entry.countdown > 0;
+  const progressRef = useRef<HTMLSpanElement>(null);
+  const timed = isTimed(entry.countdown);
+  useFrameCountdown({
+    // Runs only while the machine shows the toast, so the dismiss request repeats until it lands.
+    duration: timed && toast.visible ? entry.countdown : undefined,
+    paused: toast.paused,
+    onFrame: (elapsed) => {
+      // The bar's animation is held and seeked to the countdown, so it cannot run ahead of it.
+      progressRef.current?.getAnimations({ subtree: true }).forEach((animation) => {
+        animation.currentTime = elapsed;
+      });
+    },
+    onElapsed: () => toast.dismiss(),
+  });
   return (
     <ToastPrimitive.Root {...entry.props} className={tx('toast.root', {}, entry.classNames)} ref={entry.ref}>
       <ElevationProvider elevation='toast'>
         <Column.Root classNames={tx('toast.grid', {})}>{entry.children}</Column.Root>
-        {timed && <Progress countdown={entry.countdown} paused={toast.paused} classNames={tx('toast.countdown', {})} />}
+        {timed && (
+          <Progress countdown={entry.countdown} paused classNames={tx('toast.countdown', {})} ref={progressRef} />
+        )}
       </ElevationProvider>
     </ToastPrimitive.Root>
   );
@@ -197,7 +265,7 @@ const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
         }
         toaster.create({
           id,
-          duration: countdown,
+          duration: isTimed(countdown) ? MACHINE_DURATION : countdown,
           // The root's `aria-labelledby` follows this; every toast renders a `Title`.
           title: true,
           onStatusChange: ({ status }) => {

@@ -46,6 +46,14 @@ export interface DedicatedWorkerReadyMessage {
 }
 
 /**
+ * Worker -> Leader Client when the runtime failed to start; the worker shuts down after sending it.
+ */
+export interface DedicatedWorkerInitFailedMessage {
+  type: 'init-failed';
+  error: SerializedError;
+}
+
+/**
  * Any Client -> Worker to start a session.
  */
 export interface DedicatedWorkerStartSessionMessage {
@@ -83,6 +91,7 @@ export type DedicatedWorkerMessage =
   | DedicatedWorkerListeningMessage
   | DedicatedWorkerInitMessage
   | DedicatedWorkerReadyMessage
+  | DedicatedWorkerInitFailedMessage
   | DedicatedWorkerStartSessionMessage
   | DedicatedWorkerSessionMessage;
 
@@ -116,6 +125,55 @@ export type CoordinatorMessage =
     };
 
 export type WorkerOrPort = Worker | MessagePort;
+
+/**
+ * Postable form of an error; structured clone drops a custom `name` and, on some engines, the `cause` chain.
+ */
+export interface SerializedError {
+  name: string;
+  message: string;
+  stack?: string;
+  cause?: SerializedError;
+  /** Present when the error was an `AggregateError`. */
+  errors?: SerializedError[];
+}
+
+export const encodeError = (error: unknown): SerializedError => {
+  // Guards against cycles only: an error may appear twice in the tree, e.g. as a cause and an aggregated error.
+  const encode = (value: unknown, ancestors: ReadonlySet<unknown>): SerializedError => {
+    if (!(value instanceof Error)) {
+      return { name: 'Error', message: String(value) };
+    }
+    const path = new Set(ancestors).add(value);
+    return {
+      name: value.name,
+      message: value.message,
+      stack: value.stack,
+      cause: value.cause === undefined || path.has(value.cause) ? undefined : encode(value.cause, path),
+      errors:
+        value instanceof AggregateError
+          ? value.errors.filter((inner) => !path.has(inner)).map((inner) => encode(inner, path))
+          : undefined,
+    };
+  };
+  return encode(error, new Set());
+};
+
+export const decodeError = ({ name, message, stack, cause, errors }: SerializedError): Error => {
+  const options = cause ? { cause: decodeError(cause) } : undefined;
+  const error = errors
+    ? new AggregateError(
+        errors.map((inner) => decodeError(inner)),
+        message,
+        options,
+      )
+    : new Error(message, options);
+  error.name = name;
+  if (stack !== undefined) {
+    error.stack = stack;
+  }
+  return error;
+};
 
 /**
  * Endpoint for worker-side message handling (DedicatedWorker global or a MessagePort in tests).

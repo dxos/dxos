@@ -9,12 +9,13 @@ import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { Database, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID, PublicKey } from '@dxos/keys';
-import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
+import { type LogConfig, type LogEntry, log } from '@dxos/log';
+import { FeedProtocol, RpcClosedError, makeInProcessClient } from '@dxos/protocols';
 import { FeedService } from '@dxos/protocols/rpc';
 
 import { EchoTestBuilder } from '../testing/index.ts';
@@ -342,6 +343,73 @@ describe('Feed', () => {
       const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
+    });
+
+    test('append stops retrying once the rpc endpoint is closed', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let callCount = 0;
+      const closedHandlers: FeedService.Handlers = {
+        ...peer.host.feedService,
+        'FeedService.insertIntoFeed': () => {
+          callCount++;
+          return Effect.fail(new RpcClosedError());
+        },
+      };
+      db._setFeedService(await makeFeedClient(closedHandlers));
+
+      const feed = db.add(Feed.make({ name: 'closed' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+
+      await sleep(2_500);
+      expect(callCount).toBe(1);
+
+      // The handle can never send again, so a later append must say so rather than resolve over a
+      // write that was dropped.
+      await expect(db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })])).rejects.toThrow(
+        RpcClosedError,
+      );
+      expect(callCount).toBe(1);
+    });
+
+    test('append rejects once the rpc endpoint closes, and dispose counts only the writes it lost', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let insertCalls = 0;
+      const closingHandlers: FeedService.Handlers = {
+        ...peer.host.feedService,
+        'FeedService.insertIntoFeed': (...args) =>
+          insertCalls++ === 0
+            ? peer.host.feedService['FeedService.insertIntoFeed'](...args)
+            : Effect.fail(new RpcClosedError()),
+      };
+      db._setFeedService(await makeFeedClient(closingHandlers));
+
+      const lostCounts: unknown[] = [];
+      onTestFinished(
+        log.addProcessor((_config: LogConfig, entry: LogEntry) => {
+          if (entry.message === 'feed handle disposed with writes its closed endpoint could not send') {
+            lostCounts.push(entry.computedContext?.pending);
+          }
+        }),
+      );
+
+      const feed = db.add(Feed.make({ name: 'closing' }));
+      // 16 objects span two 15-object append chunks: the first commits, the second meets the closed endpoint.
+      const people = Array.from({ length: 16 }, (_, i) => Obj.make(TestSchema.Person, { name: `person-${i}` }));
+      await expect(db.appendToFeed(feed, people)).rejects.toThrow(RpcClosedError);
+      // Refused up front, since the handle can never send again.
+      await expect(db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })])).rejects.toThrow(
+        RpcClosedError,
+      );
+
+      await db.evictFeedHandle(feed);
+      // The lost chunk's one object and the refused append; the committed chunk is not counted.
+      expect(lostCounts).toEqual([2]);
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {

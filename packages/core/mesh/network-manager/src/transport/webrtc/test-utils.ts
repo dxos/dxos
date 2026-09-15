@@ -18,5 +18,9 @@ export const handleChannelErrors = (channel: Transport) => {
       }
       expect(handled).toBeTruthy();
     },
+    expectNoErrorRaised: async () => {
+      await sleep(5);
+      expect(handled).toBeFalsy();
+    },
   };
 };
