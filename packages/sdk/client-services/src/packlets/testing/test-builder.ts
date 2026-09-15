@@ -3,93 +3,292 @@
 //
 
 import { create } from '@bufbuild/protobuf';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
+import { type Trigger } from '@dxos/async';
+import {
+  type ClientServicesHandlers,
+  makeInProcessClientServicesRpc,
+  makeServicesFromRpc,
+} from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost, MeshEchoReplicator } from '@dxos/echo-host';
+import { EchoHost, EchoHostService, MeshEchoReplicator } from '@dxos/echo-host';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { RuntimeProvider } from '@dxos/effect';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { SqliteKeyring } from '@dxos/keyring';
-import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
-import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import { FeedFactory, FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  type SignalManager,
+  SignalManagerService,
+} from '@dxos/messaging';
+import {
+  MemoryTransportFactory,
+  SwarmNetworkManager,
+  SwarmNetworkManagerService,
+  type TransportFactory,
+} from '@dxos/network-manager';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations/index.ts';
-import { SqliteMetadataStore } from '../metadata/index.ts';
+import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
+import { createDiagnostics } from '../diagnostics/index.ts';
+import {
+  type EdgeIdentityRecoveryManager,
+  EdgeIdentityRecoveryManagerService,
+} from '../identity/identity-recovery-manager.ts';
+import {
+  type CreateIdentityOptions,
+  type Identity,
+  IdentityLifecycleService,
+  type IdentityManager,
+  IdentityManagerService,
+} from '../identity/index.ts';
+import {
+  InvitationsHandler,
+  InvitationsHandlerService,
+  InvitationsManager,
+  InvitationsManagerService,
+  SpaceInvitationProtocol,
+} from '../invitations/index.ts';
+import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
-import { ClientServicesHost, type ServiceContext, type ServiceContextRuntimeProps } from '../services/index.ts';
-import { SqliteStorage } from '../services/sqlite-storage.ts';
-import { SpaceManager } from '../space/index.ts';
-import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces/index.ts';
+import {
+  ClientServicesLayer,
+  type ClientServicesStackContext,
+  type ServiceContextRuntimeProps,
+  StackReadinessService,
+  handlersFromStack,
+  openStack,
+} from '../services/index.ts';
+import { SqliteStorage, wipeSqliteStorage } from '../services/sqlite-storage.ts';
+import { SpaceManager, SpaceManagerService } from '../space/index.ts';
+import {
+  DataSpaceManager,
+  type DataSpaceManagerRuntimeProps,
+  DataSpaceManagerService,
+  type SigningContext,
+} from '../spaces/index.ts';
+import { SystemServiceImpl } from '../system/index.ts';
 
-//
-// TODO(burdon): Replace with test builder.
-//
-
-export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) => {
-  return new ClientServicesHost({
-    config,
-    signalManager: new MemorySignalManager(signalManagerContext),
-    transportFactory: MemoryTransportFactory,
-    runtime: ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
-    ).contextEffect,
-  });
+/**
+ * Options for a test {@link ServiceContext}.
+ */
+export type ServiceContextOptions = {
+  config?: Config;
+  signalManager?: SignalManager;
+  transportFactory?: TransportFactory;
+  runtimeProps?: ServiceContextRuntimeProps;
 };
 
+/**
+ * A client services runtime for tests: the stack built from {@link ClientServicesLayer} over an
+ * in-memory SQLite runtime, plus the system service, with the components exposed as properties
+ * while open.
+ */
+export class ServiceContext {
+  readonly #options: ServiceContextOptions;
+  readonly #config: Config;
+  readonly #sql = ManagedRuntime.make(
+    SqlTransaction.layer
+      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
+      .pipe(Layer.orDie),
+  );
+  readonly #systemService: SystemServiceImpl;
+  #runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
+  #stack?: EffectContext.Context<ClientServicesStackContext>;
+  #ctx?: Context;
+
+  constructor(options: ServiceContextOptions = {}) {
+    this.#options = options;
+    this.#config = options.config ?? new Config();
+    this.#systemService = new SystemServiceImpl({
+      config: () => this.#config,
+      getDiagnostics: async () => {
+        const scope = Effect.runSync(Scope.make());
+        try {
+          const rpc = await EffectEx.runPromise(
+            makeInProcessClientServicesRpc(() => this.services).pipe(Effect.provideService(Scope.Scope, scope)),
+          );
+          return await createDiagnostics(makeServicesFromRpc(rpc, EffectContext.empty()), this.stack, this.#config);
+        } finally {
+          await EffectEx.runPromise(Scope.close(scope, Exit.void));
+        }
+      },
+      close: () => this.close(),
+      wipeStorage: () => RuntimeProvider.runPromise(this.#sql.contextEffect)(wipeSqliteStorage),
+    });
+  }
+
+  get isOpen(): boolean {
+    return this.#stack !== undefined;
+  }
+
+  get config(): Config {
+    return this.#config;
+  }
+
+  /** The RPC handlers served while open; only the system service while closed. */
+  get services(): Partial<ClientServicesHandlers> {
+    return { SystemService: this.#systemService, ...(this.#stack ? handlersFromStack(this.#stack) : {}) };
+  }
+
+  get stack(): EffectContext.Context<ClientServicesStackContext> {
+    return this.#stack ?? failUndefined();
+  }
+
+  get initialized(): Trigger {
+    return this.#get(StackReadinessService).initialized;
+  }
+
+  get identityManager(): IdentityManager {
+    return this.#get(IdentityManagerService);
+  }
+
+  get spaceManager(): SpaceManager {
+    return this.#get(SpaceManagerService);
+  }
+
+  get metadataStore(): IMetadataStore {
+    return this.#get(IMetadataStoreService);
+  }
+
+  get recoveryManager(): EdgeIdentityRecoveryManager {
+    return this.#get(EdgeIdentityRecoveryManagerService);
+  }
+
+  get keyring(): KeyringApi {
+    return this.#get(KeyringApiService);
+  }
+
+  get feedStore(): FeedStore<any> {
+    return this.#get(FeedStoreService);
+  }
+
+  get echoHost(): EchoHost {
+    return this.#get(EchoHostService);
+  }
+
+  get invitations(): InvitationsHandler {
+    return this.#get(InvitationsHandlerService);
+  }
+
+  get invitationsManager(): InvitationsManager {
+    return this.#get(InvitationsManagerService);
+  }
+
+  get networkManager(): SwarmNetworkManager {
+    return this.#get(SwarmNetworkManagerService);
+  }
+
+  get signalManager(): SignalManager {
+    return this.#get(SignalManagerService);
+  }
+
+  get dataSpaceManager(): DataSpaceManager | undefined {
+    return this.#stack && EffectContext.get(this.#stack, DataSpaceManagerService);
+  }
+
+  get edgeAgentManager(): EdgeAgentManager | undefined {
+    return this.#stack && EffectContext.get(this.#stack, EdgeAgentManagerService);
+  }
+
+  async open(ctx: Context = new Context()): Promise<void> {
+    if (this.#runtime) {
+      return;
+    }
+    this.#ctx = ctx;
+    this.#runtime = ManagedRuntime.make(
+      ClientServicesLayer({
+        config: this.#config,
+        runtime: this.#sql.contextEffect,
+        runtimeProps: {
+          invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
+          ...this.#options.runtimeProps,
+        },
+        signalManager: this.#options.signalManager,
+        transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
+      }),
+    );
+    try {
+      this.#stack = await this.#runtime.context();
+      await this.#runtime.runPromise(openStack(ctx));
+    } catch (err) {
+      await this.#runtime.dispose();
+      this.#runtime = undefined;
+      this.#stack = undefined;
+      throw err;
+    }
+    this.#systemService.setStatus(SystemStatus.ACTIVE);
+  }
+
+  async close(_ctx?: Context): Promise<void> {
+    if (!this.#runtime) {
+      return;
+    }
+    const { feedStore, metadataStore } = this;
+    await this.#runtime.dispose();
+    // The stores below the stack close last; the metadata store persists on close.
+    await feedStore.close();
+    await metadataStore.close();
+    this.#runtime = undefined;
+    this.#stack = undefined;
+    this.#systemService.setStatus(SystemStatus.INACTIVE);
+  }
+
+  async reset(): Promise<void> {
+    await this.#systemService.reset();
+  }
+
+  /** Disposes the SQLite runtime too; call once the context is no longer needed. */
+  async destroy(): Promise<void> {
+    await this.close();
+    await this.#sql.dispose();
+  }
+
+  async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
+    return this.#get(IdentityLifecycleService).createIdentity(params, ctx ?? this.#ctx);
+  }
+
+  #get<Self extends ClientServicesStackContext, Service>(tag: EffectContext.Key<Self, Service>): Service {
+    return EffectContext.get(this.stack, tag);
+  }
+}
+
+export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext): ServiceContext =>
+  new ServiceContext({ config, signalManager: new MemorySignalManager(signalManagerContext) });
+
 export const createServiceContext = async ({
-  signalManagerFactory = async () => {
-    const signalContext = new MemorySignalManagerContext();
-    return new MemorySignalManager(signalContext);
-  },
+  signalManagerFactory = async () => new MemorySignalManager(new MemorySignalManagerContext()),
   runtimeProps,
 }: {
   signalManagerFactory?: () => Promise<SignalManager>;
   runtimeProps?: ServiceContextRuntimeProps;
 } = {}): Promise<ServiceContext> => {
-  const signalManager = await signalManagerFactory();
-
-  // The host builds its component stack over this SQLite runtime; dispose it once the host closes so
-  // the layer-scoped finalizers (e.g. EchoHost) do not leak across tests.
-  const runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
-  );
-
-  const host = new ClientServicesHost({
-    config: new Config(),
-    signalManager,
-    transportFactory: MemoryTransportFactory,
-    runtime: runtime.contextEffect,
-    runtimeProps: {
-      invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
-      ...runtimeProps,
-    },
-  });
-
-  const closeHost = host.close.bind(host);
-  host.close = async (ctx = new Context()) => {
-    await closeHost(ctx);
-    await runtime.dispose();
+  const context = new ServiceContext({ signalManager: await signalManagerFactory(), runtimeProps });
+  // Tests close the context; the SQLite runtime goes with it so layer finalizers do not leak across tests.
+  const close = context.close.bind(context);
+  context.close = async (ctx) => {
+    await close(ctx);
+    await context.destroy();
   };
-
-  return host;
+  return context;
 };
 
 export const createPeers = async (
