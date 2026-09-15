@@ -101,6 +101,9 @@ hang. NEXT: confirm CI on `c1c387a7`, then the browser `client` tests and Compos
 - [x] `ClientServicesLayer` takes `ConfigService` and `Event.Bus` as layer requirements; every
       embedder provides them once beneath the layer.
 - [ ] Decide D17's readiness-gate behaviour (startup error visibility to the tab).
+- [ ] Typed errors via `BaseError.extend` (carried over from the deleted `client-services/TASKS.md`):
+      `stop`, `createSession` and session open/close still wrap fallible work in bare
+      `Effect.promise`, so a rejection becomes a defect.
 - [ ] Consider serving the in-process and iframe paths through `layerHandlersFromTag` too, so the
       hand-written `makeClientServicesHandlers` binding is not the only guard against unbound
       handlers.

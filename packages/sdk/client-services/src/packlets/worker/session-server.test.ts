@@ -36,10 +36,20 @@ describe('worker session server', () => {
             }),
           );
 
-          // The tab's side of the reverse direction: a bridge server the worker's client can reach.
-          const bridgeServer = Rpc.serve(reverse.port2, BridgeService.Rpcs, BridgeService.Rpcs.toLayer({} as never), {
-            disableTracing: true,
-          });
+          // The tab's side of the reverse direction: the worker's bridge client needs a peer to
+          // finish its handshake, but nothing dials in this test, so every call is a test bug.
+          const bridgeHandlers = Object.fromEntries(
+            [...BridgeService.Rpcs.requests.keys()].map((tag) => [
+              tag,
+              () => Effect.die(new Error(`unexpected bridge call in this test: ${tag}`)),
+            ]),
+          );
+          const bridgeServer = Rpc.serve(
+            reverse.port2,
+            BridgeService.Rpcs,
+            BridgeService.Rpcs.toLayer(bridgeHandlers as never),
+            { disableTracing: true },
+          );
           yield* Effect.promise(() => bridgeServer.open());
           yield* Effect.addFinalizer(() => Effect.promise(() => bridgeServer.close()));
 

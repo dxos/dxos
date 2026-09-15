@@ -84,6 +84,21 @@ export const makeClient = <G>(
  * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
  * ambient {@link RpcServer.Protocol} for the life of the layer.
  */
+/**
+ * Re-tags a handler layer for the same rpcs carrying {@link RpcTiming.Middleware}.
+ *
+ * `Rpc.AddMiddleware` changes the handler tags' type but not the handlers: a timed server dispatches
+ * to the very values the untimed one takes, and effect-rpc offers no way to say that in the type.
+ */
+const asTimedHandlers = <Rpcs extends Rpc.Any, R>(
+  handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
+): Layer.Layer<
+  | Rpc.ToHandler<Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>>
+  | Rpc.ServicesServer<Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>>,
+  never,
+  R
+> => handlers as never;
+
 export const serverLayer = <Rpcs extends Rpc.Any, R>(
   group: RpcGroup.RpcGroup<Rpcs>,
   handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
@@ -97,16 +112,9 @@ export const serverLayer = <Rpcs extends Rpc.Any, R>(
     return RpcServer.layer(group, serverOptions).pipe(Layer.provide(handlers));
   }
 
-  // The timed group's rpcs carry the middleware in their type, so their handler tags are a distinct
-  // type from the caller's; the handlers themselves are the same values the untimed server takes.
-  const timed = RpcTiming.applyMiddleware(group);
-  type Timed = Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>;
-  return RpcServer.layer(timed, serverOptions).pipe(
+  return RpcServer.layer(RpcTiming.applyMiddleware(group), serverOptions).pipe(
     Layer.provide(
-      Layer.merge(
-        handlers as unknown as Layer.Layer<Rpc.ToHandler<Timed> | Rpc.ServicesServer<Timed>, never, R>,
-        RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)),
-      ),
+      Layer.merge(asTimedHandlers(handlers), RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing))),
     ),
   );
 };

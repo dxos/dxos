@@ -228,8 +228,8 @@ export const makeWorkerRuntime = ({
           transportFactory,
         }).pipe(
           Layer.provideMerge(sqlite),
-          Layer.provideMerge(Layer.succeed(ConfigService, config)),
-          Layer.provideMerge(Layer.succeed(Event.Bus, yield* Event.Bus)),
+          Layer.provide(Layer.succeed(ConfigService, config)),
+          Layer.provide(Layer.succeed(Event.Bus, bus)),
         ),
       ).pipe(Scope.provide(stackScope));
       stack = stackContext;

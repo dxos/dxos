@@ -18,7 +18,7 @@ import { Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
+import { normalizeHandlers, runServiceCall } from '@dxos/protocols';
 import {
   ContactsService,
   DataService,
@@ -223,38 +223,13 @@ export const serveClientServicesOverIFrame = async ({
 };
 
 /**
- * Binds a service implementation's methods to it.
- *
- * `RpcGroup.toLayer` stores the handler functions and effect-rpc calls them unbound, so a
- * class-backed implementation loses `this` and throws on its first private-field access — a throw
- * during dispatch, which never reaches the caller, so the request hangs rather than failing.
+ * The handler layer for one service's rpcs, resolved from its tag and normalized so effect-rpc
+ * finds and correctly invokes a class-instance implementation (see {@link normalizeHandlers}).
  */
-export const boundServiceHandlers = <T extends object>(service: T): T => {
-  const bound: Record<string, unknown> = {};
-  for (let proto: object | null = service; proto && proto !== Object.prototype; proto = Object.getPrototypeOf(proto)) {
-    for (const key of Object.getOwnPropertyNames(proto)) {
-      if (key === 'constructor' || key in bound) {
-        continue;
-      }
-      const value = (service as Record<string, unknown>)[key];
-      if (typeof value === 'function') {
-        bound[key] = (value as (...args: never[]) => unknown).bind(service);
-      }
-    }
-  }
-  return bound as T;
-};
-
-/**
- * The handler layer for one service's rpcs, bound to the implementation its tag resolves to.
- */
-export const layerHandlersFromTag = <Identifier, Shape extends object>(
-  // A merged/prefixed group does not structurally satisfy `RpcGroup<Rpc.Any>`, so the group is taken
-  // by the one method used here (see `asRpcGroup` in `./Rpc.ts` for the same friction).
-  rpcs: { toLayer: (build: Effect.Effect<any, never, never>) => Layer.Layer<any, never, any> },
+export const layerHandlersFromTag = <Rpcs extends EffectRpc.Any, Identifier, Shape extends object>(
+  group: RpcGroup.RpcGroup<Rpcs>,
   tag: Context.Key<Identifier, Shape>,
-): Layer.Layer<any, never, Identifier> =>
-  rpcs.toLayer(Effect.map(tag, (service) => boundServiceHandlers(service)) as Effect.Effect<any, never, never>);
+) => group.toLayer(Effect.map(tag, (service) => normalizeHandlers(group, service as RpcGroup.HandlersFrom<Rpcs>)));
 
 /**
  * Serves every client service over the ambient {@link RpcServer.Protocol}, with the handler layers
