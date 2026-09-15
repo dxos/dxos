@@ -155,15 +155,26 @@ const uploadFixture = (): Uint8Array => {
   return bytes;
 };
 
-/** The uploaded file as the database holds it, read outside the agent. */
+/** The uploaded file as the database holds it, bytes included, read outside the agent. */
 const readUploadedFile = Effect.gen(function* () {
   const file = yield* findObject(File.File, (candidate) => candidate.name === UPLOAD_NAME);
   if (!file) {
     return undefined;
   }
   const blob = yield* Database.load(file.data);
-  return { size: blob.size, type: blob.type, external: blob.data._tag === 'external' };
+  return {
+    size: blob.size,
+    type: blob.type,
+    external: blob.data._tag === 'external',
+    // The bytes themselves, because a length is not an identity: a truncated-then-padded or
+    // substituted payload of the same size would satisfy every other check here.
+    bytes: yield* Blob.read(blob),
+  };
 });
+
+/** Whether two byte arrays are identical. */
+const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
+  left.length === right.length && left.every((byte, index) => byte === right[index]);
 
 type TaskRow = { title?: string; status?: string; description?: string };
 
@@ -259,7 +270,7 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
           name: 'upload-round-trip',
           description:
             'The agent uploaded a 3MB file off its own disk through the signed URL and turned it ' +
-            'into a File object whose blob holds exactly those bytes.',
+            'into a File object whose blob holds exactly those bytes, compared byte for byte.',
           score: Effect.succeed(staged.uploaded),
         }),
       ]),
@@ -406,9 +417,10 @@ const localTask = () =>
           !upload.isError &&
           upload.toolCalls.includes(tool('createUpload')) &&
           upload.toolCalls.includes(tool('invokeOperation')) &&
-          // The byte count is the real assertion: it can only match if the transfer completed and
-          // the service measured what it received, which no amount of model narration produces.
+          // The bytes are the real assertion: they can only match if the transfer completed intact
+          // and the service stored what it received, which no amount of model narration produces.
           stored?.size === UPLOAD_BYTES &&
+          sameBytes(stored.bytes, fixture) &&
           // External, not inline — an inline blob would mean the bytes came back through the model
           // after all, which is the exact failure this whole path exists to prevent.
           stored.external === true;

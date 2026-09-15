@@ -44,12 +44,19 @@ const handler: Operation.WithHandler<typeof FileOperation.CreateFromUpload> = Fi
             ? Effect.fail(new UploadNotFoundError(uploadId))
             : Effect.fail(new NoBackendError()),
         ),
-        Effect.catchTag('BlobWriteError', () => Effect.fail(new UploadNotFoundError(uploadId))),
       );
 
       // The type is only knowable once the blob service reports what it received — the caller never
-      // declared one and could not be believed if it had. Checked before anything is added, so a
-      // rejected upload leaves no orphan Blob behind in the space.
+      // declared one and could not be believed if it had. Checked before either object is added, so
+      // a rejected upload leaves nothing behind in the SPACE.
+      //
+      // It does leave the bytes in the store: adoption has already promoted them to their
+      // content-addressed key, and deleting that key is not safe to do here. The key is the digest,
+      // so identical bytes deduplicate — a delete would take the bytes out from under any other
+      // File that happens to reference the same content. That is the same hazard that keeps
+      // `BlobBackend` from having a `remove` at all (see `MAX_EDGE_BLOB_SIZE`'s note on GC and
+      // refcounting). Rejecting the type before the bytes move — at mint time, from a media type
+      // the upload URL is signed for — is the fix, and it belongs with `createUpload`.
       const type = blob.type ?? 'application/octet-stream';
       if (!FileLimits.isAcceptedMimeType(type)) {
         return yield* Effect.fail(new UnsupportedUploadTypeError(type));
