@@ -66,7 +66,7 @@ export class TestWorkerFactory extends Resource {
                 if (isOwner) {
                   yield* runtime.connectWebrtcBridge(session);
                 }
-                return yield* Effect.never;
+                yield* session.closed;
               }),
           };
         }),

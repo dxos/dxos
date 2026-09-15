@@ -88,7 +88,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
                 log('dedicated-worker: connecting webrtc bridge to owning client', { clientId });
                 yield* runtime.connectWebrtcBridge(session);
               }
-              return yield* Effect.never;
+              yield* session.closed;
             }),
         };
       }),

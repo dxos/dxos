@@ -34,7 +34,7 @@ export type RuntimeHandle = {
   createSession(args: {
     clientId: string;
     isOwner: boolean;
-  }): Effect.Effect<never, never, Scope.Scope | RpcClient.Protocol | RpcServer.Protocol>;
+  }): Effect.Effect<void, never, Scope.Scope | RpcClient.Protocol | RpcServer.Protocol>;
 };
 
 export type Options = {

@@ -4,6 +4,7 @@
 
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -15,7 +16,12 @@ import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';
-import { type ClientServicesHandlers } from '@dxos/client-protocol';
+import {
+  ClientRpcServer,
+  type ClientServicesHandlers,
+  PROXY_CONNECTION_TIMEOUT,
+  makeBridgeServiceClientOverProtocol,
+} from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Event } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -23,7 +29,7 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { makeInProcessClient } from '@dxos/protocols';
-import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
+import { DevicesService, IdentityService, type WorkerService } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -37,16 +43,25 @@ import {
   wipeSqliteStorage,
 } from '../services/index.ts';
 import { SessionClosed } from './events.ts';
-import { WorkerSession } from './worker-session.ts';
 
 // Session transports are effect-rpc protocol layers handed over by the worker framework: appProtocol
 // serves the client services (+ WorkerService); systemProtocol carries the reverse-direction
 // BridgeService (worker→tab).
 export type CreateSessionProps = {
+  /** Forward-direction (tab→worker) protocol over which the worker serves the client services. */
   appProtocol: RpcServer.Protocol['Service'];
+  /** Reverse-direction (worker→tab) protocol serving the tab's WebRTC `BridgeService`; the worker is the client. */
   systemProtocol: RpcClient.Protocol['Service'];
-  shellPort?: MessagePort;
 };
+
+/** A tab connection within the worker; it lives as long as the scope `createSession` ran in. */
+export interface WorkerSession {
+  readonly origin?: string;
+  /** The tab's WebRTC bridge, which the worker's network stack proxies through. */
+  readonly bridgeService: Awaited<ReturnType<typeof makeBridgeServiceClientOverProtocol>>['bridgeService'];
+  /** Completes when the tab asks to stop or its liveness lock releases; the caller then closes the scope. */
+  readonly closed: Effect.Effect<void>;
+}
 
 /**
  * Grace period between "worker booted" and the first edge dial. wa-sqlite runs in-process on this
@@ -88,8 +103,8 @@ export type WorkerRuntimeOptions = {
 export interface WorkerRuntimeService {
   /** Effect context of the running stack: every component and RPC handler. */
   readonly stack: () => Context.Context<ClientServicesStackContext>;
-  /** Open a new tab session over the supplied effect-rpc protocols and register it for WebRTC bridging. */
-  readonly createSession: (props: CreateSessionProps) => Effect.Effect<WorkerSession>;
+  /** Open a tab session over the supplied effect-rpc protocols for the life of the scope, registered for WebRTC bridging. */
+  readonly createSession: (props: CreateSessionProps) => Effect.Effect<WorkerSession, never, Scope.Scope>;
   /** Route the WebRTC bridge through the given session (or disconnect when `undefined`). */
   readonly connectWebrtcBridge: (session: WorkerSession | undefined) => Effect.Effect<void>;
 }
@@ -263,31 +278,90 @@ export const makeWorkerRuntime = ({
     const createSession = ({
       appProtocol,
       systemProtocol,
-      shellPort,
-    }: CreateSessionProps): Effect.Effect<WorkerSession> =>
+    }: CreateSessionProps): Effect.Effect<WorkerSession, never, Scope.Scope> =>
       Effect.gen(function* () {
-        const session = new WorkerSession({
-          services,
-          bus,
-          appProtocol,
-          systemProtocol,
-          shellPort,
-          readySignal: ready,
-        });
+        log('opening session...');
+        const closeRequested = yield* Deferred.make<void>();
+        const started = yield* Deferred.make<{ origin: string; lockKey?: string }>();
 
-        yield* session.open();
+        const { bridgeService } = yield* Effect.acquireRelease(
+          Effect.promise(() => makeBridgeServiceClientOverProtocol(systemProtocol)),
+          ({ close }) => Effect.promise(() => close()),
+        );
+
+        // Per-session `WorkerService` control handlers, served alongside the client services. `start`
+        // conveys the tab origin and liveness lock; `stop` ends the session.
+        const workerServiceHandlers: WorkerService.Handlers = {
+          'WorkerService.start': (payload) =>
+            Deferred.succeed(started, { origin: payload.origin, lockKey: payload.lockKey }).pipe(Effect.asVoid),
+          'WorkerService.stop': () =>
+            // Resolve on the next tick so the RPC response is delivered before the transport tears down.
+            Effect.forkDetach(
+              Effect.callback<void>((resume) => {
+                setTimeout(() => resume(Effect.void));
+              }).pipe(Effect.andThen(Deferred.succeed(closeRequested, undefined))),
+            ).pipe(Effect.asVoid),
+        };
+
+        yield* Effect.acquireRelease(
+          Effect.promise(async () => {
+            const server = new ClientRpcServer({
+              services: () => ({ ...services(), WorkerService: workerServiceHandlers }),
+              protocol: appProtocol,
+              // Hold requests until the worker runtime is ready; propagate startup errors to callers.
+              onRequest: async () => {
+                const error = await ready.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
+                if (error) {
+                  throw error;
+                }
+              },
+            });
+            await server.open();
+            return server;
+          }),
+          (server) => Effect.promise(() => server.close()),
+        );
+
+        // Wait until the tab calls `WorkerService.start`.
+        const { origin, lockKey } = yield* Deferred.await(started).pipe(
+          Effect.timeout(PROXY_CONNECTION_TIMEOUT),
+          Effect.orDie,
+        );
+
+        if (lockKey) {
+          // The tab is gone once its liveness lock releases.
+          const lockFiber = yield* Effect.forkDetach(
+            Effect.promise(() =>
+              navigator.locks.request(lockKey, () => {
+                // No-op.
+              }),
+            ).pipe(Effect.andThen(Deferred.succeed(closeRequested, undefined))),
+          );
+          yield* Effect.addFinalizer(() => Fiber.interrupt(lockFiber));
+        }
+
         // A worker can only service one origin currently.
         invariant(
-          !signalMetadataTags.origin || signalMetadataTags.origin === session.origin,
-          `worker origin changed from ${signalMetadataTags.origin} to ${session.origin}?`,
+          !signalMetadataTags.origin || signalMetadataTags.origin === origin,
+          `worker origin changed from ${signalMetadataTags.origin} to ${origin}?`,
         );
-        signalMetadataTags.origin = session.origin;
+        signalMetadataTags.origin = origin;
+
+        const session: WorkerSession = { origin, bridgeService, closed: Deferred.await(closeRequested) };
         sessions.add(session);
+        yield* Effect.addFinalizer(() =>
+          Event.emit(SessionClosed, { session }).pipe(
+            Effect.provideService(Event.Bus, bus),
+            // A subscriber failing must not keep the transport open.
+            Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
+          ),
+        );
 
         if (automaticallyConnectWebrtc) {
           yield* reconnectWebrtc;
         }
 
+        log('session opened', { origin });
         return session;
       });
 
