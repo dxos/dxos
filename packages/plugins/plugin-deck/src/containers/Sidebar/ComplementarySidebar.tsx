@@ -67,11 +67,12 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     [activeCompanion?.id, activeCompanion?.data],
   );
 
+  const hasPersistedPanel = current !== undefined;
   useEffect(() => {
-    if (!activeId) {
+    if (!hasPersistedPanel) {
       void invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, invokePromise]);
+  }, [hasPersistedPanel, invokePromise]);
 
   return (
     <Main.ComplementarySidebar
