@@ -18,6 +18,7 @@ import { type GenerationService } from '#types';
 
 import { loadProviderOptions } from '../../hooks/index.ts';
 import { ArtifactRefField, isArtifactRefField } from './ArtifactRefField.tsx';
+import { FileUrlField, fileUrlOptions } from './FileUrlField.tsx';
 
 export type ProviderOptionsFieldProps = FormFieldRendererProps & {
   provider: GenerationService.GenerationService;
@@ -68,7 +69,8 @@ ProviderOptionsField.displayName = 'ProviderOptionsField';
 
 /**
  * Renderers for the provider's request fields: comboboxes for every field it lists options for,
- * artifact pickers for fields that reference a media artifact; the provider's own `fieldMap` wins.
+ * artifact pickers for fields that reference a media artifact, upload controls for URL fields marked
+ * file-backed; the provider's own `fieldMap` wins.
  */
 export const providerFieldMap = (provider: GenerationService.GenerationService): FormFieldMap => {
   const options = Object.keys(provider.fieldOptions ?? {}).map((field) => [
@@ -80,5 +82,16 @@ export const providerFieldMap = (provider: GenerationService.GenerationService):
   const refs = Object.entries(fields)
     .filter(([, field]) => isArtifactRefField(field))
     .map(([field]) => [field, ArtifactRefField]);
-  return { ...Object.fromEntries(options), ...Object.fromEntries(refs), ...provider.fieldMap };
+  const files = Object.entries(fields).flatMap(([field, schema]) => {
+    const upload = fileUrlOptions(schema);
+    return upload
+      ? [[field, (props: FormFieldRendererProps) => <FileUrlField {...props} accept={upload.accept} />]]
+      : [];
+  });
+  return {
+    ...Object.fromEntries(options),
+    ...Object.fromEntries(refs),
+    ...Object.fromEntries(files),
+    ...provider.fieldMap,
+  };
 };

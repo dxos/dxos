@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Format, Ref } from '@dxos/echo';
+import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 
 const model = Schema.NonEmptyString.annotate({
@@ -45,6 +46,7 @@ export const HiggsfieldVideoConfig = Schema.Struct({
   imageUrl: Schema.optional(
     Schema.String.pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.URL),
+      GenerationService.FileUrlAnnotation.set({ accept: 'image/*' }),
       Schema.annotate({ title: 'Still image', description: 'Image to animate; generated from the prompt when empty.' }),
     ),
   ),
