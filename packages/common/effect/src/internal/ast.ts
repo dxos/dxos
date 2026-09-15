@@ -387,7 +387,7 @@ export const mapAst = (
     case 'Union': {
       return new SchemaAST.Union(
         ast.types.map((type) => f(type, undefined)),
-        ast.mode,
+        ast.options,
         ast.annotations,
         ast.checks,
         ast.encoding,

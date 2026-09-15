@@ -61,7 +61,10 @@ enum ModelTags {
   SURFACE = 'surface',
 }
 
-export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> = any> {
+export interface ParseResponseCallbacks<
+  Tools extends Record<string, Tool.Any> = any,
+  Mode extends Response.ToolParametersMode = Response.ToolParametersMode,
+> {
   /**
    * Called when the stream begins.
    */
@@ -70,7 +73,7 @@ export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> =
   /**
    * Called on every part received from the stream.
    */
-  onPart: (part: Response.StreamPart<Tools>) => Effect.Effect<void>;
+  onPart: (part: Response.StreamPart<Tools, Mode>) => Effect.Effect<void>;
 
   /**
    * Called on every partial or completed content block.
@@ -97,7 +100,10 @@ export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> =
   emitPartial?: boolean;
 }
 
-export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> extends ParseResponseCallbacks<Tools> {
+export interface ParseResponseOptions<
+  Tools extends Record<string, Tool.Any>,
+  Mode extends Response.ToolParametersMode = Response.ToolParametersMode,
+> extends ParseResponseCallbacks<Tools, Mode> {
   /**
    * Whether to parse reasoning tags: <cot> and <think>.
    */
@@ -113,15 +119,15 @@ export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> ex
  * nothing until the producer fiber yields (e.g. after many SSE parts or end of stream).
  */
 export const parseResponse =
-  <Tools extends Record<string, Tool.Any>>({
+  <Tools extends Record<string, Tool.Any>, Mode extends Response.ToolParametersMode = Response.ToolParametersMode>({
     parseReasoningTags = false,
     onBegin = Function.constant(Effect.void),
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
     emitPartial = false,
-  }: Partial<ParseResponseOptions<Tools>> = {}) =>
-  <E, R>(input: Stream.Stream<Response.StreamPart<Tools>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
+  }: Partial<ParseResponseOptions<Tools, Mode>> = {}) =>
+  <E, R>(input: Stream.Stream<Response.StreamPart<Tools, Mode>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.unwrap(
       Effect.gen(function* () {
         const transformer = new StreamTransform();
@@ -211,7 +217,10 @@ export const parseResponse =
           block = undefined;
         });
 
-        const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>, out: ContentBlock.Any[]) {
+        const handlePart = Effect.fnUntraced(function* (
+          part: Response.StreamPart<Tools, Mode>,
+          out: ContentBlock.Any[],
+        ) {
           log('part', { type: part.type });
           yield* onPart(part);
           switch (part.type) {

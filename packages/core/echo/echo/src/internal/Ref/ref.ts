@@ -373,7 +373,7 @@ export const createEchoReferenceSchema = (
           $ref: JSON_SCHEMA_ECHO_REF_ID,
           reference: referenceInfo,
         }),
-        SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
           decode: (encoded) =>
             Effect.gen(function* () {
               const dbService = yield* Effect.serviceOption(Database.Service);

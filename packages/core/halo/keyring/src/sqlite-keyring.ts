@@ -15,17 +15,13 @@ import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type KeyRecord, KeyRecordSchema } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
 import { type KeyringApi, KeyringApiService } from './keyring.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
-
 export type SqliteKeyringOptions = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
 
 /**
@@ -33,7 +29,7 @@ export type SqliteKeyringOptions = {
  * Stores ECDSA key pairs in the `keyring` table.
  */
 export class SqliteKeyring implements KeyringApi {
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   readonly #keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(PublicKey.hash);
   readonly keysUpdate = new Event();
 
@@ -43,14 +39,12 @@ export class SqliteKeyring implements KeyringApi {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -165,11 +159,11 @@ const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> =>
 /**
  * Effect Layer constructing a {@link SqliteKeyring} from the ambient SQL runtime.
  */
-export const SqliteKeyringLayer = (): Layer.Layer<KeyringApiService, never, SqlClient.SqlClient | SqlTransactionTag> =>
+export const SqliteKeyringLayer = (): Layer.Layer<KeyringApiService, never, SqlClient.SqlClient> =>
   Layer.effect(
     KeyringApiService,
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       return new SqliteKeyring({ runtime });
     }),
   );

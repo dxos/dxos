@@ -21,7 +21,7 @@ const TestLayer = Layer.mergeAll(
     {
       service: 'google.com',
       // TODO(burdon): Rename `credential`.
-      apiKey: Config.redacted('GOOGLE_ACCESS_TOKEN'),
+      apiKey: Config.Redacted('GOOGLE_ACCESS_TOKEN'),
     },
   ]),
   FetchHttpClient.layer,

@@ -35,10 +35,11 @@ describe('opfs-worker protocol browser test', { timeout: 60_000, sequential: tru
       const [, queryError, results] = await queryPromise;
       expect(queryError).toBeUndefined();
 
-      const [columns, rows] = results as [string[], unknown[][]];
-      expect(columns).toContain('label');
+      // Column names arrive per row, so a multi-statement query's rows keep their own columns.
+      const [columns, rows] = results as [string[][], unknown[][]];
+      expect(columns[0]).toContain('label');
       expect(rows).toHaveLength(1);
-      expect(rows[0]?.[columns.indexOf('label')]).toBe('imported');
+      expect(rows[0]?.[columns[0].indexOf('label')]).toBe('imported');
     } finally {
       await shutdownWorker(worker);
     }

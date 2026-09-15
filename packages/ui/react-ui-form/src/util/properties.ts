@@ -20,7 +20,7 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
   }
   return defined.length === 1
     ? defined[0]
-    : new SchemaAST.Union(defined, prop.type.mode, prop.type.annotations, prop.type.checks);
+    : new SchemaAST.Union(defined, prop.type.options, prop.type.annotations, prop.type.checks);
 };
 
 /**
