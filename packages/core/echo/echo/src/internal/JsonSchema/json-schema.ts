@@ -153,6 +153,10 @@ const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType>
   // is inlined), and they are carried over as `$defs` rather than dropped.
   const { schema, definitions } = Schema.toJsonSchemaDocument(Schema.make(withRefinements), {
     includeAnnotationKey: isEchoJsonSchemaKey,
+    // Effect 4 serializes a struct as open (`additionalProperties: true`) by default; ECHO's wire
+    // contract states a struct as closed, and an open tool schema would let a model pass keys the
+    // handler never declared.
+    onExcessProperty: 'error',
   });
   const jsonSchema = {
     ...schema,
