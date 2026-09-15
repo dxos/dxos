@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Obj, type Ref } from '@dxos/echo';
-import { ViewState } from '@dxos/react-ui-attention';
+import { ViewState } from '@dxos/react-ui-attention/types';
 
 import * as Frame from './Frame.ts';
 import * as MediaArtifact from './MediaArtifact.ts';
