@@ -1,9 +1,5 @@
 ---
 '@dxos/echo': minor
-'@dxos/echo-protocol': minor
-'@dxos/echo-host': minor
-'@dxos/keys': minor
-'@dxos/react-ui-task': minor
 ---
 
 Objects now have a **mnemonic**: the last 6 characters of their id, uppercased — short enough for a person to read out or type, and stable for the life of the object.
