@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { TimeoutError, Trigger } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemService } from '@dxos/protocols/rpc';
 
 import { TestBuilder } from '../testing/index.ts';
 import { Client } from './client.ts';
@@ -83,8 +84,7 @@ describe('Client.fatalError', () => {
 
     const services = testBuilder.createLocalClientServices();
     await services.open();
-    const system = services.host?.services.SystemService;
-    invariant(system);
+    const system = EffectContext.get(services.stack, SystemService.Tag);
     const lost = new Trigger();
     const failure = new Error('status stream failed');
     vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>

@@ -15,7 +15,7 @@ import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityRecovery_Kind } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type ServiceContext } from '../services/index.ts';
+import { type ServiceContext } from '../testing/index.ts';
 import { createServiceContext } from '../testing/index.ts';
 import { IdentityServiceImpl } from './identity-service.ts';
 

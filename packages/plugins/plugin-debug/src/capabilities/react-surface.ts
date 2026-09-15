@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Position } from '@dxos/util';
 
-import { DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
+import { DebugPanelDrawer, DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
 
@@ -109,6 +109,11 @@ export default Capability.makeModule(
         id: 'debugPanelStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: DebugPanelStatus,
+      }),
+      Surface.create({
+        id: 'debugDrawer',
+        filter: Surface.makeFilter(AppSurface.Drawer),
+        component: DebugPanelDrawer,
       }),
       Surface.create({
         id: 'statsPanel',

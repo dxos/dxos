@@ -3,7 +3,9 @@
 //
 
 import { setLoggerFactory } from '@automerge/automerge-repo';
+import * as Context from 'effect/Context';
 
+import { IdentityManagerService } from '@dxos/client-services';
 import { runDedicatedWorker } from '@dxos/client/worker';
 import { resolveTelemetryTag } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
@@ -101,11 +103,12 @@ runDedicatedWorker({
     // initialized before it runs (see util/automerge-wasm.ts).
     await initAutomergeWasm();
   },
-  onStart: async (host) => {
+  onStart: async (stack) => {
     const instance = await observability;
     if (instance) {
+      const identityManager = Context.get(stack, IdentityManagerService);
       await EffectEx.runPromise(
-        instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(host.identityManager)),
+        instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager)),
       );
     }
   },

@@ -10,7 +10,6 @@ import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
 import {
   HIGGSFIELD_CONNECTOR_ID,
   HIGGSFIELD_DEFAULT_IMAGE_MODEL,
-  HIGGSFIELD_DEFAULT_STILL_MODEL,
   HIGGSFIELD_DEFAULT_VIDEO_MODEL,
   HIGGSFIELD_ID,
   HIGGSFIELD_SOURCE,
@@ -139,10 +138,10 @@ export const makeHiggsfieldVideoService = (
   requestSchema: HiggsfieldVideoConfig,
   defaultRequest: {
     model: HIGGSFIELD_DEFAULT_VIDEO_MODEL,
-    stillModel: HIGGSFIELD_DEFAULT_STILL_MODEL,
+    imageModel: HIGGSFIELD_DEFAULT_IMAGE_MODEL,
     aspectRatio: HIGGSFIELD_DEFAULT_ASPECT_RATIO,
   },
-  fieldOptions: { model: async () => VIDEO_MODELS, stillModel: async () => IMAGE_MODELS },
+  fieldOptions: { model: async () => VIDEO_MODELS, imageModel: async () => IMAGE_MODELS },
   enqueue: async (request, { apiKey, signal, onProgress }) => {
     const config = decodeVideoConfig(request);
     const options = credentials(apiKey, signal);
@@ -151,7 +150,7 @@ export const makeHiggsfieldVideoService = (
       onProgress?.({ status: 'Generating still' });
       const still = await provider.enqueue(
         {
-          model: config.stillModel ?? HIGGSFIELD_DEFAULT_STILL_MODEL,
+          model: config.imageModel ?? HIGGSFIELD_DEFAULT_IMAGE_MODEL,
           body: { prompt: config.prompt, aspect_ratio: config.aspectRatio },
         },
         options,

@@ -14,7 +14,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
@@ -365,8 +365,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // Suggestion review: the document's `kind:'suggestion'` branches overlaid as change-block tiles
   // alongside comment threads. Accept/Reject route through the same durable ops as branch review.
-  const mainText = markdownDoc?.content.target;
-  const [base = ''] = useObject(markdownDoc?.content, 'content');
+  const mainText = useResolveRef(markdownDoc?.content);
 
   const routeSuggestion = useCallback(
     async (
@@ -536,7 +535,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             <ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}
-                base={base}
+                base={mainText}
                 authorLabels={authorLabels}
                 authorHues={authorHues}
                 onAccept={handleAcceptSuggestion}

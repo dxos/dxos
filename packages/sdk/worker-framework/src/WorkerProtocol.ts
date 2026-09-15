@@ -66,6 +66,12 @@ export interface DedicatedWorkerStartSessionMessage {
    * request as the first attempt, i.e. first-wins.
    */
   attempt?: number;
+  /**
+   * Web Lock the tab holds for this connect attempt. The worker ends the session when it releases,
+   * i.e. when the tab closed the connection or died. Absent from a client that predates the field:
+   * that session then ends only when superseded or on worker shutdown.
+   */
+  sessionLockKey?: string;
 }
 
 /**
@@ -105,6 +111,8 @@ export type CoordinatorMessage =
       clientId: string;
       /** See {@link DedicatedWorkerStartSessionMessage.attempt}; the leader forwards it verbatim. */
       attempt?: number;
+      /** See {@link DedicatedWorkerStartSessionMessage.sessionLockKey}; the leader forwards it verbatim. */
+      sessionLockKey?: string;
     }
   | {
       type: 'provide-port';
