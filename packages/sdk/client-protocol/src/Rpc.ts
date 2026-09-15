@@ -78,6 +78,26 @@ export const makeClient = <G>(
     options,
   );
 
+/**
+ * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
+ * ambient {@link RpcServer.Protocol} for the life of the layer.
+ */
+export const serverLayer = <G, R>(
+  group: G,
+  handlers: Layer.Layer<any, never, R>,
+  options?: ServeOptions,
+): Layer.Layer<never, never, RpcServer.Protocol | R> => {
+  const timingEnabled = RpcTiming.isEnabled(options?.timing);
+  const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
+  const handlersLayer = timingEnabled
+    ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
+    : handlers;
+  return RpcServer.layer(asRpcGroup(rpcGroup), {
+    disableTracing: options?.disableTracing ?? true,
+    concurrency: options?.concurrency ?? 'unbounded',
+  }).pipe(Layer.provide(handlersLayer)) as Layer.Layer<never, never, RpcServer.Protocol | R>;
+};
+
 export type GroupServer = {
   open(): Promise<void>;
   close(): Promise<void>;

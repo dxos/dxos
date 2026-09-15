@@ -12,14 +12,13 @@ import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';
 import {
-  ClientRpcServer,
-  type ClientServicesHandlers,
   PROXY_CONNECTION_TIMEOUT,
+  layerClientServicesServer,
   makeBridgeServiceClientOverProtocol,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -29,7 +28,22 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { makeInProcessClient } from '@dxos/protocols';
-import { DevicesService, IdentityService, type WorkerService } from '@dxos/protocols/rpc';
+import {
+  ContactsService,
+  DataService,
+  DevicesService,
+  DevtoolsHost,
+  EdgeAgentService,
+  FeedService,
+  IdentityService,
+  InvitationsService,
+  LoggingService,
+  NetworkService,
+  QueryService,
+  SpacesService,
+  SystemService,
+  WorkerService,
+} from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -39,7 +53,6 @@ import {
   type ClientServicesStackContext,
   HostEvents,
   enableNetworking,
-  handlersFromStack,
   wipeSqliteStorage,
 } from '../services/index.ts';
 import { SessionClosed } from './events.ts';
@@ -160,8 +173,6 @@ export const makeWorkerRuntime = ({
 
     /** Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a reset gets here. */
     const wipeStorage = wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie);
-
-    const services = (): Partial<ClientServicesHandlers> => (stack ? handlersFromStack(stack) : {});
 
     const connectBridge = (session: WorkerSession | undefined): void => {
       sessionForNetworking = session;
@@ -303,23 +314,33 @@ export const makeWorkerRuntime = ({
             ).pipe(Effect.asVoid),
         };
 
-        yield* Effect.acquireRelease(
-          Effect.promise(async () => {
-            const server = new ClientRpcServer({
-              services: () => ({ ...services(), WorkerService: workerServiceHandlers }),
-              protocol: appProtocol,
-              // Hold requests until the worker runtime is ready; propagate startup errors to callers.
-              onRequest: async () => {
-                const error = await ready.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
-                if (error) {
-                  throw error;
-                }
-              },
-            });
-            await server.open();
-            return server;
-          }),
-          (server) => Effect.promise(() => server.close()),
+        // Serve once the runtime is ready; the handlers come from the stack's tags.
+        const error = yield* Effect.promise(() => ready.wait({ timeout: PROXY_CONNECTION_TIMEOUT }));
+        if (error || !stack) {
+          return yield* Effect.die(error ?? new Error('worker runtime stack is not available'));
+        }
+        yield* Layer.build(
+          layerClientServicesServer(
+            Layer.mergeAll(
+              SystemService.Rpcs.toLayer(SystemService.Tag),
+              NetworkService.Rpcs.toLayer(NetworkService.Tag),
+              LoggingService.Rpcs.toLayer(LoggingService.Tag),
+              IdentityService.Rpcs.toLayer(IdentityService.Tag),
+              InvitationsService.Rpcs.toLayer(InvitationsService.Tag),
+              DevicesService.Rpcs.toLayer(DevicesService.Tag),
+              SpacesService.Rpcs.toLayer(SpacesService.Tag),
+              DataService.Rpcs.toLayer(DataService.Tag),
+              QueryService.Rpcs.toLayer(QueryService.Tag),
+              FeedService.Rpcs.toLayer(FeedService.Tag),
+              ContactsService.Rpcs.toLayer(ContactsService.Tag),
+              EdgeAgentService.Rpcs.toLayer(EdgeAgentService.Tag),
+              DevtoolsHost.Rpcs.toLayer(DevtoolsHost.Tag),
+              WorkerService.Rpcs.toLayer(workerServiceHandlers),
+            ),
+          ).pipe(
+            Layer.provide(Layer.succeed(RpcServer.Protocol, appProtocol)),
+            Layer.provide(Layer.succeedContext(stack)),
+          ),
         );
 
         // Wait until the tab calls `WorkerService.start`.

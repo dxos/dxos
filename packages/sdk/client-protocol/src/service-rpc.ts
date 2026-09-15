@@ -232,6 +232,16 @@ export const serveClientServicesOverIFrame = async ({
 };
 
 /**
+ * Serves every client service over the ambient {@link RpcServer.Protocol}, with the handler layers
+ * supplied by the caller (typically `Rpcs.toLayer(Tag)` per service over a stack context).
+ */
+export const layerClientServicesServer = <R>(
+  handlers: Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>, never, R>,
+): Layer.Layer<never, never, RpcServer.Protocol | R> =>
+  // `timing` must match the tab client, whose middleware is `requiredForClient`.
+  Rpc.serverLayer(ClientServicesRpcs, handlers, { disableTracing: true, concurrency: 'unbounded', timing: true });
+
+/**
  * Builds handler layers for every client service RPC, dispatching to the service implementations
  * resolved from `services` on each call.
  */
