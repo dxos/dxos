@@ -80,7 +80,6 @@ import {
   SpacesService,
 } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -152,7 +151,7 @@ export type ClientServicesHostProps = {
    * @default true
    */
   autoConnect?: boolean;
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport>;
   runtimeProps?: ServiceContextRuntimeProps;
 };
 
@@ -203,9 +202,7 @@ export class ClientServicesHost {
     ClientServicesHostService | ClientServicesRpcContext | ServiceContextStackContext,
     never
   >;
-  readonly #runtime: RuntimeProvider.RuntimeProvider<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
-  >;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport>;
   readonly #runtimeProps: ServiceContextRuntimeProps;
   #diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
@@ -237,7 +234,7 @@ export class ClientServicesHost {
   #meshReplicator?: AutomergeReplicator;
   #echoEdgeReplicator?: EdgeAutomergeReplicator;
   #feedSyncer?: FeedSyncer;
-  #storageMigrate?: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  #storageMigrate?: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
 
   // Orchestration state (formerly on `ServiceContext`).
   readonly #initialized = new Trigger();

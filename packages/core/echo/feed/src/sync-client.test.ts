@@ -14,7 +14,6 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { SyncRpcTimeoutError } from './errors.ts';
 import { FeedStore } from './feed-store.ts';
@@ -22,13 +21,9 @@ import { SyncClient } from './sync-client.ts';
 
 const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+});
 
 describe('SyncClient', () => {
   test('times out when edge does not respond', async () => {

@@ -25,7 +25,6 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations/index.ts';
 import { SqliteMetadataStore } from '../metadata/index.ts';
@@ -44,11 +43,8 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     config,
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
-    runtime: ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
-    ).contextEffect,
+    runtime: ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie))
+      .contextEffect,
   });
 };
 
@@ -66,11 +62,7 @@ export const createServiceContext = async ({
 
   // The host builds its component stack over this SQLite runtime; dispose it once the host closes so
   // the layer-scoped finalizers (e.g. EchoHost) do not leak across tests.
-  const runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
-  );
+  const runtime = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
 
   const host = new ClientServicesHost({
     config: new Config(),
@@ -152,9 +144,7 @@ export type TestPeerProps = {
 export class TestPeer {
   private _props: TestPeerProps = {};
   private readonly _runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
+    sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie),
   );
   private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.contextEffect });
 

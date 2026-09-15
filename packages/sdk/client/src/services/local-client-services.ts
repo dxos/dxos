@@ -31,7 +31,6 @@ import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/conf
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
   new Promise((resolve) => {
@@ -129,10 +128,7 @@ export class LocalClientServices implements ClientServicesProvider {
   private readonly _sqlitePath?: string;
   private _host?: ClientServicesHost;
   private _opfsWorker?: Worker;
-  private _runtime?: ManagedRuntime.ManagedRuntime<
-    SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
-    never
-  >;
+  private _runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -235,12 +231,7 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     this._runtime = ManagedRuntime.make(
-      SqlTransaction.layer.pipe(
-        Layer.provideMerge(sqlExportLayer),
-        Layer.provideMerge(sqliteLayer),
-        Layer.provideMerge(Reactivity.layer),
-        Layer.orDie,
-      ),
+      sqlExportLayer.pipe(Layer.provideMerge(sqliteLayer), Layer.provideMerge(Reactivity.layer), Layer.orDie),
     );
 
     this._host = new ClientServicesHost({

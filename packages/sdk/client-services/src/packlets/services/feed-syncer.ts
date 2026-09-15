@@ -23,7 +23,6 @@ import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
@@ -37,7 +36,7 @@ const MAX_PUSH_FAILURE_BACKOFF_MS = 30_000;
 const MAX_BLOCKING_SYNC_ITERATIONS = 100;
 
 export type FeedSyncerOptions = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   feedStore: FeedStore;
   edgeClient: EdgeConnection;
   peerId: string;
@@ -103,7 +102,7 @@ export class FeedSyncer extends Resource {
   readonly #pollRequestThrottleMs: number;
   readonly #backgroundSync: boolean;
 
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   readonly #feedStore: FeedStore;
   readonly #edgeClient: EdgeConnection;
   readonly #syncClient: SyncClient;
@@ -574,15 +573,11 @@ export type FeedSyncerLayerOptions = Pick<
  */
 export const FeedSyncerLayer = (
   options: FeedSyncerLayerOptions,
-): Layer.Layer<
-  FeedSyncerService,
-  never,
-  SqlClient.SqlClient | SqlTransaction.SqlTransaction | EchoHostService | EdgeConnectionService
-> =>
+): Layer.Layer<FeedSyncerService, never, SqlClient.SqlClient | EchoHostService | EdgeConnectionService> =>
   Layer.effect(
     FeedSyncerService,
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       const echoHost = yield* EchoHostService;
       const edgeClient = yield* EdgeConnectionService;
       return new FeedSyncer({

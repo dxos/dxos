@@ -30,7 +30,6 @@ import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
@@ -93,11 +92,7 @@ export class TestBuilder {
    * Create backend service handlers.
    */
   createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
-    const runtime = ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
-    );
+    const runtime = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
 
     const services = new ClientServicesHost({
       config: this.config,

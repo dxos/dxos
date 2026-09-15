@@ -9,7 +9,7 @@ import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
-import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlMigrations } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import extractedQuestionInit from './extracted-question/0001_init.sql?raw';
@@ -37,10 +37,7 @@ type Manifest = (typeof STORES)[number]['manifest'];
 
 /** Mirrors each store's `migrate`, so the tests exercise the production configuration. */
 const migrate = (manifest: Manifest, table: string) =>
-  Migrator.make({})({ loader: Migrator.fromRecord(manifest), table }).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
-    Effect.orDie,
-  );
+  Migrator.make({})({ loader: Migrator.fromRecord(manifest), table }).pipe(Effect.orDie);
 
 /** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
 const ids = (manifest: Manifest) =>
@@ -79,7 +76,7 @@ describe('pipeline-discord migrations', () => {
           yield* SqlMigrations.apply(init);
           expect(yield* migrate(manifest, table)).toEqual(ids(manifest));
           expect(yield* migrate(manifest, table)).toEqual([]);
-        }).pipe(Effect.provide(SqlTransaction.layer.pipe(Layer.provideMerge(layerMemory))), Effect.orDie),
+        }).pipe(Effect.provide(layerMemory), Effect.orDie),
       );
     });
   }

@@ -12,7 +12,6 @@ import * as Result from 'effect/Result';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { FeedStore } from './feed-store.ts';
 import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher.ts';
@@ -21,13 +20,9 @@ const Block = FeedProtocol.Block;
 type Block = FeedProtocol.Block;
 const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+});
 
 // ActorIds.
 const ALICE = 'alice';

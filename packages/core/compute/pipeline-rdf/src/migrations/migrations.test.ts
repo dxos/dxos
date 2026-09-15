@@ -9,7 +9,7 @@ import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
-import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlMigrations } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import init from './0001_init.sql?raw';
@@ -17,7 +17,6 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from './index.ts';
 
 /** Mirrors the store's `migrate`, so the test exercises the production configuration. */
 const migrate = Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-  Effect.provide(SqlTransaction.clientLayer),
   Effect.orDie,
 );
 
@@ -61,7 +60,7 @@ describe('rdf migrations', () => {
         yield* SqlMigrations.apply(init);
         expect(yield* migrate).toEqual(ids);
         expect(yield* migrate).toEqual([]);
-      }).pipe(Effect.provide(SqlTransaction.layer.pipe(Layer.provideMerge(layerMemory))), Effect.orDie),
+      }).pipe(Effect.provide(layerMemory), Effect.orDie),
     );
   });
 });

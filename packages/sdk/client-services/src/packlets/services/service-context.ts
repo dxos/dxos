@@ -27,7 +27,6 @@ import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents/index.ts';
 import {
@@ -65,9 +64,6 @@ import {
 import { FeedSyncerLayer } from './feed-syncer.ts';
 import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
 
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
-
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,
   'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval'
@@ -84,7 +80,7 @@ export type ServiceContextRuntimeProps = Pick<
  */
 export class StorageMigrationService extends EffectContext.Service<
   StorageMigrationService,
-  Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>
+  Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>
 >()('@dxos/client-services/StorageMigration') {}
 
 export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
@@ -123,7 +119,7 @@ export const ServiceContextLayer = (
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
+  SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient
 > => {
   const { edgeConnection, edgeHttpClient } = options;
 
@@ -194,7 +190,7 @@ const identityProviderLayer = Layer.effect(
 const storageMigrationLayer = Layer.effect(
   StorageMigrationService,
   Effect.gen(function* () {
-    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
     return Effect.all(
       [
         new SqliteMetadataStore({ runtime }).migrate,

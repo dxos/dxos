@@ -13,23 +13,18 @@ import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+});
 
 describe('LocalFeedServiceImpl', () => {
   it.effect('should insert and query items', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       const service = new LocalFeedServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
 
@@ -55,7 +50,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should delete items', () =>
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       const service = new LocalFeedServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
@@ -88,7 +83,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should support pagination', () =>
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
       const service = new LocalFeedServiceImpl(runtime, feedStore);
@@ -130,7 +125,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should pass tombstone blocks through paginated reads', () =>
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
       const service = new LocalFeedServiceImpl(runtime, feedStore);
@@ -163,7 +158,7 @@ describe('LocalFeedServiceImpl', () => {
   it.effect('should report local push backlog in getSyncState', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       const service = new LocalFeedServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
 
@@ -188,7 +183,7 @@ describe('LocalFeedServiceImpl', () => {
     Effect.scoped(
       Effect.gen(function* () {
         const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
-        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
         const service = new LocalFeedServiceImpl(runtime, feedStore);
         yield* feedStore.migrate();
 
@@ -227,7 +222,7 @@ describe('LocalFeedServiceImpl', () => {
     Effect.scoped(
       Effect.gen(function* () {
         const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
-        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
         const service = new LocalFeedServiceImpl(runtime, feedStore);
         yield* feedStore.migrate();
 

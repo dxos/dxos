@@ -25,7 +25,6 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services/index.ts';
@@ -125,9 +124,7 @@ export const makeWorkerRuntime = ({
   }
 
   const runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
+    (sqliteLayer ?? LocalSqliteOpfsLayer).pipe(Layer.provideMerge(Reactivity.layer), Layer.orDie),
   );
 
   const stop = (): Effect.Effect<void> =>

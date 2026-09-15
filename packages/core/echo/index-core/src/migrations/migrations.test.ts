@@ -11,7 +11,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readdirSync } from 'node:fs';
 import { test } from 'vitest';
 
-import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
 import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
@@ -22,7 +22,7 @@ import { MIGRATIONS as REVERSE_REF } from './reverse-ref/index.ts';
 import trackerInit from './tracker/0001_init.sql?raw';
 import { MIGRATIONS as TRACKER } from './tracker/index.ts';
 
-const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
+const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 const STORES = [
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
@@ -34,7 +34,7 @@ const STORES = [
 const migrateEntityMeta = Migrator.make({})({
   loader: Migrator.fromRecord(ENTITY_META),
   table: ENTITY_META_TABLE,
-}).pipe(Effect.provide(SqlTransaction.clientLayer), Effect.orDie);
+}).pipe(Effect.orDie);
 
 /** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
 const ENTITY_META_IDS = Object.keys(ENTITY_META).map((key) => [

@@ -30,15 +30,11 @@ import {
   LargeSpaceMetadataSchema,
   type SpaceMetadata,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/metadata/index.ts';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store.ts';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 
@@ -59,7 +55,7 @@ const largeKey = (spaceKey: PublicKey) => `large:${spaceKey.toHex()}`;
 const isLegacyInvitationFormat = (invitation: Invitation): boolean => invitation.type === Invitation_Type.MULTIUSE;
 
 export type SqliteMetadataStoreProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
 
 /**
@@ -67,7 +63,7 @@ export type SqliteMetadataStoreProps = {
  * Stores EchoMetadata as a single protobuf blob and LargeSpaceMetadata as per-space blobs.
  */
 export class SqliteMetadataStore implements IMetadataStore {
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   #metadata: EchoMetadata = emptyEchoMetadata();
   readonly #spaceLargeMetadata = new ComplexMap<PublicKey, LargeSpaceMetadata>(PublicKey.hash);
@@ -80,14 +76,12 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -390,15 +384,11 @@ export class SqliteMetadataStore implements IMetadataStore {
 /**
  * Effect Layer constructing a {@link SqliteMetadataStore} from the ambient SQL runtime.
  */
-export const SqliteMetadataStoreLayer = (): Layer.Layer<
-  IMetadataStoreService,
-  never,
-  SqlClient.SqlClient | SqlTransactionTag
-> =>
+export const SqliteMetadataStoreLayer = (): Layer.Layer<IMetadataStoreService, never, SqlClient.SqlClient> =>
   Layer.effect(
     IMetadataStoreService,
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       return new SqliteMetadataStore({ runtime });
     }),
   );
