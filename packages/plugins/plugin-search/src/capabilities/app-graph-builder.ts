@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Equal from 'effect/Equal';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -14,31 +13,24 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { type Client } from '@dxos/react-client';
 import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 import { SearchOperation } from '#types';
-
-// The Client capability lands before `initialize()` resolves, and `client.spaces` throws until it does.
-const initializedFamily = Atom.family((client: Client) =>
-  Atom.make((get) => {
-    if (!client.initialized) {
-      void client.waitUntilInitialized().then(() => get.setSelf(true));
-    }
-    return client.initialized;
-  }),
-);
-
-// Keyed by reference: the family's structural key reads every accessor on the client, including the throwing ones.
-// TODO(wittjosiah): Factor out.
-const initializedAtom = (client: Client): Atom.Atom<boolean> => initializedFamily(Equal.byReferenceUnsafe(client));
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Reactive read: the connector may evaluate before the client module finishes
     // activating; the atom dependency re-evaluates it when the client lands.
     const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+    const initializedClientAtom = Atom.make((get) => {
+      const [client] = get(clientAtom);
+      if (client && !client.initialized) {
+        void client.waitUntilInitialized().then(() => get.setSelf(client));
+        return undefined;
+      }
+      return client;
+    });
     // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
     // `AppCapabilities.Layout`; hoisting the atom lets the connector heal reactively if it lands.
     const layoutCapabilityAtom = yield* Capability.atom(AppCapabilities.Layout);
@@ -48,11 +40,11 @@ export default Capability.makeModule(
         match: GraphNodeMatcher.whenRoot,
         connector: (_node, get) =>
           Effect.sync(() => {
-            const [client] = get(clientAtom);
+            const client = get(initializedClientAtom);
             const [layoutAtom] = get(layoutCapabilityAtom);
             const layout = layoutAtom ? get(layoutAtom) : undefined;
             const spaceId = layout?.workspace ? GraphPath.getSpaceIdFromPath(layout.workspace) : undefined;
-            const space = client && spaceId && get(initializedAtom(client)) ? client.spaces.get(spaceId) : undefined;
+            const space = client && spaceId ? client.spaces.get(spaceId) : undefined;
 
             return [
               AppNode.makeDeckCompanion({

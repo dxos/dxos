@@ -23,8 +23,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { SearchPlugin } from '#plugin';
 
-/** Contributes a client that has not been initialized, with a workspace open on a space. */
-const makeHostPlugin = (client: Client) =>
+const makeUninitializedClientHostPlugin = (client: Client) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.host'), name: 'Host' })).pipe(
     Plugin.addModule({
       id: 'host',
@@ -55,7 +54,7 @@ describe('SearchPlugin', () => {
   test('contributes the search deck companion before the client initializes', async ({ expect }) => {
     const client = new Client();
     await using harness = await createComposerTestApp({
-      plugins: [makeHostPlugin(client)(), SearchPlugin()],
+      plugins: [makeUninitializedClientHostPlugin(client)(), SearchPlugin()],
     });
 
     const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
