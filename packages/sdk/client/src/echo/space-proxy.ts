@@ -107,6 +107,9 @@ export class SpaceProxy implements Space, CustomInspectable {
    */
   private readonly _anySpaceUpdate = new Event<SpaceData>();
 
+  /** The root last handed to the database, so an unchanged root is not re-applied on every update. */
+  private _appliedSpaceRoot: string | undefined;
+
   /**
    * @internal
    * To update the space query when a space changes.
@@ -386,11 +389,13 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
 
     if (this._initialized) {
-      // Transition onto new automerge root.
+      // Transition onto new automerge root. The host re-sends the space several times a second while
+      // its feeds advance, and the root is the same in nearly all of them, so the unchanged case is
+      // dropped here rather than walked down into the database only to be discarded.
       const automergeRoot = space.pipeline?.directoryUrl;
-      if (automergeRoot) {
+      if (automergeRoot && automergeRoot !== this._appliedSpaceRoot) {
         log('set space root', { spaceKey: this.key, automergeRoot });
-        // NOOP if the root is the same.
+        this._appliedSpaceRoot = automergeRoot;
         await this._db.setSpaceRoot(automergeRoot);
       }
     }
@@ -490,6 +495,9 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._initializing = false;
     this._initialized = false;
     this._databaseOpen = false;
+    // Dropped with the database it tracked, so the next update re-applies the root rather than
+    // matching a cache that outlived it.
+    this._appliedSpaceRoot = undefined;
     log('destroyed');
   }
 
