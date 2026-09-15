@@ -8,34 +8,31 @@ import * as Schema from 'effect/Schema';
 import { log } from '@dxos/log';
 import type * as Observability from '@dxos/observability/Observability';
 
-import { BOOT_ASSET_FAILURE_KEY } from './constants.ts';
+import { BOOT_ASSET_FAILURE_KEY, BOOT_ASSET_RETRY_KEY } from './constants.ts';
 
 const BootAssetFailure = Schema.Struct({
   url: Schema.String,
   page: Schema.String,
   at: Schema.Number,
-  attempts: Schema.Number,
+  failures: Schema.Number,
 });
+
+export type BootAssetFailure = typeof BootAssetFailure.Type;
 
 const decodeBootAssetFailure = Schema.decodeUnknownOption(Schema.fromJsonString(BootAssetFailure));
 
-type WebProcessTermination = { at: number; visible: boolean; hostUptimeMs: number };
+type WebProcessTermination = { at: number; webview: string; visible: boolean; hostUptimeMs: number };
 
-/** Platforms whose host registers `take_web_process_terminations`. */
-const DESKTOP_PLATFORMS = ['linux', 'macos', 'windows'];
+/** The part of observability these reports use. */
+type EventSink = { events: Pick<Observability.Observability['events'], 'captureEvent'> };
 
-/** Origin and path only: page URLs carry invitation codes in their query, and older records kept it. */
-const originAndPath = (value: string): string => {
-  if (!URL.canParse(value)) {
-    return '';
-  }
-  const url = new URL(value);
-  return `${url.origin}${url.pathname}`;
-};
-
-/** Takes the failure the inline script in `index.html` recorded, so it is reported once. */
-const takeBootAssetFailure = (): typeof BootAssetFailure.Type | undefined => {
+/**
+ * Takes the failure the inline script in `index.html` recorded, so it is reported once, and resets that
+ * script's retry guard. Call as soon as a boot succeeds, before anything that can fail.
+ */
+export const takeBootAssetFailure = (): BootAssetFailure | undefined => {
   try {
+    sessionStorage.removeItem(BOOT_ASSET_RETRY_KEY);
     const raw = localStorage.getItem(BOOT_ASSET_FAILURE_KEY);
     localStorage.removeItem(BOOT_ASSET_FAILURE_KEY);
     return raw === null ? undefined : Option.getOrUndefined(decodeBootAssetFailure(raw));
@@ -45,45 +42,29 @@ const takeBootAssetFailure = (): typeof BootAssetFailure.Type | undefined => {
   }
 };
 
-const takeWebProcessTerminations = async (): Promise<WebProcessTermination[]> => {
-  const { type } = await import('@tauri-apps/plugin-os');
-  if (!DESKTOP_PLATFORMS.includes(type())) {
-    return [];
-  }
-  const { invoke } = await import('@tauri-apps/api/core');
-  return invoke<WebProcessTermination[]>('take_web_process_terminations');
+export const reportBootAssetFailure = (observability: EventSink, failure: BootAssetFailure) => {
+  const attributes = {
+    url: failure.url,
+    page: failure.page,
+    failures: failure.failures,
+    ageMs: Date.now() - failure.at,
+  };
+  log.warn('boot asset failed to load in an earlier boot', attributes);
+  observability.events.captureEvent('composer.boot.asset-failed', attributes);
 };
 
-/**
- * Reports failures an earlier boot could not: a boot asset that failed to load, and WebContent
- * terminations the native host recovered from. Call once a boot has succeeded.
- */
-export const reportPreviousBootFailures = async (
-  observability: Observability.Observability,
-  isTauri: boolean,
-): Promise<void> => {
+/** Reports WebContent terminations the native host recovered from since the last report. */
+export const reportWebProcessTerminations = async (observability: EventSink): Promise<void> => {
+  const { invoke } = await import('@tauri-apps/api/core');
   const now = Date.now();
-  const failure = takeBootAssetFailure();
-  if (failure) {
+  for (const termination of await invoke<WebProcessTermination[]>('take_web_process_terminations')) {
     const attributes = {
-      url: originAndPath(failure.url),
-      page: originAndPath(failure.page),
-      attempts: failure.attempts,
-      ageMs: now - failure.at,
+      webview: termination.webview,
+      visible: termination.visible,
+      hostUptimeMs: termination.hostUptimeMs,
+      ageMs: now - termination.at,
     };
-    log.warn('boot asset failed to load in an earlier boot', attributes);
-    observability.events.captureEvent('composer.boot.asset-failed', attributes);
-  }
-
-  if (isTauri) {
-    for (const termination of await takeWebProcessTerminations()) {
-      const attributes = {
-        visible: termination.visible,
-        hostUptimeMs: termination.hostUptimeMs,
-        ageMs: now - termination.at,
-      };
-      log.warn('web content process terminated', attributes);
-      observability.events.captureEvent('composer.native.web-process-terminated', attributes);
-    }
+    log.warn('web content process terminated', attributes);
+    observability.events.captureEvent('composer.native.web-process-terminated', attributes);
   }
 };

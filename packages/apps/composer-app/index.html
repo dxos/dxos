@@ -40,9 +40,10 @@
     </script>
 
     <!--
-      A boot asset that fails to load (e.g. stale HTML naming another build's chunks) is recorded, and
-      the page re-navigates once so a normal load replaces the HTML. `util/boot-reports.ts` reports the
-      record after the next successful boot. Only acts while the boot loader is up.
+      A same-origin `/assets/` script or stylesheet that fails while the page loads (e.g. stale HTML naming
+      another build's chunks) is recorded, and the page re-navigates once per session so a normal load
+      replaces the HTML. `util/boot-reports.ts` reports the record after the next successful boot. The
+      keys must match `BOOT_ASSET_FAILURE_KEY` and `BOOT_ASSET_RETRY_KEY` in `util/constants.ts`.
     -->
     <script>
       window.addEventListener(
@@ -55,7 +56,8 @@
               : target instanceof HTMLLinkElement && target.rel === 'stylesheet'
                 ? target.href
                 : '';
-          if (!href || !document.getElementById('boot-loader')) {
+          // Once `load` has fired, failures come from lazily imported chunks rather than the boot HTML.
+          if (!href || document.readyState === 'complete') {
             return;
           }
           const url = new URL(href);
@@ -63,15 +65,18 @@
             return;
           }
           try {
-            const key = 'dxos.composer.boot-asset-failure';
-            const attempts = (Number(JSON.parse(localStorage.getItem(key) ?? 'null')?.attempts) || 0) + 1;
+            const failureKey = 'dxos.composer.boot-asset-failure';
+            const retryKey = 'dxos.composer.boot-asset-retry';
+            const failures = (Number(JSON.parse(localStorage.getItem(failureKey) ?? 'null')?.failures) || 0) + 1;
             // Origin and path only: page URLs carry invitation codes in their query.
             const page = location.origin + location.pathname;
             localStorage.setItem(
-              key,
-              JSON.stringify({ url: url.origin + url.pathname, page, at: Date.now(), attempts }),
+              failureKey,
+              JSON.stringify({ url: url.origin + url.pathname, page, at: Date.now(), failures }),
             );
-            if (attempts === 1) {
+            // Session-scoped, so a record left by an earlier session cannot use up this one's retry.
+            if (!sessionStorage.getItem(retryKey)) {
+              sessionStorage.setItem(retryKey, '1');
               location.replace(location.href);
             }
           } catch {
