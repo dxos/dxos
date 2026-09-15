@@ -366,8 +366,10 @@ const TaskTreeHeading = ({
       <span className='col-[title] self-center min-w-0 truncate'>
         {/* The mnemonic names the row in conversation ("look at 7QK2ZB"); monospace so the
             fixed-width code reads apart from the prose title and aligns down the column. */}
-        <span className='font-mono text-xs text-subdued mr-2'>{Obj.getMnemonic(current)}</span>
-        {current.title}
+        <span data-testid='taskList.item.mnemonic' className='font-mono text-xs text-subdued mr-2'>
+          {Obj.getMnemonic(current)}
+        </span>
+        <span data-testid='taskList.item.title'>{current.title}</span>
       </span>
       {/* The row's second line, running under the title and its chips only: it has to clear the
           ordinal and the status control, or it reads as belonging to the row above, and it must stop
