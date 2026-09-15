@@ -11,29 +11,6 @@ import { BOOT_ASSET_FAILURE_KEY, BOOT_ASSET_RETRY_KEY } from './constants.ts';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-const createStorage = (): Storage => {
-  const values = new Map<string, string>();
-  return {
-    get length() {
-      return values.size;
-    },
-    clear: () => values.clear(),
-    getItem: (key) => values.get(key) ?? null,
-    key: (index) => [...values.keys()][index] ?? null,
-    removeItem: (key) => {
-      values.delete(key);
-    },
-    setItem: (key, value) => {
-      values.set(key, value);
-    },
-  };
-};
-
-const createSink = () => {
-  const captureEvent = vi.fn();
-  return { captureEvent, sink: { events: { captureEvent } } };
-};
-
 describe('boot reports', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', createStorage());
@@ -92,3 +69,26 @@ describe('boot reports', () => {
     expect(html).toContain(`'${BOOT_ASSET_RETRY_KEY}'`);
   });
 });
+
+const createStorage = (): Storage => {
+  const values = new Map<string, string>();
+  return {
+    get length() {
+      return values.size;
+    },
+    clear: () => values.clear(),
+    getItem: (key) => values.get(key) ?? null,
+    key: (index) => [...values.keys()][index] ?? null,
+    removeItem: (key) => {
+      values.delete(key);
+    },
+    setItem: (key, value) => {
+      values.set(key, value);
+    },
+  };
+};
+
+const createSink = () => {
+  const captureEvent = vi.fn();
+  return { captureEvent, sink: { events: { captureEvent } } };
+};
