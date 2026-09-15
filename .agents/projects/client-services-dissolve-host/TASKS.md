@@ -97,7 +97,7 @@ review of the diff ran and its findings are addressed. NEXT: reviewers; then Com
       paths) — the session lifetime change is browser-only in production.
 - [ ] Composer e2e (`DX_ENVIRONMENT=dev`) for the dedicated worker: boot, second tab, tab close,
       reset from settings.
-- [ ] Re-check CI on PR #13094 (Depot; `gh pr checks 13094`).
+- [x] CI green on PR #13094 after merging `main` (8fd51a5e); auto-merge (squash) enabled.
 
 ## Phase 6: Cleanup (outstanding)
 
@@ -105,6 +105,12 @@ review of the diff ran and its findings are addressed. NEXT: reviewers; then Com
       still casts, where the middleware changes the handler tags' types.
 - [x] `ClientServicesLayer` takes `ConfigService` and `Event.Bus` as layer requirements; every
       embedder provides them once beneath the layer.
+- [ ] Rename `@dxos/effect`'s `Event` to `Hook` (wittjosiah, PR #13094): the module's semantics are
+      Tapable's `AsyncParallelHook`/`AsyncSeriesHook` (an emit waits for every handler and a handler
+      failure fails the emitter), not a bus's, and `Event` clashes with `@dxos/async`'s, which is why
+      call sites alias it as `EffectEvent`. Touches the module, the `@dxos/effect/Event.Bus` context
+      key and ~20 call sites. Deferred out of #13094, which landed with the semantics documented on
+      `emit`.
 - [ ] Decide D17's readiness-gate behaviour (startup error visibility to the tab).
 - [ ] Typed errors via `BaseError.extend` (carried over from the deleted `client-services/TASKS.md`):
       `stop`, `createSession` and session open/close still wrap fallible work in bare
