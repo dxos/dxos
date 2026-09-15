@@ -18,6 +18,7 @@ import { Trigger } from '@dxos/async';
 import {
   PROXY_CONNECTION_TIMEOUT,
   layerClientServicesServer,
+  layerHandlersFromTag,
   makeBridgeServiceClientOverProtocol,
 } from '@dxos/client-protocol';
 import { type Config, ConfigService } from '@dxos/config';
@@ -137,6 +138,9 @@ export const makeWorkerRuntime = ({
   memorySignalManagerContext,
 }: WorkerRuntimeOptions): Effect.Effect<WorkerRuntimeService, never, Scope.Scope> =>
   Effect.gen(function* () {
+    // Held so effects that outlive this construction — a session finalizer, which the framework runs
+    // when it closes a session scope — still reach the bus.
+    const bus = yield* Event.Bus;
     const transportFactory = new RtcTransportProxyFactory();
     const ready = new Trigger<Error | undefined>();
     const sessions = new Set<WorkerSession>();
@@ -298,19 +302,19 @@ export const makeWorkerRuntime = ({
         yield* Layer.build(
           layerClientServicesServer(
             Layer.mergeAll(
-              SystemService.Rpcs.toLayer(SystemService.Tag),
-              NetworkService.Rpcs.toLayer(NetworkService.Tag),
-              LoggingService.Rpcs.toLayer(LoggingService.Tag),
-              IdentityService.Rpcs.toLayer(IdentityService.Tag),
-              InvitationsService.Rpcs.toLayer(InvitationsService.Tag),
-              DevicesService.Rpcs.toLayer(DevicesService.Tag),
-              SpacesService.Rpcs.toLayer(SpacesService.Tag),
-              DataService.Rpcs.toLayer(DataService.Tag),
-              QueryService.Rpcs.toLayer(QueryService.Tag),
-              FeedService.Rpcs.toLayer(FeedService.Tag),
-              ContactsService.Rpcs.toLayer(ContactsService.Tag),
-              EdgeAgentService.Rpcs.toLayer(EdgeAgentService.Tag),
-              DevtoolsHost.Rpcs.toLayer(DevtoolsHost.Tag),
+              layerHandlersFromTag(SystemService.Rpcs, SystemService.Tag),
+              layerHandlersFromTag(NetworkService.Rpcs, NetworkService.Tag),
+              layerHandlersFromTag(LoggingService.Rpcs, LoggingService.Tag),
+              layerHandlersFromTag(IdentityService.Rpcs, IdentityService.Tag),
+              layerHandlersFromTag(InvitationsService.Rpcs, InvitationsService.Tag),
+              layerHandlersFromTag(DevicesService.Rpcs, DevicesService.Tag),
+              layerHandlersFromTag(SpacesService.Rpcs, SpacesService.Tag),
+              layerHandlersFromTag(DataService.Rpcs, DataService.Tag),
+              layerHandlersFromTag(QueryService.Rpcs, QueryService.Tag),
+              layerHandlersFromTag(FeedService.Rpcs, FeedService.Tag),
+              layerHandlersFromTag(ContactsService.Rpcs, ContactsService.Tag),
+              layerHandlersFromTag(EdgeAgentService.Rpcs, EdgeAgentService.Tag),
+              layerHandlersFromTag(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
             ),
           ).pipe(
             Layer.provide(Layer.succeed(RpcServer.Protocol, appProtocol)),
@@ -322,6 +326,7 @@ export const makeWorkerRuntime = ({
         sessions.add(session);
         yield* Effect.addFinalizer(() =>
           Event.emit(SessionClosed, { session }).pipe(
+            Effect.provideService(Event.Bus, bus),
             // A subscriber failing must not keep the transport open.
             Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
           ),
