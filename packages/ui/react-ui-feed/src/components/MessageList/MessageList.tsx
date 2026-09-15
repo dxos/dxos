@@ -86,6 +86,8 @@ type MessageListContextValue = {
   currentIndex: number;
   /** Whether the reader is resting on the tail — what a scroll-to-bottom affordance hides against. */
   atEnd: boolean;
+  /** Whether the list is keeping the tail in view itself; an affordance to return there has no place while it is. */
+  following: boolean;
   /** The one seam every navigation driver calls: toolbar, arrows, outline, minimap (SPEC F-3.2). */
   navigation: FeedNavigation;
   /** Rows mounted right now: the window the reader is paying for. */
@@ -129,6 +131,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     range,
     currentIndex,
     atEnd,
+    following,
     navigation,
     mountedRows,
     mountedWidgets,
@@ -144,6 +147,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     range,
     currentIndex,
     atEnd,
+    following,
     navigation,
     mountedRows,
     mountedWidgets,
@@ -509,6 +513,7 @@ const MessageListRoot = ({
           range={range}
           currentIndex={currentIndex}
           atEnd={follow.atEnd}
+          following={follow.following}
           navigation={navigation}
           mountedRows={mounted}
           mountedWidgets={mountedWidgets}
