@@ -56,7 +56,6 @@ import {
   SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
@@ -260,20 +259,23 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   ['SpacesService.subscribeMessages']({
     spaceKey,
     channel,
-  }: SpacesService.SubscribeMessagesRequest): EffectStream.Stream<GossipMessage, Error> {
-    return EffectEx.streamFromEmitter<GossipMessage, Error>((emit) => {
-      const ctx = Context.default();
-      scheduleTask(ctx, async () => {
-        const dataSpaceManager = await this._getDataSpaceManager();
-        const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-        const handle = space.listen(getChannelId(channel), (message) => {
-          void emit.single(message);
-        });
-        ctx.onDispose(() => handle.unsubscribe());
-      });
-
-      return Effect.promise(() => ctx.dispose());
-    });
+  }: SpacesService.SubscribeMessagesRequest): EffectStream.Stream<SpacesService.SubscribeMessagesResponse, Error> {
+    return EffectStream.unwrap(
+      Effect.promise(() => this._getDataSpaceManager()).pipe(
+        Effect.map((dataSpaceManager) =>
+          EffectEx.streamFromEmitter<SpacesService.SubscribeMessagesResponse, Error>((emit) => {
+            const space = dataSpaceManager.spaces.get(spaceKey);
+            if (!space) {
+              emit.fail(new SpaceNotFoundError(spaceKey));
+              return;
+            }
+            const handle = space.listen(getChannelId(channel), (message) => emit.single({ _tag: 'Message', message }));
+            emit.single({ _tag: 'Ready' });
+            return Effect.sync(() => handle.unsubscribe());
+          }),
+        ),
+      ),
+    );
   }
 
   ['SpacesService.queryCredentials']({
