@@ -245,12 +245,23 @@ export const run = ({
             break;
           }
 
+          // Aborted when a newer attempt supersedes this session: an un-cancelled request stays
+          // queued on the tab's lock for the worker's life, and would run `closeSession` against an
+          // already-closed scope whenever the tab finally released it.
+          const tabGoneAbort = new AbortController();
           const tabGone = message.sessionLockKey
-            ? navigator.locks.request(message.sessionLockKey, () => {
-                // Granted once the tab releases it.
-              })
+            ? navigator.locks
+                .request(message.sessionLockKey, { signal: tabGoneAbort.signal }, () => {
+                  // Granted once the tab releases it.
+                })
+                .catch((err) => {
+                  if (err?.name !== 'AbortError') {
+                    throw err;
+                  }
+                  return new Promise<never>(() => {});
+                })
             : new Promise<never>(() => {});
-          void Promise.race([superseded.wait(), tabGone]).then(closeSession);
+          void Promise.race([superseded.wait().then(() => tabGoneAbort.abort()), tabGone]).then(closeSession);
           break;
         }
 

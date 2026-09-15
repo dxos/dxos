@@ -18,6 +18,7 @@ import { createDidFromIdentityKey, credentialsOfType } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { buf, fromPublicKey, fromTimeframe, toDate, toPublicKey } from '@dxos/protocols/buf';
@@ -186,7 +187,9 @@ export const createDiagnostics = async (
 
         diagnostics.swarms = EffectContext.get(stack, SwarmNetworkManagerService).connectionLog?.swarms;
       }
-    })(),
+      // Diagnostics are best-effort: a half-open space or a tag the stack has not built yet must
+      // leave the other sections intact rather than failing the whole report.
+    })().catch((err) => log.warn('failed to collect identity diagnostics', { err })),
   ]);
 
   diagnostics.config = config.values;

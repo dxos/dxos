@@ -123,7 +123,6 @@ export class SqliteMetadataStore implements IMetadataStore {
    */
   @synchronized
   async load(): Promise<void> {
-    this.#loaded = true;
     const rows = await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -170,6 +169,10 @@ export class SqliteMetadataStore implements IMetadataStore {
       },
       EXPIRED_INVITATION_CLEANUP_INTERVAL,
     );
+
+    // Set last: a throw above (SQL error, a row failing to decode) must leave the store unloaded, or
+    // `close()` would save the empty metadata it still holds over the persisted record.
+    this.#loaded = true;
   }
 
   async flush(): Promise<void> {
