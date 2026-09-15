@@ -40,7 +40,6 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
 import {
@@ -104,11 +103,7 @@ export type ServiceContextOptions = {
 export class ServiceContext {
   readonly #options: ServiceContextOptions;
   readonly #config: Config;
-  readonly #sql = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
-  );
+  readonly #sql = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
   readonly #bus = Event.makeBus();
   /** Holds the reset handlers; closed by `destroy`. */
   readonly #busScope = Effect.runSync(Scope.make());
@@ -352,9 +347,7 @@ export type TestPeerProps = {
 export class TestPeer {
   private _props: TestPeerProps = {};
   private readonly _runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
+    sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie),
   );
   private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.contextEffect });
 

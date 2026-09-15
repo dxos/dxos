@@ -11,7 +11,6 @@ import { Event } from '@dxos/effect';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { ClientPlatformLayer, type TransportFactoryService } from './client-platform.ts';
 import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
@@ -31,7 +30,7 @@ export type ClientServicesStackContext =
   | TransportFactoryService;
 
 /** The SQL services the stack persists through; the embedder provides them beneath the layer. */
-export type ClientServicesSqlContext = SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction;
+export type ClientServicesSqlContext = SqlClient.SqlClient | SqlExport.SqlExport;
 
 export type ClientServicesLayerOptions = {
   /** Overrides for the config-derived runtime props. */

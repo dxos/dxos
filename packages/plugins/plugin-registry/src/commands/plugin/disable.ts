@@ -47,7 +47,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
 export const disable = Command.make(
   'disable',
   {
-    id: Args.string('id').pipe(Args.withDescription('The ID of the plugin to disable.')),
+    id: Args.String('id').pipe(Args.withDescription('The ID of the plugin to disable.')),
   },
   handler,
 ).pipe(Command.withDescription('Disable a plugin.'));

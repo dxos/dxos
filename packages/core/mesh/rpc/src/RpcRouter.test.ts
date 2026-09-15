@@ -14,7 +14,7 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { layerProtocolRpcPortServer, makeProtocolRpcPortClient } from './effect-rpc.ts';
+import { layerProtocolRpcPortClient, layerProtocolRpcPortServer } from './effect-rpc.ts';
 import * as RpcRouter from './RpcRouter.ts';
 import { createLinkedPorts } from './testing.ts';
 
@@ -62,10 +62,10 @@ const serveCounter = RpcRouter.serve('Counter.', CounterRpcs).pipe(Effect.provid
 const makeHarness = Effect.gen(function* () {
   const [clientPort, serverPort] = createLinkedPorts();
   const router = yield* Layer.build(RpcRouter.layer.pipe(Layer.provide(layerProtocolRpcPortServer(serverPort))));
-  const protocol = yield* makeProtocolRpcPortClient(clientPort);
-  const client = yield* RpcClient.make(AllRpcs, { disableTracing: true }).pipe(
-    Effect.provideService(RpcClient.Protocol, protocol),
-  );
+  // Built into the test's scope, not `Effect.provide`d: the protocol forks its receive loop into
+  // the layer's scope, which a per-effect provide would close as soon as the client is constructed.
+  const protocol = yield* Layer.build(layerProtocolRpcPortClient(clientPort));
+  const client = yield* RpcClient.make(AllRpcs, { disableTracing: true }).pipe(Effect.provide(protocol));
 
   const register = (serving: Effect.Effect<void, never, RpcRouter.RpcRouter | Scope.Scope>) =>
     Effect.gen(function* () {

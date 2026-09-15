@@ -241,12 +241,12 @@ const unmatched = (request: ScriptedRequest): AiError.AiError =>
   });
 
 /**
- * Constructs a {@link LanguageModel.Service} that replays a script: a plain turn list is consumed
+ * Constructs a {@link LanguageModel.LanguageModel} that replays a script: a plain turn list is consumed
  * sequentially; a routed script dispatches each call to the first matching {@link ScriptedRoute},
  * each with its own cursor. Prefer the layer helpers ({@link scriptedLanguageModelLayer} /
  * {@link scriptedAiService}) at call sites.
  */
-export const makeScriptedLanguageModel = (script: Script): Effect.Effect<LanguageModel.Service> =>
+export const makeScriptedLanguageModel = (script: Script): Effect.Effect<LanguageModel.LanguageModel> =>
   Effect.gen(function* () {
     const routes = toRoutes(script);
     // Per-route script position. The Request semaphore serializes turns within a session, and

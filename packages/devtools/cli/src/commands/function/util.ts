@@ -102,7 +102,7 @@ export const selectDeployedFunction = Effect.fn(function* (fns: Operation.Persis
     return yield* Effect.fail(new Error('No functions available to import (all are up-to-date)'));
   }
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: 'Select a function to import:',
     choices: importableFunctions.map((fn) => {
       const status = getFunctionStatus(fn, dbFunctions);
