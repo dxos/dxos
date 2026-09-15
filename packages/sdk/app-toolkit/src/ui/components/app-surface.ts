@@ -10,6 +10,7 @@ import { Entity, Obj, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
+import { type MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { AppCapabilities } from '../../app-framework/index.ts';
@@ -460,6 +461,18 @@ export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardI
 
 /** Role token for the card slot. */
 export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
+
+/**
+ * Card header menu items a type contributes. The surface renders nothing: it registers items with the
+ * host's `menu` via `useMenuContribution`, so hosts render it through `CardMenuSlot`.
+ */
+export const CardMenu: Role.Role<CardMenuData<any>> = Role.make('org.dxos.role.cardMenu');
+
+/** Surface data for the card menu role. */
+export type CardMenuData<Subject = unknown> = {
+  subject: Subject;
+  menu: MenuActions;
+};
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {

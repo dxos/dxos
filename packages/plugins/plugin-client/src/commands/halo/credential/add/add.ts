@@ -21,7 +21,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
 
   let credentialHex = Option.getOrUndefined(credential);
   if (!credentialHex) {
-    credentialHex = yield* Prompt.text({ message: 'Enter credential (hex string)' }).pipe(Prompt.run);
+    credentialHex = yield* Prompt.String({ message: 'Enter credential (hex string)' }).pipe(Prompt.run);
   }
 
   invariant(credentialHex, 'Invalid credential.');
@@ -83,7 +83,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
 export const add = Command.make(
   'add',
   {
-    credential: Args.string('credential').pipe(Args.withDescription('Credential as hex string.'), Args.optional),
+    credential: Args.String('credential').pipe(Args.withDescription('Credential as hex string.'), Args.optional),
   },
   handler,
 ).pipe(Command.withDescription('Import credential into HALO.'));

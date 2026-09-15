@@ -7,8 +7,6 @@ import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { type Quad } from 'n3';
 
-import { type SqlTransaction } from '@dxos/sql-sqlite';
-
 import { SemanticIndexError } from '../errors.ts';
 import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source.ts';
 import { insertQuads, makeSqliteSource } from '../internal/source/sqlite-source.ts';
@@ -41,7 +39,7 @@ const makeSelect = (source: Parameters<typeof selectTriples>[1]): FactStoreApi['
   return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
 };
 
-export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
+export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.effect(
   FactStore,
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;

@@ -20,7 +20,7 @@ export const list = Command.make(
   'list',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    remote: Options.boolean('remote').pipe(
+    remote: Options.Boolean('remote').pipe(
       Options.withDescription('Query EDGE service (defaults to local)'),
       Options.withDefault(false),
     ),

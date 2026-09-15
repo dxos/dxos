@@ -7,22 +7,9 @@ import { type Config } from '@dxos/config';
 import { SystemService } from '@dxos/protocols/rpc';
 import { type JsonKeyOptions, jsonKeyReplacer } from '@dxos/util';
 
-import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast.ts';
-
 const GET_DIAGNOSTICS_RPC_TIMEOUT = 10_000;
 
-export interface CollectDiagnosticsBroadcastSender {
-  broadcastDiagnosticsRequest(): any;
-}
-
-export interface CollectDiagnosticsBroadcastHandler {
-  start(): void;
-  stop(): void;
-}
-
 export class DiagnosticsCollector {
-  private static broadcastSender = createCollectDiagnosticsBroadcastSender();
-
   public static async collect(
     config: Config | Config[] = [],
     services: ClientServicesProvider | null = null,
@@ -43,13 +30,7 @@ export class DiagnosticsCollector {
       config,
     };
 
-    const diagnostics =
-      serviceDiagnostics != null
-        ? { client: clientDiagnostics, services: serviceDiagnostics }
-        : {
-            client: clientDiagnostics,
-            broadcast: await this.broadcastSender.broadcastDiagnosticsRequest(),
-          };
+    const diagnostics = { client: clientDiagnostics, services: serviceDiagnostics ?? undefined };
 
     return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
   }

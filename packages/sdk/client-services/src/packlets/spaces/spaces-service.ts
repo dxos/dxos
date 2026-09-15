@@ -5,6 +5,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
@@ -18,7 +19,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type EchoHost } from '@dxos/echo-host';
+import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { writeMessages } from '@dxos/feed-store';
@@ -37,30 +38,29 @@ import {
 import { buf, fromPublicKey, fromTimeframe, requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
+  type ContactAdmission,
+  ContactAdmissionSchema,
   type CreateEpochResponse,
   CreateEpochResponseSchema,
+  IdentitySchema,
   type JoinSpaceResponse,
   JoinSpaceResponseSchema,
   type QuerySpacesResponse,
   QuerySpacesResponseSchema,
   type Space,
-  SpaceSchema,
-} from '@dxos/protocols/buf/dxos/client/services_pb';
-import {
-  type ContactAdmission,
-  ContactAdmissionSchema,
-  IdentitySchema,
   Space_PipelineStateSchema,
   type SpaceMember,
   SpaceMember_PresenceState,
   SpaceMemberSchema,
+  SpaceSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
-import { type IdentityManager } from '../identity/index.ts';
+import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
+import { StackReadinessService } from '../services/stack-readiness.ts';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
@@ -69,8 +69,8 @@ import {
   readSerializedSpaceArchive,
   writeSerializedSpaceArchive,
 } from '../space-export/index.ts';
-import { type SpaceManager } from '../space/index.ts';
-import { type DataSpaceManager } from './data-space-manager.ts';
+import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from './data-space-manager.ts';
 import { type DataSpace } from './data-space.ts';
 
 /** Reads the space as the buf message the service returns. */
@@ -596,6 +596,24 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     }
   }
 }
+
+export const SpacesServiceLayer: Layer.Layer<
+  SpacesService.Tag,
+  never,
+  IdentityManagerService | SpaceManagerService | EchoHostService | DataSpaceManagerService | StackReadinessService
+> = Layer.effect(
+  SpacesService.Tag,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    const spaceManager = yield* SpaceManagerService;
+    const echoHost = yield* EchoHostService;
+    const dataSpaceManager = yield* DataSpaceManagerService;
+    const readiness = yield* StackReadinessService;
+    return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () =>
+      readiness.initialized.wait().then(() => dataSpaceManager),
+    );
+  }),
+);
 
 // Add `user-channel` prefix to the channel name, so that it doesn't collide with the internal channels.
 const getChannelId = (channel: string): string => `user-channel/${channel}`;

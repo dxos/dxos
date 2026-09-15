@@ -61,7 +61,7 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
 export const update = Command.make(
   'update',
   {
-    label: Options.string('label').pipe(Options.withDescription('The device label.')),
+    label: Options.String('label').pipe(Options.withDescription('The device label.')),
   },
   handler,
 ).pipe(Command.withDescription('Update device label.'));
