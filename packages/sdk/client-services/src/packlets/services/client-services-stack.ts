@@ -10,7 +10,7 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { type ClientServicesHandlers } from '@dxos/client-protocol';
 import { type Config, ConfigService } from '@dxos/config';
 import { type Context } from '@dxos/context';
-import { Event, EffectEx, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';

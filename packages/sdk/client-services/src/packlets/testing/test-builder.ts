@@ -239,6 +239,21 @@ export class ServiceContext {
   }
 
   async close(_ctx?: Context): Promise<void> {
+    await this.#closeStack();
+  }
+
+  async reset(): Promise<void> {
+    await this.#systemService.reset();
+  }
+
+  /** Disposes the SQLite runtime too; call once the context is no longer needed. */
+  async destroy(): Promise<void> {
+    await this.#closeStack();
+    await this.#sql.dispose();
+  }
+
+  // Shared by close and destroy so a caller that wraps `close` cannot recurse through `destroy`.
+  async #closeStack(): Promise<void> {
     if (!this.#runtime) {
       return;
     }
@@ -250,16 +265,6 @@ export class ServiceContext {
     this.#runtime = undefined;
     this.#stack = undefined;
     this.#systemService.setStatus(SystemStatus.INACTIVE);
-  }
-
-  async reset(): Promise<void> {
-    await this.#systemService.reset();
-  }
-
-  /** Disposes the SQLite runtime too; call once the context is no longer needed. */
-  async destroy(): Promise<void> {
-    await this.close();
-    await this.#sql.dispose();
   }
 
   async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
