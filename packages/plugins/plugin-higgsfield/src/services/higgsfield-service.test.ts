@@ -126,6 +126,13 @@ describe('Higgsfield generation services', () => {
     await enqueue({ model: 'higgsfield-ai/dop/lite', prompt: 'pan', imageArtifact, duration: 10 }, options);
     expect(calls[0].body.duration).toBe(10);
     expect(calls[1].body.duration).toBeUndefined();
+    await expect(
+      enqueue(
+        { model: 'minimax/hailuo-2.3/standard/image-to-video', prompt: 'pan', imageArtifact, duration: 7 },
+        options,
+      ),
+    ).rejects.toThrow('6 or 10 seconds, not 7');
+    expect(calls).toHaveLength(2);
   });
 
   test('awaitResult reports progress and maps outputs to variants', async ({ expect }) => {

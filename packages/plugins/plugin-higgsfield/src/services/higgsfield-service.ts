@@ -97,8 +97,33 @@ const VIDEO_MODELS: readonly GenerationService.FieldOption[] = [
   { value: 'kling-video/v2.1/pro/image-to-video', label: 'Kling 2.1 (pro)', secondaryLabel: '5s / 10s' },
 ];
 
-/** Whether a video model takes a clip `duration`; DoP's length is fixed. */
-const takesDuration = (model: string): boolean => !model.startsWith('higgsfield-ai/dop/');
+/**
+ * Clip lengths each video model family accepts (its OpenAPI enum); DoP's length is fixed, so it
+ * takes none. A model outside the table is passed through for the API to validate.
+ */
+const DURATIONS: readonly { prefix: string; seconds: readonly number[] }[] = [
+  { prefix: 'higgsfield-ai/dop/', seconds: [] },
+  { prefix: 'kling-video/', seconds: [5, 10] },
+  { prefix: 'wan-25-preview/', seconds: [5, 10] },
+  { prefix: 'minimax/hailuo-', seconds: [6, 10] },
+];
+
+/** The `duration` body field for the model, or an error for a length the model rejects. */
+const durationBody = (model: string, duration?: number): { duration?: number } => {
+  if (duration === undefined) {
+    return {};
+  }
+  const family = DURATIONS.find(({ prefix }) => model.startsWith(prefix));
+  if (family?.seconds.length === 0) {
+    return {};
+  }
+  if (family && !family.seconds.includes(duration)) {
+    throw new GenerationService.GenerationError(
+      `${model} produces clips of ${family.seconds.join(' or ')} seconds, not ${duration}.`,
+    );
+  }
+  return { duration };
+};
 
 /**
  * The studio persists one opaque job id per pending variant; ours is the API's `status_url`, so a
@@ -173,7 +198,7 @@ export const makeHiggsfieldVideoService = (
     if (cover.contentType && !cover.contentType.startsWith('image/')) {
       throw new GenerationService.GenerationError(`The reference cover is ${cover.contentType}, not an image.`);
     }
-    const duration = config.duration !== undefined && takesDuration(config.model) ? { duration: config.duration } : {};
+    const duration = durationBody(config.model, config.duration);
     const job = await provider.enqueue(
       { model: config.model, body: { prompt: config.prompt, image_url: cover.url, ...duration } },
       credentials(apiKey, signal),
