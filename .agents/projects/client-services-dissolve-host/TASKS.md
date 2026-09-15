@@ -2,17 +2,33 @@
 
 Design: [`./DESIGN.md`](./DESIGN.md). Branch `dm/client-services-refactor`, PR #13094.
 
-_Resume: PAUSED mid-change 2026-09-15 with UNCOMMITTED work (14 files, see Phase 6). Last commit
-`9129624c4f` (effect-native session server). The uncommitted tree has the framework-owned session
-scope + tab session lock + `WorkerService` removal; worker-framework tests pass (13/13 in
-`Client.test.ts`) but client-services fails to typecheck at `worker-runtime.ts:170` ("Expression
-expected"). `worker-runtime.ts` also carries the user's own in-progress edits on top of the
-agent's (bus provided via `Event.busLayer` and read with `yield* Event.Bus`, the wipe-storage
-handler inlined, `WorkerSession` made non-exported), so the error is likely mid-edit state there,
-not the session change. `Client.test.ts` has three `onTestFinished(() => x.close())` hooks whose
-`Promise<Connection>` return type must be wrapped in an async block. No suites beyond
-worker-framework have run since `e6b1bcdbf4`. CI on PR #13094 was red (4 test shards + check) on
-`67edcada13`, caused by a composer-app typecheck failure since fixed; not re-checked since._
+_Resume: Branch pushed through `62901596` (cloud sandbox). Fixed since the last note: the
+`client-services` build break (`WorkerSession` was not exported, which failed EVERY CI shard),
+the three browser `Worker session lifetime` tests (they asserted on `sessionsOpened` before the
+worker had recorded the session; they now await it), the `Event.Bus` defect in the worker's
+session finalizer, the `client-services-stack.ts` TODO (config and the bus are layer
+requirements now), `Rpc.serverLayer`'s typing, the stale `packages/sdk/client-services/TASKS.md`,
+and the changeset (now a summary of the whole PR). Green locally: `client-services` 30 files /
+`client-protocol` / `rpc` / `effect` / `worker-framework` node + browser, and builds for
+`client-services`, `client`, `client-protocol`, `client-e2e`, `worker-framework`, `composer-app`.
+
+OPEN, THE ONE REAL BLOCKER: every STREAMING rpc over a worker session hangs, so
+`client:test`'s `dedicated-worker-client-services.test.ts` fails 5/7 (CI never reached it before,
+because the build failed first). Evidence gathered: a unary rpc over a real worker session
+answers in ~200ms, while `SystemService.queryStatus` over the same session never produces a
+chunk; the request IS delivered and dispatched (`entry.handler` is the right impl, the fiber is
+forked, `Stream.runForEachArray` runs) but the handler's stream is never pulled — its
+`streamFromEmitter` registration never runs — so nothing is written back and the tab's
+`client._open: waiting for status trigger` never resolves. Ruled out: the `RpcTiming` wrap
+middleware (fails with `timing: false` too), `Layer.build` vs `ManagedRuntime` for the session
+server, the breadth of the stack context handed to the handlers (narrowing it to the 13 service
+tags changes nothing), and session-scope lifetime (the scope only closes at test teardown). The
+same server path — `layerClientServicesServer` + `Rpcs.toLayer(Tag)` over a MessagePort, with
+timing on, streaming, callback-registered streams, and a client that connects first — passes in
+`effect-rpc.test.ts` (4 new tests), so the difference is something about the session's
+arrangement, most likely the reverse-direction `RpcClient.layerProtocolWorker` the framework
+merges into the same context (an UNPEERED one demonstrably stalls the forward server's streams;
+see D18). NEXT: fix that, then rerun `client:test` and `client-e2e:test`._
 
 ## Phase 1: Event lifecycle in the stack (landed)
 
@@ -54,7 +70,7 @@ worker-framework have run since `e6b1bcdbf4`. CI on PR #13094 was red (4 test sh
       `SessionClosed` event; `shellPort` removed.
 - [x] Effect-native session server (`Rpc.serverLayer`, `layerClientServicesServer`) over stack tags.
 
-## Phase 4: Framework-owned session lifetime (UNCOMMITTED)
+## Phase 4: Framework-owned session lifetime (landed)
 
 - [x] JSDoc on `RuntimeHandle.createSession` and `Options.createRuntime` describing each scope's lifetime.
 - [x] `Worker.run`: session scope = `Scope.fork(runtimeScope)`; `createSession` acquires and
@@ -68,15 +84,19 @@ worker-framework have run since `e6b1bcdbf4`. CI on PR #13094 was red (4 test sh
 - [x] Tests in `worker-framework/src/Client.test.ts` ("Worker session lifetime"): stays open
       while connected; tab close releases the lock and closes the session scope; shutdown closes
       sessions before the runtime. Tab acks the worker's client transport (D18).
-- [ ] Fix `Client.test.ts` `onTestFinished` return types (three sites: wrap in an async block).
-- [ ] Fix client-services typecheck error at `worker-runtime.ts:170`.
-- [ ] Rebuild chain (`protocols → client-protocol → worker-framework → client-services`),
-      typecheck `client`, `client-e2e`, `composer-app`; format/lint/knip; commit; push.
+- [x] Fix `Client.test.ts` `onTestFinished` return types.
+- [x] Fix the client-services typecheck error (`WorkerSession` was not exported for `events.ts`).
+- [x] Rebuild chain (`protocols → client-protocol → worker-framework → client-services`),
+      typecheck `client`, `client-e2e`, `composer-app`; format/lint; commit; push.
+- [x] Browser `Worker session lifetime` tests await the recorded session before asserting.
 
 ## Phase 5: Verification (outstanding)
 
-- [ ] Run `client-services`, `client`, `client-e2e`, `worker-framework`, `effect` suites
-      (`moon run … -- --no-file-parallelism`); last full green was before `f1f97cad30`.
+- [x] `client-services` (30 files), `client-protocol`, `rpc`, `effect`, `worker-framework`
+      (node + browser) suites green.
+- [ ] `client:test` — `dedicated-worker-client-services.test.ts` fails 5/7 on the streaming-rpc
+      hang described in the resume note; everything else in the package passes.
+- [ ] `client-e2e:test` — not reached (the run aborts on `client:test`).
 - [ ] Run the client browser tests (`sync-main-thread-lag.browser.test.ts`, dedicated worker
       paths) — the session lifetime change is browser-only in production.
 - [ ] Composer e2e (`DX_ENVIRONMENT=dev`) for the dedicated worker: boot, second tab, tab close,
@@ -85,15 +105,14 @@ worker-framework have run since `e6b1bcdbf4`. CI on PR #13094 was red (4 test sh
 
 ## Phase 6: Cleanup (outstanding)
 
-- [ ] Remove the casts in `Rpc.serverLayer` (client-protocol `Rpc.ts`) — fix the merged-group typing.
-- [ ] User TODO in `client-services-stack.ts`: `ConfigService` and `Event.Bus` as layer
-      requirements rather than options; then drop the redundant `Layer.succeed(Event.Bus, bus)`
-      in the test context and `LocalClientServices` (both currently do both).
+- [x] `Rpc.serverLayer` is typed against its group and handler layer; only the timed branch
+      still casts, where the middleware changes the handler tags' types.
+- [x] `ClientServicesLayer` takes `ConfigService` and `Event.Bus` as layer requirements; every
+      embedder provides them once beneath the layer.
 - [ ] Decide D17's readiness-gate behaviour (startup error visibility to the tab).
-- [ ] `docs`/comments: `packages/sdk/client-services/TASKS.md` still describes the old
-      `ClientServicesHost` architecture; reconcile or point here.
-- [ ] Changeset `.changeset/client-services-event-lifecycle.md` covers `@dxos/effect` only;
-      rewrite as a summary of the whole PR before landing (client-services, client,
-      worker-framework, client-protocol, protocols).
+- [x] `packages/sdk/client-services/TASKS.md` points here instead of describing the old
+      `ClientServicesHost` architecture.
+- [x] The changeset is a summary of the whole PR (effect, client-services, client-protocol,
+      worker-framework, client, protocols, rpc).
 - [ ] Update memory `project-dissolve-client-services-host` (host is gone; goal moved to the
       worker framework scopes).
