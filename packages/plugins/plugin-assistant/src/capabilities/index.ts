@@ -65,9 +65,11 @@ export const SubjectContext = Capability.lazyModule(
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
 });
+// Provisions companion chats against deck planks and attention state — app-shell only.
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
   {
+    environments: [],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,

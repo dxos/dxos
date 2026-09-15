@@ -56,9 +56,12 @@ export const AutomationTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates.ts'),
 );
+// Resolves navigation targets for the app shell; a headless host has no navigation and cannot
+// provide `Client`, so it would fail the dependency graph rather than be skipped.
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
+    environments: [],
     requires: [ClientCapabilities.Client],
   },
 );

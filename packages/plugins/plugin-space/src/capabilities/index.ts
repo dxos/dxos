@@ -60,9 +60,12 @@ export const IdentityCreated = Capability.lazyModule(
 );
 export { NavigationHandler } from './navigation-handler/index.ts';
 export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
+// Resolves navigation targets for the app shell; a headless host has no navigation and cannot
+// provide `Client`, so it would fail the dependency graph rather than be skipped.
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
+    environments: [],
     requires: [ClientCapabilities.Client],
   },
 );

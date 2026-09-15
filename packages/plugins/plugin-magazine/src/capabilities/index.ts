@@ -16,7 +16,9 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
+// Builds app-graph nodes from attention view state, which only an app shell holds.
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
+  environments: [],
   requires: [AttentionCapabilities.ViewState],
 });
 export const RoutineTemplates = Capability.lazyModule(
