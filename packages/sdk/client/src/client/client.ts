@@ -748,8 +748,7 @@ export class Client {
     await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
     }).catch((err) => {
-      // A reset's last step shuts the host down, and a dedicated worker does so before its reply is sent.
-      if (!(err instanceof RpcClosedError)) {
+      if (!isHostShutDownByReset(err)) {
         throw err;
       }
     });
@@ -762,3 +761,5 @@ export class Client {
     log('reset complete');
   }
 }
+
+const isHostShutDownByReset = (err: unknown): boolean => err instanceof RpcClosedError;
