@@ -69,11 +69,11 @@
   --color-header-surface: var(--dx-surface-chrome);
   --color-l1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
   --color-r1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
-  /* The sidebars' landmark edge: `separator` lifted from the expanded sidebar tone, fixed rather
-     than surface-derived so a collapsed sidebar (which wears the rail's darker tone) keeps the same
-     line as the expanded one across the deck. */
+  /* The sidebars' landmark edge: `subdued-separator`'s lift from the expanded sidebar tone, fixed
+     rather than surface-derived so a collapsed sidebar (which wears the rail's darker tone) keeps
+     the same line as the expanded one across the deck. */
   --color-sidebar-separator: oklch(
-    from var(--color-l1-surface) calc(l + var(--dx-lift) * var(--dx-attenuate-separator-line) * 0.166) c h
+    from var(--color-l1-surface) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c h
   );
 
   /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */
