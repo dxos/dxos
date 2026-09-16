@@ -116,6 +116,10 @@ export class StageRunner {
     // A worker that appeared since the last boundary has no probe yet; the call is idempotent.
     await Promise.all(this.#targets.map(installWorkerProbe));
 
+    // Named for the stage about to run, so every artifact says which stage it covers.
+    this.#instruments.screencast?.beginStage(id);
+    await this.#instruments.profiler?.beginStage(id, this.#targets);
+
     // Drained and discarded: samples produced between stages belong to neither, and leaving them
     // would charge the previous stage's tail to this one.
     await readResponsiveness(page, this.#targets).catch(() => undefined);
@@ -155,9 +159,8 @@ export class StageRunner {
     const responsiveness = await readResponsiveness(page, this.#targets);
     const domCounters = await readDomCounters(this.#targets.find((target) => target.kind === 'page'));
 
-    const nextLabel = `${this.#index + 1}-next`;
-    const stills = this.#instruments.screencast?.cut(nextLabel);
-    const profiles = (await this.#instruments.profiler?.cut(nextLabel, this.#targets)) ?? [];
+    const stills = this.#instruments.screencast?.endStage();
+    const profiles = (await this.#instruments.profiler?.endStage()) ?? [];
 
     // Heap last, because it forces a GC: read earlier it would charge the collection's CPU to this
     // stage, and read before the DOM counters it would drop nodes the stage had just created.

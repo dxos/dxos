@@ -10,22 +10,24 @@ import { type Attached } from '../cdp.ts';
 /**
  * V8 sampling interval.
  *
- * The default 1000 µs costs a few percent on JS-heavy frames. That bias is accepted rather than
- * minimized because it is CONSTANT and because `diagnose` rows are never trended or compared
- * against `measure` rows — the profile is there so a nightly regression arrives with its
- * callstack instead of needing a reproduction.
+ * The default 1000 µs. Accepted rather than minimized because `diagnose` rows are never trended
+ * nor compared against `measure` rows — the profile exists so a regression `measure` detected
+ * arrives with its callstack instead of needing a reproduction. Do not read the overhead as small:
+ * profiling every realm alongside the screencast slowed a 200-task render by an order of
+ * magnitude, which is why `diagnose` needs its own (much larger) timeouts.
  */
 const SAMPLING_INTERVAL_US = 1000;
 
 export type ProfileSession = {
   /**
-   * Stops the current stage's profile, writes it, and starts the next stage's.
+   * Starts a stage's profile, naming its artifacts after that stage.
    *
    * Takes the target list rather than closing over it: realms come and go mid-flow, and a shared
-   * worker that started during stage 2 must be profiled for stage 3.
+   * worker that started during one stage must be profiled for the next.
    */
-  cut: (nextLabel: string, targets: Attached[]) => Promise<string[]>;
-  stop: () => Promise<string[]>;
+  beginStage: (label: string, targets: Attached[]) => Promise<void>;
+  /** Stops the stage's profile and writes one file per realm, named for the stage. */
+  endStage: () => Promise<string[]>;
 };
 
 /**
@@ -33,16 +35,14 @@ export type ProfileSession = {
  *
  * Per stage AND per target: a whole-run profile for a flow this long runs to hundreds of MB and
  * attributes nothing to the step that regressed, and a page-only profile misses the shared worker
- * that does the database work.
+ * that does the database work. Files are named for the stage they cover, which is the whole reason
+ * the profile is worth keeping — a reviewer reading a regression should not have to reconstruct
+ * which stage an artifact belongs to.
  */
-export const startProfiling = async (
-  targets: Attached[],
-  outputDir: string,
-  firstLabel: string,
-): Promise<ProfileSession> => {
+export const startProfiling = (outputDir: string): ProfileSession => {
   mkdirSync(outputDir, { recursive: true });
 
-  let label = firstLabel;
+  let label = 'unstarted';
   const started: Attached[] = [];
 
   const begin = async (current: Attached[]) => {
@@ -73,15 +73,11 @@ export const startProfiling = async (
     return files;
   };
 
-  await begin(targets);
-
   return {
-    cut: async (nextLabel: string, current: Attached[]): Promise<string[]> => {
-      const files = await end();
-      label = nextLabel;
+    beginStage: async (stageLabel: string, current: Attached[]): Promise<void> => {
+      label = stageLabel;
       await begin(current);
-      return files;
     },
-    stop: end,
+    endStage: end,
   };
 };

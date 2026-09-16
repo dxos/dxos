@@ -7,14 +7,15 @@
  *
  * The two modes exist because instrumentation is not free in a way that cancels out: an attached
  * CDP client makes Blink retain response bodies, which reads as linear memory growth (the finding
- * `scripts/memory/plain-soak.mjs` was written to control for), and the sampling profiler adds a
- * few percent to every JS frame. So the memory-authoritative run cannot be the profiled one.
+ * `scripts/memory/plain-soak.mjs` was written to control for), and profiling every realm alongside
+ * a per-frame screencast costs an order of magnitude on a render-heavy stage. So the
+ * memory-authoritative run cannot be the profiled one, and the two modes' timings never mix.
  *
  * - `measure`  — counter reads at stage boundaries only. Authoritative for memory and wall time;
  *                the only mode whose rows are trended.
- * - `diagnose` — always-on sampling profiler and screencast. Authoritative for CPU attribution and
- *                hotspots; its memory columns are recorded but flagged `instrumented` and must
- *                never be compared against `measure`.
+ * - `diagnose` — always-on sampling profiler and screencast. Good for hotspots and visible stalls;
+ *                its timings and memory are NOT comparable to `measure`, and the gap is large —
+ *                on a 200-task render the same stage went from 6.8s to past a 60s timeout.
  */
 export type Mode = 'measure' | 'diagnose';
 

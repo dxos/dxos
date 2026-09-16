@@ -61,6 +61,16 @@ const scaleName = process.env.DX_PERF_SCALE ?? 'smoke';
 
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
+/**
+ * Locator budget per mode.
+ *
+ * `diagnose` gets far more than `measure` because its instrumentation is not a small tax: the
+ * per-frame screencast and the per-realm profiler took the smoke tier's `open-tasks` from 6.8s to
+ * past 60s. A budget sized for `measure` turns every instrumented run into a timeout — the one
+ * failure mode that yields no artifacts, exactly when they are wanted.
+ */
+const locatorTimeout = (mode: Mode): number => (mode === 'diagnose' ? 300_000 : 60_000);
+
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
 };
@@ -93,6 +103,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
   const runId = `${Date.now().toString(36)}`;
   const artifactDir = path.join(WORKSPACE_ROOT, 'test-results', 'perf', 'artifacts', `${mode}-${scaleName}-${runId}`);
 
+  const budget = locatorTimeout(mode);
   const instrumented = await launchInstrumentedBrowser();
   const { browser, browserCdp, browserPid, debugPort } = instrumented;
 
@@ -155,8 +166,8 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       runner.adopt(targets);
       const pageTarget = targets.find((target) => target.kind === 'page');
       runner.attachInstruments({
-        profiler: await startProfiling(targets, artifactDir, 'open-space'),
-        ...(pageTarget ? { screencast: await startScreencast(pageTarget.cdp, artifactDir, 'open-space') } : {}),
+        profiler: startProfiling(artifactDir),
+        ...(pageTarget ? { screencast: await startScreencast(pageTarget.cdp, artifactDir) } : {}),
       });
     }
 
@@ -167,29 +178,29 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       // The URL, not `networkidle`: this app holds a websocket open and syncs continuously, so the
       // network never goes idle and that wait burns its whole timeout — which then reports as the
       // stage's duration and would trend as a 60s regression forever.
-      await page.waitForURL(new RegExp(`/w/${fixture.spaceId}`), { timeout: 60_000 });
+      await page.waitForURL(new RegExp(`/w/${fixture.spaceId}`), { timeout: budget });
     });
 
     await runner.stage('open-project', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
         subject: [projectPath(fixture.spaceId, fixture.projectIds[0])],
       });
-      await page.getByTestId('projectsPlugin.tab.tasks').waitFor({ timeout: 60_000 });
+      await page.getByTestId('projectsPlugin.tab.tasks').waitFor({ timeout: budget });
     });
 
     await runner.stage('open-tasks', async () => {
-      await page.getByTestId('projectsPlugin.tab.tasks').click();
-      await page.getByTestId('taskList.item').first().waitFor({ timeout: 60_000 });
+      await page.getByTestId('projectsPlugin.tab.tasks').click({ timeout: budget });
+      await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
     });
 
     await runner.stage('toggle-task', async () => {
-      await page.getByTestId('taskList.item.checkbox').first().click();
+      await page.getByTestId('taskList.item.checkbox').first().click({ timeout: budget });
       await page.waitForTimeout(500);
     });
 
     await runner.stage('scroll-tasks', async () => {
       const list = page.getByTestId('taskList.item').first();
-      await list.waitFor({ timeout: 60_000 });
+      await list.waitFor({ timeout: budget });
       for (let step = 0; step < 10; step++) {
         await page.mouse.wheel(0, 2_000);
         await page.waitForTimeout(100);
@@ -199,10 +210,10 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     });
 
     await runner.stage('reopen-project', async () => {
-      await page.getByTestId('projectsPlugin.tab.overview').click();
+      await page.getByTestId('projectsPlugin.tab.overview').click({ timeout: budget });
       await page.waitForTimeout(500);
-      await page.getByTestId('projectsPlugin.tab.tasks').click();
-      await page.getByTestId('taskList.item').first().waitFor({ timeout: 60_000 });
+      await page.getByTestId('projectsPlugin.tab.tasks').click({ timeout: budget });
+      await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
     });
 
     const rows = runner.rows;

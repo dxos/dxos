@@ -20,8 +20,10 @@ const STILL_FRAME_MS = 200;
 export type StillFrames = { maxMs: number; count: number; files: string[] };
 
 export type Screencast = {
-  /** Ends the current stage, returning its still-frame summary and starting the next. */
-  cut: (nextLabel: string) => StillFrames;
+  /** Names the stills that follow after the stage they belong to. */
+  beginStage: (label: string) => void;
+  /** Ends the stage, returning its still-frame summary. */
+  endStage: () => StillFrames;
   stop: () => void;
 };
 
@@ -32,10 +34,10 @@ export type Screencast = {
  * did rather than what the event loop did, and the same frames are the between-stage screenshots.
  * Diagnose mode only — an attached screencast is itself a perturbation.
  */
-export const startScreencast = async (page: Cdp, outputDir: string, firstLabel: string): Promise<Screencast> => {
+export const startScreencast = async (page: Cdp, outputDir: string): Promise<Screencast> => {
   mkdirSync(outputDir, { recursive: true });
 
-  let label = firstLabel;
+  let label = 'unstarted';
   let gaps: number[] = [];
   let files: string[] = [];
   let lastFrameAt: number | undefined;
@@ -70,20 +72,19 @@ export const startScreencast = async (page: Cdp, outputDir: string, firstLabel: 
   await page.trySend('Page.startScreencast', { format: 'png', quality: 60, everyNthFrame: 1 });
 
   return {
-    cut: (nextLabel: string): StillFrames => {
-      const summary: StillFrames = {
-        maxMs: Math.round(Math.max(0, ...gaps)),
-        count: gaps.length,
-        files,
-      };
+    beginStage: (stageLabel: string): void => {
+      label = stageLabel;
       gaps = [];
       files = [];
       framesThisStage = 0;
-      label = nextLabel;
-      // `lastFrameAt` deliberately survives the cut: the interval spanning a boundary is real time
-      // in which the screen did not update, and it belongs to the stage that was ending.
-      return summary;
+      // `lastFrameAt` deliberately survives the boundary: the interval spanning it is real time in
+      // which the screen did not update.
     },
+    endStage: (): StillFrames => ({
+      maxMs: Math.round(Math.max(0, ...gaps)),
+      count: gaps.length,
+      files,
+    }),
     stop: () => {
       page.off('Page.screencastFrame', onFrame);
       void page.trySend('Page.stopScreencast');

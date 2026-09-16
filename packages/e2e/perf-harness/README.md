@@ -14,13 +14,20 @@ A flow is described once, in a `.mdl` QA test, and executed once, as a Playwrigh
 | Mode       | Instrumentation                   | Authoritative for            | Trended |
 | ---------- | --------------------------------- | ---------------------------- | ------- |
 | `measure`  | counter reads at boundaries only  | memory, wall time            | yes     |
-| `diagnose` | V8 sampling profiler + screencast | CPU attribution, hotspots    | no      |
+| `diagnose` | V8 sampling profiler + screencast | hotspots, visible stalls     | no      |
 
-The split is not caution, it is a measured effect: an attached CDP client makes Blink retain
-response bodies, which reads as linear memory growth over a run — the finding
-`composer-app/scripts/memory/plain-soak.mjs` exists to control for. So the memory-authoritative run
-cannot be the profiled one. `writePosthogBatch` drops every non-`measure` row rather than trusting
-a caller to remember.
+The split is not caution, it is a measured effect, and a much larger one than "a few percent":
+
+- An attached CDP client makes Blink retain response bodies, which reads as linear memory growth
+  over a run — the finding `composer-app/scripts/memory/plain-soak.mjs` exists to control for.
+- The screencast writes a PNG per frame, and the sampling profiler runs in every realm. On the
+  smoke tier's `open-tasks` (a 200-task render) that took the stage from **6.8s in `measure` to
+  past a 60s timeout in `diagnose`** — an order of magnitude, not a constant bias.
+
+So `diagnose` numbers are not comparable to `measure` numbers, and are not comparable to each
+other across a change in instrumentation either. They exist to attribute a regression `measure`
+has already detected, and nothing more. `writePosthogBatch` drops every non-`measure` row rather
+than trusting a caller to remember.
 
 ## What each metric actually reads
 
