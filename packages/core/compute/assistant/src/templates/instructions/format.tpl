@@ -41,7 +41,8 @@ never wrapped in backticks. Three forms render an object; choose by what the rea
 
 When you create, upload or file an object — a document, an image, a file — end your reply with it
 embedded as a card, so the reader sees the result where they are. Open an object in the layout only
-when asked to open or navigate to it; a tool that opens one is not how you present it.
+when asked to open or navigate to it; a tool that opens one is not how you present it. A <surface>
+tag is for the roles a skill documents, not for showing an object: use the markdown image form.
 - Block reference — an <object> tag, when you have only the DXN:
 
 <object>

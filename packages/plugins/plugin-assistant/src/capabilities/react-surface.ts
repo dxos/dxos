@@ -27,6 +27,7 @@ import {
   IntegrationPrompt,
   PluginPrompt,
   QuestionCard,
+  ObjectCardSurface,
   QuestionSurface,
   SpaceHomePrompt,
 } from '#containers';
@@ -158,6 +159,13 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.CardContent, Question.Question),
         component: QuestionCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      // `<surface role='card' data='{"id":"echo://…"}'>`: the object as its card.
+      Surface.create({
+        id: 'objectCard',
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'card'),
+        component: ObjectCardSurface,
+        props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
       }),
       Surface.create({
         id: 'question',
