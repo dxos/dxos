@@ -29,7 +29,7 @@ import {
   composableProps,
   useTranslation,
 } from '@dxos/react-ui';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { ActionToolbar } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -41,7 +41,12 @@ import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
-import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter.ts';
+import {
+  type ProcessEnvironment,
+  filterProcesses,
+  filterTraceMessages,
+  parseProcessEnvironments,
+} from './trace-filter.ts';
 import { useTraceMenu } from './useTraceMenu.ts';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
@@ -62,12 +67,22 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       [updateSettings],
     );
 
-    const menu = useTraceMenu({ selected: environments, onSelectedChange: handleEnvironmentsChange });
+    // The picked processes live in view state keyed by the panel, so they survive a remount; the
+    // trace below narrows to them and their children.
+    const selectedPids = useSelection(attendableId, 'multi');
+    const { toggle: toggleSelected, clear: clearSelected } = useSelectionActions(attendableId);
+
+    const menu = useTraceMenu({
+      selected: environments,
+      onSelectedChange: handleEnvironmentsChange,
+      selectionCount: selectedPids.length,
+      onClearSelection: clearSelected,
+    });
     const { t } = useTranslation(meta.profile.key);
 
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
     // See the comment in `ProcessTreeContainer` for more details.
-    const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
+    const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space, { selectedPids }));
 
     // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
     // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
@@ -120,16 +135,14 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       [invokePromise, setSelectedCommit],
     );
 
-    // Select current branch.
-    const [currentBranch, setCurrentBranch] = useState<string | null>(null);
+    // The most recently picked process is the highlighted branch, while it is still picked.
+    const currentBranch = useMemo(() => {
+      const last = selectedPids.at(-1);
+      return last !== undefined && branches.includes(last) ? last : null;
+    }, [selectedPids, branches]);
     const handleProcessSelect = useCallback(
-      (process: Process.Info) => {
-        const branch = branches.find((branch) => branch === process.pid.toString());
-        if (branch) {
-          setCurrentBranch(branch);
-        }
-      },
-      [branches],
+      (process: Process.Info) => toggleSelected(process.pid.toString()),
+      [toggleSelected],
     );
 
     return (
@@ -160,6 +173,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                             classNames='max-h-[8lh]'
                             space={space}
                             environments={environments}
+                            selected={selectedPids}
                             onProcessSelect={handleProcessSelect}
                             onProcessTerminate={onProcessTerminate}
                           />
@@ -183,7 +197,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                         <Accordion.ItemHeader hover>
                           <span className='text-sm text-description'>{t('trace.label')}</span>
                         </Accordion.ItemHeader>
-                        <Accordion.ItemBody classNames='p-0 dx-grow grid grid-rows-[minmax(0,1fr)]'>
+                        <Accordion.ItemBody classNames='dx-grow grid grid-rows-[minmax(0,1fr)]'>
                           <ScrollContainer.Root pin>
                             <ScrollContainer.Content thin>
                               <ScrollContainer.Fade />
@@ -195,6 +209,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                                     branches={branches}
                                     branch={currentBranch}
                                     commits={commits}
+                                    showTimestamp
                                     onSelect={handleCommitSelect}
                                   />
                                 )}
@@ -237,8 +252,9 @@ type TraceSection = { id: 'processes' | 'trace' | 'details' };
 
 const SECTIONS: TraceSection[] = [{ id: 'processes' }, { id: 'trace' }, { id: 'details' }];
 
-// Stable ref.
+// Stable refs.
 const atomEmpty = Atom.make(() => [] as const);
+const NO_PIDS: readonly string[] = [];
 
 // How often the graph re-checks for spans that timed out with no closing event.
 // Coarse-grained on purpose: `spanTimeoutMs` operates on a 20-minute scale, so there is no
@@ -248,11 +264,13 @@ const SPAN_TIMEOUT_CHECK_INTERVAL_MS = 60_000;
 type UseExecutionGraphOptions = {
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
+  /** Pids to narrow the graph to (with their descendants); empty shows everything. */
+  selectedPids?: readonly string[];
 };
 
 const useExecutionGraph = (
   space: Space,
-  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans, eventLimit, selectedPids = NO_PIDS }: UseExecutionGraphOptions = {},
 ): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
@@ -268,8 +286,8 @@ const useExecutionGraph = (
   }, []);
 
   const atom = useMemo(
-    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit, now }),
-    [space, processesAtom, collapseCompletedSpans, eventLimit, now],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit, selectedPids, now }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit, selectedPids, now],
   );
 
   return useAtomValue(atom);
@@ -283,16 +301,25 @@ const sameProcesses = (left: readonly Process.Info[], right: readonly Process.In
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { collapseCompletedSpans = true, eventLimit = 100, now }: UseExecutionGraphOptions & { now: number },
+  {
+    collapseCompletedSpans = true,
+    eventLimit = 100,
+    selectedPids = NO_PIDS,
+    now,
+  }: UseExecutionGraphOptions & { now: number },
 ): Atom.Atom<ExecutionGraph> => {
-  const traceMessages = getTraceMessagesAtom(space);
+  const traceMessages = getTraceMessagesAtom(space).pipe(
+    Atom.map((messages) => filterTraceMessages(messages, selectedPids)),
+  );
 
   const activeProcesses = pipe(
     processesAtom,
     Atom.debounce(Duration.millis(500)),
     Atom.map((processes) =>
       processes.filter(
-        (process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING,
+        (process) =>
+          (process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING) &&
+          (selectedPids.length === 0 || selectedPids.includes(process.pid)),
       ),
     ),
     // The monitor rebuilds the process list on every poll, so without a structural comparison the
@@ -319,7 +346,7 @@ const feedKey = (uri: string): string => {
 };
 
 type ProcessTreeContainerProps = ThemedClassName<
-  Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'> & {
+  Pick<ProcessTreeProps, 'selected' | 'onProcessSelect' | 'onProcessTerminate'> & {
     space: Space;
     environments: readonly ProcessEnvironment[];
   }
@@ -331,6 +358,7 @@ const ProcessTreeContainer = ({
   classNames,
   space,
   environments,
+  selected,
   onProcessSelect,
   onProcessTerminate,
 }: ProcessTreeContainerProps) => {
@@ -384,6 +412,7 @@ const ProcessTreeContainer = ({
       depth={3}
       processes={visibleProcesses}
       resolveLabel={resolveLabel}
+      selected={selected}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}
     />

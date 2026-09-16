@@ -305,7 +305,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
   const label = (entry: ToolEntry) => entryLabel(entry, t);
 
   return (
-    <Accordion.Root<ToolEntry> items={entries} onValueChange={(value) => onOpen?.(value.length > 0)}>
+    <Accordion.Root<ToolEntry> rounded items={entries} onValueChange={(value) => onOpen?.(value.length > 0)}>
       {({ items }) =>
         items.map((entry) => {
           // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
@@ -325,7 +325,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
                 </span>
               </Accordion.ItemHeader>
               {detail && (
-                <Accordion.ItemBody>
+                <Accordion.ItemBody classNames='px-2'>
                   <ToolCallDetail entry={entry} />
                 </Accordion.ItemBody>
               )}

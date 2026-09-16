@@ -35,6 +35,9 @@ export type Commit = {
 
 const SHIMMER_EFFECT_TAG = 'effect:shimmer';
 
+/** Wall-clock to the second: a trace line is read against its neighbours, and milliseconds only widen the column. */
+const TIMESTAMP_FORMAT = 'HH:mm:ss';
+
 const hasShimmerEffect = (commit: Commit): boolean => commit.tags?.includes(SHIMMER_EFFECT_TAG) ?? false;
 
 const empty = Object.freeze([]);
@@ -296,7 +299,7 @@ export const Timeline = memo(
           {...composableProps(props, { classNames: 'grid auto-rows-min outline-none' })}
           tabIndex={0}
           style={{
-            gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
+            gridTemplateColumns: ['min-content', showTimestamp && 'max-content', showIcon && '1.25rem', '1fr']
               .filter(Boolean)
               .join(' '),
           }}
@@ -334,8 +337,8 @@ export const Timeline = memo(
                   data-index={index}
                   aria-current={current === index}
                   className={mx(
-                    'group/row col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]',
-                    'aria-[current=true]:bg-current-surface! hover:bg-hover-surface-subtle',
+                    'group/row col-span-full grid grid-cols-subgrid gap-1 px-[2px] overflow-hidden items-center cursor-pointer',
+                    'aria-current:bg-current-surface! hover:bg-hover-surface-subtle',
                   )}
                   style={{ height: `${options.lineHeight}px` }}
                   onClick={handleClick}
@@ -352,14 +355,14 @@ export const Timeline = memo(
                     />
                   </div>
                   {showTimestamp && (
-                    <div className='text-xs font-mono truncate items-center text-subdued'>
-                      {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
+                    <div className='text-xs tabular-nums items-center text-description font-thin'>
+                      {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
                     </div>
                   )}
                   {showIcon && <CommitIcon commit={commit} />}
                   <div
                     className={mx(
-                      'text-sm truncate cursor-pointer text-subdued font-thin group-aria-[current=true]/row:text-current-fg hover:text-current-fg',
+                      'text-sm truncate cursor-pointer text-description font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
                       hasLink && 'underline decoration-dotted underline-offset-2',
                     )}
                   >

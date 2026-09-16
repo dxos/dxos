@@ -122,6 +122,7 @@ export const translations: Resource[] = [
         'trace-details.label': 'Details',
 
         'trace-filter.menu': 'Filter processes',
+        'trace-clear-selection.label': 'Clear process selection',
         'trace-filter-all.label': 'Show all',
         'trace-filter-none.label': 'Hide all',
         'trace-environment-app.label': 'App',

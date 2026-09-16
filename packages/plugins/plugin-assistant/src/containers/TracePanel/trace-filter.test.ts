@@ -5,6 +5,8 @@
 import { describe, test } from 'vitest';
 
 import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
+import { Obj } from '@dxos/echo';
 import { SpaceId, URI } from '@dxos/keys';
 
 import { makeProcess } from '#testing';
@@ -14,6 +16,7 @@ import {
   DEFAULT_PROCESS_ENVIRONMENTS,
   ProcessEnvironment,
   filterProcesses,
+  filterTraceMessages,
   parseProcessEnvironments,
   processEnvironment,
   toggleProcessEnvironment,
@@ -98,3 +101,37 @@ describe('parseProcessEnvironments', () => {
 
 const makeInfo = (name: string, environment: Process.Environment): Process.Info =>
   makeProcess({ pid: Process.ID.make(name), name, state: Process.State.RUNNING, environment });
+
+describe('filterTraceMessages', () => {
+  const message = (pid: string, parentPid?: string): Trace.Message =>
+    Obj.make(Trace.Message, {
+      meta: { pid, ...(parentPid ? { parentPid } : {}) },
+      isEphemeral: false,
+      events: [{ type: 'test', timestamp: 0, data: {} }],
+    });
+
+  test('an empty selection is no filter', ({ expect }) => {
+    const messages = [message('a'), message('b')];
+    expect(filterTraceMessages(messages, [])).toBe(messages);
+  });
+
+  test("a selected process keeps its own messages and its descendants'", ({ expect }) => {
+    const messages = [message('agent'), message('tool', 'agent'), message('nested', 'tool'), message('other')];
+    expect(filterTraceMessages(messages, ['agent']).map((m) => m.meta.pid)).toEqual(['agent', 'tool', 'nested']);
+  });
+
+  test('several selected processes are unioned', ({ expect }) => {
+    const messages = [message('a'), message('b'), message('c')];
+    expect(filterTraceMessages(messages, ['a', 'c']).map((m) => m.meta.pid)).toEqual(['a', 'c']);
+  });
+
+  test('a message with no pid is dropped once anything is selected', ({ expect }) => {
+    const orphan = Obj.make(Trace.Message, { meta: {}, isEphemeral: false, events: [] });
+    expect(filterTraceMessages([orphan, message('a')], ['a']).map((m) => m.meta.pid)).toEqual(['a']);
+  });
+
+  test('a cyclic parent chain terminates', ({ expect }) => {
+    const messages = [message('a', 'b'), message('b', 'a')];
+    expect(filterTraceMessages(messages, ['z'])).toEqual([]);
+  });
+});

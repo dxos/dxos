@@ -3,6 +3,7 @@
 //
 
 import type * as Process from '@dxos/compute/Process';
+import type * as Trace from '@dxos/compute/Trace';
 
 /**
  * What a running process is working on behalf of, as a single bucket.
@@ -82,3 +83,38 @@ export const parseProcessEnvironments = (selected: readonly string[] | undefined
   selected === undefined
     ? DEFAULT_PROCESS_ENVIRONMENTS
     : ALL_PROCESS_ENVIRONMENTS.filter((environment) => selected.includes(environment));
+
+/**
+ * Narrows trace messages to the selected processes and their descendants: a tool call or sub-agent
+ * runs as a child of the process it serves, so its events are that process's work. An empty
+ * selection is no filter.
+ */
+export const filterTraceMessages = (
+  messages: readonly Trace.Message[],
+  selected: readonly string[],
+): readonly Trace.Message[] => {
+  if (selected.length === 0) {
+    return messages;
+  }
+  const parentByPid = new Map<string, string | undefined>();
+  for (const message of messages) {
+    if (message.meta.pid !== undefined) {
+      parentByPid.set(message.meta.pid, message.meta.parentPid);
+    }
+  }
+  const selection = new Set(selected);
+  const matches = new Map<string, boolean>();
+  const isSelected = (pid: string): boolean => {
+    const known = matches.get(pid);
+    if (known !== undefined) {
+      return known;
+    }
+    // Pinned before the walk so a cyclic parent chain (a corrupt trace) terminates.
+    matches.set(pid, false);
+    const parent = parentByPid.get(pid);
+    const result = selection.has(pid) || (parent !== undefined && isSelected(parent));
+    matches.set(pid, result);
+    return result;
+  };
+  return messages.filter((message) => message.meta.pid !== undefined && isSelected(message.meta.pid));
+};

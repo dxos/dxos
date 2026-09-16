@@ -378,7 +378,7 @@ export const Tree = <T extends { id: string } = any>({
         onSelect?.({ item: node.item, path: node.path, current: !node.current, ...modifiers });
       }
     },
-    [canSelect, onSelect, toggleOpen],
+    [canSelect, onSelect, toggleOpen, selectionMode],
   );
 
   const onCommitClose = useCallback(
@@ -566,6 +566,7 @@ export const Tree = <T extends { id: string } = any>({
       onOpenChange,
       onItemHover,
       selectNode: onSelectNode,
+      selectionMode,
       closingValues,
       commitClose: onCommitClose,
       mountedRef,
@@ -586,6 +587,7 @@ export const Tree = <T extends { id: string } = any>({
       debug,
       dropBelowExpanded,
       onSelectNode,
+      selectionMode,
       closingValues,
       onOpenChange,
       onItemHover,
@@ -835,6 +837,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     onOpenChange,
     onItemHover,
     selectNode,
+    selectionMode,
     focusNode,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -999,6 +1002,26 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     [current, node, selectNode],
   );
 
+  // In multiple mode a plain click toggles the row. The machine would replace the selection with
+  // the row instead (and report the row a second time through `handleClick` when it is current),
+  // so the click is taken here in the capture phase and never reaches it; a modified click keeps
+  // the machine's range and toggle gestures, and a click on a control inside the row is the
+  // control's.
+  const handleClickCapture = useCallback(
+    (event: MouseEvent) => {
+      if (selectionMode !== 'multiple' || event.shiftKey || event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+      if ((event.target as HTMLElement).closest('button, input, textarea, [contenteditable="true"]')) {
+        return;
+      }
+      event.stopPropagation();
+      event.preventDefault();
+      selectNode(node, { option: false, shift: false });
+    },
+    [selectionMode, node, selectNode],
+  );
+
   const handleItemHover = useCallback(() => onItemHover?.({ item }), [onItemHover, item]);
 
   const handleContextMenu = useCallback((event: MouseEvent) => {
@@ -1042,6 +1065,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         props.className,
       )}
       onClick={handleClick}
+      onClickCapture={handleClickCapture}
       onMouseEnter={handleItemHover}
       onContextMenu={handleContextMenu}
     >

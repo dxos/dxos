@@ -37,6 +37,8 @@ export type ProcessTreeProps = {
    * Must be referentially stable — `ProcessTree` is memoized on its props.
    */
   resolveLabel?: (process: Process.Info) => string | undefined;
+  /** Pids drawn as selected; the tree is controlled, so a click reports through `onProcessSelect`. */
+  selected?: readonly string[];
   onProcessSelect?: (process: Process.Info) => void;
   onProcessTerminate?: (process: Process.Info) => void;
 };
@@ -60,7 +62,7 @@ const ROOT_ID = 'processes';
 export const ProcessTree = React.memo(
   composable<HTMLDivElement, ProcessTreeProps>(
     (
-      { processes, depth = DEFAULT_DEPTH, resolveLabel, onProcessSelect, onProcessTerminate, ...props },
+      { processes, depth = DEFAULT_DEPTH, resolveLabel, selected, onProcessSelect, onProcessTerminate, ...props },
       forwardedRef,
     ) => {
       // Open state lives outside the model: `processes` carries live metrics, so the forest (and with
@@ -79,8 +81,9 @@ export const ProcessTree = React.memo(
             }),
             // Expanded by default, matching the flattened view this replaced.
             isOpen: (_node, path) => openRef.current.get(path.join('/')) ?? true,
+            isCurrent: (node) => node.process !== undefined && (selected?.includes(node.process.pid) ?? false),
           }),
-        [root, resolveLabel],
+        [root, resolveLabel, selected],
       );
 
       // The ref survives model rebuilds; the atom is what the controlled tree actually reads, so a
@@ -109,6 +112,7 @@ export const ProcessTree = React.memo(
               id={ROOT_ID}
               model={model}
               density='sm'
+              selectionMode='multiple'
               classNames='text-sm tabular-nums gap-0'
               gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
               renderIcon={renderIcon}

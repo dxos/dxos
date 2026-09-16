@@ -19,13 +19,21 @@ export type UseTraceMenuOptions = {
   /** Process environments currently shown. */
   selected: readonly ProcessEnvironment[];
   onSelectedChange: (environments: ProcessEnvironment[]) => void;
+  /** How many processes are picked; the clear action shows only while there are some. */
+  selectionCount?: number;
+  onClearSelection?: () => void;
 };
 
 /**
  * Environment filter menu for the trace panel's toolbar.
  * The group collapses to a funnel trigger, so the panel's own rows keep the width.
  */
-export const useTraceMenu = ({ selected, onSelectedChange }: UseTraceMenuOptions) => {
+export const useTraceMenu = ({
+  selected,
+  onSelectedChange,
+  selectionCount = 0,
+  onClearSelection,
+}: UseTraceMenuOptions) => {
   const handleToggle = useCallback(
     (environment: ProcessEnvironment) => onSelectedChange(toggleProcessEnvironment(selected, environment)),
     [selected, onSelectedChange],
@@ -34,6 +42,17 @@ export const useTraceMenu = ({ selected, onSelectedChange }: UseTraceMenuOptions
   return useMenuBuilder(
     () =>
       MenuBuilder.make()
+        .action(
+          'clearSelection',
+          {
+            label: ['trace-clear-selection.label', { ns: meta.profile.key }],
+            icon: 'ph--selection-slash--regular',
+            iconOnly: true,
+            hidden: selectionCount === 0,
+            testId: 'tracePanel.clearSelection',
+          },
+          () => onClearSelection?.(),
+        )
         .group(
           'processEnvironments',
           {
@@ -71,6 +90,6 @@ export const useTraceMenu = ({ selected, onSelectedChange }: UseTraceMenuOptions
           },
         )
         .build(),
-    [handleToggle, selected, onSelectedChange],
+    [handleToggle, selected, onSelectedChange, selectionCount, onClearSelection],
   );
 };

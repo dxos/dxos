@@ -134,6 +134,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
   selectNode: (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => void;
+  /** In `multiple` mode a plain click toggles the row; in `single` mode it selects. */
+  selectionMode: 'single' | 'multiple';
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;
   /** Branch values currently running their conceal animation before the close commits. */

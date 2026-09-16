@@ -22,6 +22,7 @@ import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
+import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -123,7 +124,10 @@ const DefaultStory = () => {
         </Toolbar.Root>
       }
     >
-      <TracePanel space={space} attendableId={space.id} onProcessTerminate={handleStop} />
+      {/* The process selection is view state, which needs a provider to hold it. */}
+      <ViewStateProvider>
+        <TracePanel space={space} attendableId={space.id} onProcessTerminate={handleStop} />
+      </ViewStateProvider>
     </BaseStory>
   );
 };
