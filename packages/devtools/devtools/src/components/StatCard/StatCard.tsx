@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { Card, type CardMenuProps, Flex, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Card, type CardMenuProps, Flex, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 //
@@ -60,48 +60,75 @@ type StatCardRowProps = ThemedClassName<{
   /** Leading gutter icon; the gutter is kept even when empty so labels align across rows. */
   icon?: string;
   iconClassNames?: string;
+  /** A disclosure row: the leading gutter holds the toggle instead of an icon. */
+  open?: boolean;
+  onToggle?: (open: boolean) => void;
   label: ReactNode;
   value?: ReactNode;
+  /** Shown in the trailing gutter, so values end on one edge whether or not they carry a unit. */
   unit?: string;
   /** Tooltip on the label, for the full text of a truncated row. */
   title?: string;
-  /** Trailing gutter control. */
+  /** Trailing gutter control; takes the gutter over `unit`. */
   action?: ReactNode;
   warning?: boolean;
 }>;
 
-/** A label/value row: icon in the leading gutter, a control in the trailing one. */
+/**
+ * A label/value row: icon or disclosure toggle in the leading gutter, a unit or control in the
+ * trailing one. With nothing trailing, the content runs through the trailing gutter.
+ */
 const StatCardRow = ({
   classNames,
   icon,
   iconClassNames,
+  open,
+  onToggle,
   label,
   value,
   unit,
   title,
   action,
   warning,
-}: StatCardRowProps) => (
-  <Card.Row classNames={classNames}>
-    <Card.Block compact>{icon && <Icon icon={icon} classNames={iconClassNames} />}</Card.Block>
-    <Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>
-      <span className='truncate' title={title}>
-        {label}
-      </span>
-      {value !== undefined && (
-        <span className={mx('shrink-0 font-mono tabular-nums', warning && 'text-error-text')}>
-          {value}
-          {unit && <span className='ps-1 text-subdued'>{unit}</span>}
-        </span>
-      )}
-    </Flex>
-    {action && (
-      <Card.Block end compact>
-        {action}
+}: StatCardRowProps) => {
+  const trailing = action ?? (unit && <span className='text-xs text-subdued'>{unit}</span>);
+  return (
+    <Card.Row classNames={classNames}>
+      <Card.Block compact>
+        {onToggle ? (
+          <IconButton
+            iconOnly
+            variant='ghost'
+            icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+            label={open ? 'Collapse' : 'Expand'}
+            onClick={() => onToggle(!open)}
+          />
+        ) : (
+          icon && <Icon icon={icon} classNames={iconClassNames} />
+        )}
       </Card.Block>
-    )}
-  </Card.Row>
-);
+      <Flex
+        align='center'
+        justify='between'
+        gap='sm'
+        classNames={['min-w-0 text-xs', !trailing && '[--dx-col:2/span_2]']}
+      >
+        <span className='truncate' title={title}>
+          {label}
+        </span>
+        {value !== undefined && (
+          <span className={mx('shrink-0 font-mono tabular-nums', warning && 'text-error-text')}>{value}</span>
+        )}
+      </Flex>
+      {trailing && (
+        // A unit reads on from its value, so it sits at the gutter's start; a control stays centred.
+        <Card.Block end compact classNames={!action && 'justify-items-start'}>
+          {trailing}
+        </Card.Block>
+      )}
+    </Card.Row>
+  );
+};
 
 StatCardRow.displayName = 'StatCard.Row';
 

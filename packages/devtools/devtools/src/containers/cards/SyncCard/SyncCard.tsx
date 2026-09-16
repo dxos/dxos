@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { IconButton } from '@dxos/react-ui';
+import { Grid, IconButton } from '@dxos/react-ui';
 
 import { StatCard } from '../../../components/index.ts';
 import { type SyncRow } from '../../../hooks/index.ts';
@@ -26,13 +26,16 @@ const describe = ({ spaceId, name, state, feedState }: SyncRow): string =>
     `Remote documents: ${state.remoteDocumentCount} (missing: ${state.missingOnRemote})`,
   ].join('\n');
 
+/** Fixed tracks, so the automerge and feed figures line up in columns across rows. */
+const METRIC_TRACKS = ['auto', '5rem', 'auto', '3.5rem'];
+
 const Metric = ({ label, pending, total }: { label: string; pending: number; total: number }) => (
-  <span className='inline-flex items-center gap-1'>
+  <>
     <span className='text-subdued'>{label}</span>
     <span className={pending > 0 ? 'text-warning-text' : 'text-success-text'}>
       {pending > 0 ? `${pending}/${total}` : total}
     </span>
-  </span>
+  </>
 );
 
 export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
@@ -63,10 +66,10 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             label={row.name}
             title={describe(row)}
             value={
-              <span className='inline-flex gap-2'>
+              <Grid cols={METRIC_TRACKS} gap='xs' grow={false} classNames='text-end'>
                 <Metric label='automerge' pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
                 <Metric label='feed' pending={feedPending} total={row.feedState?.total ?? 0} />
-              </span>
+              </Grid>
             }
             action={
               <IconButton

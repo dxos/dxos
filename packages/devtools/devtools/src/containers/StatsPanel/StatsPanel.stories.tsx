@@ -45,7 +45,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'devtools/devtools/StatsPanel',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

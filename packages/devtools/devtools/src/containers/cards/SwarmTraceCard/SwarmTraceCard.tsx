@@ -51,19 +51,13 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
             <StatCard.Row
               label={summary}
               title={summary}
-              action={
-                <IconButton
-                  iconOnly
-                  variant='ghost'
-                  icon={open ? 'ph--caret-up--regular' : 'ph--caret-down--regular'}
-                  label={open ? 'Collapse' : 'Expand'}
-                  onClick={() => setExpanded(open ? undefined : received.id)}
-                />
-              }
+              open={open}
+              onToggle={(open) => setExpanded(open ? received.id : undefined)}
             />
             {open && (
               <StatCard.Content>
                 <JsonHighlighter
+                  classNames='text-xs'
                   data={{
                     receivedAt: new Date(received.receivedAt).toISOString(),
                     // The wire tag list this broadcast was routed under — what a subscriber's coarse
