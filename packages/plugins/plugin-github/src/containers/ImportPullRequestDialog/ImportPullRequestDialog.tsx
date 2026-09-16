@@ -61,7 +61,6 @@ export const ImportPullRequestDialog = () => {
         { reference: reference.trim() },
         { spaceId: space.db.spaceId },
       );
-      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
 
       const pullRequest = data?.pullRequest.target;
       if (error || !pullRequest) {
@@ -75,6 +74,9 @@ export const ImportPullRequestDialog = () => {
         return;
       }
 
+      // Closed only on success: a failed import keeps the reference the user typed, which is the
+      // thing they would otherwise have to find again.
+      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       await openObject(pullRequest);
     },
     [invokePromise, openObject, space],
