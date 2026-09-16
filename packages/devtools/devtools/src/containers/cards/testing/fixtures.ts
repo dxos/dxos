@@ -174,9 +174,9 @@ const syncState = (settled: boolean, total: number): PeerSyncState => ({
 const feedState = (pending: number, total: number): FeedSyncState => ({ pending, total });
 
 export const syncRows: SyncRow[] = [
-  { spaceId: 'BXYZ1', name: 'Personal Space', state: syncState(true, 120), feedState: feedState(0, 12) },
-  { spaceId: 'BXYZ2', name: 'Acme Robotics', state: syncState(false, 480), feedState: feedState(31, 96) },
-  { spaceId: 'BXYZ3', name: 'New space', state: syncState(true, 3) },
+  { spaceId: 'B4RQ7KM2ZP9VJ6TW', name: 'Personal Space', state: syncState(true, 120), feedState: feedState(0, 12) },
+  { spaceId: 'BQ8ZT3NX5MC2HD7K', name: 'Acme Robotics', state: syncState(false, 480), feedState: feedState(31, 96) },
+  { spaceId: 'BM6WP9RV4KT8XA2J', name: 'New space', state: syncState(true, 3) },
 ];
 
 const traceMessage = (index: number, type: string, space: string): ReceivedMessage => ({
@@ -189,10 +189,10 @@ const traceMessage = (index: number, type: string, space: string): ReceivedMessa
 });
 
 export const traceMessages: ReceivedMessage[] = [
-  traceMessage(1, 'sync.start', 'BXYZ1'),
-  traceMessage(2, 'sync.progress', 'BXYZ1'),
-  traceMessage(3, 'operation.invoke', 'BXYZ2'),
-  traceMessage(4, 'sync.complete', 'BXYZ1'),
+  traceMessage(1, 'sync.start', 'B4RQ7KM2ZP9VJ6TW'),
+  traceMessage(2, 'sync.progress', 'B4RQ7KM2ZP9VJ6TW'),
+  traceMessage(3, 'operation.invoke', 'BQ8ZT3NX5MC2HD7K'),
+  traceMessage(4, 'sync.complete', 'B4RQ7KM2ZP9VJ6TW'),
 ];
 
 export const stats: Stats = {

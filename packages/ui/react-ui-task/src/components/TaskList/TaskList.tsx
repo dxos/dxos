@@ -678,8 +678,8 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   return (
     <IconBlock>
       {/* The button is the trigger, not the block: the button stops the click so the row is not selected
-            too, and a trigger above it would never receive it. The block still gives every control in
-            the row one rail-item square. */}
+          too, and a trigger above it would never receive it. The block still gives every control in
+          the row one rail-item square. */}
       <ActionMenu actions={actions}>
         <IconButton
           variant='ghost'

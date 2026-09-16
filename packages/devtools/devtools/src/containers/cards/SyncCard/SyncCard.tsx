@@ -15,8 +15,8 @@ export type SyncCardProps = {
   onCopy?: () => void;
 };
 
-/** The id chip takes the slack; fixed figure tracks line the automerge and feed columns up across rows. */
-const ROW_TRACKS = ['1fr', 'auto', '5rem', 'auto', '3.5rem'];
+/** The chip keeps its own width and the automerge label absorbs the slack, so the figures line up across rows. */
+const ROW_TRACKS = ['auto', '1fr', '5rem', 'auto', '3.5rem'];
 
 const Metric = ({ label, pending, total }: { label: string; pending: number; total: number }) => (
   <>
