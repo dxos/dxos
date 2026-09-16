@@ -18,8 +18,10 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   testMatch: '**/perf-*.spec.ts',
-  // A heavy tier builds 10k tasks through the operation layer before the first stage runs.
-  timeout: 1_800_000,
+  // Only the OUTER bound: the spec derives each tier's budget from the measured fixture cost and
+  // sets it per test, which overrides this. Kept above the largest of those so it never binds
+  // first, since a config-level expiry reports no stage at all.
+  timeout: 3_600_000,
   expect: { timeout: 30_000 },
   workers: 1,
   // Two flows measured at once would contend for the same 4 cores and measure each other.

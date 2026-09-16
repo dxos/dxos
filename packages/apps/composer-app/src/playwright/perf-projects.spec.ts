@@ -71,6 +71,24 @@ const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter
  */
 const locatorTimeout = (mode: Mode): number => (mode === 'diagnose' ? 300_000 : 60_000);
 
+/**
+ * Whole-test budget, sized from the MEASURED fixture cost rather than guessed.
+ *
+ * Generation runs at roughly 420ms per task through the operation layer (five samples at the smoke
+ * tier: 80.8-84.6s for 200 tasks), and every task is one `tasks.create` whose write appends to a
+ * growing `tasks` array — so the rate does not improve with scale. A flat 15-minute budget was
+ * enough for 200 tasks and expired mid-fixture at 2,000, before a single stage ran.
+ *
+ * The per-task term dominates, which is the finding: the operation layer is the wrong fixture path
+ * above a couple of thousand objects, and no budget fixes that — see `spec/PERF.mdl`.
+ */
+const FIXTURE_MS_PER_TASK = 420;
+
+/** Boot, settle and the seven stages, generously — `diagnose` stages run an order slower. */
+const STAGE_BUDGET_MS = 600_000;
+
+const testBudget = (scale: Scale): number => scale.tasks * FIXTURE_MS_PER_TASK + STAGE_BUDGET_MS;
+
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
 };
@@ -250,7 +268,9 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 };
 
 test.describe.serial('Projects + Tasks performance', () => {
-  test.setTimeout(900_000);
+  // Derived, not flat: the config's `timeout` is only the outer bound, and a `setTimeout` here
+  // silently overrides it — a flat value below the fixture's cost expires before any stage runs.
+  test.setTimeout(testBudget(SCALES[scaleName] ?? SCALES.smoke));
 
   for (const mode of modes) {
     test(`${mode} @ ${scaleName}`, async () => {
