@@ -29,6 +29,20 @@ declare module '@dxos/app-framework' {
 }
 
 declare global {
+  /**
+   * The client/ECHO debug hook (`window.__DXOS__`), mounted at the end of `client.initialize()`.
+   *
+   * Narrowed to what the specs use, per this file's convention. `Ref.fromURI` is the only way to
+   * build a live reference from inside the page: an operation that CREATES an object returns a JSON
+   * snapshot (`{ id, title, … }`), while one that CONSUMES it takes a `Ref` — and a hand-assembled
+   * `{ '/': 'echo:///<id>' }` envelope is rejected by the input schema.
+   */
+  var dxos:
+    | {
+        Ref?: { fromURI?: (uri: string) => unknown };
+      }
+    | undefined;
+
   /** Long-task samples accumulated by the observer the startup spec installs. */
   var __longTasks: Array<{ start: number; duration: number }> | undefined;
 

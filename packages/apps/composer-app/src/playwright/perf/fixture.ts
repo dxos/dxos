@@ -110,17 +110,24 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
       };
 
       /**
-       * Builds a ref by substituting an object id into a ref the APP produced.
+       * Builds a LIVE ref for an object id, using the app's own `Ref.fromURI`.
        *
-       * Operations that CREATE an object return the object (`{ id, title, … }`), while operations
-       * that CONSUME one take a ref — so the fixture has to bridge them. The form is taken from a
-       * known-good ref rather than assembled here, so the fixture follows the encoding instead of
-       * restating it. The trailing segment is the object id under either delimiter
-       * (`echo:///<id>`, `dxn:echo:<space>:<id>`).
+       * Operations that CREATE an object return a JSON snapshot (`{ id, title, … }`), while
+       * operations that CONSUME one take a `Ref` — so the fixture has to bridge them. A
+       * hand-assembled `{ '/': 'echo:///<id>' }` envelope does NOT work: the input schema rejects
+       * it (`Expected <Declaration>`), because what it wants is a reference instance and not its
+       * serialized form. `dxos.Ref.fromURI` is the only constructor reachable from inside the page.
+       *
+       * The URI form is taken from a ref the app itself produced, so only the trailing object id is
+       * substituted and the encoding is never restated here.
        */
-      const makeRef = (template: string, id: string): Record<string, string> => ({
-        '/': template.replace(/[^/:]+$/, id),
-      });
+      const makeRef = (template: string, id: string): unknown => {
+        const fromURI = globalThis.dxos?.Ref?.fromURI;
+        if (!fromURI) {
+          throw new Error('dxos.Ref.fromURI is unavailable — the client debug hook is not mounted');
+        }
+        return fromURI(template.replace(/[^/:]+$/, id));
+      };
 
       const started = Date.now();
 
