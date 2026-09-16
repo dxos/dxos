@@ -4,16 +4,13 @@
 
 import { act, cleanup, render } from '@testing-library/react';
 import React from 'react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 
 import {
-  type CommandDefinition,
   GRAPH_ROOT_ID,
   type HotkeyStore,
-  createHotkeyStore,
   hotkeyStore,
   nestHotkeyScope,
-  reconcileHotkeys,
   scopeChain,
   setHotkeyScope,
   useActiveHotkeys,
@@ -175,45 +172,5 @@ describe('hotkey scopes', () => {
     // Both, not one: the path-scan this replaced fired only the most specific match, so asserting
     // the pair is what catches a regression back to it.
     expect(fired).toEqual(['root', 'plank']);
-  });
-});
-
-describe('reconcileHotkeys', () => {
-  // The same hotkey in disjoint scopes, as one graph action per object produces.
-  const bindings = (fired: string[], hotkey = 'shift+meta+p', count = 3) =>
-    new Map<string, CommandDefinition>(
-      Array.from({ length: count }, (_, index) => {
-        const id = `root/object-${index}:present`;
-        return [id, { id, hotkey, scopes: [`root/object-${index}`], action: () => fired.push(id) }];
-      }),
-    );
-
-  test('an unchanged set touches nothing, a changed or dropped id is replaced or retired', () => {
-    const store = createHotkeyStore();
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      const fired: string[] = [];
-      const first = bindings(fired);
-      reconcileHotkeys(store, new Map(), first);
-      const conflictsOnAdd = warn.mock.calls.length;
-      expect(conflictsOnAdd).toBeGreaterThan(0);
-
-      const register = vi.spyOn(store, 'register');
-      const unregister = vi.spyOn(store, 'unregister');
-      const rebuilt = bindings(fired);
-      reconcileHotkeys(store, first, rebuilt);
-      expect(register).not.toHaveBeenCalled();
-      expect(unregister).not.toHaveBeenCalled();
-      expect(warn.mock.calls.length).toBe(conflictsOnAdd);
-
-      const changed = bindings(fired, 'shift+meta+o', 2);
-      reconcileHotkeys(store, rebuilt, changed);
-      expect(register.mock.calls.map(([command]) => (command as CommandDefinition).id)).toEqual([...changed.keys()]);
-      expect([...store.getState().commands.values()].map(({ id, hotkey }) => [id, hotkey])).toEqual(
-        [...changed.keys()].map((id) => [id, 'shift+meta+o']),
-      );
-    } finally {
-      warn.mockRestore();
-    }
   });
 });

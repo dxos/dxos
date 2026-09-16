@@ -13,13 +13,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { runAction } from '@dxos/plugin-graph';
-import {
-  type CommandDefinition,
-  hotkeyStore,
-  initHotkeys,
-  reconcileHotkeys,
-  setHotkeyScope,
-} from '@dxos/react-focus/store';
+import { hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus/store';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '#meta';
@@ -30,11 +24,11 @@ export default Capability.makeModule(
     const invoker = yield* Capabilities.OperationInvoker;
     const pluginContext = yield* Capability.Service;
 
-    // What the last sync registered, so the next one only touches ids that changed.
-    let registered = new Map<string, CommandDefinition>();
+    // Ids registered by the last sync, so a re-sync can retire the ones the graph no longer has.
+    let registered = new Set<string>();
 
     // TODO(wittjosiah): Factor out.
-    const visitor = (next: Map<string, CommandDefinition>) => (node: AppGraphNode.Node, path: string[]) => {
+    const visitor = (seen: Set<string>) => (node: AppGraphNode.Node, path: string[]) => {
       let shortcut: string | undefined;
       if (typeof node.properties.keyBinding === 'object') {
         const availablePlatforms = Object.keys(node.properties.keyBinding);
@@ -53,12 +47,20 @@ export default Capability.makeModule(
       if (shortcut && AppGraphNode.isAction(node)) {
         const scope = path.slice(0, -1).join('/');
         const id = `${scope}:${node.id}`;
-        next.set(id, {
+        seen.add(id);
+        // This re-runs on every graph change, and each store mutation notifies every subscriber.
+        const existing = hotkeyStore.getState().commands.get(id);
+        if (existing?.hotkey === shortcut && JSON.stringify(existing.label) === JSON.stringify(node.properties.label)) {
+          return;
+        }
+
+        hotkeyStore.unregister(id);
+        hotkeyStore.register({
           id,
           hotkey: shortcut,
           scopes: [scope],
           label: node.properties.label,
-          // Resolved when fired, since an unchanged binding is not re-registered with the newer node.
+          // Resolved when fired, since an unchanged binding keeps the closure it was registered with.
           action: () => {
             const current = Option.getOrUndefined(AppGraph.getNode(graph, node.id));
             if (current && AppGraphNode.isAction(current)) {
@@ -73,10 +75,15 @@ export default Capability.makeModule(
     };
 
     const syncBindings = () => {
-      const next = new Map<string, CommandDefinition>();
-      AppGraph.traverse(graph, { relation: ['child', 'action'], visitor: visitor(next) });
-      reconcileHotkeys(hotkeyStore, registered, next);
-      registered = next;
+      const seen = new Set<string>();
+      AppGraph.traverse(graph, { relation: ['child', 'action'], visitor: visitor(seen) });
+      // Actions the graph has dropped since the last pass.
+      for (const id of registered) {
+        if (!seen.has(id)) {
+          hotkeyStore.unregister(id);
+        }
+      }
+      registered = seen;
     };
 
     const eventHandler = debounce(syncBindings, 500);
@@ -93,8 +100,10 @@ export default Capability.makeModule(
         unsubscribe();
         // Only the bindings this capability registered: the store is shared with every component
         // that calls `useHotkeys`, so destroying it here would silently unbind all of them.
-        reconcileHotkeys(hotkeyStore, registered, new Map());
-        registered = new Map();
+        for (const id of registered) {
+          hotkeyStore.unregister(id);
+        }
+        registered = new Set();
       }),
     );
     return [];
