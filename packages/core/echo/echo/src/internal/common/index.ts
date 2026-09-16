@@ -5,3 +5,4 @@
 export * from './api/index.ts';
 export * from './proxy/index.ts';
 export * from './types/index.ts';
+export * from './merge.ts';

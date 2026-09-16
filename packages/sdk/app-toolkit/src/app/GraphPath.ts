@@ -32,6 +32,7 @@ export const GroupSegments = {
   communications: 'communications',
   crm: 'crm',
   system: 'system',
+  debug: 'debug',
 } as const;
 
 /**
@@ -45,6 +46,7 @@ export const GroupTypes = {
   communications: 'org.dxos.navtree.group.communications',
   crm: 'org.dxos.navtree.group.crm',
   system: 'org.dxos.navtree.group.system',
+  debug: 'org.dxos.navtree.group.debug',
 } as const;
 
 /**

@@ -9,10 +9,8 @@ import { HomeSection, useCapabilities, useOperationInvoker } from '@dxos/app-fra
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import { Annotation, Collection, Entity, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type Space } from '@dxos/react-client/echo';
 import { Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -43,8 +41,8 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
     const types = schemas
       .flat()
       .filter(Type.isType)
-      .filter((type) => getTypeAnnotation(Type.getSchema(type))?.kind !== EntityKind.Relation)
-      .filter((type) => !HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
+      .filter((type) => Annotation.getTypeAnnotation(Type.getSchema(type))?.kind !== Entity.Kind.Relation)
+      .filter((type) => !Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
       .filter((type) => Type.getTypename(type) !== collectionTypename);
     return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
   }, [schemas]);

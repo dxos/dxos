@@ -85,8 +85,12 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
                 }
                 case Process.State.TERMINATED:
                   return yield* Effect.die('Operation was terminated');
-                default:
+                case Process.State.SUCCEEDED:
                   return yield* Effect.die('Process produced no output');
+                default:
+                  // Outputs close on a live process only when the manager suspends it (app shutdown):
+                  // the invocation was cut short rather than answered, which is an interruption.
+                  return yield* Effect.interrupt;
               }
             }),
         }),

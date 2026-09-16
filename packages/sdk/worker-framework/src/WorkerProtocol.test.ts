@@ -33,4 +33,14 @@ describe('WorkerProtocol error codec', () => {
     expect(third.message).toBe('TEST: cyclic');
     expect(third.cause).toBeUndefined();
   });
+
+  test('an aggregated error that repeats an ancestor keeps its position', ({ expect }) => {
+    const aggregate = new AggregateError([new Error('TEST: first')], 'TEST: outer');
+    aggregate.errors.push(aggregate, new Error('TEST: last'));
+
+    const decoded = WorkerProtocol.decodeError(structuredClone(WorkerProtocol.encodeError(aggregate)));
+
+    invariant(decoded instanceof AggregateError);
+    expect(decoded.errors.map((error: Error) => error.message)).toEqual(['TEST: first', '<cycle>', 'TEST: last']);
+  });
 });

@@ -11,7 +11,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
+import type * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcMiddleware from 'effect/unstable/rpc/RpcMiddleware';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
@@ -50,9 +52,9 @@ const defectLogLayer = Layer.succeed(DefectLogMiddleware, (handler, { rpc }) =>
   ),
 );
 
-const makeServerLayer = <G, H extends Layer.Layer<never, never, never>>(
+const makeServerLayer = <G, ROut, R>(
   group: G,
-  handlers: H,
+  handlers: Layer.Layer<ROut, never, R>,
   options: ServeOptions | undefined,
 ) => {
   const timingEnabled = RpcTiming.isEnabled(options?.timing);
@@ -110,6 +112,16 @@ export const makeClient = <G>(
     group,
     options,
   );
+
+/**
+ * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
+ * ambient {@link RpcServer.Protocol} for the life of the layer.
+ */
+export const serverLayer = <Rpcs extends Rpc.Any, R>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
+  options?: ServeOptions,
+): Layer.Layer<never, never, RpcServer.Protocol | R> => makeServerLayer(group, handlers, options);
 
 export type GroupServer = {
   open(): Promise<void>;

@@ -9,6 +9,9 @@
       "path": "../../../../tools/vite-plugin-import-source"
     },
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/effect"
     },
     {
@@ -31,6 +34,9 @@
     },
     {
       "path": "../../../plugins/plugin-debug"
+    },
+    {
+      "path": "../../../plugins/plugin-file"
     },
     {
       "path": "../../../plugins/plugin-illustrator"
@@ -69,6 +75,9 @@
       "path": "../../../sdk/app-toolkit"
     },
     {
+      "path": "../../../sdk/client"
+    },
+    {
       "path": "../../../sdk/config"
     },
     {
@@ -82,6 +91,18 @@
     },
     {
       "path": "../../echo/echo-client"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../mesh/edge-client"
+    },
+    {
+      "path": "../../protocols"
     },
     {
       "path": "../ai"

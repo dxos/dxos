@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
-        Effect.provide(BlueskyApi.Credentials.fromConnection(connectionRef, client)),
+        Effect.provide(BlueskyApi.fromConnection(connectionRef, client)),
         Effect.provide(FetchHttpClient.layer),
         Effect.catch((error) =>
           Effect.sync(() => {

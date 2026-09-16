@@ -7,13 +7,15 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Frame, MediaArtifact, Storyboard } from '#types';
+import { Frame, MediaArtifact, Storyboard, StoryboardView } from '#types';
 
 import { FRAME_COMPANION } from '../constants.ts';
 
@@ -24,6 +26,30 @@ export default Capability.makeModule(
     // needs a node of its own under the storyboard, which is where its toolbar reads contributed
     // actions (Connect). Hidden rather than navigable: these nodes have no URL of their own.
     const extensions = yield* Effect.all([
+      // Play: the storyboard's main-panel toolbar reads it as a graph action, so no host threads a
+      // callback down; the article watches the view state the action flips.
+      AppGraphBuilder.createTypeExtension({
+        id: 'storyboardPlay',
+        type: Storyboard.Storyboard,
+        actions: (storyboard, get) =>
+          Effect.succeed([
+            AppGraphNode.makeAction({
+              id: `${meta.profile.key}.play`,
+              data: () =>
+                Effect.gen(function* () {
+                  const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+                  viewState.set(StoryboardView.aspect, storyboard.id, { playing: true });
+                }),
+              properties: {
+                label: ['play.label', { ns: meta.profile.key }],
+                icon: 'ph--play--regular',
+                disposition: 'toolbar',
+                disabled: get(StoryboardView.clipsAtom(storyboard)).length === 0,
+                testId: 'studioPlugin.play',
+              },
+            }),
+          ]),
+      }),
       // The frame companion: the selected frame's artifact article beside the storyboard plank.
       AppGraphBuilder.createTypeExtension({
         id: 'frameCompanion',

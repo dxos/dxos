@@ -9,7 +9,6 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 
 import * as StudioCapabilities from './StudioCapabilities.ts';
@@ -51,25 +50,27 @@ export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.
     /** Open discriminator: 'image' | 'video' | … (no enum). Selects renderer + provider. */
     kind: Schema.String,
     /** Chosen GenerationService id for this kind (passed to op:generate as `provider`). */
-    generator: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+    generator: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false))),
     /**
      * The request the compose form edits (prompt + kind-specific knobs). Persisted rather than held in
      * the article so a prompt authored elsewhere — an agent's frame, another peer — is there when the
      * artifact opens, and a half-written one survives a remount.
      */
-    request: Schema.optional(Schema.Record(Schema.String, Schema.Unknown).pipe(FormInputAnnotation.set(false))),
+    request: Schema.optional(
+      Schema.Record(Schema.String, Schema.Unknown).pipe(Annotation.FormInputAnnotation.set(false)),
+    ),
     /** Owned interchangeable alternatives of the primary output; each records its own generation. */
     variants: Schema.Array(Ref.Ref(Variant.Variant)).pipe(
       Annotation.SetParent.set(true),
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
     /** The chosen/primary variant (used for thumbnails). */
-    cover: Schema.optional(Ref.Ref(Variant.Variant).pipe(FormInputAnnotation.set(false))),
+    cover: Schema.optional(Ref.Ref(Variant.Variant).pipe(Annotation.FormInputAnnotation.set(false))),
     /** Downstream products (transcript, summary, caption, upscale, …). */
-    derived: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false), Schema.optional),
+    derived: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--paint-brush--regular', hue: 'indigo' }),
     // Offer "Connect" when the artifact's provider needs a credential. The connectorId is resolved
     // per-instance from the artifact's `kind` via the registered `GenerationService` providers.

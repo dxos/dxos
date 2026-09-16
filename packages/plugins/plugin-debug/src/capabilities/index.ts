@@ -26,6 +26,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
     'org.dxos.role.article',
     'org.dxos.role.deckCompanion.logs',
     'org.dxos.role.deckCompanion.spaceObjects',
+    'org.dxos.role.drawer',
     'org.dxos.role.section',
     'org.dxos.role.statusIndicator',
   ],

@@ -22,7 +22,7 @@ import { callTools, getToolCalls } from '../tools/index.ts';
 import { TestingToolkit, testingLayer } from './toolkit.ts';
 
 // TODO(dmaretskyi): What is the right stopping condition?
-export const hasToolCall = Effect.fn(function* (chat: Chat.Service) {
+export const hasToolCall = Effect.fn(function* (chat: Chat.Chat) {
   const history = yield* Ref.get(chat.history);
   const lastMessage = history.content.at(-1);
   return (

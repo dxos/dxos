@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { type ServiceContext } from '../services/index.ts';
+import { type ServiceContext } from '../testing/index.ts';
 import { createServiceContext } from '../testing/index.ts';
 import { NetworkServiceImpl } from './network-service.ts';
 

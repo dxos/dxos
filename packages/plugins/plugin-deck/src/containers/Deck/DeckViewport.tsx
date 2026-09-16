@@ -165,8 +165,6 @@ const PlankContext = createContext<PlankContextValue>({
   markExposeSelect: () => {},
 });
 
-const usePlankContext = () => useContext(PlankContext);
-
 //
 // DeckViewport
 //
@@ -450,7 +448,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
-  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = usePlankContext();
+  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = useContext(PlankContext);
   const { open: companion, companionId } = useDeckCompanion(id);
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
@@ -1585,7 +1583,7 @@ export const DeckPlanks = () => {
     if (!viewport || !isSliding || expose) {
       return;
     }
-    const opened = deck.companionPlanks.filter((id) => !(previous ?? []).includes(id) && planks.includes(id));
+    const opened = (deck.companionPlanks ?? []).filter((id) => !(previous ?? []).includes(id) && planks.includes(id));
     const openedId = opened[opened.length - 1];
     if (!openedId) {
       return;

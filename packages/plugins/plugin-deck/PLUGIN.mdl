@@ -5,7 +5,8 @@ version: 0.1.0
 ---
 
 The Deck plugin is the core layout engine for DXOS Composer. It manages the multi-plank workspace
-("deck"), the sidebar, the complementary sidebar, dialogs, popovers, and toast notifications.
+("deck"), the sidebar, the complementary sidebar, the bottom drawer, dialogs, popovers, and toast
+notifications.
 It owns the persisted and ephemeral layout state, handles URL routing, and implements every
 `LayoutOperation` that changes what is visible on screen.
 
@@ -62,6 +63,8 @@ type StoredDeckState
     sidebarState: closed | collapsed | expanded
     complementarySidebarState: closed | collapsed | expanded
     complementarySidebarPanel?: string
+    drawerState?: open | closed   # the bottom drawer; absent (state persisted before it existed) reads as closed
+    drawerHeight?: number         # drawer height in rem; absent falls back to react-ui's DRAWER_DEFAULT_HEIGHT (24)
     activeDeck: string
     previousDeck: string
     decks: Record<string, DeckState>
@@ -133,7 +136,29 @@ component Matrix
     │            │            │            │
     │            ├────────────┤            │
     │            │ companion  │            │
-    └────────────┴────────────┴────────────┘
+    │            ├────────────┴────────────┤
+    │            │ drawer (Surface.Drawer) │
+    └────────────┴─────────────────────────┘
+```
+
+```mdl
+component DeckContent
+  desc: |
+    The `Main.Root` host for the whole layout: the navigation and complementary sidebars, the
+    `Main.Content` the deck renders into, and the bottom drawer — a `Main.Drawer` (`@dxos/react-ui`)
+    fixed to the block-end edge between the two sidebars, whose inline insets follow the sidebar
+    states. It renders one `Surface type={AppSurface.Drawer} limit={1}` (`org.dxos.role.drawer`), so
+    the first plugin contributing a drawer surface owns it (plugin-debug's panel today). Open, the
+    content pads block-end by the drawer height (`--main-drawer-height`) so planks reflow above it
+    rather than being covered; the top-edge handle resizes it live and the height is persisted on
+    drag end (`drawerHeight`, clamped to react-ui's DRAWER_MIN_HEIGHT..DRAWER_MAX_HEIGHT, 8..64rem).
+    Fullscreen renders it closed without touching the persisted state, so it returns when
+    fullscreen ends. The drawer is chrome, not a plank: it never takes attention and is not in the URL.
+  props:
+    children?: ReactNode          # the deck; the layout state is read from DeckCapabilities.State atoms
+  state:
+    drawerState: open | closed    # StoredDeckState.drawerState, closed while EphemeralDeckState.fullscreen is set
+    drawerHeight: number          # live during a drag, StoredDeckState.drawerHeight (or the default) otherwise
 ```
 
 ```mdl
@@ -202,6 +227,21 @@ op UpdateSidebar
   desc: Update the sidebar visibility state (closed / collapsed / expanded).
   input:
     state?: closed | collapsed | expanded
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op UpdateDrawer
+  key: org.dxos.operation.appToolkit.updateDrawer
+  desc: |
+    Open, close, toggle or resize the bottom drawer. `toggle` flips the persisted state (absent
+    reads as closed); `height` is clamped to the react-ui drag bounds (8..64rem) and applies whether
+    or not the state changes. The store is written only when something changed.
+  input:
+    state?: open | closed | toggle
+    height?: number               # rem
   output: void
   effects: [layout:state]
   requires: [DeckCapabilities]
@@ -430,6 +470,20 @@ feat F-3: Sidebar & Complementary Sidebar
   req F-3.2:
     when: UpdateComplementary is dispatched with a panel
     then: complementary sidebar opens to the specified panel
+
+  req F-3.3:
+    when: UpdateDrawer is dispatched with a state or height
+    then: the bottom drawer opens, closes, toggles or resizes; `drawerState` and `drawerHeight` are
+          persisted with the rest of the layout state, and `Main.Content` pads block-end by the
+          drawer height so open planks reflow above it
+
+  req F-3.4:
+    when: the drawer is open and the navigation or complementary sidebar changes state
+    then: the drawer's inline edges follow the sidebars (it spans the content area between them)
+
+  req F-3.5:
+    when: the drawer is open and a plank enters fullscreen
+    then: the drawer is hidden for the duration and reappears, at the same height, when fullscreen ends
 ```
 
 ```mdl
@@ -636,6 +690,16 @@ scenario T-5: Exit fullscreen
   then:
     - EphemeralDeckState.fullscreen is cleared
     - the deck returns to its normal presentation for the unchanged active list
+```
+
+```mdl
+scenario T-5a: Toggle and resize the bottom drawer
+  given: StoredDeckState.drawerState is absent
+  when: UpdateDrawer({ state: 'toggle' }) then UpdateDrawer({ height: 100 }) are dispatched
+  then:
+    - drawerState is 'open' and drawerHeight is 64 (clamped to DRAWER_MAX_HEIGHT)
+    - `main` carries data-drawer-state='open' and its padding-block-end equals the drawer height
+    - a following UpdateDrawer({ state: 'closed' }) keeps drawerHeight for the next open
 ```
 
 ```mdl

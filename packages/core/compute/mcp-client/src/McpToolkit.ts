@@ -41,13 +41,13 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
  */
 const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
 
-export interface McpToolkitOptions {
+export interface Options {
   url: string;
   protocol: 'sse' | 'http';
   apiKey?: string;
 }
 
-export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError> =>
+export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError> =>
   Effect.gen(function* () {
     const { client, protocol } = yield* connectWithFallback(options);
 
@@ -125,8 +125,8 @@ export const is405 = (error: unknown): boolean => {
  * the misconfigured server) without breaking the surrounding effect.
  */
 const connectWithFallback = (
-  options: McpToolkitOptions,
-): Effect.Effect<{ client: Client; protocol: McpToolkitOptions['protocol'] }, McpConnectionError> =>
+  options: Options,
+): Effect.Effect<{ client: Client; protocol: Options['protocol'] }, McpConnectionError> =>
   Effect.gen(function* () {
     const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
     const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.result);
@@ -155,7 +155,7 @@ const connectWithFallback = (
     );
   });
 
-const connectClient = (url: string, protocol: McpToolkitOptions['protocol'], apiKey?: string) =>
+const connectClient = (url: string, protocol: Options['protocol'], apiKey?: string) =>
   Effect.tryPromise(() => {
     const client = new Client(CLIENT_INFO);
     const transport = createTransport(url, protocol, apiKey);
@@ -182,7 +182,7 @@ export const formatCause = (error: unknown): string => {
  */
 const createTransport = (
   url: string,
-  protocol: McpToolkitOptions['protocol'],
+  protocol: Options['protocol'],
   apiKey?: string,
 ): SSEClientTransport | StreamableHTTPClientTransport => {
   const urlObj = new URL(url);

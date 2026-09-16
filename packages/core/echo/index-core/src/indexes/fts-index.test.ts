@@ -11,7 +11,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import { FtsIndex } from './fts-index.ts';
@@ -22,14 +21,9 @@ const TYPE_PERSON_VERSIONLESS = DXN.make('com.example.type.person');
 const TYPE_TASK = DXN.make('com.example.type.task', '0.1.0');
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-  Layer.provideMerge(Reactivity.layer),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+}).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('FtsIndex', () => {
   it.effect(

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Accordion as AccordionPrimitive } from '@ark-ui/react/accordion';
+import { Accordion as AccordionPrimitive, useAccordionItemContext } from '@ark-ui/react/accordion';
 import React, {
   type ComponentPropsWithoutRef,
   type CSSProperties,
@@ -43,7 +43,7 @@ export type AccordionValueProps = {
   onValueChange?: (value: string[]) => void;
 };
 
-const defaultGetId = <T extends AccordionItemRecord>(item: T) => (item as any)?.id;
+const defaultGetId = <T extends AccordionItemRecord>(item: T) => item.id ?? '';
 
 export type AccordionRootProps<T extends AccordionItemRecord> = ThemedClassName<
   {
@@ -55,9 +55,9 @@ export type AccordionRootProps<T extends AccordionItemRecord> = ThemedClassName<
 
 const AccordionRoot = <T extends AccordionItemRecord>({
   classNames,
+  children,
   items,
   getId = defaultGetId,
-  children,
   value,
   defaultValue,
   onValueChange,
@@ -89,16 +89,29 @@ export type AccordionItemProps<T extends AccordionItemRecord> = ThemedClassName<
     item: T;
     /** The item's element — a reorder aspect binds its drop target here. */
     ref?: Ref<HTMLDivElement>;
+    /** A row with nothing to open: it keeps the list's frame and rhythm but shows no caret and does not toggle. */
+    disabled?: boolean;
   }>
 >;
 
-const AccordionItem = <T extends AccordionItemRecord>({ children, classNames, item, ref }: AccordionItemProps<T>) => {
+const AccordionItem = <T extends AccordionItemRecord>({
+  children,
+  classNames,
+  item,
+  ref,
+  disabled,
+}: AccordionItemProps<T>) => {
   const { tx } = useThemeContext();
   const { getId } = useAccordionContext(ACCORDION_ITEM_NAME);
 
   return (
     <AccordionItemProvider {...{ item }}>
-      <AccordionPrimitive.Item ref={ref} value={getId(item)} className={tx('accordion.item', {}, classNames)}>
+      <AccordionPrimitive.Item
+        ref={ref}
+        value={getId(item)}
+        disabled={disabled}
+        className={tx('accordion.item', {}, classNames)}
+      >
         {children}
       </AccordionPrimitive.Item>
     </AccordionItemProvider>
@@ -135,6 +148,8 @@ const AccordionItemHeader = ({
   ...props
 }: AccordionItemHeaderProps) => {
   const { tx } = useThemeContext();
+  // A disabled item has nothing to open, so the caret that promises a body is dropped.
+  const { disabled } = useAccordionItemContext();
   return (
     // Ark exposes no `Header` part — `ItemTrigger` is the control itself — so this is a plain row.
     <div {...props} className={tx('accordion.header', {}, classNames)}>
@@ -151,13 +166,15 @@ const AccordionItemHeader = ({
           </span>
         )}
         <div className={tx('accordion.triggerContent', {})}>{children}</div>
-        <span className={tx('accordion.triggerIcon', {})}>
-          <Icon
-            icon='ph--caret-right--regular'
-            size={4}
-            classNames='transition-transform duration-200 group-data-[state=open]:rotate-90'
-          />
-        </span>
+        {!disabled && (
+          <span className={tx('accordion.triggerIcon', {})}>
+            <Icon
+              icon='ph--caret-right--regular'
+              size={4}
+              classNames='transition-transform duration-200 group-data-[state=open]:rotate-90'
+            />
+          </span>
+        )}
       </AccordionPrimitive.ItemTrigger>
       {trailing && <div className={tx('accordion.trailing', {})}>{trailing}</div>}
     </div>
