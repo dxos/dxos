@@ -190,7 +190,7 @@ export const SurfaceProfilerCard = ({
             <StatCard.Row
               key={surface.id ?? index}
               label={selectedGroup.role}
-              action={<SystemIconButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
+              control={<SystemIconButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
             >
               <JsonHighlighter
                 classNames='text-sm'

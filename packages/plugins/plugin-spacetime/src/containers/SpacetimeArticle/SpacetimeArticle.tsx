@@ -18,7 +18,7 @@ export const SpacetimeArticle = ({ subject, attendableId, role }: SpacetimeArtic
   if (role === AppSurface.Section.role) {
     return (
       <SpacetimeEditor.Root scene={subject}>
-        <Flex classNames='aspect-square'>
+        <Flex classNames='aspect-square max-h-full min-h-0'>
           <SpacetimeEditor.Canvas />
         </Flex>
       </SpacetimeEditor.Root>

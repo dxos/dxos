@@ -26,9 +26,6 @@ export type EdgeCardProps = {
   onCopy?: () => void;
 };
 
-const OK = 'ph--check-circle--regular';
-const FAIL = 'ph--x-circle--regular';
-
 type HealthRow = {
   ok: boolean;
   label: string;
@@ -92,7 +89,7 @@ const HealthRows = ({ rows }: { rows: HealthRow[] }) => (
     {rows.map((row, index) => (
       <StatCard.Row
         key={index}
-        icon={row.ok ? OK : FAIL}
+        icon={row.ok ? undefined : 'ph--warning--regular'}
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
         label={row.label}
         tooltip={row.label}
@@ -122,7 +119,7 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
     {rows.map((row) => (
       <StatCard.Row
         key={row.spaceId}
-        icon={row.ok ? OK : FAIL}
+        icon={row.ok ? undefined : 'ph--warning--regular'}
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
       >
         <Tooltip.Trigger asChild content={<SpaceDetail row={row} />}>
@@ -137,9 +134,7 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
           />
         </Tooltip.Trigger>
         {row.flags.length > 0 && (
-          <span className='shrink-0 font-mono tabular-nums text-error-text'>
-            {row.flags.length} {row.flags.length === 1 ? 'flag' : 'flags'}
-          </span>
+          <span className='shrink-0 font-mono tabular-nums text-error-text'>{row.flags.length}</span>
         )}
       </StatCard.Row>
     ))}
@@ -176,7 +171,7 @@ export const EdgeCard = ({ edge, status, spaceNames, onRefresh, onCopy }: EdgeCa
           <SpaceRows rows={report.spaces} />
         </StatCard.Section>
       )}
-      {problems.length > 0 && (
+      {/* {problems.length > 0 && (
         <StatCard.Section title='Issues'>
           {problems.map((problem, index) => (
             <StatCard.Row
@@ -189,7 +184,7 @@ export const EdgeCard = ({ edge, status, spaceNames, onRefresh, onCopy }: EdgeCa
             />
           ))}
         </StatCard.Section>
-      )}
+      )} */}
     </StatCard.Root>
   );
 };
