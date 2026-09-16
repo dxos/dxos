@@ -40,7 +40,11 @@ export const parseGitHubLink = (url: string): GitHubLink | undefined => {
 };
 
 /** The chip's leading icon for a pull request, in GitHub's open-state green. */
-const PULL_REQUEST_ICON = { icon: 'ph--git-pull-request--regular', classNames: 'text-green-500' };
+export const PULL_REQUEST_ICON = { icon: 'ph--git-pull-request--regular', classNames: 'text-green-500' };
+
+/** The chip icon for a GitHub URL: a pull request's; none for an issue or a repository. */
+export const githubLinkIcon = (url: string): typeof PULL_REQUEST_ICON | undefined =>
+  parseGitHubLink(url)?.kind === 'pull' ? PULL_REQUEST_ICON : undefined;
 
 export type GitHubLinksOptions = {
   /** Overrides the default chip's preview trigger. */

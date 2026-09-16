@@ -24,15 +24,15 @@ describe('pipeline/Pipeline', () => {
     const pipeline = new Pipeline();
 
     const builder = new TestFeedBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
 
     // Remote feeds from other peers.
     const numFeeds = 5;
     const messagesPerFeed = 10;
     for (const _ in range(numFeeds)) {
       const key = await builder.keyring.createKey();
-      const feed = await feedStore.openFeed(key, { writable: true });
-      void pipeline.addFeed(feed);
+      const feed = await hypercoreStore.openHypercore(key, { writable: true });
+      void pipeline.addHypercore(feed);
 
       setTimeout(async () => {
         for (const _ in range(messagesPerFeed)) {
@@ -43,8 +43,8 @@ describe('pipeline/Pipeline', () => {
 
     // Local feed.
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-    void pipeline.addFeed(feed);
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    void pipeline.addHypercore(feed);
     pipeline.setWriteFeed(feed);
 
     for (const _ in range(messagesPerFeed)) {
@@ -66,10 +66,10 @@ describe('pipeline/Pipeline', () => {
     onTestFinished(() => pipeline.stop());
 
     const builder = new TestFeedBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-    await pipeline.addFeed(feed);
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    await pipeline.addHypercore(feed);
 
     const numMessages = 30;
     const sequenceNumbers: number[] = [];
@@ -109,10 +109,10 @@ describe('pipeline/Pipeline', () => {
     onTestFinished(() => pipeline.stop());
 
     const builder = new TestFeedBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-    await pipeline.addFeed(feed);
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    await pipeline.addHypercore(feed);
 
     for (const _ of range(20)) {
       await feed.appendWithReceipt(TEST_MESSAGE);
@@ -130,8 +130,8 @@ describe('pipeline/Pipeline', () => {
     });
 
     await pipeline.start();
-    await sleep(1000);
-
+    // Blocks 0-9 were cleared and cannot be re-fetched, so the consumer makes no progress until
+    // the cursor below skips past them; pausing does not need to wait on any prior consumption.
     await pipeline.pause();
     await pipeline.setCursor(new Timeframe([[feed.key, 9]]));
     await pipeline.unpause();
@@ -148,10 +148,10 @@ describe('pipeline/Pipeline', () => {
     const pipeline = new Pipeline();
 
     const builder = new TestFeedBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-    await pipeline.addFeed(feed);
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    await pipeline.addHypercore(feed);
     pipeline.setWriteFeed(feed);
 
     const messageCount = 3;

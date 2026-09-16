@@ -331,6 +331,26 @@ export class QueryPlanner {
         ]);
       }
 
+      // Mnemonic — a local predicate on the object's own id, so it runs as a filter step over
+      // a wildcard select. Inversion cannot fold into the value, so it is re-wrapped as `not`.
+      case 'mnemonic': {
+        const planned: QueryAST.Filter = context.selectionInverted ? { type: 'not', filter } : filter;
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: planned,
+          },
+        ]);
+      }
+
       // HasParent — a local predicate on the object's own parent slot, so inversion folds into
       // the value rather than costing a negated plan.
       case 'has-parent': {
@@ -1355,7 +1375,7 @@ const isSelectorResidualFilter = (filter: QueryAST.Filter, selector: QueryPlan.S
 };
 
 /**
- * Returns true if the filter is `child-of` or `has-parent` — the post-select pruning filters —
+ * Returns true if the filter is `child-of`, `has-parent` or `mnemonic` — the post-select pruning filters —
  * or composes one via `and` / `or` / `not`. Their FilterSteps genuinely subtract from the
  * SelectStep's candidates (the step is not a re-check of the selector's own predicate), so a
  * limit must never be pushed past them.
@@ -1364,6 +1384,7 @@ const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'child-of':
     case 'has-parent':
+    case 'mnemonic':
       return true;
     case 'not':
       return _filterContainsPostSelectPrune(filter.filter);
@@ -1531,6 +1552,7 @@ const isRootExecutable = (filter: QueryAST.Filter): boolean => {
     case 'object':
     case 'tag':
     case 'has-parent':
+    case 'mnemonic':
       return true;
     case 'not':
       return isRootExecutable(filter.filter);

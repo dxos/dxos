@@ -11,7 +11,7 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { getSession } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -138,7 +138,7 @@ describe('makeDelegationStrategy', () => {
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* getSession(chat);
+        const session = yield* AgentService.getSession(chat);
         const ephemeral = yield* collectEphemeral(session);
 
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
@@ -192,7 +192,7 @@ describe('makeDelegationStrategy', () => {
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* getSession(chat);
+        const session = yield* AgentService.getSession(chat);
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
         yield* session.waitForCompletion();
 

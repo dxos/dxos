@@ -723,6 +723,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   // Blobs.
   //
 
+  async createBlobFromUpload(uploadId: string, options?: { storage?: string }): Promise<Blob.Blob> {
+    return this.graph.blobManager.createBlobFromUpload(this.spaceId, uploadId, options);
+  }
+
   async createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob> {
     return this.graph.blobManager.createBlob(this.spaceId, bytes, options);
   }

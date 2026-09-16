@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useRef, useState } from 'react';
 
-import { toJsonSchema } from '@dxos/echo/JsonSchema';
+import * as JsonSchema from '@dxos/echo/JsonSchema';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { json } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
@@ -107,8 +107,8 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
   const [log, setLog] = useState<readonly SequencedLogEntry[]>([]);
   const seq = useRef(0);
 
-  const schemaText = useMemo(() => JSON.stringify(toJsonSchema(ProjectState), null, 2), []);
-  const jsonSchema = useMemo(() => toJsonSchema(ProjectState), []);
+  const schemaText = useMemo(() => JSON.stringify(JsonSchema.toJsonSchema(ProjectState), null, 2), []);
+  const jsonSchema = useMemo(() => JsonSchema.toJsonSchema(ProjectState), []);
 
   const parsed = useMemo<{ node?: Node; error?: string }>(() => {
     try {

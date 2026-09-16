@@ -47,16 +47,16 @@ feat HiggsfieldGenerationService
   source: higgsfield.ai
   requestSchema:
     image: { model, prompt }
-    video: { model, prompt, imageUrl?, imageModel? }   # DoP animates a still: generated from the prompt unless imageUrl is given
+    video: { model, prompt, imageArtifact, duration? }   # animates the referenced image artifact's cover; duration (s) for Kling/Hailuo/Wan, fixed for DoP
   fieldOptions:
     image.model: Soul v2 / Soul (text-to-image)
-    video.model: DoP lite / turbo / standard (image-to-video); video.imageModel: the Soul tiers
+    video.model: DoP lite / turbo / standard, Kling 2.1 / 2.5, Hailuo 2.3, Wan 2.5 (image-to-video)
   defaultRequest:
     image: { model: "higgsfield-ai/soul/v2/standard" }
-    video: { model: "higgsfield-ai/dop/lite", imageModel: "higgsfield-ai/soul/v2/standard" }
+    video: { model: "higgsfield-ai/dop/lite" }
   enqueue:
     endpoint: POST https://api.higgsfield.ai/<model>   # via edge CORS proxy; header Authorization: Key id:secret
-    body: { prompt } (image) | { prompt, image_url } (video — the still is a synchronous Soul job inside enqueue)
+    body: { prompt } (image) | { prompt, image_url, duration? } (video — the reference artifact's cover, resolved through the op's load)
     returns: { jobId: status_url }   # the animation's status url for video; polled verbatim
   awaitResult:
     endpoint: GET {status_url}   # 2s → 10s backoff, 5 min operation deadline, 60s per round trip

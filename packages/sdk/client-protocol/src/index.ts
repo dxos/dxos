@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './bridge-rpc.ts';
+export * from './rtc-rpc.ts';
 export * from './config.ts';
 export * as Rpc from './Rpc.ts';
 export type * from './echo.ts';

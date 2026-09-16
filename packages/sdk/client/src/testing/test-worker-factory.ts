@@ -74,7 +74,7 @@ export class TestWorkerFactory extends Resource {
                 const systemProtocol = yield* RpcClient.Protocol;
                 const session = yield* runtime.createSession({ appProtocol, systemProtocol });
                 if (isOwner) {
-                  yield* runtime.connectWebrtcBridge(session);
+                  yield* runtime.connectWebrtc(session);
                 }
               }),
           };

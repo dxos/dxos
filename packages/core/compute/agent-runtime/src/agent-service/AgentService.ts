@@ -103,7 +103,7 @@ export const createSession: (
   Effect.scoped,
 );
 
-export interface AgentServiceOptions {
+export interface Options {
   systemPrompt?: string;
 
   /**
@@ -153,7 +153,7 @@ export interface AgentServiceOptions {
  * `RemoteProcessManager.layerNoop`.
  */
 export const layer = (
-  opts?: AgentServiceOptions,
+  opts?: Options,
 ): Layer.Layer<AgentService, never, ProcessManager.Service | RemoteProcessManager.Service> =>
   Layer.effect(
     AgentService,

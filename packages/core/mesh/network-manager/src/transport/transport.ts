@@ -9,7 +9,6 @@ import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 export enum TransportKind {
   WEB_RTC = 'WEB-RTC',
-  WEB_RTC_PROXY = 'WEB-RTC_PROXY',
   MEMORY = 'MEMORY',
   TCP = 'TCP',
 }

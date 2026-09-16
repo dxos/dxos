@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 
 import * as McpServerSpec from '@dxos/compute/McpServer';
 import { Annotation, DXN, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * MCP server configuration stored as a space-level ECHO object.
@@ -24,7 +23,7 @@ export class McpServer extends Type.makeObject<McpServer>(DXN.make('org.dxos.typ
     ...McpServerSpec.McpServer.fields,
     enabled: Schema.optional(Schema.Boolean),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'sky' }),
   ),
 ) {}

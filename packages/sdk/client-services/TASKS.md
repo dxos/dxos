@@ -3,7 +3,7 @@
 The worker-runtime refactor this file used to track (kill shared-worker, `WorkerRuntime`/
 `WorkerSession` as Effect services, remove `ServiceRegistry`, fold `ServiceContext` into
 `ClientServicesHost`) is complete, and `ClientServicesHost` itself no longer exists: the runtime is
-composed as `ClientServicesLayer` and its lifecycle is driven by events on an `Event.Bus` rather
+composed as `ClientServicesLayer` and its lifecycle is driven by events on a `Hook.Controller` rather
 than by an orchestrator class.
 
 Current work-stream and open items:
