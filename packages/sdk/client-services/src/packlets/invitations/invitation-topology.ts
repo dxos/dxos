@@ -55,7 +55,7 @@ export class InvitationTopology implements Topology {
       return;
     }
 
-    // a candidate has no connection and is still in the swarm, so a peer that stopped being one ends its pending dial
+    // A candidate has no connection and is still in the swarm, so a peer that stopped being one ends its pending dial.
     this._pending = new ComplexSet<PublicKey>(
       PublicKey.hash,
       candidates.filter((peerId) => this._pending.has(peerId)),
@@ -63,7 +63,7 @@ export class InvitationTopology implements Topology {
 
     // don't start a connection while we have an active invitation flow
     if (connected.length > 0) {
-      // record a connection another host initiated with us, without counting one we already dialed again
+      // Record a connection another host initiated with us, without counting one we already dialed again.
       connected.forEach((peerId) => {
         if (!this._dials.has(peerId)) {
           this._dials.set(peerId, 1);
@@ -72,7 +72,7 @@ export class InvitationTopology implements Topology {
       return;
     }
 
-    // cleanup
+    // Cleanup.
     this._dials = new ComplexMap<PublicKey, number>(
       PublicKey.hash,
       allPeers.flatMap((peerId): [PublicKey, number][] => {
@@ -81,7 +81,7 @@ export class InvitationTopology implements Topology {
       }),
     );
 
-    // a pending dial already holds the one invitation flow
+    // A pending dial already holds the one invitation flow.
     if (this._pending.size > 0) {
       return;
     }

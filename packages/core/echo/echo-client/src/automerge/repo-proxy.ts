@@ -470,11 +470,14 @@ export class RepoProxy extends Resource {
       update();
     };
 
+    let deleted = false;
     const cleanup = () => {
       log('onDelete', { documentId: handle.documentId, internalId: handle._internalId });
+      deleted = true;
       handle.off('change', onChange);
 
       if (!handle.documentId) {
+        this._failedCreations.delete(handle._internalId);
         return;
       }
 
@@ -501,6 +504,11 @@ export class RepoProxy extends Resource {
         .then(
           (response) => {
             const documentId = response.documentId as DocumentId;
+            if (deleted) {
+              this._pendingRemoveIds.add(documentId);
+              this._sendUpdatesJob?.trigger();
+              return;
+            }
             handle._setDocumentId(documentId);
             this._pendingAddIds.add(documentId);
             this._handles[documentId] = handle;
@@ -516,6 +524,9 @@ export class RepoProxy extends Resource {
             }
             if (!(err instanceof RpcClosedError)) {
               log.catch(err);
+            }
+            if (deleted) {
+              return;
             }
             this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
           },
