@@ -119,7 +119,12 @@ export const bindDataChannel = (
       if (data instanceof ArrayBuffer) {
         data = Buffer.from(data);
       } else if (data instanceof Blob) {
+        // The only await on this path, so re-read the binding after it: disposal in the meantime
+        // leaves nothing to push to.
         data = Buffer.from(await data.arrayBuffer());
+        if (!duplex) {
+          return;
+        }
       }
       duplex.push(data);
     },
