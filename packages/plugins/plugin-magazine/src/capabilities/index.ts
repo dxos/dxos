@@ -16,7 +16,10 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
+// Excluded from the workerd barrel: builds app-graph nodes from attention view state, which no
+// worker host holds. Node keeps it — the composer test harness runs there and provides attention.
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
+  environments: ['node'],
   requires: [AttentionCapabilities.ViewState],
 });
 export const RoutineTemplates = Capability.lazyModule(
