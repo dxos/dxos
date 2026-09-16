@@ -23,21 +23,25 @@ export const DevtoolsOverviewContainer = () => {
     Surface.clearMetrics();
   }, [clearSurfaceProfiler]);
 
-  // Join dispatch metrics onto the render-timing stats (both keyed by `surface/<id>/<role>`).
+  // Join dispatch metrics onto the render-timing stats (both keyed by `surface/<id>/<role>`). The
+  // stack's own surfaces — the companion and every card on its role — re-render on each refresh, so
+  // left in they would dominate the profiler's window and the panel would be measuring itself.
   const enrichedStats = useMemo<SurfaceProfilerStats[]>(() => {
     const byId = new Map(surfaceMetrics.map((metric) => [metric.id, metric]));
-    return surfaceProfilerStats.map((stat) => {
-      const metric = byId.get(stat.id);
-      return metric
-        ? {
-            ...stat,
-            candidates: metric.candidates,
-            truncated: metric.truncated,
-            errors: metric.errors,
-            dataUnstable: metric.dataUnstable,
-          }
-        : stat;
-    });
+    return surfaceProfilerStats
+      .filter((stat) => !stat.id.endsWith('.devtoolsOverview'))
+      .map((stat) => {
+        const metric = byId.get(stat.id);
+        return metric
+          ? {
+              ...stat,
+              candidates: metric.candidates,
+              truncated: metric.truncated,
+              errors: metric.errors,
+              dataUnstable: metric.dataUnstable,
+            }
+          : stat;
+      });
   }, [surfaceProfilerStats, surfaceMetrics]);
 
   const data = useMemo<DevtoolsCardData>(

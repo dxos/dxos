@@ -28,11 +28,15 @@ const FAIL = 'ph--x-circle--regular';
 
 type HealthRow = { ok: boolean; label: string; value?: string; unit?: string };
 
-const healthRows = (status?: EdgeStatus, socket?: SocketStatus): HealthRow[] => {
+type HealthReport = { connection: HealthRow[]; services: HealthRow[]; spaces: HealthRow[] };
+
+const healthReport = (status?: EdgeStatus, socket?: SocketStatus): HealthReport => {
   const connected = socket?.state === EdgeStatus_ConnectionState.CONNECTED;
-  const rows: HealthRow[] = [{ ok: connected, label: 'Websocket', value: connected ? 'connected' : 'disconnected' }];
+  const connection: HealthRow[] = [
+    { ok: connected, label: 'Websocket', value: connected ? 'connected' : 'disconnected' },
+  ];
   if (connected) {
-    rows.push(
+    connection.push(
       { ok: true, label: 'Uptime', value: socket?.uptime?.toFixed(0) ?? 'N/A', unit: 's' },
       { ok: true, label: 'RTT', value: socket?.rtt?.toFixed(0) ?? 'N/A', unit: 'ms' },
       { ok: true, label: 'Up', value: Unit.KB(socket?.rateBytesUp ?? 0), unit: 'KB/s' },
@@ -40,25 +44,43 @@ const healthRows = (status?: EdgeStatus, socket?: SocketStatus): HealthRow[] => 
     );
   }
   if (!status) {
-    return rows;
+    return { connection, services: [], spaces: [] };
   }
 
   const devices = status.router.connectedDevices?.length ?? 0;
   const spaces = Object.entries(status.spaces.data ?? {});
-  rows.push(
-    { ok: devices > 0 && !status.router.fetchError, label: 'Router', value: `${devices} devices` },
-    { ok: status.agent.agentStatus === 'active', label: 'Agent', value: status.agent.agentStatus ?? 'unknown' },
-    { ok: !status.spaces.fetchError, label: 'Spaces', value: spaces.length.toLocaleString() },
-    ...spaces.map(([spaceId, space]) => ({
+  return {
+    connection,
+    services: [
+      { ok: devices > 0 && !status.router.fetchError, label: 'Router', value: `${devices} devices` },
+      { ok: status.agent.agentStatus === 'active', label: 'Agent', value: status.agent.agentStatus ?? 'unknown' },
+      { ok: !status.spaces.fetchError, label: 'Spaces', value: spaces.length.toLocaleString() },
+    ],
+    spaces: spaces.map(([spaceId, space]) => ({
       ok: !((space.diagnostics?.redFlags?.length ?? 0) > 0 || space.fetchError),
       label: spaceId,
     })),
-  );
-  return rows;
+  };
 };
 
+const HealthRows = ({ rows }: { rows: HealthRow[] }) => (
+  <>
+    {rows.map((row, index) => (
+      <StatCard.Row
+        key={index}
+        icon={row.ok ? OK : FAIL}
+        iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
+        label={row.label}
+        title={row.label}
+        value={row.value}
+        unit={row.unit}
+      />
+    ))}
+  </>
+);
+
 export const EdgeCard = ({ edge, status, onRefresh, onCopy }: EdgeCardProps) => {
-  const rows = healthRows(status, edge?.status);
+  const report = healthReport(status, edge?.status);
   const problems = status?.problems ?? [];
   const menu = [
     ...(onRefresh ? [{ label: 'Refresh', icon: 'ph--arrow-clockwise--regular', onClick: onRefresh }] : []),
@@ -74,26 +96,32 @@ export const EdgeCard = ({ edge, status, onRefresh, onCopy }: EdgeCardProps) => 
         info={status ? (problems.length === 0 ? 'healthy' : `${problems.length} issues`) : undefined}
         menu={menu.length > 0 ? menu : undefined}
       />
-      {rows.map((row, index) => (
-        <StatCard.Row
-          key={index}
-          icon={row.ok ? OK : FAIL}
-          iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
-          label={row.label}
-          title={row.label}
-          value={row.value}
-          unit={row.unit}
-        />
-      ))}
-      {problems.map((problem, index) => (
-        <StatCard.Row
-          key={`problem-${index}`}
-          icon='ph--warning--regular'
-          iconClassNames='text-warning-text'
-          label={problem}
-          title={problem}
-        />
-      ))}
+      <StatCard.Section title='Connection'>
+        <HealthRows rows={report.connection} />
+      </StatCard.Section>
+      {report.services.length > 0 && (
+        <StatCard.Section title='Services'>
+          <HealthRows rows={report.services} />
+        </StatCard.Section>
+      )}
+      {report.spaces.length > 0 && (
+        <StatCard.Section title='Spaces'>
+          <HealthRows rows={report.spaces} />
+        </StatCard.Section>
+      )}
+      {problems.length > 0 && (
+        <StatCard.Section title='Issues'>
+          {problems.map((problem, index) => (
+            <StatCard.Row
+              key={index}
+              icon='ph--warning--regular'
+              iconClassNames='text-warning-text'
+              label={problem}
+              title={problem}
+            />
+          ))}
+        </StatCard.Section>
+      )}
     </StatCard.Root>
   );
 };

@@ -153,6 +153,19 @@ const StatCardRow = ({
 StatCardRow.displayName = 'StatCard.Row';
 
 //
+// Section
+//
+
+type StatCardSectionProps = PropsWithChildren<{ title: string }>;
+
+/** A titled group of rows, for a card whose rows are of more than one kind. */
+const StatCardSection = ({ title, children }: StatCardSectionProps) => (
+  <Card.Section title={title}>{children}</Card.Section>
+);
+
+StatCardSection.displayName = 'StatCard.Section';
+
+//
 // Content
 //
 
@@ -173,7 +186,8 @@ export const StatCard = {
   Root: StatCardRoot,
   Header: StatCardHeader,
   Row: StatCardRow,
+  Section: StatCardSection,
   Content: StatCardContent,
 };
 
-export type { StatCardContentProps, StatCardHeaderProps, StatCardRootProps, StatCardRowProps };
+export type { StatCardContentProps, StatCardHeaderProps, StatCardRootProps, StatCardRowProps, StatCardSectionProps };

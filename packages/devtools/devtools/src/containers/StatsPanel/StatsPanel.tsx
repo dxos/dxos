@@ -17,7 +17,7 @@ export type StatsPanelProps = PropsWithChildren<{
  * The stats stack: a toolbar with the refresh controls over a scrolling column of cards. Hosts pass
  * the cards as children — directly, or as a `Surface` over the card role.
  */
-export const StatsPanel = ({ role, onRefresh, children }: StatsPanelProps) => {
+export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
   const [live, setLive] = useState(false);
   useEffect(() => {
     if (live && onRefresh) {
