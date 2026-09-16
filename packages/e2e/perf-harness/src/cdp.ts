@@ -88,10 +88,12 @@ export class Cdp {
   }
 
   on(method: string, fn: (params: any) => void): void {
-    if (!this.#listeners.has(method)) {
-      this.#listeners.set(method, new Set());
+    const existing = this.#listeners.get(method);
+    if (existing) {
+      existing.add(fn);
+    } else {
+      this.#listeners.set(method, new Set([fn]));
     }
-    this.#listeners.get(method)!.add(fn);
   }
 
   off(method: string, fn: (params: any) => void): void {

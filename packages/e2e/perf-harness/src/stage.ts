@@ -21,6 +21,7 @@ import { readDomCounters, readHeap, sumHeapUsed, trackPeakRss } from './collecto
 import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
 import { installWorkerProbe, readResponsiveness } from './collectors/responsiveness.ts';
+import { STAGE_MARK_PREFIX } from './collectors/tracing.ts';
 import {
   type Comparability,
   type Mode,
@@ -127,6 +128,18 @@ export class StageRunner {
     this.#instruments = instruments;
   }
 
+  /**
+   * A user-timing mark delimiting the stage, which is how a browser-wide trace attributes work.
+   *
+   * Inside the measured window on purpose: a mark is a single `performance.mark` call, and moving
+   * it outside would leave the trace's stage boundaries offset from `wallMs`'s.
+   */
+  async #mark(id: string, edge: 'begin' | 'end'): Promise<void> {
+    await this.#options.page
+      .evaluate((name: string) => performance.mark(name), `${STAGE_MARK_PREFIX}${id}:${edge}`)
+      .catch(() => undefined);
+  }
+
   /** One PNG per stage, for a reviewer who wants to see what the numbers describe. */
   async #screenshot(id: string): Promise<string | undefined> {
     const { screenshotDir, page } = this.#options;
@@ -171,6 +184,7 @@ export class StageRunner {
     let ok = true;
     let error: string | undefined;
     try {
+      await this.#mark(id, 'begin');
       await body();
     } catch (caught) {
       // Recorded rather than thrown: a stage that fails still produced the metrics up to its
@@ -179,6 +193,7 @@ export class StageRunner {
       error = caught instanceof Error ? caught.message : String(caught);
     }
 
+    await this.#mark(id, 'end');
     const wallMs = Date.now() - before.at;
     const peakRssBytes = stopRss();
     const cpu = diffProcessCpu(before.cpu, await readProcessCpu(browserCdp));

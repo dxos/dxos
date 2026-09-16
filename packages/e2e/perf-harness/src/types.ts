@@ -187,6 +187,14 @@ export type StageRow = {
   threadByRealm: RealmThreadMetrics[];
   /** Profiler-measured CPU per realm, page and workers alike. Present in both modes. */
   cpuMsByRealm?: RealmCpu[];
+  /**
+   * The same quantity read from a browser-wide trace instead, for as long as both instruments run.
+   *
+   * Backfilled after the flow, because a trace cannot be rotated per stage. It measures TASK TIME
+   * rather than sampled CPU, and it covers `boot`, which the profiler cannot. Kept beside
+   * `cpuMsByRealm` while the two are being compared.
+   */
+  tracedCpuMsByRealm?: RealmCpu[];
 
   heap: HeapReading[];
   heapUsedTotalBytes: number;

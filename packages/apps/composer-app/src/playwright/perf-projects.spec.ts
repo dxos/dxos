@@ -16,6 +16,7 @@ import {
   installProbes,
   launchInstrumentedBrowser,
   startProfiling,
+  startTracing,
   startScreencast,
   trackNetwork,
   writePosthogBatch,
@@ -182,6 +183,10 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // are.
     await installProbes(page);
 
+    // Before the first navigation, which is the whole point: a browser-wide trace covers `boot`
+    // and the workers boot creates, the window no per-target instrument can reach.
+    const tracing = await startTracing(browserCdp, { mode, outputDir: artifactDir });
+
     await runner.stage('boot', async () => {
       await page.goto(`${INITIAL_URL}/?profiler=1`, { timeout: 120_000 });
       await waitForReady(page);
@@ -297,6 +302,28 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     });
 
     const rows = runner.rows;
+
+    // After the flow, because a trace cannot be rotated per stage: the marks the runner emitted
+    // are what attribute it, so the numbers only exist once the whole trace has been read.
+    const traced = await tracing.finish().catch((error) => {
+      log.warn('trace could not be read', { error });
+      return undefined;
+    });
+    if (traced) {
+      log.info('trace read', {
+        compressedBytes: traced.bytes,
+        stages: traced.byStage.size,
+        file: traced.file,
+        inlineEvents: traced.inlineEvents,
+      });
+      for (const row of rows) {
+        const perRealm = traced.byStage.get(row.stage);
+        if (perRealm) {
+          row.tracedCpuMsByRealm = perRealm;
+        }
+      }
+    }
+
     runner.dispose();
 
     const name = `${FLOW}-${mode}`;
