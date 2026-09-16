@@ -27,3 +27,6 @@ export class PositionConflictError extends BaseError.extend('PositionConflictErr
     });
   }
 }
+
+/** Feed operation failed. The underlying failure, where there is one, is the `cause`. */
+export class FeedOperationError extends BaseError.extend('FeedOperationError', 'Feed operation failed.') {}

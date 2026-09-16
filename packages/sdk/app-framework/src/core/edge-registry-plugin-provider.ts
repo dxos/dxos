@@ -9,6 +9,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { BaseError, messageOf } from '@dxos/errors';
 import { type PluginView } from '@dxos/protocols';
 
+import { PluginManagerError } from './plugin-manager/errors.ts';
 import type * as Plugin from './plugin.ts';
 import * as Registry from './registry.ts';
 
@@ -74,7 +75,7 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error> {
     const entry = this.#cachedEntries.find((candidate) => candidate.profile.key === id);
     if (!entry) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
+      return Effect.fail(new PluginManagerError({ message: `Plugin not found in catalog: ${id}` }));
     }
     // Releases are already `PluginRelease`-shaped on the wire view; serve them directly.
     return Effect.succeed(entry.releases);
@@ -83,11 +84,13 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   getPlugin(id: string, version?: string): Effect.Effect<Plugin.Meta, Error> {
     const plugin = this.#cachedPlugins.find((candidate) => candidate.profile.key === id);
     if (!plugin) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
+      return Effect.fail(new PluginManagerError({ message: `Plugin not found in catalog: ${id}` }));
     }
     if (version && version !== plugin.release?.version) {
       return Effect.fail(
-        new Error(`Version ${version} not available for ${id}; only ${plugin.release?.version} is cached`),
+        new PluginManagerError({
+          message: `Version ${version} not available for ${id}; only ${plugin.release?.version} is cached`,
+        }),
       );
     }
     return Effect.succeed(plugin);

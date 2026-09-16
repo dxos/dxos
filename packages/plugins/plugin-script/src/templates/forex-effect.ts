@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// Shipped to users as a starting function; it has no access to DXOS-internal error classes.
+/** @effect-diagnostics globalErrorInEffectFailure:skip-file */
+
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';

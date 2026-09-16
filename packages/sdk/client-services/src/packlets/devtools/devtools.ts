@@ -28,6 +28,7 @@ import {
 import { DevtoolsHost } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
+import { ClientServiceError } from '../errors.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import { StackReadinessService } from '../services/stack-readiness.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
@@ -124,19 +125,19 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   }
 
   ['DevtoolsHost.resetStorage'](_request: DevtoolsHost.ResetStorageRequest): Effect.Effect<void, Error> {
-    return Effect.fail(new Error());
+    return Effect.fail(new ClientServiceError());
   }
 
   ['DevtoolsHost.enableDebugLogging'](
     _request: DevtoolsHost.EnableDebugLoggingRequest,
   ): Effect.Effect<DevtoolsHost.EnableDebugLoggingResponse, Error> {
-    return Effect.fail(new Error());
+    return Effect.fail(new ClientServiceError());
   }
 
   ['DevtoolsHost.disableDebugLogging'](
     _request: DevtoolsHost.EnableDebugLoggingRequest,
   ): Effect.Effect<DevtoolsHost.EnableDebugLoggingResponse, Error> {
-    return Effect.fail(new Error());
+    return Effect.fail(new ClientServiceError());
   }
 
   ['DevtoolsHost.subscribeToKeyringKeys'](
@@ -182,23 +183,23 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   ['DevtoolsHost.getSpaceSnapshot'](
     _request: DevtoolsHost.GetSpaceSnapshotRequest,
   ): Effect.Effect<GetSpaceSnapshotResponse, Error> {
-    return Effect.fail(new Error());
+    return Effect.fail(new ClientServiceError());
   }
 
   ['DevtoolsHost.saveSpaceSnapshot'](
     _request: DevtoolsHost.SaveSpaceSnapshotRequest,
   ): Effect.Effect<SaveSpaceSnapshotResponse, Error> {
-    return Effect.fail(new Error());
+    return Effect.fail(new ClientServiceError());
   }
 
   ['DevtoolsHost.clearSnapshots'](_request: DevtoolsHost.ClearSnapshotsRequest): Effect.Effect<void, Error> {
-    return Effect.fail(new Error());
+    return Effect.fail(new ClientServiceError());
   }
 
   ['DevtoolsHost.getNetworkPeers'](
     _request: DevtoolsHost.GetNetworkPeersRequest,
   ): Effect.Effect<DevtoolsHost.GetNetworkPeersResponse, Error> {
-    return Effect.fail(new Error());
+    return Effect.fail(new ClientServiceError());
   }
 
   ['DevtoolsHost.subscribeToNetworkTopics'](): EffectStream.Stream<

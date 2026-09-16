@@ -30,12 +30,7 @@ export class FileTooLargeError extends Error {
   }
 }
 
-export class NoBackendError extends Error {
-  constructor() {
-    super('No file storage backend is registered.');
-    this.name = 'NoBackendError';
-  }
-}
+export class NoBackendError extends BaseError.extend('NoBackendError', 'No file storage backend is registered.') {}
 
 export class FileReadError extends BaseError.extend('FileReadError', 'Failed to read file contents.') {}
 

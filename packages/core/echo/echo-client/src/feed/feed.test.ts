@@ -17,6 +17,7 @@ import { EID, PublicKey } from '@dxos/keys';
 import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
 import { FeedService } from '@dxos/protocols/rpc';
 
+import { EchoClientError } from '../errors.ts';
 import { EchoTestBuilder } from '../testing/index.ts';
 
 describe('Feed', () => {
@@ -316,7 +317,7 @@ describe('Feed', () => {
         'FeedService.insertIntoFeed': (...args: Parameters<(typeof realHandlers)['FeedService.insertIntoFeed']>) => {
           callCount++;
           return callCount === 1
-            ? Effect.fail(new Error('simulated insertIntoFeed failure'))
+            ? Effect.fail(new EchoClientError({ message: 'simulated insertIntoFeed failure' }))
             : realHandlers['FeedService.insertIntoFeed'](...args);
         },
       };

@@ -11,6 +11,8 @@ import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE, DEEPSEEK_PROVIDER_ID, DEEPSEEK_SOURCE } from '../constants.ts';
+import { ConnectorKeyInvalidError } from '../operations/errors.ts';
+import { AssistantOperationError } from '../operations/errors.ts';
 
 /** API-key form for the Anthropic BYOK provider; key is best-effort validated against `/v1/models`. */
 const AnthropicTokenForm = ConnectorSpec.TokenForm({
@@ -36,7 +38,9 @@ const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
           ? Effect.fail(
-              new Error('Invalid Anthropic API key. Check it at https://console.anthropic.com/settings/keys.'),
+              new ConnectorKeyInvalidError({
+                message: 'Invalid Anthropic API key. Check it at https://console.anthropic.com/settings/keys.',
+              }),
             )
           : Effect.void,
       onFailure: () => Effect.void,
@@ -57,7 +61,11 @@ const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, Error> =>
     Effect.matchEffect({
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
-          ? Effect.fail(new Error('Invalid DeepSeek API key. Check it at https://platform.deepseek.com/api_keys.'))
+          ? Effect.fail(
+              new AssistantOperationError({
+                message: 'Invalid DeepSeek API key. Check it at https://platform.deepseek.com/api_keys.',
+              }),
+            )
           : Effect.void,
       onFailure: () => Effect.void,
     }),

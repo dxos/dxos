@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+// These fixtures simulate third-party plugin code throwing an untagged `Error`, which is exactly
+// what the manager has to survive — tagging them would remove the thing under test.
+/** @effect-diagnostics globalErrorInEffectFailure:skip-file */
+
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
@@ -31,6 +35,7 @@ import {
   ProvidesMismatchError,
 } from '../errors.ts';
 import * as Plugin from '../plugin.ts';
+import { PluginManagerError } from './errors.ts';
 import * as PluginManager from './plugin-manager.ts';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
@@ -121,7 +126,7 @@ describe('PluginManager', () => {
         if (locator === urlLocator) {
           return { plugin: testPlugin };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: urlLoader });
@@ -164,7 +169,7 @@ describe('PluginManager', () => {
         if (locator === 'dev') {
           return { plugin: devPlugin, dev: true };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: loader });
@@ -216,7 +221,7 @@ describe('PluginManager', () => {
         if (locator === 'dev') {
           return { plugin: devPlugin, dev: true };
         }
-        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
       });
 
       const manager = PluginManager.make({ pluginLoader: loader });
@@ -350,7 +355,7 @@ describe('PluginManager', () => {
             provides: [],
             activatesOn: FailEvent,
             id: 'Fail',
-            activate: () => Effect.fail(new Error('test')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'test' })),
           }),
           Plugin.make,
         )(),
@@ -486,7 +491,7 @@ describe('PluginManager', () => {
             provides: [],
             activatesOn: FailEvent,
             id: 'Fail',
-            activate: () => Effect.fail(new Error('test')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'test' })),
           }),
           Plugin.make,
         )(),
@@ -1937,7 +1942,7 @@ describe('PluginManager', () => {
             provides: [],
             id: 'Boom',
             activatesOn: FailingEvent,
-            activate: () => Effect.fail(new Error('boom')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'boom' })),
           }),
           Plugin.make,
         );
@@ -1972,7 +1977,7 @@ describe('PluginManager', () => {
             provides: [],
             id: 'Boom',
             activatesOn: FailingEvent,
-            activate: () => Effect.fail(new Error('boom')),
+            activate: () => Effect.fail(new PluginManagerError({ message: 'boom' })),
           }),
           Plugin.make,
         );
@@ -2006,7 +2011,7 @@ describe('PluginManager', () => {
             activatesOn: Event,
             activate: () =>
               shouldFail
-                ? Effect.fail(new Error('first try'))
+                ? Effect.fail(new PluginManagerError({ message: 'first try' }))
                 : Effect.succeed([Capability.contribute(String, { string: 'ok' })]),
           }),
           Plugin.make,
@@ -2239,7 +2244,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const dependent = makePlugin('dependent', ['remote-broken']);
         const failingLoader = Effect.fn(function* (_id: string) {
-          return yield* Effect.fail(new Error('fetch failed'));
+          return yield* Effect.fail(new PluginManagerError({ message: 'fetch failed' }));
         });
 
         const registry = Registry.make();

@@ -62,6 +62,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/errors": "workspace:*",
     "@effect/sql-sqlite-wasm": "catalog:",
     "@effect/wa-sqlite": "catalog:"
   },

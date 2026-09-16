@@ -26,6 +26,7 @@ import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { findObject, toolInvocations } from '../../assertions.ts';
+import { EvalError } from '../../errors.ts';
 import { OPENING_PROMPT, SKILL_KEY, evaluateHandOff, seed } from './scenario.ts';
 import { startWorkerSpecServer } from './worker-spec-server.ts';
 
@@ -94,7 +95,7 @@ describe('weather MCP hand-off', () => {
 
           const skill = yield* findObject(Skill.Skill, (candidate) => Obj.getMeta(candidate).key === SKILL_KEY);
           if (!skill) {
-            return yield* Effect.fail(new Error('The template did not seed the Weather MCP skill.'));
+            return yield* Effect.fail(new EvalError({ message: 'The template did not seed the Weather MCP skill.' }));
           }
           expect(skill.mcpServers).toEqual([]);
           target.skill = Obj.getURI(skill);

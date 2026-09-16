@@ -89,7 +89,7 @@ export const reset = Command.make(
         yield* Console.error(
           `Refusing to run without --hard. This command deletes all local data for profile "${profile}".`,
         );
-        return yield* Effect.fail(new Error('Missing --hard flag.'));
+        return yield* Effect.fail(new CliError({ message: 'Missing --hard flag.' }));
       }
 
       const candidates = collectPathsToDelete(profile);

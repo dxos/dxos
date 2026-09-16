@@ -12,6 +12,7 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
+import { FeedOperationError } from './errors.ts';
 import { SyncRpcTimeoutError } from './errors.ts';
 import type { FeedStore } from './feed-store.ts';
 
@@ -454,11 +455,13 @@ export class SyncClient {
 
   #expectResponse<T>(requestId: string, message: ProtocolMessage, expectedTag: string): Effect.Effect<T, Error, never> {
     if (message._tag === 'Error') {
-      return Effect.fail(new Error(message.message));
+      return Effect.fail(new FeedOperationError({ message: message.message }));
     }
     const requestIdMsg = 'requestId' in message ? String(message.requestId) : undefined;
     if (message._tag !== expectedTag || requestIdMsg !== requestId) {
-      return Effect.fail(new Error(`Unexpected message: expected ${expectedTag} with requestId ${requestId}`));
+      return Effect.fail(
+        new FeedOperationError({ message: `Unexpected message: expected ${expectedTag} with requestId ${requestId}` }),
+      );
     }
     return Effect.succeed(message as T);
   }

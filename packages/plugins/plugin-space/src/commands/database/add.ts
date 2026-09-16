@@ -32,6 +32,7 @@ import { type SpaceId } from '@dxos/keys';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 
+import { SpaceOperationError } from '../../operations/errors.ts';
 import { printObject } from './util.ts';
 
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
@@ -78,13 +79,13 @@ export const add: Command.Command<
       });
       const metadata = resolve(selectedTypename);
       if (!metadata) {
-        return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
+        return yield* Effect.fail(new SpaceOperationError({ message: `Unknown typename: ${selectedTypename}` }));
       }
 
       const result = yield* metadata.createObject({}, { db, target: collection });
       const object = result.object;
       if (!Obj.isObject(object)) {
-        return yield* Effect.fail(new Error(`Invalid object: ${object}`));
+        return yield* Effect.fail(new SpaceOperationError({ message: `Invalid object: ${object}` }));
       }
 
       if (json) {

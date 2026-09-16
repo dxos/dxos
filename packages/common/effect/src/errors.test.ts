@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+// The subject of these tests is a plain `Error`'s stack frames, so they construct and re-raise
+// one deliberately; a tagged error would carry the catch's stack instead of the thunk's.
+/** @effect-diagnostics globalErrorInEffectCatch:skip-file globalErrorInEffectFailure:skip-file */
+
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -40,9 +44,6 @@ describe('causeToError', () => {
       Effect.sync(() => {
         throw new Error('defect');
       }),
-      // The subject of this test is a plain `Error`'s stack, so the thrown error is returned as
-      // it is; a tagged wrapper would carry the catch's stack instead of the thunk's.
-      // @effect-diagnostics-next-line globalErrorInEffectCatch:off
       Effect.try({
         try: () => {
           throw new Error('failure');

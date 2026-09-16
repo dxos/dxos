@@ -34,6 +34,7 @@ import { type Actor, File, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type ToolInvocation, findObject } from '../assertions.ts';
+import { EvalError } from '../errors.ts';
 import { createEvalRunner } from '../runner.ts';
 import * as Scorer from '../Scorer.ts';
 import { getDefaultSkills } from '../skills.ts';
@@ -399,13 +400,13 @@ const task = createEvalRunner({
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(spaceId);
       if (!space) {
-        return yield* Effect.fail(new Error(`Space not found: ${spaceId}`));
+        return yield* Effect.fail(new EvalError({ message: `Space not found: ${spaceId}` }));
       }
       yield* SampleSpace.applyTo(StockfishSpace(), space);
 
       const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
       if (!project?.taskSet || !project.instructions) {
-        return yield* Effect.fail(new Error('The template did not produce the project.'));
+        return yield* Effect.fail(new EvalError({ message: 'The template did not produce the project.' }));
       }
       const taskSet = yield* Database.load(project.taskSet);
       const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
@@ -413,7 +414,7 @@ const task = createEvalRunner({
         (stage): stage is Task.Task => stage !== undefined,
       );
       if (stages.length !== DELEGATED_STAGES.length) {
-        return yield* Effect.fail(new Error('The template did not produce the delegated stages.'));
+        return yield* Effect.fail(new EvalError({ message: 'The template did not produce the delegated stages.' }));
       }
 
       // The space's Development skill, which the project's instructions bind for a companion chat.

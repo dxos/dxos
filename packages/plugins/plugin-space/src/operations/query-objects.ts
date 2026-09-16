@@ -10,6 +10,8 @@ import { Database, DXN, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 
 import { SpaceOperation } from '#types';
 
+import { SpaceOperationError } from './errors.ts';
+
 const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = SpaceOperation.QueryObjects.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
@@ -76,7 +78,7 @@ const fullText = (text: string): Query.Any =>
 const typeFilter = Effect.fnUntraced(function* (typename: string) {
   const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
   if (!types.some((type) => Type.getTypename(type) === typename)) {
-    return yield* Effect.fail(new Error(`Schema not found: ${typename}`));
+    return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
   }
   return Filter.type(DXN.make(typename));
 });
