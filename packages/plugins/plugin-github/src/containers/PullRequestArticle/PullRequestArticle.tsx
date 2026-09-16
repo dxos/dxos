@@ -208,27 +208,11 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     () =>
       MenuBuilder.make()
         .action(
-          'generateWalkthrough',
-          {
-            label: [
-              walkthrough ? 'regenerate-walkthrough.label' : 'generate-walkthrough.label',
-              { ns: meta.profile.key },
-            ],
-            icon: 'ph--path--regular',
-            variant: walkthrough ? undefined : 'primary',
-            iconOnly: false,
-            disabled: generating,
-            disposition: 'toolbar',
-            testId: 'pull-request.toolbar.generate-walkthrough',
-          },
-          () => void handleGenerate(),
-        )
-        .action(
           'approve',
           {
             label: ['approve-pull-request.label', { ns: meta.profile.key }],
             icon: 'ph--check-circle--regular',
-            variant: walkthrough ? 'primary' : undefined,
+            variant: 'primary',
             iconOnly: false,
             disabled: busy || status?.state === 'merged' || status?.state === 'closed',
             disposition: 'toolbar',
@@ -248,6 +232,20 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
           () => setComposing((value) => !value),
         )
         .separator()
+        .action(
+          'generateWalkthrough',
+          {
+            label: [
+              walkthrough ? 'regenerate-walkthrough.label' : 'generate-walkthrough.label',
+              { ns: meta.profile.key },
+            ],
+            icon: 'ph--path--regular',
+            disabled: generating,
+            disposition: 'toolbar',
+            testId: 'pull-request.toolbar.generate-walkthrough',
+          },
+          () => void handleGenerate(),
+        )
         .action(
           'openOnGitHub',
           {
