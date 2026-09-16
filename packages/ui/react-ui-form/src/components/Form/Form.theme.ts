@@ -16,17 +16,13 @@ const formStyles = tv({
     // Bottom padding on the body, so the last field never sits flush against its host's edge
     // (a form in a card, a dialog body, a scrolled panel all need it).
     content: 'pb-form-padding',
-    // A `<fieldset>`: laid out as a column so its legend (floated by the fieldset theme) is a child
-    // in flow rather than the browser's border-drawn legend. The depth variant decides the chrome.
-    // `relative` anchors `fieldSetActions`; the legend stays the fieldset's own child to name the group.
-    fieldSet: 'relative flex flex-col',
+    fieldSet: 'flex flex-col',
     fieldSetLegend: 'w-full',
     fieldSetTitle: '',
     fieldSetDescription: 'text-description',
     // Padding under whichever of legend or description comes last.
     fieldSetHeader: '',
-    // Out of flow, so a description below the label does not push the actions down.
-    fieldSetActions: 'absolute top-0 end-0 flex items-center',
+    fieldSetActions: 'ms-auto flex items-center',
     // The folding body of a collapsible field set.
     fieldSetBody: 'flex flex-col',
     field: '',
@@ -102,7 +98,7 @@ const formStyles = tv({
         // The gap spaces the section's direct children: its header and every field or group in it.
         fieldSet: 'py-form-section-gap! gap-trim-md',
         fieldSetHeader: 'pb-form-section-gap',
-        fieldSetActions: 'top-form-section-gap px-trim-md',
+        fieldSetActions: 'px-trim-md',
         fieldSetTitle: 'px-trim-md text-xl',
         fieldSetDescription: 'px-trim-md',
         fieldSetBody: 'gap-trim-md',
