@@ -123,6 +123,11 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   // The plank the URL names, before anything has resolved: an id and nothing else.
   const loadingNode = useMemo(() => ({ id }), [id]);
 
+  // Memoized so the navbar and footer surfaces see one data reference per node: an inline literal
+  // would hand them a fresh object every render, which the surface metrics flag as unstable data.
+  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
+  const shellData = useMemo(() => ({ subject: shellNode?.data }), [shellNode?.data]);
+
   const controls = (
     <PlankControls
       capabilities={capabilities}
@@ -135,7 +140,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
 
   const headless = fullscreen;
 
-  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
   if (!shellNode) {
     return (
       <Plank
@@ -154,17 +158,11 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
 
   const navbarEnd =
     part !== 'complementary' ? (
-      <Surface.Surface
-        type={AppSurface.NavbarEnd}
-        data={{ subject: shellNode.data } satisfies AppSurface.NavbarEndData}
-      />
+      <Surface.Surface type={AppSurface.NavbarEnd} data={shellData satisfies AppSurface.NavbarEndData} />
     ) : undefined;
 
   const sigilFooter = (
-    <Surface.Surface
-      type={AppSurface.MenuFooter}
-      data={{ subject: shellNode.data } satisfies AppSurface.MenuFooterData}
-    />
+    <Surface.Surface type={AppSurface.MenuFooter} data={shellData satisfies AppSurface.MenuFooterData} />
   );
 
   return (

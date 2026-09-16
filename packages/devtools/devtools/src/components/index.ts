@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './performance/index.ts';
-
 export * from './Bitbar.tsx';
 export * from './BooleanIcon.tsx';
 export * from './ControlledSelector.tsx';
@@ -14,6 +12,7 @@ export * from './PropertiesTable.tsx';
 export * from './PublicKeySelector.tsx';
 export * from './Searchbar.tsx';
 export * from './Select.tsx';
+export * from './StatCard/index.ts';
 export * from './Tree.tsx';
 export * from './ObjectViewer.tsx';
 export * from './ObjectsTree.tsx';

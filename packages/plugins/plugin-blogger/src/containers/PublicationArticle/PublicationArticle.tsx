@@ -71,7 +71,11 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   }, [invokePromise, subject]);
 
   const handleDelete = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
+    void invokePromise(
+      SpaceOperation.RemoveObjects,
+      { objects: [subject] },
+      { spaceId: Obj.getDatabase(subject)?.spaceId },
+    );
   }, [invokePromise, subject]);
 
   // Publisher + connection resolution for the Sync action. A publisher is contributed by a provider

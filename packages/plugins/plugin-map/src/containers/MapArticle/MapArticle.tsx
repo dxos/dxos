@@ -164,6 +164,6 @@ const MapArticleInner = ({
   );
 };
 
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />;
 
 MapArticle.displayName = 'MapArticle';
