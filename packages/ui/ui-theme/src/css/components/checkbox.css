@@ -41,18 +41,20 @@
   }
 
   /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
-  /* Sized by knobs so density can shrink the track and knob together; the knob's margin is
-     (track height - knob) / 2 and the track width leaves the knob that same inset when it has
-     slid its own width to the end. */
+  /* Sized by knobs so density can shrink the track and knob together. The knob is positioned
+     inside the border, so the inset that centres it is measured from the padding box, and the
+     track width leaves the knob that same inset once it has slid its own width to the end. */
   .dx-checkbox--switch {
     --dx-switch-h: 1.25rem;
     --dx-switch-knob: 0.75rem;
-    --dx-switch-inset: calc((var(--dx-switch-h) - var(--dx-switch-knob)) / 2);
+    --dx-switch-border: 1px;
+    --dx-switch-inset: calc((var(--dx-switch-h) - var(--dx-switch-border) * 2 - var(--dx-switch-knob)) / 2);
     @apply inline-block appearance-none relative shrink-0;
     @apply shadow-inner transition-colors bg-un-accent;
     @apply cursor-pointer rounded-full;
+    border-width: var(--dx-switch-border);
     height: var(--dx-switch-h);
-    width: calc(var(--dx-switch-knob) * 2 + var(--dx-switch-inset) * 2);
+    width: calc(var(--dx-switch-knob) * 2 + (var(--dx-switch-inset) + var(--dx-switch-border)) * 2);
 
     &::before {
       @apply absolute block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform;
