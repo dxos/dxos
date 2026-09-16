@@ -159,13 +159,15 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                   case 'trace':
                     return (
                       // The trace takes the slack: item and body are flex columns so the scroll
-                      // container inside gets a definite height to scroll within.
+                      // container inside gets a definite height to scroll within. The body's slide
+                      // animation is off here — it ramps to a measured height, and this body's height
+                      // comes from the flex slack, not its content.
                       <Accordion.Item
                         key={section.id}
                         item={section}
                         classNames={mx(
                           'border-x-0 dx-grow flex flex-col',
-                          '[&>[data-part=item-content]]:flex-1 [&>[data-part=item-content]]:min-h-0 [&>[data-part=item-content]]:flex [&>[data-part=item-content]]:flex-col',
+                          '[&>[data-part=item-content]]:dx-grow [&>[data-part=item-content]]:flex [&>[data-part=item-content]]:flex-col [&>[data-part=item-content]]:animate-none',
                         )}
                       >
                         <Accordion.ItemHeader hover>
