@@ -970,8 +970,9 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             data-testid='taskList.edit.description'
             // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
             // description left to auto-place would take the cell it vacates and fall into the icon
-            // column — a field one word wide.
-            className={mx('flex min-w-0 -col-end-2', grid ? 'col-start-[title]' : 'col-start-2')}
+            // column — a field one word wide. It runs to the row's end: the toolbar sits on the
+            // title line only.
+            className={mx('flex min-w-0 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
           >
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
@@ -981,7 +982,10 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             <MarkdownEditable
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
-              classNames='text-sm'
+              // A long description scrolls within the field rather than growing the pane past the
+              // list it edits from: eight lines, with the scroller's line-height set to the lines'
+              // (CodeMirror's base theme gives it a smaller one) so `lh` measures a real line.
+              classNames='text-sm [&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
               editing
               multiline
               placeholder={descriptionPlaceholder}

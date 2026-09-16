@@ -8,7 +8,7 @@ import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { type ObjectLinkProps, type WidgetDef, type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { createBlockExtensions } from './extensions.ts';
@@ -31,6 +31,8 @@ export type MarkdownBlockProps = ThemedClassName<{
    */
   editable?: boolean;
   registry?: XmlWidgetRegistry;
+  /** The block widget for an object embedded as a card (`![label](echo://…)`). */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   hits?: readonly HighlightRange[];
   /** Number of block widgets this item currently has mounted; 0 once it unmounts. */
   onWidgetsChange?: (count: number) => void;
@@ -43,7 +45,16 @@ export type MarkdownBlockProps = ThemedClassName<{
  * single thread-wide document needs a cursor and a range table to know which message it is touching.
  */
 export const MarkdownBlock = memo(
-  ({ classNames, text, stream, editable = false, registry, hits, onWidgetsChange }: MarkdownBlockProps) => {
+  ({
+    classNames,
+    text,
+    stream,
+    editable = false,
+    registry,
+    objectImage,
+    hits,
+    onWidgetsChange,
+  }: MarkdownBlockProps) => {
     const { themeMode } = useThemeContext();
     const [view, setView] = useState<EditorView | null>(null);
     // React widgets render in portals into hosts the extension places in the document, so the item has
@@ -59,14 +70,14 @@ export const MarkdownBlock = memo(
 
     const extensions = useMemo<Extension[]>(
       () => [
-        ...createBlockExtensions({ registry, editable, themeMode, setWidgets }),
+        ...createBlockExtensions({ registry, objectImage, editable, themeMode, setWidgets }),
         EditorView.updateListener.of((update) => {
           if (update.selectionSet && !update.state.selection.main.empty) {
             selectionGroupRef.current.claim(update.view);
           }
         }),
       ],
-      [editable, themeMode, registry],
+      [editable, themeMode, registry, objectImage],
     );
 
     // Deliberately NOT `useTextEditor`, which builds the view in a passive effect — i.e. after paint.

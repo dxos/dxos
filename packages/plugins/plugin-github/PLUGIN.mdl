@@ -216,6 +216,24 @@ op SyncGitHubRepositories
     Pagination: up to 10 pages per paginated endpoint (1 000 items max).
 ```
 
+```mdl
+op ImportPullRequest
+  key: org.dxos.operation.github.importPullRequest
+  desc: |
+    Add one pull request to the space, named by a github.com URL or `owner/repo#number`,
+    so a reviewer with a link in hand need not sync the whole repository first.
+    Idempotent by owner/repo/number: a pull request the space already holds is returned
+    as it stands.  The object is filed via SpaceOperation.AddObject, not merely added.
+  input:
+    reference: string             # https://github.com/owner/repo/pull/123, or owner/repo#123
+  output: { pullRequest: Ref<PullRequest>, imported: boolean }
+  effects: [echo:read, echo:write, http]
+  errors:
+    GitHubPullRequestReferenceError: the text names no pull request
+    NetworkError: transient HTTP failure after retries
+
+```
+
 ## Features
 
 ```mdl
@@ -354,6 +372,22 @@ feat F-8: Link Previews
   req F-8.3: The object comes from a contributed GitHubCapabilities.LinkSource when a host provides one; otherwise it is fetched from the GitHub API with the space's connection token, or anonymously when the space has none.
 
   req F-8.4: GitHubCard is the CardContent surface for Repo, Issue and PullRequest, so the popover shows reference, state, author, diff size (or default branch) and a link out.
+```
+
+```mdl
+feat F-9: Pull Request Review
+
+  req F-9.1:
+    when: the user runs the "Import pull request" command and names a pull request
+    then: ImportPullRequest files it in the active space and the deck opens it
+
+  req F-9.2: The article's subject is the PullRequest, not its walkthrough — so a pull request with no narration yet opens, showing its state, CI outcome and a "Generate walkthrough" action.
+
+  req F-9.3:
+    when: the space holds a walkthrough of the open pull request
+    then: the article renders its prose and diff chunks, and the toolbar action regenerates rather than generates
+
+  req F-9.4: A Walkthrough opened by id resolves to the same article, through the pull request it narrates.
 ```
 
 ## Acceptance

@@ -107,6 +107,29 @@ export const id = (...ids: EntityId[]): Any => {
 };
 
 /**
+ * Filter by mnemonic — the human-memorable short form of an object's id (see `Obj.getMnemonic`).
+ * Input is case-insensitive.
+ *
+ * @example
+ * ```ts
+ * const [task] = await db.query(Filter.mnemonic('7qk2zb')).run();
+ * ```
+ */
+export const mnemonic = (mnemonic: string): Any => {
+  const normalized = EntityId.normalizeMnemonic(mnemonic);
+  assertArgument(
+    EntityId.isValidMnemonic(normalized),
+    'mnemonic',
+    `mnemonic must be ${EntityId.mnemonicLength} base32 characters`,
+  );
+
+  return new FilterClass({
+    type: 'mnemonic',
+    mnemonic: normalized,
+  });
+};
+
+/**
  * Filter by type.
  *
  * Accepts a `Type.Type` entity (the value produced by `Type.makeObject` /

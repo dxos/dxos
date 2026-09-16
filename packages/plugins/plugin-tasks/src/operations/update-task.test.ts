@@ -60,7 +60,7 @@ describe('update-task', () => {
       // The actor is the session object itself, not a bare role: a check-in finds its open tasks by
       // this ref, and a role alone would not say which run holds the task.
       expect(task.assignee?.role).toBe('assistant');
-      expect(Task.refEntityId(task.assignee!.subject!)).toBe(sessions[0].id);
+      expect(Task.refEntityId(task.assignee?.subject)).toBe(sessions[0].id);
     }).pipe(
       Effect.provide(Trace.writerLayerNoop),
       Effect.provide(
@@ -87,7 +87,7 @@ describe('update-task', () => {
 
       const sessions = yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run;
       expect(sessions).toHaveLength(1);
-      expect(Task.refEntityId(task.assignee!.subject!)).toBe(existing.id);
+      expect(Task.refEntityId(task.assignee?.subject)).toBe(existing.id);
       // A session missing a title takes the one the caller named; a session that has one keeps it,
       // since the session reports its own state and this call is not that report.
       expect(existing.title).toBe('Draft the thing');

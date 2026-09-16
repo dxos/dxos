@@ -28,16 +28,18 @@ const fingerprint = (value: string): string => {
   return hash.toString(16);
 };
 
-const cacheKey = (providerId: string, field: string, apiKey?: Redacted.Redacted<string>): string =>
-  `${providerId}/${field}/${apiKey ? fingerprint(Redacted.value(apiKey)) : ''}`;
+// A provider id names the vendor, shared by its per-kind services (Higgsfield lists Soul models
+// for an image `model` and DoP models for a video one), so the kind is part of the key.
+const cacheKey = (providerId: string, kind: string, field: string, apiKey?: Redacted.Redacted<string>): string =>
+  `${providerId}/${kind}/${field}/${apiKey ? fingerprint(Redacted.value(apiKey)) : ''}`;
 
 /**
  * Loads a provider's options for a request field through a shared, time-bounded cache keyed by
- * provider, field and credential — every article and remount reads one fetch, and a rejected load
+ * provider, kind, field and credential — every article and remount reads one fetch, and a rejected load
  * is evicted so the next read retries rather than caching the failure.
  */
 export const loadProviderOptions = (
-  provider: Pick<GenerationService.GenerationService, 'id' | 'fieldOptions'>,
+  provider: Pick<GenerationService.GenerationService, 'id' | 'kind' | 'fieldOptions'>,
   field: string,
   request: GenerationService.FieldOptionsRequest,
 ): Promise<readonly GenerationService.FieldOption[]> => {
@@ -47,7 +49,7 @@ export const loadProviderOptions = (
   }
 
   const apiKey = request.apiKey && Redacted.value(request.apiKey);
-  const key = cacheKey(provider.id, field, request.apiKey);
+  const key = cacheKey(provider.id, provider.kind, field, request.apiKey);
   const now = Date.now();
   const cached = cache.get(key);
   // A 32-bit fingerprint can collide; never hand one credential's list to another.

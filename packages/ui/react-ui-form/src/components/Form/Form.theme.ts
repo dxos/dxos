@@ -16,17 +16,13 @@ const formStyles = tv({
     // Bottom padding on the body, so the last field never sits flush against its host's edge
     // (a form in a card, a dialog body, a scrolled panel all need it).
     content: 'pb-form-padding',
-    // A `<fieldset>`: laid out as a column so its legend (floated by the fieldset theme) is a child
-    // in flow rather than the browser's border-drawn legend. The depth variant decides the chrome.
-    // `relative` anchors `fieldSetActions`; the legend stays the fieldset's own child to name the group.
-    fieldSet: 'relative flex flex-col',
+    fieldSet: 'flex flex-col',
     fieldSetLegend: 'w-full',
     fieldSetTitle: '',
     fieldSetDescription: 'text-description',
     // Padding under whichever of legend or description comes last.
     fieldSetHeader: '',
-    // Out of flow, so a description below the label does not push the actions down.
-    fieldSetActions: 'absolute top-0 end-0 flex items-center',
+    fieldSetActions: 'ms-auto flex items-center',
     // The folding body of a collapsible field set.
     fieldSetBody: 'flex flex-col',
     field: '',
@@ -72,10 +68,18 @@ const formStyles = tv({
       above: {},
       beside: {},
     },
+    // Whether a legend renders at all; an unlabelled field set has nothing to hang its top space on.
+    labelled: {
+      true: {},
+      false: {},
+    },
     // A top-level field set is a titled section; a nested one is an indented, bordered group.
     depth: {
+      // The section's top space sits on the legend: WebKit lays a rendered legend at the fieldset's
+      // border edge, ignoring its padding-block-start.
       root: {
-        fieldSet: 'py-form-section-gap first:pt-0',
+        fieldSet: 'pb-form-section-gap',
+        fieldSetLegend: 'pt-form-section-gap',
         fieldSetTitle: 'text-lg',
       },
       // The legend sits above the box, like a field's label above its control; the body is the box.
@@ -96,13 +100,27 @@ const formStyles = tv({
       },
     },
     {
+      labelled: false,
+      depth: 'root',
+      class: {
+        fieldSet: 'pt-form-section-gap',
+      },
+    },
+    {
+      variant: 'default',
+      depth: 'root',
+      class: {
+        fieldSet: '[&:first-child>legend]:pt-0 first:pt-0',
+      },
+    },
+    {
       variant: 'settings',
       depth: 'root',
       class: {
         // The gap spaces the section's direct children: its header and every field or group in it.
-        fieldSet: 'py-form-section-gap! gap-trim-md',
+        fieldSet: 'pb-form-section-gap! gap-trim-md',
         fieldSetHeader: 'pb-form-section-gap',
-        fieldSetActions: 'top-form-section-gap px-trim-md',
+        fieldSetActions: 'px-trim-md',
         fieldSetTitle: 'px-trim-md text-xl',
         fieldSetDescription: 'px-trim-md',
         fieldSetBody: 'gap-trim-md',
@@ -120,6 +138,7 @@ const formStyles = tv({
   defaultVariants: {
     variant: 'default',
     labelPlacement: 'above',
+    labelled: true,
     depth: 'root',
   },
 });

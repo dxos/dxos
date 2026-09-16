@@ -245,8 +245,10 @@ export class TriggerDispatcher extends Context.Service<
      */
     getCurrentTime(): Date;
   }
->()('@dxos/functions/TriggerDispatcher') {
-  static layer = (
+>()('@dxos/functions/TriggerDispatcher') {}
+
+export namespace TriggerDispatcher {
+  export const layer = (
     options: Omit<TriggerDispatcherOptions, 'services'>,
   ): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>
     Layer.effect(

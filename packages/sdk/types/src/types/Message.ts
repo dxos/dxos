@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor.ts';
@@ -44,7 +43,7 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
     /** Message creation timestamp. NOTE: May be different from the object creation timestamp. */
     created: Schema.String.pipe(
       Schema.annotate({ description: 'ISO date string when the message was sent.' }),
-      GeneratorAnnotation.set('date.iso8601'),
+      Annotation.GeneratorAnnotation.set('date.iso8601'),
     ),
     sender: Actor.Actor.pipe(Schema.annotate({ description: 'Identity of the message sender.' })),
     blocks: Schema.Array(ContentBlock.Any).annotate({
@@ -68,7 +67,7 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
       }),
     ),
   }).pipe(
-    LabelAnnotation.set(['properties.subject']),
+    Annotation.LabelAnnotation.set(['properties.subject']),
     Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
   ),
 ) {}

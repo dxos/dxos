@@ -9,7 +9,7 @@ import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { credentialPayload, getCredentialAssertion } from '@dxos/credentials';
 import { type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
@@ -37,8 +37,8 @@ describe('identity/identity-manager', () => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 
     const keyring = new Keyring(storage.createDirectory('keyring'));
-    const feedStore = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
         root: storage.createDirectory('feeds'),
         signer: keyring,
         hypercore: {
@@ -47,14 +47,14 @@ describe('identity/identity-manager', () => {
       }),
     });
 
-    onTestFinished(() => feedStore.close());
+    onTestFinished(() => hypercoreStore.close());
 
     const networkManager = new SwarmNetworkManager({
       signalManager: new MemorySignalManager(signalContext),
       transportFactory: MemoryTransportFactory,
     });
     const spaceManager = new SpaceManager({
-      feedStore,
+      hypercoreStore,
       networkManager,
       metadataStore,
     });
@@ -62,7 +62,7 @@ describe('identity/identity-manager', () => {
     const identityManager = new IdentityManager({
       metadataStore,
       keyring,
-      feedStore,
+      hypercoreStore,
       spaceManager,
       automergeCredentials: true,
     });
@@ -71,7 +71,7 @@ describe('identity/identity-manager', () => {
       networkManager,
       metadataStore,
       identityManager,
-      feedStore,
+      hypercoreStore,
       keyring,
     };
   };
@@ -129,7 +129,7 @@ describe('identity/identity-manager', () => {
     await peer1.identityManager.open(new Context());
     const identity1 = await peer1.identityManager.createIdentity();
     await peer1.identityManager.close(Context.default());
-    await peer1.feedStore.close();
+    await peer1.hypercoreStore.close();
     await peer1.metadataStore.close();
 
     const peer2 = await setupPeer({ storage });
