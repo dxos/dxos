@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import * as Predicate from 'effect/Predicate';
 
-import { DeferredTask, Event, UpdateScheduler, scheduleTask } from '@dxos/async';
+import { DeferredTask, Event, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
 import {
@@ -51,6 +51,12 @@ const RECONNECT_MAX_DELAY = 30_000;
 const APPEND_RETRY_INITIAL_DELAY = 1_000;
 
 const APPEND_RETRY_MAX_DELAY = 30_000;
+
+/** Drain passes {@link FeedHandle.waitForPendingWrites} makes before reporting writes as unsendable. */
+const FLUSH_ATTEMPTS = 3;
+
+/** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
+const FLUSH_RETRY_DELAY_MS = 50;
 
 /**
  * Client-side handle for a single feed, backed by an EDGE queue.
@@ -238,6 +244,11 @@ export class FeedHandle {
    * registered for every object the handle has hydrated, and is dropped only on `delete` or
    * `dispose`, so this is the retention-relevant count rather than `_objects.length`.
    */
+  /** The last load, subscription, or append failure; an append failure is cleared once every write has been sent. */
+  get error(): Error | null {
+    return this._error;
+  }
+
   get residentObjectCount(): number {
     return this.#cores.size;
   }
@@ -416,8 +427,10 @@ export class FeedHandle {
       }
     }
     this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
-    // A later successful send clears the error a retried failure left.
-    this._error = null;
+    // Sends run concurrently, so this one succeeding says nothing of a failed batch still awaiting its retry.
+    if (this.#dirtyCores.size === 0) {
+      this._error = null;
+    }
   }
 
   #onAppendFailed(err: unknown, batch: AppendCapture[]): void {
@@ -500,19 +513,25 @@ export class FeedHandle {
    * through polling — the index that serves queries is caught up synchronously by the query host
    * itself, so callers don't need to wait on our own poll cycle). Mirrors `RepoProxy.flush`.
    *
-   * Best-effort, matching the pre-existing append contract: a failed send re-queues its cores and
-   * reschedules, so this can return with a retry still pending, and the failure surfaces only via
-   * {@link error} rather than rejecting.
-   *
-   * TODO(wittjosiah): Drain until `#dirtyCores` and `#inFlight` both settle and propagate a
-   *   persistent failure, so `db.flush()` cannot report success over unwritten state. Needs a
-   *   bounded retry policy first — an unbounded drain would hang on a permanently failing send.
+   * Throws if writes are still unsent after {@link FLUSH_ATTEMPTS} drains, or at once when the endpoint is closed.
    */
   async waitForPendingWrites(): Promise<void> {
-    if (this.#dirtyCores.size > 0) {
-      await this.#appendScheduler.runBlocking();
+    for (let attempt = 1; ; attempt++) {
+      if (this.#dirtyCores.size > 0) {
+        await this.#appendScheduler.runBlocking();
+      }
+      await Promise.allSettled([...this.#inFlight]);
+      if (this.#dirtyCores.size === 0) {
+        return;
+      }
+      if (this.#endpointClosed) {
+        throw this.#endpointClosed;
+      }
+      if (attempt >= FLUSH_ATTEMPTS) {
+        throw this._error ?? new Error('Feed writes could not be sent.');
+      }
+      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
     }
-    await Promise.allSettled([...this.#inFlight]);
   }
 
   async sync({
@@ -773,21 +792,15 @@ export class FeedHandle {
     this.#objectIds.clear();
   }
 
+  /** Throws after teardown if writes could not be sent, since nothing carries them to a handle that replaces this one. */
   async dispose() {
     // Drain before teardown: a same-tick `Obj.update` is still queued for the background append,
-    // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still
-    // live, and cannot reject — `waitForPendingWrites` is best-effort by contract.
-    await this.waitForPendingWrites();
-
-    if (this.#endpointClosed && this.#dirtyCores.size > 0) {
-      // The drain above is a no-op once the endpoint is closed, and nothing carries these writes to
-      // the handle that replaces this one, so say how many were lost rather than losing them quietly.
-      log.warn('feed handle disposed with writes its closed endpoint could not send', {
-        feedId: this._feedId,
-        pending: this.#dirtyCores.size,
-        err: this.#endpointClosed,
-      });
-    }
+    // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still live.
+    const unsent = await this.waitForPendingWrites().then(
+      () => undefined,
+      (err: unknown) => err,
+    );
+    const lost = this.#dirtyCores.size;
 
     this._pollingHandlers = 0;
     this.#teardownFeedSubscription();
@@ -798,6 +811,9 @@ export class FeedHandle {
     this.#dirtyCores.clear();
     await this._ctx.dispose();
     await this._refreshTask.join();
+    if (unsent !== undefined) {
+      throw new Error(`Feed handle disposed with ${lost} unsent writes.`, { cause: unsent });
+    }
   }
 }
 
