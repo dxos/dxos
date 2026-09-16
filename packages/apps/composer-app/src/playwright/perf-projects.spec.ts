@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Page, expect, test } from '@playwright/test';
+import { type Locator, type Page, expect, test } from '@playwright/test';
 import path from 'node:path';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -23,7 +23,7 @@ import {
 } from '@dxos/perf-harness';
 
 import { INITIAL_URL } from './app-manager.ts';
-import { DEFAULT_SCALE, type Scale, SCALES, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
+import { SCALE, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
@@ -47,6 +47,25 @@ const projectPath = (spaceId: string, projectId: string): string =>
   GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.ai, PROJECT_TYPENAME, projectId);
 
 /**
+ * A document's navtree path.
+ *
+ * `content/collections/<id>`, the form the functional QA opens documents with — a document created
+ * through `markdown.create` lands in the space's root collection, and the bare `content/<id>` form
+ * does not resolve to a node.
+ */
+const documentPath = (spaceId: string, documentId: string): string =>
+  `root/${spaceId}/content/collections/${documentId}`;
+
+/**
+ * The editable markdown editor, as opposed to a preview of one.
+ *
+ * `composer.markdownRoot` alone is ambiguous: the Overview artifact gallery previews each document
+ * through the same component, so the testid matches once per artifact card. Only the real editor
+ * exposes a `textbox` role, which is what makes this unique.
+ */
+const documentEditor = (page: Page): Locator => page.getByTestId('composer.markdownRoot').getByRole('textbox');
+
+/**
  * Idle allowed after ready before the first measured stage.
  *
  * Modules keep arriving for minutes after the app reports ready, so a stage that starts too early
@@ -56,16 +75,13 @@ const projectPath = (spaceId: string, projectId: string): string =>
  */
 const SETTLE_MS = 20_000;
 
-/** Which tier to run. The nightly runs `normal` only; the larger tiers are for exploration. */
-const scaleName = process.env.DX_PERF_SCALE ?? DEFAULT_SCALE;
-
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
 /**
  * Locator budget per mode.
  *
  * `diagnose` gets far more than `measure` because its instrumentation is not a small tax: the
- * per-frame screencast and the per-realm profiler took the `normal` tier's `open-tasks` from 6.8s to
+ * per-frame screencast and the per-realm profiler took `open-tasks` from 6.8s to
  * past 60s. A budget sized for `measure` turns every instrumented run into a timeout — the one
  * failure mode that yields no artifacts, exactly when they are wanted.
  */
@@ -74,20 +90,15 @@ const locatorTimeout = (mode: Mode): number => (mode === 'diagnose' ? 300_000 : 
 /**
  * Whole-test budget, sized from the MEASURED fixture cost rather than guessed.
  *
- * Generation runs at ~420ms per task at the `normal` tier (five samples: 80.8-84.6s for 200 tasks),
- * and every task is one `tasks.create` whose write appends to a growing `tasks` array — so the rate
- * gets WORSE with scale, not better: at 2,000 tasks the fixture had not finished after 1,380s, i.e.
- * above 690ms each. The figure below is that upper observation, so the `normal` tier is
- * over-budgeted rather than the larger tiers under-budgeted.
- *
- * The per-task term dominates, which is the finding: the operation layer is the wrong fixture path
- * above a few hundred objects. An `extra-heavy` run is budgeted here at nearly two hours and may
- * still not finish — that tier wants the archive path (`buildArchive` -> `client.spaces.import`,
- * building the graph headlessly in node and importing it), which is unbuilt. See `spec/PERF.mdl`.
+ * Generation costs ~420ms per task through the operation layer (five samples: 80.8-84.6s for 200
+ * tasks), because every task is one `tasks.create` whose write appends to a growing `tasks` array.
+ * The figure below is the upper observation from a larger run, so the flow is over-budgeted rather
+ * than at risk of expiring mid-fixture — an expiry there reports no stage at all, which is the one
+ * failure that explains nothing.
  */
 const FIXTURE_MS_PER_TASK = 700;
 
-/** Boot, settle and the seven stages, generously — `diagnose` stages run an order slower. */
+/** Boot, settle and the stages, generously — `diagnose` stages run an order slower. */
 const STAGE_BUDGET_MS = 600_000;
 
 const testBudget = (scale: Scale): number => scale.tasks * FIXTURE_MS_PER_TASK + STAGE_BUDGET_MS;
@@ -122,7 +133,7 @@ const invokeInPage = (page: Page, key: string, input: unknown): Promise<unknown>
  */
 const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
   const runId = `${Date.now().toString(36)}`;
-  const artifactDir = path.join(WORKSPACE_ROOT, 'test-results', 'perf', 'artifacts', `${mode}-${scaleName}-${runId}`);
+  const artifactDir = path.join(WORKSPACE_ROOT, 'test-results', 'perf', 'artifacts', `${mode}-${runId}`);
 
   const budget = locatorTimeout(mode);
   const instrumented = await launchInstrumentedBrowser();
@@ -175,6 +186,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     log.info('fixture built', {
       tasks: fixture.taskCount,
       projects: fixture.projectIds.length,
+      documents: fixture.documentCount,
       elapsedMs: fixture.elapsedMs,
     });
     expect(fixture.taskCount).toBeGreaterThan(0);
@@ -230,9 +242,44 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await page.waitForTimeout(500);
     });
 
-    await runner.stage('reopen-project', async () => {
-      await page.getByTestId('projectsPlugin.tab.overview').click({ timeout: budget });
+    // The document stages: the flow is a project, not a task list, and a project accumulates
+    // documents. Their cost is a different engine — CodeMirror's measurement and highlighting
+    // rather than the flat `tasks` array — which is the point of measuring both in one journey.
+    await runner.stage('open-document', async () => {
+      // Opened through the graph path rather than by clicking its card in the Overview artifact
+      // gallery: that click empties the deck instead of opening the document (planks 1 -> 0 and
+      // nothing renders for 30s — a defect, filed separately). The operation is the same mechanism
+      // `open-project` uses and is what the functional QA opens documents with.
+      await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
+        subject: [documentPath(fixture.spaceId, fixture.documentIds[0])],
+      });
+      await documentEditor(page).waitFor({ timeout: budget });
+    });
+
+    await runner.stage('scroll-document', async () => {
+      const editor = documentEditor(page);
+      await editor.waitFor({ timeout: budget });
+      await editor.click({ timeout: budget, position: { x: 20, y: 20 } });
+      for (let step = 0; step < 10; step++) {
+        await page.mouse.wheel(0, 2_000);
+        await page.waitForTimeout(100);
+      }
+      await page.mouse.wheel(0, -20_000);
       await page.waitForTimeout(500);
+    });
+
+    await runner.stage('edit-document', async () => {
+      // Typed rather than set: the keystroke path — input handling, the CRDT write, re-highlight —
+      // is what a user feels in a long document, and a programmatic set would skip all of it.
+      await documentEditor(page).click({ timeout: budget });
+      await page.keyboard.type('Perf harness edit. ', { delay: 20 });
+      await page.waitForTimeout(500);
+    });
+
+    await runner.stage('reopen-project', async () => {
+      await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
+        subject: [projectPath(fixture.spaceId, fixture.projectIds[0])],
+      });
       await page.getByTestId('projectsPlugin.tab.tasks').click({ timeout: budget });
       await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
     });
@@ -240,7 +287,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     const rows = runner.rows;
     runner.dispose();
 
-    const name = `${FLOW}-${mode}-${scaleName}`;
+    const name = `${FLOW}-${mode}`;
     appendRows(WORKSPACE_ROOT, name, rows);
     writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
     if (mode === 'measure') {
@@ -273,21 +320,11 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 test.describe.serial('Projects + Tasks performance', () => {
   // Derived, not flat: the config's `timeout` is only the outer bound, and a `setTimeout` here
   // silently overrides it — a flat value below the fixture's cost expires before any stage runs.
-  test.setTimeout(testBudget(SCALES[scaleName] ?? SCALES[DEFAULT_SCALE]));
+  test.setTimeout(testBudget(SCALE));
 
   for (const mode of modes) {
-    test(`${mode} @ ${scaleName}`, async () => {
-      const scale = SCALES[scaleName];
-      expect(scale, `unknown scale ${scaleName}`).toBeDefined();
-      if (scaleName !== DEFAULT_SCALE) {
-        // Said out loud because the cost is the surprising part, not the result: the fixture alone
-        // runs for most of the budget, and an exploratory run that looks hung usually is not.
-        console.log(
-          `[perf] exploratory tier '${scaleName}' (${scale.tasks} tasks): fixture generation alone is budgeted at ` +
-            `${Math.round((scale.tasks * FIXTURE_MS_PER_TASK) / 60_000)} minutes and is not trended.`,
-        );
-      }
-      await runFlow(mode, scale, 0);
+    test(mode, async () => {
+      await runFlow(mode, SCALE, 0);
     });
   }
 });

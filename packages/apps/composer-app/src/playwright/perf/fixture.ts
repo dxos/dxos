@@ -6,40 +6,41 @@ import { type Page } from '@playwright/test';
 
 import { type SpaceId } from '@dxos/keys';
 
-/** One scale tier of the Projects + Tasks flow. */
+/** How much data the flow runs against. */
 export type Scale = {
   /** Total tasks across every project. */
   tasks: number;
   /** Hierarchy depth; 1 means a flat set. */
   depth: number;
   projects: number;
+  /** Markdown documents attached to the project, each `documentParagraphs` long. */
+  documents: number;
+  documentParagraphs: number;
 };
 
 /**
- * `normal` is the trended tier — the CI default and the only one the nightly measures.
+ * One size, shaped like a project someone actually has.
  *
- * The larger two are exploration tools: reachable by hand when someone wants to know how the flat
- * `tasks` array behaves at size, not part of any trend. Their fixture cost is punishing (see
- * `FIXTURE_MS_PER_TASK` in `perf-projects.spec.ts`), so expect to leave a run going.
+ * Deliberately not a set of tiers: data volume is orthogonal to the flow, and a scale knob makes
+ * every row's comparability depend on it. Someone exploring how the flat `tasks` array behaves at
+ * size edits this constant for that run rather than selecting a tier nobody trends.
  */
-export const SCALES: Record<string, Scale> = {
-  'normal': { tasks: 200, depth: 2, projects: 1 },
-  'heavy': { tasks: 2000, depth: 3, projects: 5 },
-  'extra-heavy': { tasks: 10_000, depth: 3, projects: 5 },
-};
+export const SCALE: Scale = { tasks: 200, depth: 2, projects: 1, documents: 3, documentParagraphs: 400 };
 
-/** The tier run without a `DX_PERF_SCALE` override, and the only one trended. */
-export const DEFAULT_SCALE = 'normal';
-
-/** The label that groups rows by tier; stable across runs so a trend is joinable. */
-export const scaleLabel = ({ tasks, depth, projects }: Scale): string =>
-  `tasks=${tasks},depth=${depth},projects=${projects}`;
+/** The label recorded on every row, so a trend breaks visibly if the fixture changes shape. */
+export const scaleLabel = ({ tasks, depth, projects, documents, documentParagraphs }: Scale): string =>
+  `tasks=${tasks},depth=${depth},projects=${projects},docs=${documents}x${documentParagraphs}`;
 
 export type Fixture = {
   spaceId: SpaceId;
   projectIds: string[];
+  /** Titles of the markdown documents filed as project artifacts, in creation order. */
+  documentTitles: string[];
+  /** Object ids of those documents, for the graph path that opens one. */
+  documentIds: string[];
   /** Tasks actually created, which is the figure to report rather than the one asked for. */
   taskCount: number;
+  documentCount: number;
   elapsedMs: number;
 };
 
@@ -55,6 +56,35 @@ const TITLE_VARIANT = 'zephyr';
 const CONCURRENCY = 25;
 
 /**
+ * One paragraph of a generated document.
+ *
+ * Prose rather than `lorem ipsum` repeated verbatim: an editor's line measurement and its
+ * syntax-highlight pass both behave differently on identical lines than on varying ones, and a
+ * document of one repeated string would measure a cache rather than a render.
+ */
+const PARAGRAPH_WORDS = [
+  'the',
+  'rendered',
+  'document',
+  'carries',
+  'enough',
+  'prose',
+  'that',
+  'measurement',
+  'and',
+  'highlighting',
+  'both',
+  'have',
+  'work',
+  'to',
+  'do',
+  'across',
+  'varying',
+  'line',
+  'lengths',
+];
+
+/**
  * Builds the fixture through the app's own operations, in one page evaluation.
  *
  * Operations rather than direct `db.add`, because the write path is what produces a realistic
@@ -64,10 +94,24 @@ const CONCURRENCY = 25;
  *
  * One evaluation rather than a call per task: each operation is an in-page await, so driving 10k of
  * them from the test process would add 10k round trips to a fixture nobody measures.
+ *
+ * Markdown documents are filed as project ARTIFACTS rather than created loose in the space, because
+ * that is how a project accumulates them in use — and it is what puts them on the Overview tab the
+ * flow already opens, so the document stages need no second navigation path.
  */
 export const createProjectsFixture = async (page: Page, scale: Scale, runId: string): Promise<Fixture> =>
   page.evaluate(
-    async ({ tasks, depth, projects, runId, titleVariant, concurrency }) => {
+    async ({
+      tasks,
+      depth,
+      projects,
+      documents,
+      documentParagraphs,
+      runId,
+      titleVariant,
+      concurrency,
+      paragraphWords,
+    }) => {
       const isRecord = (value: unknown): value is Record<string, unknown> =>
         typeof value === 'object' && value !== null;
 
@@ -110,6 +154,14 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
        * (`Expected <Declaration>`). This is the bridge between operations that CREATE an object
        * (returning a JSON snapshot) and those that CONSUME one (taking a `Ref`).
        */
+      const refForUri = (uri: string): unknown => {
+        const space = globalThis.dxos?.spaces?.().find((candidate) => candidate.id === spaceId);
+        if (!space) {
+          throw new Error(`space ${spaceId} is not in the client's space list`);
+        }
+        return space.db.makeRef(uri);
+      };
+
       const refFor = (id: string): unknown => {
         const space = globalThis.dxos?.spaces?.().find((candidate) => candidate.id === spaceId);
         if (!space) {
@@ -218,7 +270,57 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
         }
       }
 
-      return { spaceId, projectIds, taskCount, elapsedMs: Date.now() - started };
+      // Documents last: `projects.addArtifact` needs the project to exist, and doing them after the
+      // tasks keeps the reported per-task fixture rate comparable with earlier runs.
+      const documentTitles: string[] = [];
+      const documentIds: string[] = [];
+      for (let index = 0; index < documents; index++) {
+        const title = `Perf notes ${index + 1} ${runId}`;
+        const paragraphs: string[] = [`# ${title}`, ''];
+        for (let paragraph = 0; paragraph < documentParagraphs; paragraph++) {
+          // Heading every tenth paragraph, so the document has structure for the editor to fold,
+          // outline and highlight rather than one flat wall of text.
+          if (paragraph % 10 === 0) {
+            paragraphs.push(`## Section ${paragraph / 10 + 1}`, '');
+          }
+          const words: string[] = [];
+          for (let word = 0; word < 40; word++) {
+            words.push(paragraphWords[(paragraph + word) % paragraphWords.length]);
+          }
+          paragraphs.push(`${words.join(' ')} (paragraph ${paragraph + 1}).`, '');
+        }
+
+        const created = await invoke(
+          'org.dxos.operation.markdown.create',
+          { name: title, content: paragraphs.join('\n') },
+          spaceId,
+        );
+        // `markdown.create` returns a URI (`Obj.getURI`), not a bare id, so this ref is built from
+        // the URI directly rather than through the id path the task operations use.
+        const uri = field(created, 'id');
+        if (typeof uri !== 'string') {
+          throw new Error(`markdown.create returned no id: ${JSON.stringify(created)?.slice(0, 200)}`);
+        }
+        await invoke(
+          'org.dxos.operation.projects.addArtifact',
+          { project: refFor(projectIds[index % projectIds.length]), object: refForUri(uri) },
+          spaceId,
+        );
+        documentTitles.push(title);
+        // The id is the URI's last segment: the graph path that opens a document takes a bare
+        // object id, while `addArtifact` takes a ref built from the whole URI.
+        documentIds.push(uri.split('/').pop() ?? '');
+      }
+
+      return {
+        spaceId,
+        projectIds,
+        documentTitles,
+        documentIds,
+        taskCount,
+        documentCount: documentTitles.length,
+        elapsedMs: Date.now() - started,
+      };
     },
-    { ...scale, runId, titleVariant: TITLE_VARIANT, concurrency: CONCURRENCY },
+    { ...scale, runId, titleVariant: TITLE_VARIANT, concurrency: CONCURRENCY, paragraphWords: PARAGRAPH_WORDS },
   );

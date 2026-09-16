@@ -50,14 +50,20 @@ comparable at all:
 ## QA
 
 ```mdl
-test QA-1: A project whose task set is large
+test QA-1: A project with a large task set and long documents
   desc: |
-    The champion flow for space complexity. `TaskSet.tasks` is FLAT and holds every task in the set,
+    One journey across TWO different cost engines, because a project is not a task list and
+    anything in the app can tank performance.
+
+    The task set is the ECHO-shaped half: `TaskSet.tasks` is FLAT and holds every task in the set,
     sub-tasks included, so a large set is a large ref array: `TaskSet.loadRefs` resolves the cold
     remainder at concurrency 16, `resolveTasks` de-duplicates the whole array on every read, and the
-    hierarchy the UI renders is derived by walking `Task.parentTask` per task. Every one of those is
-    O(set size) on a data structure the UI reads on each render, which is why this flow — rather than
-    a wide navtree or a big document — is where complexity should first become visible.
+    hierarchy the UI renders is derived by walking `Task.parentTask` per task — every one O(set
+    size) on a structure the UI reads on each render.
+
+    The documents are the editor-shaped half: markdown filed as project artifacts, where the cost is
+    CodeMirror's line measurement, highlighting and the keystroke path rather than any ref array. A
+    regression in one half would be invisible in the other, which is why one flow covers both.
 
     Measured, not asserted: the only failure is a stage that cannot complete.
   actors: agent
@@ -66,24 +72,33 @@ test QA-1: A project whose task set is large
     - an identity exists
     - space: a space created by the fixture, named "PERF: Projects $runId"
     - >-
-      scale: a tier selected by `DX_PERF_SCALE`, defaulting to `normal` —
-      `tasks=200,depth=2,projects=1` (normal, shaped like a real project someone actually has),
-      `tasks=2000,depth=3,projects=5` (heavy), or `tasks=10000,depth=3,projects=5` (extra-heavy).
-      The label is the join key for a trend, so it never varies within a tier
+      scale: ONE size, `tasks=200,depth=2,projects=1,docs=3x400` — shaped like a project someone
+      actually has. Deliberately not a set of tiers: data volume is orthogonal to the flow, and a
+      scale knob makes every row's comparability depend on it. The label is recorded on each row so
+      a trend breaks visibly if the fixture changes shape; someone exploring behaviour at size edits
+      `SCALE` in `perf/fixture.ts` for that run
     - >-
-      ONLY `normal` IS MEASURED AND TRENDED; the larger two are exploration tools, run by hand.
-      The reason is the fixture path: generation costs ~420ms per task at 200 tasks (five samples:
-      80.8-84.6s), because each task is one `tasks.create` whose write appends to a growing `tasks`
-      array — so the rate gets WORSE as the array grows, not better. Two `heavy` attempts establish
-      that: a flat 15-minute budget expired mid-fixture, and so did a 24-minute budget derived from
-      the `normal` rate, neither reaching a single stage. 2,000 tasks therefore cost over 1,380s,
-      above 690ms each, and `extra-heavy` is five times further out again. They are still runnable —
-      the budget is derived per tier rather than refused — but expect to leave a run going, and
-      expect `extra-heavy` to want the archive path (`buildArchive` -> `client.spaces.import`,
-      building the graph headlessly in node and importing it), which is unbuilt
+      THE FIXTURE PATH IS WHY THE SIZE IS WHAT IT IS. Generation costs ~420ms per task through the
+      operation layer (five samples: 80.8-84.6s for 200 tasks), because each task is one
+      `tasks.create` whose write appends to a growing `tasks` array — so the rate gets WORSE as the
+      array grows, not better. Two attempts at 2,000 tasks establish that: a flat 15-minute budget
+      expired mid-fixture, and so did a 24-minute budget derived from the 200-task rate, neither
+      reaching a single stage, which bounds 2,000 tasks above 1,380s (over 690ms each). Anything
+      materially larger wants the archive path (`buildArchive` -> `client.spaces.import`, building
+      the graph headlessly in node and importing it), which is unbuilt
     - the fixture has created `projects` Projects via `org.dxos.operation.projects.create`, each with
       `tasks / projects` tasks filed into its own task set via `org.dxos.operation.tasks.create`,
       nested to `depth` and spread across three milestones
+    - >-
+      the fixture has created `documents` markdown documents via
+      `org.dxos.operation.markdown.create`, each `documentParagraphs` paragraphs long with a heading
+      every tenth, and filed each onto a project via `org.dxos.operation.projects.addArtifact` —
+      artifacts rather than loose objects, because that is how a project accumulates documents in
+      use and it puts them on the Overview tab this flow already opens
+    - >-
+      paragraph text varies word by word rather than repeating one string: an editor's line
+      measurement and highlight pass both behave differently on identical lines, so a document of
+      one repeated paragraph would measure a cache rather than a render
     - fixture generation happens BEFORE the first measured stage and is never itself a stage —
       its cost is setup, not a number anyone reads
     - plugin-projects and plugin-tasks are enabled (both are on by default)
@@ -140,12 +155,36 @@ test QA-1: A project whose task set is large
       note: |
         Read `stillFrameMaxMs` here (diagnose mode): scroll is the one stage where a frame gap is
         precisely the symptom a user reports.
+    - name: Open a document artifact
+      id: open-document
+      do: Switch to the Overview tab and click the first document in the artifacts gallery.
+      expect: the markdown editor renders the document
+      note: |
+        The artifact gallery renders `ObjectCard`s, which carry no testid of their own, so the card
+        is addressed by title within the `projectsPlugin.artifacts` fieldset. This stage is a
+        different engine from every stage before it: nothing here touches the `tasks` array.
+    - name: Scroll the document
+      id: scroll-document
+      do: Scroll the editor to the end and back.
+      expect: the document scrolls without a blank viewport
+      note: |
+        CodeMirror measures lines lazily, so this is where a long document's measurement cost lands
+        rather than at open. Read `stillFrameMaxMs` beside `wallMs`, as with `scroll-tasks`.
+    - name: Edit the document
+      id: edit-document
+      do: Type a short sentence into the editor.
+      expect: the typed text appears in the document
+      note: |
+        Typed with a delay rather than set programmatically: the keystroke path — input handling,
+        the CRDT write, re-highlight — is what a user feels in a long document, and a programmatic
+        set would skip all of it. The stage to watch for a per-keystroke O(document) cost.
     - name: Reopen the project
       id: reopen-project
-      do: Navigate to another plank and back to the project.
+      do: Reopen the project from the navtree and return to the Tasks tab.
       expect: the task list renders again
       note: |
-        Catches cost paid per mount rather than once — a warm re-render should be far cheaper than
+        Last deliberately: by now the journey has genuinely navigated away, into the editor. Catches
+        cost paid per mount rather than once — a warm re-render should be far cheaper than
         `open-tasks`, and a run where it is not has cached nothing.
   after:
     - name: Delete the fixture space
@@ -159,10 +198,8 @@ test QA-1: A project whose task set is large
 ```mdl
 suite perf-nightly: The measured flows, from main
   desc: |
-    Runs both modes at the `normal` tier, the only tier trended. `measure` rows go to PostHog;
-    `diagnose` artifacts are uploaded for whoever reads a regression and never trended. The `heavy`
-    and `extra-heavy` tiers are deliberately out of the nightly: their fixture cost is measured in
-    tens of minutes, so they are explored by hand rather than scheduled.
+    Runs both modes of every flow. `measure` rows go to PostHog; `diagnose` artifacts are uploaded
+    for whoever reads a regression and never trended.
   tags: [perf, nightly]
   tests: [QA-1]
 ```

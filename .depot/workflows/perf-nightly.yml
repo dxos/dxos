@@ -14,13 +14,9 @@ on:
 
   workflow_dispatch:
     inputs:
-      scales:
-        type: string
-        description: 'DX_PERF_SCALE tiers to sweep, comma-separated (normal is the trended tier; heavy and extra-heavy cost tens of minutes of fixture each)'
-        default: 'normal'
       modes:
         type: string
-        description: 'DX_PERF_MODES per tier (measure, diagnose)'
+        description: 'DX_PERF_MODES to run (measure, diagnose)'
         default: 'measure,diagnose'
 
 permissions:
@@ -36,7 +32,7 @@ env:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  # Never cancelled mid-flight: a half-run tier writes rows for some stages and not others, which
+  # Never cancelled mid-flight: a half-run flow writes rows for some stages and not others, which
   # reads as a regression on whichever stages are missing.
   cancel-in-progress: false
 
@@ -82,12 +78,6 @@ jobs:
         id: flows
         continue-on-error: true
         env:
-          # `normal` is the only tier in the default sweep. The larger tiers spend tens of minutes
-          # in fixture generation before a single stage (measured — see `spec/PERF.mdl`), which is
-          # exploration rather than a trend, and a tier that expired would suppress the rows the
-          # OTHER tiers produced, since the trending gate below requires a successful flow. Both
-          # stay available via `inputs.scales` for a deliberate run.
-          SCALES: ${{ inputs.scales || 'normal' }}
           MODES: ${{ inputs.modes || 'measure,diagnose' }}
           DX_PWA: 'false'
         run: |
@@ -95,16 +85,9 @@ jobs:
           # Cleared first so a re-run cannot inherit the previous attempt's rows and trend them
           # twice under a different wall time.
           rm -rf test-results/perf
-          status=0
-          IFS=',' read -ra tiers <<< "$SCALES"
-          for tier in "${tiers[@]}"; do
-            echo "::group::$tier"
-            # One tier per invocation, serially: two flows measured at once contend for the same
-            # cores and measure each other.
-            DX_PERF_SCALE="$tier" DX_PERF_MODES="$MODES" moon run composer-app:e2e-perf || status=1
-            echo "::endgroup::"
-          done
-          exit $status
+          # The modes run serially inside one invocation — two flows measured at once contend for
+          # the same cores and measure each other.
+          DX_PERF_MODES="$MODES" moon run composer-app:e2e-perf
 
       - name: Summarize
         if: always()
@@ -139,7 +122,7 @@ jobs:
       # Only `measure` rows from a COMPLETE run reach PostHog. `writePosthogBatch` drops the
       # diagnose rows (whose CPU carries the profiler's overhead) and the failed stages (whose
       # durations are the budgets they exhausted), but the flow step is `continue-on-error`, so a
-      # tier that died partway would otherwise publish whatever it had managed to write — a trend
+      # run that died partway would otherwise publish whatever it had managed to write — a trend
       # built from a truncated run reads as a regression nobody caused.
       - name: Trend the measured rows
         if: steps.flows.outcome == 'success' && github.event_name == 'schedule' && github.ref == 'refs/heads/main'
@@ -158,7 +141,7 @@ jobs:
           done
 
       # The diagnose artifacts — per-stage `.cpuprofile` per realm, and the first/last frame of
-      # each stage — are what a regression is read with. Not committed anywhere: a large tier's
+      # each stage — are what a regression is read with. Not committed anywhere: a diagnose run's
       # profiles run to hundreds of MB.
       - name: Upload artifacts
         if: always()
