@@ -27,7 +27,7 @@ export const PerformanceCard = ({ entries = [] }: PerformanceCardProps) => (
         <StatCard.Row
           key={index}
           label={label}
-          title={label}
+          tooltip={label}
           value={Unit.ms(entry.duration)}
           unit='ms'
           warning={entry.duration > SLOW_TIME}

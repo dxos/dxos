@@ -51,7 +51,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
           <React.Fragment key={received.id}>
             <StatCard.Row
               label={summary}
-              title={summary}
+              tooltip={summary}
               open={open}
               onToggle={(open) => setExpanded(open ? received.id : undefined)}
             />

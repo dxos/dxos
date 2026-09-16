@@ -4,7 +4,7 @@
 
 import React, { Fragment, useState } from 'react';
 
-import { Grid } from '@dxos/react-ui';
+import { Grid, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -40,9 +40,9 @@ export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
           <Fragment key={shape}>
             <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? shape : undefined)} unit='ms'>
               <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end'>
-                <span className='truncate text-start' title={shape}>
-                  {shape}
-                </span>
+                <Tooltip.Trigger asChild content={shape}>
+                  <span className='truncate text-start'>{shape}</span>
+                </Tooltip.Trigger>
                 <span className='text-description'>×{group.length}</span>
                 <span className={mx('tabular-nums', slowest > SLOW_TIME && 'text-error-text')}>{Unit.ms(slowest)}</span>
               </Grid>

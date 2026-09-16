@@ -12,6 +12,7 @@ import {
   Icon,
   IconButton,
   type ThemedClassName,
+  Tooltip,
 } from '@dxos/react-ui';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
@@ -93,8 +94,8 @@ type StatCardRowProps = PropsWithChildren<
     value?: ReactNode;
     /** Shown in the trailing gutter, so values end on one edge whether or not they carry a unit. */
     unit?: string;
-    /** Tooltip on the label, for the full text of a truncated row. */
-    title?: string;
+    /** Tooltip on the label, for the full text of a truncated row or more detail. */
+    tooltip?: ReactNode;
     /** Trailing gutter control; takes the gutter over `unit`. */
     action?: ReactNode;
     /** Run the content through the trailing gutter (columns 2–3); by default it stays in the content track so values line up. */
@@ -122,7 +123,7 @@ const StatCardRow = ({
   label,
   value,
   unit,
-  title,
+  tooltip,
   action,
   span,
   warning,
@@ -160,9 +161,13 @@ const StatCardRow = ({
       >
         {children ?? (
           <>
-            <span className='truncate' title={title}>
-              {label}
-            </span>
+            {tooltip ? (
+              <Tooltip.Trigger asChild content={tooltip}>
+                <span className='truncate'>{label}</span>
+              </Tooltip.Trigger>
+            ) : (
+              <span className='truncate'>{label}</span>
+            )}
             {value !== undefined && (
               <span className={mx('shrink-0 font-mono tabular-nums', warning && 'text-error-text')}>{value}</span>
             )}

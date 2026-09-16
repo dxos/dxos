@@ -26,7 +26,7 @@ const DefaultStory = () => {
       <StatCard.Row icon='ph--warning--regular' iconClassNames='text-error-text' label='Used' value='44%' warning />
       <StatCard.Row
         label='A row whose label is far too long to fit and therefore truncates'
-        title='A row whose label is far too long to fit and therefore truncates'
+        tooltip='A row whose label is far too long to fit and therefore truncates'
         value='1'
         action={<IconButton iconOnly variant='ghost' icon='ph--trash--regular' label='Clear' />}
       />

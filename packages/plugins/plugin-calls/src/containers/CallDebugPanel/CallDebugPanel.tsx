@@ -79,7 +79,7 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
         menu={[{ label: 'Copy raw', icon: 'ph--copy--regular', onClick: () => void handleCopyRaw() }]}
       />
       {rows.map((row, index) => (
-        <StatCard.Row key={index} label={row.label} title={row.label} value={row.value} />
+        <StatCard.Row key={index} label={row.label} tooltip={row.label} value={row.value} />
       ))}
       <StatCard.Row
         label={t('show-webrtc-stats.title')}

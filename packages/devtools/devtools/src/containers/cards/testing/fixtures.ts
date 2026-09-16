@@ -92,6 +92,11 @@ export const edgeStatus: EdgeStatus = {
   },
 };
 
+export const edgeSpaceNames: Record<string, string> = {
+  BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N: 'Personal Space',
+  B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF: 'Acme Robotics',
+};
+
 export const edgeStatusDegraded: EdgeStatus = {
   problems: ['Agent is not reachable.', 'Router fetch timed out.'],
   agent: { agentStatus: 'inactive' },

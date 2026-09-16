@@ -10,7 +10,7 @@ import {
   type QueryEdgeStatusResponse,
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SystemIconButton, Tooltip } from '@dxos/react-ui';
+import { Flex, SystemIconButton, Tooltip } from '@dxos/react-ui';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
@@ -20,6 +20,8 @@ export type EdgeCardProps = {
   edge?: QueryEdgeStatusResponse;
   /** Health report from the edge HTTP API. */
   status?: EdgeStatus;
+  /** Space names by id, where the client knows them. */
+  spaceNames?: Record<string, string>;
   onRefresh?: () => void;
   onCopy?: () => void;
 };
@@ -34,7 +36,7 @@ type HealthRow = {
   unit?: string;
 };
 
-type SpaceRow = { ok: boolean; spaceId: string; flags: number };
+type SpaceRow = { ok: boolean; spaceId: string; name?: string; flags: string[]; fetchError?: string };
 
 type HealthReport = {
   connection: HealthRow[];
@@ -42,7 +44,11 @@ type HealthReport = {
   spaces: SpaceRow[];
 };
 
-const healthReport = (status?: EdgeStatus, socket?: SocketStatus): HealthReport => {
+const healthReport = (
+  status?: EdgeStatus,
+  socket?: SocketStatus,
+  spaceNames: Record<string, string> = {},
+): HealthReport => {
   const connected = socket?.state === EdgeStatus_ConnectionState.CONNECTED;
   const connection: HealthRow[] = [
     { ok: connected, label: 'Websocket', value: connected ? 'connected' : 'disconnected' },
@@ -69,8 +75,14 @@ const healthReport = (status?: EdgeStatus, socket?: SocketStatus): HealthReport 
       { ok: !status.spaces.fetchError, label: 'Spaces', value: spaces.length.toLocaleString() },
     ],
     spaces: spaces.map(([spaceId, space]) => {
-      const flags = space.diagnostics?.redFlags?.length ?? 0;
-      return { ok: !(flags > 0 || space.fetchError), spaceId, flags };
+      const flags: string[] = space.diagnostics?.redFlags ?? [];
+      return {
+        ok: flags.length === 0 && !space.fetchError,
+        spaceId,
+        name: spaceNames[spaceId],
+        flags,
+        fetchError: space.fetchError,
+      };
     }),
   };
 };
@@ -83,7 +95,7 @@ const HealthRows = ({ rows }: { rows: HealthRow[] }) => (
         icon={row.ok ? OK : FAIL}
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
         label={row.label}
-        title={row.label}
+        tooltip={row.label}
         value={row.value}
         unit={row.unit}
       />
@@ -91,7 +103,20 @@ const HealthRows = ({ rows }: { rows: HealthRow[] }) => (
   </>
 );
 
-/** One row per space: a copyable id chip (as the Sync card) and the red-flag count. */
+/** Tooltip body for a space row: its name where known, then each red flag and any fetch error. */
+const SpaceDetail = ({ row }: { row: SpaceRow }) => (
+  <Flex column gap='xs' classNames='max-w-64 text-xs'>
+    <span>{row.name ?? 'Unknown space'}</span>
+    {row.flags.map((flag) => (
+      <span key={flag} className='text-error-text'>
+        {flag}
+      </span>
+    ))}
+    {row.fetchError && <span className='text-error-text'>fetch: {row.fetchError}</span>}
+  </Flex>
+);
+
+/** One row per space: a copyable id chip (as the Sync card) and the count of EDGE's red flags for it. */
 const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
   <>
     {rows.map((row) => (
@@ -100,7 +125,7 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
         icon={row.ok ? OK : FAIL}
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
       >
-        <Tooltip.Trigger asChild content={row.spaceId}>
+        <Tooltip.Trigger asChild content={<SpaceDetail row={row} />}>
           <SystemIconButton.Clipboard
             density='sm'
             variant='ghost'
@@ -111,14 +136,18 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
             onCopy={() => row.spaceId}
           />
         </Tooltip.Trigger>
-        {row.flags > 0 && <span className='shrink-0 font-mono tabular-nums text-error-text'>{row.flags} flags</span>}
+        {row.flags.length > 0 && (
+          <span className='shrink-0 font-mono tabular-nums text-error-text'>
+            {row.flags.length} {row.flags.length === 1 ? 'flag' : 'flags'}
+          </span>
+        )}
       </StatCard.Row>
     ))}
   </>
 );
 
-export const EdgeCard = ({ edge, status, onRefresh, onCopy }: EdgeCardProps) => {
-  const report = healthReport(status, edge?.status);
+export const EdgeCard = ({ edge, status, spaceNames, onRefresh, onCopy }: EdgeCardProps) => {
+  const report = healthReport(status, edge?.status, spaceNames);
   const problems = status?.problems ?? [];
   const menu = [
     ...(onRefresh ? [{ label: 'Refresh', icon: 'ph--arrow-clockwise--regular', onClick: onRefresh }] : []),
@@ -156,7 +185,7 @@ export const EdgeCard = ({ edge, status, onRefresh, onCopy }: EdgeCardProps) => 
               iconClassNames='text-warning-text'
               span
               label={problem}
-              title={problem}
+              tooltip={problem}
             />
           ))}
         </StatCard.Section>

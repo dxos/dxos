@@ -65,7 +65,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
         <StatCard.Root key={pluginKey}>
           <StatCard.Header icon='ph--chart-bar--regular' hue={STAT_CARD_HUES.system} title={pluginKey} />
           {flatten(value).map(([key, cell]) => (
-            <StatCard.Row key={key} label={key} title={key} value={formatValue(cell)} />
+            <StatCard.Row key={key} label={key} tooltip={key} value={formatValue(cell)} />
           ))}
         </StatCard.Root>
       ))}

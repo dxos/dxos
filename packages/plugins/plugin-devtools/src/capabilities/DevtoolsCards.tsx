@@ -19,6 +19,7 @@ import {
   useSwarmTrace,
   useSyncRows,
 } from '@dxos/devtools';
+import { SpaceState, useSpaces } from '@dxos/react-client/echo';
 
 /** Surfaces hosting the debug tooling; they and everything rendered inside them are not listed. */
 const DEBUG_HOSTS = new Set(['devtoolsOverview', 'debugDrawer']);
@@ -51,7 +52,18 @@ export type EdgeCardSurfaceProps = Pick<DevtoolsCardData, 'stats'>;
 
 export const EdgeCardSurface = ({ stats }: EdgeCardSurfaceProps) => {
   const { status, refresh, copy } = useEdgeStatus();
-  return <EdgeCard edge={stats.edge} status={status} onRefresh={refresh} onCopy={copy} />;
+  const spaces = useSpaces({ all: true });
+  const spaceNames = useMemo(() => {
+    const names: Record<string, string> = {};
+    for (const space of spaces) {
+      const name = space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
+      if (typeof name === 'string') {
+        names[space.id] = name;
+      }
+    }
+    return names;
+  }, [spaces]);
+  return <EdgeCard edge={stats.edge} status={status} spaceNames={spaceNames} onRefresh={refresh} onCopy={copy} />;
 };
 
 export type SurfaceProfilerCardSurfaceProps = Pick<DevtoolsCardData, 'surfaceProfilerStats' | 'onClearSurfaceProfiler'>;
