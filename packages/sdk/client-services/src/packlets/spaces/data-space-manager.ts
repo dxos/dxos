@@ -47,7 +47,7 @@ import {
   EdgeHttpClientService,
 } from '@dxos/edge-client';
 import { Event as EffectEvent, EffectEx } from '@dxos/effect';
-import { type FeedStore, FeedStoreService, writeMessages } from '@dxos/feed-store';
+import { type HypercoreStore, HypercoreStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -200,7 +200,7 @@ export type DataSpaceManagerProps = {
   metadataStore: IMetadataStore;
   keyring: KeyringApi;
   signingContextProvider: SigningContextProvider;
-  feedStore: FeedStore<FeedMessage>;
+  hypercoreStore: HypercoreStore<FeedMessage>;
   echoHost: EchoHost;
   invitationsManager: InvitationsManager;
   edgeConnection?: EdgeConnection;
@@ -272,7 +272,7 @@ export class DataSpaceManager extends Resource {
   private readonly _metadataStore: IMetadataStore;
   private readonly _keyring: KeyringApi;
   private readonly _signingContextProvider: SigningContextProvider;
-  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _hypercoreStore: HypercoreStore<FeedMessage>;
   private readonly _echoHost: EchoHost;
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
@@ -294,7 +294,7 @@ export class DataSpaceManager extends Resource {
     this._metadataStore = params.metadataStore;
     this._keyring = params.keyring;
     this._signingContextProvider = params.signingContextProvider;
-    this._feedStore = params.feedStore;
+    this._hypercoreStore = params.hypercoreStore;
     this._echoHost = params.echoHost;
     this._meshReplicator = params.meshReplicator;
     this._invitationsManager = params.invitationsManager;
@@ -892,10 +892,10 @@ export class DataSpaceManager extends Resource {
 
     const controlFeed =
       metadata.controlFeedKey &&
-      (await this._feedStore.openFeed(requirePublicKey(metadata.controlFeedKey), { writable: true }));
+      (await this._hypercoreStore.openHypercore(requirePublicKey(metadata.controlFeedKey), { writable: true }));
     const dataFeed =
       metadata.dataFeedKey &&
-      (await this._feedStore.openFeed(requirePublicKey(metadata.dataFeedKey), {
+      (await this._hypercoreStore.openHypercore(requirePublicKey(metadata.dataFeedKey), {
         writable: true,
         sparse: true,
       }));
@@ -949,7 +949,7 @@ export class DataSpaceManager extends Resource {
       gossip,
       presence,
       keyring: this._keyring,
-      feedStore: this._feedStore,
+      hypercoreStore: this._hypercoreStore,
       echoHost: this._echoHost,
       signingContext: this.signingContext,
       callbacks: {
@@ -1185,7 +1185,7 @@ export const DataSpaceManagerLayer = (
   | IMetadataStoreService
   | KeyringApiService
   | SigningContextProviderService
-  | FeedStoreService
+  | HypercoreStoreService
   | EchoHostService
   | InvitationsManagerService
 > =>
@@ -1196,7 +1196,7 @@ export const DataSpaceManagerLayer = (
       const metadataStore = yield* IMetadataStoreService;
       const keyring = yield* KeyringApiService;
       const signingContextProvider = yield* SigningContextProviderService;
-      const feedStore = yield* FeedStoreService;
+      const hypercoreStore = yield* HypercoreStoreService;
       const echoHost = yield* EchoHostService;
       const invitationsManager = yield* InvitationsManagerService;
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
@@ -1209,7 +1209,7 @@ export const DataSpaceManagerLayer = (
         metadataStore,
         keyring,
         signingContextProvider,
-        feedStore,
+        hypercoreStore,
         echoHost,
         invitationsManager,
         edgeConnection: Option.getOrUndefined(edgeConnection),

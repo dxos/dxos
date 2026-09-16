@@ -17,7 +17,7 @@ export type WriteOptions = {
   afterWrite?: (receipt: WriteReceipt) => Promise<void>;
 };
 
-export interface FeedWriter<T extends {}> {
+export interface HypercoreWriter<T extends {}> {
   /**
    * Write data to the feed.
    * Awaits `afterWrite` before returning.
@@ -25,13 +25,22 @@ export interface FeedWriter<T extends {}> {
   write(data: T, options?: WriteOptions): Promise<WriteReceipt>;
 }
 
-export const createFeedWriter = <T extends {}>(cb: (data: T) => Promise<WriteReceipt>): FeedWriter<T> => ({
+/**
+ * Adapts a write callback to the {@link HypercoreWriter} interface.
+ */
+export const createHypercoreWriter = <T extends {}>(cb: (data: T) => Promise<WriteReceipt>): HypercoreWriter<T> => ({
   write: async (data: T) => {
     return cb(data);
   },
 });
 
-export const writeMessages = async <T extends {}>(writer: FeedWriter<T>, messages: T[]): Promise<WriteReceipt[]> => {
+/**
+ * Writes messages sequentially, since a hypercore append is not safe to interleave.
+ */
+export const writeMessages = async <T extends {}>(
+  writer: HypercoreWriter<T>,
+  messages: T[],
+): Promise<WriteReceipt[]> => {
   const receipts: WriteReceipt[] = [];
   // NOTE: Write messages sequentially.
   for (const message of messages) {

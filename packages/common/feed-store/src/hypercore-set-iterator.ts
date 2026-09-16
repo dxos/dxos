@@ -11,45 +11,45 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
-import { AbstractFeedIterator } from './feed-iterator.ts';
-import { FeedQueue } from './feed-queue.ts';
-import { type FeedWrapper } from './feed-wrapper.ts';
-import { type FeedBlock } from './types.ts';
+import { AbstractHypercoreIterator } from './hypercore-iterator.ts';
+import { HypercoreQueue } from './hypercore-queue.ts';
+import { type HypercoreWrapper } from './hypercore-wrapper.ts';
+import { type HypercoreBlock } from './types.ts';
 
 /**
  * Select next block.
  */
-export type FeedBlockSelector<T> = (blocks: FeedBlock<T>[]) => number | undefined;
+export type HypercoreBlockSelector<T> = (blocks: HypercoreBlock<T>[]) => number | undefined;
 
-export type FeedIndex = {
+export type HypercoreIndex = {
   feedKey: PublicKey;
   index: number;
 };
 
-export type FeedSetIteratorOptions = {
+export type HypercoreSetIteratorOptions = {
   // TODO(burdon): Should we remove this and assume the feeds are positioned before adding?
-  start?: FeedIndex[];
+  start?: HypercoreIndex[];
   stallTimeout?: number;
 };
 
-export const defaultFeedSetIteratorOptions = {
+export const defaultHypercoreSetIteratorOptions = {
   stallTimeout: 1000,
 };
 
 /**
  * Iterator that reads blocks from multiple feeds, ordering them based on a traversal callback.
  */
-export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
-  private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
+export class HypercoreSetIterator<T extends {}> extends AbstractHypercoreIterator<T> {
+  private readonly _feedQueues = new ComplexMap<PublicKey, HypercoreQueue<T>>(PublicKey.hash);
 
   private readonly _trigger = new Trigger({ autoReset: true });
   private readonly _subscriptions = new SubscriptionList();
 
-  public readonly stalled = new Event<FeedSetIterator<T>>();
+  public readonly stalled = new Event<HypercoreSetIterator<T>>();
 
   constructor(
-    private readonly _selector: FeedBlockSelector<T>,
-    public readonly options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions,
+    private readonly _selector: HypercoreBlockSelector<T>,
+    public readonly options: HypercoreSetIteratorOptions = defaultHypercoreSetIteratorOptions,
   ) {
     super();
     invariant(_selector);
@@ -60,7 +60,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     return inspectObject(this);
   }
 
-  override toJSON(): { open: boolean; running: boolean; indexes: FeedIndex[] } {
+  override toJSON(): { open: boolean; running: boolean; indexes: HypercoreIndex[] } {
     return {
       open: this.isOpen,
       running: this.isRunning,
@@ -72,28 +72,28 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     return this._feedQueues.size;
   }
 
-  get feeds(): FeedWrapper<T>[] {
+  get feeds(): HypercoreWrapper<T>[] {
     return Array.from(this._feedQueues.values()).map((feedQueue) => feedQueue.feed);
   }
 
-  get indexes(): FeedIndex[] {
+  get indexes(): HypercoreIndex[] {
     return Array.from(this._feedQueues.values()).map((feedQueue) => ({
       feedKey: feedQueue.feed.key,
       index: feedQueue.index,
     }));
   }
 
-  reiterateBlock(block: FeedBlock<T>): void {
+  reiterateBlock(block: HypercoreBlock<T>): void {
     this._trigger.wake();
   }
 
-  async addFeed(feed: FeedWrapper<T>): Promise<void> {
+  async addHypercore(feed: HypercoreWrapper<T>): Promise<void> {
     invariant(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
     invariant(feed.properties.opened);
     log('feed added', { feedKey: feed.key });
 
     // Create queue and listen for updates.
-    const queue = new FeedQueue<T>(feed);
+    const queue = new HypercoreQueue<T>(feed);
     this._feedQueues.set(feed.key, queue);
     this._subscriptions.add(
       queue.updated.on(() => {
@@ -109,7 +109,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     this._trigger.wake();
   }
 
-  hasFeed(feedKey: PublicKey): boolean {
+  hasHypercore(feedKey: PublicKey): boolean {
     return this._feedQueues.has(feedKey);
   }
 
@@ -130,7 +130,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   /**
    * Gets the next block from the selected queue.
    */
-  override async _nextBlock(): Promise<FeedBlock<T> | undefined> {
+  override async _nextBlock(): Promise<HypercoreBlock<T> | undefined> {
     let t: NodeJS.Timeout | undefined;
 
     while (this._running) {
