@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldToEventLoop } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -29,7 +29,7 @@ import {
   queryTargetsSpacesOrFeeds,
 } from '../query/index.ts';
 
-/** Records hydrated between turns of the event loop in {@link IndexQuerySource._mapRecords}. */
+/** Records hydrated together between checks for a turn of the event loop in {@link IndexQuerySource._mapRecords}. */
 const HYDRATE_CHUNK_SIZE = 64;
 
 export type LoadObjectProps = {
@@ -391,9 +391,7 @@ export class IndexQuerySource implements QuerySource {
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null)[] = [];
     for (const chunk of chunkArray([...records], HYDRATE_CHUNK_SIZE)) {
-      if (processedResults.length > 0) {
-        await yieldToEventLoop();
-      }
+      await yieldOrContinue('smooth');
       processedResults.push(
         ...(await Promise.all(
           chunk.map((result) => this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle)),

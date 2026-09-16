@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { yieldOrContinue } from 'main-thread-scheduling';
 import { useEffect, useState } from 'react';
 
+import { yieldOrContinue } from '@dxos/async';
 import { type Entity, Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
@@ -20,22 +20,22 @@ export const filterObjects = async <T extends Entity.Unknown>(
     return result;
   }
 
-  await Promise.all(
-    objects
-      .filter((object) => !Obj.instanceOf(Text.Text, object))
-      .map(async (object) => {
-        await yieldOrContinue('interactive');
-        const fields = mapObjectToTextFields<T>(object);
-        Object.entries(fields)
-          .filter(([_, value]) => value.match(match))
-          .forEach(([key, value]) => {
-            if (!result.has(object)) {
-              result.set(object, []);
-            }
-            result.set(object, [...result.get(object)!, [key, value]]);
-          });
-      }),
-  );
+  // Sequential, so yielding splits the matching across turns of the event loop.
+  for (const object of objects) {
+    if (Obj.instanceOf(Text.Text, object)) {
+      continue;
+    }
+    await yieldOrContinue('interactive');
+    const fields = mapObjectToTextFields<T>(object);
+    Object.entries(fields)
+      .filter(([_, value]) => value.match(match))
+      .forEach(([key, value]) => {
+        if (!result.has(object)) {
+          result.set(object, []);
+        }
+        result.set(object, [...result.get(object)!, [key, value]]);
+      });
+  }
 
   return result;
 };

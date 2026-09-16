@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
 
-import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldToEventLoop } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -19,13 +19,6 @@ import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
-
-/**
- * Longest synchronous run of host-update integration before the event loop gets a turn. A first sync
- * hands the client hundreds of full documents per batch, and loading each one is Automerge work that
- * would otherwise block input for the whole batch.
- */
-const INTEGRATE_SLICE_MS = 8;
 
 /**
  * Batch size from which its documents are integrated as a bulk delivery, whose downstream fan-out
@@ -131,7 +124,7 @@ export class RepoProxy extends Resource {
   /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
   private _resubscribeDelay = 0;
 
-  /** Host updates not yet integrated, in arrival order; drained in {@link INTEGRATE_SLICE_MS} slices. */
+  /** Host updates not yet integrated, in arrival order. */
   #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
@@ -578,13 +571,12 @@ export class RepoProxy extends Resource {
     this.#draining = true;
     try {
       while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
-        const started = performance.now();
-        do {
-          const { update, bulk } = this.#inbox[this.#inboxHead++];
-          this.#integrate(update, bulk);
-        } while (this.#inboxHead < this.#inbox.length && performance.now() - started < INTEGRATE_SLICE_MS);
+        const { update, bulk } = this.#inbox[this.#inboxHead++];
+        this.#integrate(update, bulk);
+        // A first sync hands the client hundreds of full documents per batch, and loading each one is Automerge work
+        // that would otherwise block input for the whole batch.
         if (this.#inboxHead < this.#inbox.length) {
-          await yieldToEventLoop();
+          await yieldOrContinue('smooth');
         }
       }
     } finally {
