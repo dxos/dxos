@@ -22,7 +22,7 @@ import {
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
 import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
-import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { HypercoreFactoryLayer, HypercoreStoreLayer, HypercoreStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { log } from '@dxos/log';
@@ -134,7 +134,7 @@ export const ServiceStack = (
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  Event.Bus | ConfigService | SignalManagerService | TransportFactoryService | SqlClient.SqlClient
+  Hook.Controller | ConfigService | SignalManagerService | TransportFactoryService | SqlClient.SqlClient
 > => {
   // Core stack, flattened into a single pipe. Optional replicators expose their service via
   // `provideMerge` and are read with `serviceOption` down the stack; their absence is modelled by
@@ -211,7 +211,7 @@ const presentService = <Self, Service>(tag: EffectContext.Key<Self, Service>): E
  */
 const registerReplicator = <Self>(
   tag: EffectContext.Key<Self, AutomergeReplicator>,
-): Layer.Layer<never, never, EchoHostService | Event.Bus> =>
+): Layer.Layer<never, never, EchoHostService | Hook.Controller> =>
   Layer.unwrap(
     Effect.map(Effect.serviceOption(tag), (replicator) =>
       Option.match(replicator, {
@@ -221,7 +221,7 @@ const registerReplicator = <Self>(
             Effect.gen(function* () {
               const echoHost = yield* EchoHostService;
               const ctx = yield* EffectEx.contextFromScope();
-              yield* Event.on(
+              yield* Hook.on(
                 NetworkReady,
                 Effect.fn('EchoHost.addReplicator')(function* () {
                   yield* Effect.promise(() => echoHost.addReplicator(ctx, replicator));
@@ -233,7 +233,7 @@ const registerReplicator = <Self>(
     ),
   );
 
-const meshReplicatorLayer = (): Layer.Layer<MeshEchoReplicatorService, never, EchoHostService | Event.Bus> =>
+const meshReplicatorLayer = (): Layer.Layer<MeshEchoReplicatorService, never, EchoHostService | Hook.Controller> =>
   registerReplicator(MeshEchoReplicatorService).pipe(Layer.provideMerge(MeshEchoReplicatorLayer()));
 
 /**
@@ -277,7 +277,7 @@ const storageLifecycleLayer = Layer.effectDiscard(
     const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
     const migrate = yield* StorageMigrationService;
     const metadataStore = yield* IMetadataStoreService;
-    yield* Event.on(
+    yield* Hook.on(
       Opening,
       Effect.fn('Storage.onOpening')(function* () {
         log('running storage migrations...');
@@ -290,7 +290,7 @@ const storageLifecycleLayer = Layer.effectDiscard(
         log('running sqlite health check...');
         yield* Effect.promise(() => runSqliteHealthCheck(runtime));
         log('storage ready');
-        yield* Event.emit(StorageReady, undefined);
+        yield* Hook.emit(StorageReady, undefined);
       }),
     );
   }),

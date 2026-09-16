@@ -19,7 +19,7 @@ import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/cred
 import { failUndefined } from '@dxos/debug';
 import { EchoHost, EchoHostService, MeshEchoReplicator } from '@dxos/echo-host';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { HypercoreFactory, HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
 import {
@@ -81,8 +81,8 @@ import {
 
 /** The open event chain; `StackOpened` resolves once every handler the cascade triggered has run. */
 const openChain = Effect.gen(function* () {
-  yield* Event.emit(Opening, undefined);
-  yield* Event.emit(StackOpened, undefined);
+  yield* Hook.emit(Opening, undefined);
+  yield* Hook.emit(StackOpened, undefined);
 });
 
 /**
@@ -104,7 +104,7 @@ export class ServiceContext {
   readonly #options: ServiceContextOptions;
   readonly #config: Config;
   readonly #sql = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
-  readonly #bus = Event.makeBus();
+  readonly #controller = Hook.makeController();
   /** Holds the reset handlers; closed by `destroy`. */
   readonly #busScope = Effect.runSync(Scope.make());
   #runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
@@ -116,9 +116,9 @@ export class ServiceContext {
     this.#config = options.config ?? new Config();
     Effect.runSync(
       Effect.gen({ self: this }, function* () {
-        yield* Event.on(Closing, () => Effect.promise(() => this.#closeStack()));
-        yield* Event.on(WipingStorage, () => Effect.promise(() => this.#sql.runPromise(wipeSqliteStorage)));
-      }).pipe(Effect.provideService(Event.Bus, this.#bus), Scope.provide(this.#busScope)),
+        yield* Hook.on(Closing, () => Effect.promise(() => this.#closeStack()));
+        yield* Hook.on(WipingStorage, () => Effect.promise(() => this.#sql.runPromise(wipeSqliteStorage)));
+      }).pipe(Effect.provideService(Hook.Controller, this.#controller), Scope.provide(this.#busScope)),
     );
   }
 
@@ -211,7 +211,7 @@ export class ServiceContext {
       }).pipe(
         Layer.provideMerge(RuntimeProvider.toLayer(this.#sql.contextEffect)),
         Layer.provide(Layer.succeed(ConfigService, this.#config)),
-        Layer.provide(Layer.succeed(Event.Bus, this.#bus)),
+        Layer.provide(Layer.succeed(Hook.Controller, this.#controller)),
       ),
     );
     try {

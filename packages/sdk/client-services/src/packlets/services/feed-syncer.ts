@@ -13,7 +13,7 @@ import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
-import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -575,7 +575,11 @@ export type FeedSyncerLayerOptions = Pick<
  */
 export const FeedSyncerLayer = (
   options: FeedSyncerLayerOptions,
-): Layer.Layer<FeedSyncerService, never, Event.Bus | SqlClient.SqlClient | EchoHostService | EdgeConnectionService> =>
+): Layer.Layer<
+  FeedSyncerService,
+  never,
+  Hook.Controller | SqlClient.SqlClient | EchoHostService | EdgeConnectionService
+> =>
   Layer.effect(
     FeedSyncerService,
     Effect.gen(function* () {
@@ -604,7 +608,7 @@ export const FeedSyncerLayer = (
 
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => feedSyncer.close()));
-      yield* Event.on(
+      yield* Hook.on(
         StackOpened,
         Effect.fn('FeedSyncer.onStackOpened')(function* () {
           yield* Effect.promise(() => feedSyncer.open(ctx));

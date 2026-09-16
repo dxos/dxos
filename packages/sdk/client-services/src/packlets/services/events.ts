@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Event } from '@dxos/effect';
+import { Hook } from '@dxos/effect';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type Identity } from '../identity/index.ts';
@@ -19,7 +19,7 @@ import { type Identity } from '../identity/index.ts';
 //
 // Teardown has no events: each layer closes its component in its layer finalizer, so runtime
 // disposal unwinds the stack in reverse build order. A reset is the embedder's concern and runs on
-// the embedder's bus, which outlives the stack:
+// the embedder's controller, which outlives the stack:
 //
 //   Closing → WipingStorage → Reset                          (system service; the embedder handles).
 //
@@ -29,45 +29,45 @@ import { type Identity } from '../identity/index.ts';
 //
 
 /** The host is opening; nothing has been touched yet. */
-export const Opening = Event.make<void>()('client-services/Opening');
+export const Opening = Hook.make<void>()('client-services/Opening');
 
 /** Storage has been migrated, version-checked, and loaded. */
-export const StorageReady = Event.make<void>()('client-services/StorageReady');
+export const StorageReady = Hook.make<void>()('client-services/StorageReady');
 
 /** The identity manager is open; `identity` is the persisted identity, if there is one. */
-export const IdentityLoaded = Event.make<{ identity?: Identity }>()('client-services/IdentityLoaded');
+export const IdentityLoaded = Hook.make<{ identity?: Identity }>()('client-services/IdentityLoaded');
 
 /** Edge, signaling, and swarm networking are open with the current network identity. */
-export const NetworkReady = Event.make<void>()('client-services/NetworkReady');
+export const NetworkReady = Hook.make<void>()('client-services/NetworkReady');
 
 /**
  * A new identity must be bound to the network before it joins; `deviceCredential` is present when
  * the identity was admitted by another device.
  */
-export const IdentityBound = Event.make<{ identity: Identity; deviceCredential?: Credential }>()(
+export const IdentityBound = Hook.make<{ identity: Identity; deviceCredential?: Credential }>()(
   'client-services/IdentityBound',
 );
 
 /** An identity has joined the network; identity-bound services may open. */
-export const IdentityAvailable = Event.make<{ identity: Identity }>()('client-services/IdentityAvailable');
+export const IdentityAvailable = Hook.make<{ identity: Identity }>()('client-services/IdentityAvailable');
 
 /** The data space manager is open. */
-export const DataSpacesReady = Event.make<{ identity: Identity }>()('client-services/DataSpacesReady');
+export const DataSpacesReady = Hook.make<{ identity: Identity }>()('client-services/DataSpacesReady');
 
 /** The open sequence has completed, with or without an identity. */
-export const StackOpened = Event.make<void>()('client-services/StackOpened');
+export const StackOpened = Hook.make<void>()('client-services/StackOpened');
 
 /** Outbound networking may begin; emitted on `StackOpened` when auto-connecting, else by the embedder. */
-export const NetworkingEnabled = Event.make<void>()('client-services/NetworkingEnabled');
+export const NetworkingEnabled = Hook.make<void>()('client-services/NetworkingEnabled');
 
 /** A reset began: the embedder disposes the stack. */
-export const Closing = Event.make<void>()('client-services/Closing');
+export const Closing = Hook.make<void>()('client-services/Closing');
 
 /** The stack is gone: the embedder wipes persisted storage so the next open starts fresh. */
-export const WipingStorage = Event.make<void>()('client-services/WipingStorage');
+export const WipingStorage = Hook.make<void>()('client-services/WipingStorage');
 
 /** Storage is wiped; the embedder typically reloads. */
-export const Reset = Event.make<void>()('client-services/Reset');
+export const Reset = Hook.make<void>()('client-services/Reset');
 
 /** The local profile changed and should be broadcast to every open space. */
-export const ProfileUpdated = Event.make<{ profile: ProfileDocument }>()('client-services/ProfileUpdated');
+export const ProfileUpdated = Hook.make<{ profile: ProfileDocument }>()('client-services/ProfileUpdated');

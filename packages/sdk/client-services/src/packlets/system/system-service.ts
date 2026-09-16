@@ -9,7 +9,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Event, MulticastObservable } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
-import { Event as EffectEvent, EffectEx } from '@dxos/effect';
+import { EffectEx, Hook } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -27,8 +27,11 @@ import { DataSpaceManagerService } from '../spaces/index.ts';
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;
   getDiagnostics: () => Promise<Partial<Diagnostics['services']>>;
-  /** The embedder's bus, which outlives the stack; a reset is the `Closing → WipingStorage → Reset` chain on it. */
-  bus: EffectEvent.BusService;
+  /**
+   * The embedder's controller, which outlives the stack; a reset is the
+   * `Closing → WipingStorage → Reset` chain on it.
+   */
+  controller: Hook.ControllerService;
 };
 
 /**
@@ -77,11 +80,11 @@ export class SystemServiceImpl implements SystemService.Handlers {
       // has in flight: component finalizers are not re-entrant against live traffic. That holds only
       // because every embedder shuts down or reloads immediately after `Reset` below — a reset that
       // left the worker serving would need a gate that fails new requests from here on.
-      yield* EffectEvent.emit(Closing, undefined);
-      yield* EffectEvent.emit(WipingStorage, undefined);
+      yield* Hook.emit(Closing, undefined);
+      yield* Hook.emit(WipingStorage, undefined);
       log.info('reset');
-      yield* EffectEvent.emit(Reset, undefined);
-    }).pipe(Effect.provideService(EffectEvent.Bus, this.#options.bus));
+      yield* Hook.emit(Reset, undefined);
+    }).pipe(Effect.provideService(Hook.Controller, this.#options.controller));
   }
 
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
@@ -152,14 +155,14 @@ export class SystemServiceImpl implements SystemService.Handlers {
 
 /**
  * Serves the {@link SystemService} over the stack's domain handlers: active once the stack has
- * opened, inactive when the layer is torn down, and resetting over the embedder's bus.
+ * opened, inactive when the layer is torn down, and resetting over the embedder's controller.
  */
 export const SystemServiceLayer: Layer.Layer<
   SystemService.Tag,
   never,
   | RpcServicesContext
   | ConfigService
-  | EffectEvent.Bus
+  | Hook.Controller
   | IdentityManagerService
   | DataSpaceManagerService
   | SwarmNetworkManagerService
@@ -167,16 +170,16 @@ export const SystemServiceLayer: Layer.Layer<
   SystemService.Tag,
   Effect.gen(function* () {
     const config = yield* ConfigService;
-    const bus = yield* EffectEvent.Bus;
+    const controller = yield* Hook.Controller;
     const stack = yield* Effect.context<
       RpcServicesContext | IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService
     >();
     const service = new SystemServiceImpl({
       config: () => config,
       getDiagnostics: () => createDiagnosticsFromHandlers(() => rpcHandlersFromStack(stack), stack, config),
-      bus,
+      controller,
     });
-    yield* EffectEvent.on(StackOpened, () => Effect.sync(() => service.setStatus(SystemStatus.ACTIVE)));
+    yield* Hook.on(StackOpened, () => Effect.sync(() => service.setStatus(SystemStatus.ACTIVE)));
     yield* Effect.addFinalizer(() => Effect.sync(() => service.setStatus(SystemStatus.INACTIVE)));
     return service;
   }),

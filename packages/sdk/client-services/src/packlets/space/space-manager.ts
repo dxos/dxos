@@ -12,7 +12,7 @@ import { Trigger, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { Event } from '@dxos/effect';
+import { Hook } from '@dxos/effect';
 import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -201,7 +201,7 @@ export const SpaceManagerLayer = (
 ): Layer.Layer<
   SpaceManagerService,
   never,
-  Event.Bus | HypercoreStoreService | SwarmNetworkManagerService | IMetadataStoreService
+  Hook.Controller | HypercoreStoreService | SwarmNetworkManagerService | IMetadataStoreService
 > =>
   Layer.effect(
     SpaceManagerService,
@@ -218,8 +218,8 @@ export const SpaceManagerLayer = (
 
       yield* Effect.addFinalizer(() => Effect.promise(() => spaceManager.close()));
       yield* NetworkReady.pipe(
-        Event.handler(() => Effect.promise(() => spaceManager.open())),
-        Event.subscribe,
+        Hook.handler(() => Effect.promise(() => spaceManager.open())),
+        Hook.subscribe,
       );
       return spaceManager;
     }),
