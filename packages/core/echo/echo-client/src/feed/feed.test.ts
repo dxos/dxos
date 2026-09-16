@@ -431,6 +431,42 @@ describe('Feed', () => {
       await expect(db.flush()).rejects.toThrow('alice refused');
     });
 
+    test('a failed append does not retry an object deleted while it was in flight', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'deleted' }));
+      await db.flush();
+
+      let inserts = 0;
+      const sent = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<void>();
+      const realHandlers = peer.host.feedService;
+      db._setFeedService(
+        await makeFeedClient({
+          ...realHandlers,
+          'FeedService.deleteFromFeed': (...args) => realHandlers['FeedService.deleteFromFeed'](...args),
+          'FeedService.insertIntoFeed': (...args) => {
+            inserts++;
+            if (inserts > 1) {
+              return realHandlers['FeedService.insertIntoFeed'](...args);
+            }
+            sent.resolve();
+            return Effect.promise(() => release.promise).pipe(Effect.andThen(Effect.fail(new Error('john refused'))));
+          },
+        }),
+      );
+
+      const john = db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      await sent.promise;
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri);
+      await db._tryGetFeedHandle(feedUri)?.delete([john.id]);
+      release.resolve();
+
+      await db.flush();
+      expect(inserts).toEqual(1);
+    });
+
     test('a successful append leaves the error of a failed append that awaits its retry', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
