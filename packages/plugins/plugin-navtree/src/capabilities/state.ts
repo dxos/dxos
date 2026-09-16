@@ -9,6 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Path } from '@dxos/react-ui-list/util';
@@ -127,45 +128,36 @@ export default Capability.makeModule(
       queueMicrotask(handleUpdate);
     });
 
-    // Expand the nodes marked open in state so the graph has children loaded for rendering: all of them
-    // once the graph is ready, then a workspace's again whenever it becomes current, since the graph may
-    // have unloaded it in between.
-    let unsubscribeWorkspace: (() => void) | undefined;
+    // Expand the nodes marked open in state: all of them once the graph is ready, then a workspace's
+    // again whenever it becomes current, since the graph may have unloaded it in between.
     yield* Effect.gen(function* () {
       const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
-      const expandOpen = (workspace: string | undefined, all: boolean) => {
+      const expandOpen = (workspace: string | undefined, include: (nodeId: string) => boolean) => {
         if (workspace) {
           AppGraph.expandSync(graph, workspace, 'child');
         }
 
-        const openPaths = Array.from(backingState.entries())
-          .filter(([, state]) => state.open)
-          .map(([pathString]) => Path.parts(pathString))
-          .filter((path) => !isTopLevelPath(path));
-        for (const path of openPaths) {
+        for (const [pathString, state] of backingState.entries()) {
+          const path = Path.parts(pathString);
           const nodeId = path[path.length - 1];
-          if (nodeId && (all || (workspace !== undefined && nodeId.startsWith(`${workspace}/`)))) {
+          if (state.open && !isTopLevelPath(path) && nodeId && include(nodeId)) {
             AppGraph.expandSync(graph, nodeId, 'child');
           }
         }
       };
 
       let workspace = registry.get(layoutAtom).workspace;
-      expandOpen(workspace, true);
-      unsubscribeWorkspace = registry.subscribe(layoutAtom, (layout) => {
+      expandOpen(workspace, () => true);
+      const unsubscribeWorkspace = registry.subscribe(layoutAtom, (layout) => {
         if (layout.workspace !== workspace) {
           workspace = layout.workspace;
-          expandOpen(workspace, false);
+          expandOpen(workspace, (nodeId) => GraphPath.getWorkspaceFromPath(nodeId) === workspace);
         }
       });
-    }).pipe(Effect.forkDetach);
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribeWorkspace()));
+    }).pipe(Effect.forkScoped);
 
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        unsubscribe();
-        unsubscribeWorkspace?.();
-      }),
-    );
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
     return Capability.contribute(NavTreeCapabilities.State, {
       getItem,
       getItemAtom,

@@ -15,6 +15,7 @@ import {
   getUnresolvedPlankId,
   initialPlanks,
   parse,
+  plankPair,
   toSegment,
 } from './navigation.ts';
 
@@ -140,5 +141,21 @@ describe('initialPlanks', () => {
       { segment: 'object/01JXYZ', id: 'resolved' },
       { segment: 'object/01JABC', id: getUnresolvedPlankId(other) },
     ]);
+  });
+});
+
+describe('plankPair', () => {
+  const represented = { key: 'object', id: '01JXYZ', workspace: WORKSPACE };
+
+  test('prefers the pair the graph represents', ({ expect }) => {
+    expect(plankPair(Option.some(represented), 'object/OTHER', WORKSPACE)).toEqual(Option.some(represented));
+  });
+
+  test('falls back to the recorded segment for a node the graph has unloaded', ({ expect }) => {
+    expect(plankPair(Option.none(), 'object/01JXYZ', WORKSPACE)).toEqual(Option.some(represented));
+  });
+
+  test('gives up only when neither exists', ({ expect }) => {
+    expect(Option.isNone(plankPair(Option.none(), undefined, WORKSPACE))).toBe(true);
   });
 });

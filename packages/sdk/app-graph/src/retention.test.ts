@@ -216,19 +216,17 @@ describe('retention', () => {
 
 describe('retention port', () => {
   /** The deck's policy in miniature: keep the current and previous workspace, answer with the rest. */
-  const policy = ({ builder, graph }: ReturnType<typeof setup>) => {
-    let current: string | undefined;
-    let previous: string | undefined;
+  const policy = ({ builder, graph, registry }: ReturnType<typeof setup>) => {
+    const visited = Atom.make<{ current?: string; previous?: string }>({}).pipe(Atom.keepAlive);
     GraphBuilder.setRetention(builder, {
-      evictable: () =>
-        Graph.getConnections(graph, GraphNode.RootId, 'child')
+      evictable: Atom.make((get) => {
+        const { current, previous } = get(visited);
+        return get(graph.connections(GraphNode.RootId, 'child'))
           .map(({ id }) => id)
-          .filter((id) => id !== current && id !== previous),
+          .filter((id) => id !== current && id !== previous);
+      }),
     });
-    return (root: string) => {
-      previous = current;
-      current = root;
-    };
+    return (root: string) => registry.update(visited, ({ current }) => ({ current: root, previous: current }));
   };
 
   test('the builder keeps what the port retains, and a revisit rebuilds the rest', async () => {
@@ -255,6 +253,26 @@ describe('retention port', () => {
     switchTo(stale);
     await visit(harness, stale);
     expect(registry.get(graph.connections(stale, 'child'))).to.have.length(CHILDREN);
+  });
+
+  test('switching into a loaded workspace releases the one that fell out, with no connector flush', async () => {
+    const harness = setup();
+    const { builder, graph, registry } = harness;
+    await visit(harness, GraphNode.RootId);
+    const switchTo = policy(harness);
+    for (const id of ['w0', 'w1']) {
+      switchTo(`${GraphNode.RootId}/${id}`);
+      await visit(harness, `${GraphNode.RootId}/${id}`);
+    }
+
+    const w2 = `${GraphNode.RootId}/w2`;
+    await visit(harness, w2, { mounted: false });
+    expect(registry.get(graph.connections(w2, 'child'))).to.have.length(CHILDREN);
+
+    switchTo(w2);
+    await GraphBuilder.flush(builder);
+    expect(registry.get(graph.connections(`${GraphNode.RootId}/w0`, 'child'))).to.deep.equal([]);
+    expect(registry.get(graph.connections(w2, 'child'))).to.have.length(CHILDREN);
   });
 
   test('a workspace expanded without a switch stays loaded until the next switch', async () => {

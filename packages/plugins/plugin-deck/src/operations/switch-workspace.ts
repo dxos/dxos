@@ -11,7 +11,6 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
@@ -39,13 +38,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const { open } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
       const remembered = open[input.subject]?.active ?? [];
 
-      // The graph may have unloaded this workspace, and both seeding and the URL read what it rebuilds.
-      AppGraph.expandSync(graph, input.subject, 'child');
-      remembered.forEach((id) => NotFound.expandPath(graph, id));
-      yield* Effect.promise(() => AppGraphBuilder.flush(builder));
-
-      const seeded =
-        remembered.length === 0 && platform !== 'mobile' ? openableChildren(graph, input.subject).slice(0, 1) : [];
+      // Seeding reads children, which an unloaded workspace only has once its expansion flushes.
+      const seeds = remembered.length === 0 && platform !== 'mobile';
+      if (seeds) {
+        AppGraph.expandSync(graph, input.subject, 'child');
+        yield* Effect.promise(() => AppGraphBuilder.flush(builder));
+      }
+      const seeded = seeds ? openableChildren(graph, input.subject).slice(0, 1) : [];
       const active = remembered.length > 0 ? remembered : seeded;
 
       const workspace = GraphPath.getWorkspaceToken(input.subject);

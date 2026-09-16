@@ -135,10 +135,10 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   subgraph?(roots: Iterable<string>): readonly string[];
 }
 
-/** Names the subgraphs the builder may unload; the implementor answers from state it already keeps. */
+/** Names the subgraphs the builder may unload; the implementor derives it from state it already keeps. */
 export interface Retention {
-  /** Roots whose subgraphs may be unloaded, asked after every flush; the roots themselves stay. */
-  evictable(): Iterable<string>;
+  /** Roots whose subgraphs may be unloaded, collected whenever this changes; the roots themselves stay. */
+  readonly evictable: Atom.Atom<readonly string[]>;
 }
 
 /**
@@ -262,8 +262,11 @@ export class GraphBuilder<
   _flushScheduled = false;
   /** The installed retention port, if any; see {@link setRetention}. */
   _retention?: Retention;
+  _unsubscribeRetention?: CleanupFn;
   /** The roots the last collection released. */
   _evicted: ReadonlySet<string> = new Set();
+  _collectScheduled = false;
+  _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
   /** Registered extensions keyed by extension ID. */
@@ -390,27 +393,36 @@ export class GraphBuilder<
           // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
           this._store.batch ? this._store.batch(apply) : apply();
         }
+      });
+    }
+  }
 
+  /** Collects on a task of its own, so a release never lands inside a flush. */
+  _scheduleCollect(): void {
+    if (!this._collectScheduled) {
+      this._collectScheduled = true;
+      this._collectPromise = this._schedule(() => {
+        this._collectScheduled = false;
         this._collect();
       });
     }
   }
 
   /**
-   * Releases below the port's roots when its answer changes, so a root something expands again under
-   * the same answer stays loaded instead of being rebuilt and dropped on every flush.
+   * Releases below the port's roots when the set differs from the last one released, so a root
+   * expanded again under the same answer stays loaded.
    */
-  _collect(): string[] {
+  _collect(): void {
     const store = this._store;
     if (!this._retention || !store.subgraph || !store.release) {
-      return [];
+      return;
     }
 
     // Everything hangs below the graph root, so it is never a releasable unit.
-    const roots = new Set([...this._retention.evictable()].filter((id) => id !== GraphNode.RootId));
+    const roots = new Set(this._registry.get(this._retention.evictable).filter((id) => id !== GraphNode.RootId));
     const previous = this._evicted;
     if (roots.size === previous.size && [...roots].every((id) => previous.has(id))) {
-      return [];
+      return;
     }
 
     this._evicted = roots;
@@ -418,8 +430,6 @@ export class GraphBuilder<
     if (ids.length > 0) {
       release(this, ids);
     }
-
-    return [...ids];
   }
 
   /**
@@ -763,9 +773,11 @@ export const removeExtension: {
 });
 
 /**
- * Wait for all pending connector updates to be flushed.
+ * Wait for all pending connector updates to be flushed, and for any retention collection they trail.
  */
-export const flush = (builder: Any): Promise<void> => builder._flushPromise;
+export const flush = async (builder: Any): Promise<void> => {
+  await Promise.all([builder._flushPromise, builder._collectPromise]);
+};
 
 /**
  * Unloads the nodes and everything the builder remembers about them: expansion subscriptions, the
@@ -782,7 +794,12 @@ export const release = (builder: Any, ids: readonly string[]): void => {
     // A connector rooted at a released node, or one that produced one. The second case matters:
     // its diff state still claims the node was emitted, so leaving it in place would mean the
     // connector never re-emits and the node never comes back. Both tear down to "never expanded".
-    if (released.has(relationFromConnectorKey(key).id) || previous.some((id) => released.has(id))) {
+    const inline = builder._connectorPreviousInlineIds.get(key) ?? [];
+    if (
+      released.has(relationFromConnectorKey(key).id) ||
+      previous.some((id) => released.has(id)) ||
+      inline.some((id) => released.has(id))
+    ) {
       builder._connectorPrevious.delete(key);
       builder._connectorPreviousArgs.delete(key);
       builder._connectorPreviousInlineIds.delete(key);
@@ -794,7 +811,10 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   // A connector expanded but never flushed has no diff state yet — its first emission is still
   // sitting in the dirty queue, and left there the flush would re-materialize the released nodes.
   for (const [key, { nodes }] of [...builder._dirtyConnectors]) {
-    if (released.has(relationFromConnectorKey(key).id) || nodes.some((node: NodeArgLike) => released.has(node.id))) {
+    if (
+      released.has(relationFromConnectorKey(key).id) ||
+      nodes.some((node: NodeArgLike) => [node, ...builder._allInline(node)].some(({ id }) => released.has(id)))
+    ) {
       builder._dirtyConnectors.delete(key);
       builder._onReleaseRelation(relationFromConnectorKey(key));
     }
@@ -806,8 +826,12 @@ export const release = (builder: Any, ids: readonly string[]): void => {
 
 /** Installs the retention port, or removes it with `undefined`; the builder usually predates the policy. */
 export const setRetention = (builder: Any, retention: Retention | undefined): void => {
+  builder._unsubscribeRetention?.();
   builder._retention = retention;
   builder._evicted = new Set();
+  builder._unsubscribeRetention = retention
+    ? builder._registry.subscribe(retention.evictable, () => builder._scheduleCollect(), { immediate: true })
+    : undefined;
 };
 
 /**

@@ -62,6 +62,19 @@ export const fromSegment = (segment: string, workspace: string): UrlPath.Pair =>
     : { key: segment.slice(0, separator), id: segment.slice(separator + 1), workspace };
 };
 
+/**
+ * A plank's pair: from its node while the graph holds it, otherwise from the segment it was opened
+ * under, so a plank the graph unloaded goes back through resolution instead of out of the URL.
+ */
+export const plankPair = (
+  represented: Option.Option<UrlPath.Pair>,
+  recorded: string | undefined,
+  workspace: string,
+): Option.Option<UrlPath.Pair> =>
+  Option.orElse(represented, () =>
+    recorded === undefined ? Option.none() : Option.some(fromSegment(recorded, workspace)),
+  );
+
 /** Serialize to a pathname. */
 export const format = ({ workspace, pairs }: Navigation): string =>
   UrlPath.format({ workspace, workspaceKey: UrlPath.WORKSPACE_KEY, pairs: [...pairs] });

@@ -361,61 +361,75 @@ describe('retention', () => {
     await GraphBuilder.flush(builder);
   };
 
+  /** Both workspaces loaded, with a port whose answer the test sets. */
   const loaded = async () => {
     const harness = workspaces();
     await visit(harness, GraphNode.RootId);
     await visit(harness, 'root/w0');
     await visit(harness, 'root/w1');
-    return harness;
+    const evictable = Atom.make<readonly string[]>([]).pipe(Atom.keepAlive);
+    GraphBuilder.setRetention(harness.builder, { evictable });
+    await GraphBuilder.flush(harness.builder);
+    const evict = async (roots: readonly string[]) => {
+      harness.registry.set(evictable, roots);
+      await GraphBuilder.flush(harness.builder);
+    };
+    return { ...harness, evict };
   };
 
-  test('nothing is released without a port', async () => {
-    const harness = await loaded();
-    expect(harness.builder._collect()).to.deep.equal([]);
-    expect(harness.children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
-  });
-
-  test('a settled flush unloads below the roots the port names and keeps the roots', async () => {
-    const harness = await loaded();
-    const { builder, model, children } = harness;
-    GraphBuilder.setRetention(builder, { evictable: () => ['root/w0'] });
-    await visit(harness, 'root/w1/c0');
+  test('a change in the answer unloads below the named roots and keeps the roots', async () => {
+    const { model, children, evict } = await loaded();
+    await evict(['root/w0']);
 
     expect(model.findNode('root/w0')?.id).to.equal('root/w0');
     expect(children('root/w0')).to.deep.equal([]);
     expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
   });
 
-  test('the graph root is never released, whatever the port answers', async () => {
-    const harness = await loaded();
-    GraphBuilder.setRetention(harness.builder, { evictable: () => [GraphNode.RootId] });
-    expect(harness.builder._collect()).to.deep.equal([]);
-    expect(harness.children(GraphNode.RootId)).to.deep.equal(['root/w0', 'root/w1']);
+  test('the graph root is never released, whatever the answer', async () => {
+    const { children, evict } = await loaded();
+    await evict([GraphNode.RootId]);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/w0', 'root/w1']);
+    expect(children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
   });
 
   test('a root expanded again under the same answer stays loaded until the answer changes', async () => {
     const harness = await loaded();
-    const { builder, children } = harness;
-    let evictable = ['root/w0'];
-    GraphBuilder.setRetention(builder, { evictable: () => evictable });
-    builder._collect();
+    const { children, evict } = harness;
+    await evict(['root/w0']);
     expect(children('root/w0')).to.deep.equal([]);
 
-    // A prefetch expands the unloaded root; the flush it triggers must not drop it again.
     await visit(harness, 'root/w0');
     expect(children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
 
-    evictable = ['root/w0', 'root/w1'];
-    builder._collect();
+    await evict(['root/w0', 'root/w1']);
     expect(children('root/w0')).to.deep.equal([]);
     expect(children('root/w1')).to.deep.equal([]);
   });
 
-  test('a store that cannot enumerate a subgraph is left alone', async () => {
-    const harness = await loaded();
-    delete harness.builder._store.subgraph;
-    GraphBuilder.setRetention(harness.builder, { evictable: () => ['root/w0'] });
-    expect(harness.builder._collect()).to.deep.equal([]);
-    expect(harness.children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
+  test('releasing an inline descendant tears down the connector that produced it', async () => {
+    const harness = setup();
+    const { builder, registry, children } = harness;
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: (): GraphBuilder.ModelNodeArg[] => [],
+            onSome: (source) => (source.id === GraphNode.RootId ? [{ id: 'w', nodes: [{ id: 'x' }] }] : []),
+          }),
+        ),
+    });
+    await visit(harness, GraphNode.RootId);
+    expect(children('root/w')).to.deep.equal(['root/w/x']);
+
+    const evictable = Atom.make<readonly string[]>(['root/w']).pipe(Atom.keepAlive);
+    GraphBuilder.setRetention(builder, { evictable });
+    await GraphBuilder.flush(builder);
+    expect(children('root/w')).to.deep.equal([]);
+
+    registry.set(evictable, []);
+    await visit(harness, GraphNode.RootId);
+    expect(children('root/w')).to.deep.equal(['root/w/x']);
   });
 });
