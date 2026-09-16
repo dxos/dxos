@@ -9,9 +9,11 @@ import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug.tsx';
 import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics.ts';
 import {
   SurfaceProfilerProvider,
+  aggregateSurfaceProfilerStats,
   useSurfaceProfilerCallback,
   useSurfaceProfilerClear,
   useSurfaceProfilerEntries,
+  useSurfaceProfilerSnapshot,
   useSurfaceProfilerStats,
 } from './SurfaceProfilerContext.tsx';
 import {
@@ -54,11 +56,15 @@ export namespace Surface {
   export const useProfilerCallback = useSurfaceProfilerCallback;
   export const useProfilerEntries = useSurfaceProfilerEntries;
   export const useProfilerStats = useSurfaceProfilerStats;
+  export const useProfilerSnapshot = useSurfaceProfilerSnapshot;
+  export const aggregateProfilerStats = aggregateSurfaceProfilerStats;
   export const useProfilerClear = useSurfaceProfilerClear;
 
   export type Metric = SurfaceMetric;
   export const useMetrics = useSurfaceMetrics;
   export const clearMetrics = () => surfaceMetrics.clear();
+  /** The current metrics without subscribing; see `useProfilerSnapshot`. */
+  export const getMetrics = (): SurfaceMetric[] => [...surfaceMetrics.getSnapshot()];
 }
 
 export type { SurfaceProfilerEntry, SurfaceProfilerStats } from './SurfaceProfilerContext.tsx';

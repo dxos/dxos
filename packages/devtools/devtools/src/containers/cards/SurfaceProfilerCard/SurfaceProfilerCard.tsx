@@ -45,6 +45,9 @@ const describe = (stat: SurfaceProfilerStats): string =>
     .filter(Boolean)
     .join('\n');
 
+/** The role segment of a profiler id (`surface/<id>/<role>`), without the shared `org.dxos.role.` prefix. */
+const roleName = (id: string): string => (id.split('/').pop() ?? id).replace(/^org\.dxos\.role\./, '');
+
 /** Surface takes the slack; fixed average and maximum tracks make the rows a table. */
 const ROW_TRACKS = ['1fr', '3.5rem', '3.5rem'];
 
@@ -84,7 +87,7 @@ export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCard
             classNames={mx('font-mono tabular-nums text-end', stat.avgActualDuration > SLOW_TIME && 'text-error-text')}
           >
             <span className='truncate text-start' title={describe(stat)}>
-              {stat.id.split('/').pop()}
+              {roleName(stat.id)}
             </span>
             <span>{stat.avgActualDuration.toFixed(1)}</span>
             <span>{stat.maxActualDuration.toFixed(1)}</span>

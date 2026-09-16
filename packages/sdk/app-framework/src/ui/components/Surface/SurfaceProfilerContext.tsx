@@ -163,10 +163,24 @@ export const useSurfaceProfilerEntries = (): readonly SurfaceProfilerEntry[] => 
 };
 
 /**
+ * Reads the current entries without subscribing: a profiled component that subscribed would record
+ * an entry on every re-render the notification caused, and loop. Sample it on a schedule instead.
+ */
+export const useSurfaceProfilerSnapshot = (): (() => readonly SurfaceProfilerEntry[]) => {
+  const store = useContext(SurfaceProfilerContext)?.store;
+  return useMemo(() => (store ? () => store.getSnapshot() : emptySnapshot), [store]);
+};
+
+/**
  * Returns aggregated stats grouped by surface id.
  */
 export const useSurfaceProfilerStats = (): SurfaceProfilerStats[] => {
   const entries = useSurfaceProfilerEntries();
+  return aggregateSurfaceProfilerStats(entries);
+};
+
+/** Aggregates raw entries into per-surface stats, slowest maximum first. */
+export const aggregateSurfaceProfilerStats = (entries: readonly SurfaceProfilerEntry[]): SurfaceProfilerStats[] => {
   const statsMap = new Map<string, SurfaceProfilerStats>();
 
   for (const entry of entries) {
