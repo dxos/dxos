@@ -183,20 +183,23 @@ export const SurfaceProfilerCard = ({
         </StatCard.Row>
       ))}
       {selectedGroup && detail && (
-        <StatCard.Section title={selectedGroup.role}>
+        <>
           {/* One block per surface: the stringifier folds repeated references into back-references,
               and sibling surfaces routinely share their `data`. */}
           {detail.map((surface, index) => (
-            <StatCard.Content key={surface.id ?? index}>
-              <SystemIconButton.Clipboard onCopy={() => navigator.clipboard.writeText(JSON.stringify(surface))} />
+            <StatCard.Row
+              key={surface.id ?? index}
+              label={selectedGroup.role}
+              action={<SystemIconButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
+            >
               <JsonHighlighter
                 classNames='text-sm'
                 data={surface}
                 replacer={{ maxDepth: 5, maxArrayLen: 10, maxStringLen: 120 }}
               />
-            </StatCard.Content>
+            </StatCard.Row>
           ))}
-        </StatCard.Section>
+        </>
       )}
     </StatCard.Root>
   );

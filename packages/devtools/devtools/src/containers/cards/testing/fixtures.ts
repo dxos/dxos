@@ -98,7 +98,11 @@ export const edgeSpaceNames: Record<string, string> = {
 };
 
 export const edgeStatusDegraded: EdgeStatus = {
-  problems: ['Agent is not reachable.', 'Router fetch timed out.'],
+  problems: [
+    'Agent is not reachable.',
+    'Router fetch timed out.',
+    'Some credentials were not processed by space-state-machine, might be a gap in dependency timeframes. in space BUM5S2UIPZQQLMY3YNTT7UXBTN2MHM7DN',
+  ],
   agent: { agentStatus: 'inactive' },
   router: { fetchError: 'timeout' },
   spaces: {
