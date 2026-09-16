@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import { DoctorOperation } from '#types';
@@ -78,7 +77,7 @@ export default DoctorOperation.QueryComposerLogs.pipe(
 
       const result = yield* Effect.try({
         try: () => runQuery(records, queryInput),
-        catch: (err) => new LogQueryError({ message: messageOf(err), cause: err }),
+        catch: LogQueryError.wrap(),
       });
       return { ...result, total: result.total + malformed };
     }),

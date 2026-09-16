@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
-import { BaseError, messageOf } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 import { File } from '@dxos/types';
 
 import { FileCapabilities, FileLimits, FileOperation, Settings } from '#types';
@@ -83,7 +83,7 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
       const bytes = new Uint8Array(
         yield* Effect.tryPromise({
           try: () => file.arrayBuffer(),
-          catch: (error) => new FileReadError({ message: messageOf(error), cause: error }),
+          catch: FileReadError.wrap(),
         }),
       );
       // The size cap only applies to `inline` storage — `Blob.fromBytes` enforces it internally;

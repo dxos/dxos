@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { BaseError, messageOf } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 import { type PluginView } from '@dxos/protocols';
 
 import type * as Plugin from './plugin.ts';
@@ -60,7 +60,7 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error> {
     return Effect.tryPromise({
       try: () => this._client.getRegistryPlugins(Context.default()),
-      catch: (error) => new RegistryError({ message: messageOf(error), cause: error }),
+      catch: RegistryError.wrap(),
     }).pipe(
       Effect.map((body) => {
         this.#cachedEntries = body.plugins;

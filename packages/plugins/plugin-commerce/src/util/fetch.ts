@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { BaseError, messageOf } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import { type HttpRequest } from './bindRequest.ts';
@@ -27,8 +27,7 @@ export const fetchViaProxy = (request: HttpRequest): Effect.Effect<string, Fetch
       }
       return response.text();
     },
-    catch: (error) =>
-      error instanceof FetchError ? error : new FetchError({ message: messageOf(error), cause: error }),
+    catch: FetchError.wrap({ ifTypeDiffers: true }),
   });
 
 export type FetchPageOptions = {
