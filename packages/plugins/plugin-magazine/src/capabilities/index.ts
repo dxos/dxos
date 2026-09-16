@@ -17,6 +17,7 @@ import { translations } from '#translations';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
+  environments: [],
   requires: [AttentionCapabilities.ViewState],
 });
 export const RoutineTemplates = Capability.lazyModule(

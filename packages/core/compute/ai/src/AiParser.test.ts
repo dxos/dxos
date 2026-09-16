@@ -609,7 +609,8 @@ describe('parser', () => {
             encodedResult: undefined,
             isFailure: false,
             providerExecuted: false,
-          } as any),
+            preliminary: false,
+          }),
         ])
           .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect);

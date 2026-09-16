@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Obj, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Message from './Message.ts';
 
@@ -44,7 +43,7 @@ export class Thread extends Type.makeObject<Thread>(DXN.make('org.dxos.type.thre
     status: ThreadStatus.pipe(Schema.optional),
     messages: Schema.Array(Ref.Ref(Message.Message)),
     agent: Schema.optional(AgentConfig),
-  }).pipe(HiddenAnnotation.set(true)),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
 
 export const make = ({

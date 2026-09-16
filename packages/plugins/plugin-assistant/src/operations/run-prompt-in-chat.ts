@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Chat from '@dxos/assistant/Chat';
-import { getSession } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -61,7 +61,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         // The model is the chat's, so the provider has to be the one that serves THAT model rather
         // than whichever the settings now name — a chat outlives a provider change.
         const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? preset?.model;
-        const session = yield* getSession(chat, {
+        const session = yield* AgentService.getSession(chat, {
           provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
           location: chat.remote ? 'edge' : 'local',
         });

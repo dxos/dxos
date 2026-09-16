@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type Config, ConfigService } from '@dxos/config';
-import { Event } from '@dxos/effect';
+import { Hook } from '@dxos/effect';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -18,11 +18,11 @@ import { NetworkingEnabled } from './events.ts';
 import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
 
 /**
- * Everything the client services runtime provides: the event bus, config, the platform inputs,
+ * Everything the client services runtime provides: the hook controller, config, the platform inputs,
  * the component layers, and the RPC handler layers.
  */
 export type ClientServicesStackContext =
-  | Event.Bus
+  | Hook.Controller
   | ConfigService
   | ClientServicesRpcContext
   | ServiceContextStackContext
@@ -64,7 +64,7 @@ export const runtimePropsFromConfig = (
 
 /**
  * The whole client services runtime as one layer: RPC handlers over the component stack over the
- * platform inputs, persisting through the SQL services, config and the embedder's bus provided
+ * platform inputs, persisting through the SQL services, config and the embedder's controller provided
  * beneath it. Build it with `ManagedRuntime`, then emit `Opening` and `StackOpened` to boot; disposing the
  * runtime tears everything down in reverse.
  */
@@ -77,14 +77,14 @@ export const ClientServicesLayer = ({
 }: ClientServicesLayerOptions = {}): Layer.Layer<
   ClientServicesStackContext,
   never,
-  ClientServicesSqlContext | ConfigService | Event.Bus
+  ClientServicesSqlContext | ConfigService | Hook.Controller
 > =>
   // The runtime props are read from the config eagerly, so the stack is unwrapped from an effect
   // that resolves the config the embedder provided beneath it.
   Layer.unwrap(
     Effect.gen(function* () {
       const config = yield* ConfigService;
-      const bus = yield* Event.Bus;
+      const controller = yield* Hook.Controller;
       return ClientServicesRpcLayer.pipe(
         Layer.provideMerge(
           ServiceStack({
@@ -97,7 +97,7 @@ export const ClientServicesLayer = ({
         Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
         // Re-provided so the built stack context carries them, as every consumer of the context expects.
         Layer.provideMerge(Layer.succeed(ConfigService, config)),
-        Layer.provideMerge(Layer.succeed(Event.Bus, bus)),
+        Layer.provideMerge(Layer.succeed(Hook.Controller, controller)),
         Layer.orDie,
       );
     }),
@@ -107,4 +107,4 @@ export const ClientServicesLayer = ({
  * Allows outbound network activity to begin; for embedders that build the stack with
  * `autoConnect: false`.
  */
-export const enableNetworking: Effect.Effect<void, never, Event.Bus> = Event.emit(NetworkingEnabled, undefined);
+export const enableNetworking: Effect.Effect<void, never, Hook.Controller> = Hook.emit(NetworkingEnabled, undefined);

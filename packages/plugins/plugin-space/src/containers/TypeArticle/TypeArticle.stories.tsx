@@ -15,7 +15,6 @@ import { useAtomCapability } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-lib';
 import { PublicKey } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -44,7 +43,7 @@ class CardType extends Type.makeObject<CardType>(DXN.make('org.dxos.type.test.ca
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cards--regular', hue: 'emerald' }),
     CardAnnotation.set(true),
   ),

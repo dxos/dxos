@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
           // and resolves the user's PDS once. Public XRPC reads (e.g.
           // `getAuthorFeed`) only need HttpClient and ignore the layer.
           syncBinding({ client, binding }).pipe(
-            Effect.provide(BlueskyApi.Credentials.fromAccessToken(binding.spec.source, client)),
+            Effect.provide(BlueskyApi.fromAccessToken(binding.spec.source, client)),
             Effect.provide(FetchHttpClient.layer),
           ),
       });

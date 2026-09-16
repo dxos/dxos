@@ -11,6 +11,7 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, DXN, Filter, Ref } from '@dxos/echo';
@@ -57,13 +58,7 @@ const seedStudioProject = async ({ space }: { space: Space }) => {
 };
 
 /** The chat works in the project's context, which is what the skill files the storyboard into. */
-const bindProject = async ({
-  db,
-  binder,
-}: {
-  db: Database.Database;
-  binder: { bind: (props: any) => Promise<void> };
-}) => {
+const bindProject = async ({ db, binder }: { db: Database.Database; binder: AiContext.Binder }) => {
   const project = await db.query(Filter.type(Project.Project)).first();
   await binder.bind({ objects: [Ref.make(project)] });
 };

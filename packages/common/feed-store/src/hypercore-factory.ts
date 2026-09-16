@@ -16,15 +16,15 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
 
-import { FeedWrapper } from './feed-wrapper.ts';
+import { HypercoreWrapper } from './hypercore-wrapper.ts';
 
-export type FeedFactoryOptions = {
+export type HypercoreFactoryOptions = {
   root: Directory;
   signer?: Signer;
   hypercore?: HypercoreOptions;
 };
 
-export type FeedOptions = HypercoreOptions & {
+export type HypercoreCreateOptions = HypercoreOptions & {
   writable?: boolean;
   /**
    * Optional hook called before data is written after being verified.
@@ -36,29 +36,30 @@ export type FeedOptions = HypercoreOptions & {
 };
 
 /**
- * Effect service tag for {@link FeedFactory}.
+ * Effect service tag for {@link HypercoreFactory}.
  */
-export class FeedFactoryService extends EffectContext.Service<FeedFactoryService, FeedFactory<any>>()(
-  '@dxos/feed-store/FeedFactory',
+export class HypercoreFactoryService extends EffectContext.Service<HypercoreFactoryService, HypercoreFactory<any>>()(
+  '@dxos/feed-store/HypercoreFactory',
 ) {}
 
 /**
  * Root directory for hypercore feed files.
  */
-export class FeedStorageDirectoryService extends EffectContext.Service<FeedStorageDirectoryService, Directory>()(
-  '@dxos/feed-store/FeedStorageDirectory',
-) {}
+export class HypercoreStorageDirectoryService extends EffectContext.Service<
+  HypercoreStorageDirectoryService,
+  Directory
+>()('@dxos/feed-store/HypercoreStorageDirectory') {}
 
 /**
  * Hypercore factory.
  */
-export class FeedFactory<T extends {}> {
+export class HypercoreFactory<T extends {}> {
   private readonly _root: Directory;
   private readonly _signer?: Signer;
   private readonly _hypercoreOptions?: HypercoreOptions;
 
-  constructor({ root, signer, hypercore }: FeedFactoryOptions) {
-    log('FeedFactory', { options: hypercore });
+  constructor({ root, signer, hypercore }: HypercoreFactoryOptions) {
+    log('HypercoreFactory', { options: hypercore });
     this._root = root ?? failUndefined();
     this._signer = signer;
     this._hypercoreOptions = hypercore;
@@ -68,7 +69,7 @@ export class FeedFactory<T extends {}> {
     return this._root;
   }
 
-  async createFeed(publicKey: PublicKey, options?: FeedOptions): Promise<FeedWrapper<T>> {
+  async createHypercore(publicKey: PublicKey, options?: HypercoreCreateOptions): Promise<HypercoreWrapper<T>> {
     if (options?.writable && !this._signer) {
       throw new Error('Signer required to create writable feeds.');
     }
@@ -105,24 +106,24 @@ export class FeedFactory<T extends {}> {
     };
 
     const core = hypercore(makeStorage, Buffer.from(key), opts);
-    return new FeedWrapper(core, publicKey, storageDir);
+    return new HypercoreWrapper(core, publicKey, storageDir);
   }
 }
 
-export type FeedFactoryLayerOptions = Pick<FeedFactoryOptions, 'hypercore'>;
+export type HypercoreFactoryLayerOptions = Pick<HypercoreFactoryOptions, 'hypercore'>;
 
 /**
- * Effect Layer constructing a {@link FeedFactory} from feed storage and keyring services.
+ * Effect Layer constructing a {@link HypercoreFactory} from feed storage and keyring services.
  */
-export const FeedFactoryLayer = (
-  options: FeedFactoryLayerOptions = {},
-): Layer.Layer<FeedFactoryService, never, KeyringApiService | FeedStorageDirectoryService> =>
+export const HypercoreFactoryLayer = (
+  options: HypercoreFactoryLayerOptions = {},
+): Layer.Layer<HypercoreFactoryService, never, KeyringApiService | HypercoreStorageDirectoryService> =>
   Layer.effect(
-    FeedFactoryService,
+    HypercoreFactoryService,
     Effect.gen(function* () {
-      const root = yield* FeedStorageDirectoryService;
+      const root = yield* HypercoreStorageDirectoryService;
       const signer = yield* KeyringApiService;
-      return new FeedFactory({
+      return new HypercoreFactory({
         root,
         signer,
         hypercore: options.hypercore,

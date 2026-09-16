@@ -19,8 +19,32 @@ import { Task } from '@dxos/types';
 import subAgentFixture from '../execution-graph/testing/sub-agent-delegation.json';
 import { buildSessionTimeline } from './session-timeline.ts';
 
-// External JSON → typed at this boundary; the builder reads only `meta`/`events`.
-const fixtureMessages = subAgentFixture as unknown as Trace.Message[];
+/** The plain-JSON shape the fixture was captured in, before being replayed as real trace messages. */
+interface RawTraceMessage {
+  readonly meta: {
+    readonly pid?: string;
+    readonly parentPid?: string;
+    readonly processName?: string;
+    readonly space?: string;
+  };
+  readonly isEphemeral: boolean;
+  readonly events: readonly { readonly timestamp: number; readonly type: string; readonly data: unknown }[];
+}
+
+// External JSON → typed at this boundary as a real (if partial) shape, then replayed as the
+// genuine ECHO objects `buildSpanTree` requires, rather than laundered through `unknown`.
+const fixtureMessages: Trace.Message[] = (subAgentFixture as readonly RawTraceMessage[]).map((raw) =>
+  Obj.make(Trace.Message, {
+    meta: {
+      pid: raw.meta.pid,
+      parentPid: raw.meta.parentPid,
+      processName: raw.meta.processName,
+      space: raw.meta.space,
+    },
+    isEphemeral: raw.isEphemeral,
+    events: raw.events,
+  }),
+);
 
 const SUPERVISOR_PID = '2433a0a1-7c09-46e6-bc6f-893f104d1691';
 const SUB_AGENT_PID = 'cf8f7243-5b1d-4902-b158-70d9107d5f43';
