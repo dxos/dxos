@@ -371,7 +371,7 @@ const TaskTreeHeading = ({
           hue='emerald'
           label={Obj.getMnemonic(current)}
           iconEnd
-          onCopy={() => '#' + Obj.getMnemonic(current)}
+          onCopy={() => '@' + Obj.getMnemonic(current)}
           data-testid='taskList.item.mnemonic'
         />
         <span data-testid='taskList.item.title' className='truncate'>
