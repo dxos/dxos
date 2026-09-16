@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Grid, IconButton } from '@dxos/react-ui';
+import { Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { StatCard } from '../../../components/index.ts';
@@ -15,19 +15,7 @@ export type SyncCardProps = {
   onCopy?: () => void;
 };
 
-const describe = ({ spaceId, name, state, feedState }: SyncRow): string =>
-  [
-    `Space: ${name}`,
-    `SpaceId: ${spaceId}`,
-    `Automerge total: ${state.totalDocumentCount ?? 0}`,
-    `Automerge unsynced: ${state.unsyncedDocumentCount ?? 0}`,
-    `Feed total: ${feedState?.total ?? 0}`,
-    `Feed pending: ${feedState?.pending ?? 0}`,
-    `Local documents: ${state.localDocumentCount} (missing: ${state.missingOnLocal})`,
-    `Remote documents: ${state.remoteDocumentCount} (missing: ${state.missingOnRemote})`,
-  ].join('\n');
-
-/** The name takes the slack; fixed figure tracks line the automerge and feed columns up across rows. */
+/** The id chip takes the slack; fixed figure tracks line the automerge and feed columns up across rows. */
 const ROW_TRACKS = ['1fr', 'auto', '5rem', 'auto', '3.5rem'];
 
 const Metric = ({ label, pending, total }: { label: string; pending: number; total: number }) => (
@@ -64,22 +52,19 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             key={row.spaceId}
             icon={syncing ? 'ph--arrows-down-up--regular' : 'ph--check-circle--regular'}
             iconClassNames={syncing ? 'text-warning-text' : 'text-success-text'}
-            // TODO(burdon): Use system.
-            action={
-              <IconButton
-                variant='ghost'
-                density='sm'
-                icon='ph--copy--regular'
-                iconOnly
-                label='Copy space id'
-                onClick={() => void navigator.clipboard.writeText(row.spaceId)}
-              />
-            }
           >
             <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
-              <span className='truncate text-start' title={describe(row)}>
-                {row.name}
-              </span>
+              <Tooltip.Trigger asChild content={row.name}>
+                <SystemIconButton.Clipboard
+                  density='sm'
+                  variant='ghost'
+                  compact
+                  iconEnd
+                  classNames='justify-self-start font-mono'
+                  label={row.spaceId.slice(0, 8)}
+                  onCopy={() => row.spaceId}
+                />
+              </Tooltip.Trigger>
               <Metric label='automerge' pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
               <Metric label='feed' pending={feedPending} total={row.feedState?.total ?? 0} />
             </Grid>
