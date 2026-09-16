@@ -407,6 +407,14 @@ export class Peer {
       return;
     }
 
+    // The remote only announces a session that died before connecting; once connected, its own close ends it.
+    if (
+      ![ConnectionState.CREATED, ConnectionState.INITIAL, ConnectionState.CONNECTING].includes(this.connection.state)
+    ) {
+      log('dropping close for a session that already connected', { sessionId: message.sessionId });
+      return;
+    }
+
     const reason = message.data.close.reason;
     log.info('remote peer closed the session before it connected', { sessionId: message.sessionId, reason });
     await this.closeConnection(new SessionClosedByRemoteError(reason));
@@ -421,6 +429,19 @@ export class Peer {
     await this.connection.signal(ctx, message);
   }
 
+  @synchronized
+  async safeDestroy(reason?: string): Promise<void> {
+    await this._ctx.dispose();
+    log('Destroying peer', { peerId: this.remoteInfo, topic: this.topic });
+
+    // Won't throw.
+    await this?.connection?.close({ reason });
+  }
+
+  /**
+   * Sent on this peer's context, so a peer being destroyed announces nothing: leaving the swarm already
+   * tells the remote the session is over.
+   */
   private _announceClose(sessionId: PublicKey, err?: Error): void {
     this._signalMessaging
       .close(this._ctx, {
@@ -431,15 +452,6 @@ export class Peer {
         data: { close: create(CloseSchema, { reason: err?.message ?? 'transport closed' }) },
       })
       .catch((err) => log('session close not delivered', { sessionId, err }));
-  }
-
-  @synchronized
-  async safeDestroy(reason?: string): Promise<void> {
-    await this._ctx.dispose();
-    log('Destroying peer', { peerId: this.remoteInfo, topic: this.topic });
-
-    // Won't throw.
-    await this?.connection?.close({ reason });
   }
 }
 

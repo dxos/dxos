@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import {
   MemorySignalManager,
@@ -21,6 +22,7 @@ import {
   SwarmEvent_PeerAvailableSchema,
   SwarmEventSchema,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { CloseSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexSet } from '@dxos/util';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol.ts';
@@ -240,6 +242,29 @@ describe('Swarm over a memory transport', () => {
       expect(failed).toBe(true);
     },
   );
+});
+
+describe('Swarm over a memory transport, once connected', () => {
+  test('a close for a session that already connected is ignored', async () => {
+    const topic = PublicKey.random();
+    const transportFactory: TransportFactory = { createTransport: (options) => new MemoryTransport(options) };
+    const peer1 = await setupSwarm({ topic, transportFactory });
+    const peer2 = await setupSwarm({ topic, transportFactory });
+    await connectSwarms(peer1, peer2);
+
+    const peer = peer1.swarm._peers.get(peer2.peer)!;
+    const connection = peer.connection!;
+    await peer.onClose(Context.default(), {
+      author: peer2.peer,
+      recipient: peer1.peer,
+      topic,
+      sessionId: connection.sessionId,
+      data: { close: create(CloseSchema, { reason: 'transport closed' }) },
+    });
+
+    expect(connection.state).toBe(ConnectionState.CONNECTED);
+    await peer1.protocol.testConnection(PublicKey.from(peer2.peer.peerKey), 'still connected');
+  });
 });
 
 /** Fails on its first signal, as a WebRTC answerer does when it cannot apply the remote offer. */

@@ -6,10 +6,8 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { MMSTTopology } from './mmst-topology.ts';
+import { MIN_UPDATE_INTERVAL, MMSTTopology } from './mmst-topology.ts';
 import { type SwarmController, type SwarmState } from './topology.ts';
-
-const MIN_UPDATE_INTERVAL = 10_000;
 
 describe('MMSTTopology', () => {
   const setup = () => {

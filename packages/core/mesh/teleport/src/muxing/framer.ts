@@ -142,7 +142,7 @@ export class Framer {
     if (this._stream.writableLength > 0) {
       log.warn('framer destroyed while there are still write bytes in the buffer.');
     }
-    // A destroyed stream never drains, so sends waiting on it are released now.
+    // A destroyed stream never drains, so sends waiting on it are released now; resolved, though never written.
     const sendCallbacks = this._sendCallbacks;
     this._sendCallbacks = [];
     sendCallbacks.forEach((cb) => cb());
