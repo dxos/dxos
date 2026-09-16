@@ -11,23 +11,19 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { EntityMetaIndex } from './entity-meta-index';
-import { FtsIndex } from './fts-index';
-import type { IndexerObject } from './interface';
+import { EntityMetaIndex } from './entity-meta-index.ts';
+import { FtsIndex } from './fts-index.ts';
+import type { IndexerObject } from './interface.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
+const TYPE_PERSON_VERSIONLESS = DXN.make('com.example.type.person');
+const TYPE_TASK = DXN.make('com.example.type.task', '0.1.0');
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-  Layer.provideMerge(Reactivity.layer),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+}).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('FtsIndex', () => {
   it.effect(
@@ -76,7 +72,7 @@ describe('FtsIndex', () => {
       yield* metaIndex.lookupRecordIds(objects);
       yield* index.update(objects);
 
-      const match = yield* index.query({ query: 'Effect', spaceId: null, includeAllQueues: false, queueIds: null });
+      const match = yield* index.query({ query: 'Effect', spaceId: null, includeAllQueues: false, queues: null });
       expect(match.length).toBeGreaterThan(0);
       expect(match[0].objectId).toBe(objects[0].data.id);
 
@@ -84,7 +80,7 @@ describe('FtsIndex', () => {
         query: 'DefinitelyNotPresent',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(noMatch).toHaveLength(0);
     }, Effect.provide(TestLayer)),
@@ -120,7 +116,7 @@ describe('FtsIndex', () => {
       yield* metaIndex.lookupRecordIds([obj1]);
       yield* index.update([obj1]);
 
-      let match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queueIds: null });
+      let match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queues: null });
       expect(match.length).toBe(1);
 
       // Update with same doc id and object id.
@@ -145,11 +141,11 @@ describe('FtsIndex', () => {
       yield* index.update([obj2]);
 
       // Old content should be gone.
-      match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queueIds: null });
+      match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queues: null });
       expect(match.length).toBe(0);
 
       // New content should exist.
-      match = yield* index.query({ query: 'Updated', spaceId: null, includeAllQueues: false, queueIds: null });
+      match = yield* index.query({ query: 'Updated', spaceId: null, includeAllQueues: false, queues: null });
       expect(match.length).toBe(1);
     }, Effect.provide(TestLayer)),
   );
@@ -217,7 +213,7 @@ describe('FtsIndex', () => {
         query: 'Alpha',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(alphaMatch).toHaveLength(1);
 
@@ -226,7 +222,7 @@ describe('FtsIndex', () => {
         query: 'Document',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(allMatch).toHaveLength(3);
     }, Effect.provide(TestLayer)),
@@ -283,7 +279,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(allMatches).toHaveLength(2);
 
@@ -292,7 +288,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [space1],
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(s1Matches).toHaveLength(1);
       expect(s1Matches[0].objectId).toBe(obj1.data.id);
@@ -302,7 +298,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [space2],
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(s2Matches).toHaveLength(1);
       expect(s2Matches[0].objectId).toBe(obj2.data.id);
@@ -355,7 +351,7 @@ describe('FtsIndex', () => {
       yield* metaIndex.lookupRecordIds(objects);
       yield* index.update(objects);
 
-      const defaultQuery = { spaceId: null, includeAllQueues: false, queueIds: null } as const;
+      const defaultQuery = { spaceId: null, includeAllQueues: false, queues: null } as const;
 
       // Full word matches exactly.
       const exactMatch = yield* index.query({ query: 'Programming', ...defaultQuery });
@@ -460,7 +456,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: [queue1],
+        queues: [{ queueId: queue1 }],
       });
       expect(q1Matches).toHaveLength(1);
       expect(q1Matches[0].objectId).toBe(queue1Obj.data.id);
@@ -470,7 +466,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: [queue1, queue2],
+        queues: [{ queueId: queue1 }, { queueId: queue2 }],
       });
       expect(bothQueuesMatches).toHaveLength(2);
     }, Effect.provide(TestLayer)),
@@ -526,7 +522,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [spaceId],
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(spaceOnlyMatches).toHaveLength(1);
       expect(spaceOnlyMatches[0].objectId).toBe(spaceObj.data.id);
@@ -536,7 +532,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [spaceId],
         includeAllQueues: true,
-        queueIds: null,
+        queues: null,
       });
       expect(allMatches).toHaveLength(2);
     }, Effect.provide(TestLayer)),
@@ -608,7 +604,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [space1],
         includeAllQueues: false,
-        queueIds: [queueInSpace2],
+        queues: [{ queueId: queueInSpace2 }],
       });
       expect(orMatches).toHaveLength(2);
       const objectIds = orMatches.map((m) => m.objectId);
@@ -616,6 +612,76 @@ describe('FtsIndex', () => {
       expect(objectIds).toContain(queueObj.data.id);
       // Should NOT contain space2 object (not in space1 and not the specified queue).
       expect(objectIds).not.toContain(space2Obj.data.id);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'should scope matches by typeDxns',
+    Effect.fnUntraced(function* () {
+      const index = new FtsIndex();
+      const metaIndex = new EntityMetaIndex();
+      yield* index.migrate();
+      yield* metaIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const person: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-person',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          title: 'Shared Term Person',
+        },
+      };
+      const task: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-task',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_TASK,
+          title: 'Shared Term Task',
+        },
+      };
+
+      yield* metaIndex.update([person, task]);
+      yield* metaIndex.lookupRecordIds([person, task]);
+      yield* index.update([person, task]);
+
+      const defaultQuery = { query: 'Shared', spaceId: null, includeAllQueues: false, queues: null } as const;
+
+      // No type scope — both match.
+      const unscoped = yield* index.query(defaultQuery);
+      expect(unscoped).toHaveLength(2);
+      const nullScope = yield* index.query({ ...defaultQuery, typeDxns: null });
+      expect(nullScope).toHaveLength(2);
+
+      // Scoped to one type.
+      const personOnly = yield* index.query({ ...defaultQuery, typeDxns: [TYPE_PERSON] });
+      expect(personOnly).toHaveLength(1);
+      expect(personOnly[0].objectId).toBe(person.data.id);
+
+      // Versionless DXN matches versioned rows.
+      const versionless = yield* index.query({ ...defaultQuery, typeDxns: [TYPE_PERSON_VERSIONLESS] });
+      expect(versionless).toHaveLength(1);
+      expect(versionless[0].objectId).toBe(person.data.id);
+
+      // Multiple types are OR-ed.
+      const both = yield* index.query({ ...defaultQuery, typeDxns: [TYPE_PERSON, TYPE_TASK] });
+      expect(both).toHaveLength(2);
+
+      // Empty scope matches nothing.
+      const none = yield* index.query({ ...defaultQuery, typeDxns: [] });
+      expect(none).toHaveLength(0);
     }, Effect.provide(TestLayer)),
   );
 

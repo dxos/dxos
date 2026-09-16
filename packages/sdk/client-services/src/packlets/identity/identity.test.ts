@@ -2,28 +2,38 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
+import { CredentialGenerator, createDidFromIdentityKey, credentialPayload, verifyCredential } from '@dxos/credentials';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { type FeedWrapper } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState, EdgeStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Runtime_Client_EdgeFeaturesSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { IdentityRecordSchema, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import {
+  AdmittedFeed_Designation,
+  AuthorizedDeviceSchema,
+  IdentityProfileSchema,
+  ProfileDocumentSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { MetadataStore } from '../metadata';
-import { valueEncoding } from '../pipeline';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from '../space';
-import { Identity } from './identity';
+import { MetadataStore } from '../metadata/index.ts';
+import { valueEncoding } from '../pipeline/index.ts';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from '../space/index.ts';
+import { Identity } from './identity.ts';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });
@@ -46,15 +56,12 @@ describe('identity/identity', () => {
     const identitySigner = setup.identity.getIdentityCredentialSigner();
     const credential = await identitySigner.createCredential({
       subject: setup.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityProfile',
-        'profile': {
-          displayName: 'Alice',
-        },
-      },
+      assertion: create(IdentityProfileSchema, {
+        profile: create(ProfileDocumentSchema, { displayName: 'Alice' }),
+      }),
     });
 
-    expect(credential.issuer).toEqual(setup.identityKey);
+    expect(toPublicKey(credential.issuer)).toEqual(setup.identityKey);
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
   });
 
@@ -79,18 +86,17 @@ describe('identity/identity', () => {
     //
     {
       const signer = owner.identity.getIdentityCredentialSigner();
-      void owner.identity.controlPipeline.writer.write({
-        credential: {
-          credential: await signer.createCredential({
+      void owner.identity.controlPipeline.writer.write(
+        credentialPayload(
+          await signer.createCredential({
             subject: secondDevice.deviceKey,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              'identityKey': owner.identityKey,
-              'deviceKey': secondDevice.deviceKey,
-            },
+            assertion: create(AuthorizedDeviceSchema, {
+              identityKey: fromPublicKey(owner.identityKey),
+              deviceKey: fromPublicKey(secondDevice.deviceKey),
+            }),
           }),
-        },
-      });
+        ),
+      );
 
       await secondDevice.ready();
     }
@@ -101,16 +107,16 @@ describe('identity/identity', () => {
 
   test('edge feed replicator', async () => {
     let replicationStarted = false;
-    let status = EdgeStatus.ConnectionState.NOT_CONNECTED;
+    let status = EdgeStatus_ConnectionState.NOT_CONNECTED;
     const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
         statusChanged: new Event(),
         get status() {
-          return { state: status };
+          return create(EdgeStatusSchema, { state: status });
         },
         onReconnected: (listener) => {
-          if (status === EdgeStatus.ConnectionState.CONNECTED) {
+          if (status === EdgeStatus_ConnectionState.CONNECTED) {
             listener();
           } else {
             listeners.push(listener);
@@ -130,7 +136,7 @@ describe('identity/identity', () => {
 
     await writeGenesisCredential(setup);
     listeners.forEach((callback) => callback());
-    status = EdgeStatus.ConnectionState.CONNECTED;
+    status = EdgeStatus_ConnectionState.CONNECTED;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
   });
@@ -149,8 +155,8 @@ describe('identity/identity', () => {
     const identityKey = args?.identityKey ?? (await keyring.createKey());
     const spaceKey = args?.spaceKey ?? (await keyring.createKey());
 
-    const feedStore = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
         root: storage.createDirectory(),
         signer: keyring,
         hypercore: {
@@ -159,13 +165,13 @@ describe('identity/identity', () => {
       }),
     });
 
-    const createFeed = async () => {
+    const createHypercore = async () => {
       const feedKey = await keyring.createKey();
-      return feedStore.openFeed(feedKey, { writable: true });
+      return hypercoreStore.openHypercore(feedKey, { writable: true });
     };
 
-    const controlFeed = await createFeed();
-    const dataFeed = await createFeed();
+    const controlFeed = await createHypercore();
+    const dataFeed = await createHypercore();
 
     const protocol = new SpaceProtocol({
       topic: spaceKey,
@@ -178,17 +184,23 @@ describe('identity/identity', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(args?.signalContext ?? new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
-        peerInfo: { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() },
+        peerInfo: create(PeerSchema, { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() }),
       }),
     });
 
-    await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
+    await metadataStore.setIdentityRecord(
+      create(IdentityRecordSchema, {
+        haloSpace: create(SpaceMetadataSchema, { key: fromPublicKey(spaceKey) }),
+        identityKey: fromPublicKey(identityKey),
+        deviceKey: fromPublicKey(deviceKey),
+      }),
+    );
     const space: Space = new Space({
       id: await createIdFromSpaceKey(spaceKey),
       spaceKey,
       protocol,
-      genesisFeed: args?.genesisFeedKey ? await feedStore.openFeed(args.genesisFeedKey) : controlFeed,
-      feedProvider: (feedKey) => feedStore.openFeed(feedKey),
+      genesisFeed: args?.genesisFeedKey ? await hypercoreStore.openHypercore(args.genesisFeedKey) : controlFeed,
+      feedProvider: (feedKey) => hypercoreStore.openHypercore(feedKey),
       memberKey: identityKey,
       metadataStore,
       snapshotId: undefined,
@@ -204,7 +216,7 @@ describe('identity/identity', () => {
       identityKey,
       deviceKey,
       space,
-      edgeFeatures: args?.edgeConnection && { feedReplicator: true },
+      edgeFeatures: args?.edgeConnection && create(Runtime_Client_EdgeFeaturesSchema, { feedReplicator: true }),
       edgeConnection: args?.edgeConnection,
     });
 
@@ -219,13 +231,11 @@ describe('identity/identity', () => {
     const credentials = [
       ...(await generator.createSpaceGenesis(setup.spaceKey, setup.controlFeed.key)),
       await generator.createDeviceAuthorization(setup.deviceKey),
-      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed_Designation.DATA),
     ];
 
     for (const credential of credentials) {
-      await setup.identity.controlPipeline.writer.write({
-        credential: { credential },
-      });
+      await setup.identity.controlPipeline.writer.write(credentialPayload(credential));
     }
   };
 });
@@ -236,6 +246,6 @@ type TestIdentitySetup = {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   spaceKey: PublicKey;
-  controlFeed: FeedWrapper<FeedMessage>;
-  dataFeed: FeedWrapper<FeedMessage>;
+  controlFeed: HypercoreWrapper<FeedMessage>;
+  dataFeed: HypercoreWrapper<FeedMessage>;
 };

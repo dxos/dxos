@@ -11,8 +11,8 @@ import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-import * as Magazine from './Magazine';
-import * as Subscription from './Subscription';
+import * as Magazine from './Magazine.ts';
+import * as Subscription from './Subscription.ts';
 
 describe('per-Post state keyed by entity id', () => {
   let builder: EchoTestBuilder;
@@ -90,7 +90,6 @@ describe('PostContent reverse-ref lookup', () => {
         TagIndex.TagIndex,
       ],
     });
-    const space = { db };
 
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
     await db.flush();
@@ -107,7 +106,7 @@ describe('PostContent reverse-ref lookup', () => {
     );
     expect(queuePost).toBeDefined();
 
-    await Subscription.appendPostContent(space, subscription, {
+    await Subscription.appendPostContent(db, subscription, {
       post: queuePost!,
       text: '# Hello',
       snippet: 'Hello',
@@ -131,7 +130,6 @@ describe('PostContent reverse-ref lookup', () => {
         TagIndex.TagIndex,
       ],
     });
-    const space = { db };
 
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
     await db.flush();
@@ -148,12 +146,12 @@ describe('PostContent reverse-ref lookup', () => {
     );
     expect(queuePost).toBeDefined();
 
-    await Subscription.appendPostContent(space, subscription, {
+    await Subscription.appendPostContent(db, subscription, {
       post: queuePost!,
       text: 'v1',
       fetchedAt: '2026-01-01T00:00:00Z',
     });
-    await Subscription.appendPostContent(space, subscription, {
+    await Subscription.appendPostContent(db, subscription, {
       post: queuePost!,
       text: 'v2',
       fetchedAt: '2026-01-02T00:00:00Z',

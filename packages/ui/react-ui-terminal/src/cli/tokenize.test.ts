@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { rewriteHelpAliases, tokenize } from './tokenize';
+import { rewriteHelpAliases, tokenize } from './tokenize.ts';
 
 describe('tokenize', () => {
   test('splits on whitespace', ({ expect }) => {

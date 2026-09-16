@@ -13,7 +13,7 @@ import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
@@ -23,10 +23,10 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { Mailbox, SyncStreamConfig } from '#types';
 
-import { MailSyncError } from '../errors';
-import { readBindingOptions } from './binding';
-import { diffTags } from './tag-diff';
-import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, tagsFromIndex } from './tag-push';
+import { MailSyncError } from '../errors.ts';
+import { readBindingOptions } from './binding.ts';
+import { diffTags } from './tag-diff.ts';
+import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, tagsFromIndex } from './tag-push.ts';
 
 /**
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect
@@ -791,7 +791,7 @@ export const runMailSync = (
       // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
       // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
       // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
-      yield* Operation.runAgain().pipe(Effect.orDie);
+      return yield* Operation.runAgain().pipe(Effect.orDie);
     }
 
     log('sync complete', {

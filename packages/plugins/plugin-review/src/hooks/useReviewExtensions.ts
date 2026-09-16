@@ -14,7 +14,6 @@ import { Doc } from '@dxos/echo-doc';
 import { type Identity } from '@dxos/halo';
 import { useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { getSpace } from '@dxos/react-client/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import {
@@ -29,10 +28,10 @@ import { Branch } from '@dxos/versioning';
 
 import { ReviewCapabilities } from '#types';
 
-import { versionDiff } from '../extensions';
-import { authorHue, hueColour } from '../util';
-import { type VersionedEditor } from './useVersionedEditor';
-import { type useVersioning } from './useVersioning';
+import { versionDiff } from '../extensions/index.ts';
+import { authorHue, hueColour } from '../util/index.ts';
+import { type VersionedEditor } from './useVersionedEditor.ts';
+import { type useVersioning } from './useVersioning.ts';
 
 export type ReviewExtensionsProps = {
   object: Markdown.Document | Text.Text;
@@ -186,7 +185,7 @@ export const useReviewExtensions = ({
 
   // The suggestion author's palette colour — the same colour as their banner tag and avatar — so
   // the inline markers attribute the change by colour. Resolved against the space members.
-  const members = useMembers(getSpace(object)?.id);
+  const members = useMembers(Obj.getDatabase(object)?.spaceId);
   const suggestColour = useMemo(
     () => (activeBranch ? hueColour(authorHue(activeBranch, members)) : undefined),
     [activeBranch, members],

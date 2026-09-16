@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer } from '../testing/index.ts';
 
 // Define a calendar event artifact schema.
 class CalendarEvent extends Type.makeObject<CalendarEvent>(DXN.make('com.example.type.calendarEvent', '0.1.0'))(

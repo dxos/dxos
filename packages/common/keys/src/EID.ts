@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import type { EntityId } from './entity-id';
-import type { SpaceId } from './space-id';
-import type * as URI from './URI';
+import type { EntityId } from './entity-id.ts';
+import type { SpaceId } from './space-id.ts';
+import type * as URI from './URI.ts';
 
 // Canonical-form regex covering all accepted EID shapes.
 //   echo://<spaceId>/<objectId>

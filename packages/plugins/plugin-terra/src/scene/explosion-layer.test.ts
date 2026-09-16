@@ -9,8 +9,8 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Terra, TerraObject } from '#types';
 
-import { type SimObject, evaluate, initialState } from '../sim';
-import { ExplosionLayer } from './explosion-layer';
+import { type SimObject, evaluate, initialState } from '../sim/index.ts';
+import { ExplosionLayer } from './explosion-layer.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'explosion-1' } }));
 

@@ -42,9 +42,16 @@ export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: Ca
   const [canvas] = useObject(subject);
   const id = Obj.getURI(canvas);
   const graph = useMemo(
-    () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
+    () =>
+      CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) =>
+        // The mirror has to come out of the transaction: the `canvas.layout` captured here is
+        // read-only, since writability travels with the reference.
+        Obj.update(subject, (subject) => fn(subject.layout)),
+      ),
     [subject, canvas.layout],
   );
+  // Structural edits from other peers (or undo) land in the object, not through the model.
+  useEffect(() => Obj.subscribe(subject, () => graph.sync()), [subject, graph]);
   const controller = useGraphController(subject);
   const graphMonitor = useGraphMonitor(controller?.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
@@ -124,6 +131,16 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
       void controller.close();
     };
   }, [controller]);
+
+  // Structural edits from other peers (or undo) land in the object, not through the model.
+  useEffect(() => {
+    const root = canvas.computeGraph?.target;
+    if (!root || !controller) {
+      return;
+    }
+
+    return Obj.subscribe(root, () => controller.graph.sync());
+  }, [canvas.computeGraph?.target, controller]);
 
   return controller;
 };

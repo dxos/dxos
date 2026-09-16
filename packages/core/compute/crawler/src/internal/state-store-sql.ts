@@ -8,26 +8,16 @@ import * as Migrator from 'effect/unstable/sql/Migrator';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
-
-import { StateError } from '../errors';
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store';
-import { type RunStatus, type StateStoreApi } from '../StateStore';
-import type * as Type from '../types';
+import { StateError } from '../errors.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store/index.ts';
+import type * as StateStore from '../StateStore.ts';
+import type * as Type from '../types.ts';
 
 /**
  * Applies any migrations this database has not recorded yet.
- *
- * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
- * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
  */
-export const migrate = (): Effect.Effect<
-  void,
-  SqlError.SqlError,
-  SqlClient.SqlClient | SqlTransaction.SqlTransaction
-> =>
+export const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
   Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -52,7 +42,7 @@ type Row = {
 const parseTargetStatus = (value: string): Type.TargetStatus =>
   value === 'pending' || value === 'active' || value === 'done' ? value : 'error';
 
-const parseRunStatus = (value: string): RunStatus =>
+const parseRunStatus = (value: string): StateStore.RunStatus =>
   value === 'idle' || value === 'running' || value === 'paused' || value === 'done' ? value : 'error';
 
 const toTarget = (row: Row): Type.Target => ({
@@ -69,7 +59,7 @@ const toTarget = (row: Row): Type.Target => ({
 
 const fail = (message: string) => (cause: unknown) => new StateError({ message, cause });
 
-export const makeSql = (sql: SqlClient.SqlClient): StateStoreApi => ({
+export const makeSql = (sql: SqlClient.SqlClient): StateStore.Service => ({
   pushTargets: (targets) =>
     sql
       .withTransaction(

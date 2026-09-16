@@ -9,9 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { bufWkt } from '@dxos/protocols/buf';
 import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { protocol } from './defs';
-import { type EdgeIdentity } from './edge-identity';
-import { WebSocketMuxer } from './edge-ws-muxer';
+import { protocol } from './defs.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { WebSocketMuxer } from './edge-ws-muxer.ts';
 
 // Segmented-message chunk count depends on the protobuf envelope overhead, which is
 // determined empirically (see chunk-count assertions below) rather than assumed.
@@ -54,7 +54,7 @@ const { FakeWebSocket } = vi.hoisted(() => {
 
 vi.mock('isomorphic-ws', () => ({ default: FakeWebSocket }));
 
-const { EdgeWsConnection } = await import('./edge-ws-connection');
+const { EdgeWsConnection } = await import('./edge-ws-connection.ts');
 
 const testIdentity: EdgeIdentity = {
   peerKey: 'test-peer-key',

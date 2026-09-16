@@ -12,14 +12,14 @@ import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { SubjectIndex } from '../internal/subject-index';
+import { SubjectIndex } from '../internal/subject-index.ts';
 
 export const HYBRID_SKILL_KEY = 'org.dxos.stories-brain.skill.hybrid';
 
 /** Fact-indexed retrieval: find a subject's facts, then return the source messages they came from. */
 export const RetrieveSubject = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.stories-brain.operation.retrieveSubject'),
+    key: DXN.make('com.example.operation.storiesBrain.retrieveSubject'),
     name: 'Retrieve Subject',
     description: trim`
       Uses the fact store as an index: finds facts about a person/organization, 

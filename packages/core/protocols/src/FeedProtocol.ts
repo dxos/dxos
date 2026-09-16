@@ -161,6 +161,18 @@ export const QueryRequest = Schema.Struct({
    * Maximum number of blocks to return.
    */
   limit: Schema.optional(Schema.Number),
+
+  /**
+   * Token identifying the store the client believes it is talking to, as last reported in
+   * {@link QueryResponse.serverToken}.
+   *
+   * When it does not match the serving store's own token — the server was swapped or its storage
+   * wiped — every `position` the client remembers names a slot in a store that no longer exists, so
+   * the server ignores `position` and serves the namespace from the start. That keeps recovery to
+   * the same single round-trip as an ordinary pull. Omitted by clients that predate the token, for
+   * which the server keeps honouring `position` verbatim.
+   */
+  expectedServerToken: Schema.optional(Schema.String),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 
@@ -187,6 +199,16 @@ export const QueryResponse = Schema.Struct({
    * Returned blocks for the current page.
    */
   blocks: Schema.Array(Block),
+
+  /**
+   * Identity of the store that assigned the positions in this response. Stable for the life of the
+   * store's storage and regenerated when that storage is recreated, which is how a client detects
+   * that its remembered positions are no longer meaningful.
+   *
+   * Only set by a position authority (a server); absent on responses from a store that does not
+   * assign positions, and on responses from servers that predate the token.
+   */
+  serverToken: Schema.optional(Schema.String),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
@@ -208,6 +230,13 @@ export const SubscribeRequest = Schema.Struct({
    * Feeds to include in the subscription.
    */
   feedIds: Schema.Array(Schema.String),
+
+  /**
+   * Namespace the subscription covers. When set with an empty `feedIds`, the subscription is
+   * namespace-wide — the client does not learn feed ids until it pulls, so it cannot enumerate
+   * them at subscribe time.
+   */
+  feedNamespace: Schema.optional(Schema.String),
 });
 export interface SubscribeRequest extends Schema.Schema.Type<typeof SubscribeRequest> {}
 
@@ -271,8 +300,40 @@ export const AppendResponse = Schema.Struct({
    * Assigned global positions for appended blocks.
    */
   positions: Schema.Array(Schema.Number),
+
+  /**
+   * Identity of the store that assigned `positions`. See {@link QueryResponse.serverToken}.
+   */
+  serverToken: Schema.optional(Schema.String),
 });
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
+
+/**
+ * Server-initiated notification that a namespace has gained blocks beyond `position`.
+ *
+ * Carries no block data: the recipient re-pulls through the ordinary cursor path, so a hint that is
+ * dropped, duplicated or reordered costs latency rather than correctness. Sending blocks here
+ * instead would duplicate the position and `serverToken` reconciliation that `pull` already owns,
+ * and would make an undelivered frame a consistency problem rather than a slow one.
+ */
+export const FeedAdvanced = Schema.Struct({
+  /**
+   * Space the advanced namespace belongs to.
+   */
+  spaceId: Schema.String,
+
+  /**
+   * Namespace that gained blocks.
+   */
+  feedNamespace: Schema.String,
+
+  /**
+   * Highest position the server holds for the namespace, when known. Advisory only — the recipient
+   * compares it against its own cursor to skip a redundant pull, and pulls regardless if absent.
+   */
+  position: Schema.optional(Schema.Number),
+});
+export interface FeedAdvanced extends Schema.Schema.Type<typeof FeedAdvanced> {}
 
 /**
  * Tagged transport message union for queue protocol RPC traffic.
@@ -287,6 +348,7 @@ export const ProtocolMessage = Schema.Union([
   Schema.TaggedStruct('SubscribeResponse', SubscribeResponse.fields),
   Schema.TaggedStruct('AppendRequest', AppendRequest.fields),
   Schema.TaggedStruct('AppendResponse', AppendResponse.fields),
+  Schema.TaggedStruct('FeedAdvanced', FeedAdvanced.fields),
   Schema.TaggedStruct('Error', {
     /**
      * Human-readable error message.
@@ -318,19 +380,37 @@ export const isWellKnownNamespace = (namespace: string) =>
   Object.values(WellKnownNamespaces).includes(namespace as any);
 
 /**
- * Encodes queue replicator service identifier as `<service>:<namespace>:<spaceId>`.
+ * Encodes queue replicator service identifier as `<service>:<spaceId>:<namespace>`.
+ *
+ * The space id comes first, matching every other replicator (`<service>:<spaceId>`). It used to
+ * come second, which meant EDGE could not read the addressed space at a shared segment index and
+ * fell back to a KV lookup per frame on its highest-volume path.
  */
 export const encodeServiceId = (namespace: string, spaceId: SpaceId) =>
-  `${EdgeService.QUEUE_REPLICATOR}:${namespace}:${spaceId}`;
+  `${EdgeService.QUEUE_REPLICATOR}:${spaceId}:${namespace}`;
 
 /**
  * Decodes and validates queue replicator service identifier.
+ *
+ * Accepts the legacy `<service>:<namespace>:<spaceId>` ordering as well, since clients on the old
+ * encoding stay in the field until Composer production has rolled over. The two are told apart by
+ * which segment is a valid space id, so neither needs a version marker.
+ *
+ * EDGE cannot call this until it pins a build that contains it: the published `@dxos/protocols` it
+ * currently runs reads the two segments positionally and throws on the space-id-first encoding. It
+ * therefore carries its own `decodeQueueServiceId` (dxos/edge#1021), which this function replaces.
+ *
+ * TODO(DX-1152): once EDGE bumps `@dxos/protocols` to a build carrying this, delete its
+ *   `decodeQueueServiceId` and call this from `router.ts` again.
+ * TODO(DX-1152): drop the legacy ordering once the space-id-first encoding has reached Composer
+ *   production, along with the matching fallback in EDGE's `resolveServiceSpaceId`.
  */
 export const decodeServiceId = (
   serviceId: string,
 ): { namespace: keyof typeof WellKnownNamespaces; spaceId: SpaceId } => {
-  const [service, namespace, spaceId] = serviceId.split(':');
+  const [service, first, second] = serviceId.split(':');
   invariant(service === EdgeService.QUEUE_REPLICATOR, `Invalid service: ${service}`);
+  const [namespace, spaceId] = SpaceId.isValid(first) ? [second, first] : [first, second];
   invariant(isWellKnownNamespace(namespace), `Invalid namespace: ${namespace}`);
   invariant(SpaceId.isValid(spaceId), `Invalid spaceId: ${spaceId}`);
   return { namespace: namespace as keyof typeof WellKnownNamespaces, spaceId };

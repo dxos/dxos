@@ -6,13 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { TestSchema } from '@dxos/echo/testing';
 
-import * as CollectionModel from './CollectionModel';
+import * as CollectionModel from './CollectionModel.ts';
 
 describe('containing', () => {
   let builder: EchoTestBuilder;
@@ -60,7 +59,7 @@ describe('add', () => {
 
   /** A hidden type stands in for implementation-detail objects (a sketch's canvas, a game's state). */
   class HiddenState extends Type.makeObject<HiddenState>(DXN.make('org.dxos.test.hiddenState', '0.1.0'))(
-    Schema.Struct({ value: Schema.String }).pipe(HiddenAnnotation.set(true)),
+    Schema.Struct({ value: Schema.String }).pipe(Annotation.HiddenAnnotation.set(true)),
   ) {}
 
   const add = (db: EchoDatabase, props: { object: Obj.Unknown; target?: Collection.Collection }) =>

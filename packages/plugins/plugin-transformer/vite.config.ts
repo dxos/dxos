@@ -9,6 +9,7 @@ export default defineConfig({
     index: 'src/index.ts',
     TransformerPlugin: 'src/TransformerPlugin.ts',
     plugin: 'src/plugin.tsx',
+    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',

@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 
 const Anthropic = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.script.anthropic'),
+    key: DXN.make('com.example.operation.script.anthropic'),
     name: 'Anthropic Chat',
     description: 'Chat with Anthropic',
   },
@@ -27,7 +27,7 @@ const Anthropic = Operation.make({
 export default Anthropic.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ message }) {
-      const model = AiService.model('com.anthropic.model.claude-sonnet-4-6.default');
+      const model = AiService.model('com.anthropic.model.claude-sonnet-5.default');
 
       //
       // Basic example.

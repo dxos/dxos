@@ -1,0 +1,141 @@
+---
+id: org.dxos.plugin.cloudflare
+name: CloudflarePlugin
+version: 0.1.0
+---
+
+A **headless** Composer plugin that connects a Cloudflare account. It has no
+React surfaces and syncs nothing into ECHO. It contributes one thing: a
+**Connector** entry (`source: "cloudflare.com"`) that runs Cloudflare's OAuth
+flow through `kms-service` and leaves the grant behind as an `AccessToken`
+plus a `Connection`.
+
+Everything downstream — an operation, an assistant tool, another plugin —
+resolves that token through `CredentialsService` keyed on the source, the same
+seam `plugin-ideogram` uses for its API key. Nothing here knows what the token
+will be used for.
+
+The grant is sized for that downstream work rather than for this plugin: a
+coding agent that names the resources it needs should be able to deploy a
+Worker and bind its storage without the user touching the dashboard.
+
+## Extensions
+
+| Term   | URI                     |
+| ------ | ----------------------- |
+| `feat` | `org.dxos.mdl.feat@1.0` |
+| `test` | `org.dxos.mdl.test@1.0` |
+| `flow` | `org.dxos.mdl.flow@1.0` |
+
+## Connector
+
+```mdl
+feat CloudflareConnector
+  desc: >
+    Contributes a ConnectorEntry via Capability.contribute(Connector, [entry])
+    on the ConnectorEvents.Start activation event. OAuth only — no sync, no
+    credential form.
+  id: cloudflare
+  source: cloudflare.com
+  label: Cloudflare
+  oauth:
+    provider: OAuthProvider.CLOUDFLARE
+    scopes: CLOUDFLARE_OAUTH_SCOPES
+    # Identity plus the deploy and resource-management set: Workers scripts,
+    # bindings, routes, tail and observability; KV, R2, D1, Queues, Pipelines,
+    # Vectorize, Hyperdrive and Secrets Store; Workers AI; Containers; zone
+    # read and certificates. Scope ids come from
+    # Cloudflare's GET /oauth/scopes, NOT from wrangler's colon-delimited
+    # namespace, which a self-managed client rejects. offline_access is absent:
+    # Cloudflare attaches it from the client's refresh-token grant and rejects
+    # the authorization request when it is named. Register every product scope
+    # past the identity reads as optional; a declined scope is warned about by
+    # kms-service and the flow continues.
+  onTokenCreated: >
+    GET /user for the email (falling back to username, then to the first
+    account name from GET /accounts) and write it to accessToken.account.
+    Wrapped in Effect.orDie so a failed lookup cannot discard the Connection.
+  testConnection: >
+    GET /accounts with the stored token. Non-2xx or transport failure maps to
+    ConnectionTestError, which lets the connection UI offer reauthentication.
+```
+
+## Dependencies
+
+- `@dxos/plugin-connector` (workspace:\*) — `ConnectorSpec.Connector` capability
+  key and `ConnectionTestError`.
+- `@dxos/compute` — `Credential.getApiKeyValue` for the stored token.
+- `@dxos/protocols` — `OAuthProvider.CLOUDFLARE`, whose provider spec lives in
+  `kms-service`.
+- `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/echo`, `@dxos/link`,
+  `effect`.
+- No `react` / `@dxos/react-ui*`.
+
+## Acceptance
+
+```mdl
+test T-1: Label from the user endpoint
+  given: a connector token whose grant carries user-details.read
+  when: onTokenCreated runs against a /user response with an email
+  then: accessToken.account is that email
+```
+
+```mdl
+test T-2: Label falls back to the account name
+  given: a grant carrying memberships.read but not user-details.read
+  when: onTokenCreated runs and /user answers 403
+  then: accessToken.account is the first account's name from /accounts
+```
+
+```mdl
+test T-3: A rejected token fails the connection test
+  given: a revoked grant
+  when: testConnection runs and /accounts answers 401
+  then: it fails with ConnectionTestError
+```
+
+## Out of scope (v1)
+
+- Syncing any Cloudflare resource (Workers, zones, R2, D1) into ECHO. The
+  connector declares no `sync`, so `plugin-connector` offers no bindings for it.
+- Operations or assistant tools over the v4 API. This plugin holds the
+  credential; calling the API is somebody else's job.
+- Cloudflare API tokens as an alternative to OAuth (no `credentialForm`).
+- Narrowing the grant per use. Every scope is requested at connect time; there
+  is no path for an agent to ask for `d1:write` only when it first needs D1.
+
+## QA
+
+```mdl
+flow QA-1: Connect a Cloudflare account
+  desc: |
+    Headless — the whole plugin is one Connector entry, so the flow is the
+    generic connector UI end to end. There is no plugin-local operation to
+    invoke.
+  actors: both
+  covers: [CloudflareConnector, T-1, T-3]
+  status: passing            # 2026-09-09; run by a human against EDGE dev, steps 1-3
+  given:
+    - an identity exists
+    - a space is open
+    - a Cloudflare account the user can sign in to
+    - no Cloudflare connection already exists
+  test:
+    - name: Start the OAuth flow
+      do: Open Settings -> Connectors -> Cloudflare and click Connect.
+      expect: a popup opens on dash.cloudflare.com asking to authorize the listed scopes
+      note: NO `invoke` — the flow is driven by the connector coordinator, not an operation.
+    - name: Authorize
+      do: Sign in if prompted and approve the request.
+      expect: |
+        the popup closes and the connection appears with the account's email as
+        its label; an AccessToken (source "cloudflare.com") and a Connection
+        referencing it now exist
+    - name: Test the connection
+      do: Open the new connection.
+      expect: the connection tests clean and offers no reauthentication prompt
+  after:
+    - name: Disconnect
+      do: In Settings -> Connectors -> Cloudflare, remove the connection.
+      expect: the Connection and its AccessToken are removed
+```

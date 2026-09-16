@@ -6,9 +6,9 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Icon, Input, Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Field, Icon, Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
 
-import { JsonView, Tree } from '../../../components';
+import { JsonView } from '../../../components/index.ts';
 
 export const DiagnosticsPanel = () => {
   const client = useClient();
@@ -60,17 +60,18 @@ export const DiagnosticsPanel = () => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Input.Root>
-            <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
-            <Input.Label>Record metrics</Input.Label>
-          </Input.Root>
+          <Field.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)}>
+            Record metrics
+          </Field.Checkbox>
           <div className='grow' />
           <Toolbar.Button onClick={handleRefresh}>Run Diagnostics</Toolbar.Button>
           <Toolbar.IconButton icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
           <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content>{(true && <JsonView data={data} />) || <Tree data={data} />}</Panel.Content>
+      <Panel.Content>
+        <JsonView data={data} />
+      </Panel.Content>
       {info && (
         <Panel.Statusbar asChild>
           <div className='flex p-2 items-center text-sm font-mono gap-2'>

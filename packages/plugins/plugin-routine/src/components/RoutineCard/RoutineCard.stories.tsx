@@ -18,8 +18,8 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { makeRoutine } from '../../util';
-import { RoutineCard } from './RoutineCard';
+import { makeRoutine } from '../../util/index.ts';
+import { RoutineCard } from './RoutineCard.tsx';
 
 const types = [Routine.Routine, Instructions.Instructions, Trigger.Trigger, Text.Text];
 

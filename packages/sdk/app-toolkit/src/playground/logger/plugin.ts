@@ -12,9 +12,13 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { LogOperation } from './schema';
+import { LogOperation } from './schema.ts';
 
-const Toolbar = Capability.lazyModule('Toolbar', { provides: [Capabilities.ReactSurface] }, () => import('./Toolbar'));
+const Toolbar = Capability.lazyModule(
+  'Toolbar',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./Toolbar.tsx'),
+);
 
 const OperationHandler = Capability.inlineModule(
   'OperationHandler',

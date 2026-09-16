@@ -13,7 +13,7 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { ClientEvents } from '#types';
 
-import { CreateIdentity } from './definitions';
+import { CreateIdentity } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pipe(
   Operation.withHandler(

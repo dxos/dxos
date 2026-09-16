@@ -2,6 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './framer';
-export * from './muxer';
-export type * from './rpc-port';
+export * from './framer.ts';
+export * from './muxer.ts';
+export type * from './rpc-port.ts';

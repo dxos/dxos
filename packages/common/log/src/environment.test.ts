@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { inferEnvironmentName } from './environment';
+import { inferEnvironmentName } from './environment.ts';
 
 const SUFFIX_PATTERN = /^[0-9a-z]{6}$/;
 

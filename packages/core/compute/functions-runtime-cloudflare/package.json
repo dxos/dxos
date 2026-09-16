@@ -27,6 +27,7 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",

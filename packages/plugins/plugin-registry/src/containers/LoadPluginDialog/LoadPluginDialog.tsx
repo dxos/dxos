@@ -7,12 +7,9 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
-import { Button, Dialog, Flex, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Field, Flex, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.profile.key}.loadPluginDialog`);
 
 export const LoadPluginDialog = () => {
   const manager = usePluginManager();
@@ -57,9 +54,9 @@ export const LoadPluginDialog = () => {
       <Dialog.Body>
         {/* TODO(burdon): Form section. */}
         <Flex column gap='lg'>
-          <Input.Root validationValence={error ? 'error' : undefined}>
-            <Input.Label>{t('plugin-url.label')}</Input.Label>
-            <Input.TextInput
+          <Field.Root validationValence={error ? 'error' : undefined}>
+            <Field.Label>{t('plugin-url.label')}</Field.Label>
+            <Field.Input
               placeholder='https://example.com/manifest.json'
               value={url}
               onChange={(event) => {
@@ -74,8 +71,8 @@ export const LoadPluginDialog = () => {
               disabled={loading}
               autoFocus
             />
-            {error && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-          </Input.Root>
+            {error && <Field.HelperText>{error}</Field.HelperText>}
+          </Field.Root>
           <Flex justify='end'>
             <Button variant='primary' disabled={!url.trim() || loading} onClick={handleLoad}>
               {loading ? t('loading.label') : t('load-plugin.label')}

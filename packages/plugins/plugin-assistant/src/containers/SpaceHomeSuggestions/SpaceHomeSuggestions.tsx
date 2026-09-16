@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { HomeSection, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, Flex, IconButton, useTranslation } from '@dxos/react-ui';
+import { Card, Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { useHomeSuggestions } from '#hooks';
 import { meta } from '#meta';
@@ -46,35 +46,25 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
       <HomeSection.Header title={t('space-home.suggestions.heading')} onClose={onClose} />
       <Flex column gap='md'>
         {suggestions.map((prompt, index) => (
-          <div
+          // A real button, not a `role='button'` div: WKWebView only reliably synthesizes a tap into
+          // a click for natively interactive elements, and the iOS walkthrough could not launch a
+          // chat from these cards at all. It also rules the nested `IconButton` out — interactive
+          // content inside a button is invalid — so the sparkle is a plain icon.
+          <button
             key={`${index}:${prompt}`}
-            role='button'
-            tabIndex={0}
-            className='cursor-pointer w-full'
+            type='button'
+            className='cursor-pointer w-full text-start'
             onClick={() => handleRunPrompt(prompt)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleRunPrompt(prompt);
-              }
-            }}
           >
             <Card.Root fullWidth>
               <Card.Header>
                 <Card.Block>
-                  <IconButton
-                    variant='ghost'
-                    label={prompt}
-                    icon='ph--sparkle--regular'
-                    iconOnly
-                    tabIndex={-1}
-                    aria-hidden
-                  />
+                  <Icon icon='ph--sparkle--regular' />
                 </Card.Block>
                 <Card.Title>{prompt}</Card.Title>
               </Card.Header>
             </Card.Root>
-          </div>
+          </button>
         ))}
       </Flex>
     </HomeSection.Root>

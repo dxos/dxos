@@ -10,12 +10,10 @@ import * as EffectFunction from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
 import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
 
 // TODO(wittjosiah): Factor out and add tests.
@@ -81,9 +79,9 @@ const resolveType = (
             // v4 annotations are a plain record, so the getter returns the value or `undefined`.
             Option.flatMap((property) =>
               Option.fromNullishOr(
-                SchemaAST.getAnnotation<ReferenceAnnotationValue>(
+                SchemaAST.getAnnotation<Annotation.ReferenceAnnotationValue>(
                   SchemaEx.unwrapOptional(property.type),
-                  ReferenceAnnotationId,
+                  Annotation.ReferenceAnnotationId,
                 ),
               ),
             ),
@@ -108,7 +106,7 @@ const resolveType = (
       resolveType(anchor, resolve).pipe(
         Effect.map((base) =>
           base.pipe(
-            Option.map((type) => getTypeAnnotation(Type.getSchema(type))),
+            Option.map((type) => Annotation.getTypeAnnotation(Type.getSchema(type))),
             Option.flatMap((annotation) =>
               Option.fromNullishOr(direction === 'source' ? annotation?.sourceSchema : annotation?.targetSchema),
             ),
@@ -144,9 +142,9 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
   );
 
 // TODO(wittjosiah): Currently assumes from scope is at the top-level of the ast.
-export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
+export const getQueryTarget = (query: QueryAST.Query, db?: Database.Database) => {
   return Match.value(query).pipe(
-    Match.when({ type: 'from' }, () => space?.db),
-    Match.orElse(() => space?.db),
+    Match.when({ type: 'from' }, () => db),
+    Match.orElse(() => db),
   );
 };

@@ -15,7 +15,7 @@ import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { type SearchResult } from '@dxos/react-ui-search';
 
-import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
+import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
 import { meta } from '#meta';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
@@ -30,7 +30,9 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
   const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const [query, setQuery] = useState<string>();
 
-  const objects = useQuery(space?.db, buildSearchQuery(query));
+  // Scope the FTS query to user-facing types so results match what the app can render.
+  const typeUris = useSearchableTypeUris(space);
+  const objects = useQuery(space?.db, buildSearchQuery(query, typeUris));
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 

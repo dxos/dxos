@@ -18,8 +18,8 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { type TableFeatures } from '../../model';
-import { DynamicTable } from './DynamicTable';
+import { type TableFeatures } from '../../model/index.ts';
+import { DynamicTable } from './DynamicTable.tsx';
 
 random.seed(0);
 

@@ -12,7 +12,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as OllamaAdmin from './OllamaAdmin';
+import * as OllamaAdmin from './OllamaAdmin.ts';
 
 const ENDPOINT = 'http://localhost:21434';
 

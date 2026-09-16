@@ -27,6 +27,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -69,6 +72,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/migrations"
     },
     {
@@ -91,9 +97,6 @@
     },
     {
       "path": "../../ui/react-ui-table"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-theme"

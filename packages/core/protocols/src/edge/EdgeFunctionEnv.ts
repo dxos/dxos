@@ -4,10 +4,10 @@
 
 import { type SpaceId, type URI } from '@dxos/keys';
 
+import { type QueryRequest, type QueryResponse } from '../buf/proto/gen/dxos/echo/query_pb.ts';
 import { type CreateDocumentResponse } from '../DataService.ts';
-import type * as FeedProtocol from '../FeedProtocol';
-import type { SerializedError } from '../index';
-import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
+import type * as FeedProtocol from '../FeedProtocol.ts';
+import type { SerializedError } from '../index.ts';
 
 /*
 
@@ -79,7 +79,15 @@ export interface TraceContext {}
  */
 export interface DataService {
   getSpaceMeta(ctx: TraceContext, spaceId: SpaceId): Promise<RpcResult<SpaceMeta | undefined>>;
-  getDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
+  /**
+   * Reads documents by id. Documents absent on the host are omitted, so the result may be shorter
+   * than `documentIds` and is not positionally aligned with it.
+   *
+   * Batched rather than singular because every call is a Durable Object round trip: a singular
+   * form invites a caller loop, which is what made hydrating a query result cost one wake latency
+   * per object.
+   */
+  getDocuments(ctx: TraceContext, spaceId: SpaceId, documentIds: string[]): Promise<RpcResult<RawDocument[]>>;
 
   execQuery(ctx: TraceContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
   createDocument(

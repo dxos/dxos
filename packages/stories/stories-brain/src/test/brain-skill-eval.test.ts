@@ -29,8 +29,8 @@ import {
   trackProgress,
   writeResponses,
   writeResults,
-} from '../testing/harness';
-import { DEFAULT_SUBJECT, EVAL_SCORE, JUDGE, SKILL_MODES, SUBJECT } from './defs';
+} from '../testing/harness/index.ts';
+import { DEFAULT_SUBJECT, EVAL_SCORE, JUDGE, SKILL_MODES, SUBJECT } from './defs.ts';
 
 const ALL_MODES: readonly SkillMode[] = ['source', 'facts', 'rag', 'hybrid'];
 const BASELINE_MODE: SkillMode = 'source';

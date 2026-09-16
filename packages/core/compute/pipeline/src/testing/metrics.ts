@@ -29,10 +29,10 @@ export interface MetricsApi {
   readonly snapshot: Effect.Effect<MetricsSnapshot>;
 }
 
-export class Metrics extends Context.Service<Metrics, MetricsApi>()('@dxos/pipeline/testing/Metrics') {
-  /** A fresh, in-memory metrics instance. */
-  static layer: Layer.Layer<Metrics> = Layer.sync(Metrics, () => makeMetrics());
-}
+export class Metrics extends Context.Service<Metrics, MetricsApi>()('@dxos/pipeline/testing/Metrics') {}
+
+/** A fresh, in-memory metrics instance. */
+export const layer: Layer.Layer<Metrics> = Layer.sync(Metrics, () => makeMetrics());
 
 /** Construct a standalone metrics sink (also usable directly in tests). */
 export const makeMetrics = (): MetricsApi => {

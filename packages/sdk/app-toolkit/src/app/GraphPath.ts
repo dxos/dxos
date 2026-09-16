@@ -6,26 +6,11 @@
 
 import * as Option from 'effect/Option';
 
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Key, Obj, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
-
-/**
- * Prefix for pinned (non-space) workspace IDs in the graph.
- */
-const PINNED_WORKSPACE_PREFIX = '!';
-
-/**
- * Build a pinned workspace segment ID.
- */
-export const pinnedWorkspaceId = (name: string): string => `${PINNED_WORKSPACE_PREFIX}${name}`;
-
-/**
- * Build a qualified path to a pinned workspace.
- */
-export const getPinnedWorkspacePath = (name: string): string => `${Node.RootId}/${pinnedWorkspaceId(name)}`;
 
 /**
  * Well-known local segment names for the canonical graph tree structure.
@@ -47,6 +32,7 @@ export const GroupSegments = {
   communications: 'communications',
   crm: 'crm',
   system: 'system',
+  debug: 'debug',
 } as const;
 
 /**
@@ -60,6 +46,7 @@ export const GroupTypes = {
   communications: 'org.dxos.navtree.group.communications',
   crm: 'org.dxos.navtree.group.crm',
   system: 'org.dxos.navtree.group.system',
+  debug: 'org.dxos.navtree.group.debug',
 } as const;
 
 /**
@@ -67,7 +54,7 @@ export const GroupTypes = {
  * Optional additional segments are appended (e.g. a section name for a well-known child node).
  */
 export const getSpacePath = (spaceId: string, ...segments: string[]): string => {
-  const base = `${Node.RootId}/${spaceId}`;
+  const base = `${GraphNode.RootId}/${spaceId}`;
   return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
 };
 
@@ -80,6 +67,13 @@ export const SPACE_HOME_SEGMENT = 'home';
  * Canonical qualified path to the virtual Home node of a space.
  */
 export const getSpaceHomePath = (spaceId: string): string => getSpacePath(spaceId, SPACE_HOME_SEGMENT);
+
+/**
+ * The workspace token a qualified graph path sits under: the second segment of `root/<workspace>/…`.
+ * Unlike {@link getSpaceIdFromPath} this does not require the workspace to be a space.
+ */
+export const getWorkspaceToken = (qualifiedPath: string): string | undefined =>
+  qualifiedPath.split('/')[1] || undefined;
 
 /**
  * Extract the space ID segment from a qualified graph path.
@@ -162,19 +156,19 @@ export const getCollectionObjectPath = (collectionQualifiedId: string, objectId:
  * Structurally parse a qualified graph path into an ECHO EID: the SpaceId segment plus the trailing
  * EntityId-valid segment, regardless of what lies between them (a canonical database path, a
  * collection path, a custom type-section path, …). Lives in app-toolkit so this parsing has no plugin
- * dependency — used by `NotFound.validateNavigationTarget` and `plugin-deck`'s DXN dedup. `graph` gates
+ * dependency — used by `useNavigationPresence` and `plugin-deck`'s DXN dedup. `graph` gates
  * the result on the
  * path's workspace actually being a known node, so an arbitrary SpaceId-shaped substring in an
  * unrelated string can't be mistaken for a valid target.
  */
-export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Option.Option<EID.EID> => {
+export const tryGetEid = (graph: AppGraph.ExpandableGraph, qualifiedId: string): Option.Option<EID.EID> => {
   const spaceId = getSpaceIdFromPath(qualifiedId);
   const segments = qualifiedId.split('/');
   const objectId = segments[segments.length - 1];
   if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
     return Option.none();
   }
-  if (Option.isNone(Graph.getNode(graph, getSpacePath(spaceId)))) {
+  if (Option.isNone(AppGraph.getNode(graph, getSpacePath(spaceId)))) {
     return Option.none();
   }
   return Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId }));
@@ -188,9 +182,9 @@ export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Op
  * addressed by a view discriminator (`sent`, `drafts`) carries its object id in an interior segment,
  * so an existence check that demands the terminal one 404s it.
  */
-export const tryGetEidCandidates = (graph: Graph.ExpandableGraph, qualifiedId: string): EID.EID[] => {
+export const tryGetEidCandidates = (graph: AppGraph.ExpandableGraph, qualifiedId: string): EID.EID[] => {
   const spaceId = getSpaceIdFromPath(qualifiedId);
-  if (!spaceId || Option.isNone(Graph.getNode(graph, getSpacePath(spaceId)))) {
+  if (!spaceId || Option.isNone(AppGraph.getNode(graph, getSpacePath(spaceId)))) {
     return [];
   }
   const segments = qualifiedId.split('/');
@@ -248,21 +242,14 @@ export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId
 };
 
 /**
- * Check whether a qualified workspace path represents a pinned (non-space) workspace.
- * Pinned workspaces have a `!`-prefixed segment immediately after `root/`.
- */
-export const isPinnedWorkspace = (qualifiedPath: string): boolean =>
-  qualifiedPath.startsWith(`${Node.RootId}/${PINNED_WORKSPACE_PREFIX}`);
-
-/**
  * Derive the workspace qualified path from any qualified graph ID.
  * The workspace is the first two segments: `root/<workspace>`.
- * Returns `Node.RootId` if the path has no workspace segment.
+ * Returns `GraphNode.RootId` if the path has no workspace segment.
  */
 export const getWorkspaceFromPath = (qualifiedId: string): string => {
   const firstSep = qualifiedId.indexOf('/');
   if (firstSep === -1) {
-    return Node.RootId;
+    return GraphNode.RootId;
   }
   const secondSep = qualifiedId.indexOf('/', firstSep + 1);
   if (secondSep === -1) {

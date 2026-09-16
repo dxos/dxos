@@ -9,6 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type CallState, type MediaState } from '@dxos/plugin-calls';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -60,7 +61,9 @@ export default Capability.makeModule(
       },
       onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
         const { transcriptionManager } = store.state;
-        void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
+        // Not awaited (media updates must not block on transcription), but a rejection — e.g. no
+        // transcription endpoint configured — has to be logged rather than left unhandled.
+        void transcriptionManager?.setAudioTrack(mediaState.audioTrack).catch((err) => log.catch(err));
         void transcriptionManager?.setRecording(isSpeaking);
       },
     });

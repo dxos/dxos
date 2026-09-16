@@ -24,7 +24,7 @@ import { coreLayer, deterministicAiService } from '@dxos/crawler/testing';
 import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
 
-import { discordSourceLayer, mapDiscordMessage, threadRefsOf } from './discord-source';
+import { discordSourceLayer, mapDiscordMessage, threadRefsOf } from './discord-source.ts';
 
 // Test fixture: only the fields the mapper reads are populated (the full MessageResponse is large).
 const sample = (over: Record<string, unknown> = {}): MessageResponse =>
@@ -118,7 +118,7 @@ describe('DiscordSource live crawl', () => {
             Pipeline.run({ sink: Crawler.commit }),
           );
           const summary = yield* Crawler.summarize();
-          const registry = yield* AgentRegistry;
+          const registry = yield* AgentRegistry.AgentRegistry;
           const agents = yield* registry.list();
           const report = yield* extractTopics({ limit: 15 });
           const facts = dumpFacts ? yield* listFacts() : [];

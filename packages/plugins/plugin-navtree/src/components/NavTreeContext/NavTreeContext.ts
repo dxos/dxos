@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type NavTreeContextValue } from '../types';
+import { type NavTreeContextValue } from '../types.ts';
 
 export const NavTreeContext = createContext<NavTreeContextValue | null>(null);
 

@@ -1,0 +1,36 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" style="background: transparent; background-color: transparent; color-scheme: light dark;" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1729px" height="1026px" viewBox="-0.5 -0.5 1729 1026" content="&lt;mxfile&gt;&lt;diagram id=&quot;cRBb6pgf_Jt0Bkvw3gfb&quot; name=&quot;Page-1&quot;&gt;7ZdNc5swEIZ/DUfPICS+jjbY7aUnH3pWQQFNBGJkOdj59RW2wCLGhcS4TaflYvbVriU9u9IsFoyKwxeBq/wbTwmzHDs9WDC2HPWAQP00yvGsAA/YZyUTNNXaRdjSV9I6anVPU7LrOUrOmaRVX0x4WZJE9jQsBK/7bk+c9WetcKZntC/CNsGMXLl9p6nMtQpsw/0roVmupw5cPVDg1lkLuxynvDYkuLZgJDiX57fiEBHW0Gu5nOM2N0a7hQlSyikBGugLZnu9N70ueWw3K/i+TEnjb1twVedUkm2Fk2a0VvlVWi4LpiygXgv+gn+cIhtLkB19NW0usTRsVRjEtElKTZPx5LmbWOfSGNZLJ0KSw83tgw6qKkfCCyLFUbnogAVsE6FLcQEcXZy1kVi/FXMjqcB2kC4pXU5Z9/8X4upFQx9OAPqfgPEEOMHD+Pv/Nv8AOm/wA+cKv+vZ1/jD0LmffjAz/T9KBAX3Awk/H5DFFCCBhx4DpO0MPhmRt5fWAJLBS2sWJOAvQNIdozEi3gyXOHDHiWQKSXVzp/3L1TIav+kEbNQvitC7IjB0Stqm9i4AzjgAFaH6YzJeDk+UsYgzLk5x0I9if7lpdF5KQ7dPj9J3UvBnYoygeOn5/uTCcn/JFQ30Y96DKMLHUYxj3w1X76G4CtHSn348b1D8Hdgm9LAfxbZe+YG7fg+2aOlukDtT8bUd5vwUlXn5yjuNGR/LcP0T&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <g>
+            <rect x="0" y="0" width="1728" height="1024" fill="#ffffff" stroke="#000000" pointer-events="all" style="fill: light-dark(#ffffff, var(--ge-dark-color, #121212)); stroke: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));"/>
+        </g>
+        <g>
+            <rect x="0" y="0" width="288" height="1024" fill="#ffffff" stroke="#000000" pointer-events="all" style="fill: light-dark(#ffffff, var(--ge-dark-color, #121212)); stroke: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));"/>
+        </g>
+        <g>
+            <rect x="1152" y="16" width="560" height="992" fill="#ffffff" stroke="#000000" pointer-events="all" style="fill: light-dark(#ffffff, var(--ge-dark-color, #121212)); stroke: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));"/>
+        </g>
+        <g>
+            <rect x="1152" y="16" width="560" height="48" fill="#ffffff" stroke="#000000" pointer-events="all" style="fill: light-dark(#ffffff, var(--ge-dark-color, #121212)); stroke: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));"/>
+        </g>
+        <g>
+            <rect x="288" y="16" width="864" height="48" fill="#ffffff" stroke="#000000" pointer-events="all" style="fill: light-dark(#ffffff, var(--ge-dark-color, #121212)); stroke: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));"/>
+        </g>
+        <g>
+            <rect x="0" y="16" width="288" height="48" fill="#ffffff" stroke="#000000" pointer-events="all" style="fill: light-dark(#ffffff, var(--ge-dark-color, #121212)); stroke: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));"/>
+        </g>
+        <g>
+            <rect x="0" y="960" width="288" height="64" fill="#ffffff" stroke="#000000" pointer-events="all" style="fill: light-dark(#ffffff, var(--ge-dark-color, #121212)); stroke: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));"/>
+        </g>
+        <g/>
+        <g>
+            <ellipse cx="72" cy="40" rx="8" ry="8" fill="#7cd7af" stroke="#4da677" pointer-events="all" style="fill: light-dark(rgb(124, 215, 175), rgb(12, 91, 56)); stroke: light-dark(rgb(77, 166, 119), rgb(56, 133, 92));"/>
+        </g>
+        <g>
+            <ellipse cx="24" cy="40" rx="8" ry="8" fill="#dd759b" stroke="#b94a71" pointer-events="all" style="fill: light-dark(rgb(221, 117, 155), rgb(184, 94, 127)); stroke: light-dark(rgb(185, 74, 113), rgb(224, 128, 162));"/>
+        </g>
+        <g>
+            <ellipse cx="48" cy="40" rx="8" ry="8" fill="#eb785e" stroke="#ca5f45" pointer-events="all" style="fill: light-dark(rgb(235, 120, 94), rgb(194, 95, 73)); stroke: light-dark(rgb(202, 95, 69), rgb(211, 119, 96));"/>
+        </g>
+    </g>
+</svg>

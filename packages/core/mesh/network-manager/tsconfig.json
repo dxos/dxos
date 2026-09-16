@@ -11,13 +11,13 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
       "path": "../../../common/context"
     },
     {
       "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/effect"
     },
     {
       "path": "../../../common/invariant"
@@ -39,9 +39,6 @@
     },
     {
       "path": "../messaging"
-    },
-    {
-      "path": "../rpc"
     },
     {
       "path": "../teleport"

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -17,12 +17,12 @@ import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { meta } from '#meta';
 import { TrelloOperation } from '#types';
 
-import { TRELLO_SOURCE } from '../constants';
+import { TRELLO_SOURCE } from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'trelloSyncBoard',
         match: (node) => {
           if (!Obj.instanceOf(Kanban.Kanban, node.data)) {

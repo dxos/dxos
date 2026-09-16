@@ -15,11 +15,11 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
 import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx, createKvsStore } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
@@ -41,7 +41,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
-import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
+import * as ProjectMailboxOperation from '@dxos/plugin-projects/ProjectMailboxOperation';
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as Booking from '@dxos/plugin-trip/Booking';
@@ -52,6 +52,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Select, Toolbar } from '@dxos/react-ui';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TagIndex, Text } from '@dxos/schema';
@@ -64,9 +65,15 @@ import {
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person, Task } from '@dxos/types';
 
-import { StoryRole } from '../modules';
-import { StoryTripAiPlugin, seedFromFixture, seedFromMessages, seedFromObjects, seedFromTrips } from '../testing';
-import { StoryModulesPlugin } from '../testing/modules';
+import { StoryRole } from '../modules/index.ts';
+import {
+  StoryTripAiPlugin,
+  seedFromFixture,
+  seedFromMessages,
+  seedFromObjects,
+  seedFromTrips,
+} from '../testing/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
@@ -387,14 +394,14 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         run: () => invoker.invokePromise(CrmOperation.EnrichImages, {}, { spaceId: space.id }),
       },
       //
-      // ProjectOperation
+      // ProjectMailboxOperation
       //
       {
         // Projects composition: create the admin tracking project from a tracked sender's message
         // (once; reruns reuse it), then run the travel-log and investor-log artifact pipelines
         // against it — the routine→operation→artifact pattern, driven manually.
         id: 'projects',
-        label: 'ProjectOperation.CreateTrackingProject',
+        label: 'ProjectMailboxOperation.CreateTrackingProject',
         run: async () => {
           const anchor =
             messages.find((message) => TRACKED_SENDER_RE.test(message.sender?.email ?? '')) ??
@@ -407,7 +414,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           let created;
           if (!project) {
             created = await invoker.invokePromise(
-              ProjectOperation.CreateTrackingProject,
+              ProjectMailboxOperation.CreateTrackingProject,
               { mailbox: Ref.make(mailbox), message: anchor },
               { spaceId: space.id },
             );
@@ -419,12 +426,12 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           }
 
           const travel = await invoker.invokePromise(
-            ProjectOperation.UpdateTravelLog,
+            ProjectMailboxOperation.UpdateTravelLog,
             { project: Ref.make(project), mailbox: Ref.make(mailbox) },
             { spaceId: space.id },
           );
           const investors = await invoker.invokePromise(
-            ProjectOperation.UpdateInvestorLog,
+            ProjectMailboxOperation.UpdateInvestorLog,
             { project: Ref.make(project), mailbox: Ref.make(mailbox), domains: INVESTOR_DOMAINS },
             { spaceId: space.id },
           );
@@ -483,11 +490,11 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           </Select.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content data-testid='counts' classNames='dx-container grid grid-cols-2'>
+      <Panel.Content data-testid='counts' classNames='grid grid-cols-2'>
         <JsonHighlighter
           classNames='text-xs'
           data={{
-            identity: identity?.identityKey.truncate(),
+            identity: identity?.identityKey && PublicKey.from(identity.identityKey.data).truncate(),
             runs,
             mailbox: mailbox ? 1 : 0,
             messages: messages.length,

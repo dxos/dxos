@@ -24,13 +24,14 @@ import React, {
   useState,
 } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
   Icon,
   IconButton,
   ScrollArea,
+  Tabs,
   type ThemedClassName,
   Tooltip,
   toLocalizedString,
@@ -38,18 +39,17 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { DropIndicator } from '@dxos/react-ui-list';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 
-import { l0ItemType } from '../../util';
-import { useNavTreeContext } from '../NavTreeContext';
-import { UserAccountAvatar } from '../UserAccountAvatar';
-import { L0PendingAvatar, L0PendingItem } from './L0PendingItem';
+import { l0ItemType } from '../../util.ts';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { UserAccountAvatar } from '../UserAccountAvatar/index.ts';
+import { L0PendingAvatar, L0PendingItem } from './L0PendingItem.tsx';
 
 //
 // L0Item
@@ -69,19 +69,19 @@ type StackItemRearrangeHandler<Data extends { id: string } = { id: string }> = (
 ) => void;
 
 type L0ItemRootProps = {
-  item: Node.Node;
-  parent?: Node.Node;
+  item: AppGraphNode.Node;
+  parent?: AppGraphNode.Node;
   path: string[];
   onMouseEnter?: () => void;
 };
 
 type L0ItemProps = L0ItemRootProps & {
-  item: Node.Node;
-  parent?: Node.Node;
+  item: AppGraphNode.Node;
+  parent?: AppGraphNode.Node;
   path: string[];
   pinned?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
-  onItemHover?: (params: { item: Node.Node }) => void;
+  onItemHover?: (params: { item: AppGraphNode.Node }) => void;
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
@@ -95,7 +95,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
       switch (type) {
         case 'action': {
           const { properties: { caller } = {} } = item;
-          return void runAction(item as Node.Action, caller ? { parent, path, caller } : { parent, path });
+          return void runAction(item as AppGraphNode.Action, caller ? { parent, path, caller } : { parent, path });
         }
         case 'tab':
           return onTabChange?.(item);
@@ -287,12 +287,12 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
 
 export type L0MenuProps = {
   menuActions: MenuItem[];
-  topLevelItems: Node.Node[];
-  pinnedItems: Node.Node[];
-  userAccountItem?: Node.Node;
-  parent?: Node.Node;
+  topLevelItems: AppGraphNode.Node[];
+  pinnedItems: AppGraphNode.Node[];
+  userAccountItem?: AppGraphNode.Node;
+  parent?: AppGraphNode.Node;
   path: string[];
-  onItemHover?: (params: { item: Node.Node }) => void;
+  onItemHover?: (params: { item: AppGraphNode.Node }) => void;
 };
 
 export const L0Menu = ({
@@ -307,7 +307,7 @@ export const L0Menu = ({
   const { t } = useTranslation(meta.profile.key);
   const runAction = useActionRunner();
   const handleAction = useCallback(
-    (action: Node.Action, params: Node.InvokeProps) => {
+    (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {
       void runAction(action, params);
     },
     [runAction],
@@ -351,22 +351,20 @@ export const L0Menu = ({
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <Menu.Root onAction={handleAction}>
-        <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
-          <div className='grid place-items-center'>
-            <IconButton
-              density='lg'
-              variant='ghost'
-              size={5}
-              icon='ph--list--regular'
-              iconOnly
-              square
-              label={t('app-menu.label')}
-            />
-          </div>
-        </Menu.Trigger>
-        <Menu.Content group={parent} items={menuActions} />
-      </Menu.Root>
+      <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
+        {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
+        <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
+          <IconButton
+            density='lg'
+            variant='ghost'
+            size={5}
+            icon='ph--list--regular'
+            iconOnly
+            square
+            label={t('app-menu.label')}
+          />
+        </div>
+      </ActionMenu>
 
       {/* Space list. */}
       <ScrollArea.Root centered thin orientation='vertical'>

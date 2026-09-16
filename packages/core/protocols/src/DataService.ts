@@ -196,6 +196,20 @@ export const DatabaseStatsRequest = Schema.Struct({
 export interface DatabaseStatsRequest extends Schema.Schema.Type<typeof DatabaseStatsRequest> {}
 
 /**
+ * What the host holds in memory, as opposed to the stored counts alongside it: a document present
+ * on disk costs nothing until a handle for it is cached, and handles are never evicted on their own.
+ */
+export const HostLoadedStats = Schema.Struct({
+  /** Automerge handles cached for this space. */
+  documents: Schema.Number,
+  /** Automerge handles cached across every space on this host. */
+  documentsTotal: Schema.Number,
+  /** Active reactive queries registered with the host, across every space. */
+  queriesTotal: Schema.Number,
+});
+export interface HostLoadedStats extends Schema.Schema.Type<typeof HostLoadedStats> {}
+
+/**
  * Per-space storage metrics. @see `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
  */
 export const DatabaseStats = Schema.Struct({
@@ -211,6 +225,8 @@ export const DatabaseStats = Schema.Struct({
   feeds: Schema.Number,
   /** Total feed blocks stored locally for the space. */
   feedBlocks: Schema.Number,
+  /** Host-side residency. The client's own caches are added by the client, not carried on the wire. */
+  loaded: HostLoadedStats,
 });
 export interface DatabaseStats extends Schema.Schema.Type<typeof DatabaseStats> {}
 

@@ -6,7 +6,7 @@ import { expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { makeMap, makeSet } from './complex';
+import { makeMap, makeSet } from './complex.ts';
 
 const PulicKeySet = makeSet<PublicKey>(PublicKey.hash);
 

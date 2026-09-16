@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "markdown.mdl.codeblock",
+  "injectionSelector": "L:text.html.markdown",
+  "comment": "Injected rather than forked: the builtin markdown grammar keeps ownership of the fence.",
+  "patterns": [{ "include": "#fenced-code-block-mdl" }],
+  "repository": {
+    "fenced-code-block-mdl": {
+      "begin": "(^|\\G)(\\s*)(`{3,}|~{3,})\\s*(?i:(mdl))(\\s+[^`~]*)?$",
+      "beginCaptures": {
+        "3": { "name": "punctuation.definition.markdown" },
+        "4": { "name": "fenced_code.block.language.markdown" },
+        "5": { "name": "fenced_code.block.language.attributes.markdown" }
+      },
+      "end": "(^|\\G)(\\2|\\s{0,3})(\\3)\\s*$",
+      "endCaptures": { "3": { "name": "punctuation.definition.markdown" } },
+      "patterns": [
+        {
+          "begin": "(^|\\G)(\\s*)(.*)",
+          "while": "(^|\\G)(?!\\s*([`~]{3,})\\s*$)",
+          "contentName": "meta.embedded.block.mdl",
+          "patterns": [{ "include": "source.mdl-block" }]
+        }
+      ]
+    }
+  }
+}

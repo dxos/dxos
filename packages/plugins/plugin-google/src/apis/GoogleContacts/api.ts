@@ -8,13 +8,13 @@ import * as Schema from 'effect/Schema';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import * as Credential from '@dxos/compute/Credential';
 
-import { createUrl, makeGoogleApiRequest } from '../google-api';
+import { createUrl, makeGoogleApiRequest } from '../google-api.ts';
 import {
   BatchGetPeopleResponse,
   ContactGroupResponse,
   ListConnectionsResponse,
   ListContactGroupsResponse,
-} from './types';
+} from './types.ts';
 
 /**
  * Google People API.

@@ -21,7 +21,7 @@ import {
   Trace,
   Trigger,
   TriggerEvent,
-} from './index';
+} from './index.ts';
 
 describe('umbrella re-exports', () => {
   test('top-level re-exports preserve source-package namespace nesting', ({ expect }) => {

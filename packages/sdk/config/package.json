@@ -59,7 +59,7 @@
       "import": "./dist/lib/plugin/vite-plugin.mjs"
     }
   },
-  "main": "dist/lib/node/index.cjs",
+  "main": "dist/lib/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
@@ -69,6 +69,7 @@
     "test-build": "node ./src/testing/build.js"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",

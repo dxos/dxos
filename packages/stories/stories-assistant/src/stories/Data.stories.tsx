@@ -27,7 +27,7 @@ import { Cell } from '@dxos/storybook-testing';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
+import { StoryRole } from '../modules/index.ts';
 import {
   ModuleContainer,
   ResearchInputQueue,
@@ -39,7 +39,7 @@ import {
   organizations,
   storyParameters,
   testTypes,
-} from '../testing';
+} from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Data',
   render: ModuleContainer,
@@ -84,9 +84,9 @@ export const WithResearch: Story = {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
       space.db.add(Markdown.make({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
-    onChatCreated: async ({ space, binder }) => {
-      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
-      const documents = await space.db.query(Filter.type(Markdown.Document)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const organizations = await db.query(Filter.type(Organization.Organization)).run();
+      const documents = await db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
     skills: [
@@ -395,15 +395,10 @@ export const WithCRM: Story = {
       // cells always have a subject to render.
       const [existing] = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = existing ?? space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      return [
-        [StoryRole.Chat],
-        [Cell.article(mailbox)],
-        [Cell.companion(mailbox, 'automation'), AppSurface.deckCompanion('trace')],
-        [StoryRole.Database],
-      ];
+      return [[StoryRole.Chat], [Cell.article(mailbox)], [AppSurface.deckCompanion('trace')], [StoryRole.Database]];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const mailboxes = await db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = mailboxes[0];
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });

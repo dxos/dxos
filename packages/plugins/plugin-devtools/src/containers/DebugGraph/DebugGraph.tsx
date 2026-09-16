@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Tree } from '@dxos/devtools';
 import { Panel, ScrollArea } from '@dxos/react-ui';
 
-export type DebugGraphProps = { graph: Graph.Graph; root: string };
+export type DebugGraphProps = { graph: AppGraph.Graph; root: string };
 
 export const DebugGraph = ({ graph, root }: DebugGraphProps) => {
   return (
@@ -16,7 +16,7 @@ export const DebugGraph = ({ graph, root }: DebugGraphProps) => {
       <Panel.Content asChild>
         <ScrollArea.Root orientation='all'>
           <ScrollArea.Viewport>
-            <Tree data={Graph.toJSON(graph, root)} />
+            <Tree data={AppGraph.toJSON(graph, root)} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

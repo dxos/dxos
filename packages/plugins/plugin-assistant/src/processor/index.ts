@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './presets';
-export * from './processor';
-export * from './prompt';
+export * from './presets.ts';
+export * from './processor.ts';
+export * from './prompt.ts';

@@ -19,6 +19,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -52,9 +55,6 @@
       "path": "../../core/compute/edge-compute"
     },
     {
-      "path": "../../core/compute/link"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -83,6 +83,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"

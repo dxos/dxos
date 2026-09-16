@@ -10,10 +10,7 @@ import { Collection, Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 
-import { meta } from '#meta';
 import { Blog } from '#types';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** The database or collection a new object is filed under; matches `SpaceOperation.AddObject`'s `target`. */
 const TargetSchema = Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
@@ -26,7 +23,7 @@ const TargetSchema = Schema.Union([Database.Database, Type.getSchema(Collection.
  */
 export const AddPublication = Operation.make({
   meta: {
-    key: makeKey('addPublication'),
+    key: DXN.make('org.dxos.operation.blogger.addPublication'),
     name: 'Add Publication',
     description: 'Create a new blog publication.',
     icon: 'ph--books--regular',
@@ -44,7 +41,7 @@ export const AddPublication = Operation.make({
  */
 export const AddPost = Operation.make({
   meta: {
-    key: makeKey('addPost'),
+    key: DXN.make('org.dxos.operation.blogger.addPost'),
     name: 'Add Post',
     description: 'Create a new post and add it to a publication.',
     icon: 'ph--article--regular',
@@ -73,7 +70,7 @@ const PublisherIdSchema = Schema.optional(Schema.String).annotate({
  */
 export const SyncPosts = Operation.make({
   meta: {
-    key: makeKey('syncPosts'),
+    key: DXN.make('org.dxos.operation.blogger.syncPosts'),
     name: 'Sync Posts',
     description: 'Bidirectionally sync a publication’s posts with its external publisher.',
     icon: 'ph--arrows-clockwise--regular',

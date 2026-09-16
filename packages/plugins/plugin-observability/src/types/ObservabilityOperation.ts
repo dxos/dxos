@@ -10,27 +10,24 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
-export const Toggle = Operation.make({
+export const SetEnabled = Operation.make({
   meta: {
-    key: makeKey('toggle'),
-    name: 'Toggle Observability',
+    key: DXN.make('org.dxos.operation.observability.setEnabled'),
+    name: 'Set Observability Enabled',
     description: 'Toggle observability on or off.',
     icon: 'ph--eye--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    state: Schema.optional(Schema.Boolean),
+    // Required: absent used to mean "flip".
+    state: Schema.Boolean,
   }),
   output: Schema.Boolean,
 });
 
 export const SendEvent = Operation.make({
   meta: {
-    key: makeKey('sendEvent'),
+    key: DXN.make('org.dxos.operation.observability.sendEvent'),
     name: 'Send Event',
     description: 'Send an observability event.',
     icon: 'ph--broadcast--regular',

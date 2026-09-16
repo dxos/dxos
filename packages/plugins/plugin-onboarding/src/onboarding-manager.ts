@@ -9,22 +9,22 @@ import * as HubAccount from '@dxos/app-toolkit/Account';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList, type Trigger } from '@dxos/async';
+import { type Client } from '@dxos/client';
+import { type Credential, DeviceType, type Identity } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
 import * as Account from '@dxos/plugin-client/Account';
+import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
-import { type Client } from '@dxos/react-client';
-import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
 
 import hero from '../assets/hero.webp?url';
-import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants';
-import { meta } from './meta';
-import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util';
+import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants.ts';
+import { meta } from './meta.ts';
+import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util.ts';
 
 export type OnboardingManagerProps = {
   invokePromise: Capabilities.OperationInvoker['invokePromise'];
@@ -234,8 +234,8 @@ export class OnboardingManager {
 
   private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
-    return credentials.filter(
-      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    return credentials.filter((credential) =>
+      credential.subject?.assertion?.typeUrl.endsWith('dxos.halo.credentials.IdentityRecovery'),
     );
   }
 

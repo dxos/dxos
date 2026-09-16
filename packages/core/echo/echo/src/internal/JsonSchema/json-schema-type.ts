@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { SchemaEx } from '@dxos/effect';
 
-import { type Mutable } from '../common/proxy';
-import { EntityKindSchema } from '../common/types';
-import { FormatAnnotation, TypeFormat } from '../Format';
+import { type Mutable } from '../common/proxy/index.ts';
+import { EntityKindSchema } from '../common/types/index.ts';
+import { FormatAnnotation, TypeFormat } from '../Format/index.ts';
 
 //
 // JSON Schema

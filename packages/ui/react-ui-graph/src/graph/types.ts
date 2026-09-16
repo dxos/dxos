@@ -7,10 +7,10 @@
 // Generic graph data type.
 //
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { invariant } from '@dxos/invariant';
 
-import { type Point } from '../util';
+import { type Point } from '../util/index.ts';
 
 export type IdAccessor<N = any> = (node: N) => string;
 
@@ -19,7 +19,7 @@ export const defaultIdAccessor: IdAccessor = (node: any) => {
   return node.id;
 };
 
-export const emptyGraph: Graph.Any = {
+export const emptyGraph: GraphModel.AnyData = {
   nodes: [],
   edges: [],
 };

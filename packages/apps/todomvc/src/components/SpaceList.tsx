@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
-import { createTodoList } from '../types';
+import { createTodoList } from '../types.ts';
 
 export const SpaceList = ({ current }: { current?: Space }) => {
   const client = useClient();

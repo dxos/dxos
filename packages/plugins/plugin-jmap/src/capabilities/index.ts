@@ -9,16 +9,19 @@ import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
+import { translations } from '#translations';
+
 export const Connector = Capability.lazyModule(
   'JmapConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
 export const MailSend = Capability.lazyModule(
   'JmapMailSend',
   { provides: [InboxCapabilities.MailSendOperation] },
-  () => import('./mail-send'),
+  () => import('./mail-send.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const Translations = AppCapability.translations(translations);

@@ -20,13 +20,13 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { MagazinePlugin } from '#plugin';
 import { MagazineSkill } from '#skills';
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
-import { MagazinePlugin } from '../../plugin';
-import { MagazineArticle } from './MagazineArticle';
+import { MagazineArticle } from './MagazineArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

@@ -17,15 +17,20 @@ import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 import { GoogleMail } from '#apis';
 import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '#services';
 
-import { GoogleApiError } from '../../../errors';
-import { type AttachmentMetadata } from '../mapper';
+import { GoogleApiError } from '../../../errors.ts';
+import { type AttachmentMetadata } from '../mapper.ts';
 
-/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
+/**
+ * Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
+ *
+ * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
+ * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
+ */
 export const GOOGLE_SYNC_CONFIG = {
   listPageSize: 500,
   fetchConcurrency: 5,
   commitPageSize: 10,
-  maxItemsPerRun: 500,
+  maxItemsPerRun: 100,
   dateChunkDays: 7,
 } as const satisfies SyncStreamConfig.SyncStreamConfig;
 

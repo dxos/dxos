@@ -34,11 +34,11 @@ import {
   type SubductionProtocolMessageEnveloped,
 } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 import { bufferToArray, compositeKey } from '@dxos/util';
 
@@ -50,7 +50,7 @@ import {
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,
-} from '../automerge';
+} from '../automerge/index.ts';
 
 /**
  * Delay before restarting the connection after the edge requests it.
@@ -90,9 +90,8 @@ export type EchoEdgeSubductionReplicatorProps = {
  * {@link AutomergeReplicatorConnection}. Outbound repo messages are wrapped in a router
  * frame and sent to the edge.
  *
- * No classical automerge-repo sync, collection-query/state, bundle sync, or rate-limiting
- * runs through this class — Subduction's sedimentree protocol replaces those
- * responsibilities. For the classical sync path see {@link EchoEdgeReplicator}.
+ * No automerge-repo sync, collection-query/state, or rate-limiting runs through this class —
+ * Subduction's sedimentree protocol replaces those responsibilities.
  */
 export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
@@ -262,7 +261,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     // (`remove_connection` detaches the peer's muxes with no notification to the requester),
     // costing a full sync-round timeout. The space is already registered in `_connectedSpaces`,
     // so `_handleReconnect` opens this connection once the socket is actually ready.
-    if (this._edgeConnection.status.state !== EdgeStatus.ConnectionState.CONNECTED) {
+    if (this._edgeConnection.status.state !== EdgeStatus_ConnectionState.CONNECTED) {
       log('deferring subduction connection until edge ws is ready', { spaceId });
       return;
     }
@@ -441,12 +440,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     return this._remotePeerId;
   }
 
-  get bundleSyncEnabled(): boolean {
-    return false;
-  }
-
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
+      log.verbose('share policy probe', { documentId: params.documentId, allow: true, reason: 'policy-disabled' });
       return true;
     }
     const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
@@ -463,7 +459,17 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       // If a document is not present locally return true only if it already exists on edge.
       return remoteDocumentExists;
     }
-    return spaceId === this._spaceId;
+    // `reason` separates the expected cross-space denial — which fans out across every
+    // space-scoped peer each sync round — from a same-space document being wrongly refused.
+    const allow = spaceId === this._spaceId;
+    log.verbose('share policy probe', {
+      documentId: params.documentId,
+      allow,
+      reason: allow ? 'same-space' : 'cross-space',
+      documentSpaceId: spaceId,
+      connectionSpaceId: this._spaceId,
+    });
+    return allow;
   }
 
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {

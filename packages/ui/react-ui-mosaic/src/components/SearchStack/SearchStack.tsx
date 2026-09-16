@@ -8,7 +8,7 @@ import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
 
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../..';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
 
 export type SearchStackAction = {
   type: 'select';
@@ -59,7 +59,6 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchTile}
-                classNames='my-2'
                 gap={8}
                 items={items}
                 draggable={false}

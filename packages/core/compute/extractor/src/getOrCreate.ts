@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Obj, type Type } from '@dxos/echo';
 
-import { Resolver, resolve } from './Resolver';
+import { Resolver, resolve } from './Resolver.ts';
 
 export interface GetOrCreateOptions<T> {
   /**

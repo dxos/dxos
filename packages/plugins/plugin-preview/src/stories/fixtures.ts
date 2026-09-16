@@ -55,7 +55,7 @@ export const createProject = (): Pipeline.Pipeline => {
 export const createTask = (): Task.Task => {
   return Obj.make(Task.Task, {
     title: random.lorem.sentence(),
-    status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+    status: random.helpers.arrayElement(['todo', 'started', 'done'] as const),
   });
 };
 

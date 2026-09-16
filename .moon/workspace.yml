@@ -7,7 +7,18 @@ projects:
   - tools/*/moon.yml
   - vendor/*/moon.yml
 
-# Self-hosted bazel-remote: tools/moon-cache/README.md.
+experiments:
+  # Required by `cache.unstable_sharedWorktreeCache`.
+  casOutputsCache: true
+
+cache:
+  # One CAS per machine, shared by every worktree: tools/moon-cache/README.md.
+  unstable_sharedWorktreeCache: true
+  cas:
+    # Roughly twenty full builds, evicted LRU. Unset means unbounded.
+    maxSize: '10gb'
+
+# Self-hosted bazel-remote: tools/moon-cache/README.md. Fallback for what the local CAS misses.
 remote:
   host: 'grpcs://cache.dxos.network:9092'
   mtls:

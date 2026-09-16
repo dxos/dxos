@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, Select, type ThemedClassName } from '@dxos/react-ui';
 
-import { type ActionHandler } from '../../actions';
-import { type LayoutKind, LAYOUTS } from '../../layout';
+import { type ActionHandler } from '../../actions/index.ts';
+import { type LayoutKind, LAYOUTS } from '../../layout/index.ts';
 
 export type ToolbarProps = ThemedClassName<{
   onAction?: ActionHandler;
@@ -46,7 +46,6 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
         </NaturalToolbar.Button>
         <Select.Portal>
           <Select.Content>
-            <Select.ScrollUpButton />
             <Select.Viewport>
               {LAYOUTS.map((layout) => (
                 <Select.Option key={layout} value={layout}>
@@ -54,8 +53,6 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
                 </Select.Option>
               ))}
             </Select.Viewport>
-            <Select.ScrollDownButton />
-            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>

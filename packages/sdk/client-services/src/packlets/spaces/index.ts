@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './data-space-manager';
-export * from './data-space';
-export * from './spaces-service';
-export * from './edge-feed-replicator';
+export * from './data-space-manager.ts';
+export * from './data-space.ts';
+export * from './spaces-service.ts';
+export * from './edge-feed-replicator.ts';

@@ -4,17 +4,17 @@
 
 import { describe, test } from 'vitest';
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 
-import { SVGContext } from '../../hooks';
-import { type GraphLayoutEdge } from '../types';
+import { SVGContext } from '../../hooks/index.ts';
+import { type GraphLayoutEdge } from '../types.ts';
 import {
   GraphPlexusProjector,
   PLEXUS_NODE_TYPE_FOCUS,
   PLEXUS_NODE_TYPE_OBJECT,
   PLEXUS_NODE_TYPE_RELATION,
   type PlexusRelation,
-} from './graph-plexus-projector';
+} from './graph-plexus-projector.ts';
 
 const makeContext = () => {
   const context = new SVGContext({});
@@ -42,7 +42,7 @@ const relationOf = (edge: GraphLayoutEdge, focusId: string): PlexusRelation | un
   return undefined;
 };
 
-const graph: Graph.Any = {
+const graph: GraphModel.AnyData = {
   nodes: [{ id: 'p1' }, { id: 'org' }, { id: 'p2' }, { id: 'p3' }, { id: 'p4' }, { id: 'other' }] as any,
   edges: [
     // Outgoing ref from focus → grouped under "organization →".

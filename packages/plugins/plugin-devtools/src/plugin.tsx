@@ -2,55 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { type Client } from '@dxos/react-client';
 
-import { AppGraphBuilder, ReactContext, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, PluginAsset, ReactContext, ReactSurface, SetupDevtools, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
-const SetupDevtools = Capability.inlineModule('setup-devtools', { provides: [] }, () =>
-  Effect.sync(() => setupDevtools()),
-);
 
 export const DevtoolsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactContext),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(SetupDevtools),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
-
-const setupDevtools = () => {
-  (globalThis as any).composer ??= {};
-
-  // Used to test how composer handles breaking protocol changes.
-  (globalThis as any).composer.changeStorageVersionInMetadata = async (version: number) => {
-    const { changeStorageVersionInMetadata } = await import('@dxos/client-services/testing');
-    const { createStorageObjects } = await import('@dxos/client-services');
-    const client: Client = (window as any).dxos.client;
-    const config = client.config;
-    await client.destroy();
-    const { storage } = createStorageObjects(config.values?.runtime?.client?.storage ?? {});
-    await changeStorageVersionInMetadata(storage, version);
-    location.pathname = '/';
-  };
-};
 
 export default DevtoolsPlugin;

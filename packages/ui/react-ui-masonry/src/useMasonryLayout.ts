@@ -4,7 +4,7 @@
 
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type LayoutResult, getColumnWidth, layout } from './layout';
+import { type LayoutResult, getColumnWidth, layout } from './layout.ts';
 
 /** Sub-pixel changes below this threshold (px) don't trigger a re-layout. */
 const HEIGHT_EPSILON = 0.5;

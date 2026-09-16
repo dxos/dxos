@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions, useNode } from '@dxos/plugin-graph/hooks';
@@ -32,6 +32,8 @@ export type ToolbarProps = ThemedClassName<{
   autoHideControls?: boolean;
   isInRoom?: boolean;
   onJoin?: () => void;
+  /** Calls service unconfigured: the join control renders disabled rather than doing nothing. */
+  joinDisabled?: boolean;
   onLeave?: () => void;
 }>;
 
@@ -43,6 +45,7 @@ export const Toolbar = ({
   autoHideControls = true,
   isInRoom,
   onJoin,
+  joinDisabled,
   onLeave,
 }: ToolbarProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -130,7 +133,7 @@ export const Toolbar = ({
 
             {/* Companion actions. */}
             {actions
-              .filter((action): action is Node.Action => Node.isAction(action))
+              .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
                 <IconButton
                   key={action.id}
@@ -171,6 +174,7 @@ export const Toolbar = ({
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
+            disabled={joinDisabled}
             onClick={onJoin}
           />
         )}

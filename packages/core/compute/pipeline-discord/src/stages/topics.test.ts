@@ -17,11 +17,11 @@ import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
 import { Person } from '@dxos/types';
 
-import { DiscordPipeline } from '../pipeline';
-import { replayStream } from '../replay';
-import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing';
-import { Topic } from '../types';
-import { topicsStage } from './topics';
+import { DiscordPipeline } from '../pipeline.ts';
+import { replayStream } from '../replay.ts';
+import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing/index.ts';
+import { Topic } from '../types/index.ts';
+import { topicsStage } from './topics.ts';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 
@@ -55,7 +55,7 @@ describe('topics + persons over ECHO', () => {
         yield* replayTopics;
         yield* replayTopics;
 
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const agents = yield* registry.list();
 
         const topics = yield* Database.query(Query.select(Filter.type(Topic.Topic))).run.pipe(

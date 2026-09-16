@@ -12,7 +12,7 @@ import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '
 import { ClientService } from '@dxos/client';
 import { type Key } from '@dxos/echo';
 
-import { mapMembers, printMembers } from './util';
+import { mapMembers, printMembers } from './util.ts';
 
 export const handler = Effect.fn(function* ({ spaceId }: { spaceId: Option.Option<string> }) {
   const { json } = yield* CommandConfig;

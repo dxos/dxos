@@ -25,7 +25,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import * as AiService from '../AiService';
+import * as AiService from '../AiService.ts';
 import {
   AiServiceTestingPreset,
   CalculatorLayer,
@@ -33,18 +33,18 @@ import {
   LanguageModelFixture,
   hasToolCall,
   testingLayer,
-} from './index';
+} from './index.ts';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
 // https://discord.com/channels/795981131316985866/1338871274398679130
 
 const OpenAiLayer = OpenAiClient.layerConfig({
-  apiKey: Config.redacted('OPENAI_API_KEY'),
+  apiKey: Config.Redacted('OPENAI_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const AnthropicLayer = AnthropicClient.layerConfig({
-  apiKey: Config.redacted('DX_ANTHROPIC_API_KEY'),
+  apiKey: Config.Redacted('DX_ANTHROPIC_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const createChat = Effect.fn(function* (prompt: string) {
@@ -124,7 +124,6 @@ describe('LanguageModel', () => {
   it.effect(
     'should process an agentic loop using OpenAI',
     Effect.fn(function* ({ expect }) {
-      // @effect-diagnostics-next-line multipleEffectProvide:off
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
           Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
@@ -141,7 +140,6 @@ describe('LanguageModel', () => {
   it.effect(
     'should process an agentic loop using Claude',
     Effect.fn(function* ({ expect }) {
-      // @effect-diagnostics-next-line multipleEffectProvide:off
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
           Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
@@ -189,7 +187,7 @@ describe('LanguageModel', () => {
           }),
         );
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
@@ -254,7 +252,7 @@ describe('LanguageModel', () => {
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
       Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
@@ -325,7 +323,7 @@ describe('LanguageModel', () => {
 const TestLayer = Layer.mergeAll(
   testingLayer,
   CalculatorLayer,
-  AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+  AiService.model('com.anthropic.model.claude-sonnet-5.default'),
 ).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
 // TODO(wittjosiah): GeoPoint breaks Anthropic validation.

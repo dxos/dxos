@@ -124,7 +124,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
       if (paths.length === 0) {
         return;
       }
-      Obj.update(book, () => {
+      Obj.update(book, (book) => {
         for (const path of paths) {
           Obj.setValue(book, SchemaEx.splitJsonPath(path), SchemaEx.getValue(values, path));
         }
@@ -192,7 +192,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
           {description && (
             <section className='flex flex-col gap-2 rounded-lg border border-separator p-4'>
               <h2 className='text-base font-semibold'>{t('description.label')}</h2>
-              <div ref={descriptionRef} role='none' className={expanded ? '' : 'max-h-52 overflow-hidden'}>
+              <div ref={descriptionRef} className={expanded ? '' : 'max-h-52 overflow-hidden'}>
                 <MarkdownView content={description} classNames='text-sm' />
               </div>
               {showDescriptionToggle && (
@@ -213,7 +213,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               onValuesChanged={handleChange}
             >
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Root>
           </section>

@@ -3,19 +3,29 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, DevPluginLoader, OperationHandler, ReactSurface, RegistrySettings } from '#capabilities';
+import {
+  AppGraphBuilder,
+  Commands,
+  DevPluginLoader,
+  OperationHandler,
+  ReactSurface,
+  RegistrySettings,
+  SkillDefinition,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
+import type { RegistryPluginOptions } from '#types';
 
-export const RegistryPlugin = Plugin.define(meta).pipe(
+export const RegistryPlugin = Plugin.define<RegistryPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(RegistrySettings),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Commands),
   Plugin.addModule(DevPluginLoader),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(RegistrySettings),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

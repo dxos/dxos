@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { Panel } from '@dxos/react-ui';
 import { Terminal } from '@dxos/react-ui-terminal';
 
-import { useCliApp } from './useCliApp';
+import { useCliApp } from './useCliApp.ts';
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';

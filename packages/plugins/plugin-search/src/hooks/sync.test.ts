@@ -9,7 +9,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
 
-import { filterObjectsSync } from './sync';
+import { filterObjectsSync } from './sync.ts';
 
 random.seed(1);
 

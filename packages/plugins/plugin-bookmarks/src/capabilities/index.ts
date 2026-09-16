@@ -8,23 +8,35 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
 import * as CrxEvents from '@dxos/plugin-crx/CrxEvents';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { BookmarksEvents } from '#types';
 
-export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'), {
   activatesOn: BookmarksEvents.Start,
 });
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 
 export const PageActionProvider = Capability.lazyModule(
   'PageActionProvider',
   { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
-  () => import('./page-action'),
+  () => import('./page-action.ts'),
 );
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const Translations = AppCapability.translations(translations);

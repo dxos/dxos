@@ -25,7 +25,7 @@ import {
 import { type Key } from '@dxos/echo';
 import { SpacesService } from '@dxos/protocols/rpc';
 
-import { SpaceNotReadyError } from '../../../errors';
+import { SpaceNotReadyError } from '../../../errors.ts';
 
 const SPACE_READY_TIMEOUT = Duration.seconds(30);
 
@@ -89,13 +89,13 @@ export const exportSpace = Command.make(
   'export',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    format: Options.choice('format', Formats).pipe(
+    format: Options.Literals('format', Formats).pipe(
       Options.withDescription(
         'Archive format: binary is a direct dump of the underlying storage and includes document history; json contains current object state only.',
       ),
       Options.withDefault('binary' as const),
     ),
-    output: Options.string('output').pipe(
+    output: Options.String('output').pipe(
       Options.withAlias('o'),
       Options.withDescription('Output file, or a directory to write the generated filename into.'),
       Options.optional,

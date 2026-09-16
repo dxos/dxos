@@ -2,15 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Agent, Chat, McpServer } from '@dxos/assistant-toolkit';
+import { McpServer } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { translations as assistantTranslations } from '@dxos/react-ui-assistant';
+import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
+import { Question } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -18,6 +22,7 @@ export const translations: Resource[] = [
   ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,
+  ...taskTranslations,
   {
     'en-US': {
       [Type.getTypename(Skill.Skill)]: {
@@ -81,8 +86,15 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete agent',
         'object-deleted.label': 'Agent deleted',
       },
+      [Type.getTypename(Question.Question)]: {
+        'typename.label': 'Question',
+        'typename.label_zero': 'Questions',
+        'typename.label_one': 'Question',
+        'typename.label_other': 'Questions',
+      },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.profile.key]: {
+        'delete-task.label': 'Delete task',
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -114,14 +126,34 @@ export const translations: Resource[] = [
         'trace-environment-space.label': 'Space',
         'trace-environment-conversation.label': 'Conversation',
 
+        'activity.starting.label': 'Starting agent',
+        'activity.preparing.label': 'Preparing request',
+        'activity.loading-history.label': 'Loading conversation',
+        'activity.summarizing.label': 'Summarizing conversation',
+        'activity.connecting-mcp.label': 'Connecting to MCP servers',
+        'activity.building-toolkit.label': 'Assembling tools',
+        'activity.encoding-prompt.label': 'Encoding prompt',
+        'activity.contacting-provider.label': 'Contacting inference provider',
+        'activity.generating.label': 'Generating',
+        'activity.calling-tool.label': 'Calling tool {{detail}}',
+        'activity.waking.seconds.label_one': 'Waking up in {{count}} second',
+        'activity.waking.seconds.label_other': 'Waking up in {{count}} seconds',
+        'activity.waking.minutes.label_one': 'Waking up in {{count}} minute',
+        'activity.waking.minutes.label_other': 'Waking up in {{count}} minutes',
+        'activity.waking.hours.label_one': 'Waking up in {{count}} hour',
+        'activity.waking.hours.label_other': 'Waking up in {{count}} hours',
+        'activity.sleeping.label': 'Waiting to wake',
+        'activity.attempt': 'attempt {{attempt}}',
+
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
         'import-compute-operations.label': 'Import compute operations',
-        'toggle-trace-panel-debug.label': 'Toggle trace panel debug view',
+        'set-trace-panel-debug.label': 'Toggle trace panel debug view',
 
         'no-results.message': 'No results',
 
         'cancel.button': 'Cancel',
+        'cancel-queued.button': 'Remove from queue',
         'save.button': 'Save',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
@@ -139,29 +171,36 @@ export const translations: Resource[] = [
         'integration-prompt.title': 'Connect {{service}}',
         'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
+        'integration-prompt.scopes': 'Permissions needed:',
+
+        'question-card.label': 'Question',
+        'question-answer.label': 'Your answer',
+        'question-answer.placeholder': 'Type an answer…',
+        'question-submit.label': 'Answer',
+        'question-actions.label': 'Question actions',
+        'question-failed.message': 'That answer could not be saved. Try again.',
+        'question-stranded.message': 'Answer saved, but the assistant could not be resumed.',
+
+        'plugin-prompt.title': 'Enable {{plugin}}',
+        'plugin-prompt.description': 'This action needs the {{plugin}} plugin. Enable it to continue.',
+        'plugin-prompt.enabled': '{{plugin}} is enabled.',
+        'plugin-prompt.unavailable': '{{plugin}} is not installed on this device.',
+        'plugin-prompt.failed': 'Could not enable {{plugin}}. Try again from the plugin registry.',
+        'plugin-prompt.button': 'Enable',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
         'context-objects.button': 'Add to context',
         'context-settings.button': 'Chat settings',
-        'microphone.button': 'Click to speak',
-        'microphone-denied.label': 'Microphone blocked — allow access in system settings',
-        'recording.placeholder': 'Recording…',
-        'stop-recording.label': 'Stop recording',
-        'hold-to-record.label': 'Hold to record',
-        'start-recording.label': 'Start recording',
-        'recording-options.label': 'Recording options',
-        'record-mode.label': 'Record mode',
-        'record-mode.toggle.label': 'Toggle',
-        'record-mode.hold.label': 'Hold (push-to-talk)',
-        'audio-device.label': 'Microphone',
-        'audio-device.default.label': 'System default',
-        'settings.entity-extraction.label': 'Entity extraction',
+        'send.label': 'Send',
         'cancel-processing.button': 'Stop processing',
+        'show-tasks.button': 'Show tasks',
+        'hide-tasks.button': 'Hide tasks',
 
         'options.skills.title': 'Skills',
         'options.mcp.title': 'MCP',
         'options.chat-model.title': 'Models',
+        'options.environment.title': 'Environment',
         'remove-object.label': 'Remove object',
 
         'chat-view.title': 'View',
@@ -169,6 +208,8 @@ export const translations: Resource[] = [
         'chat-view.summary.label': 'Summary',
         'chat-view.thinking.label': 'Thinking',
         'chat-view.debug.label': 'Debug',
+        'chat-environment.local.label': 'Local',
+        'chat-environment.remote.label': 'Remote (EDGE)',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
         'mcp-server-name.label': 'Server name',
@@ -207,6 +248,7 @@ export const translations: Resource[] = [
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
+        'model-unavailable.label': '{{label}} (unavailable)',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',

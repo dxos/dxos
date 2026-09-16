@@ -4,17 +4,17 @@
 
 import React from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
-import { keySymbols } from '@dxos/keyboard';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { keySymbols } from '@dxos/react-focus';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { getShortcut } from '../util';
+import { getShortcut } from '../util.ts';
 
-type Action = Node.Action<MenuActionProperties> | Node.ActionGroup<MenuItemChrome>;
+type Action = AppGraphNode.Action<MenuActionProperties> | AppGraphNode.ActionGroup<MenuItemChrome>;
 
 export const ActionLabel = ({ action }: { action: Action }) => {
   const { t } = useTranslation(translationKey);

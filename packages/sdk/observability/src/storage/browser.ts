@@ -12,8 +12,8 @@ const OBSERVABILITY_DISABLED_KEY = 'observability-disabled';
 const OBSERVABILITY_GROUP_KEY = 'observability-group';
 const OTEL_LOG_LEVEL_KEY = 'otel-log-level';
 
-/** No-op in browser contexts. */
-export const showObservabilityBanner = () => {
+/** No-op in browser contexts; the notice is a toast there. */
+export const showObservabilityBanner = async (_namespace: string, _bannercb: (input: string) => void) => {
   log.warn('showObservabilityBanner is not supported in browser contexts.');
 };
 
@@ -28,6 +28,14 @@ export const isObservabilityDisabled = async (namespace: string): Promise<boolea
     return true;
   }
 };
+
+/** Undefined in the browser: posthog-js mints and persists its own anonymous id. */
+export const getInstallationId = async (_namespace: string): Promise<string | undefined> => undefined;
+
+/** No installation id in the browser, so nothing is ever aliased from one. */
+export const getAliasedDid = async (_namespace: string): Promise<string | undefined> => undefined;
+
+export const storeAliasedDid = async (_namespace: string, _did: string): Promise<void> => {};
 
 /**
  * @param namespace - localForage key prefix used to scope the observability state in browser storage.

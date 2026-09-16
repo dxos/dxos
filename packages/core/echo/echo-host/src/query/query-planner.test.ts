@@ -4,12 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Aggregate, Filter, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Feed, Filter, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { QueryPlanner, filterContainsInQuery } from './query-planner';
+import { type QueryPlan } from './plan.ts';
+import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();
@@ -857,6 +858,189 @@ describe('QueryPlanner', () => {
         ],
       }
     `);
+  });
+
+  test('full-text search AND type pushes the typename into the selector', () => {
+    const query = Query.select(Filter.and(Filter.text('Bill'), Filter.type(TestSchema.Person)));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
+            "selector": {
+              "_tag": "TextSelector",
+              "searchKind": "full-text",
+              "text": "Bill",
+              "typename": [
+                "dxn:com.example.type.person:0.1.0",
+              ],
+            },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:com.example.type.person:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('full-text search AND or-of-types pushes all typenames into the selector', () => {
+    const query = Query.select(
+      Filter.and(Filter.text('Bill'), Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Organization))),
+    );
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
+            "selector": {
+              "_tag": "TextSelector",
+              "searchKind": "full-text",
+              "text": "Bill",
+              "typename": [
+                "dxn:com.example.type.person:0.1.0",
+                "dxn:com.example.type.organization:0.1.0",
+              ],
+            },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "filters": [
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:com.example.type.person:0.1.0",
+                },
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:com.example.type.organization:0.1.0",
+                },
+              ],
+              "type": "or",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('full-text search AND type-with-props narrows by type and re-checks props', () => {
+    const query = Query.select(Filter.and(Filter.text('Bill'), Filter.type(TestSchema.Person, { name: 'Bill' })));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
+            "selector": {
+              "_tag": "TextSelector",
+              "searchKind": "full-text",
+              "text": "Bill",
+              "typename": [
+                "dxn:com.example.type.person:0.1.0",
+              ],
+            },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {
+                "name": {
+                  "operator": "eq",
+                  "type": "compare",
+                  "value": "Bill",
+                },
+              },
+              "type": "object",
+              "typename": "dxn:com.example.type.person:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('negated full-text search AND type throws query too complex', () => {
+    const query = Query.select(Filter.not(Filter.and(Filter.text('Bill'), Filter.type(TestSchema.Person))));
+    expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
+  });
+
+  test('two full-text searches AND-ed throw query too complex', () => {
+    const query = Query.select(Filter.and(Filter.text('Bill'), Filter.text('Ted')));
+    expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
   });
 
   test('select multiple types', () => {
@@ -2049,6 +2233,88 @@ describe('QueryPlanner', () => {
 
       const filterStep = plan.steps[filterStepIndex];
       expect(filterStep).toMatchObject({ filter: { type: 'object', props: { title: { type: 'in-query' } } } });
+    });
+  });
+
+  // A feed scan orders and caps its own rows, so `limit` reaches storage instead of slicing a
+  // working set the whole feed was decoded into.
+  describe('feed limit pushdown', () => {
+    const feedScope: QueryAST.Scope[] = [{ _tag: 'feed', feedUri: QUEUE_DXN }];
+
+    const selectStep = (query: QueryAST.Query): QueryPlan.SelectStep => {
+      const step = planner.createPlan(query).steps.find((step) => step._tag === 'SelectStep');
+      expect(step).toBeDefined();
+      return step as QueryPlan.SelectStep;
+    };
+
+    test('a bounded feed read scans in the requested direction', () => {
+      for (const [direction, order] of [
+        ['asc', Order.natural()],
+        ['desc', Order.natural('desc')],
+      ] as const) {
+        const query = Query.select(Filter.everything()).orderBy(order).limit(5).from(feedScope);
+        expect(selectStep(query.ast)).toMatchObject({
+          limit: 5,
+          feedScan: { direction, deleted: false },
+        });
+      }
+    });
+
+    test('a skip is folded into the scanned page, which the SkipStep then drops from', () => {
+      const query = Query.select(Filter.everything()).orderBy(Order.natural()).skip(2).limit(3).from(feedScope);
+      const plan = planner.createPlan(query.ast);
+
+      expect(plan.steps.find((step) => step._tag === 'SelectStep')).toMatchObject({ limit: 5, feedScan: {} });
+      expect(plan.steps.some((step) => step._tag === 'SkipStep')).toBe(true);
+    });
+
+    test('the typename re-check beside a TypeSelector does not block the scan', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).limit(5).from(feedScope);
+      expect(selectStep(query.ast)).toMatchObject({ limit: 5, feedScan: { direction: 'asc' } });
+    });
+
+    test('a `deleted: only` read scans the deleted rows, so the cap counts them', () => {
+      const query = Query.select(Filter.everything()).options({ deleted: 'only' }).limit(5).from(feedScope);
+      expect(selectStep(query.ast)).toMatchObject({ feedScan: { deleted: true } });
+    });
+
+    // Each of these prunes the page after the scan, so a cap applied at scan time would return
+    // short of the limit.
+    test('a filter the scan cannot reproduce keeps the limit downstream', () => {
+      const query = Query.select(Filter.type(TestSchema.Task, { title: 'a' }))
+        .limit(5)
+        .from(feedScope);
+      expect(selectStep(query.ast).feedScan).toBeUndefined();
+    });
+
+    test('a skip below the order keeps the limit downstream', () => {
+      // `skip(2).orderBy(desc)` drops two rows in scan order and orders what is left; an inflated
+      // scan limit would order first and drop the two NEWEST, which is a different page.
+      const query = Query.select(Filter.everything()).skip(2).orderBy(Order.natural('desc')).limit(3).from(feedScope);
+      expect(selectStep(query.ast).feedScan).toBeUndefined();
+    });
+
+    test('a content-based order keeps the limit downstream', () => {
+      const query = Query.select(Filter.everything()).orderBy(Order.property('title', 'asc')).limit(5).from(feedScope);
+      const step = selectStep(query.ast);
+      expect(step.feedScan).toBeUndefined();
+      expect(step.limit).toBeUndefined();
+    });
+
+    test('a space scope keeps the limit downstream — only a feed scan is ordered', () => {
+      const query = Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(5);
+      const step = selectStep(withSpaceIdOptions(query.ast));
+      expect(step.feedScan).toBeUndefined();
+      expect(step.limit).toBeUndefined();
+    });
+
+    test('a cursor read stays a cursor read — it is windowed by position, not natural order', () => {
+      const query = Query.select(Filter.feedCursor({ begin: Feed.Cursor.make('3') }))
+        .limit(5)
+        .from(feedScope);
+      const step = selectStep(query.ast);
+      expect(step.feedScan).toBeUndefined();
+      expect(step).toMatchObject({ limit: 5, feedCursorRange: { begin: '3' } });
     });
   });
 });

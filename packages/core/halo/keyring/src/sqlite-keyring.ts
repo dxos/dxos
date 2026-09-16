@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Migrator from 'effect/unstable/sql/Migrator';
@@ -13,21 +14,14 @@ import { subtleCrypto } from '@dxos/crypto';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
-import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import { SqlTransaction } from '@dxos/sql-sqlite';
+import { type KeyRecord, KeyRecordSchema } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
-import { type KeyringApi, KeyringApiService } from './keyring';
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
-
-const KeyRecordCodec = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
+import { type KeyringApi, KeyringApiService } from './keyring.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
 export type SqliteKeyringOptions = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
 
 /**
@@ -35,7 +29,7 @@ export type SqliteKeyringOptions = {
  * Stores ECDSA key pairs in the `keyring` table.
  */
 export class SqliteKeyring implements KeyringApi {
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   readonly #keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(PublicKey.hash);
   readonly keysUpdate = new Event();
 
@@ -45,14 +39,12 @@ export class SqliteKeyring implements KeyringApi {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -89,9 +81,9 @@ export class SqliteKeyring implements KeyringApi {
       }),
     );
     return rows.map((row) => {
-      const record = KeyRecordCodec.decode(row.record);
+      const record = fromBinary(KeyRecordSchema, row.record);
       // Never expose private key material to callers.
-      return { publicKey: record.publicKey };
+      return create(KeyRecordSchema, { publicKey: record.publicKey });
     });
   }
 
@@ -113,7 +105,7 @@ export class SqliteKeyring implements KeyringApi {
       throw new Error(`Key not found: ${keyHex}`);
     }
 
-    const record = KeyRecordCodec.decode(rows[0].record);
+    const record = fromBinary(KeyRecordSchema, rows[0].record);
     const publicKey = PublicKey.from(record.publicKey);
     invariant(key.equals(publicKey), 'Corrupted keyring: key mismatch');
     invariant(record.privateKey, 'Corrupted keyring: missing private key');
@@ -144,13 +136,13 @@ export class SqliteKeyring implements KeyringApi {
     const publicKey = await keyPairToPublicKey(keyPair);
     this.#keyCache.set(publicKey, keyPair);
 
-    const record: KeyRecord = {
+    const record = create(KeyRecordSchema, {
       publicKey: publicKey.asUint8Array(),
       privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey)),
-    };
+    });
 
     const keyHex = publicKey.toHex();
-    const encodedRecord = arrayToBuffer(KeyRecordCodec.encode(record));
+    const encodedRecord = arrayToBuffer(toBinary(KeyRecordSchema, record));
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -167,11 +159,11 @@ const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> =>
 /**
  * Effect Layer constructing a {@link SqliteKeyring} from the ambient SQL runtime.
  */
-export const SqliteKeyringLayer = (): Layer.Layer<KeyringApiService, never, SqlClient.SqlClient | SqlTransactionTag> =>
+export const SqliteKeyringLayer = (): Layer.Layer<KeyringApiService, never, SqlClient.SqlClient> =>
   Layer.effect(
     KeyringApiService,
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       return new SqliteKeyring({ runtime });
     }),
   );

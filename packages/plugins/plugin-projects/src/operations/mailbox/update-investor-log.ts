@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { ProjectOperation } from '#types';
+import { ProjectMailboxOperation } from '#types';
 
 import {
   findOrCreateDocumentArtifact,
@@ -22,7 +22,7 @@ import {
   messagesAscending,
   senderMatches,
   setDocumentContent,
-} from './helpers';
+} from './helpers.ts';
 
 /** The artifact the pipeline owns; regenerated wholesale each run. */
 export const INVESTOR_LOG_NAME = 'Investor Conversations';
@@ -57,7 +57,7 @@ const threadText = (messages: readonly Message.Message[]): string =>
  * per-thread summary is an LLM generation when `summarize` is set, a deterministic digest
  * otherwise, so the pipeline is testable offline and enrichable online.
  */
-const handler = ProjectOperation.UpdateInvestorLog.pipe(
+const handler = ProjectMailboxOperation.UpdateInvestorLog.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef, mailbox: mailboxRef, domains, summarize, model }) {
       const project = yield* Database.load(projectRef);

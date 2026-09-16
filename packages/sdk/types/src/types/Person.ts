@@ -7,13 +7,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 import { PropertyMeta } from '@dxos/echo/internal';
 import { CardAnnotation } from '@dxos/schema';
 
-import * as Geo from './Geo';
-import * as Organization from './Organization';
+import * as Geo from './Geo.ts';
+import * as Organization from './Organization.ts';
 
 // TODO(burdon): Materialize link for Role (Organization => [Role] => Contact).
 // TODO(burdon): Address sub type with geo location.
@@ -26,7 +25,7 @@ import * as Organization from './Organization';
 const PersonSchema = Schema.Struct({
   fullName: Schema.String.pipe(
     Schema.annotate({ title: 'Full Name' }),
-    GeneratorAnnotation.set({
+    Annotation.GeneratorAnnotation.set({
       generator: 'person.fullName',
       probability: 1,
     }),
@@ -35,7 +34,11 @@ const PersonSchema = Schema.Struct({
   preferredName: Schema.String.pipe(Schema.annotate({ title: 'Preferred Name' }), Schema.optional),
   nickname: Schema.String.pipe(Schema.annotate({ title: 'Nickname' }), Schema.optional),
   // TODO(wittjosiah): Format.URL. Support ref?
-  image: Schema.String.pipe(Schema.annotate({ title: 'Image' }), GeneratorAnnotation.set('image.url'), Schema.optional),
+  image: Schema.String.pipe(
+    Schema.annotate({ title: 'Image' }),
+    Annotation.GeneratorAnnotation.set('image.url'),
+    Schema.optional,
+  ),
   // TODO(burdon): Use reference links.
   organization: Ref.Ref(Organization.Organization).pipe(
     PropertyMeta('referenceProperty', 'name'),
@@ -51,7 +54,7 @@ const PersonSchema = Schema.Struct({
   emails: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
+      value: Format.Email.pipe(Annotation.GeneratorAnnotation.set('internet.email')),
     }),
   ).pipe(Schema.optional),
   identities: Schema.Array(
@@ -81,14 +84,14 @@ const PersonSchema = Schema.Struct({
       label: Schema.optional(Schema.String),
       value: Format.URL.pipe(
         Schema.annotate({ default: 'https://example.com' }),
-        GeneratorAnnotation.set('internet.url'),
+        Annotation.GeneratorAnnotation.set('internet.url'),
       ),
     }),
   ).pipe(Schema.optional),
   // TODO(burdon): Support date or create String type for ISO Date.
   birthday: Schema.String.pipe(
     Schema.annotate({ title: 'Birthday' }),
-    GeneratorAnnotation.set('date.iso8601'),
+    Annotation.GeneratorAnnotation.set('date.iso8601'),
     Schema.optional,
   ),
   // TODO(burdon): Move to base object?
@@ -107,7 +110,7 @@ const _PersonSchema = PersonSchema.pipe(
     location: Format.GeoPoint.pipe(Schema.annotate({ title: 'Location' }), Schema.optional),
   }),
   Schema.annotate({ title: 'Person' }),
-  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+  Annotation.LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'neutral' }),
   CardAnnotation.set(true),
 );
@@ -118,7 +121,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.m
 
 const _LegacyPersonSchema = PersonSchema.pipe(
   Schema.annotate({ title: 'Person' }),
-  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+  Annotation.LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
 );
 
 /**

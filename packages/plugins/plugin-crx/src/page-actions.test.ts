@@ -12,10 +12,10 @@ import { DXN } from '@dxos/keys';
 
 import { PageAction } from '#types';
 
-import { handleInvokeEvent, handleListEvent } from './page-actions';
+import { handleInvokeEvent, handleListEvent } from './page-actions.ts';
 
 const TestOp = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.operation.pageAction'), name: 'Test' },
+  meta: { key: DXN.make('com.example.operation.test.pageAction'), name: 'Test' },
   input: Schema.Struct({ snapshot: PageAction.Snapshot, target: Schema.Any }),
   output: Schema.Struct({ id: Schema.String }),
 });

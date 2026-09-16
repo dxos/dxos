@@ -11,9 +11,9 @@ import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { withAuthorization } from '@dxos/compute-runtime';
 
-import { JmapApiError } from '../../errors';
-import { JmapCredentials } from '../../services/jmap-credentials';
-import { MethodError, Response, Session } from './types';
+import { JmapApiError } from '../../errors.ts';
+import { JmapCredentials } from '../../services/jmap-credentials.ts';
+import { MethodError, Response, Session } from './types.ts';
 
 /** Shared per-attempt timeout/retry policy for JMAP HTTP requests (session, batched API, blob download). */
 export const REQUEST_TIMEOUT = '10 seconds';

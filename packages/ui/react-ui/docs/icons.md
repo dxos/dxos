@@ -17,7 +17,7 @@ blank.
 
 ## The Registry
 
-`IconRegistry` (`src/primitives/ThemeProvider/IconRegistry.tsx`) owns both paths. `ThemeProvider` mounts it,
+`IconRegistry` (`src/providers/ThemeProvider/IconRegistry.tsx`) owns both paths. `ThemeProvider` mounts it,
 and it is a **refcounted document-level singleton**: a document typically mounts many `ThemeProvider`s (the
 shell, dialogs, each editor tooltip root), and all of them share one registry. A registry per mount would
 re-fetch the sprite and duplicate every symbol id in the DOM.

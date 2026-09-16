@@ -19,8 +19,8 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { TripBuilder } from '#testing';
 import { Booking, Segment, Trip } from '#types';
 
-import { TripPlugin } from '../../testing';
-import { SegmentArticle } from './SegmentArticle';
+import { TripPlugin } from '../../testing.ts';
+import { SegmentArticle } from './SegmentArticle.tsx';
 
 type StoryArgs = {
   /** Index of the segment to view (0-based; -1 for none). */

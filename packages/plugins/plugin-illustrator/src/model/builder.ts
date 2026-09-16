@@ -11,9 +11,9 @@
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import * as Drawing from '../types/Drawing';
-import { type ApplyResult, type ContentHandler, type ContentMap, type ReadResult, applyCommands } from './content';
-import type * as Scene from './scene';
+import * as Drawing from '../types/Drawing.ts';
+import { type ApplyResult, type ContentHandler, type ContentMap, type ReadResult, applyCommands } from './content.ts';
+import type * as Scene from './scene.ts';
 
 /**
  * Maps the scene DSL onto a canvas. Geometry is derived from the live records — not a stored

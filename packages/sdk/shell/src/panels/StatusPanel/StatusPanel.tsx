@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Status, useTranslation } from '@dxos/react-ui';
+import { Progress, useTranslation } from '@dxos/react-ui';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '../../translations.ts';
 
 export const StatusPanel = ({ titleId }: { titleId?: string }) => {
   const { t } = useTranslation(translationKey);
@@ -15,7 +15,7 @@ export const StatusPanel = ({ titleId }: { titleId?: string }) => {
       <p id={titleId} className='font-medium text-center'>
         {t('resetting.message')}
       </p>
-      <Status indeterminate>{t('resetting.message')}</Status>
+      <Progress indeterminate>{t('resetting.message')}</Progress>
     </div>
   );
 };

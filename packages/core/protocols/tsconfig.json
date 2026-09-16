@@ -9,7 +9,10 @@
   ],
   "references": [
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/effect"
@@ -25,6 +28,9 @@
     },
     {
       "path": "../../common/timeframe"
+    },
+    {
+      "path": "../../common/util"
     }
   ]
 }

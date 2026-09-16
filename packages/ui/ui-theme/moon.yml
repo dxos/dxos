@@ -2,31 +2,22 @@ layer: library
 language: typescript
 tags:
   - vite-plugin
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
 tasks:
   build:
-    args:
-      - '--entryPoint=src/index.ts'
     deps:
       - compile-node
   compile-node:
-    command: pnpm exec dx-compile
-    args:
-      - '--entryPoint=src/plugins/ThemePlugin.ts'
-      - '--entryPoint=src/main.css'
-      - '--outputPath=dist/plugin'
-      - '--moduleFormat=cjs'
-      - '--moduleFormat=esm'
-      - '--platform=node'
+    command: bash -c 'pnpm exec vite build --logLevel silent -c vite.plugin.config.ts && pnpm exec vite build --logLevel silent -c vite.plugin.config.ts --mode cjs'
     deps:
       - ^:build
-      - dx-compile:build
-    options:
-      mergeArgs: replace
+    inputs:
+      - vite.plugin.config.ts
+      - '@group(production)'
     outputs:
       - dist/plugin/
   test:

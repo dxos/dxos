@@ -18,7 +18,7 @@ import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { EventDetails } from '../Event';
+import { EventDetails } from '../Event/index.ts';
 
 export type EventStackAction =
   | { type: 'current'; eventId: string }

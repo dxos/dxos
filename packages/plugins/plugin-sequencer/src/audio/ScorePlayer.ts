@@ -6,7 +6,7 @@ import * as Tone from 'tone';
 
 import { Note, Patch, Score, Track } from '#types';
 
-import { createDrum } from './sounds';
+import { createDrum } from './sounds.ts';
 
 /**
  * Builds and runs a Tone.js transport for a Score.

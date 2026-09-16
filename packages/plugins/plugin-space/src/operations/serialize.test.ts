@@ -5,22 +5,23 @@
 import { describe, test } from '@effect/vitest';
 
 import * as Operation from '@dxos/compute/Operation';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { SpaceOperationHandlerSet } from '#operations';
 
 /** Keys of the verbs a remote host projects as MCP tools; the rest are app-only and need not serialize. */
 const PROJECTED_KEYS = [
-  'org.dxos.plugin.space.operation.addObject',
-  'org.dxos.plugin.space.operation.addRelation',
-  'org.dxos.plugin.space.operation.addTag',
-  'org.dxos.plugin.space.operation.addType',
-  'org.dxos.plugin.space.operation.getObjects',
-  'org.dxos.plugin.space.operation.queryObjects',
-  'org.dxos.plugin.space.operation.queryTypes',
-  'org.dxos.plugin.space.operation.removeObjects',
-  'org.dxos.plugin.space.operation.removeTag',
-  'org.dxos.plugin.space.operation.updateObject',
+  'org.dxos.operation.space.addObject',
+  'org.dxos.operation.space.addRelation',
+  'org.dxos.operation.space.addTag',
+  'org.dxos.operation.space.addType',
+  'org.dxos.operation.space.getObjects',
+  'org.dxos.operation.space.queryObjects',
+  'org.dxos.operation.space.queryTypes',
+  'org.dxos.operation.space.removeObjects',
+  'org.dxos.operation.space.removeTag',
+  'org.dxos.operation.space.updateObject',
 ];
 
 describe('operation serialization', () => {
@@ -52,10 +53,10 @@ describe('operation serialization', () => {
   test('the addObject draft keeps its open rest signature on the wire', async ({ expect }) => {
     const handlers = await SpaceOperationHandlerSet.handlers.getHandlers();
     const addObject = handlers.find(
-      (handler) => DXN.getName(handler.meta.key) === 'org.dxos.plugin.space.operation.addObject',
+      (handler) => DXN.getName(handler.meta.key) === 'org.dxos.operation.space.addObject',
     );
-    expect(addObject).toBeDefined();
-    const record = Operation.serialize(addObject!);
+    invariant(addObject);
+    const record = Operation.serialize(addObject);
     const branches = record.inputSchema?.properties?.object?.anyOf ?? [];
     const draft = branches.find((branch) => branch.properties?.['@type'] != null);
     expect(draft?.additionalProperties).toBe(true);
@@ -67,9 +68,9 @@ describe('operation serialization', () => {
       .filter((handler) => PROJECTED_KEYS.includes(DXN.getName(handler.meta.key)))
       .map((handler) => {
         const record = Operation.serialize(handler);
-        return [DXN.getName(handler.meta.key).split('.').at(-1), Operation.getMutation(record)] as const;
+        return [DXN.getName(handler.meta.key).split('.').at(-1) ?? '', Operation.getMutation(record)] as const;
       })
-      .sort(([a], [b]) => a!.localeCompare(b!));
+      .sort(([a], [b]) => a.localeCompare(b));
 
     expect(projected).toEqual([
       ['addObject', 'write'],

@@ -17,12 +17,12 @@ import { Position } from '@dxos/util';
 import {
   CollectionArticle,
   CollectionSection,
-  CreateObjectDialog,
   CreateSpaceDialog,
   DefaultProperties,
   ImportSpaceDialog,
   InlineSyncStatus,
   JoinDialog,
+  ObjectFormDialog,
   RecordArticle,
   RelatedArticle,
   RenamePopover,
@@ -34,16 +34,16 @@ import {
 import { meta } from '#meta';
 
 import {
-  CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
+  OBJECT_FORM_DIALOG,
   RENAME_POPOVER,
-} from '../constants';
-import { TypeInputOptionsAnnotationId } from '../types/SpaceForm';
-import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema';
-import { SpaceHomeContent } from '../types/SpaceSurface';
-import { HueField, IconField, TypenameField } from './SpaceFormFields';
+} from '../constants.ts';
+import { TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
+import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
+import { SpaceHomeContent } from '../types/SpaceSurface.ts';
+import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
   NavbarPresenceSurface,
   NavtreePresenceSurface,
@@ -56,8 +56,8 @@ import {
   SpaceSettingsSurface,
   TypeArticleSurface,
   ViewEditorSurface,
-} from './SpaceSurfaces';
-import { tryGetViewForObject } from './try-get-view';
+} from './SpaceSurfaces.tsx';
+import { tryGetViewForObject } from './try-get-view.ts';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -185,12 +185,9 @@ export default Capability.makeModule(
         component: ImportSpaceDialog,
       }),
       Surface.create({
-        id: CREATE_OBJECT_DIALOG,
-        filter: AppSurface.component<ComponentProps<typeof CreateObjectDialog>>(
-          AppSurface.Dialog,
-          CREATE_OBJECT_DIALOG,
-        ),
-        component: CreateObjectDialog,
+        id: OBJECT_FORM_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof ObjectFormDialog>>(AppSurface.Dialog, OBJECT_FORM_DIALOG),
+        component: ObjectFormDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { ScrollFollower } from './follow';
-import { type Placement } from './placement';
+import { ScrollFollower } from './follow.ts';
+import { type Placement } from './placement.ts';
 
 /** Distance from the end within which the reader counts as being at it. */
 const STICKY_THRESHOLD = 32;
@@ -20,6 +20,21 @@ const FOLLOW_WINDOW = 1_000;
 const SETTLE_FRAMES = 12;
 
 export type FollowHandle = {
+  /**
+   * Whether the reader is resting on the end, within {@link STICKY_THRESHOLD}.
+   *
+   * Published as state rather than read from the intent ref, so a host can render an affordance
+   * against it — the intent is a ref precisely because the correction must not re-render, and a
+   * second scroll listener in the host would fork the threshold.
+   */
+  atEnd: boolean;
+  /**
+   * Whether the follow is armed — the feed is, or will be, scrolling itself to keep the tail in
+   * view. Published so a host can hold back an affordance that only makes sense once the reader
+   * has left: while a turn streams the tail outruns the glide a frame at a time, and `atEnd` alone
+   * flickers with it.
+   */
+  following: boolean;
   /**
    * A navigation is the reader answering "do you want the tail?" — and it must answer *before* the
    * scroll moves. The intent is otherwise withdrawn by the scroll event the jump raises, which is
@@ -85,11 +100,23 @@ export const useFollow = ({
   changedAt,
 }: UseFollowOptions): FollowHandle => {
   const following = useRef(!!enabled);
+  // A feed shorter than its viewport never scrolls, so it starts at its end and no event says so.
+  const [atEnd, setAtEnd] = useState(true);
+  // The intent, mirrored as state for the handle; the ref stays what the correction reads, since a
+  // render must not sit between a gesture and the decision.
+  const [followingState, setFollowingState] = useState(!!enabled);
+  const setFollowing = useCallback((next: boolean) => {
+    following.current = next;
+    setFollowingState(next);
+  }, []);
   const wasEnabled = useRef(enabled);
   if (wasEnabled.current !== enabled) {
     wasEnabled.current = enabled;
     following.current = !!enabled;
   }
+  useEffect(() => {
+    setFollowingState(following.current);
+  }, [enabled]);
 
   // Read through a ref by the stable callbacks below: the count changes on every append, and a
   // handle rebuilt per append republishes every controller derived from it — a host that stores
@@ -190,10 +217,14 @@ export const useFollow = ({
       const total = axis === 'block' ? scroller.scrollHeight : scroller.scrollWidth;
       const back = current < lastOffset.current - 1;
       lastOffset.current = current;
-      if (total - current - viewport <= STICKY_THRESHOLD) {
-        following.current = true;
+      const end = total - current - viewport <= STICKY_THRESHOLD;
+      // Same threshold as the intent, one listener: React bails out on an unchanged value, so a
+      // pinned feed streaming for minutes re-renders nothing.
+      setAtEnd(end);
+      if (end) {
+        setFollowing(true);
       } else if (back && performance.now() - gestureAt.current < GESTURE_WINDOW) {
-        following.current = false;
+        setFollowing(false);
         follower?.cancel();
       }
     };
@@ -212,7 +243,7 @@ export const useFollow = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollerRef.current, enabled, axis, reserve, follower]);
+  }, [scrollerRef.current, enabled, axis, reserve, follower, setFollowing]);
 
   // The correction. Following is a navigation, not a correction in the §7 sense: the content the
   // reader is pinned to has moved, so the scroll has to as well.
@@ -225,7 +256,10 @@ export const useFollow = ({
   // as the estimates are replaced.
   // Whether the feed has arrived at its tail once. Opening a populated feed is not motion to
   // follow — the reader was not watching the travel, so it arrives; the glide is for content
-  // arriving at a tail they are looking at.
+  // arriving at a tail they are looking at. Earned by the settle pass below rather than by an
+  // effect that finds itself at the target: StrictMode re-runs the effect in the same tick as the
+  // arrival, and an opening still settling (the reserve lands a beat after the first write) would
+  // otherwise be glided as if the reader had watched it.
   const positioned = useRef(false);
 
   useLayoutEffect(() => {
@@ -238,7 +272,6 @@ export const useFollow = ({
     const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
     const gap = target - current;
     if (Math.abs(gap) <= 1) {
-      positioned.current = true;
       return;
     }
 
@@ -289,7 +322,12 @@ export const useFollow = ({
     // Bounded, shrink-only repayment (positive residue is growth, which the gate owns).
     let verifies = SETTLE_FRAMES;
     const verify = () => {
-      if (!following.current || verifies-- <= 0) {
+      if (!following.current) {
+        return;
+      }
+
+      if (verifies-- <= 0) {
+        positioned.current = true;
         return;
       }
 
@@ -308,14 +346,15 @@ export const useFollow = ({
   const onNavigate = useCallback(
     (index: number) => {
       const wants = index >= countRef.current - 1;
-      following.current = !!enabled && wants;
+      setFollowing(!!enabled && wants);
       if (!wants) {
         follower?.cancel();
       }
     },
-    [enabled, follower],
+    [enabled, follower, setFollowing],
   );
 
-  // Stable across appends, so controllers built over it do not churn per model change.
-  return useMemo(() => ({ onNavigate }), [onNavigate]);
+  // Stable across appends, so controllers built over it do not churn per model change; `atEnd` and
+  // `following` change only when the reader crosses the threshold or turns back, which is not an append.
+  return useMemo(() => ({ atEnd, following: followingState, onNavigate }), [atEnd, followingState, onNavigate]);
 };

@@ -10,13 +10,17 @@ import { Trigger, TriggerState } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import * as Doc from './Doc';
+import * as Doc from './Doc.ts';
 
 export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;
   doc: A.Doc<T>;
   patches: A.Patch[];
-  patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' };
+  /**
+   * `change` is a change made on this thread; `host` is bytes the worker delivered on their own;
+   * `bulk` is bytes the worker delivered as part of a large batch, such as a first sync.
+   */
+  patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' | 'host' | 'bulk' };
 };
 
 export type ClientDocHandleEvents<T> = {
@@ -85,6 +89,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Undefined if document is new and still is being created.
    */
   private _documentId?: DocumentId;
+  /** {@link url} for {@link _documentId}; the base58check encode behind it hashes twice per call. */
+  #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
   private readonly _onDelete: () => void;
 
   constructor({ documentId, initialValue, onDelete }: DocHandleProxyOptions<T>) {
@@ -108,7 +114,13 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * For loaded documents, this is always defined.
    */
   get url(): AutomergeUrl | undefined {
-    return this._documentId ? stringifyAutomergeUrl(this._documentId) : undefined;
+    if (!this._documentId) {
+      return undefined;
+    }
+    if (this.#url?.documentId !== this._documentId) {
+      this.#url = { documentId: this._documentId, url: stringifyAutomergeUrl(this._documentId) };
+    }
+    return this.#url.url;
   }
 
   /**
@@ -258,6 +270,20 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Whether every local change has been acknowledged by the host — the condition for dropping this
+   * handle from memory. `_getPendingChanges` clears the repo's pending-id set before the mutation is
+   * actually sent, so that set alone cannot answer this: a handle dropped in the window between
+   * would take an unsent write with it.
+   * @internal
+   */
+  _isAcknowledged(): boolean {
+    // `_lastSentHeads` advances only on a confirmed send or on integrating a host update, and a send
+    // in flight leaves it behind the doc's heads — so heads equality alone means the host holds
+    // everything this handle does, with nothing outstanding.
+    return this._doc !== undefined && A.equals(A.getHeads(this._doc), this._lastSentHeads);
+  }
+
+  /**
    * Confirm that the last write was successful.
    * @internal
    */
@@ -269,7 +295,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Update the doc with a foreign mutation from worker.
    * @internal
    */
-  _integrateHostUpdate(mutation: Uint8Array | undefined): void {
+  _integrateHostUpdate(mutation: Uint8Array | undefined, { bulk = false }: { bulk?: boolean } = {}): void {
     if (!mutation) {
       return;
     }
@@ -298,7 +324,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       handle: this,
       doc: this._doc,
       patches,
-      patchInfo: { before, after: this._doc, source: 'change' },
+      patchInfo: { before, after: this._doc, source: bulk ? 'bulk' : 'host' },
     });
   }
 }

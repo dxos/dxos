@@ -5,12 +5,12 @@
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Entity, Obj } from '@dxos/echo';
 
-import { constructPendingSpaceNode, constructSpaceNode, isPendingSpace, isSpacePlaceholder } from './spaces';
+import { constructPendingSpaceNode, constructSpaceNode, isPendingSpace, isSpacePlaceholder } from './spaces.ts';
 
 describe('isPendingSpace', () => {
   test('a space on its way to ready is pending', ({ expect }) => {
@@ -51,7 +51,7 @@ describe('constructPendingSpaceNode', () => {
   const makeFakeSpace = (): Space => ({ id: SPACE_ID }) as unknown as Space;
 
   /** The graph fills in a connector's omitted fields; do the same so assertions see a whole node. */
-  const makePendingNode = (namesCache?: Record<string, string>): Node.Node => {
+  const makePendingNode = (namesCache?: Record<string, string>): AppGraphNode.Node => {
     const { id, type, data, properties } = constructPendingSpaceNode({ space: makeFakeSpace(), namesCache });
     return { id, type, data, properties: properties ?? {} };
   };

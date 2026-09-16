@@ -10,11 +10,11 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { RegistryCapabilities, RegistrySettingsSchema } from '#types';
+import { RegistryCapabilities, type RegistryPluginOptions, RegistrySettingsSchema } from '#types';
 
 const DEFAULT_DEV_PLUGIN_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manifest.json`;
 
-export default Capability.makeModule(() =>
+export default Capability.makeModule(({ externalPlugins = true }: RegistryPluginOptions = {}) =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
       key: meta.profile.key,
@@ -24,11 +24,15 @@ export default Capability.makeModule(() =>
 
     return [
       Capability.contribute(RegistryCapabilities.Settings, settingsAtom),
-      Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
-        schema: RegistrySettingsSchema,
-        atom: settingsAtom,
-      }),
+      ...(externalPlugins
+        ? [
+            Capability.contribute(AppCapabilities.Settings, {
+              prefix: meta.profile.key,
+              schema: RegistrySettingsSchema,
+              atom: settingsAtom,
+            }),
+          ]
+        : []),
     ];
   }),
 );

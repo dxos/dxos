@@ -12,12 +12,14 @@ import { SearchList } from '@dxos/react-ui-search';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { SearchResultStack } from '#components';
-import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
+import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
 
 export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
   // TODO(burdon): Cross-space search — Milestone 2 (fan-out + merge).
   const [query, setQuery] = useState<string>();
-  const objects = useQuery(space.db, buildSearchQuery(query));
+  // Scope the FTS query to user-facing types so results match what the app can render.
+  const typeUris = useSearchableTypeUris(space);
+  const objects = useQuery(space.db, buildSearchQuery(query, typeUris));
   const { setMatch } = useGlobalSearch();
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
@@ -36,14 +38,14 @@ export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
-        <Panel.Content asChild>
-          <SearchResultStack results={allResults} query={query ?? ''} />
-        </Panel.Content>
-        <Panel.Statusbar asChild>
+        <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SearchList.Input placeholder='Search...' autoFocus={autoFocus} />
           </Toolbar.Root>
-        </Panel.Statusbar>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchResultStack results={allResults} query={query ?? ''} />
+        </Panel.Content>
       </Panel.Root>
     </SearchList.Root>
   );

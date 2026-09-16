@@ -12,7 +12,7 @@ import { objectStructureToJson } from '@dxos/echo/internal';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { log } from '@dxos/log';
 
-import { type AutomergeHost } from '../automerge';
+import { type AutomergeHost } from '../automerge/index.ts';
 
 const HEADS_DELIMITER = '|';
 
@@ -126,11 +126,11 @@ export class AutomergeDataSource implements IndexDataSource {
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
-          const handle = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
-          if (!handle) {
+          using lease = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
+          if (!lease) {
             continue;
           }
-          const doc = handle.doc();
+          const doc: DatabaseDirectory = lease.doc();
 
           // Skip outdated docs.
           if (doc.version !== SpaceDocVersion.CURRENT) {

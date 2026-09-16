@@ -8,7 +8,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { VideoPlayer } from './VideoPlayer';
+import { VideoPlayer } from './VideoPlayer.tsx';
 
 const meta = {
   title: 'plugins/plugin-video/components/VideoPlayer',

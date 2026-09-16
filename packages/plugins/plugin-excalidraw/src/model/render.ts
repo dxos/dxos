@@ -11,7 +11,7 @@
 
 import { type Scene } from '@dxos/plugin-illustrator/model';
 
-import { toFontSize, toStyle } from './style';
+import { toFontSize, toStyle } from './style.ts';
 
 /** Canvas content: an opaque map of ElementId → excalidraw element. */
 export type CanvasContent = Record<string, any>;

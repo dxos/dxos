@@ -3,8 +3,7 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
-// Aliased: unwrapping the enclosing `namespace` put these in the same scope as the capabilities
-// named after them.
+// Aliased: unwrapping the enclosing `namespace` put these in the same scope as the capabilities named after them.
 import { type Attention as Attention$, type ViewState as ViewState$ } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';

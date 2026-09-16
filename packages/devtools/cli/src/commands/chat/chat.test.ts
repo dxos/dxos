@@ -4,7 +4,7 @@
 
 import { describe, test } from '@effect/vitest';
 
-import { runDx } from '../../testing';
+import { runDx } from '../../testing/index.ts';
 
 /**
  * Smoke test that the `chat` subcommand is wired into the CLI: invoke

@@ -12,7 +12,7 @@ import { useSearchListResults } from '@dxos/react-ui-search';
 import { translationKey } from '#translations';
 import { type CreateOptions, type RefOption } from '#types';
 
-import { Form } from '../Form';
+import { Form } from '../Form/index.ts';
 
 export type ObjectPickerContentProps = ThemedClassName<
   CreateOptions & {
@@ -93,7 +93,10 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
     if (showForm && createSchema) {
       return (
         <Combobox.Content {...props} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
-          <Popover.Viewport>
+          {/* `Form.Content` trims only its bottom (`pb-form-padding`) because a host normally supplies
+              the top — a dialog header, a card title. A popover has nothing above the first field, so
+              the top trim is added here. */}
+          <Popover.Viewport classNames='pt-form-padding'>
             <Form.Root
               testId='create-referenced-object-form'
               schema={createSchema}
@@ -104,13 +107,12 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
             >
               <Form.Viewport>
                 <Form.Content>
-                  <Form.FieldSet />
+                  <Form.Fields />
                   <Form.Actions />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
           </Popover.Viewport>
-          <Combobox.Arrow />
         </Combobox.Content>
       );
     }
@@ -147,7 +149,6 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
             />
           )}
         </Combobox.List>
-        <Combobox.Arrow />
       </Combobox.Content>
     );
   },

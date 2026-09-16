@@ -83,18 +83,20 @@ Use `--on-failure=continue` to continue running other unrelated tasks even if so
 
 ### Plugin sets
 
-Composer builds one of **two plugin sets**, chosen at build time by `DX_PLUGIN_SET`:
+Composer builds one of **three plugin sets**, chosen at build time by `DX_PLUGIN_SET`:
 
-| Set            | Selected by                | Plugins                                   | Registry                         |
-| :------------- | :------------------------- | :---------------------------------------- | :------------------------------- |
-| full (default) | `DX_PLUGIN_SET` unset      | `src/plugin-defs.tsx` — the whole catalog | yes, incl. the dev plugin loader |
-| curated        | `DX_PLUGIN_SET=production` | `src/plugin-defs.production.tsx`          | no                               |
+| Set            | Selected by                | Plugins                                                   | Registry                         |
+| :------------- | :------------------------- | :-------------------------------------------------------- | :------------------------------- |
+| full (default) | `DX_PLUGIN_SET` unset      | `src/plugin-defs.tsx` — the whole catalog                 | yes, incl. the dev plugin loader |
+| curated        | `DX_PLUGIN_SET=production` | `src/plugin-defs.production.tsx`                          | no                               |
+| mobile         | `DX_PLUGIN_SET=mobile`     | `src/plugin-defs.mobile.tsx` — chat and its content types | yes                              |
 
 `vite.config.ts` aliases `./plugin-defs` to the selected file, so **selection is build-time, not a
-runtime flag** — a plugin the curated set doesn't name never enters the module graph (that's the
+runtime flag** — a plugin the chosen set doesn't name never enters the module graph (that's the
 bundle-size half of it; a runtime toggle would ship everything and merely hide the UI).
-`composer-app:check-plugin-set` reads the build's own sourcemaps and fails if one leaks in; **Check**
-runs it beside `check-boot-budget`.
+`composer-app:check-plugin-set` reads the build's own sourcemaps and fails if a plugin outside the
+**production** set leaks in — it only guards that one set, never whichever set a given build actually
+chose; **Check** runs it beside `check-boot-budget`.
 
 Consequences worth knowing before you debug something:
 
@@ -159,6 +161,35 @@ The following command generates storybooks across the individual packages:
 moon run storybook-react:serve
 ```
 
+### When the server wedges
+
+The dev server periodically stops answering, or keeps answering while pegging a
+core, and only a restart clears it. The cause is not yet known — a restart
+destroys the evidence, which is why it has stayed that way. Two things are
+established: it is not memory (the server inherits an 8.4GB ceiling and idles
+around 1.2GB), and it is **activity-driven, not uptime-driven** — recorded
+intervals between wedges range from 1 minute to 32 hours, clustering during
+working hours and near-vanishing overnight.
+
+`serve` therefore arms a watcher beside the server (`tools/storybook-react/serve.sh`
+→ `diagnose.sh --ensure`). It polls, and the first time the server stops answering
+or holds ≥90% CPU for three polls it writes a report to `temp/` naming what the
+CPU is in, whether a Vite dep re-optimization was in flight, and how many
+storybook processes are alive; then it re-arms. Nothing to remember and nothing
+to run.
+
+To capture on demand, or when the server was started some other way:
+
+```bash
+bash tools/storybook-react/diagnose.sh            # capture now
+bash tools/storybook-react/diagnose.sh --watch    # capture whenever it next wedges
+```
+
+**Do not restart before capturing** — that is the whole difficulty. And check for
+a second server first: an orphaned keeper daemon from a previous session was found
+restarting storybook on another port for five days, doubling the watcher and
+memory load against the same repo.
+
 ### Fast dev mode (`serve-fast`)
 
 Long React sessions can slow down and eventually wedge the browser tab. By
@@ -215,6 +246,24 @@ pnpm i
 ```
 
 NOTE: Do not use `pnpm up` since it will update more than the targeted dependencies.
+
+## Resetting stale build state
+
+`pnpm install` reports "Already up to date" in two situations where the workspace is in fact
+broken, because neither is tracked by the lockfile:
+
+- A dependency version bump leaves per-package `node_modules/.bin/*` shims pointing at a store
+  path pnpm has since removed — the build fails with `MODULE_NOT_FOUND` on a path containing the
+  _old_ version.
+- Generated sources (e.g. `packages/core/protocols/src/proto/gen`) go stale while moon's cache
+  hash still matches, so every run restores the stale output rather than regenerating it.
+
+```bash
+pnpm reset          # prune dead .bin shims, reinstall, clear .moon/cache, regenerate protobuf
+pnpm reset --deep   # also delete every package dist and reinstall node_modules from scratch
+```
+
+Stop any running dev server first — `reset` reinstalls `node_modules` underneath it.
 
 ## Folders
 
@@ -281,7 +330,7 @@ check without touching local refs at all: `git ls-remote --tags origin 'composer
 
 | Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                                                                       |
 | -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
-| **dev**        | `composer-dev…`          | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
+| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
 | **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only                                                                 |
 | **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                                                                   |
 | **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
@@ -369,7 +418,9 @@ Examples:
 
 ## CI
 
-See [CI docs](./.github/workflows/README.md).
+The build/test pipeline runs on Depot CI. See [`.depot/README.md`](./.depot/README.md), including how to
+run a workflow off uncommitted changes without pushing. What is still on GitHub Actions, and why, is in
+[`.github/workflows/README.md`](./.github/workflows/README.md).
 
 ## Trunk (flaky test quarantining / CI Autopilot)
 

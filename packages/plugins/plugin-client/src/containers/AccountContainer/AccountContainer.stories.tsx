@@ -12,12 +12,12 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { HubHttpClient } from '@dxos/edge-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 import { ClientCapabilities } from '#types';
 
-import { ClientPlugin } from '../../plugin';
-import { AccountContainer } from './AccountContainer';
+import { AccountContainer } from './AccountContainer.tsx';
 
 /**
  * A `HubHttpClient` whose account lookup is answered locally. Constructed for real and overridden

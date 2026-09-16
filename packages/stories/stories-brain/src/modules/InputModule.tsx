@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 
-import { InputPanel } from '../components';
-import { PIPELINE_RUN, usePipelineStory } from './pipeline-context';
+import { InputPanel } from '../components/index.ts';
+import { PIPELINE_RUN, usePipelineStory } from './pipeline-context.ts';
 
 /** LEFT: the source selector (document / dataset / record). Reads the shared pipeline controller. */
 export const InputModule = () => {

@@ -10,26 +10,27 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import type { CleanupFn } from '@dxos/async';
+import { SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
-import type * as Blob from './Blob';
-import type * as Entity from './Entity';
-import * as Err from './Err';
-import type * as Feed from './Feed';
-import type * as Filter from './Filter';
-import type * as Hypergraph from './Hypergraph';
-import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
+import type * as Blob from './Blob.ts';
+import type * as Entity from './Entity.ts';
+import * as Error from './Error.ts';
+import type * as Feed from './Feed.ts';
+import type * as Filter from './Filter.ts';
+import type * as Hypergraph from './Hypergraph.ts';
+import { type AnyProperties, EntityKind, KindId } from './internal/common/types/index.ts';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
-import { isInstanceOf } from './internal/Entity/type-uri';
-import * as queryInternal from './internal/Query';
-import type { Ref } from './internal/Ref/ref';
-import type * as Obj from './Obj';
-import type * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import type * as Registry from './Registry';
-import type * as Type from './Type';
+import { isInstanceOf } from './internal/Entity/type-uri.ts';
+import * as queryInternal from './internal/Query/index.ts';
+import type { Ref } from './internal/Ref/ref.ts';
+import type * as Obj from './Obj.ts';
+import type * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import type * as Registry from './Registry.ts';
+import type * as Type from './Type.ts';
 
 /**
  * `query` API function declaration.
@@ -117,8 +118,12 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
 
 /**
  * Identifier denoting an ECHO Database.
+ *
+ * Namespaced (like `@dxos/echo/Database/Service` below) rather than the bare `@dxos/echo/Database`:
+ * that key belongs to the `[ObjectDatabaseId]` accessor every ECHO object carries, and a shared
+ * registry key would make `TypeId in obj` true for every object in the graph.
  */
-export const TypeId = Symbol.for('@dxos/echo/Database');
+export const TypeId = Symbol.for('@dxos/echo/Database/TypeId');
 export type TypeId = typeof TypeId;
 
 /**
@@ -287,14 +292,28 @@ export interface Database extends Queryable {
 
   /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
-   * Rejects with `Err.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
-   * `maxSize`), `Err.BlobWriteError` (backend upload failure), or `Err.BlobNotAvailableError`
+   * Rejects with `Error.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
+   * `maxSize`), `Error.BlobWriteError` (backend upload failure), or `Error.BlobNotAvailableError`
    * (`reason: 'backend-not-registered'` — the requested storage name has no registered backend).
    */
   createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
 
   /**
-   * Loads a blob's bytes. Rejects with `Err.BlobNotAvailableError` if the backend for the blob's
+   * Adopts bytes already staged by a direct upload, returning an un-added Blob object.
+   *
+   * Unlike {@link createBlob} the bytes never enter this process: they were written straight to the
+   * store by whoever held the upload URL, which is the point — the uploader is typically an agent's
+   * shell moving a file far too large to pass through a model. Size and content type therefore come
+   * back from the store rather than from the caller.
+   *
+   * Rejects with `Error.BlobNotAvailableError` (`reason: 'backend-not-registered'` when the storage
+   * name has no backend, `'not-found'` when the backend cannot adopt uploads or the upload is gone)
+   * or `Error.BlobWriteError` if adoption fails.
+   */
+  createBlobFromUpload(uploadId: string, options?: { storage?: string }): Promise<Blob.Blob>;
+
+  /**
+   * Loads a blob's bytes. Rejects with `Error.BlobNotAvailableError` if the backend for the blob's
    * storage scheme is not registered, offline, or cannot find the bytes.
    */
   readBlob(blob: Blob.Blob): Promise<Uint8Array>;
@@ -369,7 +388,7 @@ export class Service extends Context.Service<
  */
 export const notAvailable = Layer.succeed(Service, {
   get db(): Database {
-    throw new Error('Database not available');
+    throw new globalThis.Error('Database not available');
   },
 });
 
@@ -392,6 +411,13 @@ export const layer = (db: Database): Layer.Layer<Service> => {
 };
 
 /**
+ * Stamps the database's space on every span the effect opens, so a span can be filtered by the space
+ * it ran in. Applied after `Effect.withSpan`, so the span it names is inside the annotated region.
+ */
+export const withSpaceId = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Service> =>
+  Effect.flatMap(Service, ({ db }) => effect.pipe(Effect.annotateSpans(SpanAttributes.SPACE_ID, db.spaceId)));
+
+/**
  * Returns the space ID of the database.
  */
 export const spaceId = Effect.gen(function* () {
@@ -409,11 +435,11 @@ export const resolve: {
   <S extends Type.AnyEntity>(
     ref: URI.URI | Ref<any>,
     schema: S,
-  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service>;
+  ): Effect.Effect<Type.InstanceType<S>, Error.EntityNotFoundError, Service>;
 } = (<S extends Type.AnyEntity>(
   ref: URI.URI | Ref<any>,
   schema?: S,
-): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service> =>
+): Effect.Effect<Type.InstanceType<S>, Error.EntityNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
@@ -428,13 +454,13 @@ export const resolve: {
     );
 
     if (!object) {
-      return yield* Effect.fail(new Err.EntityNotFoundError(dxn));
+      return yield* Effect.fail(new Error.EntityNotFoundError(dxn));
     }
     // `isInstanceOf` uses a conditional generic that TS can't resolve through
     // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
     invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
-  }).pipe(Effect.withSpan('Database.resolve'))) as any;
+  }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
 
 /**
  * Loads an object reference.
@@ -446,15 +472,39 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
+export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
     const object = yield* Effect.promise(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
+      return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
     return object;
   },
 );
+
+/**
+ * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
+ * never throws and never triggers loading. Compose with {@link load} for a sync-when-materialized
+ * read with an async fallback, keeping the effect runnable under `Effect.runSync` when every ref
+ * is materialized (e.g. a mutation in a gesture frame):
+ *
+ * ```ts
+ * const task = Database.peek(ref) ?? (yield* Database.load(ref));
+ * ```
+ *
+ * Peek skips {@link load}'s settling — a just-added object can resolve here before it has its own
+ * document — so callers that branch (or otherwise need a settled document) must load.
+ */
+export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
+
+/**
+ * Makes a reference to an object addressed by URI, resolvable against this database.
+ * @see {@link Database.makeRef}
+ */
+export const makeRef = <T extends Entity.Unknown = Entity.Unknown>(
+  uri: URI.URI,
+): Effect.Effect<Ref<T>, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.makeRef<T>(uri))).pipe(Effect.withSpan('Database.makeRef'), withSpaceId);
 
 /**
  * Adds an object or relation to the database.
@@ -464,7 +514,7 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
 // point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
 // iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
+  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'), withSpaceId);
 
 /**
  * Persists a Type definition to the database.
@@ -473,6 +523,7 @@ export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Eff
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.addType(type)))).pipe(
     Effect.withSpan('Database.addType'),
+    withSpaceId,
   );
 
 /**
@@ -480,7 +531,7 @@ export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, nev
  * @see {@link Database.remove}
  */
 export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'));
+  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'), withSpaceId);
 
 /**
  * Appends entities to a feed.
@@ -489,6 +540,7 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities)))).pipe(
     Effect.withSpan('Database.appendToFeed'),
+    withSpaceId,
   );
 
 /**
@@ -498,6 +550,7 @@ export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effec
 export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.deleteFromFeed(feed, entities)))).pipe(
     Effect.withSpan('Database.deleteFromFeed'),
+    withSpaceId,
   );
 
 /**
@@ -507,6 +560,7 @@ export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Eff
 export const flush = (opts?: FlushOptions) =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts)))).pipe(
     Effect.withSpan('Database.flush'),
+    withSpaceId,
   );
 
 /**
@@ -516,6 +570,7 @@ export const flush = (opts?: FlushOptions) =>
 export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.runGarbageCollection(options)))).pipe(
     Effect.withSpan('Database.runGarbageCollection'),
+    withSpaceId,
   );
 
 /**
@@ -523,14 +578,20 @@ export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
  * @see {@link Database.retainObjects}
  */
 export const retainObjects = (keep: Iterable<string>) =>
-  Service.pipe(Effect.map(({ db }) => db.retainObjects(keep))).pipe(Effect.withSpan('Database.retainObjects'));
+  Service.pipe(Effect.map(({ db }) => db.retainObjects(keep))).pipe(
+    Effect.withSpan('Database.retainObjects'),
+    withSpaceId,
+  );
 
 /**
  * Per-space storage metrics.
  * @see {@link Database.stats}
  */
 export const stats = () =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.stats()))).pipe(Effect.withSpan('Database.stats'));
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.stats()))).pipe(
+    Effect.withSpan('Database.stats'),
+    withSpaceId,
+  );
 
 /**
  * Creates a `QueryResult` object that can be subscribed to.
@@ -542,6 +603,7 @@ export const query: {
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
+    withSpaceId,
     queryInternal.makeQueryResultEffect,
   );
 
@@ -605,6 +667,43 @@ export interface DatabaseStats {
   readonly feeds: number;
   /** Total feed blocks stored locally for the space. */
   readonly feedBlocks: number;
+  /**
+   * What is resident in memory right now, as opposed to the stored counts above. Split by realm
+   * because the client and the host cache independently — a client-side working set that is never
+   * released reads as nothing at all in the host's numbers, and vice versa.
+   */
+  readonly loaded: {
+    readonly client: ClientLoadedStats;
+    readonly host: HostLoadedStats;
+  };
+}
+
+/**
+ * Client-side residency. Space-scoped except where noted.
+ */
+export interface ClientLoadedStats {
+  /** Document handles held by this space's repo proxy. */
+  readonly documents: number;
+  /** Object cores held by this space's entity manager. */
+  readonly objects: number;
+  /** Feed handles cached by this database. */
+  readonly feeds: number;
+  /** Objects resident across those feed handles — the feeds' working set, not what is stored. */
+  readonly feedObjects: number;
+  /** Entities in the runtime registry (types and other static entities), across the whole client. */
+  readonly registryTotal: number;
+}
+
+/**
+ * Host-side residency. A document on disk costs nothing until a handle for it is cached.
+ */
+export interface HostLoadedStats {
+  /** Automerge handles cached for this space. */
+  readonly documents: number;
+  /** Automerge handles cached across every space on this host. */
+  readonly documentsTotal: number;
+  /** Active reactive queries registered with the host, across every space. */
+  readonly queriesTotal: number;
 }
 
 /**

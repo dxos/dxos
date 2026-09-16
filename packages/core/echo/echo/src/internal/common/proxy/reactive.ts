@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type RefTypeId } from '../../Ref/ref';
-import { getProxyTarget, isProxy } from './proxy-utils';
-import { ChangeId, EventId } from './symbols';
+import { type RefTypeId } from '../../Ref/ref.ts';
+import { getProxyTarget, isProxy } from './proxy-utils.ts';
+import { ChangeId, EventId } from './symbols.ts';
 
 /**
  * Subscribe to changes on a reactive object.
@@ -15,7 +15,7 @@ import { ChangeId, EventId } from './symbols';
 // TODO(wittjosiah): Consider throwing if obj doesn't have EventId instead of returning no-op.
 export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
   // Guard against non-reactive inputs (queue-stored typed objects, snapshots, plain shapes
-  // with branded symbols) before `getProxyTarget`'s `ProxyHandlerSlot` invariant kicks in.
+  // with branded symbols) before `getProxyTarget`'s invariant kicks in.
   // `Obj.isObject` (KindId-based) is satisfied by these inputs, so callers like
   // `Atom.family((obj) => Atom.make((get) => Obj.subscribe(obj, ...)))` legitimately reach
   // here with a non-proxy. Falling back to a no-op preserves the documented contract that

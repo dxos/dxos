@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
 import * as Context from 'effect/Context';
@@ -17,21 +18,42 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
+import { Stream as PbStream } from '@dxos/async';
 import {
   ClientRpcServer,
   type ClientServicesHandlers,
   type ClientServicesRpc,
+  layerClientServicesServer,
   makeClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { SpacesService, SystemService } from '@dxos/protocols/rpc';
+import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  QueryInvitationsResponse,
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+  QueryInvitationsResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
+
+import { remainingLifetimeSeconds } from '../spaces/data-space-manager.ts';
 
 //
 // Helpers & Schema for test suite 2
@@ -123,20 +145,21 @@ describe('client services effect-rpc', () => {
     const proxy = await setup(() => ({
       SpacesService: mockService<SpacesService.Handlers>({
         ['SpacesService.createSpace']: () =>
-          Effect.succeed({
-            id: 'test-space',
-            spaceKey,
-            state: SpaceState.SPACE_READY,
-            membershipPolicy: MembershipPolicy.INVITE,
-            metrics: {},
-          }),
+          Effect.succeed(
+            buf.create(SpaceSchema, {
+              id: 'test-space',
+              spaceKey: fromPublicKey(spaceKey),
+              state: SpaceState.SPACE_READY,
+              membershipPolicy: MembershipPolicy.INVITE,
+            }),
+          ),
       }),
     }));
 
     const space = await proxy.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
     expect(space.id).toEqual('test-space');
-    expect(space.spaceKey).toBeInstanceOf(PublicKey);
-    expect(space.spaceKey.equals(spaceKey)).toBe(true);
+    expect(toPublicKey(space.spaceKey)).toBeInstanceOf(PublicKey);
+    expect(toPublicKey(space.spaceKey)?.equals(spaceKey)).toBe(true);
   });
 
   test('streaming call round trip', async ({ expect }) => {
@@ -177,6 +200,45 @@ describe('client services effect-rpc', () => {
     expect(error.message).toContain('no identity');
   });
 
+  // Regression: a delegated space invitation carried a fractional `lifetime`, which the int32 field
+  // could not encode. The response failed to serialize, so the stream died before delivering the
+  // initial snapshot that `InvitationsProxy.open()` (and therefore the whole app boot) waited on.
+  test('an existing-invitations snapshot with a delegated invitation reaches the client', async ({ expect }) => {
+    const delegated: Invitation = buf.create(InvitationSchema, {
+      invitationId: 'delegated-invitation',
+      type: Invitation_Type.DELEGATED,
+      kind: Invitation_Kind.SPACE,
+      authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
+      state: Invitation_State.INIT,
+      swarmKey: fromPublicKey(PublicKey.random()),
+      spaceKey: fromPublicKey(PublicKey.random()),
+      delegationCredentialId: fromPublicKey(PublicKey.random()),
+      lifetime: remainingLifetimeSeconds(new Date(Date.now() + 604_799_123)),
+      multiUse: true,
+      persistent: false,
+    });
+
+    const snapshot: QueryInvitationsResponse = buf.create(QueryInvitationsResponseSchema, {
+      action: QueryInvitationsResponse_Action.ADDED,
+      type: QueryInvitationsResponse_Type.CREATED,
+      invitations: [delegated],
+      existing: true,
+    });
+
+    const proxy = await setup(() => ({
+      InvitationsService: mockService<InvitationsService.Handlers>({
+        ['InvitationsService.queryInvitations']: (): Stream.Stream<QueryInvitationsResponse, never> =>
+          Stream.fromIterable([snapshot]),
+      }),
+    }));
+
+    const messages = await PbStream.consumeData(proxy.InvitationsService!.queryInvitations());
+    expect(messages).toHaveLength(1);
+    expect(messages[0].existing).toBe(true);
+    expect(messages[0].invitations?.[0].invitationId).toEqual('delegated-invitation');
+    expect(messages[0].invitations?.[0].lifetime).toEqual(delegated.lifetime);
+  });
+
   test('calls fail when the service is not available', async ({ expect }) => {
     const proxy = await setup(() => ({}));
     await expect(proxy.SystemService!.getConfig()).rejects.toThrow(
@@ -189,7 +251,7 @@ describe('client services effect-rpc', () => {
     const gate = new Trigger();
     const proxy = await setup(() => ({
       SystemService: mockService<SystemService.Handlers>({
-        ['SystemService.getConfig']: () => Effect.promise(() => gate.wait().then(() => ({}))),
+        ['SystemService.getConfig']: () => Effect.promise(() => gate.wait().then(() => create(ConfigSchema, {}))),
       }),
     }));
 
@@ -214,6 +276,7 @@ describe('client services effect-rpc', () => {
 
   test('onRequest gates dispatch until ready', async ({ expect }) => {
     const ready = new Trigger();
+    const arrived = new Trigger();
     let called = false;
     const proxy = await setup(
       () => ({
@@ -221,15 +284,22 @@ describe('client services effect-rpc', () => {
           ['SystemService.getConfig']: () =>
             Effect.sync(() => {
               called = true;
-              return {};
+              return create(ConfigSchema, {});
             }),
         }),
       }),
-      { onRequest: () => ready.wait() },
+      {
+        onRequest: () => {
+          arrived.wake();
+          return ready.wait();
+        },
+      },
     );
 
     const request = proxy.SystemService!.getConfig();
-    await sleep(50);
+    // `onRequest` runs before the gated handler, so waiting on `arrived` proves the request
+    // reached the gate without depending on how long dispatch across the MessageChannel takes.
+    await arrived.wait();
     expect(called).toBe(false);
 
     ready.wake();
@@ -251,7 +321,7 @@ describe('client services effect-rpc', () => {
     const rpc = await setupRpc(() => ({
       SystemService: mockService<SystemService.Handlers>({
         ['SystemService.getConfig']: () =>
-          Effect.succeed({ runtime: { client: { remoteSource: 'https://example.com' } } }),
+          Effect.succeed(create(ConfigSchema, { runtime: { client: { remoteSource: 'https://example.com' } } })),
         ['SystemService.queryStatus']: (): Stream.Stream<SystemService.QueryStatusResponse, Error> =>
           Stream.make({ status: SystemStatus.ACTIVE }),
       }),
@@ -266,77 +336,222 @@ describe('client services effect-rpc', () => {
 });
 
 describe('effect-rpc tests', () => {
-  test(
-    '1. just regular test with a couple rpcs',
-    Effect.fnUntraced(function* () {
+  test('1. just regular test with a couple rpcs', () =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const { port1, port2 } = yield* makeMessageChannel();
+
+          const serverLayer = Layer.mergeAll(
+            handlers,
+            RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port2))),
+          );
+
+          yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(
+            Effect.provide(serverLayer),
+            Effect.forkScoped,
+          );
+
+          const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
+            Layer.provide(BrowserWorker.layer(() => port1)),
+          );
+
+          yield* Effect.gen(function* () {
+            const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
+            const pongResult = yield* client.ping({ message: 'hello' });
+            expect(pongResult).toBe('pong: hello');
+
+            const userResult = yield* client.getUser({ id: '42' });
+            expect(userResult.id).toBe('42');
+            expect(userResult.name).toBe('User 42');
+          }).pipe(Effect.provide(clientLayer));
+        }),
+      ),
+    ));
+
+  test('3. two message channels to one server (simulating 2 tabs one worker)', () =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const channel1 = yield* makeMessageChannel();
+          const channel2 = yield* makeMessageChannel();
+
+          const serverLayer1 = Layer.mergeAll(
+            handlers,
+            Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
+              Layer.provide(BrowserWorkerRunner.layerMessagePort(channel1.port2)),
+            ),
+          );
+
+          const serverLayer2 = Layer.mergeAll(
+            handlers,
+            Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
+              Layer.provide(BrowserWorkerRunner.layerMessagePort(channel2.port2)),
+            ),
+          );
+
+          yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(
+            Effect.provide(serverLayer1),
+            Effect.forkScoped,
+          );
+
+          yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(
+            Effect.provide(serverLayer2),
+            Effect.forkScoped,
+          );
+
+          const clientLayer1 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
+            Layer.provide(BrowserWorker.layer(() => channel1.port1)),
+          );
+
+          yield* Effect.gen(function* () {
+            const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
+            const result = yield* client.ping({ message: 'tab1' });
+            expect(result).toBe('pong: tab1');
+          }).pipe(Effect.provide(clientLayer1));
+
+          const clientLayer2 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
+            Layer.provide(BrowserWorker.layer(() => channel2.port1)),
+          );
+
+          yield* Effect.gen(function* () {
+            const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
+            const result = yield* client.ping({ message: 'tab2' });
+            expect(result).toBe('pong: tab2');
+          }).pipe(Effect.provide(clientLayer2));
+        }),
+      ),
+    ));
+});
+
+describe('session server (layerClientServicesServer)', () => {
+  const serveOnPort = (
+    port: MessagePort,
+    // The per-service handler layers resolve their tag, which types as `any` through `toLayer`.
+    handlers: Layer.Layer<any, never, any>,
+  ): Effect.Effect<void, never, Scope.Scope> =>
+    Effect.asVoid(
+      Layer.build(
+        layerClientServicesServer(handlers).pipe(
+          Layer.provide(
+            RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
+          ),
+          Layer.orDie,
+        ),
+      ),
+    );
+
+  const serveOverChannel = (
+    // The per-service handler layers resolve their tag, which types as `any` through `toLayer`.
+    handlers: Layer.Layer<any, never, any>,
+  ): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
+    Effect.gen(function* () {
       const { port1, port2 } = yield* makeMessageChannel();
-
-      const serverLayer = Layer.mergeAll(
-        handlers,
-        RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port2))),
-      );
-
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer), Effect.forkScoped);
-
-      const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layer(() => port1)),
-      );
-
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const pongResult = yield* client.ping({ message: 'hello' });
-        expect(pongResult).toBe('pong: hello');
-
-        const userResult = yield* client.getUser({ id: '42' });
-        expect(userResult.id).toBe('42');
-        expect(userResult.name).toBe('User 42');
-      }).pipe(Effect.provide(clientLayer));
-    }),
-  );
-
-  test(
-    '3. two message channels to one server (simulating 2 tabs one worker)',
-    Effect.fnUntraced(function* () {
-      const channel1 = yield* makeMessageChannel();
-      const channel2 = yield* makeMessageChannel();
-
-      const serverLayer1 = Layer.mergeAll(
-        handlers,
-        Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
-          Layer.provide(BrowserWorkerRunner.layerMessagePort(channel1.port2)),
+      yield* Layer.build(
+        layerClientServicesServer(handlers).pipe(
+          Layer.provide(
+            RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port2))),
+          ),
+          Layer.orDie,
         ),
       );
+      return yield* makeClientServicesRpc(port1);
+    });
 
-      const serverLayer2 = Layer.mergeAll(
-        handlers,
-        Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
-          Layer.provide(BrowserWorkerRunner.layerMessagePort(channel2.port2)),
-        ),
-      );
+  test('serves a unary rpc from a service tag', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const rpc = yield* serveOverChannel(
+            SystemService.Rpcs.toLayer(SystemService.Tag).pipe(
+              Layer.provide(
+                Layer.succeed(
+                  SystemService.Tag,
+                  mockService<SystemService.Handlers>({
+                    ['SystemService.getConfig']: () => Effect.succeed(create(ConfigSchema, {})),
+                  }),
+                ),
+              ),
+            ),
+          );
+          const config = yield* rpc['SystemService.getConfig'](undefined);
+          expect(config).toBeDefined();
+        }),
+      ),
+    );
+  });
 
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer1), Effect.forkScoped);
+  test('serves a streaming rpc whose stream emits from a callback registration', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const impl = mockService<SystemService.Handlers>({
+            ['SystemService.queryStatus']: () =>
+              EffectEx.streamFromEmitter<SystemService.QueryStatusResponse, Error>((emit) => {
+                emit.single({ status: SystemStatus.ACTIVE });
+              }),
+          });
+          const stack = Context.make(SystemService.Tag, impl);
+          const rpc = yield* serveOverChannel(
+            SystemService.Rpcs.toLayer(SystemService.Tag).pipe(Layer.provide(Layer.succeedContext(stack))),
+          );
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.take(1), Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
 
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer2), Effect.forkScoped);
+  // Mirrors the worker session: the tab opens its client before the worker has built the server.
+  test('serves a streaming rpc to a client that connected before the server was built', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const { port1, port2 } = yield* makeMessageChannel();
+          const scope = yield* Effect.scope;
+          const rpcPromise = EffectEx.runPromise(makeClientServicesRpc(port1).pipe(Scope.provide(scope)));
+          yield* Effect.sleep('50 millis');
+          yield* serveOnPort(
+            port2,
+            SystemService.Rpcs.toLayer(SystemService.Tag).pipe(
+              Layer.provide(
+                Layer.succeed(
+                  SystemService.Tag,
+                  mockService<SystemService.Handlers>({
+                    ['SystemService.queryStatus']: () => Stream.make({ status: SystemStatus.ACTIVE }),
+                  }),
+                ),
+              ),
+            ),
+          );
+          const rpc = yield* Effect.promise(() => rpcPromise);
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.take(1), Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
 
-      const clientLayer1 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layer(() => channel1.port1)),
-      );
-
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const result = yield* client.ping({ message: 'tab1' });
-        expect(result).toBe('pong: tab1');
-      }).pipe(Effect.provide(clientLayer1));
-
-      const clientLayer2 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layer(() => channel2.port1)),
-      );
-
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const result = yield* client.ping({ message: 'tab2' });
-        expect(result).toBe('pong: tab2');
-      }).pipe(Effect.provide(clientLayer2));
-    }),
-  );
+  test('serves a streaming rpc from a service tag', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const rpc = yield* serveOverChannel(
+            SystemService.Rpcs.toLayer(SystemService.Tag).pipe(
+              Layer.provide(
+                Layer.succeed(
+                  SystemService.Tag,
+                  mockService<SystemService.Handlers>({
+                    ['SystemService.queryStatus']: () => Stream.make({ status: SystemStatus.ACTIVE }),
+                  }),
+                ),
+              ),
+            ),
+          );
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
 });

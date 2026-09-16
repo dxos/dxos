@@ -19,7 +19,7 @@ import { PostContent } from '#components';
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
 
-import { PostToolbar } from './PostToolbar';
+import { PostToolbar } from './PostToolbar.tsx';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
@@ -130,8 +130,8 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
         onSetStarred={handleSetStarred}
         onSetArchived={handleSetArchived}
         onMarkUnread={handleMarkUnread}
-        onRefresh={() => void handleRefresh()}
         onOpenOriginal={handleOpenOriginal}
+        onRefresh={() => void handleRefresh()}
       />
       <Panel.Content asChild>
         <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />

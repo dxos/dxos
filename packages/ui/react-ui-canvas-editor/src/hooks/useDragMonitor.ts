@@ -11,14 +11,14 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Dimension, type Point, useCanvasContext } from '@dxos/react-ui-canvas';
 
-import { type Anchor, resizeAnchors } from '../components';
-import { getInputPoint, pointAdd, pointSubtract } from '../layout';
-import { createRectangle, parseAnchorId } from '../shapes';
-import { createId, itemSize } from '../testing';
-import { type CanvasGraphModel, type Polygon, isPolygon } from '../types';
-import { useEditorContext } from './useEditorContext';
-import { getClosestAnchor } from './useLayout';
-import { useSnap } from './useSnap';
+import { type Anchor, resizeAnchors } from '../components/index.ts';
+import { getInputPoint, pointAdd, pointSubtract } from '../layout/index.ts';
+import { createRectangle, parseAnchorId } from '../shapes/index.ts';
+import { createId, itemSize } from '../testing/index.ts';
+import { type CanvasGraphModel, type Polygon, isPolygon } from '../types/index.ts';
+import { useEditorContext } from './useEditorContext.ts';
+import { getClosestAnchor } from './useLayout.ts';
+import { useSnap } from './useSnap.ts';
 
 export const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 

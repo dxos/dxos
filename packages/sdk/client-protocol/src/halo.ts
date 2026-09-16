@@ -4,21 +4,21 @@
 
 import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
   type Device,
   type Identity,
-  type Invitation,
-  type RecoverIdentityRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+  type RecoverIdentityRequest_ExternalSignature,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
   type Presentation,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
+import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations/index.ts';
 
 /**
  * Ways to re-admit a device to an existing identity. `external` presents a signature from a key
@@ -28,7 +28,7 @@ export type RecoverIdentityArgs =
   | { recoveryCode: string }
   | { recoveryProof: string }
   | { token: string }
-  | { external: RecoverIdentityRequest.ExternalSignature };
+  | { external: RecoverIdentityRequest_ExternalSignature };
 
 /**
  * TODO(burdon): Public API (move comments here).

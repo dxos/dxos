@@ -6,11 +6,12 @@ import React, { type FC, useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';
-import { createTextBitbar } from '../../../util';
+import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks/index.ts';
+import { createTextBitbar } from '../../../util/index.ts';
 
 type FeedInfo = {
   feedKey: PublicKey;
@@ -31,7 +32,7 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
   const feedKeys = [
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
-  ];
+  ].map(requirePublicKey);
   const devtoolsHost = useDevtools();
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [feedKeys]);
   const maxLength = feeds.reduce((max, feed) => (feed?.length > max ? feed.length : max), 0);

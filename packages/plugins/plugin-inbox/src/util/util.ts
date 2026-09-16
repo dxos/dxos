@@ -310,14 +310,14 @@ export const getMessageProps = (
   // query), and `getMessageBodyText` already guards that.
   const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
+  const to = message.properties?.to; // TODO(burdon): Ref?
   // Falls through to the address, as `renderMarkdown` does: bulk senders often set no display name,
   // and a row with an empty sender reads as a broken message rather than an unnamed one.
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name ?? message.sender?.email;
-  const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? getMessageBodyText(message);
-  return { id, text, date, from, to, email, subject, snippet };
+  return { id, text, date, to, from, email, subject, snippet };
 };
 
 /**

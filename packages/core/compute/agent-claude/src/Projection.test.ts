@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { ContentBlock } from '@dxos/types';
 
-import * as Projection from './Projection';
+import * as Projection from './Projection.ts';
 
 const SESSION_ID = 'session-1';
 

@@ -6,7 +6,7 @@ import { type Context, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type SurfaceManager } from './SurfaceManager';
+import { type SurfaceManager } from './SurfaceManager.ts';
 
 const SurfaceManagerContext: Context<SurfaceManager | undefined> = createContext<SurfaceManager | undefined>(undefined);
 

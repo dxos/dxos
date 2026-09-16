@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { useListDisclosure } from '../../hooks';
-import { Listbox } from './Listbox';
+import { useListDisclosure } from '../../hooks/index.ts';
+import { Listbox } from './Listbox.tsx';
 
 random.seed(1);
 
@@ -80,7 +80,7 @@ const MasterDetailStory = () => {
   const [selected, setSelected] = useState<string | undefined>(allItems[0].id);
   const detail = allItems.find(({ id }) => id === selected);
   return (
-    <div className='dx-container grid grid-cols-[20rem_1fr] divide-x divide-separator'>
+    <div className='dx-expand grid grid-cols-[20rem_1fr] divide-x divide-separator'>
       <Listbox.Root value={selected} onValueChange={setSelected}>
         <Listbox.Viewport>
           <Listbox.Content aria-label='Items'>
@@ -92,7 +92,7 @@ const MasterDetailStory = () => {
           </Listbox.Content>
         </Listbox.Viewport>
       </Listbox.Root>
-      <div role='region' aria-label='Detail' className='dx-container p-4 overflow-auto'>
+      <div role='region' aria-label='Detail' className='dx-expand p-4 overflow-auto'>
         {detail && (
           <>
             <h2 className='text-lg font-semibold'>{detail.name}</h2>
@@ -118,14 +118,10 @@ const WithToolbarStory = () => {
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>Filter items</Input.Label>
-              <Input.TextInput
-                placeholder='Filter…'
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Input.Root>
+            <Field.Root>
+              <Field.Label srOnly>Filter items</Field.Label>
+              <Field.Input placeholder='Filter…' value={filter} onChange={(event) => setFilter(event.target.value)} />
+            </Field.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
@@ -230,7 +226,9 @@ const DisclosureStory = () => {
                   />
                 </button>
                 {expanded && (
-                  <div {...panelProps} className='ps-[var(--dx-rail-item)] px-3 pb-2 text-sm text-description'>
+                  // `ps-10` = the header's `px-3` + the icon's `size-5` + its `gap-2`, so the
+                  // description starts under the title rather than under the icon.
+                  <div {...panelProps} className='ps-10 pe-3 pb-2 text-sm text-description'>
                     {item.description}
                   </div>
                 )}

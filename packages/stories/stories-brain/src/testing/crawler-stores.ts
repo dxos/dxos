@@ -12,14 +12,18 @@ import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { DXN } from '@dxos/keys';
 import { ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 /**
  * The crawler-only stores the Discord pipeline needs beyond `FactStore` — which `BrainPlugin` owns
  * (per-space, via {@link BrainCapabilities.FactStoreRegistry}). This story-local plugin provides the
  * remaining stores so a Facts-story module can run a crawl whose facts land in Brain's `FactStore`.
  */
-export type CrawlerStoreServices = StateStore | AgentRegistry | MessageStore | QuestionStore | ExtractedQuestionStore;
+export type CrawlerStoreServices =
+  | StateStore.StateStore
+  | AgentRegistry.AgentRegistry
+  | MessageStore.MessageStore
+  | QuestionStore.QuestionStore
+  | ExtractedQuestionStore.ExtractedQuestionStore;
 
 /** All crawler stores (minus `FactStore`) over one shared in-memory wasm SQLite client. */
 const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>
@@ -29,11 +33,7 @@ const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>
     MessageStore.layerSql,
     QuestionStore.layerSql,
     ExtractedQuestionStore.layerSql,
-  ).pipe(
-    // Store migrations run inside the SqlTransaction service; derive it from the same client.
-    Layer.provide(SqlTransaction.layer),
-    Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)),
-  );
+  ).pipe(Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)));
 
 /**
  * A long-lived runtime over the crawler stores. Modules run a crawl program through it after

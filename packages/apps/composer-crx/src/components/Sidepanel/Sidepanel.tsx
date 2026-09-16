@@ -10,14 +10,14 @@ import { log } from '@dxos/log';
 import { ErrorBoundary, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { getConfig } from '../../config';
-import { ThumbnailUrl, focusOrOpenComposerTab } from '../../core';
-import { debugLog } from '../../debug-log';
-import { translationKey } from '../../translations';
-import { Chat } from '../Chat';
-import { PageActions } from '../PageActions';
-import { Root } from '../Root';
-import { Thumbnail } from '../Thumbnail';
+import { getConfig } from '../../config.ts';
+import { ThumbnailUrl, focusOrOpenComposerTab } from '../../core/index.ts';
+import { debugLog } from '../../debug-log.ts';
+import { translationKey } from '../../translations.ts';
+import { Chat } from '../Chat/index.ts';
+import { PageActions } from '../PageActions/index.ts';
+import { Root } from '../Root/index.ts';
+import { Thumbnail } from '../Thumbnail/index.ts';
 
 /**
  * Side panel root component. `Root` (theme + i18n + tooltip + error boundary) must wrap the
@@ -96,7 +96,7 @@ const SidepanelContent = () => {
   const showChat = !thumbnailUrl && !!host;
 
   return (
-    <Panel.Root classNames='absolute inset-0 dx-container'>
+    <Panel.Root classNames='dx-fullscreen dx-fill'>
       {/* App controls that are not chat-specific (clip, page actions, launch) live here, not inside Chat. */}
       <Panel.Toolbar>
         <Toolbar.Root>

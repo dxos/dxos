@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Cell, Headers, Row, Viewport } from '../state/types';
-import { cellWidth, visibleCellRange, visibleCells, worldToScreen } from '../state/viewport';
+import type { Cell, Headers, Row, Viewport } from '../state/types.ts';
+import { cellWidth, visibleCellRange, visibleCells, worldToScreen } from '../state/viewport.ts';
 
 export type RenderCellArgs<T> = {
   ctx: CanvasRenderingContext2D;

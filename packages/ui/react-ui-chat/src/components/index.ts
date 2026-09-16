@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './ChatDialog';
-export * from './ChatEditor';
-export * from './ChatStatus';
-export * from './ChatStatusIndicator';
+export * from './ChatDialog/index.ts';
+export * from './ChatEditor/index.ts';
+export * from './ChatStatus/index.ts';
+export * from './ChatStatusIndicator/index.ts';

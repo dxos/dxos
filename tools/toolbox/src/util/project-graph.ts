@@ -5,7 +5,7 @@
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 
-import { loadJson } from './file';
+import { loadJson } from './file.ts';
 
 export type Project = {
   name: string;

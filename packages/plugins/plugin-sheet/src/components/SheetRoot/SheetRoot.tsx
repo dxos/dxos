@@ -10,18 +10,12 @@ import {
   type CompleteCellRange,
   type ComputeGraph,
 } from '@dxos/compute-hyperformula';
-import {
-  Grid,
-  type GridContentProps,
-  type GridEditing,
-  type GridScopedProps,
-  useGridContext,
-} from '@dxos/react-ui-grid';
+import { Grid, type GridContentProps, type GridEditing, useGridContext } from '@dxos/react-ui-grid';
 
 import { Sheet } from '#types';
 
-import { type SheetModel, useSheetModel } from '../../model';
-import { SheetContext } from './SheetContext';
+import { type SheetModel, useSheetModel } from '../../model/index.ts';
+import { SheetContext } from './SheetContext.ts';
 
 export type SheetContextValue = {
   id: string;
@@ -84,16 +78,13 @@ export const SheetRoot = ({
 };
 
 const SheetProviderImpl = ({
-  __gridScope,
   children,
   attendableId,
   ignoreAttention,
   model,
   onInfo,
-}: GridScopedProps<
-  PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'ignoreAttention' | 'model' | 'onInfo'>>
->) => {
-  const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
+}: PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'ignoreAttention' | 'model' | 'onInfo'>>) => {
+  const { id, editing, setEditing } = useGridContext('SheetProvider');
 
   const [cursor, setCursorInternal] = useState<CellAddress>();
   const [range, setRangeInternal] = useState<CellRange>();

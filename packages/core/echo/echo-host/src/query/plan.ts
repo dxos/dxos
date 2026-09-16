@@ -76,13 +76,38 @@ export namespace QueryPlan {
      * covers positioned blocks only.
      */
     feedCursorRange?: { begin?: string; end?: string };
+
+    /**
+     * Set when the planner has proved the step's {@link limit} can be applied by the feed scan
+     * itself — see `feedScanForLimit`. Absent means the limit must be applied downstream, after the
+     * steps that would otherwise slice candidates out of an already-capped page.
+     */
+    feedScan?: FeedScan;
+  };
+
+  /**
+   * How a feed scan must run for a `limit` pushed into it to keep the same rows the unpushed plan
+   * would have returned.
+   */
+  export type FeedScan = {
+    /** Natural order the scan produces, matching the plan's `OrderStep`. */
+    direction: 'asc' | 'desc';
+
+    /** Deleted state the scan filters to, folding in the plan's `FilterDeletedStep`. */
+    deleted?: boolean;
   };
 
   /**
    * Specifier to scan the database for objects.
    * Optimized to utilize database indexes.
    */
-  export type Selector = WildcardSelector | IdSelector | TypeSelector | TextSelector | TimestampSelector;
+  export type Selector =
+    | WildcardSelector
+    | IdSelector
+    | TypeSelector
+    | TextSelector
+    | TimestampSelector
+    | IncomingReferenceSelector;
 
   export type WildcardSelector = {
     _tag: 'WildcardSelector';
@@ -106,6 +131,23 @@ export namespace QueryPlan {
      * If true, select objects that do not match the typename.
      */
     inverted: boolean;
+  };
+
+  /**
+   * Select the objects holding a reference to `targetDXN`, straight off the reverse-reference index.
+   *
+   * Unlike an incoming {@link ReferenceTraversal} this needs no anchor in the working set, so it can
+   * name an entity that is absent from the graph — a named entity, or one a migration has renamed away.
+   */
+  export type IncomingReferenceSelector = {
+    _tag: 'IncomingReferenceSelector';
+
+    targetDXN: URI.URI;
+
+    /**
+     * Property path where the reference is located; null matches any property.
+     */
+    property: EscapedPropPath | null;
   };
 
   /**

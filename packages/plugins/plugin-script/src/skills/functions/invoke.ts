@@ -10,7 +10,7 @@ import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 
-import { Invoke } from './definitions';
+import { Invoke } from './definitions.ts';
 
 export default Invoke.pipe(
   Operation.withHandler(

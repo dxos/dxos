@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Graph from '@dxos/app-graph/Graph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { meta } from '#meta';
 
-import { deleteAction, openGroup } from '../Toolbar';
-import { type ExtractorMenuItem } from './useExtractorActions';
+import { deleteAction, openGroup } from '../Toolbar/index.ts';
+import { type ExtractorMenuItem } from './useExtractorActions.tsx';
 
 export type UseMessageToolbarActionsProps = {
   /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */
-  graph?: Graph.ReadableGraph;
+  graph?: AppGraph.ReadableGraph;
   /** Graph node id of the message (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
   /** Pre-built extract menu items (container-resolved from the object extractors + operation invoker). */

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as Progress from './Progress';
+import * as Progress from './Progress.ts';
 
 describe('Progress', () => {
   test('seed registers pending tasks', () => {

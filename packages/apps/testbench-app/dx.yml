@@ -11,7 +11,7 @@ runtime:
       agents: true
     disableP2pReplication: true
     log:
-      filter: 'echo-edge-replicator:debug,info'
+      filter: 'echo-edge-subduction-replicator:debug,info'
   services:
     # signaling:
     #   - server: wss://kube.dxos.org/.well-known/dx/signal
@@ -20,6 +20,6 @@ runtime:
         username: dxos
         credential: dxos
     edge:
-      url: https://main.dxos.network/
+      url: https://preview.dxos.network/
     iceProviders:
       - urls: https://dxos.network/ice

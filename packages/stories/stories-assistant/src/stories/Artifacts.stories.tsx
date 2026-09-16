@@ -12,8 +12,8 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Artifacts',
   render: ModuleContainer,
@@ -65,9 +65,9 @@ export const WithChess: Story = {
         }),
       );
     },
-    onChatCreated: async ({ space, binder }) => {
+    onChatCreated: async ({ db, binder }) => {
       const { Game } = await import('@dxos/plugin-game');
-      const objects = await space.db.query(Filter.type(Game.Game)).run();
+      const objects = await db.query(Filter.type(Game.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
     skills: [AssistantSkill.key, ChessSkill.key],
@@ -114,8 +114,8 @@ export const WithMap: Story = {
       space.db.add(table);
       space.db.add(map);
     },
-    onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(View.View)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
     skills: [AssistantSkill.key, MapSkill.key],
@@ -174,9 +174,9 @@ export const WithTrip: Story = {
         }),
       );
     },
-    onChatCreated: async ({ space, binder }) => {
+    onChatCreated: async ({ db, binder }) => {
       const { Map } = await import('@dxos/plugin-map');
-      const objects = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      const objects = await db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -201,9 +201,9 @@ export const WithBoard: Story = {
       const { Board } = await import('@dxos/plugin-board');
       space.db.add(Board.makeBoard());
     },
-    onChatCreated: async ({ space, binder }) => {
+    onChatCreated: async ({ db, binder }) => {
       const { Board } = await import('@dxos/plugin-board');
-      const objects = await space.db.query(Filter.type(Board.Board)).run();
+      const objects = await db.query(Filter.type(Board.Board)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),

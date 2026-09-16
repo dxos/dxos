@@ -21,7 +21,7 @@ export type ScaffoldProjectProps = {
 /**
  * Builds the standard in-memory Project graph: the project plus its owned Instructions (named so
  * chat context chips read sensibly) and task set, all parented so a single `Database.add` cascade
- * persists them and deletion cascades back. Shared by the blank template and domain templates,
+ * persists them and deletion cascades back. Shared by the default template and domain templates,
  * which pass their own instructions text/skills/objects.
  */
 export const scaffoldProject = ({ name, description, text, ...instructionsProps }: ScaffoldProjectProps = {}) => {
@@ -31,10 +31,11 @@ export const scaffoldProject = ({ name, description, text, ...instructionsProps 
     text: text ?? DEFAULT_PROJECT_INSTRUCTIONS,
     ...instructionsProps,
   });
-  Obj.setParent(instructions, project);
-  // The task set comes from `Project.make` — every project owns a ledger from the start.
+  // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
   });
+  Obj.setParent(instructions, project);
+  // The task set comes from `Project.make` — every project owns a ledger from the start.
   return project;
 };

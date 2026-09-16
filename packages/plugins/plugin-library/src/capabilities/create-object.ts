@@ -10,12 +10,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form/annotations';
 
 import { Book } from '#types';
 
-import { lookupHiveBook, searchBooks } from '../operations/bookhive';
-import { browserCorsProxy } from '../operations/cors';
+import { lookupHiveBook, searchBooks } from '../operations/bookhive.ts';
+import { browserCorsProxy } from '../operations/cors.ts';
 
 type CreateBookValues = {
   hiveId?: string;

@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Ollama } from '#types';
 
-import { OllamaModelsSection } from './OllamaModels';
+import { OllamaModelsSection } from './OllamaModels.tsx';
 
 // In-memory manager that bypasses the (desktop-only) capability lookup; methods are no-ops so the
 // configured state is what renders.

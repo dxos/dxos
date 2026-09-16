@@ -12,8 +12,8 @@ import { DraftMessage } from '@dxos/types';
 
 import { InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { getFeedObjectPath, getMailboxPath } from '../paths';
-import { createDraftMessage } from '../util';
+import { getFeedObjectPath, getMailboxPath } from '../paths.ts';
+import { createDraftMessage } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
   Operation.withHandler(

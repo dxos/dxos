@@ -8,7 +8,7 @@ import type { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { MakeOptional, Position } from '@dxos/util';
 
-import * as Role from '../../../common/Role';
+import * as Role from '../../../common/Role.ts';
 
 /**
  * One entry in a {@link Filter} — a role NSID plus the guard that validates the

@@ -4,7 +4,6 @@
 
 import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
-import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
@@ -13,8 +12,15 @@ import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
-import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
-import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
+import {
+  type CancellableInvitationObservable,
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
+import { Button, Clipboard, Icon, QrCode, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
@@ -37,7 +43,7 @@ const activeActionKey = 'dxos:react-shell/space-manager/active-action';
 
 const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservable.Subscription) => {
   const invitationCode = InvitationEncoder.encode(invitation);
-  if (invitation.state === Invitation.State.CONNECTING) {
+  if (invitation.state === Invitation_State.CONNECTING) {
     log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     subscription.unsubscribe();
   }
@@ -53,7 +59,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   const { invokePromise } = useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
-    (invitation) => ![Invitation.State.CANCELLED].includes(invitation.get().state),
+    (invitation) => ![Invitation_State.CANCELLED].includes(invitation.get().state),
   );
 
   const [activeAction, setInternalActiveAction] = useState(localStorage.getItem(activeActionKey) ?? 'inviteMany');
@@ -77,8 +83,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         onClick: async () => {
           const { data: invitation } = await invokePromise(SpaceOperation.Share, {
             space,
-            type: Invitation.Type.INTERACTIVE,
-            authMethod: Invitation.AuthMethod.SHARED_SECRET,
+            type: Invitation_Type.INTERACTIVE,
+            authMethod: Invitation_AuthMethod.SHARED_SECRET,
             multiUse: false,
             target: target && Obj.getURI(target),
           });
@@ -97,8 +103,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         onClick: async () => {
           const { data: invitation } = await invokePromise(SpaceOperation.Share, {
             space,
-            type: Invitation.Type.DELEGATED,
-            authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+            type: Invitation_Type.DELEGATED,
+            authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
             multiUse: true,
             target: target && Obj.getURI(target),
           });
@@ -126,8 +132,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       <Form.Root variant='settings'>
         <Form.Viewport scroll>
           <Form.Content>
-            <Form.Section title={t('members-verbose.label')} description={t('members.description')}>
-              <Form.Group>
+            <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
+              <Form.FieldSet>
                 <div role='group' className='min-w-0'>
                   <h3 className='text-lg mb-2'>{t('members.label')}</h3>
                   <SpaceMemberList spaceKey={space.key} includeSelf />
@@ -154,8 +160,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                     </>
                   )}
                 </div>
-              </Form.Group>
-            </Form.Section>
+              </Form.FieldSet>
+            </Form.FieldSet>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
@@ -167,14 +173,14 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
 type InvitationComponentProps = Partial<
   Pick<Invitation, 'authCode' | 'invitationId'> & {
-    state: Invitation.State;
+    state: Invitation_State;
     url: string;
     onBack: () => void;
   }
 >;
 
 const InvitationSection = ({
-  state = Invitation.State.INIT,
+  state = Invitation_State.INIT,
   authCode,
   invitationId = 'never',
   url = 'never',
@@ -183,9 +189,9 @@ const InvitationSection = ({
   const activeView =
     state < 0
       ? 'init'
-      : state >= Invitation.State.CANCELLED
+      : state >= Invitation_State.CANCELLED
         ? 'complete'
-        : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
+        : state >= Invitation_State.READY_FOR_AUTHENTICATION && authCode
           ? 'auth-code'
           : 'qr-code';
   return (
@@ -217,16 +223,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div className='w-full aspect-square relative text-description'>
-          <QR
-            rounding={100}
-            backgroundColor='transparent'
-            color='currentColor'
-            aria-labelledby={qrLabel}
-            errorCorrectionLevel='Q'
-            cutout={true}
-          >
-            {url ?? 'never'}
-          </QR>
+          <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
           </Centered>

@@ -9,7 +9,7 @@ import { fn } from 'storybook/test';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { AttentionSigil, type AttentionSigilAction } from './AttentionSigil';
+import { AttentionSigil, type AttentionSigilAction } from './AttentionSigil.tsx';
 
 const sampleActions: AttentionSigilAction[][] = [
   [

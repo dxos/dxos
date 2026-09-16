@@ -5,7 +5,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { type ActiveTopic, type ActiveTopicsResult, populatedChecklist, topicSlug } from './active-topics';
+import { type ActiveTopic, type ActiveTopicsResult, populatedChecklist, topicSlug } from './active-topics.ts';
 
 // Morning-review artifacts for the Active Topics experiment (spec 2026-07-13). The string renderers
 // are pure (unit-tested); `writeActiveTopicsReports` performs the filesystem writes.

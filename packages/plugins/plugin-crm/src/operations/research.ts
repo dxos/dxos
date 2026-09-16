@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { Text } from '@dxos/schema';
 import { type Organization, type Person } from '@dxos/types';
 
 import { ProfileOf } from '#types';
@@ -52,8 +53,11 @@ export const upsertProfile = (subject: Person.Person | Organization.Organization
       return { profile: Ref.make(source), created: false };
     }
 
-    const profile = Markdown.make({ name: content.title, content: renderProfile(content) });
-    Obj.setParent(profile, subject);
+    const profile = Obj.make(Markdown.Document, {
+      name: content.title,
+      content: Ref.make(Text.make({ content: renderProfile(content) })),
+      [Obj.Parent]: subject,
+    });
     yield* Database.add(profile);
     yield* Database.add(
       ProfileOf.make({

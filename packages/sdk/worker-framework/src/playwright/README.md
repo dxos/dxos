@@ -53,6 +53,7 @@ Commands (`stress-commands.ts`):
 | `DX_STRESS_SEED` | `1` | RNG seed. A failure prints its seed; re-run with it to replay exactly. |
 | `DX_STRESS_ITERATIONS` | `30` | Commands in the random walk. Raise for a soak. |
 | `DX_STRESS_TABS` | `2` | Tabs the random walk starts with. |
+| `DX_STRESS_PORT` | `9010` | Harness dev-server port. Move it when something else already owns the default. |
 
 ## Layout
 

@@ -9,6 +9,7 @@
     ]
   },
   "exclude": [
+    "**/*.tst.ts",
     "*.t.ts"
   ],
   "include": [

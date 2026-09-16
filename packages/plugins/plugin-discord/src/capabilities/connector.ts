@@ -22,9 +22,9 @@ import {
   DISCORD_SOURCE,
   DISCORD_USER_LABEL,
   DISCORD_USER_PROVIDER_ID,
-} from '../constants';
-import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
-import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
+} from '../constants.ts';
+import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors.ts';
+import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services/index.ts';
 
 /**
  * Manual-credential form for the Discord Bot connector.

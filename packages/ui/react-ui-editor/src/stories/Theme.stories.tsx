@@ -9,7 +9,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
-import { Editor } from '../components';
+import { Editor } from '../components/index.ts';
 
 const createText = (monospace?: boolean) =>
   [`${monospace ? 'monospace' : 'body'}`, 'Hello world', '0123456789'].join('\n');

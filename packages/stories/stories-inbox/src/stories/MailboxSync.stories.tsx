@@ -34,8 +34,8 @@ import { TagIndex } from '@dxos/schema';
 import { ModuleContainer, UpdateCompanionStubPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { StoryRole } from '../modules';
-import { StoryModulesPlugin } from '../testing/modules';
+import { StoryRole } from '../modules/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 const TYPES = [
   AccessToken.AccessToken,
@@ -54,7 +54,7 @@ const TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'main' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'preview' }));
 
 const DECORATORS = [
   withSurfaceDebug(false),

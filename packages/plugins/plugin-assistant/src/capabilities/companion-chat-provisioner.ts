@@ -9,17 +9,17 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
-import type * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as CompanionViewState from '@dxos/plugin-deck/CompanionViewState';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
@@ -42,6 +42,17 @@ export default Capability.makeModule(
       return [];
     }
     const deckStateAtom = deckStateOption.value;
+    // What is open is derived from the URL and lives in the deck's ephemeral state, not its stored one.
+    const deckEphemeralOption = yield* Capability.getOption(DeckCapabilities.EphemeralState);
+    if (Option.isNone(deckEphemeralOption)) {
+      return [];
+    }
+    const deckEphemeralAtom = deckEphemeralOption.value;
+    // The mobile drawer and the desktop companion plank record "which companion is on screen" in
+    // different fields, so the host has to be known before that state can be read.
+    const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
+      Effect.catch(() => Effect.succeed('desktop' as const)),
+    );
 
     const cacheAtom = yield* AssistantCapabilities.CompanionChatCache;
     const stateAtom = yield* AssistantCapabilities.State;
@@ -75,7 +86,7 @@ export default Capability.makeModule(
      * so the caller can tear down the connection subscription.
      */
     const provisionForPlank = (plankId: string, companionVariant: string | undefined): boolean => {
-      const node: Node.Node | null = Graph.getNode(graph, plankId).pipe(Option.getOrNull);
+      const node: AppGraphNode.Node | null = AppGraph.getNode(graph, plankId).pipe(Option.getOrNull);
       if (!node || !Obj.isObject(node.data) || Obj.instanceOf(Chat.Chat, node.data)) {
         return false;
       }
@@ -98,7 +109,7 @@ export default Capability.makeModule(
       }
 
       void operationInvoker
-        .invokePromise(AssistantOperation.EnsureCompanionChat, { db, companionTo: object })
+        .invokePromise(AssistantOperation.EnsureCompanionChat, { companionTo: object }, { spaceId: db.spaceId })
         .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }));
 
       return false;
@@ -107,13 +118,18 @@ export default Capability.makeModule(
     const provision = () => {
       const deckState: DeckSchema.StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
-      if (!deck?.companionPlanks.length) {
+      const active: string[] = registry.get(deckEphemeralAtom).open[deckState.activeDeck]?.active ?? [];
+      const { open, variant: companionVariant } = DeckSchema.getCompanionSelection(
+        platform,
+        deckState,
+        registry.get(variantAtom),
+      );
+      if (!deck || !open) {
         unsubAllPlanks();
         return;
       }
 
-      const companionVariant = registry.get(variantAtom);
-      const plankIds = new Set(deck.active);
+      const plankIds = new Set(active);
 
       // Remove subscriptions for planks that are no longer active.
       for (const trackedId of plankSubs.keys()) {
@@ -148,12 +164,14 @@ export default Capability.makeModule(
     provision();
 
     const unsub1 = registry.subscribe(deckStateAtom, provision);
+    const unsubOpen = registry.subscribe(deckEphemeralAtom, provision);
     const unsub2 = registry.subscribe(stateAtom, provision);
     const unsub3 = registry.subscribe(variantAtom, provision);
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsub1();
+        unsubOpen();
         unsub2();
         unsub3();
         unsubAllPlanks();
@@ -168,24 +186,14 @@ export default Capability.makeModule(
  * Returns the variant that would actually be rendered for a given plank.
  */
 const resolveEffectiveVariant = (
-  graph: Graph.BaseGraph,
+  graph: AppGraph.BaseGraph,
   plankId: string,
   preferredVariant: string | undefined,
 ): string | undefined => {
-  const companions = Graph.getConnections(graph, plankId, 'child')
+  const companions = AppGraph.getConnections(graph, plankId, 'child')
     .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
-  if (companions.length === 0) {
-    return undefined;
-  }
-
-  if (preferredVariant) {
-    const preferred = companions.find((companion) => Attention.getLinkedVariant(companion.id) === preferredVariant);
-    if (preferred) {
-      return Attention.getLinkedVariant(preferred.id);
-    }
-  }
-
-  return Attention.getLinkedVariant(companions[0].id);
+  const selected = DeckSchema.selectCompanion(companions, preferredVariant);
+  return selected && Attention.getLinkedVariant(selected.id);
 };

@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './InvitationManager';
-export type * from './StepProps';
-export * from './ConfirmReset';
+export * from './InvitationManager.tsx';
+export type * from './StepProps.ts';
+export * from './ConfirmReset.tsx';

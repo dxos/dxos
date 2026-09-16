@@ -912,7 +912,7 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       with the nexus schema.
 - [x] **Create Topic from the nav menu** — plugin-brain `CreateObject` capability (`SpaceCapabilities.CreateObjectEntry`
       for `Topic.Topic`) creates the Topic + an `Instructions` (seeded default brief, drives the agent) and
-      links them; wired the `+` action into the Topics type-section (`OpenCreateObject`). Registered via
+      links them; wired the `+` action into the Topics type-section (`OpenObjectForm`). Registered via
       `addCreateObjectModule`. Added `@dxos/plugin-space` dep.
 - [x] **Storybooks in plugin-brain** — co-located `TopicArticle.stories.tsx` + `FactsCompanion.stories.tsx`
       (contributes a seeded `FactStoreRegistry`); added the `storybook`/`ts-test-storybook` tags,

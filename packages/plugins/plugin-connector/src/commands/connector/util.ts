@@ -23,6 +23,34 @@ export type OAuthPreset = {
 // TODO(wittjosiah): Copied from plugin-token-manager.
 export const OAUTH_PRESETS: OAuthPreset[] = [
   {
+    provider: OAuthProvider.CLOUDFLARE,
+    source: 'cloudflare.com',
+    label: 'Cloudflare',
+    scopes: [
+      'memberships.read',
+      'account-settings.read',
+      'user-details.read',
+      'workers-scripts.write',
+      'workers-scripts.bind',
+      'workers-routes.write',
+      'workers-tail.read',
+      'workers-observability.read',
+      'workers-kv-storage.write',
+      'workers-r2.write',
+      'workers-r2-bucket-item.write',
+      'd1.write',
+      'queues.write',
+      'pipelines.write',
+      'vectorize.write',
+      'query-cache.write',
+      'secrets-store.write',
+      'ai.write',
+      'containers.write',
+      'zone.read',
+      'ssl-and-certificates.write',
+    ],
+  },
+  {
     provider: OAuthProvider.GITHUB,
     source: 'github.com',
     label: 'GitHub',
@@ -34,7 +62,9 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
     label: 'Google',
     scopes: [
       'https://www.googleapis.com/auth/calendar.readonly',
-      'https://www.googleapis.com/auth/gmail.readonly',
+      // `gmail.modify` (not `gmail.readonly`) — must stay within the scope set declared for
+      // restricted-scope verification (DX-794); see plugin-google `src/scopes.ts`.
+      'https://www.googleapis.com/auth/gmail.modify',
       'https://www.googleapis.com/auth/gmail.send',
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/youtube.readonly',

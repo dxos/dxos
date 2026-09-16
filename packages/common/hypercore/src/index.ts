@@ -10,7 +10,7 @@ export type {
   ReadStreamOptions,
 } from '@dxos/vendor-hypercore/hypercore';
 
-export * from './crypto';
-export * from './defaults';
-export * from './hypercore-factory';
-export * from './iterator';
+export * from './crypto.ts';
+export * from './defaults.ts';
+export * from './hypercore-factory.ts';
+export * from './iterator.ts';

@@ -1,0 +1,3 @@
+# Derived from the manifest UUID by scripts/assemble.mjs.
+org.dxos.composer.sdPlugin/
+composer-stream-deck.streamDeckPlugin

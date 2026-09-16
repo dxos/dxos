@@ -17,11 +17,11 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { InboxPlugin } from '#plugin';
 import { Builder } from '#testing';
 import { Calendar } from '#types';
 
-import { InboxPlugin } from '../../plugin';
-import { CalendarArticle } from './CalendarArticle';
+import { CalendarArticle } from './CalendarArticle.tsx';
 
 type StoryArgs = {
   count?: number;

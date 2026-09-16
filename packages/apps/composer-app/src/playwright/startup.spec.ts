@@ -10,15 +10,16 @@ import path from 'node:path';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { INITIAL_URL } from './app-manager';
+import { INITIAL_URL } from './app-manager.ts';
 import {
   appendBenchmarkRow,
   appendRunSample,
   collectStartupReport,
+  throttleProfile,
   trackNetwork,
   waitForReady,
   writeReport,
-} from './harness-helpers';
+} from './harness-helpers.ts';
 
 // Surface the DX_PWA requirement as a test-level failure rather than a hard
 // `process.exit` at spec-collection time — keeps the playwright report and
@@ -226,14 +227,12 @@ test.describe.serial('Startup timing harness', () => {
       test.skip(true, 'CDP session unavailable');
       return;
     }
+    // Overridable, since the default Fast 3G profile can outrun `waitForReady`'s 300 s budget.
+    const { cpuRate, ...conditions } = throttleProfile();
     await cdp.send('Network.enable');
-    await cdp.send('Network.emulateNetworkConditions', {
-      offline: false,
-      latency: 150,
-      downloadThroughput: (1.5 * 1024 * 1024) / 8,
-      uploadThroughput: (750 * 1024) / 8,
-    });
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 2 });
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, ...conditions });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuRate });
+    log.info('throttle profile', { ...conditions, cpuRate });
 
     const network = trackNetwork(page);
     await observeLongTasks(page);

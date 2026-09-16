@@ -13,28 +13,29 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
-import { Editor, type ViewModeItem, defaultViewModeItems, useEditorContext } from '@dxos/react-ui-editor';
+import {
+  Editor,
+  type EditorMenuGroup,
+  type ViewModeItem,
+  defaultViewModeItems,
+  useEditorContext,
+} from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
 
-import {
-  MarkdownEditor,
-  type MarkdownEditorContentProps,
-  MarkdownEditorProvider,
-  type MarkdownEditorProviderProps,
-} from '#components';
+import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from '#components';
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities } from '#types';
 
-import { mergeConflicts } from '../../extensions';
+import { mergeConflicts } from '../../extensions/index.ts';
 
 /**
  * Built-in binding when no {@link MarkdownCapabilities.EditorBindingHook} is contributed: bind the
@@ -42,8 +43,9 @@ import { mergeConflicts } from '../../extensions';
  * entries (e.g. Suggesting) still toggle without a versioning host.
  */
 const useDefaultEditorBinding: MarkdownCapabilities.UseEditorBinding = ({ object, viewMode, onViewModeChange }) => {
-  const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
-  const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
+  const text = useResolveRef(
+    Obj.instanceOf(Markdown.Document, object) ? object.content : Obj.instanceOf(Text.Text, object) ? object : undefined,
+  );
   // Contributed review modes have no host here; remember the active one so its entry still checks.
   const [activeReviewMode, setActiveReviewMode] = useState<MarkdownCapabilities.ReviewMode | undefined>(undefined);
   const selectViewMode = useCallback(
@@ -64,7 +66,7 @@ const useDefaultEditorBinding: MarkdownCapabilities.UseEditorBinding = ({ object
   );
   return {
     subject: object,
-    initialValue: docContent ?? textContent,
+    initialValue: text?.content,
     key: 'current',
     viewMode,
     loading: false,
@@ -113,8 +115,7 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
       onSelectObject?: (objectId: string) => void;
     },
     Pick<MarkdownCapabilities.MarkdownPluginState, 'extensionProviders'>,
-    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onViewModeChange'>,
-    Pick<MarkdownEditorContentProps, 'editorStateStore'>
+    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onViewModeChange' | 'editorStateStore'>
   >
 >;
 
@@ -218,6 +219,7 @@ const MarkdownArticleImpl = forwardRef<
     // is selected) the review mode has no effect, so only the built-in editor modes are shown.
     const { ambient, activeReviewMode, selectViewMode } = binding;
     const viewModeExtensions = useCapabilities(MarkdownCapabilities.ViewModeExtension);
+
     // Bumped on every dropdown selection: the menu returns focus to its trigger on close, so the
     // editor must be handed the focus back (the caret survives in editor state) — see RefocusEditor.
     const [focusRequest, setFocusRequest] = useState(0);
@@ -266,6 +268,28 @@ const MarkdownArticleImpl = forwardRef<
 
     // Open linked objects.
     const { invokePromise } = useOperationInvoker();
+    // Contributed slash-menu commands, one group per contributing plugin. Each entry names an
+    // operation; selecting it hands the operation the surface and the offset the trigger was
+    // consumed at, and the handler reaches the live view through `EditorViews`.
+    const menuExtensions = useCapabilities(MarkdownCapabilities.MenuExtension);
+    const slashCommandGroups = useMemo<EditorMenuGroup[]>(() => {
+      const groups = new Map<string, EditorMenuGroup>();
+      for (const extension of [...menuExtensions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
+        const group = groups.get(extension.group.id) ?? {
+          id: extension.group.id,
+          label: extension.group.label,
+          items: [],
+        };
+        group.items.push({
+          id: extension.id,
+          label: extension.label,
+          icon: extension.icon,
+          onSelect: ({ head }) => void invokePromise?.(extension.operation, { subject: attendableId ?? id, head }),
+        });
+        groups.set(extension.group.id, group);
+      }
+      return [...groups.values()];
+    }, [menuExtensions, attendableId, id, invokePromise]);
     const handleSelectObject = useCallback(
       (targetId: string, modifiers?: { shift: boolean }) => {
         if (onSelectObject) {
@@ -318,6 +342,7 @@ const MarkdownArticleImpl = forwardRef<
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
         onSelectLink={handleSelectLink}
+        slashCommandGroups={slashCommandGroups}
         onViewModeChange={onViewModeChange}
         {...props}
       >

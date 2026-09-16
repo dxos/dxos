@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './App';
-export * from './loader';
+export * from './App.tsx';
+export * from './loader.ts';

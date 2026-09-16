@@ -33,10 +33,9 @@ import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
+import { KanbanPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Kanban } from '#types';
-
-import { KanbanPlugin } from '../../plugin';
 
 random.seed(0);
 
@@ -126,7 +125,7 @@ const DefaultComponent = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden dx-fill'>
       <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor

@@ -10,7 +10,7 @@ import { Person } from '@dxos/types';
 
 import { CrmOperation } from '#types';
 
-import { organizationProfileContent, upsertProfile } from './research';
+import { organizationProfileContent, upsertProfile } from './research.ts';
 
 const handler: Operation.WithHandler<typeof CrmOperation.ResearchOrganization> = CrmOperation.ResearchOrganization.pipe(
   Operation.withHandler(

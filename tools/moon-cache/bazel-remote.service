@@ -8,9 +8,12 @@ Wants=network-online.target
 # accept any client, and the cache is reachable from the public internet.
 # --access_log_level defaults to all (one line per CAS/AC request) and filled the disk in
 # 8 days at CI volume; `none` disables it, the request rate isn't otherwise interesting.
+# --max_size is bounded by RAM, not disk: bazel-remote holds one index entry per cache file,
+# measured at ~1.1 KB. At 200 GiB the cache reached 10.5M files and an 11.7 GB heap on a 16 GB
+# droplet, which swapped and took BatchReadBlobs to 18 s. 50 GiB is ~3.7M files, ~4 GB of index.
 ExecStart=/usr/local/bin/bazel-remote \
   --dir /var/cache/moon \
-  --max_size 100 \
+  --max_size 50 \
   --storage_mode zstd \
   --grpc_address 0.0.0.0:9092 \
   --http_address 0.0.0.0:9093 \

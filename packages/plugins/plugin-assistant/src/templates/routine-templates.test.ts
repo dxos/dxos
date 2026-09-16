@@ -11,8 +11,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { dailyDigest } from './daily-digest';
-import { researchBrief } from './research-brief';
+import { dailyDigest } from './daily-digest.ts';
+import { researchBrief } from './research-brief.ts';
 
 const templates = [
   { template: researchBrief, skillCount: 4 },
@@ -20,12 +20,11 @@ const templates = [
 ];
 
 describe('scheduled routine templates', () => {
-  test('apply only in the global create dialog (no companion subject)', ({ expect }) => {
-    // These templates appear only in the global create dialog, not in object companions.
-    expect(dailyDigest.appliesTo?.(undefined)).toBe(true);
-    expect(researchBrief.appliesTo?.(undefined)).toBe(true);
-    expect(dailyDigest.appliesTo?.({} as Obj.Unknown)).toBe(false);
-    expect(researchBrief.appliesTo?.({} as Obj.Unknown)).toBe(false);
+  test('are listed in the create picker and need no input', ({ expect }) => {
+    for (const { template } of templates) {
+      expect(template.hidden).toBeUndefined();
+      expect(template.inputSchema).toBeUndefined();
+    }
   });
 
   for (const { template, skillCount } of templates) {

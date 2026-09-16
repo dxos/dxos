@@ -13,12 +13,12 @@
   "exports": {
     "./hypercore": {
       "types": "./src/hypercore.d.ts",
-      "default": "./dist/lib/browser/hypercore.mjs"
+      "default": "./dist/lib/hypercore.mjs"
     },
     "./hypercore-crypto": {
       "types": "./src/hypercore-crypto.d.ts",
       "workerd": "./src/hypercore-crypto-stub.js",
-      "default": "./dist/lib/browser/hypercore-crypto.mjs"
+      "default": "./dist/lib/hypercore-crypto.mjs"
     }
   },
   "files": [

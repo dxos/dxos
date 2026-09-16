@@ -7,14 +7,15 @@ import { EditorView } from '@codemirror/view';
 import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { useThemeContext } from '@dxos/react-ui';
-import { type XmlWidgetRegistry, type XmlWidgetState } from '@dxos/ui-editor';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ObjectLinkProps, type WidgetDef, type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
-import { createBlockExtensions } from './extensions';
-import { type HighlightRange, setHighlights } from './highlight';
-import { useSelectionGroup } from './selection-group';
+import { createBlockExtensions } from './extensions.ts';
+import { type HighlightRange, setHighlights } from './highlight.ts';
+import { useSelectionGroup } from './selection-group.ts';
 
-export type MarkdownBlockProps = {
+export type MarkdownBlockProps = ThemedClassName<{
   text: string;
   /**
    * Drip appended text in per frame (the typewriter) instead of dispatching whole deltas. The
@@ -30,10 +31,12 @@ export type MarkdownBlockProps = {
    */
   editable?: boolean;
   registry?: XmlWidgetRegistry;
+  /** The block widget for an object embedded as a card (`![label](echo://…)`). */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   hits?: readonly HighlightRange[];
   /** Number of block widgets this item currently has mounted; 0 once it unmounts. */
   onWidgetsChange?: (count: number) => void;
-};
+}>;
 
 /**
  * One message as its own markdown document.
@@ -42,12 +45,21 @@ export type MarkdownBlockProps = {
  * single thread-wide document needs a cursor and a range table to know which message it is touching.
  */
 export const MarkdownBlock = memo(
-  ({ text, stream, editable = false, registry, hits, onWidgetsChange }: MarkdownBlockProps) => {
+  ({
+    classNames,
+    text,
+    stream,
+    editable = false,
+    registry,
+    objectImage,
+    hits,
+    onWidgetsChange,
+  }: MarkdownBlockProps) => {
     const { themeMode } = useThemeContext();
     const [view, setView] = useState<EditorView | null>(null);
     // React widgets render in portals into hosts the extension places in the document, so the item has
     // to own them: a widget's tree belongs to the React root that rendered the item, not to CodeMirror.
-    const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+    const [widgets, setWidgets] = useState<WidgetState[]>([]);
     const rootRef = useRef<HTMLDivElement>(null);
 
     // Read through a ref so the group never lands in the extension deps: rebuilding extensions
@@ -58,14 +70,14 @@ export const MarkdownBlock = memo(
 
     const extensions = useMemo<Extension[]>(
       () => [
-        ...createBlockExtensions({ registry, editable, themeMode, setWidgets }),
+        ...createBlockExtensions({ registry, objectImage, editable, themeMode, setWidgets }),
         EditorView.updateListener.of((update) => {
           if (update.selectionSet && !update.state.selection.main.empty) {
             selectionGroupRef.current.claim(update.view);
           }
         }),
       ],
-      [editable, themeMode, registry],
+      [editable, themeMode, registry, objectImage],
     );
 
     // Deliberately NOT `useTextEditor`, which builds the view in a passive effect — i.e. after paint.
@@ -223,7 +235,9 @@ export const MarkdownBlock = memo(
 
     return (
       <>
-        <div ref={rootRef} />
+        {/* No query container here: a prompt's bubble is sized by this element's text, which
+            inline-size containment would stop contributing. */}
+        <div className={mx(classNames)} ref={rootRef} />
         {widgets.map(({ Component, root, id, props }) => (
           <div key={id}>{createPortal(<Component view={view ?? undefined} {...props} />, root)}</div>
         ))}

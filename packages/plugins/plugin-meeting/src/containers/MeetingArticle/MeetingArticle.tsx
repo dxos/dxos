@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { Meeting, MeetingOperation } from '#types';
@@ -116,13 +116,10 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Toolbar>
+
       {tab === 'call' && callData && (
         <Panel.Content>
           <Surface.Surface type={AppSurface.Article} data={callData} limit={1} />

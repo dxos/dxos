@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
@@ -14,7 +15,7 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/config';
 import { log } from '@dxos/log';
-import type { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Client_Storage, Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 export const handler = Effect.fn(function* ({
   file,
@@ -35,11 +36,11 @@ export const handler = Effect.fn(function* ({
     () => import('@dxos/client-services'),
   );
 
-  let storageConfig: Runtime.Client.Storage;
+  let storageConfig: Runtime_Client_Storage;
   if (!dataDirValue) {
     if (!force) {
       yield* Console.log(`Will overwrite profile: ${profile}`);
-      const confirmed = yield* Prompt.confirm({
+      const confirmed = yield* Prompt.Confirm({
         message: `Delete all data? (Profile: ${profile})`,
         initial: false,
       }).pipe(Prompt.run);
@@ -51,10 +52,10 @@ export const handler = Effect.fn(function* ({
   } else {
     const fullPath = path.resolve(dataDirValue);
     yield* Console.log(`Importing into: ${fullPath}`);
-    storageConfig = {
+    storageConfig = create(Runtime_Client_StorageSchema, {
       persistent: true,
       dataRoot: fullPath,
-    };
+    });
   }
 
   if (yield* fs.exists(storageConfig.dataRoot!)) {
@@ -89,9 +90,12 @@ export const handler = Effect.fn(function* ({
 export const importCommand = Command.make(
   'import',
   {
-    file: Options.string('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    dataDir: Options.string('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
-    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
+    file: Options.String('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    dataDir: Options.String('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
+    force: Options.Boolean('force').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Skip confirmation prompt.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('Import profile.'));

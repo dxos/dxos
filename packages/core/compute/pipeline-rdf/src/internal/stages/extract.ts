@@ -15,8 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SemanticIndexError } from '../../errors';
-import { type ExtractDocument, type ExtractOptions, FactualityValue } from '../../types';
+import { SemanticIndexError } from '../../errors.ts';
+import { type ExtractDocument, type ExtractOptions, FactualityValue } from '../../types/index.ts';
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 

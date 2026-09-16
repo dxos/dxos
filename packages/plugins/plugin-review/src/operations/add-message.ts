@@ -16,7 +16,7 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { AgentIdentity, CommentCapabilities, CommentOperation } from '#types';
 
-import { shouldTriggerAgent } from '../should-trigger-agent';
+import { shouldTriggerAgent } from '../should-trigger-agent.ts';
 
 const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
   Operation.withHandler(

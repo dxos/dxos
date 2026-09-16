@@ -15,12 +15,12 @@ import { SchemaAST } from '@dxos/effect';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Message, type Person, Transcript } from '@dxos/types';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Transcript', icon: 'ph--microphone--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.transcription.create'),
+    name: 'Create Transcript',
+    icon: 'ph--microphone--regular',
+  },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     space: SpaceSchema,
@@ -47,7 +47,7 @@ export type MessageWithRangeIdType = Schema.Schema.Type<typeof MessageWithRangeI
 
 export const Open = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.transcription.open'),
+    key: DXN.make('org.dxos.operation.transcription.open'),
     name: 'Open',
     description: 'Opens and reads the contents of a transcription object.',
     icon: 'ph--folder-open--regular',
@@ -65,7 +65,7 @@ export const Open = Operation.make({
 
 export const Summarize = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.transcription.summarize'),
+    key: DXN.make('org.dxos.operation.transcription.summarize'),
     name: 'Summarize',
     description: 'Summarize a transcript of a meeting.',
     icon: 'ph--text-align-left--regular',
@@ -88,7 +88,7 @@ export const Summarize = Operation.make({
 
 export const EnrichMessage = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.transcription.enrichMessage'),
+    key: DXN.make('org.dxos.operation.transcription.enrichMessage'),
     name: 'Enrich Transcript Message',
     description: 'Extract proper nouns from a transcript message and link them to objects in the space.',
     icon: 'ph--text-t--regular',
@@ -118,7 +118,7 @@ export const SentenceNormalizationOutput = Schema.Struct({
 
 export const SentenceNormalization = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.transcription.sentenceNormalization'),
+    key: DXN.make('org.dxos.operation.transcription.normalizeSentence'),
     name: 'Sentence Normalization',
     description: 'Post process of transcription for sentence normalization',
     icon: 'ph--text-t--regular',

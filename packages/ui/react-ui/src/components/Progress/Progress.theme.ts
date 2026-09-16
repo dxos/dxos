@@ -1,0 +1,38 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { mx } from '@dxos/ui-theme';
+import type { ComponentFunction, Theme } from '@dxos/ui-types';
+
+export type ProgressStyleProps = {
+  indeterminate?: boolean;
+  /** Empties the fill over the caller's duration, for a deadline rather than a task. */
+  countdown?: boolean;
+  /** Draws the fill in the error colour, for a run that stopped where it got to. */
+  error?: boolean;
+};
+
+const root: ComponentFunction<ProgressStyleProps> = (_props, ...etc) =>
+  // A separator-derived track rather than a surface: the bar is drawn ON a surface, so a track
+  // painted in one is invisible against its host.
+  mx('block h-1 relative rounded-full overflow-hidden bg-separator', ...etc);
+
+const bar: ComponentFunction<ProgressStyleProps> = ({ indeterminate, countdown, error }, ...etc) =>
+  mx(
+    'absolute inset-y-0 block rounded-full',
+    // The accent role, as a primary button: `primary-surface` is a fixed tint that reads as a track.
+    error ? 'bg-error-surface' : 'bg-accent-bg',
+    indeterminate
+      ? 'animate-progress-indeterminate'
+      : countdown
+        ? 'start-0 animate-progress-countdown'
+        : // Ease the width between updates so incremental advances glide rather than jump.
+          'start-0 transition-[width] duration-200 ease-linear',
+    ...etc,
+  );
+
+export const progressTheme: Theme<ProgressStyleProps> = {
+  root,
+  bar,
+};

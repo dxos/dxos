@@ -6,7 +6,7 @@ import cx from 'classnames';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { FILTER } from '../constants';
+import { FILTER } from '../constants.ts';
 
 const pluralize = (count: number, word: string) => {
   return count === 1 ? word : word + 's';

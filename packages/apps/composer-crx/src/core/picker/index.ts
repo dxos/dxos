@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { getActionsForUrl } from '../actions/registry';
-import { type Snapshot } from '../actions/types';
-import { harvestFavicon, harvestHints, harvestSelection } from './harvest';
-import { showPickerNotice } from './notice';
-import { startPicker } from './picker';
+import { getActionsForUrl } from '../actions/registry.ts';
+import { type Snapshot } from '../actions/types.ts';
+import { harvestFavicon, harvestHints, harvestSelection } from './harvest.ts';
+import { showPickerNotice } from './notice.ts';
+import { startPicker } from './picker.ts';
 
-export * from './picker';
-export * from './harvest';
+export * from './picker.ts';
+export * from './harvest.ts';
 
 export type PickedSnapshot = {
   actionId: string;

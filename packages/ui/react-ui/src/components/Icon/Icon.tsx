@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Primitive } from '@radix-ui/react-primitive';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef, memo, useMemo } from 'react';
 
 import { type Size } from '@dxos/ui-types';
 
-import { useIconHref, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { useIconHref, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
 
-export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.svg>> & {
+export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof ark.svg>> & {
   icon: string;
   size?: Size;
   synchronized?: boolean;

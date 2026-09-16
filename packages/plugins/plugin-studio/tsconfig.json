@@ -25,6 +25,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -94,6 +97,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -104,6 +110,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-projects"
     },
     {
       "path": "../plugin-space"

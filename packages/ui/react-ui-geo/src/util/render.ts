@@ -7,8 +7,8 @@ import { type Feature, type Geometry } from 'geojson';
 import { feature, mesh } from 'topojson-client';
 import { type Topology } from 'topojson-specification';
 
-import { type LatLngLiteral } from '../types';
-import { geoLine, geoPoint } from './path';
+import { type LatLngLiteral } from '../types.ts';
+import { geoLine, geoPoint } from './path.ts';
 
 export type Styles = Record<string, any>;
 

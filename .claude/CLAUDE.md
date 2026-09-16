@@ -11,6 +11,18 @@
   `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. It must
   lead the message, as a slash command does — so a mid-sentence mention of the
   command cannot flip the mode. The `$mode` sentinel has been removed.
+- **`/mode focus [task]`** adds a pinned task to `terse`. `focus` is not a third
+  mode value: the hook writes `terse` to `.claude/.mode` and the task to
+  `.claude/.focus`, so every reader of the mode is unchanged and the pin is just
+  that second file existing. With no task on the line the hook reads the
+  previous user instruction out of the event's `transcript_path` and pins that —
+  deriving it in the hook keeps the pin a mechanism rather than a request that
+  the agent remember. Nothing pinnable means terse and no pin, said out loud.
+  Any write to the mode clears the pin, so naming a verbosity is how you leave
+  focus; the pin is per-worktree like the mode, so concurrent sessions in one
+  worktree share it.
+- `bash .claude/scripts/mode.test.sh` exercises both files by feeding the hook
+  the JSON the `UserPromptSubmit` event carries. Run it after touching either.
 - **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
   branch, the instruction files actually consulted (including skills loaded this
   session), and the current mode — never the modes as numbered options, since a
@@ -29,6 +41,34 @@
   that is a first-reply rule, carried by the `SessionStart` hook.
 - The rules themselves are canonical in `AGENTS.md` → "Responding to the user";
   the machinery is documented in `.claude/README.md`.
+
+## Autonomous mode
+
+- **`/autonomous [task]`** pins a task the session must drive to completion
+  **without asking any questions**; `/autonomous off [reason]` ends it, and
+  `/autonomous status` reports. With no task on the line the hook adopts the
+  previous user instruction (same derivation as `/mode focus`). It must lead the
+  message, as a slash command does.
+- It is orthogonal to the verbosity mode — a run can be `terse` or `normal`, and
+  `/mode` never touches it.
+- `.claude/hooks/autonomous.sh` (`UserPromptSubmit`) writes the state and injects
+  the `AUTONOMOUS MODE` block; `.claude/hooks/autonomous-stop.sh` (`Stop`) blocks
+  the turn from ending while a run is active, at most three times per user turn.
+- The state is four untracked files: `.claude/.autonomous` (task, hook-written),
+  `.claude/.autonomous-dod` (definition of done, **agent-written, first thing**),
+  `.claude/.autonomous-user.md` (every user message verbatim, hook-written every
+  turn) and `.claude/.autonomous-log.md` (the decision log, agent-written).
+- **Answer scoping and PR-size questions from the user log**
+  (`bash .claude/scripts/autonomous.sh user show`) rather than asking — that is
+  what it is for.
+- The only clean exit is `bash .claude/scripts/autonomous.sh stop '<reason>'`,
+  with the DoD met or the blocker established; run an adversarial review of the
+  diff before you do.
+- `bash .claude/scripts/autonomous.test.sh` exercises both hooks and the backend.
+  Run it after touching any of them.
+- Doctrine lives in the `autonomous-mode` skill
+  (`.agents/skills/autonomous-mode/SKILL.md`); the machinery is documented in
+  `.claude/README.md`.
 
 ## Task planning
 

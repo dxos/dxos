@@ -38,6 +38,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryTypes> = SpaceOp
             .filter((schema) => requested.has(Type.getTypename(schema)))
             .map((schema) => ({
               typename: Type.getTypename(schema),
+              version: Type.getVersion(schema),
               kind: Type.isRelation(schema) ? 'relation' : 'record',
               jsonSchema: JsonSchema.toJsonSchema(schema),
             })),
@@ -49,6 +50,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryTypes> = SpaceOp
           const jsonSchema = JsonSchema.toJsonSchema(schema);
           return {
             typename: Type.getTypename(schema),
+            // Two versions of a typename can be registered at once, so a row that names only the
+            // typename cannot identify the schema it describes.
+            version: Type.getVersion(schema),
             kind: Type.isRelation(schema) ? 'relation' : 'record',
             name: jsonSchema.title ?? Type.getTypename(schema),
             description: jsonSchema.description,

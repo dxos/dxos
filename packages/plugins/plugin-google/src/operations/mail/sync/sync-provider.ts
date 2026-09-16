@@ -30,12 +30,12 @@ import { Person } from '@dxos/types';
 import { GoogleMail } from '#apis';
 import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '#services';
 
-import { GMAIL_SOURCE } from '../../../constants';
-import { GoogleApiError } from '../../../errors';
-import { decodeBody, mapToMessage } from '../mapper';
-import { findOrCreateGmailTag } from '../tags';
-import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
-import { GMAIL_SYSTEM_TAGS, GMAIL_UNPUSHABLE_LABELS } from './system-tags';
+import { GMAIL_SOURCE } from '../../../constants.ts';
+import { GoogleApiError } from '../../../errors.ts';
+import { decodeBody, mapToMessage } from '../mapper.ts';
+import { findOrCreateGmailTag } from '../tags.ts';
+import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch.ts';
+import { GMAIL_SYSTEM_TAGS, GMAIL_UNPUSHABLE_LABELS } from './system-tags.ts';
 
 /** The resolved delta for one run — either a fresh capture (no delta) or a fetched `history.list` page. */
 type DeltaPlan = {

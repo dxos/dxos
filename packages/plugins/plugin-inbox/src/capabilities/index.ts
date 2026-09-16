@@ -14,16 +14,21 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { MessageExtractor } from '#operations';
+import { translations } from '#translations';
 import { InboxCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
+  environments: ['node'],
+});
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
+  environments: ['node'],
+});
 export const IdentitySpecs = Capability.lazyModule(
   'IdentitySpecs',
   { provides: [SpaceCapabilities.IdentitySpec] },
-  () => import('./identity-specs'),
+  () => import('./identity-specs.ts'),
 );
 export const ContactExtractor = Capability.inlineModule(
   'contact-extractor',
@@ -44,20 +49,24 @@ export const SummarizeExtractor = Capability.inlineModule(
 export const MailboxProcessors = Capability.lazyModule(
   'MailboxProcessors',
   { provides: [InboxCapabilities.MailboxProcessor] },
-  () => import('./mailbox-processors'),
+  () => import('./mailbox-processors.ts'),
 );
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-  () => import('./automation-templates'),
+  () => import('./automation-templates.ts'),
 );
-export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
-  requires: [ClientCapabilities.Client],
-});
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const NavigationTargetResolver = AppCapability.navigationResolver(
+  () => import('./navigation-target-resolver.ts'),
+  {
+    environments: [],
+    requires: [ClientCapabilities.Client],
+  },
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.role.article',
     'org.dxos.role.cardContent',
@@ -67,7 +76,8 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.role.section',
   ],
 });
-export const InboxSettings = AppCapability.settings(() => import('./settings'), {
+export const InboxSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [InboxCapabilities.Settings],
   activatesOn: ActivationEvents.Idle,
 });
+export const Translations = AppCapability.translations(translations);

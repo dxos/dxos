@@ -15,18 +15,18 @@ import {
   QueryDeployedFunctions,
   Read,
   Update,
-} from './definitions';
+} from './definitions.ts';
 
-export * from './definitions';
+export * from './definitions.ts';
 
 export const ScriptHandlers = OperationHandlerSet.lazy([
-  Create.pipe(Operation.lazyHandler(() => import('./create'))),
-  Read.pipe(Operation.lazyHandler(() => import('./read'))),
-  Update.pipe(Operation.lazyHandler(() => import('./update'))),
-  Delete.pipe(Operation.lazyHandler(() => import('./delete'))),
-  Deploy.pipe(Operation.lazyHandler(() => import('./deploy'))),
-  Invoke.pipe(Operation.lazyHandler(() => import('./invoke'))),
-  InspectInvocations.pipe(Operation.lazyHandler(() => import('./inspect-invocations'))),
-  QueryDeployedFunctions.pipe(Operation.lazyHandler(() => import('./query-deployed-functions'))),
-  InstallFunction.pipe(Operation.lazyHandler(() => import('./install-function'))),
+  Create.pipe(Operation.lazyHandler(() => import('./create.ts'))),
+  Read.pipe(Operation.lazyHandler(() => import('./read.ts'))),
+  Update.pipe(Operation.lazyHandler(() => import('./update.ts'))),
+  Delete.pipe(Operation.lazyHandler(() => import('./delete.ts'))),
+  Deploy.pipe(Operation.lazyHandler(() => import('./deploy.ts'))),
+  Invoke.pipe(Operation.lazyHandler(() => import('./invoke.ts'))),
+  InspectInvocations.pipe(Operation.lazyHandler(() => import('./inspect-invocations.ts'))),
+  QueryDeployedFunctions.pipe(Operation.lazyHandler(() => import('./query-deployed-functions.ts'))),
+  InstallFunction.pipe(Operation.lazyHandler(() => import('./install-function.ts'))),
 ]);

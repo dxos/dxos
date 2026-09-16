@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,13 +16,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -44,7 +46,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
-import { Deck } from './Deck';
+import { Deck } from './Deck.tsx';
 
 type StoryItem = { id: string; title: string; icon: string };
 
@@ -99,7 +101,7 @@ const TestArticle = ({ title, content }: { title: string; content: string }) => 
   return (
     <Editor.Root>
       <div className='contents' data-testid='story.article' data-title={title}>
-        <Editor.View value={content} extensions={extensions} classNames='dx-container' />
+        <Editor.View value={content} extensions={extensions} classNames='dx-expand' />
       </div>
     </Editor.Root>
   );
@@ -156,8 +158,8 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
 };
 
 // In-memory deck settings so stories don't read/write the persisted plugin settings.
-const storyDeckSettings = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckSettings = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableNativeRedirect: false,
@@ -169,8 +171,8 @@ const storyDeckSettings = Capability.makeModule(() =>
 
 // In-memory deck state so each story starts from a clean deck; the real `DeckState()` capability
 // persists to localStorage, which otherwise leaks planks between stories.
-const storyDeckState = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckState = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
       sidebarState: 'closed',
       complementarySidebarState: 'closed',
@@ -193,6 +195,7 @@ const storyDeckState = Capability.makeModule(() =>
       toasts: [],
       currentUndoId: undefined,
       scrollIntoView: undefined,
+      open: {},
     }).pipe(Atom.keepAlive);
 
     const layoutAtom = Atom.make((get) => {
@@ -200,14 +203,15 @@ const storyDeckState = Capability.makeModule(() =>
       const ephemeral = get(ephemeralAtom);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
+      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       return {
-        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.active,
-        inactive: deck.inactive,
+        active: open.active,
+        inactive: open.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
@@ -215,6 +219,7 @@ const storyDeckState = Capability.makeModule(() =>
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, any>()),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
@@ -232,7 +237,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: 'story-deck-state',
     activatesOn: ActivationEvents.Startup,
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      DeckCapabilities.Projection,
+      AppCapabilities.Layout,
+    ],
     activate: storyDeckState,
   }),
   Plugin.addModule(OperationHandler),
@@ -292,13 +302,13 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
       { provides: [AppCapabilities.AppGraphBuilder] },
       Effect.fnUntraced(function* () {
         const extensions = yield* Effect.all([
-          GraphBuilder.createExtension({
+          AppGraphBuilder.createExtension({
             id: 'storyItems',
-            match: NodeMatcher.whenRoot,
+            match: GraphNodeMatcher.whenRoot,
             connector: () =>
               Effect.succeed([
                 ...STORY_ITEMS.map((item) =>
-                  Node.make({
+                  AppGraphNode.make({
                     id: item.id,
                     type: 'story-item',
                     data: item,
@@ -306,7 +316,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                   }),
                 ),
                 // The launcher declares its chain on the node, the way the app resolves it off the type.
-                Node.make({
+                AppGraphNode.make({
                   id: LAUNCHER_ID,
                   type: 'story-launcher',
                   data: { id: LAUNCHER_ID, title: 'Inbox', launcher: true },
@@ -318,13 +328,13 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 }),
               ]),
           }),
-          GraphBuilder.createExtension({
+          AppGraphBuilder.createExtension({
             id: 'storyLauncherMessages',
-            match: NodeMatcher.whenNodeType('story-launcher'),
+            match: GraphNodeMatcher.whenNodeType('story-launcher'),
             connector: () =>
               Effect.succeed(
                 LAUNCHER_MESSAGES.map((message) =>
-                  Node.make({
+                  AppGraphNode.make({
                     id: message.id,
                     type: 'story-message',
                     data: message,
@@ -335,7 +345,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
           // Every story plank carries the same two companions, so the companion can be watched moving from
           // plank to plank as attention changes.
-          GraphBuilder.createExtension({
+          AppGraphBuilder.createExtension({
             id: 'storyItemCompanions',
             match: (node) =>
               node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
@@ -401,13 +411,13 @@ const DefaultStory = ({
   }, [settingsOverrides, updateSettings]);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
-  const { state, deck, updateState } = useDeckState();
+  const { state, deck, updateState, updateEphemeral } = useDeckState();
 
   // Subscribe to the root's children so the `whenRoot` connector runs and materializes the story
   // nodes; without this each plank's `useNode` never resolves and the deck stays in the loading state.
   // The graph qualifies connector node ids with their parent path (e.g. `root/story-item-1`), so the
   // seeded `active` list holds the materialized ids rather than the bare `STORY_ITEMS` ids.
-  const rootChildren = useConnections(graph, Node.RootId, 'child');
+  const rootChildren = useConnections(graph, GraphNode.RootId, 'child');
   const items = useMemo(() => rootChildren.filter((node) => node.type === 'story-item'), [rootChildren]);
   const launcherNode = useMemo(() => rootChildren.find((node) => node.type === 'story-launcher'), [rootChildren]);
 
@@ -430,10 +440,16 @@ const DefaultStory = ({
       sidebarState,
       decks: {
         ...current.decks,
-        [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionPlanks: open },
+        [current.activeDeck]: { ...current.decks[current.activeDeck], companionPlanks: open },
       },
     }));
-  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState]);
+    // What is open is the URL's, and there is no URL here, so the story writes it where the projection
+    // would have.
+    updateEphemeral((current) => ({
+      ...current,
+      open: { ...current.open, [state.activeDeck]: { active, inactive: [] } },
+    }));
+  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState, updateEphemeral]);
 
   return (
     <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
@@ -570,6 +586,14 @@ export const CompanionPerPlank: Story = {
     await attendPlank(canvasElement, 1);
     await new Promise((resolve) => setTimeout(resolve, 100));
     await expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']);
+
+    // Every plank sits in a splitter panel, companion or not: a companion resolves a commit after its
+    // plank mounts, so a shape that varied with it would unmount the plank and everything it holds.
+    const planks = canvasElement.querySelectorAll<HTMLElement>('[data-testid="deck.plank"]');
+    await expect(planks).toHaveLength(3);
+    for (const plank of planks) {
+      await expect(plank.closest('[data-scope="splitter"][data-part="panel"]')).not.toBeNull();
+    }
   },
 };
 

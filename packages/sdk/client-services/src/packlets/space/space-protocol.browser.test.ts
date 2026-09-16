@@ -7,10 +7,12 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
+import { FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { TestAgentBuilder, TestFeedBuilder } from './testing';
+import { TestAgentBuilder, TestFeedBuilder } from './testing/index.ts';
 
 describe('space/space-protocol', () => {
   // TODO(dmaretskyi): Fails with the vscode test-runner for some reason.
@@ -37,12 +39,8 @@ describe('space/space-protocol', () => {
     onTestFinished(() => protocol1.stop(Context.default()));
     onTestFinished(() => protocol2.stop(Context.default()));
 
-    await expect
-      .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey)))
-      .toBeTruthy();
-    await expect
-      .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer1.identityKey)))
-      .toBeTruthy();
+    await expect.poll(() => presence1.getPeersByIdentityKey(peer2.identityKey).length > 0).toBeTruthy();
+    await expect.poll(() => presence2.getPeersByIdentityKey(peer1.identityKey).length > 0).toBeTruthy();
   });
 
   test('replicates a feed', async () => {
@@ -65,22 +63,22 @@ describe('space/space-protocol', () => {
     onTestFinished(() => protocol2.stop(Context.default()));
 
     const builder1 = new TestFeedBuilder();
-    const feedStore1 = builder1.createFeedStore();
+    const hypercoreStore1 = builder1.createHypercoreStore();
 
     const builder2 = new TestFeedBuilder();
-    const feedStore2 = builder2.createFeedStore();
+    const hypercoreStore2 = builder2.createHypercoreStore();
 
     const feedKey = await builder1.keyring.createKey();
-    const feed1 = await feedStore1.openFeed(feedKey, { writable: true });
-    const feed2 = await feedStore2.openFeed(feedKey);
+    const feed1 = await hypercoreStore1.openHypercore(feedKey, { writable: true });
+    const feed2 = await hypercoreStore2.openHypercore(feedKey);
 
-    await protocol1.addFeed(feed1);
-    await protocol2.addFeed(feed2);
+    await protocol1.addHypercore(feed1);
+    await protocol2.addHypercore(feed2);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(1);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(2);
 
     await builder.close();
@@ -112,16 +110,16 @@ describe('space/space-protocol', () => {
 
     const feedKey = await peer1.keyring.createKey();
 
-    const feed1 = await peer1.feedStore.openFeed(feedKey, { writable: true });
-    const feed2 = await peer2.feedStore.openFeed(feedKey);
+    const feed1 = await peer1.hypercoreStore.openHypercore(feedKey, { writable: true });
+    const feed2 = await peer2.hypercoreStore.openHypercore(feedKey);
 
-    await protocol1.addFeed(feed1);
-    await protocol2.addFeed(feed2);
+    await protocol1.addHypercore(feed1);
+    await protocol2.addHypercore(feed2);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(1);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(2);
 
     await builder.close();

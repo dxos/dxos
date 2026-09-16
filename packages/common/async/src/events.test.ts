@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 
-import { Event } from './events';
-import { sleep } from './timeout';
+import { Event } from './events.ts';
+import { sleep } from './timeout.ts';
 
 describe('Event', () => {
   test('#debounce', async () => {

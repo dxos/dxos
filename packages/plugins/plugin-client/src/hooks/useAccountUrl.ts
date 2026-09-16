@@ -4,9 +4,10 @@
 
 import { useCallback } from 'react';
 
+import { getEnvString } from '@dxos/config';
 import { useClient } from '@dxos/react-client';
 
-import { ACCOUNT_PROFILE_URL } from '../constants';
+import { ACCOUNT_PROFILE_URL } from '../constants.ts';
 
 /**
  * The account profile page and an opener for it. Served from a different origin to the app, so the
@@ -14,7 +15,7 @@ import { ACCOUNT_PROFILE_URL } from '../constants';
  */
 export const useAccountUrl = (): { accountUrl: string; openAccountPage: () => void } => {
   const client = useClient();
-  const accountUrl = client.config.values?.runtime?.app?.env?.DX_ACCOUNT_URL ?? ACCOUNT_PROFILE_URL;
+  const accountUrl = getEnvString(client.config, 'DX_ACCOUNT_URL') ?? ACCOUNT_PROFILE_URL;
   const openAccountPage = useCallback(() => {
     window.open(accountUrl, '_blank', 'noopener');
   }, [accountUrl]);

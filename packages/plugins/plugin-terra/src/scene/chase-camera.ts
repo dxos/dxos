@@ -6,9 +6,9 @@ import { TargetCamera } from '@babylonjs/core/Cameras/targetCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math';
 import { type Scene } from '@babylonjs/core/scene';
 
-import { scale } from '../engine';
-import { type SimObject } from '../sim';
-import { SCALE_FACTOR, objectFrame } from './orientation';
+import { scale } from '../engine/index.ts';
+import { type SimObject } from '../sim/index.ts';
+import { SCALE_FACTOR, objectFrame } from './orientation.ts';
 
 /** How far behind the object the camera sits, as a multiple of the object's own rendered scale. */
 const STANDOFF = 5;

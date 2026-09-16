@@ -23,10 +23,19 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/sql-sqlite"
     },
     {
       "path": "../../common/util"
@@ -80,10 +89,16 @@
       "path": "../../plugins/plugin-crm"
     },
     {
+      "path": "../../plugins/plugin-debug"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
       "path": "../../plugins/plugin-game"
+    },
+    {
+      "path": "../../plugins/plugin-higgsfield"
     },
     {
       "path": "../../plugins/plugin-illustrator"
@@ -113,13 +128,22 @@
       "path": "../../plugins/plugin-routine"
     },
     {
+      "path": "../../plugins/plugin-sandbox"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {
       "path": "../../plugins/plugin-space"
     },
     {
+      "path": "../../plugins/plugin-studio"
+    },
+    {
       "path": "../../plugins/plugin-table"
+    },
+    {
+      "path": "../../plugins/plugin-tasks"
     },
     {
       "path": "../../plugins/plugin-thread"
@@ -140,6 +164,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/client-services"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -150,6 +177,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-chat"

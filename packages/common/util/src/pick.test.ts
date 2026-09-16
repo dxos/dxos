@@ -4,7 +4,7 @@
 
 import { expect, test } from 'vitest';
 
-import { pick, pickBy } from './pick';
+import { pick, pickBy } from './pick.ts';
 
 test('pick', () => {
   const object = { a: 1, b: '2', c: 3 };

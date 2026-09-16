@@ -6,16 +6,17 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { isBusy } from '../../state/busy';
+import { isBusy } from '../../state/busy.ts';
 import {
   appendPendingText,
   cancelPending,
+  cancelPendingText,
   commitPending,
   pendingText,
   pendingTextState,
   setPendingAnchor,
   setPendingInterim,
-} from './pending-text';
+} from './pending-text.ts';
 
 const createView = (doc: string): EditorView =>
   new EditorView({ state: EditorState.create({ doc, extensions: [pendingText()] }) });
@@ -130,5 +131,22 @@ describe('pendingText extension', () => {
     await flush();
     expect(isBusy(view.state)).toBe(false);
     view.destroy();
+  });
+  // The editor's own placeholder shows whenever the document is empty, and pending text is a
+  // decoration rather than document content — so without this the two are drawn over each other,
+  // the hint sitting behind the words being dictated.
+  test('the preview marks the content so the empty-document placeholder can stand aside', ({ expect }) => {
+    const view = createView('');
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
+
+    // Opening a session paints nothing, so the hint stays until there is something to replace it.
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 0 }) });
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
+
+    view.dispatch({ effects: appendPendingText.of('the world is everything') });
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.true;
+
+    view.dispatch({ effects: cancelPendingText.of() });
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
   });
 });

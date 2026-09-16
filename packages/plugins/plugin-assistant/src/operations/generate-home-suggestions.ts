@@ -12,9 +12,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import { Collection, Database, Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import * as Annotation from '@dxos/echo/Annotation';
+import * as Entity from '@dxos/echo/Entity';
 import { log } from '@dxos/log';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -31,7 +31,8 @@ const ONBOARDING_DOCUMENT_LABELS = new Set(['Welcome to Composer']);
 const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSuggestions> =
   AssistantOperation.GenerateHomeSuggestions.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ db }) {
+      Effect.fnUntraced(function* () {
+        const { db } = yield* Database.Service;
         const spaceId = db.spaceId;
 
         // Cache check: return early if a fresh result exists.
@@ -47,8 +48,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
         const types = schemas
           .flat()
           .filter(Type.isType)
-          .filter((type) => getTypeAnnotation(Type.getSchema(type))?.kind !== EntityKind.Relation)
-          .filter((type) => !HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
+          .filter((type) => Annotation.getTypeAnnotation(Type.getSchema(type))?.kind !== Entity.Kind.Relation)
+          .filter((type) => !Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
           .filter((type) => Type.getTypename(type) !== collectionTypename);
 
         let prompts: string[] = [];

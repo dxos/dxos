@@ -8,8 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Filter, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import * as Entity from '@dxos/echo/Entity';
 import { type URI } from '@dxos/keys';
 
 export const TypeInputOptions = Schema.Struct({
@@ -35,6 +34,24 @@ export const TypeInputOptionsAnnotation = Annotation.make({
  * surface user-defined types.
  */
 export const allTypesQuery = Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
+
+/**
+ * Whether a type is user-facing: an object type (not a relation or meta-schema) that is not
+ * annotated hidden, unless `includeHidden`. Shared by the nav tree's Database section and the
+ * search type scope so the two agree.
+ */
+export const isUserType = (type: Type.AnyEntity, options?: { includeHidden?: boolean }): boolean => {
+  if (Type.isRelation(type) || Type.isTypeKind(type)) {
+    return false;
+  }
+  if (!options?.includeHidden) {
+    const hidden = Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
+    if (hidden) {
+      return false;
+    }
+  }
+  return true;
+};
 
 export type TypeOption = {
   /** Full type URI (DXN or EID), suitable for use with Filter.type. */
@@ -69,8 +86,8 @@ export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: 
     }
 
     const effectSchema = Type.getSchema(type);
-    const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
-    const hidden = HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
+    const relation = Annotation.getTypeAnnotation(effectSchema)?.kind === Entity.Kind.Relation;
+    const hidden = Annotation.HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
     if (relation || hidden) {
       if (!includeHiddenType) {
         continue;

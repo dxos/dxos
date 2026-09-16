@@ -9,8 +9,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Organization } from '@dxos/types';
 
-import { makeDatabaseLookup } from '../types/lookup';
-import { extractProperNouns, makeExtractionStage } from './extraction';
+import { makeDatabaseLookup } from '../types/lookup.ts';
+import { extractProperNouns, makeExtractionStage } from './extraction.ts';
 
 describe('extraction', () => {
   test('extractProperNouns finds capitalized runs minus stop-words', ({ expect }) => {

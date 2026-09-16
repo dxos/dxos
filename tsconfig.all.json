@@ -46,6 +46,9 @@
       "path": "tools/beast/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/blob/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -67,9 +70,6 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
-      "path": "packages/common/codec-protobuf/tsconfig.json"
-    },
-    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
@@ -77,6 +77,9 @@
     },
     {
       "path": "packages/apps/composer-crx/tsconfig.json"
+    },
+    {
+      "path": "packages/apps/composer-stream-deck/tsconfig.json"
     },
     {
       "path": "packages/core/compute/compute/tsconfig.json"
@@ -130,12 +133,6 @@
       "path": "packages/common/display-name/tsconfig.json"
     },
     {
-      "path": "tools/dx-build/tsconfig.json"
-    },
-    {
-      "path": "tools/dx-compile/tsconfig.json"
-    },
-    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
@@ -185,9 +182,6 @@
     },
     {
       "path": "packages/common/effect-atom-solid/tsconfig.json"
-    },
-    {
-      "path": "packages/common/effect-proto/tsconfig.json"
     },
     {
       "path": "packages/common/effect-zod/tsconfig.json"
@@ -268,9 +262,6 @@
       "path": "packages/common/invariant/tsconfig.json"
     },
     {
-      "path": "packages/common/keyboard/tsconfig.json"
-    },
-    {
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
@@ -314,6 +305,9 @@
     },
     {
       "path": "packages/sdk/migrations/tsconfig.json"
+    },
+    {
+      "path": "packages/experimental/ner/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/network-manager/tsconfig.json"
@@ -382,7 +376,13 @@
       "path": "packages/plugins/plugin-chess-com/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-claude/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-client/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
@@ -412,6 +412,9 @@
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-deepseek/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-devtools/tsconfig.json"
     },
     {
@@ -433,6 +436,9 @@
       "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-file-system/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {
@@ -449,6 +455,9 @@
     },
     {
       "path": "packages/plugins/plugin-heygen/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
@@ -472,10 +481,16 @@
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-lametric/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-library/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-linear/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-lingo/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-magazine/tsconfig.json"
@@ -496,10 +511,10 @@
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-native/tsconfig.json"
+      "path": "packages/plugins/plugin-mobile/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-native-filesystem/tsconfig.json"
+      "path": "packages/plugins/plugin-native/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
@@ -535,6 +550,9 @@
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-qa/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
@@ -542,6 +560,9 @@
     },
     {
       "path": "packages/plugins/plugin-routine/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-s3/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sample/tsconfig.json"
@@ -568,9 +589,6 @@
       "path": "packages/plugins/plugin-sidekick/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-slack/tsconfig.json"
     },
     {
@@ -587,6 +605,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-stream-deck/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-studio/tsconfig.json"
@@ -655,9 +676,6 @@
       "path": "packages/e2e/proto-guard/tsconfig.json"
     },
     {
-      "path": "packages/common/protobuf-compiler/tsconfig.json"
-    },
-    {
       "path": "tools/protobuf-test/tsconfig.json"
     },
     {
@@ -679,10 +697,10 @@
       "path": "packages/ui/react-primitives/react-error-boundary/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-focus/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-primitives/react-input/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
     },
     {
       "path": "packages/ui/react-primitives/react-list/tsconfig.json"
@@ -794,9 +812,6 @@
     },
     {
       "path": "packages/ui/react-ui-table/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-tabs/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-task/tsconfig.json"
@@ -914,6 +929,12 @@
     },
     {
       "path": "packages/ui/ui-editor/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-icons/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-template/tsconfig.json"
     },
     {
       "path": "packages/ui/ui-theme/tsconfig.json"

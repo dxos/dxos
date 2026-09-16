@@ -8,8 +8,8 @@ import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
 
-import { type Size } from '../defs';
-import { getFallbackGlyph } from './fallback';
+import { type Size } from '../defs.ts';
+import { getFallbackGlyph } from './fallback.ts';
 
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 

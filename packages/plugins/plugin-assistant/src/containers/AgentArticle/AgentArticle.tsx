@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Agent } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';

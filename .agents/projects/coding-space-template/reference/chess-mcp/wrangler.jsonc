@@ -1,0 +1,5 @@
+{
+  "name": "chess-mcp-demo",
+  "main": "src/index.js",
+  "compatibility_date": "2026-01-01",
+}

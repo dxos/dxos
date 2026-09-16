@@ -9,7 +9,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Format } from '@dxos/echo/Format';
 import { type SignalStatus } from '@dxos/messaging';
-import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { SignalState } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';

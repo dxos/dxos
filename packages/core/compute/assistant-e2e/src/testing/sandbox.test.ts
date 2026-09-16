@@ -8,10 +8,10 @@ import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import { trim } from '@dxos/util';
 
-import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness';
+import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness.ts';
 
 /**
- * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).
+ * Prereq: sandbox-service worker at http://localhost:8792 (routes served at its root).
  * Entity IDs must be unique per run (do not call `Obj.ID.dangerouslyDisableRandomness`) so sandbox-service
  * KV does not reject the same sandboxId under a new space from a prior run.
  * Regenerate memoized conversations with:
@@ -31,8 +31,8 @@ describe('Sandbox', { tags: ['manual'] }, () => {
       instructions: trim`
         The database starts empty. The sandbox service is available at http://localhost:8792.
         Enable the sandbox skill (key: org.dxos.skill.sandbox) using the skill manager.
-        Use CreateSandbox (org.dxos.function.sandbox.create) to create a sandbox named "assistant-e2e-test".
-        Use Exec (org.dxos.function.sandbox.exec) on that sandbox to run: echo hello world
+        Use CreateSandbox (org.dxos.operation.sandbox.create) to create a sandbox named "assistant-e2e-test".
+        Use Exec (org.dxos.operation.sandbox.exec) on that sandbox to run: echo hello world
         Report the exec result in your completion output.
       `,
       completionCriteria: [

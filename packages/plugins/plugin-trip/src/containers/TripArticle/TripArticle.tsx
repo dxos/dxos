@@ -17,7 +17,7 @@ import * as MapRole from '@dxos/plugin-map/MapRole';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { type SegmentCardAction, SegmentStack } from '#components';
@@ -258,7 +258,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
   }, [handleAddSegment, showGlobe, mapAvailable, hasRoad, planning, handlePlanRoute]);
 
   return (
-    <div role={role} className='@container dx-container overflow-hidden'>
+    <div role={role} className='@container dx-expand'>
       <div
         className={mx(
           'grid h-full',
@@ -266,7 +266,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         )}
       >
         {/* Row 1: calendar + segment stack. */}
-        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-h-0 overflow-hidden'>
+        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] overflow-hidden'>
           <NaturalCalendar.Root>
             <Panel.Root classNames='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>
@@ -283,12 +283,8 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           </NaturalCalendar.Root>
 
           <Panel.Root>
-            <Panel.Toolbar>
-              <Menu.Root {...menuActions} attendableId={attendableId}>
-                <Menu.Toolbar>
-                  <Menu.Items />
-                </Menu.Toolbar>
-              </Menu.Root>
+            <Panel.Toolbar asChild>
+              <ActionToolbar {...menuActions} attendableId={attendableId} />
             </Panel.Toolbar>
             <Panel.Content asChild>
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import * as Operation from '../Operation';
+import * as Operation from '../Operation.ts';
 
 const operationServiceStub: Operation.OperationService = {
   invoke: () => Effect.die('operationServiceLayerNoop: invoke is not implemented.'),

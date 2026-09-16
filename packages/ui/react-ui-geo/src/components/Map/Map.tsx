@@ -4,7 +4,6 @@
 
 import 'leaflet/dist/leaflet.css';
 
-import { createContext } from '@radix-ui/react-context';
 import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, latLngBounds, point } from 'leaflet';
 import React, {
   type PropsWithChildren,
@@ -27,12 +26,13 @@ import {
   useMapEvents,
 } from 'react-leaflet';
 
+import { createContext } from '@dxos/react-hooks';
 import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { composable, composableProps, defaultTx } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type GeoMarker } from '../../types';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+import { type GeoMarker } from '../../types.ts';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar/index.ts';
 
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
 // TODO(burdon): react-leaflet v5 is not compatible with react 18.
@@ -245,7 +245,7 @@ const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwar
     <MapContainer
       {...composableProps(rest, {
         // Frame classes (formerly on Map.Root): focusable grid container.
-        classNames: 'dx-container group relative grid dx-focus-ring-inset bg-base-surface!',
+        classNames: 'dx-expand overflow-hidden group relative grid dx-focus-ring-inset bg-base-surface!',
       })}
       attributionControl={false}
       zoomControl={false}

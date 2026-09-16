@@ -9,16 +9,16 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Aggregate from './Aggregate';
-import * as Dataset from './Dataset';
-import * as Feed from './Feed';
-import * as Filter from './Filter';
-import * as Obj from './Obj';
-import * as Order from './Order';
-import * as Query from './Query';
-import * as Ref from './Ref';
-import { TestSchema } from './testing';
-import * as Type from './Type';
+import * as Aggregate from './Aggregate.ts';
+import * as Dataset from './Dataset.ts';
+import * as Feed from './Feed.ts';
+import * as Filter from './Filter.ts';
+import * as Obj from './Obj.ts';
+import * as Order from './Order.ts';
+import * as Query from './Query.ts';
+import * as Ref from './Ref.ts';
+import { TestSchema } from './testing/index.ts';
+import * as Type from './Type.ts';
 
 describe('query api', () => {
   describe('Query', () => {
@@ -857,6 +857,23 @@ describe('query api', () => {
           ],
         },
       });
+    });
+
+    test('hasParent AST, decode, and pretty-print', ({ expect }) => {
+      const filter = Filter.hasParent(false);
+      expect(filter.ast).toMatchObject({ type: 'has-parent', value: false });
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
+      expect(Filter.pretty(filter)).toBe('Filter.hasParent(false)');
+      expect(Filter.hasParent().ast).toMatchObject({ type: 'has-parent', value: true });
+    });
+
+    test('hasParent matches via toPredicate', ({ expect }) => {
+      const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
+      const child = Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'Child' });
+      expect(Filter.toPredicate(child, Filter.hasParent())).toBe(true);
+      expect(Filter.toPredicate(child, Filter.hasParent(false))).toBe(false);
+      expect(Filter.toPredicate(parent, Filter.hasParent(false))).toBe(true);
+      expect(Filter.toPredicate(parent, Filter.hasParent())).toBe(false);
     });
 
     test('childOf pretty-prints correctly', () => {

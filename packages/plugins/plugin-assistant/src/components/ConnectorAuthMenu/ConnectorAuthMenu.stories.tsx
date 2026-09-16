@@ -11,7 +11,7 @@ import React, { useContext, useMemo } from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
@@ -22,13 +22,13 @@ import { translations as connectorTranslations } from '@dxos/plugin-connector/tr
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Menu, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
+import { ActionToolbar, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { ConnectorAuthMenu } from './ConnectorAuthMenu';
+import { ConnectorAuthMenu } from './ConnectorAuthMenu.tsx';
 
 /** `connector-b` already has a Connection below, so it renders as a "reuse" entry; `connector-a` has
  * none, so it renders as a "Connect" entry — together they exercise both item kinds and the
@@ -104,10 +104,10 @@ const ToolbarStory = () => {
       allConnectors,
       allConnections,
     });
-    const nextGraph = Graph.make({ registry });
-    nextGraph.pipe(
-      Graph.addNodes([{ id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions }]),
-    );
+    const nextGraph = AppGraph.make({ registry });
+    AppGraph.addNodes(nextGraph, [
+      { id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions },
+    ]);
     return nextGraph;
   }, [registry, space, target, allConnectors, allConnections]);
 
@@ -119,11 +119,7 @@ const ToolbarStory = () => {
 
   return (
     <div className='p-4 border border-separator rounded-sm'>
-      <Menu.Root {...menuActions} onAction={runAction} attendableId={TOOLBAR_NODE_ID} alwaysActive>
-        <Menu.Toolbar>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar {...menuActions} onAction={runAction} attendableId={TOOLBAR_NODE_ID} alwaysActive />
     </div>
   );
 };

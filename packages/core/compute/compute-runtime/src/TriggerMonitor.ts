@@ -14,8 +14,8 @@ import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import * as RemoteTriggerManager from './RemoteTriggerManager';
-import { TriggerDispatcher, type TriggerRuntimeStatus } from './triggers/trigger-dispatcher';
+import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
+import { TriggerDispatcher, type TriggerRuntimeStatus } from './triggers/trigger-dispatcher.ts';
 
 /**
  * Aggregate {@link Trigger.TriggerMonitorService} that merges the local

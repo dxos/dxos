@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./process-control": {
+      "source": "./src/EdgeProcessControl.ts",
+      "types": "./dist/types/src/EdgeProcessControl.d.ts",
+      "import": "./dist/lib/process-control.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",

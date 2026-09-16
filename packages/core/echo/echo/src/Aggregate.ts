@@ -8,8 +8,8 @@ import type * as EffectTypes from 'effect/Types';
 
 import type { QueryAST } from '@dxos/echo-protocol';
 
-import type * as Order from './Order';
-import type * as Query from './Query';
+import type * as Order from './Order.ts';
+import type * as Query from './Query.ts';
 
 /**
  * The aggregate spec sans name; the name is supplied by the `Query.aggregate` record key. A tagged

@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import * as Score from './Score';
+import * as Score from './Score.ts';
 
 /**
  * Read a Score and return its lead-sheet text representation. The lead sheet is
@@ -20,7 +20,7 @@ import * as Score from './Score';
  */
 export const Read = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sequencer.read'),
+    key: DXN.make('org.dxos.operation.sequencer.read'),
     name: 'Read score',
     icon: 'ph--music-notes--regular',
     description: trim`
@@ -51,7 +51,7 @@ export const Read = Operation.make({
  */
 export const Write = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sequencer.write'),
+    key: DXN.make('org.dxos.operation.sequencer.write'),
     name: 'Write score',
     icon: 'ph--music-notes--regular',
     description: trim`

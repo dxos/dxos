@@ -9,35 +9,62 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as shellTranslations } from '@dxos/shell/translations';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
-import { SpaceOperationConfig } from '../operations/helpers';
-import { makeCreateInvitationUrl } from './helpers';
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+import { SpaceOperationConfig } from '../operations/helpers.ts';
+import { makeCreateInvitationUrl } from './helpers.ts';
 
-export * from './app-graph-builder';
-export { makeCreateObjectEntryForDatabaseType } from '../util';
+export * from './app-graph-builder/index.ts';
+export * from './settings-sync/index.ts';
+export { makeCreateObjectEntryForDatabaseType } from '../util/index.ts';
 
-export const Commands = AppCapability.commands(() => import('./commands'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const Commands = AppCapability.commands(() => import('./commands.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
+  environments: ['node'],
+});
+export const Dashboard = Capability.lazyModule(
+  'Dashboard',
+  {
+    environments: [],
+    requires: [Capabilities.PluginManager, ClientCapabilities.Client, AppCapabilities.Layout],
+    provides: [SpaceCapabilities.Dashboard],
+    activatesOn: ClientEvents.SpacesReady,
+  },
+  () => import('./dashboard.ts'),
+);
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
-    requires: [ClientCapabilities.Client],
+    // `SchemaRegistered` pulls the idle-gated schema registration into this wave; the root
+    // collection is a typed object.
+    requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
     provides: [SpaceCapabilities.DefaultSpace],
     // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
+    environments: ['node'],
   },
-  () => import('./identity-created'),
+  () => import('./identity-created.ts'),
 );
-export { NavigationHandler } from './navigation-handler';
-export type { NavigationHandlerOptions } from './navigation-handler';
-export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
-  requires: [ClientCapabilities.Client],
-});
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export { NavigationHandler } from './navigation-handler/index.ts';
+export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
+export const NavigationTargetResolver = AppCapability.navigationResolver(
+  () => import('./navigation-target-resolver.ts'),
+  {
+    environments: [],
+    requires: [ClientCapabilities.Client],
+  },
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.role.article',
@@ -59,15 +86,18 @@ export const Repair = Capability.lazyModule(
     // Runtime event: repairs run once spaces are observed, not at startup.
     activatesOn: ClientEvents.SpacesReady,
   },
-  () => import('./repair'),
+  () => import('./repair.ts'),
 );
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SpaceSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });
+// Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
+// headless host registers.
 export const SpacesReady = Capability.lazyModule(
   'SpacesReady',
   {
+    environments: [],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
@@ -83,23 +113,39 @@ export const SpacesReady = Capability.lazyModule(
     // Runtime event: spaces become ready when the client observes them, not at startup.
     activatesOn: ClientEvents.SpacesReady,
   },
-  () => import('./spaces-ready'),
+  () => import('./spaces-ready.ts'),
 );
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+// Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
+// the app-graph builder, `SpacesReady` — is itself browser-only.
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
     requires: [Capabilities.AtomRegistry, Capabilities.PluginManager],
     provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
+    environments: [],
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
-export const ObservabilityMappings = AppCapability.observabilityMappings(() => import('./observability-mappings'), {
+export const ObservabilityMappings = AppCapability.observabilityMappings(() => import('./observability-mappings.ts'), {
   props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
 });
-export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
+  environments: ['node'],
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
   }),
+});
+export const Translations = AppCapability.translations([
+  ...translations,
+  ...componentsTranslations,
+  ...formTranslations,
+  ...shellTranslations,
+]);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

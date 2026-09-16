@@ -14,7 +14,16 @@ export type TaskProgress = {
   /** Human display name, shown by UIs. */
   readonly label?: string;
   readonly current: number;
+  /** Items in the current phase; absent means the length is unknowable and no bar is drawn. */
   readonly total?: number;
+  /**
+   * How many phases the run expects, when it knows up front. A phased run reports `current`/`total`
+   * WITHIN its current phase, so the two axes are independent: a run can be on phase 2 of 4 and know
+   * nothing about how long phase 2 is.
+   */
+  readonly phases?: number;
+  /** Zero-based index of the phase in flight. */
+  readonly phase?: number;
   readonly status: TaskStatus;
   readonly startedAt?: string;
   readonly updatedAt: string;
@@ -43,8 +52,24 @@ export interface TaskHandle {
   readonly advance: (by?: number) => void;
   /** Set the absolute item index. */
   readonly set: (current: number) => void;
-  /** Set (or revise) the expected total. */
-  readonly total: (total: number) => void;
+  /**
+   * Set (or revise) the expected total for the current phase. Pass `undefined` to return the task to
+   * indeterminate — a run that counted one phase and cannot count the next (a single model call, a
+   * remote step reporting nothing) has to be able to drop the bar rather than leave it pinned at its
+   * last fraction, which reads as stuck.
+   */
+  readonly total: (total: number | undefined) => void;
+  /**
+   * Enter a phase: sets the index, resets the item count, and clears the total unless one is given.
+   * Clearing is the default because the next phase's length is a fresh question — carrying the last
+   * phase's total forward is how a bar ends up describing work it knows nothing about.
+   */
+  readonly phase: (phase: number, options?: { total?: number; note?: string }) => void;
+  /**
+   * Set the plan without entering a phase — how a remote producer's status update lands, where the
+   * count and the phase arrive together and the update must not reset either.
+   */
+  readonly plan: (options: { phases?: number; phase?: number }) => void;
   /** Set the producer's estimate of remaining time (ms). */
   readonly estimate: (remainingMs: number) => void;
   readonly note: (text: string) => void;
@@ -64,7 +89,10 @@ export interface ProgressApi {
    * Pass `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
    * {@link ProgressApi.cancel}.
    */
-  readonly task: (name: string, options?: { total?: number; label?: string; onCancel?: () => void }) => TaskHandle;
+  readonly task: (
+    name: string,
+    options?: { total?: number; phases?: number; label?: string; onCancel?: () => void },
+  ) => TaskHandle;
   /** Pre-registers tasks as `pending` (so an orchestrator can show the full list up front). */
   readonly seed: (tasks: readonly { name: string; total?: number; label?: string }[]) => void;
   /** Invokes the task's registered `onCancel` handler (no-op if absent). */
@@ -109,6 +137,7 @@ export const make = (): ProgressApi => {
     const entry: MutableTask = tasks.get(name) ?? { name, current: 0, status: 'pending', updatedAt: started };
     entry.label = options.label ?? entry.label;
     entry.total = options.total ?? entry.total;
+    entry.phases = options.phases ?? entry.phases;
     entry.status = 'running';
     entry.startedAt = entry.startedAt ?? started;
     entry.updatedAt = started;
@@ -122,6 +151,24 @@ export const make = (): ProgressApi => {
       advance: (by = 1) => touch(entry, (item) => (item.current += by)),
       set: (current) => touch(entry, (item) => (item.current = current)),
       total: (total) => touch(entry, (item) => (item.total = total)),
+      plan: ({ phases, phase }) =>
+        touch(entry, (item) => {
+          if (phases !== undefined) {
+            item.phases = phases;
+          }
+          if (phase !== undefined) {
+            item.phase = phase;
+          }
+        }),
+      phase: (phase, options = {}) =>
+        touch(entry, (item) => {
+          item.phase = phase;
+          item.current = 0;
+          item.total = options.total;
+          if (options.note !== undefined) {
+            item.note = options.note;
+          }
+        }),
       estimate: (remainingMs) => touch(entry, (item) => (item.estimatedMs = remainingMs)),
       note: (text) => touch(entry, (item) => (item.note = text)),
       done: () => touch(entry, (item) => (item.status = 'done')),

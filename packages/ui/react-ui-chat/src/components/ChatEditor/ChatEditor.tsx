@@ -9,8 +9,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { Editor, type EditorController, type UseTextEditorProps } from '@dxos/react-ui-editor';
 import { type BasicExtensionsOptions, type SubmitOptions } from '@dxos/ui-editor';
 
-import { type ReferencesOptions } from './references';
-import { useChatExtensions } from './useChatExtensions';
+import { type ReferencesOptions } from './references.ts';
+import { useChatExtensions } from './useChatExtensions.ts';
 
 export interface ChatEditorController extends EditorController {}
 

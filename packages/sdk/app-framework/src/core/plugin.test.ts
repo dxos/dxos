@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 
 import { DXN } from '@dxos/keys';
 
-import * as ActivationEvent from './activation-event';
-import * as Capability from './capability';
-import * as CapabilityManager from './capability-manager';
-import * as Plugin from './plugin';
-import * as PluginManager from './plugin-manager';
+import * as ActivationEvent from './activation-event.ts';
+import * as CapabilityManager from './capability-manager.ts';
+import * as Capability from './capability.ts';
+import * as PluginManager from './plugin-manager/index.ts';
+import * as Plugin from './plugin.ts';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
 const Number = Capability.makeSingleton<{ number: number }>()('org.dxos.test.number');
@@ -344,6 +344,31 @@ describe('Plugin module authoring', () => {
       const [module] = Test().modules;
       expect(module.activation.activatesOn).toEqual(CountEvent);
       expect(module.activation.requires).toEqual([String]);
+    });
+
+    it('skips undefined modules so headless barrels can stub excluded exports', () => {
+      const Lazy = Capability.lazyModule('Total', { provides: [Total] }, () =>
+        Promise.resolve({ default: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]) }),
+      );
+      // Simulates resolving a headless `#capabilities` barrel where a browser-only module
+      // resolves to an `undefined` stub.
+      const Stubbed: Capability.Module<void> | undefined = undefined;
+      const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Stubbed), Plugin.addModule(Lazy)));
+      const plugin = Test();
+      expect(plugin.modules).toHaveLength(1);
+      expect(plugin.modules[0].id).toEqual('org.dxos.plugin.test.module.Total');
+    });
+
+    it('carries environments metadata on the module spec', () => {
+      const Lazy = Capability.lazyModule('Total', { provides: [Total], environments: ['browser', 'workerd'] }, () =>
+        Promise.resolve({ default: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]) }),
+      );
+      expect(Lazy.environments).toEqual(['browser', 'workerd']);
+
+      const Inline = Capability.inlineModule('InlineTotal', { provides: [Total], environments: ['node'] }, () =>
+        Effect.succeed([Capability.contribute(Total, { total: 2 })]),
+      );
+      expect(Inline.environments).toEqual(['node']);
     });
   });
 });

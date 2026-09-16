@@ -10,7 +10,7 @@ import { SpaceOperation } from '#types';
 const handler: Operation.WithHandler<typeof SpaceOperation.DuplicateObject> = SpaceOperation.DuplicateObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      yield* Effect.fail(new Error('DuplicateObject is not yet implemented.'));
+      return yield* Effect.fail(new Error('DuplicateObject is not yet implemented.'));
     }),
   ),
 );

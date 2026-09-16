@@ -10,9 +10,9 @@ import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighte
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { Searchbar } from '../../../components';
-// import { DataSpaceSelector } from '../../../containers';
-// import { useDevtoolsState } from '../../../hooks';
+import { Searchbar } from '../../../components/index.ts';
+// import { DataSpaceSelector } from '../../../containers/index.ts';
+// import { useDevtoolsState } from '../../../hooks/index.ts';
 
 // TODO(queue-to-feed-migration): retains "Queue" naming — `FeedsPanel` already names the unrelated
 // hypercore feed-pipeline devtools panel (see ../FeedsPanel), so renaming this to `FeedsPanel` would

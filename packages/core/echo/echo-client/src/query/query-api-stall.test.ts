@@ -9,7 +9,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { openAndClose } from '@dxos/test-utils';
 
-import { EchoTestBuilder, createTmpPath } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 
 // Reproduces the user-visible symptom of the bug investigated in
 // composer-logs-2026-05-15T13-18-07.ndjson via a deterministic harness

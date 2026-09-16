@@ -16,7 +16,7 @@ import { DXN } from '@dxos/keys';
 describe('Operation', () => {
   describe('make', () => {
     test('creates an operation definition with required fields', () => {
-      const key = DXN.make('org.example.test.operation');
+      const key = DXN.make('com.example.test.operation');
       const op = Operation.make({
         input: Schema.Struct({ value: Schema.Number }),
         output: Schema.Struct({ result: Schema.String }),
@@ -39,7 +39,7 @@ describe('Operation', () => {
         input: Schema.Void,
         output: Schema.Void,
         meta: {
-          key: DXN.make('org.example.test.sync'),
+          key: DXN.make('com.example.operation.test.sync'),
         },
         executionMode: 'sync',
       });
@@ -50,7 +50,7 @@ describe('Operation', () => {
         input: Schema.Void,
         output: Schema.Void,
         meta: {
-          key: DXN.make('org.example.test.async'),
+          key: DXN.make('com.example.operation.test.async'),
         },
         executionMode: 'async',
       });
@@ -63,7 +63,7 @@ describe('Operation', () => {
         input: Schema.Void,
         output: Schema.Void,
         meta: {
-          key: DXN.make('org.example.test.default'),
+          key: DXN.make('com.example.operation.test.default'),
         },
       });
 
@@ -75,7 +75,7 @@ describe('Operation', () => {
         input: Schema.Void,
         output: Schema.Void,
         meta: {
-          key: DXN.make('org.example.test.deployed'),
+          key: DXN.make('com.example.operation.test.deployed'),
           deployedId: 'edge-func-123',
         },
       });
@@ -88,7 +88,7 @@ describe('Operation', () => {
         input: Schema.Void,
         output: Schema.Void,
         meta: {
-          key: DXN.make('org.example.test.types'),
+          key: DXN.make('com.example.operation.test.types'),
         },
         types: [TestSchema.Task, TestSchema.Person],
       });
@@ -108,7 +108,7 @@ describe('Operation', () => {
         input: Schema.Struct({ query: Schema.String }),
         output: Schema.Struct({ results: Schema.Array(Schema.String), summary: Schema.String }),
         meta: {
-          key: DXN.make('org.example.test.services'),
+          key: DXN.make('com.example.operation.test.services'),
         },
         services: [DatabaseService, AiService],
       });
@@ -150,7 +150,7 @@ describe('Operation', () => {
         input: Schema.Void,
         output: Schema.Void,
         meta: {
-          key: DXN.make('org.example.test.pipeable'),
+          key: DXN.make('com.example.operation.test.pipeable'),
         },
       });
 
@@ -160,7 +160,7 @@ describe('Operation', () => {
 
   describe('withHandler', () => {
     test('attaches a handler to an operation (direct call)', () => {
-      const key = DXN.make('org.example.test.double');
+      const key = DXN.make('com.example.test.double');
       const op = Operation.make({
         input: Schema.Struct({ value: Schema.Number }),
         output: Schema.Struct({ doubled: Schema.Number }),
@@ -173,7 +173,7 @@ describe('Operation', () => {
     });
 
     test('attaches a handler to an operation (piped call)', () => {
-      const key = DXN.make('org.example.test.doublePiped');
+      const key = DXN.make('com.example.test.doublePiped');
       const op = Operation.make({
         input: Schema.Struct({ value: Schema.Number }),
         output: Schema.Struct({ doubled: Schema.Number }),
@@ -193,7 +193,7 @@ describe('Operation', () => {
         input: Schema.Struct({ delay: Schema.Number }),
         output: Schema.Struct({ done: Schema.Boolean }),
         meta: {
-          key: DXN.make('org.example.test.asyncHandler'),
+          key: DXN.make('com.example.operation.test.asyncHandler'),
         },
       });
 
@@ -219,7 +219,7 @@ describe('Operation', () => {
       const op = Operation.make({
         input: Schema.Struct({ query: Schema.String }),
         output: Schema.Struct({ results: Schema.Array(Schema.String) }),
-        meta: { key: DXN.make('org.example.test.withServices') },
+        meta: { key: DXN.make('com.example.operation.test.withServices') },
         services: [DatabaseService],
       });
 
@@ -240,37 +240,6 @@ describe('Operation', () => {
       );
 
       expect(result.results).toEqual(['user1', 'user2']);
-    });
-
-    test('handler using undeclared service is a type error', () => {
-      class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()(
-        '@test/DeclaredService',
-      ) {}
-      class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(
-        '@test/UndeclaredService',
-      ) {}
-
-      const op = Operation.make({
-        input: Schema.Void,
-        output: Schema.Void,
-        meta: { key: DXN.make('org.example.test.typeError') },
-        services: [DeclaredService],
-      });
-
-      // Using the declared service is allowed.
-      Operation.withHandler(op, (_input) =>
-        Effect.gen(function* () {
-          yield* DeclaredService;
-        }),
-      );
-
-      // Using an undeclared service should be a type error.
-      Operation.withHandler(op, (_input) =>
-        // @ts-expect-error - UndeclaredService is not in the operation's services
-        Effect.gen(function* () {
-          yield* UndeclaredService;
-        }),
-      );
     });
   });
 });

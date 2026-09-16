@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ThemedClassName } from '../../util';
-import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind';
+import { type ThemedClassName } from '../../util/index.ts';
+import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
 
 export type MediaFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
@@ -49,6 +49,8 @@ export type MediaPlayerProps = ThemedClassName<{
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
   /** CSS `object-fit` for `<img>` and `<video>`. Ignored for `<iframe>`/`<audio>`. Defaults to 'cover'. */
   fit?: MediaFit;
+  /** Playback reached the end (`<video>`/`<audio>` only) — what a playlist advances on. */
+  onEnded?: () => void;
 }>;
 
 /**
@@ -69,6 +71,7 @@ export const MediaPlayer = ({
   alt,
   crossOrigin,
   fit = 'cover',
+  onEnded,
 }: MediaPlayerProps) => {
   const fitClass = FIT_CLASS[fit];
   // An explicit `kind` forces native playback even for extensionless URLs (e.g. `blob:`/`data:`).
@@ -85,6 +88,7 @@ export const MediaPlayer = ({
           muted={muted}
           crossOrigin={crossOrigin}
           aria-label={alt}
+          onEnded={onEnded}
         />
       );
     }
@@ -100,6 +104,7 @@ export const MediaPlayer = ({
           muted={muted}
           crossOrigin={crossOrigin}
           aria-label={alt}
+          onEnded={onEnded}
         />
       </div>
     );
@@ -135,10 +140,7 @@ const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
         src={src}
         title={alt ?? 'Embedded media'}
         loading='lazy'
-        className={mx(
-          'border-none w-full h-full transition-opacity duration-150',
-          loaded ? 'opacity-100' : 'opacity-0',
-        )}
+        className={mx('border-none dx-fill transition-opacity duration-150', loaded ? 'opacity-100' : 'opacity-0')}
         style={{ colorScheme: 'dark' }}
         sandbox={DEFAULT_IFRAME_SANDBOX}
         referrerPolicy='no-referrer'

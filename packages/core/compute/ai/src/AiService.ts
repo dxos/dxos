@@ -11,8 +11,8 @@ import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { DXN } from '@dxos/keys';
 
-import { AiModelNotAvailableError } from './errors';
-import * as Model from './Model';
+import { AiModelNotAvailableError } from './errors.ts';
+import * as Model from './Model.ts';
 
 export type ServiceMetadata = {
   name: string;
@@ -42,6 +42,15 @@ export interface Service {
  * AI Model Factory.
  */
 export class AiService extends Context.Service<AiService, Service>()('@dxos/ai/AiService') {}
+
+/**
+ * Module-level alias for the tag itself (usable as `Effect<Service, never, AiService>`) so
+ * callers importing the namespace avoid the doubled `AiService.AiService`.
+ */
+export const tag: Effect.Effect<Service, never, AiService> = AiService;
+
+/** Module-level alias for the tag's own `key`, so callers avoid the doubled `AiService.AiService.key`. */
+export const key = AiService.key;
 
 /**
  * Resolves a model layer from a bare NSID name — validated at compile time like {@link DXN.make} and

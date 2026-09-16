@@ -16,14 +16,14 @@ import * as Semaphore from 'effect/Semaphore';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { Capabilities } from '../../common';
-import * as ActivationEvent from '../activation-event';
-import * as Capability from '../capability';
-import * as CapabilityManager from '../capability-manager';
-import { CapabilityNotFoundError, ProvidesMismatchError } from '../errors';
-import * as Plugin from '../plugin';
-import { type ManagerState } from './manager-state';
-import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
+import { Capabilities } from '../../common/index.ts';
+import * as ActivationEvent from '../activation-event.ts';
+import * as CapabilityManager from '../capability-manager.ts';
+import * as Capability from '../capability.ts';
+import { CapabilityNotFoundError, ProvidesMismatchError } from '../errors.ts';
+import * as Plugin from '../plugin.ts';
+import { type ManagerState } from './manager-state.ts';
+import { type PluginFailurePhase, PluginTimeoutError } from './manager-types.ts';
 
 /**
  * Yields the host's event loop before a module body runs. Effect's scheduler drains its run queue
@@ -333,6 +333,8 @@ export class ModuleLoader {
     return Effect.gen({ self: this }, function* () {
       log('loading module', { module: module.id, parentEvent });
       performance.mark(`module:${module.id}:start`);
+      // Separate mark: the profiler reads `module:` as a measure, and a measure drops mark detail.
+      performance.mark(`module-cause:${module.id}`, { detail: { event: parentEvent } });
       yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activating', module: module.id });
       const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);
@@ -386,7 +388,7 @@ export class ModuleLoader {
       return expanded;
     }).pipe(
       Effect.tapCause(() => Scope.close(scope, Exit.void)),
-      Effect.withSpan('ModuleLoader.load'),
+      Effect.withSpan('ModuleLoader.load', { attributes: { 'dx.module.id': module.id } }),
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
           Effect.andThen(

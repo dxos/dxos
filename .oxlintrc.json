@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "$schema": "./node_modules/@effect/tsgo/oxlint-schema.json",
   "categories": {},
   "env": {
     "builtin": true
@@ -34,9 +34,21 @@
     "denyWarnings": true,
     "typeAware": true
   },
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf", "promise", "vitest", "jsdoc", "node"],
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "react",
+    "react-perf",
+    "promise",
+    "vitest",
+    "jsdoc",
+    "node",
+    "import"
+  ],
   "rules": {
-    "@dxos/eslint-plugin-rules/consistent-update-param": "warn",
+    "@dxos/eslint-plugin-rules/consistent-update-param": "error",
     "@dxos/eslint-plugin-rules/dxos-package-imports": "warn",
     "@dxos/eslint-plugin-rules/dxos-subpath-exports": "warn",
     "@dxos/eslint-plugin-rules/dxos-subpath-imports": "warn",
@@ -46,6 +58,8 @@
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
     "@dxos/eslint-plugin-rules/no-dead-tailwind-logical": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
+    "@dxos/eslint-plugin-rules/operation-key-shape": "error",
+    "@dxos/eslint-plugin-rules/prefer-sizing-utilities": "warn",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
     "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "eslint/curly": ["error", "all"],
@@ -61,6 +75,19 @@
     "eslint/no-useless-escape": "off",
     "eslint/no-useless-rename": "off",
     "eslint/require-yield": "off",
+    "import/default": "off",
+    "import/export": "off",
+    "import/extensions": [
+      "error",
+      "always",
+      {
+        "ignorePackages": true,
+        "checkTypeImports": true,
+        "pathGroupOverrides": [{ "pattern": "@dxos*[tT]heme", "action": "ignore" }]
+      }
+    ],
+    "import/named": "off",
+    "import/namespace": "off",
     "import-x-js/order": "off",
     "jest/expect-expect": "off",
     "jest/no-conditional-expect": "off",

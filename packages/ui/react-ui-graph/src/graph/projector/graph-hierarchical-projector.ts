@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutNode } from '../types';
-import { type GraphProjectorOptions } from './graph-projector';
-import { GraphRadialProjector, layoutRadial, updateNode } from './graph-radial-projector';
+import { type GraphLayoutNode } from '../types.ts';
+import { type GraphProjectorOptions } from './graph-projector.ts';
+import { GraphRadialProjector, layoutRadial, updateNode } from './graph-radial-projector.ts';
 
 export type GraphHierarchicalProjectorOptions = GraphProjectorOptions & {
   radius?: number;
@@ -19,7 +19,7 @@ export class GraphHierarchicalProjector<
   NodeData = any,
   Options extends GraphHierarchicalProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
-  protected override onUpdate(graph?: Graph.Any) {
+  protected override onUpdate(graph?: GraphModel.AnyData) {
     log('onUpdate', {
       graph: { nodes: graph?.nodes.length, edges: graph?.edges.length },
       selection: this.selection?.getSelectedIds(),

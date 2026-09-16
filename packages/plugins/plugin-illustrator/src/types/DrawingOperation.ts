@@ -11,15 +11,16 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-import { Scene } from '#model';
+import { Diagnostics, Scene } from '#model';
 
-import * as Drawing from './Drawing';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+import * as Drawing from './Drawing.ts';
 
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Drawing', icon: 'ph--pencil-simple--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.illustrator.create'),
+    name: 'Create Drawing',
+    icon: 'ph--pencil-simple--regular',
+  },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     variant: Schema.optional(Schema.String).annotate({
@@ -42,7 +43,7 @@ const SceneOutput = {
 
 export const Read = Operation.make({
   meta: {
-    key: makeKey('read'),
+    key: DXN.make('org.dxos.operation.illustrator.read'),
     name: 'Read Drawing',
     description:
       'Returns the current scene of a drawing: world objects (by id) with their elements in object-local units. Call before editing an existing drawing.',
@@ -57,7 +58,7 @@ export const Read = Operation.make({
 
 export const Edit = Operation.make({
   meta: {
-    key: makeKey('edit'),
+    key: DXN.make('org.dxos.operation.illustrator.edit'),
     name: 'Edit Drawing',
     description:
       'Applies scene commands to a drawing: upsert/move/remove world objects or individual elements by id. Returns the resulting scene.',
@@ -77,7 +78,7 @@ export const Edit = Operation.make({
 
 export const Generate = Operation.make({
   meta: {
-    key: makeKey('generate'),
+    key: DXN.make('org.dxos.operation.illustrator.generate'),
     name: 'Generate Drawing',
     description:
       'Replaces a drawing with a diagram compiled from a mermaid description (flowchart or classDiagram). The dialect owns layout, so no coordinates are supplied.',
@@ -85,11 +86,18 @@ export const Generate = Operation.make({
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to generate into.' }),
-    source: Schema.String.annotate({ description: 'Mermaid source: a flowchart or a classDiagram.' }),
+    source: Schema.String.annotate({
+      description:
+        'Mermaid source: a flowchart or a classDiagram. Flowcharts may carry `%% ref <nodeId> <target>` lines saying what a node depicts: an ECHO object reference opens on activation; other URIs and paths are carried for tooling.',
+    }),
   }),
   output: Schema.Struct({
     ...SceneOutput,
     upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids created or modified.' }),
+    diagnostics: Schema.Array(Diagnostics.Diagnostic).annotate({
+      description:
+        'Layout report. Fix every `error` (overlap, connector through a node, label overflow) by simplifying or splitting the diagram and regenerating; `warning`s (crossings, bends) are quality hints.',
+    }),
   }),
   services: [Capability.Service, Database.Service],
 });

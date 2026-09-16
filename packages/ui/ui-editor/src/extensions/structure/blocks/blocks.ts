@@ -6,9 +6,9 @@ import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
-import { createBlockDrag } from './drag';
-import { type BlockOps, createBlockSelection, createBlockSelectionHighlight, setBlockSelection } from './selection';
-import { type Block } from './types';
+import { createBlockDrag } from './drag.ts';
+import { type BlockOps, createBlockSelection, createBlockSelectionHighlight, setBlockSelection } from './selection.ts';
+import { type Block } from './types.ts';
 
 export type BlockOptions = {
   /**

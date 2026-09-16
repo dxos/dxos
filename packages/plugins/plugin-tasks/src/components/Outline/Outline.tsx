@@ -2,10 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
-import { composeRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
+import { EditorSelection, type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -19,8 +17,8 @@ import React, {
 } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import { DX_ANCHOR_ACTIVATE, DxAnchorActivate, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composeRefs, createContext } from '@dxos/react-hooks';
+import { composable, composableProps, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -30,8 +28,6 @@ import {
 } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import {
-  AnchorWidget,
-  type XmlWidgetProps,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -39,10 +35,11 @@ import {
   deleteItem,
   getItemText,
   hashtag,
+  isItemLink,
+  objectLinks,
   outliner,
   replaceItemWithLink,
   syncLinkLabels,
-  xmlTags,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -52,8 +49,6 @@ export type OutlineLink = {
   label: string;
   url: string;
 };
-
-const OBJECT_URL_SCHEMES = ['dxn:', 'echo:'];
 
 /** Replaces the current item with a link to the object created from its text. */
 const convertItemToTask = async (
@@ -92,10 +87,15 @@ type OutlineContextValue = {
   text: Text.Text;
   scrollable: boolean;
   showSelected: boolean;
+  readonly?: boolean;
   autoFocus?: boolean;
+  /** Reports whether the caret's item can still be promoted (an item that is already a link cannot). */
+  onConvertibleChange?: (convertible: boolean) => void;
   onConvertToTask?: (text: string) => Promise<OutlineLink | undefined>;
   onSelectLink?: (url: string) => void;
   resolveLinkLabel?: (url: string) => string | undefined;
+  /** Editor extensions contributed by the host (e.g. a plugin's reference decoration). */
+  extensions?: Extension[];
   /** Mutable ref populated by Content so Root can expose the view via the controller. */
   viewRef: RefObject<EditorView | null | undefined>;
 };
@@ -112,12 +112,25 @@ type OutlineRootProps = PropsWithChildren<
     text: Text.Text;
     scrollable?: boolean;
     showSelected?: boolean;
+    /** Presentation only: blocks edits and drops the drag grips and floating menu (e.g. a card preview). */
+    readonly?: boolean;
     /** Converts an item's text into an object; the item is replaced by a link to the returned target. */
     onConvertToTask?: (text: string) => Promise<OutlineLink | undefined>;
+    /**
+     * Called as the caret moves with whether the item under it can be promoted — false once it is a
+     * link, since converting again would orphan the object the link points at. Drives the toolbar's
+     * disabled state; the editor's own menu hides the entry itself.
+     */
+    onConvertibleChange?: (convertible: boolean) => void;
     /** Called when the user activates a link inserted by a conversion. */
     onSelectLink?: (url: string) => void;
     /** Current label of a link's target; the document text is reconciled against it. */
     resolveLinkLabel?: (url: string) => string | undefined;
+    /**
+     * Editor extensions the host contributes. The outline owns its own core (outliner, markdown,
+     * links); a host adds what only it knows about — e.g. plugin-github decorating `#123`.
+     */
+    extensions?: Extension[];
   } & Pick<UseTextEditorProps, 'autoFocus'>
 >;
 
@@ -130,9 +143,12 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
       autoFocus,
       scrollable = true,
       showSelected = true,
+      readonly,
       onConvertToTask,
+      onConvertibleChange,
       onSelectLink,
       resolveLinkLabel,
+      extensions,
     },
     forwardedRef,
   ) => {
@@ -158,10 +174,13 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
         text={text}
         scrollable={scrollable}
         showSelected={showSelected}
+        readonly={readonly}
+        onConvertibleChange={onConvertibleChange}
         autoFocus={autoFocus}
         onConvertToTask={onConvertToTask}
         onSelectLink={onSelectLink}
         resolveLinkLabel={resolveLinkLabel}
+        extensions={extensions}
         viewRef={viewRef}
       >
         {children}
@@ -181,8 +200,20 @@ const OUTLINE_CONTENT_NAME = 'Outline.Content';
 type OutlineContentProps = {};
 
 const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, forwardedRef) => {
-  const { id, text, scrollable, showSelected, autoFocus, onConvertToTask, onSelectLink, resolveLinkLabel, viewRef } =
-    useOutlineContext(OUTLINE_CONTENT_NAME);
+  const {
+    id,
+    text,
+    scrollable,
+    showSelected,
+    readonly,
+    onConvertibleChange,
+    autoFocus,
+    onConvertToTask,
+    onSelectLink,
+    resolveLinkLabel,
+    extensions,
+    viewRef,
+  } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
 
@@ -194,41 +225,57 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
       initialValue: text.content,
       extensions: [
         createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
-        createBasicExtensions({ readOnly: false, search: true }),
+        createBasicExtensions({ readOnly: !!readonly, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({
           themeMode,
           slots: {
-            scroller: { className: scrollable ? '' : '!overflow-hidden' },
+            scroller: { className: scrollable ? '' : 'overflow-hidden!' },
           },
         }),
-        outliner({ showSelected }),
+        outliner({ readonly }),
+        EditorView.updateListener.of((update) => {
+          if (update.selectionSet || update.docChanged) {
+            reportConvertible.current(!isItemLink(update.state));
+          }
+        }),
         // Renders links to converted objects as anchor chips (which dispatch `DX_ANCHOR_ACTIVATE`).
-        xmlTags({
-          registry: {
-            'link-preview': {
-              block: false,
-              urlSchemes: OBJECT_URL_SCHEMES,
-              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn ? new AnchorWidget(label, dxn) : null,
-            },
-          },
-        }),
+        objectLinks(),
         hashtag(),
+        // Last, so a host's decoration sees the document the outline's own extensions produced.
+        extensions ?? [],
       ],
     }),
-    [id, text, autoFocus, themeMode],
+    [id, text, autoFocus, themeMode, readonly, extensions],
   );
 
   // Publish view to Root so the controller can access it.
   viewRef.current = view;
+
+  // An item that is already a link cannot be promoted again (see `isItemLink`). Tracked as state
+  // because both consumers render off it: this menu, and the caller's toolbar via `onConvertibleChange`.
+  const [convertible, setConvertible] = useState(true);
+  // Held in a ref so the editor's extensions (rebuilt only on identity/theme changes) can call the
+  // latest callback without a reconfigure.
+  const reportConvertible = useRef<(convertible: boolean) => void>(() => {});
+  reportConvertible.current = (next: boolean) => {
+    setConvertible(next);
+    onConvertibleChange?.(next);
+  };
+
+  // Seed from the initial selection; subsequent changes arrive through the update listener.
+  useEffect(() => {
+    if (view) {
+      reportConvertible.current(!isItemLink(view.state));
+    }
+  }, [view]);
 
   const commandGroups: EditorMenuGroup[] = useMemo(
     () => [
       {
         id: 'outliner-actions',
         items: [
-          ...(onConvertToTask
+          ...(onConvertToTask && convertible
             ? [
                 {
                   id: 'convert-to-task',
@@ -254,7 +301,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
         ],
       },
     ],
-    [t, onConvertToTask],
+    [t, onConvertToTask, convertible],
   );
 
   const handleSelect = useCallback<NonNullable<EditorMenuProviderProps['onSelect']>>(({ view, item }) => {
@@ -272,21 +319,37 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
     }
   }, [view, resolveLinkLabel]);
 
-  // `DxAnchorActivate` does not bubble, so listen during capture on the editor's container.
+  // A link is followed on click or keyboard activation only. The chip's own `DxAnchorActivate`
+  // also fires on hover intent (and on leave, with `state: false`), which the host's preview
+  // popover answers; acting on those would follow the link on hover. The chip dispatches its
+  // activate from its own click/keydown handlers, so stopping the event in capture here keeps a
+  // pinned preview from opening against an outline that is about to leave.
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!root || !onSelectLink) {
       return;
     }
 
-    const handler = (event: Event) => {
-      if (event instanceof DxAnchorActivate) {
-        onSelectLink(event.dxn);
+    const follow = (event: Event) => {
+      const anchor = event.target instanceof Element ? event.target.closest('dx-anchor') : null;
+      const eid = anchor?.getAttribute('eid');
+      if (!anchor || !eid) {
+        return;
       }
+      if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      onSelectLink(eid);
     };
 
-    root.addEventListener(DX_ANCHOR_ACTIVATE, handler, { capture: true });
-    return () => root.removeEventListener(DX_ANCHOR_ACTIVATE, handler, { capture: true });
+    root.addEventListener('click', follow, { capture: true });
+    root.addEventListener('keydown', follow, { capture: true });
+    return () => {
+      root.removeEventListener('click', follow, { capture: true });
+      root.removeEventListener('keydown', follow, { capture: true });
+    };
   }, [root, onSelectLink]);
 
   return (

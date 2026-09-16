@@ -7,7 +7,9 @@ import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Agent, AgentSkill, Chat } from '@dxos/assistant-toolkit';
+import { AgentSkill } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
@@ -30,10 +32,11 @@ export default Capability.makeModule(
         id: Type.getTypename(Chat.Chat),
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-              db: options.db,
-              name: props?.name,
-            });
+            const { object } = yield* Operation.invoke(
+              AssistantOperation.CreateChat,
+              { name: props?.name },
+              { spaceId: options.db.spaceId },
+            );
             return yield* Operation.invoke(
               SpaceOperation.AddObject,
               {

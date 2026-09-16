@@ -10,7 +10,7 @@ import {
   formatPendingBlockStatus,
   pendingStatusFromEphemeralMessage,
   resolveEphemeralStatusUpdate,
-} from './pending-block-status';
+} from './pending-block-status.ts';
 
 describe('formatPendingBlockStatus', () => {
   test('formats pending text as generating tokens', ({ expect }) => {
@@ -50,7 +50,11 @@ describe('formatPendingBlockStatus', () => {
         {
           type: Trace.OperationInput.key,
           timestamp: Date.now(),
-          data: { key: 'org.dxos.function.agent.get-context', name: 'Get Agent Context', input: { foo: 'bar' } },
+          data: {
+            key: 'org.dxos.operation.assistantToolkit.getContext',
+            name: 'Get Agent Context',
+            input: { foo: 'bar' },
+          },
         },
       ]),
     );

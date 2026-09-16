@@ -12,14 +12,15 @@ import {
   Flex,
   Icon,
   Panel,
+  Progress,
   ScrollArea,
-  Status,
   Tag,
   type TFunction,
   Toolbar,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type DiagnosticIssue,
@@ -151,7 +152,7 @@ const RunProgress = ({
   const progress = state.total === 0 ? 0 : state.current / state.total;
   return (
     <Flex column gap='sm' classNames='p-2'>
-      <Status progress={progress} classNames='block' />
+      <Progress progress={progress} classNames='block' />
       <span className='text-xs text-description'>
         {t('progress.label', {
           current: state.current,
@@ -213,14 +214,10 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
 };
 
 const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
-  <li className='flex items-start gap-2 p-2'>
-    <Icon
-      icon={SEVERITY_ICON[issue.severity]}
-      size={4}
-      classNames={`${paletteToText(issue.severity)} shrink-0 mt-0.5`}
-    />
+  <li className='flex items-center gap-2 p-2'>
+    <Icon icon={SEVERITY_ICON[issue.severity]} size={4} classNames={mx(paletteToText(issue.severity), 'shrink-0')} />
     <Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
-      <span className='break-words break-all'>{issue.message}</span>
+      <span className='wrap-break-words break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (
         <span className='text-description font-mono break-all'>
           {issue.subjectLabel ?? ''}

@@ -22,14 +22,14 @@ DX_SANDBOX_SERVICE_URL:
   path: runtime.services.sandbox.url
   type: string
 
-DX_EDGE_ECHO_REPLICATOR:
-  path: runtime.client.edgeFeatures.echoReplicator
-  type: boolean
-
 DX_EDGE_SUBDUCTION_REPLICATOR:
   path: runtime.client.edgeFeatures.subductionReplicator
   type: boolean
 
 DX_EDGE_FEED_REPLICATOR:
   path: runtime.client.edgeFeatures.feedReplicator
+  type: boolean
+
+DX_AUTOMERGE_CREDENTIALS:
+  path: runtime.client.automergeCredentials
   type: boolean

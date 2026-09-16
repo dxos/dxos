@@ -3,16 +3,26 @@
 //
 
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { type Matcher, type WorkspacePackageResolver, externalKey, matchesKey } from './matcher.ts';
 import { createImportResolver } from './package-resolution.ts';
 import { parseImportSpecifiers } from './parse-imports.ts';
 
-/**
- * Recurse into resolved files that belong to workspace `@dxos/*` packages (including
- * in-repo sources). Stop at the matcher target so we do not walk past terminals, and
- * skip third-party packages to keep the crawl fast.
- */
+const findPackageRoot = (filePath: string): string | null => {
+  let dir = path.dirname(filePath);
+  for (;;) {
+    if (fs.existsSync(path.join(dir, 'package.json'))) {
+      return `${dir}${path.sep}`;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
+};
+
 const shouldRecurseInto = (
   resolved: string,
   matcher: Matcher,
@@ -25,6 +35,17 @@ const shouldRecurseInto = (
   return packageName?.startsWith('@dxos/') ?? false;
 };
 
+export type ImportGraph = {
+  readonly graph: Map<string, string[]>;
+  /**
+   * `#`-prefixed specifiers in the traced package's OWN files that failed to resolve, as
+   * `<importer> -> <specifier>`. The package under test defines its own subpath imports, so a
+   * failure means the condition set resolves to a file that was never built, and the crawl stops
+   * at that edge. Only the traced package's own files are policed.
+   */
+  readonly unresolvedSubpaths: string[];
+};
+
 /**
  * Build a static import graph by crawling from the entry file with the SWC parser and
  * resolving each specifier through `package.json` `imports`/`exports`. Edges to files
@@ -35,9 +56,11 @@ export const buildImportGraph = (
   conditions: readonly string[],
   matcher: Matcher,
   resolveWorkspacePackage: WorkspacePackageResolver,
-): Map<string, string[]> => {
+): ImportGraph => {
   const resolver = createImportResolver(conditions);
   const graph = new Map<string, string[]>();
+  const unresolvedSubpaths: string[] = [];
+  const entryPackageRoot = findPackageRoot(entryKey);
   const queue = [entryKey];
   const queued = new Set(queue);
 
@@ -54,8 +77,8 @@ export const buildImportGraph = (
     let source: string;
     try {
       source = fs.readFileSync(fileKey, 'utf8');
-    } catch {
-      continue;
+    } catch (err) {
+      throw new Error(`failed to read ${fileKey}: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     const deps = new Set<string>();
@@ -71,7 +94,10 @@ export const buildImportGraph = (
         continue;
       }
 
-      // Unresolvable bare specifiers (missing install, virtual modules) stay as external leaves.
+      if (specifier.startsWith('#') && entryPackageRoot !== null && fileKey.startsWith(entryPackageRoot)) {
+        unresolvedSubpaths.push(`${fileKey} -> ${specifier}`);
+      }
+
       if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
         const external = externalKey(specifier);
         deps.add(external);
@@ -82,5 +108,5 @@ export const buildImportGraph = (
     graph.set(fileKey, [...deps]);
   }
 
-  return graph;
+  return { graph, unresolvedSubpaths };
 };

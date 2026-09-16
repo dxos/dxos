@@ -43,7 +43,7 @@ The following extension dialects are used in this document.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `aspect`    | `org.dxos.mdl.aspect@0.1`      |
 
@@ -429,7 +429,7 @@ feat F-8: Retrofit
 ## Acceptance
 
 ```mdl
-test T-1: Tail at rest with reserve
+scenario T-1: Tail at rest with reserve
   given: 500 varied-height messages, a tail reserve on
   then:
     - the feed opens with the last message resting on the viewport's bottom edge
@@ -437,21 +437,21 @@ test T-1: Tail at rest with reserve
 ```
 
 ```mdl
-test T-2: Upward scroll holds still
+scenario T-2: Upward scroll holds still
   given: the reader at the tail of a feed whose estimates are wrong for most rows
   when: scrolling upward in steps
   then: the row under the top of the viewport moves by exactly the scrolled distance
 ```
 
 ```mdl
-test T-3: Prepend moves nothing
+scenario T-3: Prepend moves nothing
   given: a reader mid-feed
   when: a page of history is prepended
   then: no mounted row moves on screen
 ```
 
 ```mdl
-test T-4: Follow
+scenario T-4: Follow
   given: a reader at the tail, streaming on
   when: an answer arrives
   then: the tail stays at rest; scrolling up during the stream stops the follow until the reader
@@ -459,7 +459,7 @@ test T-4: Follow
 ```
 
 ```mdl
-test T-5: One navigation seam
+scenario T-5: One navigation seam
   given: a feed with per-prompt stops
   when: stepping via toolbar, arrows, outline, and minimap
   then: all four land on the same stops via the same controller, and the outline card follows
@@ -471,7 +471,7 @@ test T-5: One navigation seam
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -482,7 +482,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -492,8 +492,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

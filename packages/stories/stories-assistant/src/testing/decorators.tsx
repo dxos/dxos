@@ -25,20 +25,20 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import {
-  Agent,
   AgentHandlers,
   AgentSkill,
-  Chat,
-  DelegationHandlers,
   DelegationSkill,
+  DelegationSkillHandlers,
   PlanningHandlers,
   PlanningSkill,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
-import { type Space } from '@dxos/client/echo';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Project from '@dxos/compute/Project';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { ExampleHandlers } from '@dxos/compute/testing';
@@ -57,6 +57,7 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
@@ -70,7 +71,8 @@ import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storyboo
 import { Outline, Task, TaskSet } from '@dxos/types';
 import { Merge, isNonNullable } from '@dxos/util';
 
-import { moduleSurfaces } from '../modules';
+import { moduleSurfaces } from '../modules/index.ts';
+import { CalculatorHandlers, CalculatorSkill } from './calculator.ts';
 
 /** Shared CSF parameters for the assistant story groups (fullscreen canvas + plugin translations). */
 export const storyParameters = {
@@ -186,12 +188,16 @@ const toStoryDecoratorsProps = ({
     Text.Text,
     Skill.Skill,
     Operation.PersistentOperation,
+    Project.Project,
     Markdown.Document,
     Instructions.Instructions,
     Trigger.Trigger,
     ...types,
   ],
   plugins: [
+    // Registers the document card surface. Without it a seeded `Markdown.Document` has no card of
+    // its own and falls through to `plugin-preview`'s JSON dump, which is the last-resort surface.
+    MarkdownPlugin.make(),
     PreviewPlugin.make(),
     RoutinePlugin.make(),
     AssistantPlugin.make(
@@ -219,16 +225,23 @@ export const createDecorators = <Args = any,>(
 type CreateAgentOptions = {
   name?: string;
   instructions?: string;
+
+  /**
+   * Name of a project to parent the agent to. Delegation files tasks into the project's task set —
+   * a conversation with no project above it has nowhere durable to promote to, so a story that
+   * delegates has to supply one.
+   */
+  project?: string;
 };
 
 type StoryPluginOptions = {
-  onChatCreated?: (props: { space: Space; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
-
   /**
    * If set, the story creates an Agent (with its own Chat) instead of a standalone Chat.
    * Accepts `true` for defaults, or an options object for name/instructions.
    */
   createAgent?: boolean | CreateAgentOptions;
+
+  onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>(
@@ -256,7 +269,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
-        Capability.contributeAll(AppCapabilities.SkillDefinition, [MarkdownSkill, PlanningSkill, DelegationSkill]),
+        Capability.contributeAll(AppCapabilities.SkillDefinition, [
+          MarkdownSkill,
+          PlanningSkill,
+          DelegationSkill,
+          CalculatorSkill,
+        ]),
         // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
         // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
@@ -264,9 +282,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         Capability.contributeAll(Capabilities.OperationHandler, [
           MarkdownOperationHandlerSet.handlers,
           PlanningHandlers,
-          DelegationHandlers,
+          DelegationSkillHandlers,
           AgentHandlers,
           ExampleHandlers,
+          CalculatorHandlers,
         ]),
       ]),
   }),
@@ -302,6 +321,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
             ),
           ),
         );
+        if (agentOptions.project) {
+          const project = space.db.add(Project.make({ name: agentOptions.project }));
+          Obj.setParent(agent, project);
+        }
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
         if (onChatCreated) {
@@ -314,7 +337,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
           // leak into later story or test runs.
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+          yield* Effect.tryPromise(() => onChatCreated({ db: space.db, chat, binder })).pipe(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }
@@ -323,7 +346,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // skills and the chat), then apply any story-specific context bindings. The story-side
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by
         // the assistant plugin and has no hook for it.
-        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId });
+        // Added directly: this harness registers no plugin-space handlers, so `AddObject` has none.
+        space.db.add(chat);
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
           const feed = yield* Effect.promise(() => chat.feed.load());
@@ -332,7 +357,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
           // leak into later story or test runs.
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+          yield* Effect.tryPromise(() => onChatCreated({ db: space.db, chat, binder })).pipe(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }

@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
@@ -10,7 +11,10 @@ import type { Space } from '@dxos/client-protocol';
 import { TestBuilder, TestSchema, performInvitation, waitForSpace } from '@dxos/client/testing';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
 describe('ContactBook', () => {
@@ -76,7 +80,7 @@ describe('ContactBook', () => {
     test('contact appears in contact book after joining a space', async () => {
       const [client1, client2] = await createInitializedClients(2);
       const space = await client1.spaces.create();
-      expectNoContacts(client1);
+      expect(client1.halo.contacts.get().length).to.eq(0);
       await inviteMember(space, client2);
       const contacts = await waitForContactBookSize(client1, 1);
       expectInContactBook(contacts, client2);
@@ -94,7 +98,7 @@ describe('ContactBook', () => {
       await waitForCondition({ condition: allSpacesReflected });
       const contact = expectInContactBook(client1.halo.contacts.get(), client2);
       const expectedSpaces = spaces.map((s) => s.key.toHex()).sort();
-      expect(contact.commonSpaces?.map((k) => k.toHex()).sort()).to.deep.eq(expectedSpaces);
+      expect(contact.commonSpaces?.map((k) => requirePublicKey(k).toHex()).sort()).to.deep.eq(expectedSpaces);
     });
 
     test('different contacts in different spaces', async () => {
@@ -133,7 +137,7 @@ describe('ContactBook', () => {
     const initialized = await Promise.all(
       clients.map(async (c, index) => {
         await c.initialize();
-        await c.halo.createIdentity({ displayName: `Peer ${index}` });
+        await c.halo.createIdentity(create(ProfileDocumentSchema, { displayName: `Peer ${index}` }));
         return c;
       }),
     );
@@ -143,22 +147,22 @@ describe('ContactBook', () => {
     return initialized;
   };
 
-  const expectNoContacts = (client: Client) => expect(client.halo.contacts.get().length).to.eq(0);
-
   const waitForContactBookSize = async (client: Client, size: number): Promise<Contact[]> => {
     await waitForCondition({ condition: () => client.halo.contacts.get().length === size });
     return client.halo.contacts.get();
   };
 
   const expectInContactBook = (contacts: Contact[], client: Client) => {
-    const contact = contacts.find((c) => c.identityKey.equals(client.halo.identity.get()!.identityKey));
+    const contact = contacts.find((c) =>
+      toPublicKey(c.identityKey)?.equals(requirePublicKey(client.halo.identity.get()!.identityKey)),
+    );
     expect(contact).not.to.be.undefined;
     return contact!;
   };
 
   const inviteMember = async (host: Space, guest: Client) => {
     const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host, guest: guest.spaces }));
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
   };
 
   const findSpace = (client: Client, spaceKey: PublicKey) => {

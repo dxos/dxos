@@ -21,7 +21,7 @@ import { VideoPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Video } from '#types';
 
-import { VideoArticle } from './VideoArticle';
+import { VideoArticle } from './VideoArticle.tsx';
 
 const DefaultStory = () => {
   const [space] = useSpaces();

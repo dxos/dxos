@@ -11,21 +11,21 @@ import { random } from '@dxos/random';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
 
-import { HypercoreFactory } from './hypercore-factory';
-import { createReadable } from './iterator';
-import { type TestDataItem, batch, createDataItem } from './testing';
+import { RawHypercoreFactory } from './hypercore-factory.ts';
+import { createReadable } from './iterator.ts';
+import { type TestDataItem, batch, createDataItem } from './testing.ts';
 
 const noop = () => {};
 
 describe('Replication', () => {
   const storage = createStorage({ type: StorageType.RAM, root: 'x' });
-  const factory1 = new HypercoreFactory(storage.createDirectory('one'));
-  const factory2 = new HypercoreFactory(storage.createDirectory('two'));
+  const factory1 = new RawHypercoreFactory(storage.createDirectory('one'));
+  const factory2 = new RawHypercoreFactory(storage.createDirectory('two'));
 
   test('replicates feeds', async () => {
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = factory1.createFeed(publicKey, { stats: true, sparse: true, eagerUpdate: false, secretKey });
-    const core2 = factory2.createFeed(publicKey, { stats: true, sparse: true, eagerUpdate: false });
+    const core1 = factory1.createHypercore(publicKey, { stats: true, sparse: true, eagerUpdate: false, secretKey });
+    const core2 = factory2.createHypercore(publicKey, { stats: true, sparse: true, eagerUpdate: false });
 
     // Open.
     {
@@ -111,8 +111,8 @@ describe('Replication', () => {
 
     // Replicating feeds must have the same public key.
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = factory1.createFeed(publicKey, { secretKey });
-    const core2 = factory2.createFeed(publicKey);
+    const core1 = factory1.createHypercore(publicKey, { secretKey });
+    const core2 = factory2.createHypercore(publicKey);
 
     // Open.
     {
@@ -212,8 +212,8 @@ describe('Replication', () => {
     const numBlocks = 10;
 
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = factory1.createFeed(publicKey, { secretKey });
-    const core2 = factory2.createFeed(publicKey);
+    const core1 = factory1.createHypercore(publicKey, { secretKey });
+    const core2 = factory2.createHypercore(publicKey);
 
     // Open.
     {
@@ -287,7 +287,7 @@ describe('Replication', () => {
 
     const { publicKey, secretKey } = createKeyPair();
 
-    const core1 = factory1.createFeed(publicKey, { secretKey, writable: true, sparse, eagerUpdate });
+    const core1 = factory1.createHypercore(publicKey, { secretKey, writable: true, sparse, eagerUpdate });
     core1.on('error', (err) => {
       console.error(err);
     });
@@ -316,7 +316,7 @@ describe('Replication', () => {
       lastHeartbeat = now;
     }, 500);
 
-    const core2 = factory2.createFeed(publicKey, { sparse, eagerUpdate });
+    const core2 = factory2.createHypercore(publicKey, { sparse, eagerUpdate });
     core2.on('error', (err) => {
       console.error(err);
     });

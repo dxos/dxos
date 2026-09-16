@@ -27,10 +27,10 @@ import {
 } from '#containers';
 import { Calendar, Mailbox } from '#types';
 
-import { POPOVER_SAVE_FILTER } from '../constants';
-import { getSubscriptionsId } from '../paths';
-import { isAttachmentRef } from './app-graph-builder';
-import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces';
+import { POPOVER_SAVE_FILTER } from '../constants.ts';
+import { getSubscriptionsId } from '../paths.ts';
+import { isAttachmentRef } from './app-graph-builder.ts';
+import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces.tsx';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -42,7 +42,9 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'subscriptions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const lastSegment = data.attendableId.split('/').pop();
+          // A filter runs against every article candidate, including ones whose data carries no
+          // `attendableId` despite the type — throwing here fails the whole surface match.
+          const lastSegment = data.attendableId?.split('/').pop();
           return lastSegment === getSubscriptionsId() && Mailbox.instanceOf(data.subject);
         }),
         component: SubscriptionsArticle,

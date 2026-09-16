@@ -3,17 +3,16 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { PreviewPopover, ReactSurface, Schema } from '#capabilities';
+import { LinkResolver, PreviewPopover, ReactSurface, Schema, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(LinkResolver),
   Plugin.addModule(PreviewPopover),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

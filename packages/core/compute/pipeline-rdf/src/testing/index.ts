@@ -9,8 +9,8 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
-export * from './harness/serialize';
-export * from './harness/generate-facts';
+export * from './harness/serialize.ts';
+export * from './harness/generate-facts.ts';
 
 /** Minimal `AiService` whose `generateObject` returns a fixed object (no network). */
 export const mockAiService = (object: unknown): Layer.Layer<AiService.AiService> =>

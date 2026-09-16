@@ -8,11 +8,20 @@ import * as Struct from 'effect/Struct';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Translations from '@dxos/app-toolkit/Translations';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
+
+export const selectCompanion = <T extends { id: string }>(
+  companions: readonly T[],
+  preferredVariant?: string,
+): T | undefined =>
+  (preferredVariant
+    ? companions.find((companion) => Attention.getLinkedVariant(companion.id) === preferredVariant)
+    : undefined) ?? companions[0];
 
 export type Part = 'main' | 'complementary';
 export type ResolvedPart = Part;
@@ -20,22 +29,30 @@ export type ResolvedPart = Part;
 export const PlankSizing = Schema.Record(Schema.String, Schema.mutableKey(Schema.Number));
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
-export const DeckState = Schema.Struct({
+/**
+ * What is open in a workspace. Derived from the URL, which is the record of it, so this is never
+ * persisted and never written by hand — {@link applyActive} is its only writer.
+ */
+export const OpenDeck = Schema.Struct({
   /** Item IDs of planks currently active. A singleton list renders fullbleed; 2+ render as a sliding deck. */
   active: Schema.mutable(Schema.Array(Schema.String)),
-  /** Item IDs of planks that have been closed; used for state persistence and reopening. */
+  /** Item IDs of planks that have been closed; broadcast so peers clear this identity's presence. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
+  /** Each open plank's URL segment, by plank id; the key its per-plank preferences hang off. */
+  segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
+});
+export type OpenDeck = Schema.Schema.Type<typeof OpenDeck>;
+
+export const defaultOpenDeck: OpenDeck = { active: [], inactive: [] };
+
+/** A workspace's persisted deck preferences: how its planks look, not which ones are open. */
+export const StoredDeck = Schema.Struct({
   /**
    * Absolute widths in rem, keyed by item id — a plank keeps its width wherever it sits. The companion's
    * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
    */
   plankSizing: Schema.mutableKey(PlankSizing),
-  /**
-   * Planks showing their companion, by id. Per plank rather than per deck so moving between planks
-   * restores what each was left in — a plank you closed the companion on stays closed when you come
-   * back to it, while the one you left it open on reopens it.
-   */
-  companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
+  companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
    * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
    * like a browser tab: opening under a name that is already taken replaces its occupant in place.
@@ -43,7 +60,10 @@ export const DeckState = Schema.Struct({
    */
   plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
 });
-export type DeckState = Schema.Schema.Type<typeof DeckState>;
+export type StoredDeck = Schema.Schema.Type<typeof StoredDeck>;
+
+/** A workspace's deck as everything reads it: its preferences, plus what the URL says is open. */
+export type DeckState = StoredDeck & OpenDeck;
 
 /**
  * Deck key for the "no workspace resolved yet" sentinel — the initial `activeDeck` of a fresh profile,
@@ -52,11 +72,8 @@ export type DeckState = Schema.Schema.Type<typeof DeckState>;
  */
 export const DEFAULT_DECK_ID = 'default';
 
-export const defaultDeck: DeckState = {
-  active: [],
-  inactive: [],
+export const defaultDeck: StoredDeck = {
   plankSizing: {},
-  companionPlanks: [],
   plankNames: {},
 };
 
@@ -76,17 +93,76 @@ export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean
   fullscreen ? 'solo--fullscreen' : deck.active.length > 1 ? 'multi' : 'solo';
 
 // Persisted plugin state (stored in KVS/localStorage).
+/**
+ * Bottom-drawer height range in rem. Declared here, not read from `@dxos/react-ui`, because the
+ * `UpdateDrawer` handler runs in the headless (node/workerd) entry, which must not load React.
+ */
+export const DRAWER_DEFAULT_HEIGHT = 24;
+export const DRAWER_MIN_HEIGHT = 8;
+export const DRAWER_MAX_HEIGHT = 64;
+
 export const StoredDeckState = Schema.Struct({
   sidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
+  /**
+   * Openness of the deck-level complementary sidebar on desktop, and of the whole companion drawer on
+   * mobile — read it through {@link getCompanionSelection} rather than directly, which is what keeps
+   * the two meanings apart.
+   */
   complementarySidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
+  /**
+   * Which panel that sidebar shows: a deck-level companion variant on desktop, but the selected *plank*
+   * companion on mobile, where the drawer has no planks to hang `companionPlanks` off — see
+   * {@link getCompanionSelection} for the platform-correct read.
+   */
   complementarySidebarPanel: Schema.optional(Schema.String),
+  /** Openness of the bottom drawer; optional so state persisted before it existed still decodes. */
+  drawerState: Schema.optional(Schema.Literals(['open', 'closed'])),
+  /** Drawer height in rem; absent falls back to {@link DRAWER_DEFAULT_HEIGHT}. */
+  drawerHeight: Schema.optional(Schema.Number),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
   decks: Schema.mutableKey(
-    Schema.Record(Schema.String, Schema.mutableKey(DeckState.mapFields(Struct.map(Schema.mutableKey)))),
+    Schema.Record(Schema.String, Schema.mutableKey(StoredDeck.mapFields(Struct.map(Schema.mutableKey)))),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
+
+/** Which root layout renders the deck's state; the two hosts express companion visibility differently. */
+export type Platform = 'mobile' | 'desktop';
+
+/** Which plank companion the host currently has on screen. */
+export type CompanionSelection = {
+  /** Whether the companion pane is on screen at all. */
+  open: boolean;
+  /** The chosen tab; absent means the pane falls back to the plank's first companion. */
+  variant?: string;
+};
+
+/**
+ * The plank companion the host is showing, in one shape for consumers outside the layout (e.g. the
+ * assistant provisioning a chat for the plank). The deck marks the pane open per plank
+ * (`companionPlanks`) and keeps the chosen tab in global view state, while the mobile drawer has no
+ * planks and holds both in `complementarySidebar*` — that split is a layout detail, not one every
+ * consumer should have to re-derive.
+ *
+ * Both sets of fields can be *written* on either platform — a URL restore invokes `UpdateCompanion`
+ * without knowing the host — so it is this read, not the writes, that makes the answer correct: each
+ * branch consults only the fields its host actually renders from and ignores the other's.
+ */
+export const getCompanionSelection = (
+  platform: Platform,
+  state: StoredDeckState,
+  viewStateVariant: string | undefined,
+): CompanionSelection => {
+  if (platform === 'mobile') {
+    const open = state.complementarySidebarState !== 'closed' && state.complementarySidebarPanel !== undefined;
+    return { open, variant: open ? state.complementarySidebarPanel : undefined };
+  }
+
+  const companionPlanks = state.decks[state.activeDeck]?.companionPlanks;
+  const open = companionPlanks === undefined || companionPlanks.length > 0;
+  return { open, variant: open ? viewStateVariant : undefined };
+};
 
 // Transient/ephemeral plugin state (not persisted).
 export const EphemeralDeckState = Schema.Struct({
@@ -100,10 +176,10 @@ export const EphemeralDeckState = Schema.Struct({
   /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
   expose: Schema.optional(Schema.Boolean),
   /**
-   * Planks a URL restore could not resolve, by item ID. Separates "gave up" from "still loading",
-   * which an absent node cannot express on its own. Transient — resolvability is not a deck fact.
+   * What is open, by workspace. The URL only records the workspace you are in, so the others are
+   * remembered for as long as the session lasts and no longer.
    */
-  unresolved: Schema.optional(Schema.Array(Schema.String)),
+  open: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(OpenDeck))),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
   dialogBlockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),

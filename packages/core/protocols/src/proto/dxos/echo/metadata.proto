@@ -51,6 +51,10 @@ message SpaceMetadata {
   /// Space key.
   dxos.keys.PublicKey key = 1;
 
+  /// Space id — the primary identifier for the space.
+  /// Derived from the space genesis key, and carried so readers do not have to re-derive it.
+  optional string space_id = 13;
+
   /// Immutable tags assigned at space creation time.
   repeated string tags = 12;
 

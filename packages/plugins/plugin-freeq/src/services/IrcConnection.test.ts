@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { FreeqAuthError, FreeqConnectionError } from '../errors';
-import { type IncomingMessage, type Transport, makeIrcConnection } from './IrcConnection';
-import { IrcProtocol } from './IrcProtocol';
+import { FreeqAuthError, FreeqConnectionError } from '../errors.ts';
+import { type IncomingMessage, type Transport, makeIrcConnection } from './IrcConnection.ts';
+import { IrcProtocol } from './IrcProtocol.ts';
 
 describe('IrcConnection', () => {
   test('completes CAP + SASL handshake and resolves connect() on 001', async ({ expect }) => {

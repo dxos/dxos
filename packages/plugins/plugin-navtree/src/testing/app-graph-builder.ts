@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type BuilderExtensions } from '@dxos/app-graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
@@ -36,9 +36,9 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
   return Effect.runSync(
     Effect.all([
       // Create app menu actions.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'appMenu',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
@@ -55,12 +55,12 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
           ),
       }),
       // Create user account node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'userAccount',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: 'user-account',
               type: 'user-account',
               properties: {
@@ -73,7 +73,7 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
                 status: 'active',
               },
               nodes: [
-                Node.make({
+                AppGraphNode.make({
                   id: 'profile',
                   type: 'profile',
                   properties: {
@@ -81,7 +81,7 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
                     icon: 'ph--user--regular',
                   },
                 }),
-                Node.make({
+                AppGraphNode.make({
                   id: 'devices',
                   type: 'devices',
                   properties: {
@@ -89,7 +89,7 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
                     icon: 'ph--devices--regular',
                   },
                 }),
-                Node.make({
+                AppGraphNode.make({
                   id: 'security',
                   type: 'security',
                   properties: {
@@ -102,9 +102,9 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
           ]),
       }),
       // Create space (workspace) nodes directly under root.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaces',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: (_, get) =>
           Effect.sync(() => {
             if (spaces === 'none') {
@@ -127,7 +127,7 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
             });
 
             return Array.from({ length: spaces === 'pending' ? 3 : get(count) }, (_, i) =>
-              Node.make({
+              AppGraphNode.make({
                 id: `space-${i}`,
                 type: 'space',
                 // A pending space publishes its cached name but no hue or icon, since those live in
@@ -152,9 +152,9 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
           }),
       }),
       // Create space actions.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaceActions',
-        match: NodeMatcher.whenNodeType('space'),
+        match: GraphNodeMatcher.whenNodeType('space'),
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
@@ -165,14 +165,17 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
                 icon: random.properties.icon(),
+                // The properties cache is keyed by id and the object actions share these ids, so
+                // what puts an action on a row's menu is declared here for both.
+                disposition: 'list-item',
               }),
             })),
           ),
       }),
       // Create object nodes.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'objects',
-        match: NodeMatcher.whenNodeType('space'),
+        match: GraphNodeMatcher.whenNodeType('space'),
         connector: (_, get) =>
           Effect.sync(() => {
             const count = Atom.make((get) => {
@@ -191,9 +194,11 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
             });
 
             return Array.from({ length: get(count) }, (_, i) =>
-              Node.make({
+              AppGraphNode.make({
                 id: `object-${i}`,
                 type: 'object',
+                // Something to select: the navtree navigates only for a node that carries data.
+                data: { id: `object-${i}` },
                 properties: getProperties(`object-${i}`, {
                   label: `Object ${i}`,
                   icon: random.properties.icon(),
@@ -205,9 +210,9 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
           }),
       }),
       // Create object actions.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'objectActions',
-        match: NodeMatcher.whenNodeType('object'),
+        match: GraphNodeMatcher.whenNodeType('object'),
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
@@ -218,6 +223,8 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
                 icon: random.properties.icon(),
+                // What puts an action on the row's menu, as the app's object actions declare.
+                disposition: 'list-item',
               }),
             })),
           ),

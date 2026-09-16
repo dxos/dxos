@@ -14,8 +14,14 @@ import { type Space } from '@dxos/react-client/echo';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters, submitPrompt } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import {
+  ModuleContainer,
+  addToRootCollection,
+  createDecorators,
+  storyParameters,
+  submitPrompt,
+} from '../testing/index.ts';
 
 type StoryArgs = {
   /** Name of the seeded document. */
@@ -116,10 +122,10 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
     addToRootCollection(space, [document, drawing]);
     return [[StoryRole.Chat], [Cell.article(document)], [Cell.article(drawing)]];
   },
-  onChatCreated: async ({ space, binder }) => {
+  onChatCreated: async ({ db, binder }) => {
     const [{ Drawing }] = await Promise.all([import('@dxos/plugin-illustrator')]);
-    const documents = await space.db.query(Filter.type(Markdown.Document)).run();
-    const drawings = await space.db.query(Filter.type(Drawing.Drawing)).run();
+    const documents = await db.query(Filter.type(Markdown.Document)).run();
+    const drawings = await db.query(Filter.type(Drawing.Drawing)).run();
     await binder.bind({ objects: [...documents, ...drawings].map((object) => Ref.make(object)) });
   },
 }));

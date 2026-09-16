@@ -9,7 +9,7 @@ import { type FeedSyncStateMap, type PeerSyncState, type SpaceSyncStateMap } fro
 import { IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { SpaceRowContainer } from './Space';
+import { SpaceRowContainer } from './Space.tsx';
 
 export type SyncStatusProps = ThemedClassName<{
   state: SpaceSyncStateMap;

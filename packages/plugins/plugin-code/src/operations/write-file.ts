@@ -29,8 +29,8 @@ const handler: Operation.WithHandler<typeof CodeOperation.WriteFile> = CodeOpera
       const file = SourceFile.make({ path, content });
       const added = yield* Database.add(file);
       Obj.update(code, (code) => {
-        const next = [...(code.files ?? []), Ref.make(added)];
-        (code as Obj.Mutable<typeof code>).files = next;
+        code.files ??= [];
+        code.files.push(Ref.make(added));
       });
       return { path, created: true };
     }),

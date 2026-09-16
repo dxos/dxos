@@ -4,7 +4,7 @@
 
 import { describe, test } from '@effect/vitest';
 
-import { decideStderrChunk, filterStderrBuffer } from './stderr-filter';
+import { decideStderrChunk, filterStderrBuffer } from './stderr-filter.ts';
 
 /**
  * The exact warning shape produced by `warnAfterTimeout` in @dxos/debug.

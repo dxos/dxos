@@ -21,8 +21,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { RoutineOperation } from '#types';
 
-import { makeRoutine } from '../util';
-import RunRoutineHandler from './run-routine';
+import { makeRoutine } from '../util/index.ts';
+import RunRoutineHandler from './run-routine.ts';
 
 /** Captures the input each run receives so the test can assert on it after the invocation. */
 const received: unknown[] = [];
@@ -42,7 +42,7 @@ const TestMonitor = Layer.succeed(Trigger.TriggerMonitorService, {
  * required input, so a run that supplies none throws before the handler body.
  */
 const TestRunnable = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.runnable'), name: 'Test Runnable' },
+  meta: { key: DXN.make('com.example.operation.test.runnable'), name: 'Test Runnable' },
   input: Schema.Struct({ label: Schema.Any }),
   output: Schema.Void,
 });

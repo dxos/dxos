@@ -5,29 +5,29 @@
 import { Event, scheduleMicroTask, synchronized, trackLeaks } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
-import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
+import { type HypercoreCreateOptions, type HypercoreWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { AdmittedFeed_Designation, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback } from '@dxos/util';
 
-import { type IMetadataStore } from '../metadata';
-import { type PipelineAccessor } from '../pipeline';
-import { ControlPipeline } from './control-pipeline';
-import { type SpaceProtocol } from './space-protocol';
+import { type IMetadataStore } from '../metadata/index.ts';
+import { type PipelineAccessor } from '../pipeline/index.ts';
+import { ControlPipeline } from './control-pipeline.ts';
+import { type SpaceProtocol } from './space-protocol.ts';
 
 // TODO(burdon): Factor out?
-type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;
+type FeedProvider = (feedKey: PublicKey, opts?: HypercoreCreateOptions) => Promise<HypercoreWrapper<FeedMessage>>;
 
 export type SpaceProps = {
   id: SpaceId;
   spaceKey: PublicKey;
   protocol: SpaceProtocol;
-  genesisFeed: FeedWrapper<FeedMessage>;
+  genesisFeed: HypercoreWrapper<FeedMessage>;
   feedProvider: FeedProvider;
   metadataStore: IMetadataStore;
   memberKey: PublicKey;
@@ -52,6 +52,9 @@ export type CreatePipelineProps = {
 @trackLeaks('open', 'close')
 export class Space extends Resource {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
+
+  /** Multi-subscriber counterpart to {@link onCredentialProcessed}, which holds a single handler. */
+  public readonly credentialProcessed = new Event<Credential>();
   public readonly stateUpdate = new Event();
   public readonly protocol: SpaceProtocol;
 
@@ -61,8 +64,8 @@ export class Space extends Resource {
   private readonly _feedProvider: FeedProvider;
   private readonly _controlPipeline: ControlPipeline;
 
-  private _controlFeed?: FeedWrapper<FeedMessage>;
-  private _dataFeed?: FeedWrapper<FeedMessage>;
+  private _controlFeed?: HypercoreWrapper<FeedMessage>;
+  private _dataFeed?: HypercoreWrapper<FeedMessage>;
 
   constructor(params: SpaceProps) {
     super();
@@ -82,17 +85,18 @@ export class Space extends Resource {
     // TODO(dmaretskyi): Feed set abstraction.
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
       // Enable sparse replication to not download mutations covered by prior epochs.
-      const sparse = info.assertion.designation === AdmittedFeed.Designation.DATA;
+      const sparse = info.assertion.designation === AdmittedFeed_Designation.DATA;
 
       if (!info.key.equals(params.genesisFeed.key)) {
         scheduleMicroTask(this._ctx, async () => {
-          await this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
+          await this.protocol.addHypercore(await params.feedProvider(info.key, { sparse }));
         });
       }
     });
 
     this._controlPipeline.onCredentialProcessed.set(async (credential) => {
       await this.onCredentialProcessed.callIfSet(credential);
+      this.credentialProcessed.emit(credential);
       log('onCredentialProcessed', { credential });
       this.stateUpdate.emit();
     });
@@ -139,6 +143,11 @@ export class Space extends Resource {
     return this._controlPipeline.spaceState;
   }
 
+  /** @see ControlPipeline.processDocumentCredential */
+  async processDocumentCredential(credential: Credential): Promise<boolean> {
+    return this._controlPipeline.processDocumentCredential(credential);
+  }
+
   /**
    * @test-only
    */
@@ -146,14 +155,14 @@ export class Space extends Resource {
     return this._controlPipeline.pipeline;
   }
 
-  async setControlFeed(feed: FeedWrapper<FeedMessage>): Promise<this> {
+  async setControlFeed(feed: HypercoreWrapper<FeedMessage>): Promise<this> {
     invariant(!this._controlFeed, 'Control feed already set.');
     this._controlFeed = feed;
     await this._controlPipeline.setWriteFeed(feed);
     return this;
   }
 
-  async setDataFeed(feed: FeedWrapper<FeedMessage>): Promise<this> {
+  async setDataFeed(feed: HypercoreWrapper<FeedMessage>): Promise<this> {
     invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
     return this;
@@ -180,7 +189,7 @@ export class Space extends Resource {
   public async startProtocol(ctx: Context): Promise<void> {
     invariant(this.isOpen);
     await this.protocol.start(ctx);
-    await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
+    await this.protocol.addHypercore(await this._feedProvider(this._genesisFeedKey));
   }
 
   @synchronized

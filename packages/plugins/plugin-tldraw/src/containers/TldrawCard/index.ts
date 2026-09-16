@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { TldrawCard as default } from './TldrawCard';
+export { TldrawCard as default } from './TldrawCard.tsx';

@@ -5,13 +5,21 @@
 import React, { type ReactNode, createContext, forwardRef, useContext, useMemo, useState } from 'react';
 
 import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
-import { Icon, IconButton, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Field, Icon, IconButton, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-graph';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import { type Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../../types';
-import { factViewerTheme } from './FactViewer.theme';
+import {
+  type Group,
+  factualityColor,
+  formatDate,
+  formatTerm,
+  graphToTreeNode,
+  groupFacts,
+  termKey,
+} from '../../types.ts';
+import { factViewerTheme } from './FactViewer.theme.ts';
 
 const styles = factViewerTheme.styles();
 
@@ -120,14 +128,14 @@ const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
   return (
     <Panel.Toolbar asChild>
       <Toolbar.Root classNames={classNames}>
-        <Input.Root>
-          <Input.Label srOnly>Filter facts</Input.Label>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Label srOnly>Filter facts</Field.Label>
+          <Field.Input
             placeholder='Filter by entity or predicate…'
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           />
-        </Input.Root>
+        </Field.Root>
         <div className={styles.toolbarSpacer()} />
         <IconButton
           icon='ph--list--regular'

@@ -1,0 +1,85 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/*
+ * The sizing rules pdf.js' own `text_layer_builder.css` supplies, scoped to our class rather than
+ * imported: the shipped stylesheet also carries viewer chrome we do not use, and its selectors
+ * assume the viewer's DOM.
+ *
+ * These are not cosmetic. `TextLayer` positions each span by setting `--font-height`, `--scale-x`
+ * and `--rotate` on it and leaves the stylesheet to turn them into a `font-size` and a `transform`.
+ * Omit them and every span falls back to 16px, so a heading's box is far too short and its
+ * selection and search highlights sit visibly off the glyphs — small body text looks fine, which is
+ * what makes the omission easy to miss.
+ */
+
+.dx-pdf-text-layer {
+  position: absolute;
+  text-align: initial;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  /* Without a visible caret the text is selectable but the selection is invisible while dragging. */
+  caret-color: CanvasText;
+  z-index: 1;
+  /* Explicit rather than `auto`: app chrome commonly sets `user-select: none` on a container, and
+     `auto` inherits that, leaving the layer present but unselectable. */
+  user-select: text;
+  -webkit-user-select: text;
+
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+
+.dx-pdf-text-layer :is(span, br) {
+  /* Transparent, not hidden: hidden text cannot be selected. */
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.dx-pdf-text-layer > :not(.markedContent),
+.dx-pdf-text-layer .markedContent span:not(.markedContent) {
+  z-index: 1;
+
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+.dx-pdf-text-layer .markedContent {
+  display: contents;
+}
+
+.dx-pdf-text-layer ::selection {
+  background: color-mix(in srgb, AccentColor 40%, transparent);
+}
+
+/*
+ * Highlights are `<mark>` elements inside the spans, so they inherit the transform above and cannot
+ * drift from the glyphs. Translucent, because the layer sits above the canvas and an opaque
+ * background would hide the rendered text it is meant to point at.
+ */
+.dx-pdf-text-layer mark.dx-pdf-highlight {
+  color: transparent;
+  border-radius: 1px;
+  background: color-mix(in srgb, gold 55%, transparent);
+}
+
+.dx-pdf-text-layer mark.dx-pdf-highlight[data-active='true'] {
+  background: color-mix(in srgb, orange 75%, transparent);
+}

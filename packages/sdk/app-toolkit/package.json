@@ -46,6 +46,11 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
+    "./ObjectAction": {
+      "source": "./src/app-framework/ObjectAction.ts",
+      "types": "./dist/types/src/app-framework/ObjectAction.d.ts",
+      "import": "./dist/lib/app-framework/ObjectAction.mjs"
+    },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",
       "types": "./dist/types/src/echo/AppMigrations.d.ts",
@@ -65,6 +70,11 @@
       "source": "./src/app-graph/AppNodeMatcher.ts",
       "types": "./dist/types/src/app-graph/AppNodeMatcher.d.ts",
       "import": "./dist/lib/app-graph/AppNodeMatcher.mjs"
+    },
+    "./AppSettings": {
+      "source": "./src/types/AppSettings.ts",
+      "types": "./dist/types/src/types/AppSettings.d.ts",
+      "import": "./dist/lib/types/AppSettings.mjs"
     },
     "./AppSpace": {
       "source": "./src/echo/AppSpace.ts",
@@ -131,6 +141,11 @@
       "types": "./dist/types/src/echo/Query.d.ts",
       "import": "./dist/lib/echo/Query.mjs"
     },
+    "./SampleSpace": {
+      "source": "./src/sample/SampleSpace.ts",
+      "types": "./dist/types/src/sample/SampleSpace.d.ts",
+      "import": "./dist/lib/sample/SampleSpace.mjs"
+    },
     "./SettingsOperation": {
       "source": "./src/operations/SettingsOperation.ts",
       "types": "./dist/types/src/operations/SettingsOperation.d.ts",
@@ -186,6 +201,11 @@
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
+    },
+    "./Tour": {
+      "source": "./src/app-framework/Tour.ts",
+      "types": "./dist/types/src/app-framework/Tour.d.ts",
+      "import": "./dist/lib/app-framework/Tour.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -195,21 +215,23 @@
   ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keyboard": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -217,6 +239,7 @@
     "@dxos/progress": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

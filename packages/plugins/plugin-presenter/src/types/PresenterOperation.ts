@@ -11,20 +11,17 @@ import * as Operation from '@dxos/compute/Operation';
 import { Collection, DXN, Type } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
-export const TogglePresentation = Operation.make({
+export const SetPresenting = Operation.make({
   meta: {
-    key: makeKey('togglePresentation'),
-    name: 'Toggle Presentation',
+    key: DXN.make('org.dxos.operation.presenter.setPresenting'),
+    name: 'Set Presenting',
     icon: 'ph--presentation--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
     object: Schema.Union([Type.getSchema(Markdown.Document), Type.getSchema(Collection.Collection)]),
-    state: Schema.optional(Schema.Boolean),
+    // Required: absent used to mean "flip".
+    state: Schema.Boolean,
   }),
   output: Schema.Void,
 });

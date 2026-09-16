@@ -6,10 +6,10 @@ import { describe, test } from 'vitest';
 
 import { URI } from '@dxos/keys';
 
-import * as Obj from '../../../Obj';
-import * as Ref from '../../../Ref';
-import * as Relation from '../../../Relation';
-import { TestSchema } from '../../../testing';
+import * as Obj from '../../../Obj.ts';
+import * as Ref from '../../../Ref.ts';
+import * as Relation from '../../../Relation.ts';
+import { TestSchema } from '../../../testing/index.ts';
 
 // Tags are stored as `Ref<Tag>`; build refs from synthetic URIs and compare by `.uri`.
 const tagRef = (id: string): Ref.Ref<any> => Ref.fromURI(URI.make(`echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/${id}`));

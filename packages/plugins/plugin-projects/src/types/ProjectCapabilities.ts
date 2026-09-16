@@ -13,10 +13,10 @@ import type { Database, Obj } from '@dxos/echo';
 import { meta } from '#meta';
 
 /**
- * Id of the built-in blank template. Declared here (rather than on the template itself) so callers
+ * Id of the built-in default template. Declared here (rather than on the template itself) so callers
  * that create a project without the picker can name it without importing the template module.
  */
-export const BlankTemplateId = 'org.dxos.project.blank';
+export const DefaultTemplateId = 'org.dxos.project.default';
 
 /**
  * A project template contributed by a plugin: instructions text, skills, context objects, and
@@ -25,7 +25,7 @@ export const BlankTemplateId = 'org.dxos.project.blank';
  * run the chosen template's `scaffold`.
  */
 export type Template = {
-  /** Stable id (e.g. 'org.dxos.project.blank'). */
+  /** Stable id (e.g. 'org.dxos.project.default'). */
   id: string;
   /** Human-readable label shown in the picker. */
   label: string;

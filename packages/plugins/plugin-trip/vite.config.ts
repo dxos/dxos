@@ -9,8 +9,6 @@ export default defineConfig({
     'index': 'src/index.ts',
     'TripPlugin': 'src/TripPlugin.ts',
     'plugin': 'src/plugin.tsx',
-    'plugin.node': 'src/plugin.node.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',

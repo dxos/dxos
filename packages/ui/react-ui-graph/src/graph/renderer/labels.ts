@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type D3Selection } from '../../util';
-import { type GraphLayoutNode } from '../types';
+import { type D3Selection } from '../../util/index.ts';
+import { type GraphLayoutNode } from '../types.ts';
 
 export type LabelOptionsBase = {
   /**

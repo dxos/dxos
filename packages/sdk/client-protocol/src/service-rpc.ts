@@ -14,11 +14,11 @@ import * as RpcSchema from 'effect/unstable/rpc/RpcSchema';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
-import { type RequestOptions } from '@dxos/codec-protobuf';
-import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
+import { Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { runServiceCall } from '@dxos/protocols';
+import { log } from '@dxos/log';
+import { normalizeHandlers, runServiceCall } from '@dxos/protocols';
 import {
   ContactsService,
   DataService,
@@ -33,14 +33,14 @@ import {
   QueryService,
   SpacesService,
   SystemService,
-  WorkerService,
 } from '@dxos/protocols/rpc';
+import { type RequestOptions } from '@dxos/protocols/service-contract';
 import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { DEFAULT_CLIENT_CHANNEL } from './config';
-import * as Rpc from './Rpc';
-import { type ClientServices } from './service';
+import { DEFAULT_CLIENT_CHANNEL } from './config.ts';
+import * as Rpc from './Rpc.ts';
+import { type ClientServices } from './service.ts';
 
 export type MessagePortLike = MessagePort;
 
@@ -54,11 +54,6 @@ export type ClientServicesTransport = MessagePortLike | RpcPort;
 /**
  * All client service RPCs served over a single connection.
  * Rpc tags are prefixed with the {@link ClientServices} key (e.g. `DataService.subscribe`).
- *
- * {@link WorkerService} (the tab→worker control channel: `start`/`stop`) is merged in here rather
- * than served over a second port: it runs in the same tab→worker direction as the service RPCs, so
- * it multiplexes over the same app {@link MessagePort}. Only the reverse-direction `BridgeService`
- * (worker→tab) needs its own port.
  */
 export class ClientServicesRpcs extends RpcGroup.make().merge(
   SystemService.Rpcs,
@@ -74,7 +69,6 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   ContactsService.Rpcs,
   EdgeAgentService.Rpcs,
   DevtoolsHost.Rpcs,
-  WorkerService.Rpcs,
 ) {}
 
 type ClientServicesRpcUnion = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
@@ -98,8 +92,6 @@ export type ClientServicesHandlers = {
   ContactsService: ContactsService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
-  // Provided per-session by the worker session (drives readiness/origin/lock), not by the host.
-  WorkerService: WorkerService.Handlers;
 };
 
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
@@ -171,7 +163,12 @@ export class ClientRpcServer {
     }
 
     const handlers = makeClientServicesHandlers(this.#params);
-    const options = { disableTracing: true, concurrency: 'unbounded' } as const;
+    // `timing` publishes dxos.rpc.queueWait/service.duration. Queue wait is the only signal that
+    // shows the worker being saturated rather than slow, and it is measurable only from the client
+    // side of the port. Both ends must agree: the middleware is `requiredForClient`, so a server
+    // that applies it while the client does not would reject every request — see
+    // `makeClientServicesRpc` below.
+    const options = { disableTracing: true, concurrency: 'unbounded', timing: true } as const;
     if (this.#params.protocol) {
       this.#server = Rpc.serveOverProtocol(
         Layer.succeed(RpcServer.Protocol, this.#params.protocol),
@@ -224,6 +221,25 @@ export const serveClientServicesOverIFrame = async ({
   await server.open();
   return server;
 };
+
+/**
+ * The handler layer for one service's rpcs, resolved from its tag and normalized so effect-rpc
+ * finds and correctly invokes a class-instance implementation (see {@link normalizeHandlers}).
+ */
+export const layerHandlersFromTag = <Rpcs extends EffectRpc.Any, Identifier, Shape extends object>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  tag: Context.Key<Identifier, Shape>,
+) => group.toLayer(Effect.map(tag, (service) => normalizeHandlers(group, service as RpcGroup.HandlersFrom<Rpcs>)));
+
+/**
+ * Serves every client service over the ambient {@link RpcServer.Protocol}, with the handler layers
+ * supplied by the caller (typically {@link layerHandlersFromTag} per service over a stack context).
+ */
+export const layerClientServicesServer = <R>(
+  handlers: Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>, never, R>,
+): Layer.Layer<never, never, RpcServer.Protocol | R> =>
+  // `timing` must match the tab client, whose middleware is `requiredForClient`.
+  Rpc.serverLayer(ClientServicesRpcs, handlers, { disableTracing: true, concurrency: 'unbounded', timing: true });
 
 /**
  * Builds handler layers for every client service RPC, dispatching to the service implementations
@@ -305,8 +321,7 @@ export interface ClientServicesRpc
     FeedService.Client,
     ContactsService.Client,
     EdgeAgentService.Client,
-    DevtoolsHost.Client,
-    WorkerService.Client {}
+    DevtoolsHost.Client {}
 
 /**
  * Builds the effect-native {@link ClientServicesRpc} over a {@link MessagePort}.
@@ -318,8 +333,11 @@ export const makeClientServicesRpc = (
   // An RpcPort (byte transport) carries the legacy iframe/devtools bridges; a MessagePort uses the
   // native Worker-platform protocol.
   ('send' in port
-    ? Rpc.makeClientOverProtocol(layerProtocolRpcPortClient(port), ClientServicesRpcs, { disableTracing: true })
-    : Rpc.makeClient(port, ClientServicesRpcs, { disableTracing: true })
+    ? Rpc.makeClientOverProtocol(layerProtocolRpcPortClient(port), ClientServicesRpcs, {
+        disableTracing: true,
+        timing: true,
+      })
+    : Rpc.makeClient(port, ClientServicesRpcs, { disableTracing: true, timing: true })
   ).pipe(Effect.map((client) => client as ClientServicesRpc));
 
 /**
@@ -372,7 +390,7 @@ export const makeServicesFromRpc = (
 
     if (RpcSchema.isStreamSchema(rpcDef.successSchema)) {
       service[methodName] = (request?: unknown) =>
-        streamToPbStream(runtime, invoke(request) as Stream.Stream<unknown, unknown>);
+        streamToPbStream(runtime, invoke(request) as Stream.Stream<unknown, unknown>, tag);
     } else {
       service[methodName] = (request?: unknown, options?: RequestOptions) =>
         runServiceCall(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
@@ -435,14 +453,29 @@ export const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, E
  * Adapts an effect stream to a protobuf service stream.
  * Consumer close interrupts the underlying rpc subscription.
  */
-export const streamToPbStream = <T>(runtime: Context.Context<never>, stream: Stream.Stream<T, unknown>): PbStream<T> =>
+export const streamToPbStream = <T>(
+  runtime: Context.Context<never>,
+  stream: Stream.Stream<T, unknown>,
+  label?: string,
+): PbStream<T> =>
   new PbStream<T>(({ ready, next, close }) => {
     const fiber = stream.pipe(
       Stream.onStart(Effect.sync(ready)),
       Stream.runForEach((item) => Effect.sync(() => next(item))),
       Effect.matchCauseEffect({
         onFailure: (cause) =>
-          Effect.sync(() => close(Cause.hasInterruptsOnly(cause) ? undefined : toError(Cause.squash(cause)))),
+          Effect.sync(() => {
+            const error = toError(Cause.squash(cause));
+            if (Cause.hasInterruptsOnly(cause)) {
+              close();
+              return;
+            }
+            // A `PbStream` consumer may pass no error handler, in which case the failure is dropped
+            // and the consumer waits forever — a silently unencodable response field once made the
+            // app unbootable this way. Logged here so every client service stream is diagnosable.
+            log.warn('client service stream failed', { label, error: String(error) });
+            close(error);
+          }),
         onSuccess: () => Effect.sync(() => close()),
       }),
       Effect.runForkWith(runtime),

@@ -8,9 +8,9 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 
-import { type ProcessorRequestContext } from '../processor';
+import { type ProcessorRequestContext } from '../processor/index.ts';
 
 /** Resolve `object`'s selection to text via the AnchorResolver contributed for its typename. */
 export const getSelectionContext = ({

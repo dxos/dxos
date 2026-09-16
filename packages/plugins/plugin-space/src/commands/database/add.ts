@@ -16,27 +16,36 @@ import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, sp
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import {
+  Annotation,
+  Collection,
+  Database,
+  type Error as EchoError,
+  Entity,
+  Filter,
+  Obj,
+  Query,
+  Scope,
+  Type,
+} from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 
-import { printObject } from './util';
+import { printObject } from './util.ts';
 
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
 export const add: Command.Command<
   'add',
   { readonly spaceId: Option.Option<SpaceId>; readonly typename: Option.Option<string> },
   {},
-  Err.EntityNotFoundError | Error | SpaceNotFoundError,
+  EchoError.EntityNotFoundError | Error | SpaceNotFoundError,
   ClientService | CommandConfig | Operation.Service | Plugin.Service | Capability.Service | Prompt.Environment
 > = Command.make(
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.string('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
+    typename: Options.String('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
   },
   ({ typename }) =>
     Effect.gen(function* () {
@@ -101,8 +110,8 @@ const selectTypename = Effect.fn(function* (
   const allTypes = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
     .run;
   const types = allTypes
-    .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
-    .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+    .filter((schema) => !Annotation.HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+    .filter((schema) => Annotation.getTypeAnnotation(Type.getSchema(schema))?.kind !== Entity.Kind.Relation)
     .filter((schema) => !!resolve(Type.getTypename(schema)));
 
   const choices = types.map((schema) => ({
@@ -112,7 +121,7 @@ const selectTypename = Effect.fn(function* (
     description: Type.getTypename(schema),
   }));
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: 'Select a type:',
     choices,
   });

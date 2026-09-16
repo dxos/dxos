@@ -1,141 +1,64 @@
 ---
 name: effect
-description: Guides working with Effect-TS in TypeScript codebases. Use when writing Effect programs, defining services/layers, handling errors, running effects, or when code uses effect, Context, Layer, Effect.gen, or related Effect patterns.
+description: Use when writing or changing Effect code, composing test layer stacks, working with Schema or SchemaAST, or reading pre-migration code.
 ---
 
-# Working with Effect
+# Effect in DXOS
 
-Effect is a TypeScript library for building complex synchronous and asynchronous programs with typed errors, dependency injection, and resource management. Reference: <https://effect.website/llms.txt>.
+Answer Effect questions from `node_modules/effect` rather than from recall. What is
+on disk is **pinned** to the version this repo compiles against. What you remember is
+pinned to nothing, and Effect moves.
 
-## Core Principles (Inlined)
+## The pinned copy
 
-### The Effect Type
+Unlike nearly every other package, `effect` publishes its TypeScript source and its
+own agent documentation to npm, matched to the exact version this repo compiles
+against. Its `files` field ships `src/**/*.ts`, `AGENTS.md`, and `ai-docs/**`, so
+this is real source on disk, not `dist`:
 
-`Effect<Success, Error, Requirements>` is a lazy, immutable description of a workflow:
+| Path                                 | What it holds                                                                                                                                                       |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node_modules/effect/AGENTS.md`      | The Effect team's authoring guide, 380 lines                                                                                                                        |
+| `node_modules/effect/ai-docs/src/**` | 48 compiling examples, one per topic, linked from `AGENTS.md`                                                                                                       |
+| `node_modules/effect/src/**`         | 436 files of implementation, JSDoc and every export, including the `unstable/` tree that holds `sql`, `http`, `httpapi`, `cli`, `ai`, `cluster` and `observability` |
 
-- **Success**: Value on success.
-- **Error**: Expected (typed) errors; use `never` when effect cannot fail.
-- **Requirements**: Services/dependencies from `Context`; use `never` when none needed.
+effect.website tracks `main`; the pinned copy tracks what you compile against.
 
-Effects are _descriptions_, not executions. They run via the Effect runtime at a single entry point.
+Research that reaches past the pinned copy, to an upstream issue, a migration note or
+a blog post, has to match the installed version first. `pnpm-workspace.yaml` pins the
+`effect` catalog entry, currently a 4.x release candidate; material written for 3.x
+describes a different library.
 
-```ts
-import { Effect, Context, Layer } from 'effect';
+Tests are the one thing npm leaves out: the package has no `test/` or `dtslint/`.
 
-// Effect<number, never, never> - succeeds with number, no errors, no deps
-const pure = Effect.succeed(42);
+`node_modules/effect` is a pnpm symlink into `.pnpm/effect@<version>/`, and it is
+gitignored, so nothing will surface it for you. Open it by path.
 
-// Effect<never, HttpError, never> - fails with a typed domain error
-const failure = Effect.fail(new HttpError({ status: 404 }));
-```
+## Lookup order
 
-Never use bare `Error` (or `unknown`) as the error type in `Effect<A, E, R>` — in DXOS, prefer `BaseError.extend` from `@dxos/errors` so failures are tagged and recoverable via `Effect.catchTag`.
+Before writing Effect, in this order, stopping as soon as the answer is settled:
 
-### Two Types of Errors
+1. **Read a neighbour.** Find the nearest DXOS file already doing this and copy its
+   shape. House conventions beat upstream defaults.
+2. **Read `node_modules/effect/AGENTS.md`**, then follow its link to the
+   `ai-docs/src/**` example for your topic.
+3. **Grep `node_modules/effect/src/`** for the exact export. This settles whether an
+   API exists and what its signature is.
+4. **Check the divergences below.** Three DXOS rules override the pinned guide.
 
-| Type           | Tracked in type         | Purpose                                                           |
-| -------------- | ----------------------- | ----------------------------------------------------------------- |
-| **Expected**   | Yes (`Error` in Effect) | Anticipated, domain errors, recoverable (like checked exceptions) |
-| **Unexpected** | No                      | Defects, bugs, unanticipated (like unchecked exceptions)          |
+Done when every Effect API in the change either came from a neighbouring DXOS file or
+was confirmed by grep in `node_modules/effect/src/`.
 
-Use `Effect.fail()` for expected errors. Thrown errors in sync/async code become defects. Avoid `throw`; prefer `Effect.fail` or `Effect.try`.
+## Where DXOS diverges from the pinned guide
 
-### Creating Effects
+`AGENTS.md` applies as written except on three points, where following it literally
+produces broken or off-convention code here.
 
-| Constructor                        | Use case                               |
-| ---------------------------------- | -------------------------------------- |
-| `Effect.succeed(v)`                | Pure success                           |
-| `Effect.fail(e)`                   | Expected failure                       |
-| `Effect.sync(() => x)`             | Sync side effect; must not throw       |
-| `Effect.try(() => x)`              | Sync that may throw → defect or caught |
-| `Effect.promise(() => Promise)`    | Wrap Promise (reject → defect)         |
-| `Effect.gen(function* () { ... })` | Generator style, like async/await      |
-
-```ts
-const program = Effect.gen(function* () {
-  const a = yield* Effect.succeed(1);
-  const b = yield* Effect.succeed(2);
-  return a + b;
-});
-```
-
-### Running Effects
-
-| Function                   | Returns               | When to use                          |
-| -------------------------- | --------------------- | ------------------------------------ |
-| `Effect.runSync(e)`        | `A`                   | Sync only, no fail; throws otherwise |
-| `Effect.runPromise(e)`     | `Promise<A>`          | Async; rejects on failure            |
-| `Effect.runPromiseExit(e)` | `Promise<Exit<A, E>>` | Get Exit for custom handling         |
-
-Provide requirements before running: `Effect.runPromise(Effect.provide(program, layer))`.
-
-### Services and Context
-
-1. **Define a service** with `Context.Tag`:
-
-```ts
-class MyService extends Context.Tag('MyService')<
-  MyService,
-  { readonly doSomething: () => Effect.Effect<string, never> }
->() {}
-```
-
-2. **Use in effects** – the service appears in `Requirements`:
-
-```ts
-const program = Effect.gen(function* () {
-  const service = yield* MyService;
-  return yield* service.doSomething();
-});
-// Effect<string, never, MyService>
-```
-
-3. **Provide** with `Effect.provideService` or `Effect.provide` + `Layer`.
-
-### Layers
-
-Layers construct services and hide implementation dependencies. Avoid leaking internal deps in service interfaces.
-
-- `Layer.succeed(Tag, implementation)` – static implementation
-- `Layer.effect(Tag, Effect)` – effectful construction
-- `Layer.merge(a, b)` – combine layers
-- Compose with `Layer.provide` / `Layer.provideMerge` for dependency graphs
-
-Provide at the edge: `Effect.provide(program, AppLive)`.
-
-For composing layer stacks (test environments in particular) — single parameterized factory, flat
-`Layer.empty.pipe(...)` stack, ternaries for alternative implementations, `provide` vs
-`provideMerge` — see [layer-composition.md](layer-composition.md).
-
-This repo is on Effect 4. Schema and AST carry gotchas that fail compile-clean and test-silent —
-annotation reads on refined types, `mutableKey` placement, lost brands, the `toJsonSchema` wire
-contract, and the rule that `effect/SchemaAST` is only ever imported through `@dxos/effect`. See
-[v4-schema.md](v4-schema.md), which also carries the v3 → v4 name map for reading older code.
-
-### Common Patterns
-
-- **Do notation**: Prefer `Effect.gen` over manual `flatMap` chains.
-- **Error recovery**: `Effect.catchAll`, `Effect.catchTag`, `Effect.orElse`, `Effect.retry`.
-- **Resource management**: `Effect.scoped`, `Scope`, `acquireRelease`.
-- **Concurrency**: `Effect.all` (parallel), `Effect.forEach` with concurrency.
-- **Tagged errors**: Use `Data.TaggedClass` or `Data.TaggedEnum` for typed domain errors.
-
-## Quick Reference
-
-**Import:**
-
-```ts
-import { Effect, Context, Layer, Data } from 'effect';
-```
-
-**Run program with layer:**
-
-```ts
-const runnable = Effect.provide(program, AppLive);
-Effect.runPromise(runnable);
-```
-
-**Typed error (DXOS — prefer `BaseError`):**
+**Domain errors are `BaseError.extend`, not `Schema.TaggedError`.** `BaseError` from
+`@dxos/errors` supplies a `_tag` getter, so `Effect.catchTag` still discriminates,
+and it carries `context`, `wrap`, and `is` that the rest of the stack expects. Keep
+the channel typed either way: bare `Error` or `unknown` in `Effect<A, E, R>` erases
+the recovery `catchTag` depends on.
 
 ```ts
 import { BaseError } from '@dxos/errors';
@@ -145,18 +68,35 @@ export class HttpError extends BaseError.extend('HttpError', 'HTTP request faile
     super({ context });
   }
 }
-
-// Pure Effect boundaries may use Data.TaggedClass instead:
-class ValidationError extends Data.TaggedClass('ValidationError')<{ readonly field: string }> {}
 ```
 
-## Documentation Index
+**Raise `BaseError` with `Effect.fail`.** `AGENTS.md` teaches
+`return yield* new SomeError()`, which needs an error implementing
+`Cause.YieldableError`. `Data.Error`, `Data.TaggedError` and `Schema.TaggedError` all
+do; `BaseError` is a plain `Error` subclass and does not. DXOS domain errors go
+through `Effect.fail(new HttpError({ status: 404 }))`.
 
-For deeper topics, see <https://effect.website/docs/>:
+**`Effect.fnUntraced` is the default wrapper.** `AGENTS.md` prefers `Effect.fn('name')`
+for the span it attaches. This repo leans the other way, running `fnUntraced` roughly
+two to one and reserving the traced form for boundaries worth a span. Either beats a
+function that returns `Effect.gen`.
 
-- **Getting started**: Creating Effects, Running Effects, The Effect Type, Using Generators
-- **Error management**: Two Error Types, Expected Errors, Fallback, Retrying
-- **Services**: Managing Services, Managing Layers, Default Services
-- **Concurrency**: Basic Concurrency, Fibers, Queue, Semaphore
-- **Schema**: effect/Schema for validation and encoding
-- **API**: <https://effect.website/docs/additional-resources/api-reference/>
+## Layer stacks
+
+Composing a layer stack, and test environments above all: read
+[layer-composition.md](layer-composition.md). One parameterized factory per
+environment, a flat `Layer.empty.pipe(...)`, `provide` for private dependencies
+against `provideMerge` for shared ones, and the shared memo map, which hands you the
+same instance across two provides in one run with no compile error to warn you.
+
+## Schema, SchemaAST, and pre-migration code
+
+Touching `Schema`, annotations, `toJsonSchema`, or anything under `SchemaAST`: read
+[v4-schema.md](v4-schema.md). It carries the rule that `effect/SchemaAST` is imported
+only through `@dxos/effect`, the annotation reads that silently return `undefined` on
+refined types, `mutableKey` placement, lost brands, and the emitted-JSON-Schema wire
+contract.
+
+It also holds a **rename table**. Reach for it when reading an older file, an old PR
+or an upstream issue, and when a name you were about to write turns out to have been
+replaced.

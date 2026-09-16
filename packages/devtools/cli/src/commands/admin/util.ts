@@ -24,8 +24,8 @@ export const adminRequest = <T>(
   options?: { query?: Record<string, string> },
 ) =>
   Effect.gen(function* () {
-    const adminKey = yield* Config.string('DX_HUB_API_KEY');
-    const baseUrl = yield* Config.string('DX_EDGE_BASE_URL');
+    const adminKey = yield* Config.String('DX_HUB_API_KEY');
+    const baseUrl = yield* Config.String('DX_EDGE_BASE_URL');
 
     const url = new URL(path, baseUrl);
     if (options?.query) {
@@ -46,7 +46,7 @@ export const adminRequest = <T>(
 
     const envelope = result as EdgeEnvelope<T>;
     if (!envelope.success) {
-      yield* Effect.fail(new AdminApiError({ message: envelope.message }));
+      return yield* Effect.fail(new AdminApiError({ message: envelope.message }));
     }
 
     return envelope.data as T;
@@ -57,8 +57,8 @@ export const adminRequest = <T>(
  */
 export const adminDownload = (path: string) =>
   Effect.gen(function* () {
-    const adminKey = yield* Config.string('DX_HUB_API_KEY');
-    const baseUrl = yield* Config.string('DX_EDGE_BASE_URL');
+    const adminKey = yield* Config.String('DX_HUB_API_KEY');
+    const baseUrl = yield* Config.String('DX_EDGE_BASE_URL');
 
     const url = new URL(path, baseUrl);
     const request = HttpClientRequest.get(url.toString()).pipe(HttpClientRequest.setHeader('X-Admin-Key', adminKey));
@@ -68,7 +68,7 @@ export const adminDownload = (path: string) =>
     if (response.status !== 200) {
       const body = yield* response.json;
       const envelope = body as { error?: string };
-      yield* Effect.fail(new AdminApiError({ message: envelope?.error ?? `HTTP ${response.status}` }));
+      return yield* Effect.fail(new AdminApiError({ message: envelope?.error ?? `HTTP ${response.status}` }));
     }
 
     return response;

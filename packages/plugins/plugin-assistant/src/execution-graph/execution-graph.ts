@@ -20,7 +20,7 @@ import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
 
-import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree';
+import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree.ts';
 
 /**
  * Branch name for top-level operation invocations.
@@ -507,12 +507,6 @@ const isPendingToolCallEvent = (event: Trace.FlatEvent, toolCallContext: ToolCal
 };
 
 /**
- * Marks commits that represent work still in flight for Timeline shimmer styling.
- */
-const shouldShimmerInProgressCommit = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): boolean =>
-  isPendingToolCallEvent(event, toolCallContext);
-
-/**
  * A span is completed when its last recorded event is a matching end boundary.
  */
 const isCompletedSpan = (span: Span): boolean => {
@@ -677,8 +671,13 @@ const spanTreeToCommits = (
       builder.addCommit({
         id: `running:${process.pid}`,
         branch: process.pid,
+        // Falls back to the tail of main: a completed request collapses onto main, leaving the
+        // agent's own branch empty, and a parentless spinner draws as a second, disconnected root.
         parents: builder.computeParents(
-          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+          CommitSelector.firstOf(
+            CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+            CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last())),
+          ),
         ),
         icon: ICONS.agentRequestRunning.icon,
         level: ICONS.agentRequestRunning.level,
@@ -792,7 +791,8 @@ const spanTreeToCommits = (
 
     const commitIndex = globalIndex++;
     const commitId = formatCommitId(span, commitIndex, presentation.idSuffix);
-    const shimmer = shouldShimmerInProgressCommit(event, toolCallContext);
+    // A pending tool call still in flight gets Timeline shimmer styling.
+    const shimmer = isPendingToolCallEvent(event, toolCallContext);
     const commit: Commit = {
       id: commitId,
       branch,

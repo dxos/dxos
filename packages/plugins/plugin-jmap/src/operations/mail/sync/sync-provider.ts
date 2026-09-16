@@ -23,11 +23,11 @@ import { Person } from '@dxos/types';
 import { Jmap, JmapMail } from '#apis';
 import { JmapMailApi } from '#services';
 
-import { JMAP_DOMAIN } from '../../../constants';
-import { type JmapApiError } from '../../../errors';
-import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
-import { findOrCreateJmapTag } from '../tags';
-import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
+import { JMAP_DOMAIN } from '../../../constants.ts';
+import { type JmapApiError } from '../../../errors.ts';
+import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper.ts';
+import { findOrCreateJmapTag } from '../tags.ts';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags.ts';
 
 /** The resolved delta for one run — either a fresh capture (no delta) or a fetched `Email/changes` chunk. */
 type DeltaPlan = {
@@ -39,12 +39,17 @@ type DeltaPlan = {
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
-/** JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
+/**
+ * JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
+ *
+ * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
+ * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
+ */
 const JMAP_SYNC_CONFIG = {
   listPageSize: 50,
   fetchConcurrency: 5,
   commitPageSize: 10,
-  maxItemsPerRun: 500,
+  maxItemsPerRun: 100,
 } as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 /**

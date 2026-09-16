@@ -15,11 +15,11 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Transcript } from '@dxos/types';
 
+import { TranscriptionPlugin } from '#plugin';
 import { TestItem } from '#testing';
 import { translations } from '#translations';
 
-import { TranscriptionPlugin } from '../../plugin';
-import { TranscriptionArticle } from './TranscriptionArticle';
+import { TranscriptionArticle } from './TranscriptionArticle.tsx';
 
 const DefaultStory = () => {
   const [space] = useSpaces();

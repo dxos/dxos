@@ -4,12 +4,12 @@
 
 import { type Timer, easeCubic, timer } from 'd3';
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type Point } from '../../util';
-import { type GraphLayoutNode } from '../types';
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { type Point } from '../../util/index.ts';
+import { type GraphLayoutNode } from '../types.ts';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector.ts';
 
 export type GraphRadialProjectorOptions = GraphProjectorOptions & {
   radius?: number;
@@ -27,7 +27,7 @@ export class GraphRadialProjector<
     return undefined;
   }
 
-  protected override onUpdate(graph?: Graph.Any) {
+  protected override onUpdate(graph?: GraphModel.AnyData) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
     // Bind enter/exit once before the tween starts; subsequent animate frames emit 'positions'.

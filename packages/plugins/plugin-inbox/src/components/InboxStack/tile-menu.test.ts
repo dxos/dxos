@@ -4,7 +4,7 @@
 
 import { describe, expect, test, vi } from 'vitest';
 
-import { buildTileMenuItems } from './tile-menu';
+import { buildTileMenuItems } from './tile-menu.ts';
 
 /**
  * The regression this guards: the conversation tile built its own menu and never offered Archive.

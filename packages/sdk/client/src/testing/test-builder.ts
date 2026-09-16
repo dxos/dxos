@@ -2,14 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { ClientRpcServer } from '@dxos/client-protocol';
-import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { ServiceContext } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -27,19 +25,17 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
+import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
-import { Client } from '../client';
-import { ClientServicesProxy, DedicatedWorkerClientServices, type LeaderTimeoutOptions } from '../services';
+import { Client } from '../client/index.ts';
+import { ClientServicesProxy, DedicatedWorkerClientServices, type LeaderTimeoutOptions } from '../services/index.ts';
 // `@dxos/client/testing` is itself a test-only entry, so reaching the in-process host directly is
 // the point here (see `../services/local.ts`).
-import { LocalClientServices } from '../services/local';
-import { TestWorkerFactory } from './test-worker-factory';
+import { LocalClientServices } from '../services/local.ts';
+import { TestWorkerFactory } from './test-worker-factory.ts';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,
@@ -92,22 +88,9 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
-    const runtime = ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
-    );
-
-    const services = new ClientServicesHost({
-      config: this.config,
-      runtimeProps,
-      runtime: runtime.contextEffect,
-      ...this.networking,
-    });
-
-    this._ctx.onDispose(() => runtime.dispose());
-    this._ctx.onDispose(() => services.close(this._ctx));
+  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ServiceContext {
+    const services = new ServiceContext({ config: this.config, runtimeProps, ...this.networking });
+    this._ctx.onDispose(() => services.destroy());
     return services;
   }
 
@@ -120,7 +103,7 @@ export class TestBuilder {
     const configDataRoot = this.config.get('runtime.client.storage.dataRoot');
     const sqlitePath =
       options?.sqlitePath ?? this.sqlitePath ?? (configDataRoot ? `${configDataRoot}/storage.db` : undefined);
-    const sqliteMode = sqlitePath ? Runtime.Client.Storage.SqliteMode.FILE : Runtime.Client.Storage.SqliteMode.MEMORY;
+    const sqliteMode = sqlitePath ? Runtime_Client_Storage_SqliteMode.FILE : Runtime_Client_Storage_SqliteMode.MEMORY;
     const config = new Config({ runtime: { client: { storage: { sqliteMode } } } }, this.config.values);
     const services = new LocalClientServices({
       config,
@@ -141,7 +124,7 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ClientRpcServer] {
+  createClientServer(host: ServiceContext = this.createClientServicesHost()): [Client, ClientRpcServer] {
     const channel = new MessageChannel();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(channel.port1) });
     const server = new ClientRpcServer({
@@ -256,19 +239,19 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
       const hostDone = new Trigger<Invitation>();
       const guestDone = new Trigger<Invitation>();
 
-      const hostObservable = rootSpace.share({ authMethod: Invitation.AuthMethod.NONE });
+      const hostObservable = rootSpace.share({ authMethod: Invitation_AuthMethod.NONE });
       log('invitation created');
       hostObservable.subscribe(
         (hostInvitation) => {
           switch (hostInvitation.state) {
-            case Invitation.State.CONNECTING: {
+            case Invitation_State.CONNECTING: {
               const guestObservable = peer.spaces.join(hostInvitation);
               log('invitation accepted');
 
               guestObservable.subscribe(
                 (guestInvitation) => {
                   switch (guestInvitation.state) {
-                    case Invitation.State.SUCCESS: {
+                    case Invitation_State.SUCCESS: {
                       guestDone.wake(guestInvitation);
                       log('invitation guestDone');
                       break;
@@ -280,7 +263,7 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
               break;
             }
 
-            case Invitation.State.SUCCESS: {
+            case Invitation_State.SUCCESS: {
               hostDone.wake(hostInvitation);
               log('invitation hostDone');
             }

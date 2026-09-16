@@ -8,19 +8,19 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-const ONBOARDING_OPERATION = 'org.dxos.plugin.onboarding.operation';
-
 // TODO(wittjosiah): Consider if any of this is generic enough for client plugin.
 
 /**
- * Imports the bundled Bramble Coffee Roasters exemplar space and stamps it with the current migration
+ * Imports the bundled Bramble Coffee Roasters sample space and stamps it with the current migration
  * version so it is treated as already migrated (same as newly-created spaces).
- * Idempotent: if a space tagged with EXEMPLAR_SPACE_TAG already exists it is returned as-is.
+ * Idempotent: if a space tagged with SAMPLE_SPACE_TAG already exists it is returned as-is.
  */
-export const ImportExemplarSpace = Operation.make({
+export const ImportSampleSpace = Operation.make({
   meta: {
-    key: DXN.make(`${ONBOARDING_OPERATION}.importExemplarSpace`),
-    name: 'Import Exemplar Space',
+    // The key keeps its `exemplar` spelling: operation keys can be referenced from persisted
+    // user-side state, so renaming one is a data change rather than a rename.
+    key: DXN.make('org.dxos.operation.onboarding.importExemplarSpace'),
+    name: 'Import Sample Space',
     icon: 'ph--potted-plant--regular',
   },
   services: [Capability.Service],
@@ -38,7 +38,7 @@ export const ImportExemplarSpace = Operation.make({
  */
 export const RedeemOAuthRecovery = Operation.make({
   meta: {
-    key: DXN.make(`${ONBOARDING_OPERATION}.redeemOAuthRecovery`),
+    key: DXN.make('org.dxos.operation.onboarding.redeemOAuthRecovery'),
     name: 'Redeem OAuth Recovery',
     icon: 'ph--cloud--regular',
   },
@@ -63,7 +63,7 @@ export const RedeemOAuthRecovery = Operation.make({
  */
 export const RegisterOAuthRecovery = Operation.make({
   meta: {
-    key: DXN.make(`${ONBOARDING_OPERATION}.registerOAuthRecovery`),
+    key: DXN.make('org.dxos.operation.onboarding.registerOAuthRecovery'),
     name: 'Register OAuth Recovery',
     icon: 'ph--cloud--regular',
   },
@@ -87,7 +87,7 @@ export const RegisterOAuthRecovery = Operation.make({
  */
 export const CompleteOAuthRegistration = Operation.make({
   meta: {
-    key: DXN.make(`${ONBOARDING_OPERATION}.completeOAuthRegistration`),
+    key: DXN.make('org.dxos.operation.onboarding.completeOAuthRegistration'),
     name: 'Complete OAuth Registration',
     icon: 'ph--cloud--regular',
   },

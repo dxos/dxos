@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './presets';
-export * from './ObjectGenerator';
+export * from './presets.ts';
+export * from './ObjectGenerator.tsx';

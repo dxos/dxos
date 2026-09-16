@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 
 import { type ReadOnlyEvent } from '@dxos/async';
 
-import type * as Database from './Database';
-import * as Entity from './Entity';
-import type * as Filter from './Filter';
-import * as registryAtoms from './internal/Registry/atoms';
-import type * as Query from './Query';
+import type * as Database from './Database.ts';
+import * as Entity from './Entity.ts';
+import type * as Filter from './Filter.ts';
+import * as registryAtoms from './internal/Registry/atoms.ts';
+import type * as Query from './Query.ts';
 
 /**
  * Identifier denoting an ECHO Registry.
@@ -109,7 +109,8 @@ export interface Registry {
    * which fans the database and registry together; this method is for querying a registry directly.
    *
    * Only locally-evaluable AST nodes are supported: `select`, `filter`, `limit`, `from`, `options`,
-   * and boolean combinators. Server-side concerns (order, traversal, text/timestamp filters) throw.
+   * and boolean combinators, plus full-text filters as case-insensitive all-terms containment.
+   * Server-side concerns (order, traversal, vector search, timestamp filters) throw or match nothing.
    */
   query: Database.QueryFn;
 }

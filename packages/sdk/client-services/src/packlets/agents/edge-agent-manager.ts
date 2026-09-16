@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -11,16 +12,20 @@ import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
+import { EffectEx, Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { DeviceAdmissionRequestSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
-import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity';
-import { type DataSpaceManager, DataSpaceManagerService } from '../spaces';
+import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity/index.ts';
+import { DataSpacesReady } from '../services/events.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
 const AGENT_FEED_ADDED_CHECK_INTERVAL_MS = 3000;
@@ -45,7 +50,7 @@ export class EdgeAgentManager extends Resource {
   private _fetchAgentStatusTask: DeferredTask | undefined;
 
   constructor(
-    private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined,
+    private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     private readonly _dataSpaceManager: DataSpaceManager,
     private readonly _identityProvider: IdentityProvider,
@@ -85,12 +90,14 @@ export class EdgeAgentManager extends Resource {
       return;
     }
 
-    await this.identity.admitDevice({
-      deviceKey,
-      controlFeedKey: PublicKey.fromHex(response.feedKey),
-      // TODO: agents don't have data feed, should be removed
-      dataFeedKey: PublicKey.random(),
-    });
+    await this.identity.admitDevice(
+      create(DeviceAdmissionRequestSchema, {
+        deviceKey: fromPublicKey(deviceKey),
+        controlFeedKey: fromPublicKey(PublicKey.fromHex(response.feedKey)),
+        // TODO: agents don't have data feed, should be removed
+        dataFeedKey: fromPublicKey(PublicKey.random()),
+      }),
+    );
 
     log('agent created', response);
 
@@ -175,7 +182,7 @@ export class EdgeAgentManager extends Resource {
         continue;
       }
       const agentFeedNeedsNotarization = ![...space.inner.spaceState.feeds.values()].some((feed) =>
-        feed.assertion.deviceKey.equals(agentDeviceKey),
+        requirePublicKey(feed.assertion.deviceKey).equals(agentDeviceKey),
       );
       space.notarizationPlugin.setActiveEdgePollingEnabled(agentFeedNeedsNotarization);
       activePollingEnabled = activePollingEnabled || agentFeedNeedsNotarization;
@@ -201,7 +208,7 @@ export class EdgeAgentManager extends Resource {
 }
 
 export type EdgeAgentManagerLayerOptions = {
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
 };
 
 /**
@@ -209,18 +216,28 @@ export type EdgeAgentManagerLayerOptions = {
  */
 export const EdgeAgentManagerLayer = (
   options: EdgeAgentManagerLayerOptions = {},
-): Layer.Layer<EdgeAgentManagerService, never, DataSpaceManagerService | IdentityProviderService> =>
+): Layer.Layer<EdgeAgentManagerService, never, Hook.Controller | DataSpaceManagerService | IdentityProviderService> =>
   Layer.effect(
     EdgeAgentManagerService,
     Effect.gen(function* () {
       const dataSpaceManager = yield* DataSpaceManagerService;
       const identityProvider = yield* IdentityProviderService;
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
-      return new EdgeAgentManager(
+      const edgeAgentManager = new EdgeAgentManager(
         options.edgeFeatures,
         Option.getOrUndefined(edgeHttpClient),
         dataSpaceManager,
         identityProvider,
       );
+
+      const ctx = yield* EffectEx.contextFromScope();
+      yield* Effect.addFinalizer(() => Effect.promise(() => edgeAgentManager.close()));
+      yield* Hook.on(
+        DataSpacesReady,
+        Effect.fn('EdgeAgentManager.onDataSpacesReady')(function* () {
+          yield* Effect.promise(() => edgeAgentManager.open(ctx));
+        }),
+      );
+      return edgeAgentManager;
     }),
   );

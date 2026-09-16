@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../ui/react-primitives/react-error-boundary"
+    },
+    {
       "path": "../log"
     }
   ]

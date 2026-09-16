@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
 import { HyperFormula } from '@dxos/vendor-hyperformula';
 
-import { ComputeGraph } from './compute-graph';
-import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations, type FunctionContextOptions } from './functions';
+import { ComputeGraph } from './compute-graph.ts';
+import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations, type FunctionContextOptions } from './functions/index.ts';
 
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;

@@ -7,9 +7,9 @@ import { EID, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import { DataServiceImpl } from './data-service-impl';
-import { FeedServiceImpl } from './feed-service-impl';
-import { QueryServiceImpl } from './query-service-impl';
+import { DataServiceImpl } from './data-service-impl.ts';
+import { FeedServiceImpl } from './feed-service-impl.ts';
+import { QueryServiceImpl } from './query-service-impl.ts';
 
 /**
  * Constructs the ECHO/queue service handlers for the edge (Cloudflare) runtime. The handlers

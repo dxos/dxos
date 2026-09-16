@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { compile, parse } from './mermaid';
-import type * as Scene from './scene';
+import { compile, parse } from './mermaid.ts';
+import type * as Scene from './scene.ts';
 
 /** Exercises node declarations, a labelled-blank subgraph, fan-out, and a `C <-> Y` cycle. */
 export const FLOWCHART = `
@@ -131,7 +131,7 @@ describe('mermaid', () => {
 
     expect(graph.direction).toBe('LR');
     expect(graph.nodes.map((node) => node.id)).toEqual(['A', 'B']);
-    expect(graph.edges).toEqual([{ from: 'A', to: 'B' }]);
+    expect(graph.edges).toEqual([{ from: 'A', to: 'B', kind: 'reference' }]);
   });
 });
 

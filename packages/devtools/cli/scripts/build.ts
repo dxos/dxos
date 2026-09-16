@@ -13,8 +13,7 @@ import { dirname, extname, join } from 'path';
 /**
  * Bun plugin that handles Vite-style `?raw` suffix imports — `import code from 'pkg?raw'`
  * resolves the spec to a file path and inlines the file's contents as the default export.
- * Required because some workspace packages (e.g. `@dxos/echo-query`'s `query-sandbox.ts`)
- * use `?raw` to inline the bundled `query-lite` bundle as a string for QuickJS evaluation;
+ * Required because some workspace packages inline assets (shaders, fixtures) as strings this way;
  * Vite-built consumers handle this natively, but Bun's resolver doesn't.
  */
 const rawImportPlugin: BunPlugin = {
@@ -197,6 +196,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     // so nothing in the environment can flip it.
     define: {
       'globalThis.DX_CLI_BUNDLED': 'true',
+      'globalThis.DX_CLI_POSTHOG_TOKEN': JSON.stringify(process.env.DX_CLI_POSTHOG_API_KEY ?? ''),
     },
     compile: {
       target,

@@ -17,7 +17,7 @@ import { ComputerOperationHandlerSet } from '#operations';
 import { ComputerSkill } from '#skills';
 import { ComputerOperation } from '#types';
 
-import { type Host, startHost } from '../vite-plugin/testing';
+import { type Host, startHost } from '../vite-plugin/testing.ts';
 
 /**
  * Covers the wiring the app depends on: the skill's tool ids resolving to these definitions, the
@@ -49,8 +49,8 @@ describe('computer operations', () => {
 
   test('the skill exposes exactly the harness tools', ({ expect }) => {
     expect([...ComputerSkill.make().tools]).to.deep.eq([
-      'org.dxos.function.computer.bash',
-      'org.dxos.function.computer.edits',
+      Operation.toolName(ComputerOperation.Bash),
+      Operation.toolName(ComputerOperation.Edits),
     ]);
   });
 

@@ -6,8 +6,8 @@ import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { Fetch } from './operations/definitions';
-import { WebSearchToolkit } from './toolkit';
+import { Fetch } from './operations/definitions.ts';
+import { WebSearchToolkit } from './toolkit.ts';
 
 const SKILL_KEY = 'org.dxos.skill.webSearch';
 

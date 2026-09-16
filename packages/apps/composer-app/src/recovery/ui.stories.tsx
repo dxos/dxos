@@ -7,7 +7,7 @@ import './ui.css';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef } from 'react';
 
-import { type RecoveryAction, type RecoveryUi, createRecoveryUi } from './ui';
+import { type RecoveryAction, type RecoveryUi, createRecoveryUi } from './ui.ts';
 
 type RecoveryUiStoryArgs = {
   /** Lines printed on mount, standing in for the page's boot banner. */
@@ -36,7 +36,7 @@ const RecoveryUiStory = ({ lines = [], busy = false, debugPortActive = false }: 
     ui.setBusy(busy);
   }, [lines, busy, debugPortActive]);
 
-  return <div ref={containerRef} className='dxos-recovery-fill' />;
+  return <div ref={containerRef} />;
 };
 
 const BANNER = [

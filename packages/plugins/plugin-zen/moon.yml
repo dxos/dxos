@@ -1,6 +1,26 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - pack
+
+tasks:
+  check-module-structure:
+    command: >-
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --export ./ZenPlugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60

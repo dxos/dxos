@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './match-filter';
-export * from './on-arrival';
-export * from './util';
+export * from './match-filter.ts';
+export * from './on-arrival.ts';
+export * from './util.ts';

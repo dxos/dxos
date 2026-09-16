@@ -4,14 +4,14 @@
 
 import seedrandom from 'seedrandom';
 
-import { type TerraConfigValues, type Vec3 } from '../engine';
-import * as TerraObject from '../types/TerraObject';
-import { toUnit } from './geo';
-import { type MotionContext, type ObjectState, evaluate, initialState } from './motion';
-import { type NavGrid } from './nav-grid';
-import { routeLength } from './path';
-import { pickReachableTarget } from './reachable';
-import { planRoute } from './route';
+import { type TerraConfigValues, type Vec3 } from '../engine/index.ts';
+import * as TerraObject from '../types/TerraObject.ts';
+import { toUnit } from './geo.ts';
+import { type MotionContext, type ObjectState, evaluate, initialState } from './motion.ts';
+import { type NavGrid } from './nav-grid.ts';
+import { routeLength } from './path.ts';
+import { pickReachableTarget } from './reachable.ts';
+import { planRoute } from './route.ts';
 
 /**
  * Bounds the per-`evaluateAt` leg catch-up recurrence after a long-backgrounded tab (or a run of

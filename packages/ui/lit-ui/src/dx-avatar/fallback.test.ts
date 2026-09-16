@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { getFallbackGlyph } from './fallback';
+import { getFallbackGlyph } from './fallback.ts';
 
 describe('avatar fallback glyph', () => {
   test('a label initialises to at most two letters', ({ expect }) => {

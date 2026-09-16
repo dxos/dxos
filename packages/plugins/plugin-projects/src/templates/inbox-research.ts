@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
@@ -15,7 +16,7 @@ import { trim } from '@dxos/util';
 
 import { ProjectCapabilities } from '#types';
 
-import { scaffoldProject } from './scaffold';
+import { scaffoldProject } from './scaffold.ts';
 
 /**
  * Skill keys composed into the project's instructions (chat sessions) and the starter routine.
@@ -89,10 +90,7 @@ export const inboxResearch: ProjectCapabilities.Template = {
           concurrency: 1,
         }),
       });
-      // Persisted here rather than reached through the returned project: the routine connects to its
-      // project only through its own `instructions.objects`, so nothing in the project's ref graph
-      // would carry it into the database.
-      yield* Database.add(routine);
+      Project.addRoutine(project, routine);
 
       return project;
     }),

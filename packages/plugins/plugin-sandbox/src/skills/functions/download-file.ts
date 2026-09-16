@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import { ClientService } from '@dxos/client';
@@ -10,10 +11,11 @@ import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { File } from '@dxos/types';
 
-import { createSandboxClient } from '../../services/sandbox-url';
-import { DownloadFile } from './definitions';
+import { SandboxOperation } from '#types';
 
-export default DownloadFile.pipe(
+import { createSandboxClient } from '../../services/sandbox-url.ts';
+
+export default SandboxOperation.DownloadFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ sandbox, path, dest }) {
       const { db } = yield* Database.Service;
@@ -24,14 +26,12 @@ export default DownloadFile.pipe(
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
 
-      const content = yield* Effect.promise(() => sandboxClient.readFile(spaceId, sandboxId, path));
-
-      const bytes = new TextEncoder().encode(content);
+      const { bytes, type } = yield* sandboxClient.readFileBytes(spaceId, sandboxId, path).pipe(Effect.orDie);
       const fileName = path.split('/').at(-1) ?? path;
 
       if (dest) {
         const loadedDest = yield* Database.load(dest);
-        const blob = yield* Blob.fromBytes(bytes, { type: 'text/plain' });
+        const blob = yield* Blob.fromBytes(bytes, { type });
         Obj.setParent(blob, loadedDest);
         yield* Database.add(blob);
         Obj.update(loadedDest, (loadedDest) => {
@@ -42,10 +42,10 @@ export default DownloadFile.pipe(
         return { objectId: Obj.getURI(loadedDest) };
       }
 
-      const fileObj = yield* File.fromBytes(bytes, { name: fileName, type: 'text/plain' });
+      const fileObj = yield* File.fromBytes(bytes, { name: fileName, type });
       yield* CollectionModel.add({ object: fileObj });
 
       return { objectId: Obj.getURI(fileObj) };
-    }),
+    }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

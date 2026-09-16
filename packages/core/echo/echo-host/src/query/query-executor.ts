@@ -23,23 +23,25 @@ import {
   type EntityMeta,
   EscapedPropPath,
   type IndexEngine,
+  type QueueRef,
   type QueueWindow,
   type ReverseRef,
 } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type QueryService } from '@dxos/protocols/rpc';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
-import type { AutomergeHost } from '../automerge';
-import type { SpaceStateManager } from '../db-host';
-import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
-import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
-import { QueryError } from './errors';
-import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by';
-import { QueryPlan } from './plan';
-import { QueryPlanner, filterContainsInQuery } from './query-planner';
+import type { AutomergeHost } from '../automerge/index.ts';
+import type { SpaceStateManager } from '../db-host/index.ts';
+import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
+import { filterMatchDoc, filterMatchObjectJSON } from '../filter/index.ts';
+import { QueryError } from './errors.ts';
+import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
+import { QueryPlan } from './plan.ts';
+import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -593,7 +595,7 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  getResults(): QueryResult[] {
+  getResults(): QueryService.QueryResult[] {
     // Computed over the final (post-filter) result set so counts always match shipped records.
     const groupCounts = new Map<string, number>();
     for (const item of this._lastResultSet) {
@@ -604,7 +606,7 @@ export class QueryExecutor extends Resource {
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
 
-    return this._lastResultSet.map((item): QueryResult => {
+    return this._lastResultSet.map((item): QueryService.QueryResult => {
       const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
       return {
         id: item.objectId,
@@ -777,8 +779,13 @@ export class QueryExecutor extends Resource {
     switch (step.selector._tag) {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
-        const queueIds = extractQueueIds(queues);
-        const metas = await this._queryAllFromSqlIndex(spaces, allQueuesFromSpaces, queueIds, extractQueueWindow(step));
+        const queueRefs = extractQueueRefs(queues);
+        const metas = await this._queryAllFromSqlIndex(
+          spaces,
+          allQueuesFromSpaces,
+          queueRefs,
+          extractQueueWindow(step),
+        );
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -819,7 +826,7 @@ export class QueryExecutor extends Resource {
             }
             if (queues.length > 0) {
               const spaceId = extractSpaceIdFromQueue(queues[0]);
-              const queueId = extractQueueIds([queues[0]])?.[0];
+              const queueId = extractQueueRefs([queues[0]])?.[0]?.queueId;
               if (spaceId && queueId) {
                 return this._loadQueueItemById(spaceId, queueId, id);
               }
@@ -840,13 +847,13 @@ export class QueryExecutor extends Resource {
 
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
-        const queueIds = extractQueueIds(queues);
+        const queueRefs = extractQueueRefs(queues);
         const metas = await this._queryTypesFromSqlIndex(
           spaces,
           step.selector.typename,
           step.selector.inverted,
           allQueuesFromSpaces,
-          queueIds,
+          queueRefs,
           extractQueueWindow(step),
         );
         trace.indexHits = metas.length;
@@ -869,7 +876,7 @@ export class QueryExecutor extends Resource {
 
       case 'TimestampSelector': {
         const beginIndexQuery = performance.now();
-        const queueIds = extractQueueIds(queues);
+        const queueRefs = extractQueueRefs(queues);
         const metas = await this._runInRuntime(
           this._indexEngine.queryByTimeRange({
             spaceIds: spaces,
@@ -878,7 +885,7 @@ export class QueryExecutor extends Resource {
             createdAfter: step.selector.createdAfter,
             createdBefore: step.selector.createdBefore,
             includeAllQueues: allQueuesFromSpaces,
-            queueIds,
+            queues: queueRefs,
           }),
         );
         trace.indexHits = metas.length;
@@ -899,8 +906,30 @@ export class QueryExecutor extends Resource {
         break;
       }
 
+      case 'IncomingReferenceSelector': {
+        const beginIndexQuery = performance.now();
+        const metas = await this._queryIncomingReferencesByTarget([step.selector.targetDXN], step.selector.property);
+        trace.indexHits = metas.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        const documentLoadStart = performance.now();
+        // The index is per-space, but the scope may name a subset of the queried spaces.
+        const scoped = spaces.length > 0 ? metas.filter((meta) => spaces.includes(meta.spaceId)) : metas;
+        const results = await this._loadDocumentsAfterSqlQuery(scoped);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable));
+        trace.objectCount = workingSet.length;
+
+        break;
+      }
+
       case 'TextSelector': {
-        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
         if (step.selector.searchKind === 'vector') {
           // Vector search is not currently supported.
@@ -908,16 +937,17 @@ export class QueryExecutor extends Resource {
           break;
         }
 
-        // Full-text search using SQLite FTS5.
+        // Full-text search using SQLite FTS5, optionally scoped by type.
         const beginIndexQuery = performance.now();
         invariant(spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
-        const queueIds = extractQueueIds(queues);
+        const queueRefs = extractQueueRefs(queues);
         const textResults = await this._runInRuntime(
           this._indexEngine.queryText({
             query: step.selector.text,
             spaceId: spaces,
             includeAllQueues: allQueuesFromSpaces,
-            queueIds,
+            queues: queueRefs,
+            typeDxns: step.selector.typename,
           }),
         );
         trace.indexHits = textResults.length;
@@ -993,7 +1023,7 @@ export class QueryExecutor extends Resource {
             }
             if (item.queueId) {
               return queues.some((queueRef) => {
-                const queueId = extractQueueIds([queueRef])?.[0];
+                const queueId = extractQueueRefs([queueRef])?.[0]?.queueId;
                 const spaceId = extractSpaceIdFromQueue(queueRef);
                 return queueId === item.queueId && spaceId === item.spaceId;
               });
@@ -1170,7 +1200,7 @@ export class QueryExecutor extends Resource {
         spaceIds: spaces,
         ...params,
         includeAllQueues: false,
-        queueIds: [],
+        queues: [],
       }),
     );
     const matchingIds = new Set(metas.map((m) => m.objectId));
@@ -1641,7 +1671,11 @@ export class QueryExecutor extends Resource {
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
-        const comparison = a.objectId.localeCompare(b.objectId);
+        // Code-unit order, not `localeCompare`: the feed scan pushes this ordering into SQLite's
+        // `ORDER BY objectId`, which collates BINARY, and an entity id may be lower-case (the
+        // format check is case-insensitive). Under a locale collation the two would disagree on a
+        // mixed-case pair, and the scan's capped page would not be the page this sort produces.
+        const comparison = a.objectId < b.objectId ? -1 : a.objectId > b.objectId ? 1 : 0;
         return order.direction === 'desc' ? -comparison : comparison;
       }
       case 'property': {
@@ -1719,10 +1753,10 @@ export class QueryExecutor extends Resource {
   private async _queryAllFromSqlIndex(
     spaceIds: readonly SpaceId[],
     includeAllQueues: boolean,
-    queueIds: readonly EntityId[] | null,
+    queues: readonly QueueRef[] | null,
     window?: QueueWindow,
   ): Promise<readonly EntityMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds, window }));
+    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queues, window }));
   }
 
   private async _queryTypesFromSqlIndex(
@@ -1730,11 +1764,11 @@ export class QueryExecutor extends Resource {
     typeDxns: readonly URI.URI[],
     inverted: boolean,
     includeAllQueues: boolean,
-    queueIds: readonly EntityId[] | null,
+    queues: readonly QueueRef[] | null,
     window?: QueueWindow,
   ): Promise<readonly EntityMeta[]> {
     return await this._runInRuntime(
-      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds, window }),
+      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queues, window }),
     );
   }
 
@@ -1750,7 +1784,20 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly EntityMeta[]> {
-    const anchorDxns = workingSet.map((item) => QueryExecutor._anchorTargetDxn(item));
+    return this._queryIncomingReferencesByTarget(
+      workingSet.map((item) => QueryExecutor._anchorTargetDxn(item)),
+      property,
+    );
+  }
+
+  /**
+   * Reverse-reference lookup by target URI. Anchors that are not entities (a named entity's `dxn:`)
+   * reach this directly, without a working set.
+   */
+  private async _queryIncomingReferencesByTarget(
+    anchorDxns: readonly URI.URI[],
+    property: EscapedPropPath | null,
+  ): Promise<readonly EntityMeta[]> {
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),
@@ -1895,13 +1942,13 @@ export class QueryExecutor extends Resource {
     if (!meta.documentId) {
       return null;
     }
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
       fetchFromNetwork: false,
     });
-    if (!handle) {
+    if (!lease) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(handle.doc(), meta.objectId);
+    const object = DatabaseDirectory.getInlineObject(lease.doc(), meta.objectId);
     if (!object) {
       return null;
     }
@@ -2001,21 +2048,21 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
       fetchFromNetwork: false,
     });
-    if (!handle) {
+    if (!lease) {
       return null;
     }
 
-    const object = DatabaseDirectory.getInlineObject(handle.doc(), objectId);
+    const object = DatabaseDirectory.getInlineObject(lease.doc(), objectId);
     if (!object) {
       return null;
     }
 
     return {
       objectId,
-      documentId: handle.documentId,
+      documentId: lease.documentId,
       spaceId,
       queueId: null,
       queueNamespace: null,
@@ -2144,8 +2191,9 @@ const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
 const BEFORE_FIRST_POSITION = -1;
 
 /**
- * The index-level window for a select bounded by a cursor range: the positions strictly between its
- * bounds, in position order, capped at the pushed-down limit.
+ * The index-level window for a select the storage layer can bound itself, so a bounded query costs
+ * what it asks for rather than the whole feed: a cursor range resumes by position, and a
+ * `feedScan` (set by the planner only where it proved the cap sound) reads in natural order.
  *
  * Every cursor range windows the scan, an empty one included — it bounds nothing but still asks for
  * a cursor read, which is over positioned blocks in position order. A reader that paged the
@@ -2158,7 +2206,15 @@ const BEFORE_FIRST_POSITION = -1;
 const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined => {
   const range = step.feedCursorRange;
   if (range === undefined) {
-    return undefined;
+    if (step.feedScan === undefined || step.limit === undefined) {
+      return undefined;
+    }
+    return {
+      kind: 'natural',
+      direction: step.feedScan.direction,
+      limit: step.limit,
+      ...(step.feedScan.deleted !== undefined ? { deleted: step.feedScan.deleted } : {}),
+    };
   }
 
   // Backstop for the planner's check, which is where a cursor over a space's documents is refused.
@@ -2170,6 +2226,7 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
   }
 
   return {
+    kind: 'cursor',
     // The empty string is the start sentinel (`Feed.START`), which bounds nothing.
     after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : BEFORE_FIRST_POSITION,
     ...(range.end ? { before: parseCursor(range.end, BEFORE_FIRST_POSITION) } : {}),
@@ -2183,16 +2240,29 @@ const parseCursor = (cursor: string, unsatisfiable: number): number => {
   return Number.isSafeInteger(position) ? position : unsatisfiable;
 };
 
-const extractQueueIds = (queues: readonly string[]): EntityId[] | null => {
+/**
+ * The queues a feed scope names, each carrying the space its URI qualifies it with so the index
+ * seek cannot cross spaces — a queue id is unique only within its own. An unqualified URI
+ * (`echo:///<id>`) names no space, and matches on its id alone.
+ */
+const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {
   if (queues.length === 0) {
     return null;
   }
   return queues
-    .map((feedUri) => {
+    .map((feedUri): QueueRef | undefined => {
       const echoUri = EID.tryParse(feedUri);
-      return echoUri ? EID.getEntityId(echoUri) : undefined;
+      if (!echoUri) {
+        return undefined;
+      }
+      const queueId = EID.getEntityId(echoUri);
+      if (!queueId) {
+        return undefined;
+      }
+      const spaceId = EID.getSpaceId(echoUri);
+      return spaceId !== undefined ? { queueId, spaceId } : { queueId };
     })
-    .filter((id): id is EntityId => id !== undefined);
+    .filter(isNonNullable);
 };
 
 /**
