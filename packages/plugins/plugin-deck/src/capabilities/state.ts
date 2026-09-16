@@ -21,6 +21,8 @@ const defaultDeckState: DeckSchema.StoredDeckState = {
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
   complementarySidebarPanel: undefined,
+  drawerState: undefined,
+  drawerHeight: undefined,
   activeDeck: DeckSchema.DEFAULT_DECK_ID,
   previousDeck: DeckSchema.DEFAULT_DECK_ID,
   decks: {

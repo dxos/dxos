@@ -60,7 +60,10 @@ export const handler = Effect.fn(function* ({ enabled: enabledOnly }: { enabled:
 export const list = Command.make(
   'list',
   {
-    enabled: Options.boolean('enabled').pipe(Options.withDescription('Only list enabled plugins.')),
+    enabled: Options.Boolean('enabled').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Only list enabled plugins.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('List all available plugins.'));

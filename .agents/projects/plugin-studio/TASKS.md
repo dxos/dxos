@@ -15,8 +15,8 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Register in composer-app (`plugin-defs.tsx` dev defaults, `package.json`, `tsconfig.json`, `tsconfig.all.json`).
 - [x] `docs/DESIGN.md`, `PLUGIN.mdl` (+ QA flow), README; build, lint, test, format.
 - [x] Verified in the running app: registry card (scribble/lime), Connections → Higgsfield two-field form, Studio artifact provider = Higgsfield with the model default.
-- [ ] PR.
-- [ ] Live generation blocked: the provided account answers `403 not_enough_credits` (auth + proxy proven via the 404 status test).
+- [x] PR — #13078, #13087, #13095, #13110, #13111, #13112 merged.
+- [x] Live generation: the account now answers the estimate endpoint; Kling/Hailuo/Wan paths verified 2026-09-15.
 
 ## Phase 2: adjacent fixes (same PR)
 
@@ -61,6 +61,31 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [ ] Generic mechanism for plugins to add **create menu items to an article's toolbar** (e.g. a
       `CreateObjectEntry`-style capability the Lightbox/Project article's `+` reads), replacing the
       hard-wired Lightbox "Add artifact" action.
-- [ ] Verify a video model path against a real account and set it as the video default.
+- [x] Video model paths verified against the account (DoP default; Kling 2.1/2.5, Hailuo 2.3, Wan 2.5 listed).
 - [x] Shared `GenerationService.fieldOptions` → cached combobox (`ProviderOptionsField`); HeyGen migrated, Higgsfield static image list.
 - [ ] Higgsfield model catalogue from the API once it exposes one.
+
+### Observed 2026-09-15 (Composer, project/task session)
+
+- [x] Task list (plugin-tasks): the inline task editor scrolls past eight lines (#13112); object
+      links in it come through the host's `descriptionExtensions`.
+- [x] Chat session: inline ECHO object links — already rendered: `[label](echo://…)` in a text block
+      through `objectLinks()` in the feed Block extensions, and parsed `<object>` reference blocks
+      through the `<reference>` → `ReferenceWidget` chip; both carry the preview hover card. Test
+      against `plugins/plugin-assistant/components/Thread → Default` (its generator emits one link).
+      Embedded cards (`![label](echo://…)`) now render too: `objectImage` threads from
+      `ChatThread.Root` to the block's `objectLinks({ image })`, plugin-assistant supplies
+      `ObjectCardWidget` (header + `CardContent` surface). A bare `echo://…` / `@echo://…` in prose
+      is rewritten by the renderer (embed alone on a line, link in a sentence), and a
+      `<surface role='card'>` shows the object's card too (#13134).
+- [x] Task list toolbar: text filter (title/description, keeps a match's ancestors) on the standalone `TaskSetArticle`.
+
+### Observed 2026-09-14 (Composer, studio session)
+
+- [x] Frame companion **Generate** loses its spinning state when navigating away and back — busy now
+      also reads the op's progress monitor (`<plugin>/<artifactId>`), and the resume effect waits
+      while that op still runs instead of starting a second poll on the same job.
+- [x] Chat tools accordion ("Ran 13 commands") has no border — frame uses `border-separator`; row hover (`--color-hover-surface-subtle`) lifted 0.02 → 0.035.
+- [x] Chat tools accordion header row: the title is not vertically centred — label centred on the control-tall icon line.
+- [x] The Help companion for a Project article showed the Inbox text — when several plugins register a schema, the one contributing a `CreateObjectEntry` for the typename owns it.
+- [x] Frame companion `model` / `imageModel` comboboxes showed the raw path when closed — `ComboboxField` derives the label of a stored value from the loaded catalogue.

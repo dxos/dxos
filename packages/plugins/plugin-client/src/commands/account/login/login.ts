@@ -65,7 +65,7 @@ export const login = Command.make(
       ),
       Options.optional,
     ),
-    input: Args.string('input').pipe(
+    input: Args.String('input').pipe(
       Args.withDescription(
         'Method input: email address / Atmosphere handle / invitation code / recovery code. Unused by passkey.',
       ),
@@ -82,13 +82,13 @@ export const login = Command.make(
 
     const resolvedMethod: LoginMethod = Option.isSome(method)
       ? method.value
-      : yield* Prompt.select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
+      : yield* Prompt.Select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
 
     const inputPrompt = INPUT_PROMPT[resolvedMethod];
     const resolvedInput = Option.isSome(input)
       ? input.value
       : inputPrompt
-        ? yield* Prompt.text({ message: `${inputPrompt}:` }).pipe(Prompt.run)
+        ? yield* Prompt.String({ message: `${inputPrompt}:` }).pipe(Prompt.run)
         : '';
 
     const identity = yield* Match.value(resolvedMethod).pipe(
@@ -300,7 +300,7 @@ const loginWithDeviceInvitation = (client: Client, encoded: string) =>
     }
     const invitation = client.halo.join(InvitationEncoder.decode(code));
     yield* waitForState(invitation, Invitation_State.READY_FOR_AUTHENTICATION);
-    const authCode = yield* Prompt.text({ message: 'Enter the authentication code' }).pipe(Prompt.run);
+    const authCode = yield* Prompt.String({ message: 'Enter the authentication code' }).pipe(Prompt.run);
     yield* Effect.tryPromise(() => invitation.authenticate(authCode));
     yield* waitForState(invitation, Invitation_State.SUCCESS);
     const identity = client.halo.identity.get();

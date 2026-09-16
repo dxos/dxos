@@ -13,17 +13,24 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { SettingsScope, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
-import { type Space, SpaceState } from '@dxos/react-client/echo';
+import { SpaceState } from '@dxos/react-client/echo';
 
-import { DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
+import { DebugConsole, DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
 import { Settings } from '#types';
+
+//
+// DebugConsoleArticle
+//
+
+/** `react-surface.ts` is a plain `.ts` file, so the JSX for the console page's article surface lives here. */
+export const DebugConsoleArticle = () => <DebugConsole fit />;
 
 //
 // DebugSettings
@@ -39,7 +46,13 @@ export const DebugSettingsSurface = ({ subject, logStore, onUpload }: DebugSetti
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
 
   return (
-    <DebugSettings settings={settings} onSettingsChange={updateSettings} logStore={logStore} onUpload={onUpload} />
+    <DebugSettings
+      settings={settings}
+      onSettingsChange={updateSettings}
+      logStore={logStore}
+      onUpload={onUpload}
+      scope={<SettingsScope prefix={subject.prefix} />}
+    />
   );
 };
 
@@ -49,17 +62,17 @@ export const DebugSettingsSurface = ({ subject, logStore, onUpload }: DebugSetti
 
 export type SpaceGeneratorSurfaceProps = {
   role: string;
-  space: Space;
 };
 
-/** Generated objects are added to the space's root collection, resolved at invocation time. */
-export const SpaceGeneratorSurface = ({ role, space }: SpaceGeneratorSurfaceProps) => {
+/** Generated objects are added to the active space's root collection, resolved at invocation time. */
+export const SpaceGeneratorSurface = ({ role }: SpaceGeneratorSurfaceProps) => {
+  const space = useActiveSpace();
   const { invokePromise } = useOperationInvoker();
 
   const handleCreateObjects = useCallback(
     (objects: Obj.Unknown[]) => {
       const collection =
-        space.state.get() === SpaceState.SPACE_READY &&
+        space?.state.get() === SpaceState.SPACE_READY &&
         Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
       if (!Obj.instanceOf(Collection.Collection, collection)) {
         return;
@@ -71,6 +84,10 @@ export const SpaceGeneratorSurface = ({ role, space }: SpaceGeneratorSurfaceProp
     },
     [space, invokePromise],
   );
+
+  if (!space) {
+    return null;
+  }
 
   return <SpaceGenerator role={role} space={space} onCreateObjects={handleCreateObjects} />;
 };

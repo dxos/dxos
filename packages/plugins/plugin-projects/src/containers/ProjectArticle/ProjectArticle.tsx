@@ -3,9 +3,12 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type ReactNode, memo, useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -21,7 +24,7 @@ import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
 import { Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
-import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -30,7 +33,9 @@ import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation } from '#types';
+import { ProjectOperation, ProjectView } from '#types';
+
+import { getProjectChatPath } from '../../paths.ts';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
@@ -47,9 +52,6 @@ const CONTEXT_FIELDS: readonly string[] = ['objects'];
 /** The pipeline pane's initial height in rem: a handful of lanes and the axis. */
 const PIPELINE_SIZE = 14;
 
-/** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
-type Tab = 'overview' | 'tasks';
-
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
@@ -59,8 +61,13 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const [tab, setTab] = useState<Tab>('overview');
-  const { invokePromise } = useOperationInvoker();
+  // The selected tab and the chart toggle are view state under the project's id, so they outlive
+  // the plank and the reload.
+  const { tab, pipeline: showPipeline } = useViewState(ProjectView.aspect, subject.id);
+  const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
+  const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
+  const invoker = useOperationInvoker();
+  const { invokePromise } = invoker;
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // The pipeline reads the space's trace feed, which is addressed by space rather than database.
@@ -98,18 +105,37 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   );
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
-  const [showPipeline, setShowPipeline] = useState(false);
-  const togglePipeline = useCallback(() => {
-    setTab('tasks');
-    setShowPipeline((show) => !show);
-  }, []);
+  const togglePipeline = useCallback(
+    () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
+    [updateView],
+  );
 
-  // The reader is taken to the pipeline as the session starts, so the first events land in view.
-  const handleDelegated = useCallback(() => {
-    clearChecked();
-    setTab('tasks');
-    setShowPipeline(true);
-  }, [clearChecked]);
+  const handleDelegated = useCallback(() => clearChecked(), [clearChecked]);
+
+  // A session starting is what the chart is for, so a delegation run from this app — the toolbar or
+  // a row's menu — brings the pipeline into view. Read off the invoker's own events rather than
+  // inferred from the chat query, which also emits as a project's history hydrates and would open
+  // the chart on every project that has ever had a session.
+  useEffect(() => {
+    const fiber = Effect.runFork(
+      Stream.fromPubSub(invoker.invocations).pipe(
+        Stream.filter(
+          (event) => event.operation.meta.key.toString() === ProjectOperation.DelegateTaskToChat.meta.key.toString(),
+        ),
+        Stream.runForEach((event) =>
+          Effect.sync(() => {
+            const chat: unknown = event.output?.chat;
+            if (Obj.instanceOf(Chat.Chat, chat) && Chat.peekProject(chat)?.id === subject.id) {
+              updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: true }));
+            }
+          }),
+        ),
+      ),
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+  }, [invoker, subject.id, updateView]);
 
   const menuActions = useToolbarActions({
     project: subject,
@@ -120,6 +146,23 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     onDelegated: handleDelegated,
     onTogglePipeline: togglePipeline,
   });
+
+  // A session lane on the chart is the way into its chat. The project's own path helper, not the
+  // navigation resolver: the resolver answers with the assistant's Chats section, which lists only
+  // unparented chats, so that path names a node the deck cannot render.
+  const handleSelectChat = useCallback(
+    (chat: Chat.Chat) => {
+      if (!db) {
+        return;
+      }
+      void invokePromise(LayoutOperation.Open, {
+        subject: [getProjectChatPath(db.spaceId, subject.id, chat.id)],
+        pivotId: attendableId,
+        navigation: 'immediate',
+      });
+    },
+    [invokePromise, db, subject.id, attendableId],
+  );
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -186,7 +229,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   }
 
   return (
-    <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
+    <Tabs.Root
+      asChild
+      orientation='horizontal'
+      value={tab}
+      onValueChange={(value) => setTab(Schema.decodeUnknownSync(ProjectView.Tab)(value))}
+    >
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
@@ -234,7 +282,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     </Form.FieldSet>
                   )}
 
-                  <Form.FieldSet label={t('artifacts.label')}>
+                  <Form.FieldSet label={t('artifacts.label')} data-testid='projectsPlugin.artifacts'>
                     <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                   </Form.FieldSet>
                 </Form.Content>
@@ -264,7 +312,11 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Splitter.Panel>
               <Splitter.Handle />
               <Splitter.Panel position='end'>
-                {space && <ProjectPipeline space={space} project={subject} tasks={tasks} />}
+                {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
+                    trace feed on every trace message, which is pure cost behind a collapsed panel. */}
+                {showPipeline && space && (
+                  <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
+                )}
               </Splitter.Panel>
             </Splitter.Root>
           )}

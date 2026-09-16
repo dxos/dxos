@@ -16,7 +16,7 @@ import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Button, type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
@@ -57,6 +57,7 @@ import {
   useChatContext,
 } from './context.ts';
 import { type ChatEvent } from './events.ts';
+import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 import { projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
@@ -489,8 +490,25 @@ type ChatThreadProps = ThemedClassName<{
 
 const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { db, debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
+  // Embedded objects resolve against the chat's database (the fallback one while it is transient).
+  const objectImage = useMemo(() => objectCardWidget(db), [db]);
+  // A block reference's chip reads the object's name once it is loaded — resolved through the
+  // database's own ref, which honours the URI's space and the DXN forms — and the package default's
+  // bare "Object" until then; the thread re-renders as the message's blocks settle.
+  const getObjectLabel = useCallback(
+    (uri: URI.URI): string => {
+      let object: Obj.Unknown | undefined;
+      try {
+        object = db?.makeRef<Obj.Unknown>(uri).target;
+      } catch {
+        object = undefined;
+      }
+      return (object && Obj.getLabel(object)) || 'Object';
+    },
+    [db],
+  );
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
   // The toast renders whatever action the error declares (data-driven) rather than branching on type.
   const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
@@ -558,6 +576,8 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         model={model}
         viewType={viewType}
         registry={chatRegistry}
+        objectImage={objectImage}
+        getObjectLabel={getObjectLabel}
         userHue={userHue}
         tailLines={tailLines}
         debug={debug}

@@ -1,0 +1,56 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { random } from '@dxos/random';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
+
+import { type TestItem, TestItemBuilder } from './testing/index.ts';
+
+describe('HypercoreStore', () => {
+  test('reopens a feed and reads data from storage', async () => {
+    const builder = new TestItemBuilder();
+    const feedKey = await builder.keyring!.createKey();
+
+    const numBlocks = 10;
+
+    // NOTE: Must use Node so that data is persistent across invocations.
+    const storage = createStorage({ type: StorageType.NODE });
+
+    // Write.
+    {
+      const hypercoreStore = builder.clone().setStorage(storage).createHypercoreStore();
+      const feed = await hypercoreStore.openHypercore(feedKey, { writable: true });
+
+      for (const i of Array.from(Array(numBlocks)).keys()) {
+        await feed.append({
+          id: String(i),
+          value: random.lorem.sentence(),
+        } as TestItem);
+      }
+
+      expect(feed.properties.length).to.eq(numBlocks);
+    }
+
+    // Read.
+    {
+      const hypercoreStore = builder.clone().setStorage(storage).createHypercoreStore();
+      const feed = await hypercoreStore.openHypercore(feedKey);
+      expect(feed.properties.length).to.eq(numBlocks);
+    }
+
+    // Delete.
+    {
+      await storage.reset();
+    }
+
+    // Read (should be empty).
+    {
+      const hypercoreStore = builder.clone().setStorage(storage).createHypercoreStore();
+      const feed = await hypercoreStore.openHypercore(feedKey);
+      expect(feed.properties.length).to.eq(0);
+    }
+  });
+});

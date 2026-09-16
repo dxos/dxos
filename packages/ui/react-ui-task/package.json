@@ -38,6 +38,7 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
@@ -50,7 +51,6 @@
     "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",

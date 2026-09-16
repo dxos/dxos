@@ -763,20 +763,21 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         return;
       }
 
+      // The terminal status is recorded BEFORE cleanup closes the outputs: closing them resumes
+      // whoever is collecting, and a collector that reads the status first would take a finished
+      // process for a suspended one.
       if (this.#failError !== null && this.#activeHandlers === 0) {
         this.#finished = true;
         const error = this.#failError;
         logFailure(this.pid, this.key, Cause.die(error));
-        yield* this.#cleanup().pipe(
-          Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.FAILED, Exit.die(error)))),
-          Effect.tap(() => this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void),
-        );
+        this.#setStatus(Process.State.FAILED, Exit.die(error));
+        yield* this.#cleanup();
+        yield* this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void;
       } else if (this.#succeedRequested && this.#activeHandlers === 0) {
         this.#finished = true;
-        yield* this.#cleanup().pipe(
-          Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void))),
-          Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
-        );
+        this.#setStatus(Process.State.SUCCEEDED, Exit.void);
+        yield* this.#cleanup();
+        yield* this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void;
       } else if (this.#activeHandlers === 0) {
         const hybernating = this.#alarmFiber !== null || this.#alarmDispatching || this.#hasRunningChildren();
         this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);

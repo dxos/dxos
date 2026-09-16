@@ -11,4 +11,3 @@ export * as SqlExport from './SqlExport.ts';
 export * as SqlMigrations from './SqlMigrations.ts';
 export * as SqliteClient from './SqliteClient.ts';
 export * as SqliteMigrator from './SqliteMigrator.ts';
-export * as SqlTransaction from './SqlTransaction.ts';

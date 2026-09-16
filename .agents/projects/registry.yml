@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-debug
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-14
+    summary: 'DebugPanel becomes a graph application: a hidden root/debug category rendered by a navtree inside the floating panel (never the main navtree or the deck), console/logs as nodes, devtools/debug trees moved off the System group; phase 2 splits devtools into global vs per-space attachments.'
+    tasks: .agents/projects/plugin-debug/TASKS.md
+    design: packages/plugins/plugin-debug/docs/DESIGN.md
+    prs: [13087, 13095, 13110]
+    resume: "PR #13087 MERGED (phases 1-2). PR #13095 MERGED 2026-09-14 (squash 92395321fc) — phase 3 (docked panel, design §5) plus: console/logs under Debug (pristine panel opens Debug → Console), devtools panel fixes (JsonView on Syntax with JSONPath filter, Storage full width, Client → Logs, table translations, Debug before DevTools), every tool row an Accordion.Item (Accordion gained `disabled`), ComboboxField shows a stored value's catalogue label, Help companion prefers the plugin contributing a CreateObjectEntry, studio Generate busy state from the progress monitor, subtle row hover 0.025 (the per-surface value in components/surface.css is the effective one — the theme-level token is shadowed), drawer clamp owned by DeckSchema (headless handler must not load react-ui). CI note: knip once flagged deus gen/mdl.terms.ts as unused — a race with prebuild-lezer regenerating it; retry, or import the terms from syntax.ts like echo-query if it recurs. NEXT: TASKS.md follow-ups (devtools SpaceList/SpaceInfo dead links, cross-tab mode sync, headless deck test, devtools panel i18n, the two Logs panels)."
   - name: plugin-studio
     status: active
     user: burdon
@@ -14,8 +24,8 @@ projects:
     summary: 'Extend plugin-studio with more generation providers; first plugin-higgsfield (Connector + image/video GenerationService against api.higgsfield.ai), modelled on plugin-heygen.'
     tasks: .agents/projects/plugin-studio/TASKS.md
     design: .agents/projects/plugin-studio/DESIGN.md
-    prs: []
-    resume: 'PR #13078 open (Check via Depot). Landed on the branch: plugin-higgsfield (image + Soul→DoP video), Studio on Projects (template, no Studio section), Storyboard/Frame + accordion article + player, studio skill + ops, stories-assistant Studio story (scripted passes; live produced real Higgsfield stills/clips twice, then edge disconnects). NEXT: address review, land; follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake).'
+    prs: [13078, 13087, 13095, 13110, 13111, 13112]
+    resume: 'All PRs merged through #13112 (2026-09-15): higgsfield video requires an image artifact ref + duration for Kling/Hailuo/Wan; options cache keyed by kind; Play graph action; media card/lightbox; credential forms + TypeFormat.Key; project view state, timeline lane fold + dead-run close; chat embedded object cards + scroll-to-bottom; task editor 8 lines + filter + PR chip icon; Repo create entry; picker Escape. NEXT: open follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake, toolbar create-menu capability, bare echo:// decoration, Repo create form name→slug).'
   - name: task-visualization
     status: active
     user: burdon
@@ -254,6 +264,16 @@ projects:
     design: .agents/projects/client-startup-timeout/DESIGN.md
     prs: [12564]
     resume: 'PR #12564 OPEN (CI green) — the boot write amplification is FIXED and the Phase 0 blocker is CLOSED: the "existing subduction patch" never existed (every historical automerge-repo patch back to #10752 leaves the save path untouched; PR #12064 was a false lead — it builds a plain Repo with no initSubduction so it never exercises SubductionSource). The real fix is upstream automerge/automerge-repo#712, ported into our pinned .40 dist patch: mirror the attach-time hash scan into knownHashes. Verified across 3 classified boots — subduction-commits/fragments inserts on boot are now ZERO. Also landed: indexer per-pass reads halved (heads scan captured once per IndexEngine.update and shared across fts5+reverseRef, cursor rows batched per source; indexCursor 4->2 and automerge_heads 2->1 per run, batched query returning 2024 rows = 1012 docs x 2 indexes) and index-run instrumentation (reasons/durationMs/invalidates). KEY NEW FINDINGS: (1) remaining boot writes are ALL subduction-remote-heads — 515 writes against 0 reads of that key family, ~93% for documents that never attach, so the per-attach replay cannot cover them; same cold-start-blind cache defect one layer over (#lastRemoteHeads). (2) Idle index churn was 79% of boot SQL: 68 passes, ALL reporting zero work, flat ~4/s even with zero replication; instrumentation attributes them to rpc-update-indexes (the TAB drives indexing over RPC) with invalidates:false, so it is NOT a host-side invalidation loop. Main''s idle-poll-backoff (TriggerDispatcher reactive + poll backoff) may already fix the driver — re-measure before spending more. (3) app.log interleaves tab/shared-worker/dedicated-worker and survives reloads; filter on the new `i` instance field or counts merge multiple boots and look like regressions. NEXT: networking deferral (Phase 3) in a follow-up PR — diff preserved at .agents/projects/client-startup-timeout/defer-networking.patch; only the edge dial needs an explicit gate since subduction defers while the socket is not CONNECTED and feed sync restarts from onReconnected.'
+  - name: client-services-dissolve-host
+    status: paused
+    user: dmaretskyi
+    host: Dmytros-MacBook-Pro-M4
+    created: 2026-09-14
+    summary: 'Dissolve ClientServicesHost into ClientServicesLayer + event-driven layer lifecycle; every embedder composes the stack; worker runtime and worker-framework session/runtime lifetimes become scopes owned by the framework; WorkerService replaced by a framework-level tab session lock.'
+    tasks: .agents/projects/client-services-dissolve-host/TASKS.md
+    design: .agents/projects/client-services-dissolve-host/DESIGN.md
+    prs: [13094]
+    resume: 'PAUSED 2026-09-15 with uncommitted Phase 4 work (framework-owned session scope, tab session lock, WorkerService removal; worker-framework tests 13/13 green) — see TASKS.md resume line for the two typecheck fixes needed before commit. No suites beyond worker-framework run since e6b1bcdbf4; CI not re-checked. NEXT: finish Phase 4, run suites (Phase 5), cleanup (Phase 6), rewrite changeset, land.'
   - name: client-services-effect-rpc
     status: active
     user: root
@@ -412,8 +432,9 @@ projects:
         13016,
         13028,
         13077,
+        13109,
       ]
-    resume: 'Folded in the project-tasks stream (task delegation + execution; design notes in docs/DELEGATION.md, ledger section "Task delegation and execution" in TASKS.md) on 2026-09-13. IN FLIGHT: PR #13077 — the session gantt separates events by task via a task.statusChanged trace event emitted by both task tools, plus the boot-loader sprite fix and the tree-branch clip fix; Check was red (job tssm2xl5dv) and CodeRabbit left 4 inline comments — resolve both. Prior delegation PRs MERGED: #12752 #12784 #12787 #12839 #12847. Plugin side as before: M6 Phases 1-2 MERGED as #12595; follow-ups #12675 #12677 #12735 #12736 #12918 #13016 #13028 merged. NEXT: land #13077; then delegation backlog — terminal-status dates (the timeline now consumes them), extension-contributed tabs, cancel/delete, the joined delegation+TaskSet story — and M6 Phase 3 (outline-first skill rule + promote-task verb + promotion eval). TOOLING: CI is on Depot — `gh pr checks <n>`; depot CLI needs DEPOT_TOKEN, else reproduce locally. Do NOT pin a worktree in this pointer.'
+    resume: 'Folded in the project-tasks stream (task delegation + execution; design notes in docs/DELEGATION.md, ledger section "Task delegation and execution" in TASKS.md) on 2026-09-13. #13077 MERGED 2026-09-14 (per-task session gantt, boot-loader sprite, tree-branch clip). IN FLIGHT: PR #13109 from the same branch — delegation stays on the ledger + pipeline lane opens its chat, invoker shutdown interrupt, trigger card inset; watch Check + review. Prior delegation PRs MERGED: #12752 #12784 #12787 #12839 #12847. Plugin side as before: M6 Phases 1-2 MERGED as #12595; follow-ups #12675 #12677 #12735 #12736 #12918 #13016 #13028 merged. NEXT: land #13109; then delegation backlog — terminal-status dates (the timeline now consumes them), extension-contributed tabs, cancel/delete, the joined delegation+TaskSet story — and M6 Phase 3 (outline-first skill rule + promote-task verb + promotion eval). TOOLING: CI is on Depot — `gh pr checks <n>`; depot CLI needs DEPOT_TOKEN, else reproduce locally. Do NOT pin a worktree in this pointer.'
   - name: illustrator-scene-dsl
     status: active
     user: burdon
@@ -546,11 +567,12 @@ projects:
     user: josiah
     host: remote
     created: 2026-07-30
-    summary: ECHO-level deterministic object merging keyed on identity key (meta key + version) — duplicates from uncoordinated per-peer space initialization merge into a min-id winner with redirects and reference rewriting.
+    summary: ECHO-level deterministic object merging keyed on `meta.convergenceKey` — duplicates from uncoordinated per-peer space initialization merge into a min-id winner with redirects and reference rewriting.
     tasks: .agents/projects/object-merging/TASKS.md
     design: .agents/projects/object-merging/DESIGN.md
-    prs: []
-    resume: 'Research COMPLETE and committed (DESIGN.md) on branch claude/echo-object-merging-research-dqtjx1 (no PR by request). Decisions so far: merge only distinct-id duplicates (collision class 2); same-id-two-docs stays an error (no deterministic ids — rejected, §4.5); merge direction = deterministic ordering, winner = min EntityId. Next: design review of the 5 open questions in DESIGN.md §7 (identity field, version matching, merge-policy pluggability, where the merge runs, relation scope), then Phase 0 spike (§6).'
+    prs: [12410, 12412]
+    resume: 'WORKER-SIDE MERGING LIVE on branch claude/project-object-merging-bdjgum, PR #12412 (draft). Identity field is meta.convergenceKey (renamed from naturalKey 2026-08-13 after dmaretskyi review; singletonKey declined — DESIGN §4.4 + decision log). Public API: NONE beyond the meta field itself (accessors dropped 2026-08-31 — assign meta.convergenceKey inside Entity.update). §4.11 IMPLEMENTED 2026-08-31: worker rewrites references index-driven — ConvergenceKeyMerger gained queryReferrers (IndexEngine.queryReverseRef joined to lookupByRecordIds in echo-host.ts), rewrites EncodedReferences at indexed propPaths to the chain-resolved winner after tombstones and on every #foldRedirected pass (late-referrer residual accepted, DESIGN §4.11.4); db.mergeDuplicates() and the whole client merge executor DELETED (no Filter.everything() remains); merge core (MergeCandidate/mergeCandidates/toMergeCandidate/findMergeDuplicates) moved to echo-host/src/db-host/merge-core.ts with its unit suite, @dxos/echo/internal keeps only resolveMergeRedirect; e2e suites re-targeted to the worker (state read via getObjectCore, partial views staged through cores). Worker deps: loadDoc (DocumentLease-shaped MergeDocumentRef, disposed per group), flushDoc, queryByConvergenceKeys, queryReferrers. Intents in ConvergenceKeyIntentStore joining the indexing transaction; index-name-versioned cursors (fts6/reverseRef2); migrations renumbered around main (entity-meta 0007_convergence_key after two rounds of main additions, tracker 0003_retire_pre_convergence_key_cursors). Merged with main 2026-08-31 (document leases, queue positions, depot CI). ALL GREEN: echo, echo-host (incl. 6 rewrite unit tests), echo-client, echo-client-e2e (26 merge/convergence), index-core. NEXT per TASKS: singleton/ensure APIs vs Phase-2 db.ensure (dmaretskyi sketch noted), plugin-doctor duplicates diagnostic, property-based determinism (§5.3), relation endpoints (ObjectCore.setSource/setTarget), collaborative-text policy (§4.6 High risk once documents are in scope), merge-function shape on real types before Phase 4. Phase 3b (relations/types as subjects) and §7 Q3 pluggability still open.'
+
   - name: object-deduplication
     status: active
     user: burdon

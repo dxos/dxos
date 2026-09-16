@@ -40,11 +40,11 @@ import {
 // https://discord.com/channels/795981131316985866/1338871274398679130
 
 const OpenAiLayer = OpenAiClient.layerConfig({
-  apiKey: Config.redacted('OPENAI_API_KEY'),
+  apiKey: Config.Redacted('OPENAI_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const AnthropicLayer = AnthropicClient.layerConfig({
-  apiKey: Config.redacted('DX_ANTHROPIC_API_KEY'),
+  apiKey: Config.Redacted('DX_ANTHROPIC_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const createChat = Effect.fn(function* (prompt: string) {

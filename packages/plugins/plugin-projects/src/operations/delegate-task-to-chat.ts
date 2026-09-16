@@ -7,8 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -24,7 +22,6 @@ import { concat } from '@dxos/util';
 
 import { ProjectOperation } from '#types';
 
-import { getProjectChatPath } from '../paths.ts';
 import { findProject } from './find-project.ts';
 
 /**
@@ -119,21 +116,17 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* bindDelegationContext(chat, project);
         yield* Database.flush();
 
-        // The reader is taken to the work they just delegated. Opened before the turn starts so the
-        // first tokens land on screen rather than into a conversation nobody is looking at.
+        // The reader stays where they delegated from — the project's ledger, whose pipeline chart
+        // shows the session as it starts — so the operation does not navigate; the chart's session
+        // lane is the way into the chat.
         //
-        // Both steps are best-effort and deliberately not fatal: the delegation itself is already
-        // durable — the chat exists, carries the task, and is filed under the project — so a host
-        // with no layout or no agent runtime (a test harness, a headless client) still delegates,
-        // and the reader can send the first turn themselves.
+        // Best-effort and deliberately not fatal: the delegation itself is already durable — the
+        // chat exists, carries the task, and is filed under the project — so a host with no agent
+        // runtime (a test harness, a headless client) still delegates, and the reader can send the
+        // first turn themselves.
         //
         // `Effect.exit`, not `Effect.catch`: a missing service arrives as a DEFECT (the process
         // layers are `orDie`), which a failure channel handler never sees.
-        const opened = yield* openChat(chat, project).pipe(Effect.exit);
-        if (Exit.isFailure(opened)) {
-          log.warn('delegated chat did not open', { cause: Cause.pretty(opened.cause) });
-        }
-
         const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
           chat,
           prompt: OPENING_PROMPT,
@@ -146,35 +139,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
       }),
     ),
   );
-
-/**
- * Navigates to a chat.
- *
- * A project's chat is composed from this plugin's own path helper rather than asked of
- * `ResolveNavigationTargets`: the Chats branch belongs to this plugin, so it already knows where the
- * chat lives, and the generic resolvers answer with the assistant's Chats section — which lists only
- * UNPARENTED chats, so that path names a node that does not exist and the deck renders nothing.
- * Only a chat outside a project goes to the resolver.
- *
- * `immediate` expands the path instead of validating it. The chat was created moments ago, so its
- * graph node may not exist yet — the branch connector's query has not re-emitted — and validation
- * sends an unmaterialized path to the not-found route, which empties the deck.
- */
-const openChat = Effect.fnUntraced(function* (chat: Chat.Chat, project: Project.Project | undefined) {
-  const db = Obj.getDatabase(chat);
-  const path = project && db ? getProjectChatPath(db.spaceId, project.id, chat.id) : yield* resolvePath(chat);
-  if (path) {
-    yield* Operation.invoke(LayoutOperation.Open, { subject: [path], navigation: 'immediate' });
-  }
-});
-
-/** Where a chat outside any project is addressable, per whichever plugin claims it. */
-const resolvePath = Effect.fnUntraced(function* (chat: Chat.Chat) {
-  const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
-    query: { uri: Obj.getURI(chat) },
-  });
-  return targets[0]?.path;
-});
 
 /**
  * References the tasklist rather than restating the tasks: they are already bound to the chat, and

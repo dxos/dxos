@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { AccessToken } from '@dxos/link';
 
 import { ANTHROPIC_SOURCE } from '../constants.ts';
@@ -69,7 +68,7 @@ export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
     title: Schema.String.pipe(Schema.annotate({ title: 'Title' })),
     agent: Ref.Ref(ClaudeManagedAgent.ClaudeManagedAgent).pipe(
       Schema.annotate({ description: 'The agent this session runs.' }),
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
     ),
     environmentId: Schema.String.annotate({ title: 'Environment id' }),
     /**
@@ -93,7 +92,7 @@ export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
       Schema.Array(SessionCredential).annotate({ description: 'Credentials bound to this run.' }),
     ),
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--terminal-window--regular', hue: 'indigo' }),
   ),
 ) {}

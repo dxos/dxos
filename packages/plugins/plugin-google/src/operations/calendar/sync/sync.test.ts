@@ -20,7 +20,7 @@ const TestLayer = Layer.mergeAll(
   credentialsLayerConfig([
     {
       service: 'google.com',
-      apiKey: Config.redacted('ACCESS_TOKEN'),
+      apiKey: Config.Redacted('ACCESS_TOKEN'),
     },
   ]),
   FetchHttpClient.layer,

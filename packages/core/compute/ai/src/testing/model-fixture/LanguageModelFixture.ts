@@ -419,7 +419,7 @@ export const layer = (
   );
 
 type MakeProps = {
-  upstreamModel: LanguageModel.Service;
+  upstreamModel: LanguageModel.LanguageModel;
   modelName: string;
   testFilePath: string;
   allowGeneration: boolean;
@@ -427,11 +427,11 @@ type MakeProps = {
 };
 
 /**
- * Builds the replaying {@link LanguageModel.Service}: each turn is looked up in the store by request
+ * Builds the replaying {@link LanguageModel.LanguageModel}: each turn is looked up in the store by request
  * hash and replayed; on a miss it errors, unless `allowGeneration` is set, when it calls the upstream
  * model and records the turn.
  */
-export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
+export const make = (options: MakeProps): Effect.Effect<LanguageModel.LanguageModel> => {
   const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? DEFAULT_DYNAMIC_VALUE_PATTERNS);
   const store = new FixtureStore(options.testFilePath, dynamicMatcher);
 

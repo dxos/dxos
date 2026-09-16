@@ -335,38 +335,38 @@ type CredentialsValue = {
  * Construction resolves the PDS once (via the public XRPC `resolveHandle`
  * and a DID-document lookup) so subsequent calls reuse it.
  */
-export class Credentials extends Context.Service<Credentials, CredentialsValue>()('@dxos/plugin-bluesky/Credentials') {
-  /** Loads the connection's access token, resolves its PDS, and packages credentials. */
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, client: Client) =>
-    Layer.effect(
-      Credentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        const db = Obj.getDatabase(connection);
-        if (!db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
-        }
-        return yield* packageCredentials(accessToken, db, client);
-      }),
-    );
+export class Credentials extends Context.Service<Credentials, CredentialsValue>()('@dxos/plugin-bluesky/Credentials') {}
 
-  /** Loads the access token directly, resolves its PDS, and packages credentials. */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>, client: Client) =>
-    Layer.effect(
-      Credentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        const db = Obj.getDatabase(accessToken);
-        if (!db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
-        }
-        return yield* packageCredentials(accessToken, db, client);
-      }),
-    );
-}
+/** Loads the connection's access token, resolves its PDS, and packages credentials. */
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, client: Client) =>
+  Layer.effect(
+    Credentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      const db = Obj.getDatabase(connection);
+      if (!db) {
+        return yield* Effect.fail(new SyncDatabaseMissingError());
+      }
+      return yield* packageCredentials(accessToken, db, client);
+    }),
+  );
 
-/** Shared credential-packaging step used by both {@link Credentials.fromConnection} and {@link Credentials.fromAccessToken}. */
+/** Loads the access token directly, resolves its PDS, and packages credentials. */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>, client: Client) =>
+  Layer.effect(
+    Credentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      const db = Obj.getDatabase(accessToken);
+      if (!db) {
+        return yield* Effect.fail(new SyncDatabaseMissingError());
+      }
+      return yield* packageCredentials(accessToken, db, client);
+    }),
+  );
+
+/** Shared credential-packaging step used by both {@link fromConnection} and {@link fromAccessToken}. */
 const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.Database, client: Client) =>
   Effect.gen(function* () {
     const handle = accessToken.account;

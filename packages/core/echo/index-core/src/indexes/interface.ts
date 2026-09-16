@@ -8,7 +8,6 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import type { Obj } from '@dxos/echo';
 import type { EntityId, SpaceId } from '@dxos/keys';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 /**
  * Data describing objects returned from sources to the indexer.
@@ -71,7 +70,7 @@ export interface Index {
    * Runs necessary migrations to the index before it is usable.
    * Idempotent.
    */
-  migrate: () => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  migrate: () => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
 
   /**
    * Updates the index with the given objects.

@@ -28,7 +28,7 @@ export const SyncStateInfo = ({ space }: SyncStateInfoProps) => {
   return (
     <div className='p-2 text-sm'>
       <p className='text-base'>Sync state</p>
-      <JsonView data={syncState} />
+      <JsonView data={syncState} filter={false} />
     </div>
   );
 };

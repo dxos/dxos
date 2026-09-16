@@ -125,7 +125,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     const { deviceKey, controlFeedKey, dataFeedKey, profile } = request.kind.value;
 
     // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
-    // ctx is unused here because _acceptIdentity uses ServiceContext's lifecycle ctx internally.
+    // ctx is unused here because _acceptIdentity uses the identity lifecycle's own ctx internally.
 
     invariant(credential, 'Admission carries no credential.');
     const identityKeyValue = requirePublicKey(identityKey);

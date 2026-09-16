@@ -11,12 +11,12 @@ import { identity } from './identity/index.ts';
 import { space } from './space/index.ts';
 
 export const admin = Command.make('admin', {
-  adminKey: Options.string('admin-key').pipe(
+  adminKey: Options.String('admin-key').pipe(
     Options.withDescription('Edge admin key (or DX_HUB_API_KEY env var).'),
     Options.withAlias('k'),
     Options.optional,
   ),
-  edgeUrl: Options.string('edge-url').pipe(
+  edgeUrl: Options.String('edge-url').pipe(
     Options.withDescription('Edge worker base URL (or DX_EDGE_BASE_URL env var).'),
     Options.withAlias('u'),
     Options.optional,
