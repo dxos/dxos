@@ -10,6 +10,7 @@ import * as EffectStream from 'effect/Stream';
 import { Event, MulticastObservable } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
 import { EffectEx, Hook } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { toServiceError } from '@dxos/protocols';
@@ -88,7 +89,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
     }).pipe(Effect.provideService(Hook.Controller, this.#options.controller));
   }
 
-  ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
+  ['SystemService.getConfig'](): Effect.Effect<ConfigProto, BaseError> {
     return Effect.tryPromise({
       try: async () => (await this.#options.config?.())?.values ?? create(ConfigSchema, {}),
       catch: toServiceError,
@@ -122,14 +123,14 @@ export class SystemServiceImpl implements SystemService.Handlers {
     });
   }
 
-  ['SystemService.getPlatform'](): Effect.Effect<Platform, Error> {
+  ['SystemService.getPlatform'](): Effect.Effect<Platform, BaseError> {
     return Effect.tryPromise({
       try: async () => getPlatform(),
       catch: toServiceError,
     });
   }
 
-  ['SystemService.updateStatus']({ status }: SystemService.UpdateStatusRequest): Effect.Effect<void, Error> {
+  ['SystemService.updateStatus']({ status }: SystemService.UpdateStatusRequest): Effect.Effect<void, BaseError> {
     return Effect.sync(() => this.statusRequested.emit(status));
   }
 
@@ -149,7 +150,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
     });
   }
 
-  ['SystemService.reset'](): Effect.Effect<void, Error> {
+  ['SystemService.reset'](): Effect.Effect<void, BaseError> {
     return this.reset();
   }
 }

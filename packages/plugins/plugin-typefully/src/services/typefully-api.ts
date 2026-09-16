@@ -122,14 +122,14 @@ const toDraftBody = (input: Publisher.PublisherDraftInput): Record<string, unkno
 
 type TypefullyEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.Failure,
   HttpClient.HttpClient | TypefullyCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
+  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.Failure,
 ): boolean => {
-  if (error instanceof Schema.SchemaError || error instanceof Publisher.PublisherError) {
+  if (error instanceof Schema.SchemaError || Publisher.isFailure(error)) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
@@ -328,7 +328,7 @@ const runConnection = <T>(connection: Ref.Ref<Connection.Connection>, program: T
   return EffectEx.runPromise(
     program.pipe(
       Effect.provide(
-        Layer.provideMerge(Layer.provideMerge(fromConnection(connection), ProxyHttpLayer), Database.layer(db)),
+        fromConnection(connection).pipe(Layer.provideMerge(ProxyHttpLayer), Layer.provideMerge(Database.layer(db))),
       ),
     ),
   );

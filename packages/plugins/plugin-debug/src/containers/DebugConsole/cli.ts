@@ -14,7 +14,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import type * as Operation from '@dxos/compute/Operation';
-import { BaseError, messageOf } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 import { SpaceId } from '@dxos/keys';
 import { getDebugPortController } from '@dxos/react-client/devtools';
 
@@ -57,9 +57,7 @@ const invokeOperation = Effect.fn(function* (key: string, input: unknown, spaceI
     invoker.invokePromise(definition as Operation.Definition.Any, input as never, spaceId ? { spaceId } : undefined),
   );
   if (error) {
-    return yield* Effect.fail(
-      error instanceof BaseError ? error : new DebugOperationError({ message: messageOf(error), cause: error }),
-    );
+    return yield* Effect.fail(error instanceof BaseError ? error : DebugOperationError.wrap()(error));
   }
   return data;
 });

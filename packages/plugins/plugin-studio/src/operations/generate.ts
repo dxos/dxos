@@ -11,16 +11,9 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { messageOf } from '@dxos/errors';
 
 import { meta } from '#meta';
 import { Generation, GenerationService, StudioCapabilities, StudioOperation, Variant } from '#types';
-
-/** Route a provider rejection to the failure channel, keeping a `GenerationError` as it is. */
-const toGenerationError = (error: unknown): GenerationService.GenerationError =>
-  error instanceof GenerationService.GenerationError
-    ? error
-    : new GenerationService.GenerationError({ message: messageOf(error), cause: error });
 
 const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOperation.Generate.pipe(
   Operation.withHandler(
@@ -137,7 +130,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
           if (!jobId) {
             const enqueued = yield* Effect.tryPromise({
               try: () => enqueue(request, options),
-              catch: toGenerationError,
+              catch: GenerationService.GenerationError.wrap({ ifTypeDiffers: true }),
             });
             jobId = enqueued.jobId;
             const created = Variant.make({ name, config, jobId });
@@ -163,7 +156,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
               Obj.update(pendingVariant, (pendingVariant) => {
                 pendingVariant.jobId = undefined;
               });
-              return toGenerationError(error);
+              return GenerationService.GenerationError.wrap({ ifTypeDiffers: true })(error);
             },
           });
           // Fill the pending variant with the first result (freezing it); append any extras.
@@ -191,7 +184,10 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
           return { count: awaited.variants.length };
         }
         if (generate) {
-          const result = yield* Effect.tryPromise({ try: () => generate(request, options), catch: toGenerationError });
+          const result = yield* Effect.tryPromise({
+            try: () => generate(request, options),
+            catch: GenerationService.GenerationError.wrap({ ifTypeDiffers: true }),
+          });
           for (const data of result.variants) {
             yield* appendVariant(data);
           }

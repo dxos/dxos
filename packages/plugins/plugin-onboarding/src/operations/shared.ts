@@ -8,7 +8,6 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { type Client } from '@dxos/client';
 import { Context as DxContext } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { messageOf } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { type InitiateOAuthFlowRequest } from '@dxos/protocols';
 
@@ -90,7 +89,7 @@ export const beginOAuthFlow = (
             ...(request.registerRecovery ? { registerRecovery: request.registerRecovery } : {}),
             ...(request.loginHint ? { loginHint: request.loginHint } : {}),
           }),
-        catch: (error) => new OAuthFlowError({ message: messageOf(error), cause: error }),
+        catch: OAuthFlowError.wrap(),
       })
     : Effect.gen(function* () {
         const { authUrl } = yield* Effect.tryPromise({

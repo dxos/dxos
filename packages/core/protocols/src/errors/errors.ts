@@ -6,7 +6,14 @@ import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 
 import type { ObjectId } from '../types.ts';
+import { ApiError, DatabaseError, SystemError } from './base-errors.ts';
 import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers.ts';
+
+// `toServiceError` mints these for anything that is not already a DXOS error, so the client
+// rebuilds the class rather than a bare `BaseError` carrying the right name.
+registerErrorMessageContext('SystemError', SystemError);
+registerErrorMessageContext('ApiError', ApiError);
+registerErrorMessageContext('DatabaseError', DatabaseError);
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.

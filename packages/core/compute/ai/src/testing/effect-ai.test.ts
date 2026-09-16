@@ -127,7 +127,10 @@ describe('LanguageModel', () => {
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
           Effect.provide(
-            Layer.provideMerge(Layer.provideMerge(OpenAiLanguageModel.model('gpt-4o'), OpenAiLayer), CalculatorLayer),
+            OpenAiLanguageModel.model('gpt-4o').pipe(
+              Layer.provideMerge(OpenAiLayer),
+              Layer.provideMerge(CalculatorLayer),
+            ),
           ),
         );
 
@@ -143,9 +146,9 @@ describe('LanguageModel', () => {
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
           Effect.provide(
-            Layer.provideMerge(
-              Layer.provideMerge(AnthropicLanguageModel.model('claude-3-5-sonnet-latest'), AnthropicLayer),
-              CalculatorLayer,
+            AnthropicLanguageModel.model('claude-3-5-sonnet-latest').pipe(
+              Layer.provideMerge(AnthropicLayer),
+              Layer.provideMerge(CalculatorLayer),
             ),
           ),
         );
@@ -225,9 +228,9 @@ describe('LanguageModel', () => {
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
       Effect.provide(
-        Layer.provideMerge(
-          Layer.provideMerge(CalculatorLayer, AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-          AnthropicLayer,
+        CalculatorLayer.pipe(
+          Layer.provideMerge(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          Layer.provideMerge(AnthropicLayer),
         ),
       ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
@@ -261,12 +264,9 @@ describe('LanguageModel', () => {
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
       Effect.provide(
-        Layer.provideMerge(
-          Layer.provideMerge(
-            CalculatorLayer,
-            AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } }),
-          ),
-          AnthropicLayer,
+        CalculatorLayer.pipe(
+          Layer.provideMerge(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
+          Layer.provideMerge(AnthropicLayer),
         ),
       ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
@@ -303,9 +303,9 @@ describe('LanguageModel', () => {
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
       Effect.provide(
-        Layer.provideMerge(
-          Layer.provideMerge(CalculatorLayer, AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-          AnthropicLayer,
+        CalculatorLayer.pipe(
+          Layer.provideMerge(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          Layer.provideMerge(AnthropicLayer),
         ),
       ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),

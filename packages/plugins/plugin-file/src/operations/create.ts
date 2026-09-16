@@ -8,25 +8,23 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
-import { BaseError, messageOf } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 import { File } from '@dxos/types';
 
 import { FileCapabilities, FileLimits, FileOperation, Settings } from '#types';
 
-export class UnsupportedFileTypeError extends Error {
+export class UnsupportedFileTypeError extends BaseError.extend('UnsupportedFileTypeError') {
   constructor(public readonly type: string) {
-    super(`Unsupported file type: ${type}`);
-    this.name = 'UnsupportedFileTypeError';
+    super({ message: `Unsupported file type: ${type}` });
   }
 }
 
-export class FileTooLargeError extends Error {
+export class FileTooLargeError extends BaseError.extend('FileTooLargeError') {
   constructor(
     public readonly size: number,
     public readonly limit: number = Blob.MAX_INLINE_SIZE,
   ) {
-    super(`File is too large: ${size} bytes (limit: ${limit} bytes)`);
-    this.name = 'FileTooLargeError';
+    super({ message: `File is too large: ${size} bytes (limit: ${limit} bytes)` });
   }
 }
 
@@ -78,7 +76,7 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
       const bytes = new Uint8Array(
         yield* Effect.tryPromise({
           try: () => file.arrayBuffer(),
-          catch: (error) => new FileReadError({ message: messageOf(error), cause: error }),
+          catch: FileReadError.wrap(),
         }),
       );
       // The size cap only applies to `inline` storage — `Blob.fromBytes` enforces it internally;

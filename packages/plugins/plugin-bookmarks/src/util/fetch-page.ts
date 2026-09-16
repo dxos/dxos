@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { BaseError, messageOf } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 /**
@@ -90,8 +90,7 @@ const fetchResource = (url: string): Effect.Effect<string, FetchError> =>
       }
       return response.text();
     },
-    catch: (error) =>
-      error instanceof FetchError ? error : new FetchError({ message: messageOf(error), cause: error }),
+    catch: FetchError.wrap({ ifTypeDiffers: true }),
   });
 
 const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
