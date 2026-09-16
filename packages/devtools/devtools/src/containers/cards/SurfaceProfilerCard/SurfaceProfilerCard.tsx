@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { IconButton } from '@dxos/react-ui';
+import { Grid, IconButton } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { StatCard } from '../../../components/index.ts';
 
@@ -44,6 +45,9 @@ const describe = (stat: SurfaceProfilerStats): string =>
     .filter(Boolean)
     .join('\n');
 
+/** Surface takes the slack; fixed average and maximum tracks make the rows a table. */
+const ROW_TRACKS = ['1fr', '3.5rem', '3.5rem'];
+
 export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCardProps) => (
   <StatCard.Root>
     <StatCard.Header
@@ -55,6 +59,15 @@ export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCard
       }
     />
     {stats.length === 0 && <StatCard.Row label='No surfaces profiled.' />}
+    {stats.length > 0 && (
+      <StatCard.Row unit='ms'>
+        <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>
+          <span className='text-start'>surface</span>
+          <span>avg</span>
+          <span>max</span>
+        </Grid>
+      </StatCard.Row>
+    )}
     {stats.map((stat) => {
       const trouble = stat.dataUnstable || (stat.errors ?? 0) > 0;
       return (
@@ -62,12 +75,20 @@ export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCard
           key={stat.id}
           icon={trouble ? 'ph--warning--regular' : undefined}
           iconClassNames='text-error-text'
-          label={stat.id.split('/').pop()}
-          title={describe(stat)}
-          value={`${stat.avgActualDuration.toFixed(1)} / ${stat.maxActualDuration.toFixed(1)}`}
           unit='ms'
-          warning={stat.avgActualDuration > SLOW_TIME}
-        />
+        >
+          <Grid
+            cols={ROW_TRACKS}
+            gap='sm'
+            classNames={mx('font-mono tabular-nums text-end', stat.avgActualDuration > SLOW_TIME && 'text-error-text')}
+          >
+            <span className='truncate text-start' title={describe(stat)}>
+              {stat.id.split('/').pop()}
+            </span>
+            <span>{stat.avgActualDuration.toFixed(1)}</span>
+            <span>{stat.maxActualDuration.toFixed(1)}</span>
+          </Grid>
+        </StatCard.Row>
       );
     })}
   </StatCard.Root>

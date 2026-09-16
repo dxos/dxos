@@ -4,6 +4,8 @@
 
 import React from 'react';
 
+import { Grid } from '@dxos/react-ui';
+
 import { StatCard } from '../../../components/index.ts';
 import { type DatabaseInfo } from '../../../hooks/index.ts';
 import { Unit } from '../util.tsx';
@@ -13,6 +15,9 @@ export type ReplicatorMessagesCardProps = {
 };
 
 type MessageRow = { type: string; sent: number; received: number; size?: number };
+
+/** Type takes the slack; fixed size, received and sent tracks make the rows a table. */
+const ROW_TRACKS = ['1fr', '4rem', '3.5rem', '3.5rem'];
 
 export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps) => {
   const replicator = database?.dataStats?.replicator;
@@ -26,12 +31,27 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
     <StatCard.Root>
       <StatCard.Header icon='ph--envelope--regular' title='Messages' info={`${received}↓ ${sent}↑`} />
       {rows.length === 0 && <StatCard.Row label='No messages.' />}
+      {rows.length > 0 && (
+        <StatCard.Row>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>
+            <span className='text-start'>type</span>
+            <span>KB</span>
+            <span>↓</span>
+            <span>↑</span>
+          </Grid>
+        </StatCard.Row>
+      )}
       {rows.map((row) => (
-        <StatCard.Row
-          key={row.type}
-          label={row.size !== undefined ? `${row.type} (${Unit.KB(row.size)} KB)` : row.type}
-          value={`${row.received.toLocaleString()}↓ ${row.sent.toLocaleString()}↑`}
-        />
+        <StatCard.Row key={row.type}>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>
+            <span className='truncate text-start' title={row.type}>
+              {row.type}
+            </span>
+            <span className='text-subdued'>{row.size !== undefined ? Unit.KB(row.size) : '–'}</span>
+            <span>{row.received.toLocaleString()}</span>
+            <span>{row.sent.toLocaleString()}</span>
+          </Grid>
+        </StatCard.Row>
       ))}
     </StatCard.Root>
   );

@@ -4,7 +4,9 @@
 
 import React, { Fragment, useState } from 'react';
 
+import { Grid } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/ui-theme';
 
 import { StatCard } from '../../../components/index.ts';
 import { type QueryInfo } from '../../../hooks/index.ts';
@@ -14,6 +16,9 @@ export type QueriesCardProps = {
   /** Most recent first. */
   queries?: QueryInfo[];
 };
+
+/** Shape takes the slack; fixed count and duration tracks line the figures up across rows. */
+const ROW_TRACKS = ['1fr', '2.5rem', '4rem'];
 
 /** One row per filter shape: how many queries share it and the slowest of them, disclosing each query. */
 export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
@@ -28,19 +33,15 @@ export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
         const open = expanded === shape;
         return (
           <Fragment key={shape}>
-            <StatCard.Row
-              open={open}
-              onToggle={(open) => setExpanded(open ? shape : undefined)}
-              label={
-                <span className='font-mono'>
-                  {group.length} · {shape}
+            <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? shape : undefined)} unit='ms'>
+              <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end'>
+                <span className='truncate text-start' title={shape}>
+                  {shape}
                 </span>
-              }
-              title={`${group.length} queries`}
-              value={Unit.ms(slowest)}
-              unit='ms'
-              warning={slowest > SLOW_TIME}
-            />
+                <span className='text-subdued'>×{group.length}</span>
+                <span className={mx('tabular-nums', slowest > SLOW_TIME && 'text-error-text')}>{Unit.ms(slowest)}</span>
+              </Grid>
+            </StatCard.Row>
             {open && (
               <StatCard.Content>
                 <JsonHighlighter
