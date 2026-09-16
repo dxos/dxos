@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 
 import * as AtomEx from './AtomEx.ts';
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const TTL = 100;
 
 describe('AtomEx.makeRegistry', () => {
@@ -41,3 +40,5 @@ describe('AtomEx.makeRegistry', () => {
     expect(() => AtomEx.makeRegistry({ idleTTL: Duration.infinity })).toThrow();
   });
 });
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
