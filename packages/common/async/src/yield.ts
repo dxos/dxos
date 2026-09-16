@@ -71,6 +71,5 @@ export const yieldOrContinue = async (strategy: YieldStrategy): Promise<void> =>
   if (!shouldYield(strategy)) {
     return;
   }
-  sliceUntilNextTurn = undefined;
   await yieldToEventLoop();
 };

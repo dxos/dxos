@@ -6,15 +6,6 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { type YieldStrategy, yieldOrContinue } from './yield.ts';
 
-const yielded = async (strategy: YieldStrategy): Promise<boolean> => {
-  let ran = false;
-  setTimeout(() => {
-    ran = true;
-  }, 0);
-  await yieldOrContinue(strategy);
-  return ran;
-};
-
 describe('yieldOrContinue', () => {
   let now = 0;
 
@@ -54,4 +45,19 @@ describe('yieldOrContinue', () => {
     now += 1_000;
     expect(await yielded('idle')).toBe(false);
   });
+
+  test('yields every call made after the budget is spent in the same turn', async ({ expect }) => {
+    expect(await yielded('idle')).toBe(false);
+    now += 6;
+    expect(await Promise.all([yielded('idle'), yielded('idle')])).toEqual([true, true]);
+  });
 });
+
+const yielded = async (strategy: YieldStrategy): Promise<boolean> => {
+  let ran = false;
+  setTimeout(() => {
+    ran = true;
+  }, 0);
+  await yieldOrContinue(strategy);
+  return ran;
+};
