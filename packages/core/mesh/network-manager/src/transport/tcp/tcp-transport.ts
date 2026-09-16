@@ -162,8 +162,22 @@ const socketToDuplexStream = (socket: Socket): DuplexStream => ({
   writable: new WritableStream<Uint8Array>({
     write: async (chunk) => {
       if (!socket.write(chunk)) {
-        // `drain` is the socket's backpressure signal, mapped onto the write promise.
-        await new Promise<void>((resolve) => socket.once('drain', resolve));
+        // `drain` is the socket's backpressure signal, mapped onto the write promise. An error or
+        // a close while parked here must settle it too, or the writer outlives the transport.
+        await new Promise<void>((resolve, reject) => {
+          const settle = (err?: Error) => {
+            socket.off('drain', onDrain);
+            socket.off('error', onError);
+            socket.off('close', onClose);
+            err ? reject(err) : resolve();
+          };
+          const onDrain = () => settle();
+          const onError = (err: Error) => settle(err);
+          const onClose = () => settle(new Error('Socket closed while awaiting drain.'));
+          socket.once('drain', onDrain);
+          socket.once('error', onError);
+          socket.once('close', onClose);
+        });
       }
     },
     close: () => {

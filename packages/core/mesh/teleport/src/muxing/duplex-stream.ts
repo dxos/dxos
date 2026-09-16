@@ -42,13 +42,18 @@ export const readAll = async (
   onChunk: (chunk: Uint8Array) => void,
 ): Promise<void> => {
   const reader = readable.getReader();
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) {
-      return;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        return;
+      }
+      if (value) {
+        onChunk(value);
+      }
     }
-    if (value) {
-      onChunk(value);
-    }
+  } finally {
+    // Otherwise the caller can never re-read, cancel or pipe the stream after this returns.
+    reader.releaseLock();
   }
 };

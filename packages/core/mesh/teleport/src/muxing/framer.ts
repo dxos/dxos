@@ -12,6 +12,9 @@ import { type RpcPort } from './rpc-port.ts';
 
 const FRAME_LENGTH_SIZE = 2;
 
+/** Largest payload a 16-bit length prefix can describe. */
+const MAX_FRAME_PAYLOAD = 0xffff;
+
 /**
  * Bytes the readable side queues before `send` starts reporting backpressure.
  * A byte-denominated strategy is what makes `desiredSize` an exact queued-byte count for stats.
@@ -244,6 +247,12 @@ export const decodeFrame = (
 };
 
 export const encodeFrame = (payload: Uint8Array): Uint8Array => {
+  if (payload.length > MAX_FRAME_PAYLOAD) {
+    // `setUint16` would wrap, and the peer would read the overflow as further frames — silently
+    // desynchronising the stream rather than failing here.
+    throw new RangeError(`Frame payload exceeds ${MAX_FRAME_PAYLOAD} bytes: ${payload.length}.`);
+  }
+
   const frame = new Uint8Array(FRAME_LENGTH_SIZE + payload.length);
   new DataView(frame.buffer).setUint16(0, payload.length);
   frame.set(payload, FRAME_LENGTH_SIZE);
