@@ -20,7 +20,7 @@ export const PerformanceCard = ({ entries = [] }: PerformanceCardProps) => (
       title='Performance'
       info={entries.length.toLocaleString()}
     />
-    {entries.length === 0 && <StatCard.Row label='No entries.' />}
+    {entries.length === 0 && <StatCard.Row span label='No entries.' />}
     {entries.map((entry, index) => {
       const label = [entry.entryType, entry.name].filter(Boolean).join('/');
       return (

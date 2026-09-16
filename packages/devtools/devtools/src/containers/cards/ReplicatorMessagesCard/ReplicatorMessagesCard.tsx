@@ -35,7 +35,7 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
         title='Messages'
         info={`${received}↓ ${sent}↑`}
       />
-      {rows.length === 0 && <StatCard.Row label='No messages.' />}
+      {rows.length === 0 && <StatCard.Row span label='No messages.' />}
       {rows.length > 0 && (
         <StatCard.Row>
           <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>

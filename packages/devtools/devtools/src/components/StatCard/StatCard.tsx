@@ -97,6 +97,8 @@ type StatCardRowProps = PropsWithChildren<
     title?: string;
     /** Trailing gutter control; takes the gutter over `unit`. */
     action?: ReactNode;
+    /** Run the content through the trailing gutter (columns 2–3); by default it stays in the content track so values line up. */
+    span?: boolean;
     warning?: boolean;
     /** A selectable row: clicking it reports, and `current` marks the selected one. */
     onClick?: () => void;
@@ -106,8 +108,8 @@ type StatCardRowProps = PropsWithChildren<
 
 /**
  * A label/value row: icon, disclosure toggle or control in the leading gutter, a unit or control in
- * the trailing one. With nothing trailing, the content runs through the trailing gutter — via an
- * explicit `grid-column-end`, since `Card.Row` places its children by `col-start` only. `children`
+ * the trailing one. `span` runs the content through the trailing gutter — via an explicit
+ * `grid-column-end`, since `Card.Row` places its children by `col-start` only. `children`
  * replace the label/value pair for rows that need their own columns (a `Grid`).
  */
 const StatCardRow = ({
@@ -122,6 +124,7 @@ const StatCardRow = ({
   unit,
   title,
   action,
+  span,
   warning,
   onClick,
   current,
@@ -153,7 +156,7 @@ const StatCardRow = ({
         align='center'
         justify='between'
         gap='sm'
-        classNames={['min-w-0 text-xs', !trailing && '[grid-column-end:span_2]']}
+        classNames={['min-w-0 text-xs', span && !trailing && '[grid-column-end:span_2]']}
       >
         {children ?? (
           <>

@@ -45,7 +45,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
           onCopy && <IconButton iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
         }
       />
-      {spaces.length === 0 && <StatCard.Row label='No spaces.' />}
+      {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
       {spaces.length > 0 && (
         <StatCard.Row>
           <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>

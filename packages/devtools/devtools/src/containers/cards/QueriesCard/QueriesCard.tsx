@@ -32,7 +32,7 @@ export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
         title='Queries'
         info={queries.length.toLocaleString()}
       />
-      {shapes.length === 0 && <StatCard.Row label='No queries.' />}
+      {shapes.length === 0 && <StatCard.Row span label='No queries.' />}
       {shapes.map(([shape, group]) => {
         const slowest = Math.max(...group.map((query) => query.metrics.executionTime ?? 0));
         const open = expanded === shape;

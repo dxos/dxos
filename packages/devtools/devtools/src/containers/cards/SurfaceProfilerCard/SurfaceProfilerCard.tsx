@@ -139,7 +139,7 @@ export const SurfaceProfilerCard = ({
           action={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
         />
       )}
-      {groups.length === 0 && <StatCard.Row label='No surfaces mounted.' />}
+      {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
           <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>

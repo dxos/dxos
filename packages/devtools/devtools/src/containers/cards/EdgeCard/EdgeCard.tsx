@@ -116,6 +116,7 @@ export const EdgeCard = ({ edge, status, onRefresh, onCopy }: EdgeCardProps) => 
               key={index}
               icon='ph--warning--regular'
               iconClassNames='text-warning-text'
+              span
               label={problem}
               title={problem}
             />

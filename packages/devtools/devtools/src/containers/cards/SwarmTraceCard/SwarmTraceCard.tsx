@@ -42,8 +42,8 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
           )
         }
       />
-      {!available && <StatCard.Row label='No remote trace monitor (local-only deployment).' />}
-      {available && messages.length === 0 && <StatCard.Row label='No announcements received.' />}
+      {!available && <StatCard.Row span label='No remote trace monitor (local-only deployment).' />}
+      {available && messages.length === 0 && <StatCard.Row span label='No announcements received.' />}
       {messages.map((received) => {
         const summary = formatSummary(received);
         const open = expanded === received.id;
