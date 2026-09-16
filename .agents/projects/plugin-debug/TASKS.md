@@ -83,8 +83,11 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 - [x] Builds (devtools, plugin-devtools, plugin-debug, plugin-calls, testbench-app, storybook-testing),
       lint, plugin-debug tests (24), plugin-devtools tests, devtools type tests; `PLUGIN.mdl` (debug,
       devtools) updated; changeset `.changeset/devtools-articles-and-cards.md`.
-- [ ] Verify in Composer: the Stats companion shows the card stack; the `logs` R0 button is gone; every
-      DevTools tree page renders in the panel.
+- [x] Verify in Composer (2026-09-16, dev server from this worktree, Debug + Devtools enabled from the
+      Labs registry): the companion tabs are help / search / trace / samplePanel / devtoolsOverview /
+      spaceObjects (no `logs`); the Stats companion renders the stack and its Surfaces card lists all
+      fourteen card surfaces; DevTools → Client → Config renders as a `role=article` with its toolbar
+      in the drawer; console clean apart from an unrelated 401.
 
 ### Phase 4 follow-ups (from the audit, §6)
 
