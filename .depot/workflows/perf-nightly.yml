@@ -82,12 +82,12 @@ jobs:
         id: flows
         continue-on-error: true
         env:
-          # `heavy` is NOT in the default sweep: its fixture is unsupported through the operation
-          # layer (see `spec/PERF.mdl`), so including it would fail the flow step every night —
-          # and because the trending gate below requires a successful flow, one unsupported tier
-          # would suppress the rows the OTHER tiers produced. Available via `inputs.scales` for
-          # whoever builds the archive path.
-          SCALES: ${{ inputs.scales || 'smoke,working' }}
+          # `smoke` is the only tier in the default sweep: `working` and `heavy` cannot be built
+          # through the operation layer (measured — see `spec/PERF.mdl`), so including either would
+          # fail the flow step every night, and because the trending gate below requires a
+          # successful flow, one unsupported tier would suppress the rows the OTHER tiers produced.
+          # Both stay available via `inputs.scales` for whoever builds the archive path.
+          SCALES: ${{ inputs.scales || 'smoke' }}
           MODES: ${{ inputs.modes || 'measure,diagnose' }}
           DX_PWA: 'false'
         run: |

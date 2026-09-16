@@ -71,15 +71,16 @@ test QA-1: A project whose task set is large
       `tasks=10000,depth=3,projects=5` (heavy). The label is the join key for a trend, so it never
       varies within a tier
     - >-
-      THE FIXTURE PATH BOUNDS THE TIERS. Generation runs at ~420ms per task through the operation
-      layer (five samples: 80.8-84.6s for 200 tasks), because each task is one `tasks.create`
-      whose write appends to a growing `tasks` array — the rate does not improve with scale. The
-      smoke tier costs ~82s; the working tier costs ~14 minutes of setup before a single stage
-      runs, and a first attempt expired mid-fixture on a flat 15-minute budget. The heavy tier
-      would cost over an hour and is NOT reachable this way: it needs the archive path
-      (`buildArchive` -> `client.spaces.import`, building the graph headlessly in node and
-      importing it), which is unbuilt. Treat `heavy` as unsupported until that exists rather than
-      as a tier that merely needs patience
+      THE FIXTURE PATH BOUNDS THE TIERS, AND SMOKE IS THE ONLY ONE IT REACHES. Generation runs at
+      ~420ms per task at 200 tasks (five samples: 80.8-84.6s), because each task is one
+      `tasks.create` whose write appends to a growing `tasks` array — so the rate gets WORSE as the
+      array grows, not better. Two working-tier attempts establish that: a flat 15-minute budget
+      expired mid-fixture, and so did a 24-minute budget derived from the smoke rate, neither
+      reaching a single stage. 2,000 tasks therefore cost over 1,380s, above 690ms each. The heavy
+      tier is five times further out again. Both are NOT reachable this way: they need the archive
+      path (`buildArchive` -> `client.spaces.import`, building the graph headlessly in node and
+      importing it), which is unbuilt. `working` and `heavy` are refused up front until it exists
+      rather than treated as tiers that merely need patience
     - the fixture has created `projects` Projects via `org.dxos.operation.projects.create`, each with
       `tasks / projects` tasks filed into its own task set via `org.dxos.operation.tasks.create`,
       nested to `depth` and spread across three milestones
@@ -158,8 +159,9 @@ test QA-1: A project whose task set is large
 ```mdl
 suite perf-nightly: The measured flows, from main
   desc: |
-    Runs both modes at every scale tier. `measure` rows are trended in PostHog; `diagnose`
-    artifacts are uploaded for whoever reads a regression and never trended.
+    Runs both modes at the `smoke` tier, the only one this fixture path can build. `measure` rows
+    are trended in PostHog; `diagnose` artifacts are uploaded for whoever reads a regression and
+    never trended.
   tags: [perf, nightly]
   tests: [QA-1]
 ```

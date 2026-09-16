@@ -76,11 +76,12 @@ const locatorTimeout = (mode: Mode): number => (mode === 'diagnose' ? 300_000 : 
  *
  * Generation runs at roughly 420ms per task through the operation layer (five samples at the smoke
  * tier: 80.8-84.6s for 200 tasks), and every task is one `tasks.create` whose write appends to a
- * growing `tasks` array — so the rate does not improve with scale. A flat 15-minute budget was
- * enough for 200 tasks and expired mid-fixture at 2,000, before a single stage ran.
+ * growing `tasks` array — so the rate gets WORSE with scale, not better: at 2,000 tasks the fixture
+ * had not finished after 1,380s, i.e. above 690ms each.
  *
  * The per-task term dominates, which is the finding: the operation layer is the wrong fixture path
- * above a couple of thousand objects, and no budget fixes that — see `spec/PERF.mdl`.
+ * above a few hundred objects, and no budget fixes that — see `spec/PERF.mdl`. The figure below is
+ * therefore a smoke-tier rate and a lower bound, used only to size the one supported tier.
  */
 const FIXTURE_MS_PER_TASK = 420;
 
@@ -92,12 +93,16 @@ const testBudget = (scale: Scale): number => scale.tasks * FIXTURE_MS_PER_TASK +
 /**
  * Tiers this fixture path cannot build.
  *
- * `heavy` would need ~70 minutes of `tasks.create` calls before a single stage, which exceeds even
- * the config's outer bound — so it would expire at the CONFIG level, reporting no stage and no
- * reason. Refused up front instead, in seconds, naming what is missing: the archive path
- * (`buildArchive` -> `client.spaces.import`). See `spec/PERF.mdl`.
+ * MEASURED, not predicted: a `working` run given a 24-minute budget derived from the smoke tier's
+ * rate expired mid-fixture, having produced no `fixture built` line and no stage — so 2,000 tasks
+ * cost more than 1,380s, above 690ms each, and the rate DEGRADES with set size rather than holding
+ * at the smoke tier's 420ms. `heavy` is five times further out again.
+ *
+ * Refused up front, in seconds, naming what is missing — the archive path (`buildArchive` ->
+ * `client.spaces.import`) — rather than expiring at the config level with no stage and no reason.
+ * See `spec/PERF.mdl`.
  */
-const UNSUPPORTED_SCALES = new Set(['heavy']);
+const UNSUPPORTED_SCALES = new Set(['working', 'heavy']);
 
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
