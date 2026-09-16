@@ -13,20 +13,18 @@ import { File } from '@dxos/types';
 
 import { FileCapabilities, FileLimits, FileOperation, Settings } from '#types';
 
-export class UnsupportedFileTypeError extends Error {
+export class UnsupportedFileTypeError extends BaseError.extend('UnsupportedFileTypeError') {
   constructor(public readonly type: string) {
-    super(`Unsupported file type: ${type}`);
-    this.name = 'UnsupportedFileTypeError';
+    super({ message: `Unsupported file type: ${type}` });
   }
 }
 
-export class FileTooLargeError extends Error {
+export class FileTooLargeError extends BaseError.extend('FileTooLargeError') {
   constructor(
     public readonly size: number,
     public readonly limit: number = Blob.MAX_INLINE_SIZE,
   ) {
-    super(`File is too large: ${size} bytes (limit: ${limit} bytes)`);
-    this.name = 'FileTooLargeError';
+    super({ message: `File is too large: ${size} bytes (limit: ${limit} bytes)` });
   }
 }
 
