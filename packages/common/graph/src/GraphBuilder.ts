@@ -260,12 +260,9 @@ export class GraphBuilder<
   readonly _connectorPreviousArgs = new Map<string, Arg[]>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
-  /** The installed retention port, if any; see {@link setRetention}. */
   _retention?: Retention;
   _unsubscribeRetention?: CleanupFn;
-  /** The roots the last collection released. */
   _evicted: ReadonlySet<string> = new Set();
-  /** Ids released and not yet materialized again; see {@link wasReleased}. */
   readonly _released = new Set<string>();
   _collectScheduled = false;
   _collectPromise: Promise<void> = Promise.resolve();
@@ -402,8 +399,7 @@ export class GraphBuilder<
     }
   }
 
-  /** Collects on a task of its own, so a release never lands inside a flush. */
-  _scheduleCollect(): void {
+  _collectOnOwnTask(): void {
     if (!this._collectScheduled) {
       this._collectScheduled = true;
       this._collectPromise = this._schedule(() => {
@@ -413,36 +409,33 @@ export class GraphBuilder<
     }
   }
 
-  /**
-   * Releases below the port's roots when the set differs from the last one released, so a root
-   * expanded again under the same answer stays loaded.
-   */
   _collect(): void {
     if (!this._retention) {
       return;
     }
 
-    // Everything hangs below the graph root, so it is never a releasable unit.
     const roots = new Set(this._registry.get(this._retention.evictable).filter((id) => id !== GraphNode.RootId));
     const previous = this._evicted;
     if (roots.size === previous.size && [...roots].every((id) => previous.has(id))) {
       return;
     }
 
-    // A root's inline descendants arrive with the root, in its producer's output, so they stay with it;
-    // releasing one would tear down that producer, which for a workspace is the graph root's connector.
     const released = new Set(this._store.subgraph(roots));
+    this._keepInlineOfRetainedProducers(released, roots);
+
+    if (released.size > 0) {
+      release(this, [...released]);
+    }
+    this._evicted = roots;
+  }
+
+  _keepInlineOfRetainedProducers(released: Set<string>, roots: ReadonlySet<string>): void {
     for (const [key, inline] of this._connectorPreviousInlineIds) {
       const producer = relationFromConnectorKey(key).id;
       if (!roots.has(producer) && !released.has(producer)) {
         inline.forEach((id) => released.delete(id));
       }
     }
-
-    if (released.size > 0) {
-      release(this, [...released]);
-    }
-    this._evicted = roots;
   }
 
   /**
@@ -554,7 +547,6 @@ export class GraphBuilder<
     this._onRemoveNodes([id]);
   }
 
-  /** {@link _onRemoveNode} for many ids at once, so a layer can unwind its bookkeeping in one pass. */
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
       this._nodeExtensions.delete(id);
@@ -851,13 +843,13 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   builder._store.release(ids);
 };
 
-/** Installs the retention port, or removes it with `undefined`; the builder usually predates the policy. */
+/** Installs the retention port, or removes it with `undefined`. */
 export const setRetention = (builder: Any, retention: Retention | undefined): void => {
   builder._unsubscribeRetention?.();
   builder._retention = retention;
   builder._evicted = new Set();
   builder._unsubscribeRetention = retention
-    ? builder._registry.subscribe(retention.evictable, () => builder._scheduleCollect(), { immediate: true })
+    ? builder._registry.subscribe(retention.evictable, () => builder._collectOnOwnTask(), { immediate: true })
     : undefined;
 };
 

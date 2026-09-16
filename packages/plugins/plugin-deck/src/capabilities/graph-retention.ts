@@ -27,7 +27,7 @@ export default Capability.makeModule(
           rootChildren: get(graph.connections(GraphNode.RootId, 'child')).map(({ id }) => id),
           activeDeck,
           previousDeck,
-          active: [...get(layoutAtom).active, ...get(pendingPlanks)],
+          retainedPlanks: [...get(layoutAtom).active, ...get(pendingPlanks)],
         });
       }).pipe(Atom.withEquality(sameWorkspaces)),
     };

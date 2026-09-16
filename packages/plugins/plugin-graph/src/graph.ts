@@ -56,7 +56,6 @@ export default Capability.makeModule(
       { immediate: true },
     );
 
-    // Contributed by a plugin that loads after this one.
     const retentionAtom = yield* Capability.atom(AppCapabilities.AppGraphRetention);
     const unsubscribeRetention = registry.subscribe(
       retentionAtom,

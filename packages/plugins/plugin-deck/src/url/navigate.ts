@@ -74,7 +74,7 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   const pairs: UrlPath.Pair[] = [];
   const navigatedIds = new Map<Navigation.PlankSegment, string>();
   for (const nodeId of active) {
-    const segment = Navigation.plankSegment(builder, segments, nodeId);
+    const segment = Navigation.recordedOrGraphSegment(builder, segments, nodeId);
     const pair = segment && Navigation.plankPair(segment, nodeId);
     if (!segment || !pair) {
       log.error('node has no URL binding, so it cannot be opened', {

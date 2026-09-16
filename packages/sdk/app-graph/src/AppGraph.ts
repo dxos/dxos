@@ -788,7 +788,6 @@ export const release = <T extends WritableGraph>(graph: T, ids: readonly string[
   return graph;
 };
 
-/** Forgets that any relation of `ids` was ever expanded, so the next read expands it again. */
 const releaseExpansions = (internal: GraphImpl, ids: ReadonlySet<string>): void => {
   for (const set of [internal._expanded, internal._pendingExpands]) {
     for (const key of set) {

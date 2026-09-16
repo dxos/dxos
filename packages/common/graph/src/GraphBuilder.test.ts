@@ -338,8 +338,17 @@ describe('GraphBuilder', () => {
   });
 });
 
+const scheduleOnMacrotasks = (builder: GraphBuilder.Any) => {
+  builder._schedule = (callback) =>
+    new Promise((resolve) =>
+      setTimeout(() => {
+        callback();
+        resolve();
+      }),
+    );
+};
+
 describe('retention', () => {
-  /** Root fans out to workspaces, each of which fans out to its own items. */
   const workspaces = () => {
     const harness = setup();
     GraphBuilder.addExtension(harness.builder, {
@@ -361,7 +370,6 @@ describe('retention', () => {
     await GraphBuilder.flush(builder);
   };
 
-  /** Both workspaces loaded, with a port whose answer the test sets. */
   const loaded = async () => {
     const harness = workspaces();
     await visit(harness, GraphNode.RootId);
@@ -423,14 +431,7 @@ describe('retention', () => {
   test('flush waits for a collection the flush itself triggers', async () => {
     const harness = setup();
     const { builder, registry, children } = harness;
-    // On macrotasks, as the app builder schedules; on microtasks the collection would outrun the await.
-    builder._schedule = (callback) =>
-      new Promise((resolve) =>
-        setTimeout(() => {
-          callback();
-          resolve();
-        }),
-      );
+    scheduleOnMacrotasks(builder);
     const ids = Atom.make(['w0', 'w1']).pipe(Atom.keepAlive);
     GraphBuilder.addExtension(builder, {
       id: 'children',
@@ -445,7 +446,6 @@ describe('retention', () => {
     await visit(harness, GraphNode.RootId);
     await visit(harness, 'root/w0');
 
-    // The answer only changes once a flush has added w2 under the root.
     GraphBuilder.setRetention(builder, {
       evictable: Atom.make((get) =>
         get(builder.children(GraphNode.RootId)).some(({ id }) => id === 'root/w2') ? ['root/w0'] : [],
@@ -487,7 +487,6 @@ describe('retention', () => {
     expect(children('root/w')).to.deep.equal(['root/w/x']);
     expect(children('root/w/x')).to.deep.equal([]);
 
-    // The graph root's connector was not torn down, so a new workspace still arrives.
     registry.set(ids, ['w', 'v']);
     await GraphBuilder.flush(builder);
     expect(children(GraphNode.RootId)).to.deep.equal(['root/w', 'root/v']);

@@ -19,16 +19,15 @@ const [a, b, c, d] = [SPACE_A, SPACE_B, SPACE_C, SPACE_D].map((id) => GraphPath.
 
 describe('evictableWorkspaces', () => {
   test('names every space workspace except the active and previous ones', ({ expect }) => {
-    expect(evictableWorkspaces({ rootChildren: [a, b, c, d], activeDeck: c, previousDeck: a, active: [] })).to.deep.eq([
-      b,
-      d,
-    ]);
+    expect(
+      evictableWorkspaces({ rootChildren: [a, b, c, d], activeDeck: c, previousDeck: a, retainedPlanks: [] }),
+    ).to.deep.eq([b, d]);
   });
 
   test('keeps a workspace a plank on screen belongs to', ({ expect }) => {
     const plank = GraphPath.getSpacePath(SPACE_B, 'collections', 'x');
     expect(
-      evictableWorkspaces({ rootChildren: [a, b, c], activeDeck: c, previousDeck: a, active: [plank] }),
+      evictableWorkspaces({ rootChildren: [a, b, c], activeDeck: c, previousDeck: a, retainedPlanks: [plank] }),
     ).to.deep.eq([]);
   });
 
@@ -45,7 +44,7 @@ describe('evictableWorkspaces', () => {
         rootChildren,
         activeDeck: DeckSchema.DEFAULT_DECK_ID,
         previousDeck: GraphNode.RootId,
-        active: [],
+        retainedPlanks: [],
       }),
     ).to.deep.eq([a]);
   });

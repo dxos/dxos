@@ -604,7 +604,11 @@ export abstract class AbstractGraphModel<
       }
     }
 
-    // A dropped node leaves its children held from outside, so they are checked again in turn.
+    this.#dropHeldFromOutside(collected, excluded);
+    return [...collected];
+  }
+
+  #dropHeldFromOutside(collected: Set<string>, excluded: ReadonlySet<string>): void {
     const pending = [...collected];
     while (pending.length > 0) {
       const candidate = pending.pop();
@@ -621,8 +625,6 @@ export abstract class AbstractGraphModel<
         }
       }
     }
-
-    return [...collected];
   }
 
   removeNodes(ids: string[], options?: { detachEdges?: boolean }): Model {

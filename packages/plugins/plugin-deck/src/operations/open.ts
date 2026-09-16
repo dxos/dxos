@@ -47,7 +47,6 @@ import {
   updateActiveDeck,
 } from '../util/index.ts';
 
-/** Holds `ids` as pending planks around `effect`, so the graph keeps their workspaces loaded meanwhile. */
 const withPendingPlanks = <A, E, R>(ids: readonly string[], effect: Effect.Effect<A, E, R>) =>
   Effect.gen(function* () {
     if (ids.length === 0) {
@@ -85,12 +84,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      // A missing subject the builder released is being rebuilt; one it never released may never arrive.
-      const unloaded = input.subject.filter(
+      const releasedSubjects = input.subject.filter(
         (id) => Option.isNone(AppGraph.getNode(graph, id)) && AppGraphBuilder.wasReleased(builder, id),
       );
       yield* withPendingPlanks(
-        unloaded,
+        releasedSubjects,
         Effect.gen(function* () {
           for (const subjectId of input.subject) {
             NotFound.expandPath(graph, subjectId);
@@ -102,7 +100,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
               yield* applyWorkspace(input.workspace);
             }
           }
-          yield* awaitNodes(graph, unloaded, RESOLVE_TIMEOUT_MS);
+          yield* awaitNodes(graph, releasedSubjects, RESOLVE_TIMEOUT_MS);
 
           // Dedup subjects against the active deck using EID identity.
           // The same object can appear under different graph paths (e.g., via collections vs types).
@@ -221,7 +219,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
             const boundName = levelOpen?.name ?? input.name;
             const segmentOfId = (id: string) =>
-              Navigation.plankSegment(builder, segments, id) ?? Navigation.segmentOf(undefined, id);
+              Navigation.recordedOrGraphSegment(builder, segments, id) ?? Navigation.segmentOf(undefined, id);
             const nextSegments = next.map(segmentOfId);
             const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
             const plankNames = updatePlankNames(

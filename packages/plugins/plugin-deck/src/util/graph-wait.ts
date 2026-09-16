@@ -9,7 +9,6 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 
 import { openableChildren } from './openable-children.ts';
 
-/** Waits up to `timeoutMs` for each of `ids` the graph does not hold yet. */
 export const awaitNodes = (
   graph: AppGraph.ReadableGraph,
   ids: readonly string[],
@@ -24,7 +23,6 @@ export const awaitNodes = (
     { concurrency: 'unbounded', discard: true },
   );
 
-/** The first openable child of `id` once the graph has one, or `undefined` after `timeoutMs`. */
 export const firstOpenableChild = (
   registry: Registry.AtomRegistry,
   graph: AppGraph.ExpandableGraph,
@@ -32,17 +30,25 @@ export const firstOpenableChild = (
   timeoutMs: number,
 ): Effect.Effect<string | undefined> =>
   Effect.callback<string>((resume) => {
-    const settle = () => {
-      const [first] = openableChildren(graph, id);
-      if (first) {
-        unsubscribe();
-        resume(Effect.succeed(first));
-      }
-    };
-    const unsubscribe = registry.subscribe(graph.connections(id, 'child'), settle);
-    // Checked after subscribing, so a child that arrived in between is not missed.
-    settle();
-    return Effect.sync(() => unsubscribe());
+    let found = false;
+    let unsubscribe: (() => void) | undefined;
+    unsubscribe = registry.subscribe(
+      graph.connections(id, 'child'),
+      () => {
+        const [first] = openableChildren(graph, id);
+        if (first && !found) {
+          found = true;
+          unsubscribe?.();
+          resume(Effect.succeed(first));
+        }
+      },
+      { immediate: true },
+    );
+    if (found) {
+      unsubscribe();
+    }
+
+    return Effect.sync(() => unsubscribe?.());
   }).pipe(
     Effect.timeoutOrElse({
       duration: `${timeoutMs} millis`,

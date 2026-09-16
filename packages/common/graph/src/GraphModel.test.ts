@@ -397,7 +397,6 @@ describe('Graph', () => {
 });
 
 describe('subgraph', () => {
-  /** `root` fans out to two branches; `a` holds a child and an action. */
   const build = () => {
     const model = new GraphModel.GraphModel();
     model.addNodes([{ id: 'root' }, { id: 'a' }, { id: 'a1' }, { id: 'a2' }, { id: 'b' }, { id: 'b1' }]);

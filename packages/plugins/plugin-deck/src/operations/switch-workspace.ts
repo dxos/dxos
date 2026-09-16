@@ -21,10 +21,11 @@ import { DeckCapabilities } from '#types';
 import { RESOLVE_TIMEOUT_MS, applyWorkspace, navigateDeck } from '../url/index.ts';
 import { firstOpenableChild, openableChildren } from '../util/index.ts';
 
-/** The pending seed for a switch into a workspace that had no children yet; the next switch supersedes it. */
-let seeding: Fiber.Fiber<void> | undefined;
+const replaceEmptyDeck = (params: Omit<Parameters<typeof navigateDeck>[0], 'method'>) =>
+  navigateDeck({ ...params, method: 'replace' });
 
-/** Opens the workspace's first child once its connectors produce one, if nothing was opened meanwhile. */
+let pendingSeed: Fiber.Fiber<void> | undefined;
+
 const seedWhenLoaded = Effect.fnUntraced(function* (
   graph: AppGraph.ExpandableGraph,
   subject: string,
@@ -35,8 +36,7 @@ const seedWhenLoaded = Effect.fnUntraced(function* (
   const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
   const deck = yield* DeckCapabilities.getDeck();
   if (first && state.activeDeck === subject && deck.active.length === 0) {
-    // Replace, so Back skips the empty deck the switch itself navigated to.
-    yield* navigateDeck({ workspace, active: [first], companionPlanks: deck.companionPlanks, method: 'replace' });
+    yield* replaceEmptyDeck({ workspace, active: [first], companionPlanks: deck.companionPlanks });
     yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
   }
 });
@@ -48,9 +48,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
-      if (seeding) {
-        yield* Fiber.interrupt(seeding);
-        seeding = undefined;
+      if (pendingSeed) {
+        yield* Fiber.interrupt(pendingSeed);
+        pendingSeed = undefined;
       }
 
       yield* applyWorkspace(input.subject);
@@ -77,8 +77,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
 
       if (seeds && seeded.length === 0) {
-        // An unloaded workspace has no children until its connectors emit, which may take longer than a flush.
-        seeding = yield* Effect.forkDetach(
+        pendingSeed = yield* Effect.forkDetach(
           seedWhenLoaded(graph, input.subject, workspace).pipe(
             Effect.catchCause((cause) =>
               Cause.hasInterruptsOnly(cause)

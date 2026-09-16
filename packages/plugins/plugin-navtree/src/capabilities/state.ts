@@ -128,11 +128,9 @@ export default Capability.makeModule(
       queueMicrotask(handleUpdate);
     });
 
-    // Expand the current workspace and the items open in it whenever it becomes current, since the
-    // graph may have unloaded it since it was last shown.
     yield* Effect.gen(function* () {
       const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
-      const expandOpen = (workspace: string | undefined) => {
+      const reexpandWorkspace = (workspace: string | undefined) => {
         if (!workspace) {
           return;
         }
@@ -148,11 +146,11 @@ export default Capability.makeModule(
       };
 
       let workspace = registry.get(layoutAtom).workspace;
-      expandOpen(workspace);
+      reexpandWorkspace(workspace);
       const unsubscribeWorkspace = registry.subscribe(layoutAtom, (layout) => {
         if (layout.workspace !== workspace) {
           workspace = layout.workspace;
-          expandOpen(workspace);
+          reexpandWorkspace(workspace);
         }
       });
       yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribeWorkspace()));

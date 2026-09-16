@@ -94,17 +94,12 @@ export const push = (next: Navigation, method: 'push' | 'replace' = 'push'): boo
 export const segmentForNode = (builder: AppGraphBuilder.GraphBuilder, nodeId: string): PlankSegment | undefined =>
   Option.match(PathResolution.representNode(builder, nodeId), { onNone: () => undefined, onSome: toSegment });
 
-/**
- * A plank's segment: the one it was opened under, else the one its node occupies. The record comes
- * first because it survives the graph unloading the node.
- */
-export const plankSegment = (
+export const recordedOrGraphSegment = (
   builder: AppGraphBuilder.GraphBuilder,
   segments: PlankSegments | undefined,
   id: string,
 ): PlankSegment | undefined => (segments?.[id] === undefined ? segmentForNode(builder, id) : segmentOf(segments, id));
 
-/** The pair a plank's segment stands for, in the workspace its own id names rather than the deck's. */
 export const plankPair = (segment: PlankSegment, id: string): UrlPath.Pair | undefined => {
   const workspace = GraphPath.getWorkspaceToken(id);
   return workspace === undefined ? undefined : fromSegment(segment, workspace);
