@@ -5,6 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -88,26 +89,17 @@ describe('NotarizationPlugin', () => {
     expect(peer2.feed.messages.map((c) => c.id)).to.deep.eq([credential.id]);
   });
 
-  test('edge notarization keeps retrying past its own HTTP retry budget on a transient failure', async ({ expect }) => {
-    // `notarizeCredentials` bounds a single call to a few HTTP attempts; a transient EDGE failure
-    // (e.g. "no active agent yet") must not make the plugin give up on EDGE altogether, since a
-    // replicant with no reachable peer has no other way to get admitted. Regression for that stall.
-    const OLD_ATTEMPT_CEILING = 3; // 1 request + the old MAX_EDGE_RETRIES of 2.
-
+  /** A plugin whose only notarization path is EDGE, talking to `notarizeResponse` over a stubbed `fetch`. */
+  const setupEdgeOnlyPlugin = async (notarizeResponse: () => Response) => {
+    // Scoped to this plugin's own space: a previous test's retry loop can still have a request in
+    // flight when the next one stubs `fetch`, and it must not be counted here.
+    const spaceId = SpaceId.random();
     let notarizeAttempts = 0;
     const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
-        return new Response(null, { status: 200 });
-      }
-      if (url.includes('/notarization') && init?.method === 'POST') {
+      if (url.includes(`/spaces/${spaceId}/notarization`) && init?.method === 'POST') {
         notarizeAttempts++;
-        // Mirrors `EdgeResponse.failure` for `NotarizationHandler.notarizeCredentials`'s "no active
-        // agents yet" case: status 500, `Retry-After` set from `shouldRetryAfter`, no `data`.
-        return new Response(JSON.stringify({ success: false, message: 'No active agents in the space.' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json', 'Retry-After': '0' },
-        });
+        return notarizeResponse();
       }
       return new Response(JSON.stringify({ success: true, data: {} }), { status: 200 });
     });
@@ -116,10 +108,9 @@ describe('NotarizationPlugin', () => {
       vi.unstubAllGlobals();
     });
 
-    const edgeClient = new EdgeHttpClient('https://edge.example.com');
     const plugin = new NotarizationPlugin({
-      spaceId: SpaceId.random(),
-      edgeClient,
+      spaceId,
+      edgeClient: new EdgeHttpClient('https://edge.example.com'),
       edgeFeatures: create(Runtime_Client_EdgeFeaturesSchema, { feedReplicator: true }),
     });
     onTestFinished(async () => {
@@ -134,16 +125,54 @@ describe('NotarizationPlugin', () => {
       AdmittedFeed_Designation.CONTROL,
     );
 
-    const notarized = plugin.notarize({
-      credentials: [credential],
-      timeout: 0,
-      retryTimeout: 5,
-      edgeRetryJitter: 0,
-    });
+    return { plugin, credential, attempts: () => notarizeAttempts };
+  };
 
-    await vi.waitFor(() => expect(notarizeAttempts).toBeGreaterThan(OLD_ATTEMPT_CEILING), { timeout: 2_000 });
+  // `notarizeCredentials` bounds one call to `1 + MAX_EDGE_RETRIES` HTTP attempts.
+  const ATTEMPTS_PER_CALL = 3;
+
+  test('edge notarization keeps retrying while EDGE reports the failure retryable', async ({ expect }) => {
+    // "No active agents in the space" is EDGE telling the caller the owner's agent is not admitted
+    // yet and to come back — a replicant with no reachable peer has no other way in, so the plugin
+    // must outlast the per-call budget rather than giving up on EDGE for good.
+    const { plugin, credential, attempts } = await setupEdgeOnlyPlugin(
+      () =>
+        // Mirrors `EdgeResponse.failure` with `shouldRetryAfter`: `Retry-After` set, no `data`.
+        new Response(JSON.stringify({ success: false, message: 'No active agents in the space.' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', 'Retry-After': '0' },
+        }),
+    );
+
+    const notarized = plugin.notarize({ credentials: [credential], timeout: 0, retryTimeout: 5, edgeRetryJitter: 0 });
+    await vi.waitFor(() => expect(attempts()).toBeGreaterThan(ATTEMPTS_PER_CALL), { timeout: 2_000 });
 
     // Let the still-pending `notarize()` settle so it does not leak retry tasks past the test.
+    await plugin.processCredential(credential);
+    await notarized;
+  });
+
+  test('edge notarization stops once EDGE rejects the credential outright', async ({ expect }) => {
+    // Without `shouldRetryAfter` the failure is a verdict on the credential, not a transient state;
+    // retrying it would spin against EDGE forever.
+    const { plugin, credential, attempts } = await setupEdgeOnlyPlugin(
+      () =>
+        new Response(
+          JSON.stringify({ success: false, message: 'Credentials were not issued by a known space member.' }),
+          {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+    );
+
+    const notarized = plugin.notarize({ credentials: [credential], timeout: 0, retryTimeout: 5, edgeRetryJitter: 0 });
+    await vi.waitFor(() => expect(attempts()).toBeGreaterThan(0), { timeout: 2_000 });
+
+    // Long enough that a loop rescheduling at `retryTimeout` would have fired many times over.
+    await sleep(200);
+    expect(attempts()).toEqual(1);
+
     await plugin.processCredential(credential);
     await notarized;
   });

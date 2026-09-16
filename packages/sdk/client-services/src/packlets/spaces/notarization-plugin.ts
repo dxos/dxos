@@ -251,20 +251,17 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     ctx: Context,
     client: EdgeHttpClient,
     credentials: Credential[],
-    timeouts: NotarizationTimeouts & { jitter?: number },
+    timeouts: NotarizationEdgeTimeouts,
   ): void {
     const encodedCredentials = credentials.map((credential) => {
       const binary = toBinary(CredentialSchema, credential);
       return Buffer.from(binary).toString('base64');
     });
 
-    // A repeatable task, not a one-shot: `notarize({ timeout: 0 })` promises its caller an
-    // unbounded wait (see `_createWritableFeeds`'s "never times out"), but `notarizeCredentials`'s
-    // own retry budget (`MAX_EDGE_RETRIES`) only covers a handful of seconds. `EdgeResponse.failure`
-    // itself already tells the client this is transient (`No active agents in the space` while the
-    // owner's agent is still coming up) and to retry — a failure here must keep trying rather than
-    // give up for good, or a device whose only path to admission is EDGE (no reachable peer) stalls
-    // forever once the HTTP retries run out.
+    // A repeatable task, not a one-shot: `notarizeCredentials`'s own retry budget
+    // (`MAX_EDGE_RETRIES`) spans a few seconds, while the condition EDGE reports as retryable — the
+    // space owner's agent not admitted yet — can outlast it, and a device with no reachable peer has
+    // no other path to admission.
     const notarizeTask = new DeferredTask(ctx, async () => {
       try {
         await client.notarizeCredentials(
@@ -277,7 +274,11 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         log('edge notarization success');
       } catch (error: any) {
         handleEdgeError(error);
-        scheduleTask(ctx, () => notarizeTask.schedule(), timeouts.retryTimeout);
+        const retryAfterMs = edgeRetryDelay(error, timeouts);
+        if (retryAfterMs === undefined) {
+          return;
+        }
+        scheduleTask(ctx, () => notarizeTask.schedule(), retryAfterMs);
       }
     });
     notarizeTask.schedule();
@@ -425,6 +426,23 @@ const handleEdgeError = (error: any) => {
   }
 };
 
+/**
+ * How long to wait before asking EDGE to notarize again, or `undefined` to stop asking.
+ *
+ * EDGE decides both: it marks a failure retryable and names the delay (`shouldRetryAfter`, carried
+ * as `Retry-After`) only for a condition that clears on its own — an agent that is not admitted to
+ * the space yet. Anything else is a verdict on the credential itself, which no amount of retrying
+ * changes, so the caller is left to the peer path rather than spinning against EDGE forever.
+ */
+const edgeRetryDelay = (error: unknown, { retryTimeout, jitter = 0 }: NotarizationEdgeTimeouts): number | undefined => {
+  if (!(error instanceof EdgeCallFailedError) || !error.isRetryable) {
+    return undefined;
+  }
+  // Jitter for the same reason the per-call budget takes it: every device holding the space polls
+  // the same endpoint, and EDGE hands them all the same `Retry-After`.
+  return (error.retryAfterMs ?? retryTimeout) + Math.random() * jitter;
+};
+
 export type NotarizationTeleportExtensionProps = {
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
@@ -469,6 +487,8 @@ type NotarizationTimeouts = {
   retryTimeout: number;
   successDelay: number;
 };
+
+type NotarizationEdgeTimeouts = NotarizationTimeouts & { jitter?: number };
 
 type Services = {
   NotarizationService: NotarizationService;
