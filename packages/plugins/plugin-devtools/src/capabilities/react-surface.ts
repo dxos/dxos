@@ -36,7 +36,6 @@ import {
   SignalArticle,
   SqliteArticle,
   StorageArticle,
-  SurfaceProfilerCard,
   SwarmArticle,
   TimeSeriesCard,
   WorkflowArticle,
@@ -51,7 +50,13 @@ import {
 } from '#containers';
 import { Devtools } from '#types';
 
-import { EdgeCardSurface, SwarmTraceCardSurface, SyncCardSurface, devtoolsCard } from './DevtoolsCards.tsx';
+import {
+  EdgeCardSurface,
+  SurfaceProfilerCardSurface,
+  SwarmTraceCardSurface,
+  SyncCardSurface,
+  devtoolsCard,
+} from './DevtoolsCards.tsx';
 import {
   ActiveSpacePanel,
   EdgeTestingSurface,
@@ -155,10 +160,10 @@ export default Capability.makeModule(
         id: 'card.surfaceProfiler',
         filter: devtoolsCard,
         position: 5,
-        component: SurfaceProfilerCard,
+        component: SurfaceProfilerCardSurface,
         props: ({ data: { surfaceProfilerStats, onClearSurfaceProfiler } }) => ({
-          stats: surfaceProfilerStats,
-          onClear: onClearSurfaceProfiler,
+          surfaceProfilerStats,
+          onClearSurfaceProfiler,
         }),
       }),
       Surface.create({

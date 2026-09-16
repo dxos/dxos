@@ -48,6 +48,9 @@ export type SurfaceProfilerStats = {
  */
 class SurfaceProfilerStore {
   private _entries: SurfaceProfilerEntry[] = [];
+  // Cumulative per-surface stats: the entries buffer is a window, so a surface that rendered before
+  // its last MAX_ENTRIES renders would otherwise have no timings at all.
+  private _stats = new Map<string, SurfaceProfilerStats>();
   private _listeners = new Set<() => void>();
   private _snapshot: readonly SurfaceProfilerEntry[] = [];
   private _pendingNotify = false;
@@ -64,6 +67,7 @@ class SurfaceProfilerStore {
    * re-render re-triggers `record`, looping forever.
    */
   record(entry: SurfaceProfilerEntry) {
+    accumulate(this._stats, entry);
     this._entries.push(entry);
     if (this._entries.length > MAX_ENTRIES) {
       this._entries = this._entries.slice(-MAX_ENTRIES);
@@ -73,8 +77,14 @@ class SurfaceProfilerStore {
 
   clear() {
     this._entries = [];
+    this._stats = new Map();
     this._snapshot = [];
     this._notifySync();
+  }
+
+  /** Cumulative stats for every surface that rendered since the last clear, slowest maximum first. */
+  getStats(): SurfaceProfilerStats[] {
+    return [...this._stats.values()].map((stats) => ({ ...stats })).sort(byMaxDuration);
   }
 
   subscribe = (listener: () => void) => {
@@ -163,16 +173,17 @@ export const useSurfaceProfilerEntries = (): readonly SurfaceProfilerEntry[] => 
 };
 
 /**
- * Reads the current entries without subscribing: a profiled component that subscribed would record
- * an entry on every re-render the notification caused, and loop. Sample it on a schedule instead.
+ * Reads the cumulative per-surface stats without subscribing: a profiled component that subscribed
+ * would record an entry on every re-render the notification caused, and loop. Sample it on a
+ * schedule instead.
  */
-export const useSurfaceProfilerSnapshot = (): (() => readonly SurfaceProfilerEntry[]) => {
+export const useSurfaceProfilerSnapshot = (): (() => SurfaceProfilerStats[]) => {
   const store = useContext(SurfaceProfilerContext)?.store;
-  return useMemo(() => (store ? () => store.getSnapshot() : emptySnapshot), [store]);
+  return useMemo(() => (store ? () => store.getStats() : emptyStats), [store]);
 };
 
 /**
- * Returns aggregated stats grouped by surface id.
+ * Returns stats aggregated over the recent-entries window, grouped by surface id.
  */
 export const useSurfaceProfilerStats = (): SurfaceProfilerStats[] => {
   const entries = useSurfaceProfilerEntries();
@@ -182,41 +193,47 @@ export const useSurfaceProfilerStats = (): SurfaceProfilerStats[] => {
 /** Aggregates raw entries into per-surface stats, slowest maximum first. */
 export const aggregateSurfaceProfilerStats = (entries: readonly SurfaceProfilerEntry[]): SurfaceProfilerStats[] => {
   const statsMap = new Map<string, SurfaceProfilerStats>();
-
   for (const entry of entries) {
-    let stats = statsMap.get(entry.id);
-    if (!stats) {
-      stats = {
-        id: entry.id,
-        mountCount: 0,
-        updateCount: 0,
-        totalRenders: 0,
-        avgActualDuration: 0,
-        maxActualDuration: 0,
-        avgBaseDuration: 0,
-        lastActualDuration: 0,
-        lastCommitTime: 0,
-      };
-      statsMap.set(entry.id, stats);
-    }
+    accumulate(statsMap, entry);
+  }
+  return [...statsMap.values()].sort(byMaxDuration);
+};
 
-    if (entry.phase === 'mount') {
-      stats.mountCount++;
-    } else {
-      stats.updateCount++;
-    }
-    stats.totalRenders++;
-    stats.avgActualDuration =
-      (stats.avgActualDuration * (stats.totalRenders - 1) + entry.actualDuration) / stats.totalRenders;
-    stats.avgBaseDuration =
-      (stats.avgBaseDuration * (stats.totalRenders - 1) + entry.baseDuration) / stats.totalRenders;
-    stats.maxActualDuration = Math.max(stats.maxActualDuration, entry.actualDuration);
-    stats.lastActualDuration = entry.actualDuration;
-    stats.lastCommitTime = entry.commitTime;
+const byMaxDuration = (a: SurfaceProfilerStats, b: SurfaceProfilerStats) => b.maxActualDuration - a.maxActualDuration;
+
+/** Folds one entry into the running stats of its surface. */
+const accumulate = (statsMap: Map<string, SurfaceProfilerStats>, entry: SurfaceProfilerEntry) => {
+  let stats = statsMap.get(entry.id);
+  if (!stats) {
+    stats = {
+      id: entry.id,
+      mountCount: 0,
+      updateCount: 0,
+      totalRenders: 0,
+      avgActualDuration: 0,
+      maxActualDuration: 0,
+      avgBaseDuration: 0,
+      lastActualDuration: 0,
+      lastCommitTime: 0,
+    };
+    statsMap.set(entry.id, stats);
   }
 
-  return [...statsMap.values()].sort((a, b) => b.maxActualDuration - a.maxActualDuration);
+  if (entry.phase === 'mount') {
+    stats.mountCount++;
+  } else {
+    stats.updateCount++;
+  }
+  stats.totalRenders++;
+  stats.avgActualDuration =
+    (stats.avgActualDuration * (stats.totalRenders - 1) + entry.actualDuration) / stats.totalRenders;
+  stats.avgBaseDuration = (stats.avgBaseDuration * (stats.totalRenders - 1) + entry.baseDuration) / stats.totalRenders;
+  stats.maxActualDuration = Math.max(stats.maxActualDuration, entry.actualDuration);
+  stats.lastActualDuration = entry.actualDuration;
+  stats.lastCommitTime = entry.commitTime;
 };
+
+const emptyStats = (): SurfaceProfilerStats[] => [];
 
 /**
  * Clears all collected profiler entries.

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Grid, IconButton } from '@dxos/react-ui';
+import { Field, Grid, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -27,6 +27,9 @@ export type SurfaceProfilerStats = BaseSurfaceProfilerStats & {
 
 export type SurfaceProfilerCardProps = {
   stats?: SurfaceProfilerStats[];
+  /** Whether the surface highlight overlay is on; the row's switch is shown when both are given. */
+  debug?: boolean;
+  onDebugChange?: (debug: boolean) => void;
   onClear?: () => void;
 };
 
@@ -86,10 +89,10 @@ const describe = (group: RoleGroup): string =>
     .filter(Boolean)
     .join('\n');
 
-/** Role takes the slack; fixed count, average and maximum tracks make the rows a table. */
-const ROW_TRACKS = ['1fr', '2.5rem', '3.5rem', '3.5rem'];
+/** Role takes the slack; fixed count, average and maximum tracks line the figures up as a grid. */
+const ROW_TRACKS = ['1fr', '2rem', '2rem', '2rem'];
 
-export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCardProps) => {
+export const SurfaceProfilerCard = ({ stats = [], debug, onDebugChange, onClear }: SurfaceProfilerCardProps) => {
   const groups = groupByRole(stats);
   return (
     <StatCard.Root>
@@ -99,9 +102,17 @@ export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCard
         title='Surfaces'
         info={stats.length.toLocaleString()}
         action={
-          onClear && <IconButton iconOnly variant='ghost' icon='ph--trash--regular' label='Reset' onClick={onClear} />
+          onClear && (
+            <IconButton iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
+          )
         }
       />
+      {onDebugChange && (
+        <StatCard.Row
+          label='Highlight surfaces'
+          action={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
+        />
+      )}
       {groups.length === 0 && <StatCard.Row label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>

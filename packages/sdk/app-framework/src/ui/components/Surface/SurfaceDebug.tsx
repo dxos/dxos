@@ -24,7 +24,7 @@ import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceM
 declare global {
   interface Window {
     __DX_DEBUG__?: boolean;
-    __DX__?: { surfaces: (component?: string) => HTMLElement[] };
+    __DX__?: { surfaces: (component?: string) => HTMLElement[]; mounted: () => MountedSurface[] };
   }
 }
 
@@ -53,6 +53,9 @@ const ensureDebugApi = (): void => {
           component ? `${DX_SURFACE_TAG}[data-component="${component}"]` : DX_SURFACE_TAG,
         ),
       ),
+    // The registry's view, as the Stats companion samples it — compare with `surfaces()` when a
+    // mounted surface is missing from the list.
+    mounted: () => getMountedSurfaces(),
   };
 };
 
@@ -335,8 +338,9 @@ const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }
       ) : (
         <span
           className={mx(
-            concern ? 'text-rose-500' : 'text-green-500',
-            'absolute right-2 bottom-1 flex items-center p-1 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto',
+            concern ? 'text-error-text' : 'text-info-text',
+            // 'absolute right-1 bottom-1 flex items-center p-1 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto',
+            'dx-fullscreen border border-rose-500',
           )}
           title={metricSummary(info.id ?? '', metric)}
           onPointerDown={(ev) => ev.stopPropagation()}
@@ -345,7 +349,7 @@ const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }
             setExpand(true);
           }}
         >
-          {concern ? '⚠' : 'ⓘ'}
+          {/* {concern ? '⚠' : 'ⓘ'} */}
         </span>
       )}
     </div>

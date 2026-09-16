@@ -20,7 +20,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { stats: surfaceProfilerStats, onClear: () => {} },
+  args: { stats: surfaceProfilerStats, debug: false, onDebugChange: () => {}, onClear: () => {} },
 };
 
 export const Empty: Story = {};

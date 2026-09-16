@@ -4,13 +4,14 @@
 
 // Card surfaces whose data comes from a hook rather than the stack's `DevtoolsCardData`.
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { type Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   EdgeCard,
   type Stats,
+  SurfaceProfilerCard,
   type SurfaceProfilerStats,
   SwarmTraceCard,
   SyncCard,
@@ -42,6 +43,29 @@ export type EdgeCardSurfaceProps = Pick<DevtoolsCardData, 'stats'>;
 export const EdgeCardSurface = ({ stats }: EdgeCardSurfaceProps) => {
   const { status, refresh, copy } = useEdgeStatus();
   return <EdgeCard edge={stats.edge} status={status} onRefresh={refresh} onCopy={copy} />;
+};
+
+export type SurfaceProfilerCardSurfaceProps = Pick<DevtoolsCardData, 'surfaceProfilerStats' | 'onClearSurfaceProfiler'>;
+
+/** The profiler card with the surface highlight overlay's flag, which lives on `window`, mirrored in state. */
+export const SurfaceProfilerCardSurface = ({
+  surfaceProfilerStats,
+  onClearSurfaceProfiler,
+}: SurfaceProfilerCardSurfaceProps) => {
+  const [debug, setDebug] = useState(() => Surface.isDebugEnabled());
+  const handleDebugChange = useCallback((enabled: boolean) => {
+    Surface.setDebug(enabled);
+    setDebug(enabled);
+  }, []);
+
+  return (
+    <SurfaceProfilerCard
+      stats={surfaceProfilerStats}
+      debug={debug}
+      onDebugChange={handleDebugChange}
+      onClear={onClearSurfaceProfiler}
+    />
+  );
 };
 
 export const SwarmTraceCardSurface = () => {

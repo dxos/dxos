@@ -19,16 +19,15 @@ import { type DevtoolsCardData } from '../../capabilities/DevtoolsCards.tsx';
  */
 export const DevtoolsOverviewContainer = () => {
   const [stats, refreshStats] = useStats();
-  const getProfilerEntries = Surface.useProfilerSnapshot();
+  const getProfilerStats = Surface.useProfilerSnapshot();
   const clearSurfaceProfiler = Surface.useProfilerClear();
   const [surfaceProfilerStats, setSurfaceProfilerStats] = useState<SurfaceProfilerStats[]>([]);
 
-  // One row per surface mounted right now (the profiler's entries are a window of recent renders,
-  // not a registry), with its render timings and dispatch metrics joined on `surface/<id>/<role>`
-  // where they exist. The stack's own surfaces — the companion and every card on its role — are
+  // One row per surface mounted right now (the profiler records renders, not mounts), with its
+  // cumulative render timings and dispatch metrics joined on `surface/<id>/<role>` where they exist. The stack's own surfaces — the companion and every card on its role — are
   // left out so the panel does not measure itself.
   const sampleProfiler = useCallback(() => {
-    const timings = new Map(Surface.aggregateProfilerStats(getProfilerEntries()).map((stat) => [stat.id, stat]));
+    const timings = new Map(getProfilerStats().map((stat) => [stat.id, stat]));
     const metrics = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
     setSurfaceProfilerStats(
       Surface.getMounted()
@@ -60,7 +59,7 @@ export const DevtoolsOverviewContainer = () => {
         })
         .sort((a, b) => b.maxActualDuration - a.maxActualDuration || a.id.localeCompare(b.id)),
     );
-  }, [getProfilerEntries]);
+  }, [getProfilerStats]);
   useEffect(sampleProfiler, [sampleProfiler]);
 
   const handleRefresh = useCallback(() => {

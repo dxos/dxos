@@ -22,6 +22,7 @@ import { type Density, type ElevationLevel, type SlottableProps } from '@dxos/ui
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
+import { DensityProvider } from '../../providers/DensityProvider/index.ts';
 import { composable, composableProps, slottable } from '../../util/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 import { Button, IconButton } from '../Button/index.ts';
@@ -97,8 +98,16 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
         classNames={tx('card.root', { border, fullWidth, surface: elevationSurface(elevation) }, className)}
         role={role ?? 'group'}
       >
-        <div {...rest} {...(id && { 'data-object-id': id })} {...elevationAttrs(elevation)} ref={forwardedRef}>
-          {children}
+        <div
+          {...rest}
+          {...(id && { 'data-object-id': id })}
+          {...elevationAttrs(elevation)}
+          data-density={density}
+          ref={forwardedRef}
+        >
+          {/* As in Toolbar.Root: the attribute cascades `--dx-control`, but controls that stamp their
+              own `data-density` from context would shadow it, so the context is provided too. */}
+          {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
         </div>
       </Column.Root>
     );
