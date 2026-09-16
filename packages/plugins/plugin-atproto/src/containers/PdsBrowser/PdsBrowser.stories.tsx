@@ -13,7 +13,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Client } from '@dxos/client';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
@@ -42,7 +42,7 @@ const demoLens: Panproto.Lens = { adapters: [{ kind: 'scalar', wire: 'text', ech
 // A mapped type (its collection is "mapped" in the browser); registered per-story.
 class DemoNote extends Type.makeObject<DemoNote>(DXN.make('org.dxos.plugin.atproto.pdsDemoNote', '0.1.0'))(
   Schema.Struct({ title: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')) }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     AtprotoRecordAnnotation.set({ collection: NOTE_COLLECTION, rkey: 'tid', lens: demoLens }),
   ),
 ) {}

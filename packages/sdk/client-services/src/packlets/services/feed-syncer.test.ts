@@ -294,7 +294,8 @@ describe('FeedSyncer', () => {
       ])
       .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
 
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    // With a 60s pollingInterval, the client's next automatic poll is scheduled far in the
+    // future, so it deterministically has not pulled the second block yet.
     {
       const { blocks } = await clientFeedStore
         .query({

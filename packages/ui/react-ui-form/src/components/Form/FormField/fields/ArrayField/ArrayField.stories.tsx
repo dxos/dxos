@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
-import { FormLayoutAnnotation, FormOrderedAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
@@ -25,8 +25,8 @@ const Column = Schema.Struct({
 })
   .mapFields(Struct.map(Schema.mutableKey))
   .pipe(
-    LabelAnnotation.set(['name']),
-    FormLayoutAnnotation.set({
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.FormLayoutAnnotation.set({
       default: trim`
       <grid cols="2">
         <field name="name"/>
@@ -51,12 +51,12 @@ const Pipeline = Schema.Struct({
 
 const OrderedPipeline = Schema.Struct({
   ...headerFields,
-  columns: columnsField.pipe(FormOrderedAnnotation.set(true)),
+  columns: columnsField.pipe(Annotation.FormOrderedAnnotation.set(true)),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 const StringPipeline = Schema.Struct({
   ...headerFields,
-  columns: Schema.Array(Schema.String).pipe(FormOrderedAnnotation.set(true)),
+  columns: Schema.Array(Schema.String).pipe(Annotation.FormOrderedAnnotation.set(true)),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 type PipelineValues = { name?: string; description?: string; columns: readonly unknown[] };

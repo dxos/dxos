@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, Repo, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions.ts';
@@ -35,7 +34,10 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
     /** Owned agent instructions (created at the plugin layer; parented by `SetParent`). */
     instructions: Schema.optional(
-      Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set(true), FormInlineAnnotation.set(true)),
+      Ref.Ref(Instructions.Instructions).pipe(
+        Annotation.SetParent.set(true),
+        Annotation.FormInlineAnnotation.set(true),
+      ),
     ),
 
     /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
@@ -63,7 +65,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     repo: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'sky' }),
     // Only the project skill: filing created objects into `artifacts` is what a project-scoped
     // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so

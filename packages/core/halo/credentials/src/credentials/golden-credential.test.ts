@@ -5,6 +5,7 @@
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { describe, expect, test } from 'vitest';
 
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
@@ -109,7 +110,8 @@ describe('the assertion type_url a credential carries', () => {
     for (const candidate of [credential, withPrefixedAssertionUrl(credential)]) {
       const assertion = getCredentialAssertion(candidate);
       expect(assertion.$typeName).toEqual('dxos.halo.credentials.AuthorizedDevice');
-      expect(toPublicKey((assertion as any).deviceKey)?.toHex()).toEqual(deviceKey.toHex());
+      invariant(assertion.$typeName === 'dxos.halo.credentials.AuthorizedDevice');
+      expect(toPublicKey(assertion.deviceKey)?.toHex()).toEqual(deviceKey.toHex());
     }
   });
 });
@@ -135,6 +137,8 @@ const makeCredential = async () => {
 /** A clone of the credential carrying the spec-form `type.googleapis.com/` prefix `anyPack` writes. */
 const withPrefixedAssertionUrl = (credential: Credential): Credential => {
   const clone = fromBinary(CredentialSchema, toBinary(CredentialSchema, credential));
-  clone.subject!.assertion!.typeUrl = `type.googleapis.com/${clone.subject!.assertion!.typeUrl}`;
+  invariant(clone.subject, 'expected a credential with a subject');
+  invariant(clone.subject.assertion, 'expected a subject with an assertion');
+  clone.subject.assertion.typeUrl = `type.googleapis.com/${clone.subject.assertion.typeUrl}`;
   return clone;
 };

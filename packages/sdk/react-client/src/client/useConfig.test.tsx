@@ -13,17 +13,15 @@ import { useConfig } from './useConfig.ts';
 
 // TODO(burdon): Disabled in CI since flaky.
 describe.runIf(!process.env.CI)('Config hook', () => {
-  const render = () => useConfig();
-
   // TODO(wittjosiah): See client hook test.
   test.skip('should throw when used outside a context', () => {
-    expect(renderHook(render)).toThrow();
+    expect(renderHook(() => useConfig())).toThrow();
   });
 
   test('should return default client config', async () => {
     const { client } = await createClient();
     const wrapper = await createClientContextProvider(client);
-    const { result } = renderHook(render, { wrapper });
+    const { result } = renderHook(() => useConfig(), { wrapper });
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
     });
@@ -44,7 +42,7 @@ describe.runIf(!process.env.CI)('Config hook', () => {
 
     const { client } = await createClient({ config });
     const wrapper = await createClientContextProvider(client);
-    const { result } = renderHook(render, { wrapper });
+    const { result } = renderHook(() => useConfig(), { wrapper });
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
     });

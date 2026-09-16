@@ -6,9 +6,8 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
-import { Format } from '@dxos/echo';
+import { Format, JsonSchema } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
-import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 import { SchemaEx } from '@dxos/effect';
 
 /**
@@ -226,7 +225,7 @@ export const PropertySchema = Schema.Union([
 
 export interface PropertyType extends Types.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 
-export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Partial<JsonSchemaType>> = {
+export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Partial<JsonSchema.JsonSchema>> = {
   [Format.TypeFormat.None]: {},
   [Format.TypeFormat.String]: {},
   [Format.TypeFormat.Number]: {},

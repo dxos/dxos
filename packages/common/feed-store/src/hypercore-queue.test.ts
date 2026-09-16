@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { asyncTimeout, latch, sleep, untilError, untilPromise } from '@dxos/async';
+import { asyncTimeout, latch, sleep, untilError, waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -42,8 +42,9 @@ describe('HypercoreQueue', () => {
     expect(queue.feed.properties.closed).to.be.false;
 
     // Write blocks.
+    const numBlocks = 10;
     // TODO(burdon): Write slowly to test writing close feed.
-    await builder.generator.writeBlocks(feed.createHypercoreWriter(), { count: 10 });
+    await builder.generator.writeBlocks(feed.createHypercoreWriter(), { count: numBlocks });
 
     // Read until queue closed (pop throws exception).
     const errorPromise = untilError(async () => {
@@ -54,11 +55,9 @@ describe('HypercoreQueue', () => {
       }
     });
 
-    // Close the queue.
-    await untilPromise(async () => {
-      await sleep(400);
-      await queue.close();
-    });
+    // Close the queue once the reader has drained all pre-written blocks.
+    await waitForCondition({ condition: () => queue.index === numBlocks });
+    await queue.close();
 
     // Expect pop to throw error when queue is closed.
     await errorPromise;
@@ -79,8 +78,9 @@ describe('HypercoreQueue', () => {
     expect(queue.feed.properties.closed).to.be.false;
 
     // Write blocks.
+    const numBlocks = 10;
     // TODO(burdon): Write slowly to test writing close feed.
-    await builder.generator.writeBlocks(feed.createHypercoreWriter(), { count: 10 });
+    await builder.generator.writeBlocks(feed.createHypercoreWriter(), { count: numBlocks });
 
     // Read until queue closed (pop throws exception).
     const errorPromise = untilError(async () => {
@@ -91,11 +91,9 @@ describe('HypercoreQueue', () => {
       }
     });
 
-    // Close the feed.
-    await untilPromise(async () => {
-      await sleep(400);
-      await hypercoreStore.close();
-    });
+    // Close the feed once the reader has drained all pre-written blocks.
+    await waitForCondition({ condition: () => queue.index === numBlocks });
+    await hypercoreStore.close();
 
     // Expect pop to throw error when queue is closed.
     await errorPromise;

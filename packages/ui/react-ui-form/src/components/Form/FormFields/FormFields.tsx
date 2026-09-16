@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { DEFAULT_LAYOUT_NAME, FormLayoutAnnotation } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { type Merge } from '@dxos/util';
@@ -44,7 +44,7 @@ export type FormFieldsProps<T extends AnyProperties = AnyProperties> = Merge<
     sort?: string[];
     filter?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
     /**
-     * Picks a named layout out of `FormLayoutAnnotation` when present. Falls back to `'default'`.
+     * Picks a named layout out of `Annotation.FormLayoutAnnotation` when present. Falls back to `'default'`.
      * Ignored when the schema has no annotation (linear rendering then takes over).
      */
     layoutName?: string;
@@ -66,7 +66,7 @@ export const FormFields = ({
   exclude,
   sort,
   filter,
-  layoutName = DEFAULT_LAYOUT_NAME,
+  layoutName = Annotation.DEFAULT_LAYOUT_NAME,
   schema: schemaProp,
   ...props
 }: FormFieldsProps<any>) => {
@@ -96,7 +96,7 @@ export const FormFields = ({
   }
 
   // If the schema carries a layout template, hand off to <Form.Layout/> which renders the DSL.
-  const layouts = schema ? Option.getOrUndefined(FormLayoutAnnotation.get(schema)) : undefined;
+  const layouts = schema ? Option.getOrUndefined(Annotation.FormLayoutAnnotation.get(schema)) : undefined;
   if (layouts?.[layoutName] !== undefined && schema) {
     return (
       <FormLayout
