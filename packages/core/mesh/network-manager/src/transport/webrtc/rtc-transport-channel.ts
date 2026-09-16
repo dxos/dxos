@@ -2,24 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
-
 import { Event as AsyncEvent } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
-import { type Transport, type TransportOptions, type TransportStats } from '../transport';
-import { type RtcPeerConnection } from './rtc-peer-connection';
-import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-transport-stats';
+import { type Transport, type TransportOptions, type TransportStats } from '../transport.ts';
+import { bindDataChannel } from './rtc-data-channel.ts';
+import { type RtcPeerConnection } from './rtc-peer-connection.ts';
+import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-transport-stats.ts';
 
-// https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
-const MAX_MESSAGE_SIZE = 64 * 1024;
-// The default Readable stream buffer size: https://nodejs.org/api/stream.html#implementing-a-readable-stream
-const MAX_BUFFERED_AMOUNT = 64 * 1024;
+/**
+ * Omitting `stream` makes the channel a handover: the `RTCDataChannel` is surfaced through
+ * {@link RtcTransportChannel.channelReady} and the consumer — typically another thread it was
+ * transferred to — owns it from then on.
+ */
+export type RtcTransportChannelOptions = Omit<TransportOptions, 'stream' | 'sendSignal'> & {
+  stream?: TransportOptions['stream'];
+};
 
 /**
  * A WebRTC connection data channel.
@@ -30,14 +33,16 @@ export class RtcTransportChannel extends Resource implements Transport {
   public readonly connected = new AsyncEvent();
   public readonly errors = new ErrorStream();
 
+  /** Emitted once per connection when {@link RtcTransportChannelOptions.stream} is omitted. */
+  public readonly channelReady = new AsyncEvent<RTCDataChannel>();
+
   private _channel: RTCDataChannel | undefined;
-  private _stream: Duplex | undefined;
-  private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
+  private _unbind: (() => void) | undefined;
   private _isChannelCreationInProgress = false;
 
   constructor(
     private readonly _connection: RtcPeerConnection,
-    private readonly _options: TransportOptions,
+    private readonly _options: RtcTransportChannelOptions,
   ) {
     super();
   }
@@ -58,12 +63,30 @@ export class RtcTransportChannel extends Resource implements Transport {
     this._connection
       .createDataChannel(this._options.topic)
       .then((channel) => {
-        if (this.isOpen) {
-          this._channel = channel;
-          this._initChannel(this._channel);
-        } else {
+        if (!this.isOpen) {
           this._safeCloseChannel(channel);
+          return;
         }
+
+        this._channel = channel;
+        const stream = this._options.stream;
+        if (!stream) {
+          // Handed over before it opens: the platform only allows transferring a channel this
+          // context has not yet used, and the receiver observes `onopen` itself.
+          this.channelReady.emit(channel);
+          this.connected.emit();
+          return;
+        }
+
+        this._unbind = bindDataChannel(channel, stream, {
+          onOpen: () => this.connected.emit(),
+          onClose: () => this.close().then(() => {}),
+          onError: (error) => {
+            if (this.isOpen) {
+              this.errors.raise(error);
+            }
+          },
+        });
       })
       .catch((err) => {
         if (this.isOpen) {
@@ -82,101 +105,17 @@ export class RtcTransportChannel extends Resource implements Transport {
   }
 
   protected override async _close(): Promise<void> {
-    if (this._channel) {
+    if (this._unbind) {
+      this._unbind();
+      this._unbind = undefined;
+    } else if (this._channel && this._options.stream) {
       this._safeCloseChannel(this._channel);
-      this._channel = undefined;
-      this._stream = undefined;
     }
+    // A handed-over channel is detached from this context; closing it is the new owner's business.
+    this._channel = undefined;
     this.closed.emit();
 
     log('closed');
-  }
-
-  private _initChannel(channel: RTCDataChannel): void {
-    Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
-      onopen: () => {
-        if (!this.isOpen) {
-          log.warn('channel opened in a closed transport', { topic: this._options.topic });
-          this._safeCloseChannel(channel);
-          return;
-        }
-
-        log('onopen');
-        const duplex = new Duplex({
-          read: () => {},
-          write: (chunk, encoding, callback) => {
-            return this._handleChannelWrite(chunk, callback);
-          },
-        });
-        duplex.pipe(this._options.stream).pipe(duplex);
-        this._stream = duplex;
-        this.connected.emit();
-      },
-
-      onclose: async () => {
-        log('onclose');
-        await this.close();
-      },
-
-      onmessage: async (event: MessageEvent) => {
-        if (!this._stream) {
-          log.warn('ignoring message on a closed channel');
-          return;
-        }
-
-        let data = event.data;
-        if (data instanceof ArrayBuffer) {
-          data = Buffer.from(data);
-        } else if (data instanceof Blob) {
-          data = Buffer.from(await data.arrayBuffer());
-        }
-        this._stream.push(data);
-      },
-
-      onerror: (event: Event & any) => {
-        if (this.isOpen) {
-          const err = event.error instanceof Error ? event.error : new Error(`Datachannel error: ${event.type}.`);
-          this.errors.raise(err);
-        }
-      },
-
-      onbufferedamountlow: () => {
-        const cb = this._streamDataFlushedCallback;
-        this._streamDataFlushedCallback = null;
-        cb?.();
-      },
-    });
-  }
-
-  private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback): Promise<void> {
-    if (!this._channel) {
-      log.warn('writing to a channel after a connection was closed');
-      return;
-    }
-
-    if (chunk.length > MAX_MESSAGE_SIZE) {
-      const error = new Error(`Message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}.`);
-      this.errors.raise(error);
-      callback();
-      return;
-    }
-
-    try {
-      this._channel.send(chunk);
-    } catch (err: any) {
-      this.errors.raise(err);
-      callback();
-      return;
-    }
-
-    if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-      if (this._streamDataFlushedCallback !== null) {
-        log.error('consumer trying to write before we are ready for more data');
-      }
-      this._streamDataFlushedCallback = callback;
-    } else {
-      callback();
-    }
   }
 
   private _safeCloseChannel(channel: RTCDataChannel): void {
@@ -199,5 +138,3 @@ export class RtcTransportChannel extends Resource implements Transport {
     return createRtcTransportStats(this._connection.currentConnection, this._options.topic);
   }
 }
-
-type PendingStreamFlushedCallback = () => void;

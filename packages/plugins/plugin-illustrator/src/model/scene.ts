@@ -132,6 +132,12 @@ export const Text = Schema.Struct({
 });
 export type Text = Schema.Schema.Type<typeof Text>;
 
+/** UML-style end markers: the head sits at the target, the tail at the source. */
+export const ArrowHead = Schema.Literals(['arrow', 'triangle', 'crowsfoot', 'none']);
+export type ArrowHead = Schema.Schema.Type<typeof ArrowHead>;
+export const ArrowTail = Schema.Literals(['none', 'circle']);
+export type ArrowTail = Schema.Schema.Type<typeof ArrowTail>;
+
 /**
  * Connector. Endpoints are element refs — `"<elementId>"` within the same object or
  * `"<objectId>/<elementId>"` across objects — or explicit local points. Bound endpoints
@@ -145,6 +151,12 @@ export const Arrow = Schema.Struct({
   start: Schema.optional(Point).annotate({ description: 'Explicit start (used when `from` is omitted).' }),
   end: Schema.optional(Point).annotate({ description: 'Explicit end (used when `to` is omitted).' }),
   text: Schema.optional(Schema.String).annotate({ description: 'Label at the arrow midpoint.' }),
+  head: Schema.optional(ArrowHead).annotate({
+    description: 'Marker at the target end (default arrow): triangle for inheritance, crowsfoot for has-many.',
+  }),
+  tail: Schema.optional(ArrowTail).annotate({
+    description: 'Marker at the source end (default none): circle for containment.',
+  }),
   ...styleFields,
 });
 export type Arrow = Schema.Schema.Type<typeof Arrow>;
@@ -166,6 +178,10 @@ export const WorldObject = Schema.Struct({
     description: 'Canvas position (px). Omit on upsert to keep the current position.',
   }),
   scale: Schema.optional(Schema.Number).annotate({ description: 'Canvas px per local unit (default 1).' }),
+  ref: Schema.optional(Schema.String).annotate({
+    description:
+      'What the object depicts: an ECHO object reference (activating the node opens it) or any other URI or path, carried for tooling.',
+  }),
   elements: Schema.Array(Element),
 });
 export type WorldObject = Schema.Schema.Type<typeof WorldObject>;

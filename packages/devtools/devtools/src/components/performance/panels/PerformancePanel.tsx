@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type CustomPanelProps, Panel } from '../Panel';
-import { Duration } from '../util';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
+import { Duration } from '../util.tsx';
 
 export const PerformancePanel = ({ entries, ...props }: CustomPanelProps<{ entries?: PerformanceEntry[] }>) => {
   if (!entries?.length) {

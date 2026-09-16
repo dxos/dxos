@@ -6,8 +6,8 @@ import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/dashboard';
 
 import type * as Protocol from '#protocol';
 
-import { renderDial } from './dial';
-import { type IconMarkup, renderEmptyKey, renderKey } from './key';
+import { renderDial } from './dial.ts';
+import { type IconMarkup, renderEmptyKey, renderKey } from './key.ts';
 
 export type BuildFrameOptions = {
   device: Protocol.DeviceProfile;

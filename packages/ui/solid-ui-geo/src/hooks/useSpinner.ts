@@ -6,8 +6,8 @@ import { timer as d3Timer } from 'd3';
 import { type Timer } from 'd3';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
-import { type GlobeController } from '../components';
-import { type Vector } from './context';
+import { type GlobeController } from '../components/index.ts';
+import { type Vector } from './context.tsx';
 
 export type SpinnerOptions = {
   disabled?: boolean;

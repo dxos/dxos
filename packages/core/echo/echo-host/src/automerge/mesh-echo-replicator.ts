@@ -6,7 +6,7 @@ import * as EffectContext from 'effect/Context';
 import * as Layer from 'effect/Layer';
 
 import { type Context } from '@dxos/context';
-import { type CollectionId, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { type CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,9 +17,9 @@ import {
   type AutomergeReplicator,
   type AutomergeReplicatorContext,
   type ShouldAdvertiseProps,
-} from './echo-replicator';
-import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
-import { getSpaceIdFromCollectionId } from './space-collection';
+} from './echo-replicator.ts';
+import { MeshReplicatorConnection } from './mesh-echo-replicator-connection.ts';
+import { getSpaceIdFromCollectionId } from './space-collection.ts';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-host.
 
@@ -188,9 +188,12 @@ export class MeshEchoReplicator implements AutomergeReplicator {
     return connection.replicatorExtension;
   }
 
-  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey): Promise<void> {
-    log('authorizeDevice', { spaceKey, deviceKey });
-    const spaceId = await createIdFromSpaceKey(spaceKey);
+  /**
+   * Takes a space id rather than a key: a root-anchored space's id is not derivable from its key, so
+   * deriving here would record the authorization under an id no document belongs to.
+   */
+  async authorizeDevice(spaceId: SpaceId, deviceKey: PublicKey): Promise<void> {
+    log('authorizeDevice', { spaceId, deviceKey });
     defaultMap(this._authorizedDevices, spaceId, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
     for (const connection of this._connections) {
       if (connection.isEnabled && connection.remoteDeviceKey && connection.remoteDeviceKey.equals(deviceKey)) {

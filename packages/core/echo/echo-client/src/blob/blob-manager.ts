@@ -3,11 +3,9 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
+import { type BlobBackend, digestHexFromBytes } from '@dxos/blob';
 import { Blob, Error as EchoError } from '@dxos/echo';
-import { type BlobBackend } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
-
-import { digestHexFromBytes } from './ni-uri';
 
 const BASE64_CHUNK_SIZE = 0x8000;
 
@@ -91,6 +89,39 @@ export class BlobManager {
     const storage = options?.storage ?? this.#defaultStorage;
     const data = await this.#put(spaceId, bytes, storage, options?.type);
     return Blob.make({ type: options?.type, size: bytes.byteLength, data });
+  }
+
+  /**
+   * Adopts a completed direct upload, returning an un-added Blob object.
+   *
+   * No `inline` arm: inline storage keeps bytes on the ECHO object itself, so there is nowhere for
+   * a third party to have uploaded them to. A caller naming it has misunderstood the flow, and
+   * saying so beats silently producing an empty blob.
+   */
+  async createBlobFromUpload(spaceId: SpaceId, uploadId: string, options?: { storage?: string }): Promise<Blob.Blob> {
+    const storage = options?.storage ?? this.#defaultStorage;
+    if (storage === Blob.Storage.inline) {
+      throw new EchoError.BlobNotAvailableError({ backend: storage, key: uploadId, reason: 'backend-not-registered' });
+    }
+
+    const registered = this.#findByName(storage);
+    if (!registered) {
+      throw new EchoError.BlobNotAvailableError({ backend: storage, key: uploadId, reason: 'backend-not-registered' });
+    }
+    const { adoptUpload } = registered.backend;
+    if (!adoptUpload) {
+      throw new EchoError.BlobNotAvailableError({ backend: storage, key: uploadId, reason: 'not-found' });
+    }
+
+    let adopted: { uri: string; size: number; contentType?: string };
+    try {
+      adopted = await adoptUpload.call(registered.backend, { spaceId, uploadId });
+    } catch (error) {
+      throw new EchoError.BlobWriteError({ backend: storage }, { cause: error });
+    }
+    // The backend's figures, not the caller's: nothing in this process saw the bytes, so the store
+    // is the only honest source for what actually landed.
+    return Blob.make({ type: adopted.contentType, size: adopted.size, data: Blob.externalData(adopted.uri) });
   }
 
   /**

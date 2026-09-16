@@ -8,9 +8,9 @@ import React from 'react';
 import { random } from '@dxos/random';
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Banner } from './Banner';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Banner } from './Banner.tsx';
 
 random.seed(123);
 

@@ -27,7 +27,7 @@ import {
   type SqliteSynchronous,
   applyOpfsPragmas,
   checkpointWal,
-} from './internal/opfs-pragmas';
+} from './internal/opfs-pragmas.ts';
 
 /** @internal */
 type OpfsWorkerMessage =
@@ -153,13 +153,17 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
               lastParams = params;
               const results: Array<any> = [];
               const begin = performance.now();
-              let columns: Array<string> | undefined;
+              // Column names ride per row rather than once per reply: a multi-statement query returns
+              // rows from statements with different columns, and the client pairs them by index.
+              const columns: Array<Array<string>> = [];
               for (const stmt of sqlite3.statements(db, sql)) {
+                let statementColumns: Array<string> | undefined;
                 sqlite3.bind_collection(stmt, params as any);
                 while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
-                  columns = columns ?? sqlite3.column_names(stmt);
+                  statementColumns = statementColumns ?? sqlite3.column_names(stmt);
                   const row = sqlite3.row(stmt);
                   results.push(row);
+                  columns.push(statementColumns);
                 }
               }
               options.port.postMessage([id, undefined, [columns, results]]);

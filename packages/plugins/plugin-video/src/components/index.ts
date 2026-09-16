@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Pending';
-export * from './Summary';
-export * from './Transcript';
-export * from './VideoPlayer';
+export * from './Pending/index.ts';
+export * from './Summary/index.ts';
+export * from './Transcript/index.ts';
+export * from './VideoPlayer/index.ts';

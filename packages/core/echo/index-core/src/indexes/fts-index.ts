@@ -9,14 +9,13 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type * as Statement from 'effect/unstable/sql/Statement';
 
 import type { Obj } from '@dxos/echo';
-import { ATTR_TYPE } from '@dxos/echo/internal';
-import type { EntityId, SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
+import type { SpaceId } from '@dxos/keys';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
-import { chunkArray } from '../utils';
-import { type EntityMeta, buildTypeDxnCondition } from './entity-meta-index';
-import type { Index, IndexerObject } from './interface';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
+import { chunkArray } from '../utils.ts';
+import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index.ts';
+import type { Index, IndexerObject } from './interface.ts';
 
 // SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
 // Use 500 as a safe chunk size for IN (...) clauses.
@@ -42,9 +41,10 @@ export interface FtsQuery {
   includeAllQueues: boolean;
 
   /**
-   * Queue IDs to search within.
+   * Queues to search within, each scoped by the space owning it — a queue id is unique only
+   * within its own space. A ref without a `spaceId` matches on the id alone.
    */
-  queueIds: readonly EntityId[] | null;
+  queues: readonly QueueRef[] | null;
 
   /**
    * Type identifiers to restrict matches to (any form accepted by the meta index — typename
@@ -103,13 +103,9 @@ const escapeFts5Query = (text: string): string => {
 export class FtsIndex implements Index {
   /**
    * Applies any migrations this database has not recorded yet.
-   *
-   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
-   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
    */
   migrate = Effect.fn('FtsIndex.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      Effect.provide(SqlTransaction.clientLayer),
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
@@ -120,7 +116,7 @@ export class FtsIndex implements Index {
     query,
     spaceId,
     includeAllQueues,
-    queueIds,
+    queues,
     typeDxns,
   }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
@@ -166,9 +162,18 @@ export class FtsIndex implements Index {
         }
       }
 
-      if (queueIds && queueIds.length > 0) {
-        // Items from specific queues.
-        sourceConditions.push(sql`m.queueId IN ${sql.in(queueIds)}`);
+      if (queues && queues.length > 0) {
+        // Items from specific queues, each scoped by its own space: a queue id is unique only
+        // within one, so matching on the id alone would admit another space's rows.
+        sourceConditions.push(
+          sql`(${sql.or(
+            queues.map((queue) =>
+              queue.spaceId !== undefined
+                ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId})`
+                : sql`m.queueId = ${queue.queueId}`,
+            ),
+          )})`,
+        );
       }
 
       if (sourceConditions.length > 0) {
@@ -286,7 +291,14 @@ export class FtsIndex implements Index {
                 isPartialBlock && existing.length > 0
                   ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
                   : data;
-              const snapshot = JSON.stringify(merged);
+              // Document objects carry `@meta` only so the entity-meta index can extract the
+              // convergence key — full-text search must not match on foreign keys or identity
+              // strings the visible content never contains. Queue blocks always carried meta in
+              // their snapshot (clients hydrate from it), so theirs stays.
+              const searchable = object.documentId
+                ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
+                : merged;
+              const snapshot = JSON.stringify(searchable);
 
               if (existing.length > 0) {
                 yield* sql`DELETE FROM ftsIndex WHERE rowid = ${recordId}`;

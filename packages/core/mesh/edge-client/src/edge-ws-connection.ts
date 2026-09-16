@@ -12,11 +12,11 @@ import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { protocol } from './defs';
-import { type EdgeIdentity } from './edge-identity';
-import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketMuxer } from './edge-ws-muxer';
-import { toUint8Array } from './protocol';
-import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason';
+import { protocol } from './defs.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketMuxer } from './edge-ws-muxer.ts';
+import { toUint8Array } from './protocol.ts';
+import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason.ts';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
@@ -87,8 +87,9 @@ export class EdgeWsConnection extends Resource {
     return this._rtt;
   }
 
+  /** Floor uptime to satisfy the int32 EdgeStatus.uptime wire type. */
   public get uptime(): number {
-    return this._openTimestamp ? (Date.now() - this._openTimestamp) / 1000 : 0;
+    return this._openTimestamp ? Math.floor((Date.now() - this._openTimestamp) / 1000) : 0;
   }
 
   public get uploadRate(): number {

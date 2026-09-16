@@ -4,7 +4,6 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { createContext } from '@radix-ui/react-context';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
   type PropsWithChildren,
@@ -20,14 +19,15 @@ import React, {
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { createContext } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { Scene } from '#types';
 
-import { DEFAULT_EDITOR_STATE, type EditorState, getSelectedObjectIds } from '../../tools';
-import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
-import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
-import { handleExport as doExport, handleImport as doImport } from './import-export';
+import { DEFAULT_EDITOR_STATE, type EditorState, getSelectedObjectIds } from '../../tools/index.ts';
+import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas/index.ts';
+import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar/index.ts';
+import { handleExport as doExport, handleImport as doImport } from './import-export.ts';
 
 //
 // Context

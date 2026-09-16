@@ -8,8 +8,8 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { IbkrOperation } from '#types';
 
-import { parseCash, parsePositions } from '../services';
-import { latestReport } from './feed';
+import { parseCash, parsePositions } from '../services/index.ts';
+import { latestReport } from './feed.ts';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.GetPortfolio> = IbkrOperation.GetPortfolio.pipe(
   Operation.withHandler(

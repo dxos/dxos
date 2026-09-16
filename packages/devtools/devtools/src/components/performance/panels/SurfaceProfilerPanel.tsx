@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { IconButton, Select } from '@dxos/react-ui';
 
-import { type CustomPanelProps, Panel } from '../Panel';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
 
 const SLOW_TIME = 16; // One frame at 60fps.
 

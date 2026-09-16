@@ -41,6 +41,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -156,6 +159,9 @@
     },
     {
       "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/schema"

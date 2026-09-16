@@ -12,9 +12,9 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { ObjectViewer, Placeholder, Searchbar } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState } from '../../../hooks';
+import { ObjectViewer, Placeholder, Searchbar } from '../../../components/index.ts';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsState } from '../../../hooks/index.ts';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -154,7 +154,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
           </div>
 
           <div className='min-h-0 h-full border-s border-t border-separator'>
-            <div className={mx('p-1 min-h-0 h-full overflow-auto')}>
+            <div className={mx('p-1 h-full overflow-auto')}>
               {selected ? (
                 <ObjectViewer
                   object={selected.jsonSchema}

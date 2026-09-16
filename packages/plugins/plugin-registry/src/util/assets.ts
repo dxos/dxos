@@ -9,9 +9,9 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
-import { getPluginInstallPath } from '../storage';
-import { PluginInstallError } from './errors';
-import { MANIFEST_FILENAME, type PluginAsset } from './resolve';
+import { getPluginInstallPath } from '../storage.ts';
+import { PluginInstallError } from './errors.ts';
+import { MANIFEST_FILENAME, type PluginAsset } from './resolve.ts';
 
 /** A plugin bundle is a handful of small files; a stalled transfer must not hang `add` forever. */
 const ASSET_TIMEOUT = '30 seconds';

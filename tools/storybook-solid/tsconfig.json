@@ -22,6 +22,9 @@
       "path": "../vite-plugin-icons"
     },
     {
+      "path": "../vite-plugin-import-source"
+    },
+    {
       "path": "../vite-plugin-log"
     }
   ]

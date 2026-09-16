@@ -2,15 +2,23 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { fromDate, fromPublicKey, toDate } from '@dxos/protocols/buf';
+import {
+  ConnectionEventSchema,
+  ConnectionInfoSchema,
+  type SwarmInfo,
+  SwarmInfoSchema,
+} from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { type MuxerStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState, type Swarm } from './swarm';
-import { type WireProtocol } from './wire-protocol';
+import { ConnectionState, type Swarm } from './swarm/index.ts';
+import { type WireProtocol } from './wire-protocol.ts';
 
 const CONNECTION_GC_THRESHOLD = 1000 * 60 * 15;
 
@@ -39,39 +47,41 @@ export class ConnectionLog {
   }
 
   joinedSwarm(swarm: Swarm): void {
-    const info: SwarmInfo = {
-      id: PublicKey.from(swarm._instanceId),
-      topic: swarm.topic,
+    const info = create(SwarmInfoSchema, {
+      id: fromPublicKey(PublicKey.from(swarm._instanceId)),
+      topic: fromPublicKey(swarm.topic),
       isActive: true,
       label: swarm.label,
       connections: [],
-    };
+    });
 
     this._swarms.set(PublicKey.from(swarm._instanceId), info);
     this.update.emit();
 
     swarm.connectionAdded.on((connection) => {
-      const connectionInfo: ConnectionInfo = {
+      const connectionInfo = create(ConnectionInfoSchema, {
         state: ConnectionState.CREATED,
         closeReason: connection.closeReason,
-        remotePeerId: PublicKey.from(connection.remoteInfo.peerKey),
-        sessionId: connection.sessionId,
+        remotePeerId: fromPublicKey(PublicKey.from(connection.remoteInfo.peerKey)),
+        sessionId: fromPublicKey(connection.sessionId),
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: [], // TODO(dmaretskyi): Fix.
         events: [],
-        lastUpdate: new Date(),
-      };
-      info.connections!.push(connectionInfo);
+        lastUpdate: fromDate(new Date()),
+      });
+      info.connections.push(connectionInfo);
       this.update.emit();
 
       connection.stateChanged.on(async (state) => {
         connectionInfo.state = state;
         connectionInfo.closeReason = connection.closeReason;
-        connectionInfo.lastUpdate = new Date();
-        connectionInfo.events!.push({
-          type: EventType.CONNECTION_STATE_CHANGED,
-          newState: state,
-        });
+        connectionInfo.lastUpdate = fromDate(new Date());
+        connectionInfo.events.push(
+          create(ConnectionEventSchema, {
+            type: EventType.CONNECTION_STATE_CHANGED,
+            newState: state,
+          }),
+        );
 
         if (state === ConnectionState.CONNECTED) {
           const details = await connection.transport?.getDetails();
@@ -85,7 +95,7 @@ export class ConnectionLog {
         connectionInfo.readBufferSize = stats.readBufferSize;
         connectionInfo.writeBufferSize = stats.writeBufferSize;
         connectionInfo.streams = stats.channels;
-        connectionInfo.lastUpdate = new Date();
+        connectionInfo.lastUpdate = fromDate(new Date());
         this.update.emit();
       });
 
@@ -134,6 +144,7 @@ export class ConnectionLog {
 
 const gcSwarm = (swarm: SwarmInfo) => {
   swarm.connections = swarm.connections?.filter((connection) => {
-    return connection.lastUpdate ? Date.now() - connection.lastUpdate.getTime() < CONNECTION_GC_THRESHOLD : true;
+    const lastUpdate = toDate(connection.lastUpdate);
+    return lastUpdate ? Date.now() - lastUpdate.getTime() < CONNECTION_GC_THRESHOLD : true;
   });
 };

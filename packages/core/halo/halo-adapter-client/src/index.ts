@@ -7,11 +7,11 @@ import * as Layer from 'effect/Layer';
 import { type Client } from '@dxos/client';
 import { type Identity, type Space } from '@dxos/halo';
 
-import { layerIdentity } from './identity';
-import { layerSpace } from './space';
+import { layerIdentity } from './identity.ts';
+import { layerSpace } from './space.ts';
 
-export { layerIdentity, makeIdentityService } from './identity';
-export { layerSpace, makeSpaceService } from './space';
+export { layerIdentity, makeIdentityService } from './identity.ts';
+export { layerSpace, makeSpaceService } from './space.ts';
 
 /**
  * A single layer providing both HALO services ({@link Identity.Service}, {@link Space.Service})

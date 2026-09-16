@@ -5,7 +5,7 @@
 import * as Console from 'effect/Console';
 import * as Layer from 'effect/Layer';
 
-import type { TerminalBridge } from './bridge';
+import type { TerminalBridge } from './bridge.ts';
 
 const stringify = (value: unknown): string => {
   if (typeof value === 'string') {

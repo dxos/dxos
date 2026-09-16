@@ -2,23 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Context } from '@dxos/context';
-import { CredentialGenerator } from '@dxos/credentials';
-import { type FeedStore } from '@dxos/feed-store';
+import { CredentialGenerator, credentialPayload } from '@dxos/credentials';
+import { type HypercoreStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { MetadataStore } from '../../metadata';
-import { TestFeedBuilder } from '../../pipeline/testing';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../index';
+import { MetadataStore } from '../../metadata/index.ts';
+import { TestFeedBuilder } from '../../pipeline/testing/index.ts';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../index.ts';
 
 export type NetworkManagerProvider = () => SwarmNetworkManager;
 
@@ -83,7 +87,7 @@ export class TestAgent {
 
   public readonly storage: Storage;
   public readonly keyring: Keyring;
-  public readonly feedStore: FeedStore<FeedMessage>;
+  public readonly hypercoreStore: HypercoreStore<FeedMessage>;
 
   private _metadataStore?: MetadataStore;
   get metadataStore() {
@@ -98,7 +102,7 @@ export class TestAgent {
   ) {
     this.storage = this._feedBuilder.storage;
     this.keyring = this._feedBuilder.keyring;
-    this.feedStore = this._feedBuilder.createFeedStore();
+    this.hypercoreStore = this._feedBuilder.createHypercoreStore();
   }
 
   async close() {
@@ -120,7 +124,9 @@ export class TestAgent {
     }
 
     this._networkManager = this._networkManagerProvider();
-    this._networkManager.setPeerInfo({ peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() });
+    this._networkManager.setPeerInfo(
+      create(PeerSchema, { peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() }),
+    );
 
     return this._networkManager;
   }
@@ -128,7 +134,7 @@ export class TestAgent {
   private _spaceManager?: SpaceManager;
   get spaceManager() {
     return (this._spaceManager ??= new SpaceManager({
-      feedStore: this.feedStore,
+      hypercoreStore: this.hypercoreStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
     }));
@@ -149,18 +155,18 @@ export class TestAgent {
       genesisKey = await this.keyring.createKey();
     }
 
-    const controlFeed = await this.feedStore.openFeed(genesisKey, { writable: true });
-    const dataFeed = await this.feedStore.openFeed(dataKey ?? (await this.keyring.createKey()), {
+    const controlFeed = await this.hypercoreStore.openHypercore(genesisKey, { writable: true });
+    const dataFeed = await this.hypercoreStore.openHypercore(dataKey ?? (await this.keyring.createKey()), {
       writable: true,
       sparse: true,
     });
 
-    const metadata: SpaceMetadata = {
-      key: spaceKey,
-      genesisFeedKey: genesisKey,
-      controlFeedKey: controlFeed.key,
-      dataFeedKey: dataFeed.key,
-    };
+    const metadata: SpaceMetadata = create(SpaceMetadataSchema, {
+      key: fromPublicKey(spaceKey),
+      genesisFeedKey: fromPublicKey(genesisKey),
+      controlFeedKey: fromPublicKey(controlFeed.key),
+      dataFeedKey: fromPublicKey(dataFeed.key),
+    });
     if (saveMetadata) {
       await this.metadataStore.addSpace(metadata);
     }
@@ -231,14 +237,12 @@ export class TestAgent {
     const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
     const credentials = [
       ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed_Designation.DATA),
       await generator.createEpochCredential(space.key),
     ];
 
     for (const credential of credentials) {
-      await space.controlPipeline.writer.write({
-        credential: { credential },
-      });
+      await space.controlPipeline.writer.write(credentialPayload(credential));
     }
   }
 }

@@ -11,9 +11,9 @@ import { Database, Filter, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing';
-import { Memory } from '../../../types/Memory';
-import { SaveMemory } from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import { Memory } from '../../../types/Memory.ts';
+import { SaveMemory } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

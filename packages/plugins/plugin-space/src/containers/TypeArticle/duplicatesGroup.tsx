@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
@@ -12,7 +13,7 @@ import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates';
+import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates.ts';
 
 export type UseDuplicatesGroupOptions = {
   /** URI of the type under review; scopes the staged preview to this article. */
@@ -78,10 +79,17 @@ export const useDuplicatesGroup = ({
     if (!staged) {
       return;
     }
+    // `staged.objectIds` is the ephemeral preview's own key (bare ids, matched against selections);
+    // the operation wants the live members themselves, resolved from the group still under review.
+    const members = current.filter((object) => staged.objectIds.includes(object.id));
+    if (members.length !== staged.objectIds.length) {
+      log.warn('merge preview member missing from current group', { typeUri: staged.typeUri });
+      return;
+    }
     setMerging(true);
     void invokePromise(
       SpaceOperation.MergeDuplicates,
-      { typename: staged.typename, objectIds: staged.objectIds, overrides: staged.preview },
+      { typename: staged.typename, objectIds: members.map((object) => Ref.make(object)), overrides: staged.preview },
       { spaceId },
     )
       .then(({ error }) => {
@@ -101,7 +109,7 @@ export const useDuplicatesGroup = ({
         onConfirmed?.(staged.objectIds);
       })
       .finally(() => setMerging(false));
-  }, [staged, invokePromise, spaceId, updateEphemeral, onConfirmed]);
+  }, [staged, current, invokePromise, spaceId, updateEphemeral, onConfirmed]);
 
   // Skip and the next arrow are the same move — advance past the group without writing.
   const handleAdvance = useCallback(() => {

@@ -13,7 +13,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { PaymentsSettings } from './PaymentsSettings';
+import { PaymentsSettings } from './PaymentsSettings.tsx';
 
 type StoryArgs = {
   settings: Settings.Settings;

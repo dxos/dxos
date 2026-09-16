@@ -21,8 +21,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { makeRoutine } from '../../util';
-import { RoutineTraceCompanion } from './RoutineTraceCompanion';
+import { makeRoutine } from '../../util/index.ts';
+import { RoutineTraceCompanion } from './RoutineTraceCompanion.tsx';
 
 const types = [Routine.Routine, Trigger.Trigger, Feed.Feed, Trace.Message];
 

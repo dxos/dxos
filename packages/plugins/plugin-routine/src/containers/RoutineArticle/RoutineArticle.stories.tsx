@@ -24,7 +24,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { RoutineArticle } from './RoutineArticle';
+import { RoutineArticle } from './RoutineArticle.tsx';
 
 const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed, Skill.Skill];
 
@@ -66,7 +66,7 @@ const seedWithTimerTrigger = (space: Space) => {
   const automation = space.db.add(Routine.make({ name: 'Daily Digest', triggers: [] }));
   // Wire the trigger into the automation after both are in the db.
   Obj.update(automation, (automation) => {
-    automation.triggers = [...automation.triggers, Ref.make(trigger)];
+    automation.triggers.push(Ref.make(trigger));
   });
 };
 

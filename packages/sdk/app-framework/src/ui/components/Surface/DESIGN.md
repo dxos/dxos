@@ -23,6 +23,8 @@ This decouples the shell/layout from the plugins that fill it.
 
 ```text
 <Surface type={Token} data={…} limit?={n} />
+  └─ useStable(data, shallowEqual)
+                              → previous `data` reference while shallow-equal
   └─ useSurfaces()            → role-indexed, position-sorted candidate map
   └─ findCandidates(role,data)→ candidates for role, then data guard filter
   └─ Suspense
@@ -113,9 +115,11 @@ Enabled when `VITE_DEBUG` is set (build-time) or the runtime flag is toggled
 `SurfaceMetrics` (a module singleton, so the out-of-tree overlay and the in-app
 devtools panel share one source) records, keyed by `surface/<id>/<role>`:
 
-- **`dataUnstable` / `dataChurn`** — the consumer's `data` prop identity churns
-  across renders without its value changing. This is the most common Surface
-  footgun (see Performance notes) and nothing else detects it.
+- **`dataUnstable` / `dataChurn`** — the consumer's raw `data` prop identity
+  churns across renders without its value changing. Measured on the raw prop,
+  since `useStable` absorbs the churn before the subtree sees it, so a flagged
+  surface is a hygiene finding rather than a live re-render hazard: the call site
+  rebuilds `data` every render and the framework pays to normalize it.
 - **`candidates` / `truncated`** — candidates matched on the last dispatch, and
   whether `limit` dropped some. Diagnoses "nothing renders" (0) and "two things
   render" (ambiguous match).
@@ -131,6 +135,8 @@ expand) and the devtools `SurfaceProfilerPanel` (joined onto render-timing by id
 
 ## Performance notes
 
-- Keep `data` referentially stable across renders — it is a memo/`resetKeys`
-  dependency. Unstable `data` defeats candidate stability and trips error-boundary
-  resets.
+- `Surface` stabilizes `data` itself (`useStable` with `shallowEqual`), so an
+  inline `data={{ subject }}` no longer defeats the memo below it. The values
+  inside must still carry stable identities of their own: shallow equality only
+  reaches the top level, so a nested object rebuilt per render still reads as a
+  change and still trips candidate re-dispatch and error-boundary resets.

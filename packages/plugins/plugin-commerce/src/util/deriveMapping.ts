@@ -4,8 +4,8 @@
 
 import { type HTMLElement, parse } from 'node-html-parser';
 
-import { type FieldExtractor, type ResultMapping } from '../types/Provider';
-import { structureCandidates } from './summarizeStructure';
+import { type FieldExtractor, type ResultMapping } from '../types/Provider.ts';
+import { structureCandidates } from './summarizeStructure.ts';
 
 /**
  * Derive a complete, working {@link ResultMapping} directly from a rendered listings page — the

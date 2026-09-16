@@ -11,7 +11,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -20,18 +19,21 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SpaceHomeDashboard, type SpaceStatId } from './SpaceHomeDashboard';
+import { SpaceHomeDashboard, type SpaceStatId } from './SpaceHomeDashboard.tsx';
 
 class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular' })),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular' }),
+  ),
 ) {}
 
 class Note extends Type.makeObject<Note>(DXN.make('org.dxos.type.test.note', '0.1.0'))(
   Schema.Struct({
     content: Schema.optional(Schema.String),
-  }).pipe(LabelAnnotation.set(['content']), Annotation.IconAnnotation.set({ icon: 'ph--note--regular' })),
+  }).pipe(Annotation.LabelAnnotation.set(['content']), Annotation.IconAnnotation.set({ icon: 'ph--note--regular' })),
 ) {}
 
 const OBJECT_COUNT = 24;

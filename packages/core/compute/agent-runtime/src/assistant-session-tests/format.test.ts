@@ -18,7 +18,7 @@ import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer } from '../testing/index.ts';
 
 const OrganizationList = Operation.make({
   meta: {

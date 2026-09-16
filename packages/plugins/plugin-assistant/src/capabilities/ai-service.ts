@@ -22,11 +22,11 @@ export default Capability.makeModule(
     const combinedLayer = resolvers.reduce(
       (acc, resolver) => resolver.pipe(Layer.provide(acc)),
       // Empty resolver as the terminal fallback (provider is irrelevant — the map is empty).
-      AiModelResolver.AiModelResolver.fromModelMap({ name: 'Fallback' }, Provider.edge.id, Effect.succeed({})),
+      AiModelResolver.fromModelMap({ name: 'Fallback' }, Provider.edge.id, Effect.succeed({})),
     );
 
     let aiServiceLayer: Layer.Layer<AiService.AiService, never, Credential.CredentialsService> =
-      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer));
+      AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer));
 
     const aiServiceMiddleware = options?.aiServiceMiddleware;
     if (aiServiceMiddleware) {

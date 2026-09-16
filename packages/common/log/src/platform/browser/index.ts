@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type LogOptions } from '../../config';
+import { type LogOptions } from '../../config.ts';
 
 // NOTE: Implementation for the browser. See `package.json`.
 export const loadOptions = (filepath?: string): LogOptions | undefined => {

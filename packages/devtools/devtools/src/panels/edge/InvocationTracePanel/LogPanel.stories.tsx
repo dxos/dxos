@@ -9,7 +9,7 @@ import { TraceEvent as TraceEventSchema, type TraceEvent as TraceEventType } fro
 import { Obj } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { LogPanel } from './LogPanel';
+import { LogPanel } from './LogPanel.tsx';
 
 const makeEvents = (): TraceEventType[] => {
   const base = Date.now() - 1000 * 60 * 5;

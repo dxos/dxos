@@ -19,6 +19,7 @@ import {
   ProcessManager,
   RemoteOperationInvoker,
   RemoteProcessManager,
+  RemoteTraceMonitor,
   RemoteTriggerManager,
   TriggerDispatcher,
   TriggerMonitor,
@@ -253,15 +254,16 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
 );
 
 /**
- * Application-scoped remote (EDGE) process manager, providing the progress meter's cancel control.
- * Uses the EDGE implementation whenever an edge service is configured — cancel is addressed by trigger
- * id + space, so it is not space-scoped — otherwise a read-only no-op. Resolved by the progress trace
- * sink to route an edge-run trigger's cancel; the aggregate {@link TriggerMonitor} view is unaffected.
+ * Application-scoped remote (EDGE) process manager: the progress meter's cancel control and the
+ * process-control surface an agent asked for with `location: 'edge'` is spawned on. Uses the EDGE
+ * implementation whenever an edge service is configured, otherwise a read-only no-op. One instance
+ * serves every space — both cancel and process control take the space they address — so this stays
+ * application-scoped even though processes are per-space.
  */
 const RemoteProcessManagerSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [ClientService, AtomRegistry.AtomRegistry],
+    requires: [ClientService, AtomRegistry.AtomRegistry, RemoteTraceMonitor.Service],
     provides: [RemoteProcessManager.Service],
   },
   () =>
@@ -270,6 +272,28 @@ const RemoteProcessManagerSpec = LayerSpec.make(
         const client = yield* ClientService;
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         return edgeUrl ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop;
+      }),
+    ),
+);
+
+/**
+ * Application-scoped {@link RemoteTraceMonitor.Service}: the swarm-backed monitor contributed by
+ * plugin-client when a client is available, else {@link RemoteTraceMonitor.layerNoop}.
+ */
+const RemoteTraceMonitorSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Capability.Service],
+    provides: [RemoteTraceMonitor.Service],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const capabilities = yield* Capability.Service;
+        const monitors = capabilities.getAll(Capabilities.RemoteTraceMonitor);
+        return monitors.length > 0
+          ? Layer.succeed(RemoteTraceMonitor.Service, monitors[0])
+          : RemoteTraceMonitor.layerNoop;
       }),
     ),
 );
@@ -310,6 +334,7 @@ export default Capability.makeModule(() =>
       RemoteTriggerManagerSpec,
       TriggerMonitorSpec,
       RemoteOperationInvokerSpec,
+      RemoteTraceMonitorSpec,
       RemoteProcessManagerSpec,
     ]),
     Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),

@@ -141,6 +141,9 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
                 icon: random.properties.icon(),
+                // The properties cache is keyed by id and the object actions share these ids, so
+                // what puts an action on a row's menu is declared here for both.
+                disposition: 'list-item',
               }),
             })),
           ),
@@ -170,6 +173,8 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               AppGraphNode.make({
                 id: `object-${i}`,
                 type: 'object',
+                // Something to select: the navtree navigates only for a node that carries data.
+                data: { id: `object-${i}` },
                 properties: getProperties(`object-${i}`, {
                   label: `Object ${i}`,
                   icon: random.properties.icon(),
@@ -194,6 +199,8 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
                 icon: random.properties.icon(),
+                // What puts an action on the row's menu, as the app's object actions declare.
+                disposition: 'list-item',
               }),
             })),
           ),

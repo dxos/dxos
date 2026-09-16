@@ -13,7 +13,7 @@ import { type ProcedureAst } from '@dxos/vendor-hyperformula';
 import { type InterpreterState } from '@dxos/vendor-hyperformula';
 import { CellError, ErrorType, FunctionArgumentType } from '@dxos/vendor-hyperformula';
 
-import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
+import { type AsyncFunction, AsyncFunctionPlugin } from './async-function.ts';
 
 export const EDGE_FUNCTION_NAME = 'DX';
 

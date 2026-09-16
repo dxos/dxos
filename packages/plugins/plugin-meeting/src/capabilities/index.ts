@@ -17,7 +17,7 @@ import { MeetingCapabilities, MeetingEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
   requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
 });
@@ -29,14 +29,14 @@ export const CallExtension = Capability.lazyModule(
     // Both features must be live: the handler extends calls but reads meeting state.
     activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),
   },
-  () => import('./call-extension'),
+  () => import('./call-extension.ts'),
 );
 export const MeetingSettings = Capability.lazyModule(
   'MeetingSettings',
   { provides: [MeetingCapabilities.SettingsAtom], activatesOn: MeetingEvents.Start },
-  () => import('./settings'),
+  () => import('./settings.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const PluginAsset = AppCapability.pluginAsset({
@@ -45,7 +45,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
 export const MeetingState = Capability.lazyModule(
@@ -55,7 +55,7 @@ export const MeetingState = Capability.lazyModule(
     provides: [MeetingCapabilities.State],
     activatesOn: MeetingEvents.Start,
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Translations = AppCapability.translations(translations);

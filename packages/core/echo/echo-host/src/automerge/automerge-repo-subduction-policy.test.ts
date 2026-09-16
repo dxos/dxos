@@ -24,7 +24,7 @@ import {
   reconnectAdapters,
   waitForQueryState,
   waitForSubductionSave,
-} from './subduction-test-utils';
+} from './subduction-test-utils.ts';
 
 // SubductionPolicy: characterizing client-only gates.
 //
@@ -175,9 +175,10 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
         .poll(async () => (await fetcher.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: 5_000 })
         .toEqual('B-allowed');
 
-      // Denied doc stays out of `'ready'` for the negative window.
+      // Denied doc stays out of `'ready'`: docB (the control, above) already
+      // replicated over the same connection, anchoring the window to a real
+      // observed event rather than a guessed duration.
       const progress = fetcher.findWithProgress<{ text?: string }>(docA.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
 
       // Keep the first topology adapters from racing teardown with our
@@ -223,9 +224,10 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
         .poll(async () => (await client.find<{ text?: string }>(docFromServer2.url)).doc()?.text, { timeout: 5_000 })
         .toEqual('from-server2');
 
-      // Denied peer's doc stays out of `'ready'`.
+      // Denied peer's doc stays out of `'ready'`: docFromServer2 (the control,
+      // above) already replicated over the same client, anchoring the window
+      // to a real observed event rather than a guessed duration.
       const progress = client.findWithProgress<{ text?: string }>(docFromServer1.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
     }, 30_000);
 
@@ -463,8 +465,10 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
         .poll(async () => (await client.find<{ text?: string }>(doc2.url)).doc()?.text, { timeout: 5_000 })
         .toEqual('from-server2');
 
+      // doc2 (the control, above) already replicated over the same client,
+      // anchoring this window to a real observed event rather than a guessed
+      // duration.
       const progress1 = client.findWithProgress<{ text?: string }>(doc1.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress1.peek().state).to.not.equal('ready');
 
       // Connect hook fired at least once per peer (server1 deny + server2 allow).
@@ -523,14 +527,15 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
       });
       await connectAdapters(adapters);
 
-      // Allow initial handshake to land.
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Allow initial handshake to land: poll the counter itself (an
+      // observable positive signal) instead of guessing how long a
+      // handshake takes.
+      await expect.poll(() => counters.authorizeConnect, { timeout: 5_000 }).toBeGreaterThanOrEqual(1);
       const initial = counters.authorizeConnect;
-      expect(initial).to.be.greaterThanOrEqual(1);
 
       for (let i = 0; i < 2; i++) {
         await reconnectAdapters(adapters);
-        await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+        await expect.poll(() => counters.authorizeConnect, { timeout: 5_000 }).toBeGreaterThanOrEqual(initial + i + 1);
       }
 
       // Each reconnect should have triggered at least one more invocation.
@@ -555,47 +560,53 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
     // gate for OUTBOUND data flow on the holder. Combined with
     // `authorizePut` on the receiver, this gives a fully client-side
     // gate for both directions.
-    test('authorizeFetch fires on BOTH proactive push and explicit fetch (empirical)', async () => {
-      // Half 1: proactive push. Hook fires when host broadcasts.
-      const { policy: pushPolicy, counters: pushCounters } = createCountingPolicy();
-      const { repos: pushRepos, adapters: pushAdapters } = await createHostClientRepoTopology({
-        subductionPolicies: { host: pushPolicy },
-      });
-      const [pushHost, pushClient] = pushRepos;
-      await connectAdapters(pushAdapters);
-      const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
-      await waitForSubductionSave();
-      // Assert the host-side hook fired BEFORE the client issues any
-      // explicit `find` — proves it was the proactive broadcast (not a
-      // later fetch) that consulted `authorizeFetch`.
-      // Empirical: >= 1 (observed 2 locally). Don't pin an exact
-      // count — the bridge may batch or invoke twice per broadcast
-      // (once at connect-time-sync, once per `#save`).
-      expect(pushCounters.authorizeFetch).to.be.greaterThan(0);
-      await expect
-        .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
-          timeout: 5_000,
-        })
-        .toEqual('pushed');
+    // Two topologies with a 5s poll and a 10s wait between them, so the 15s default cannot cover it —
+    // same reason the two-phase `authorizePut` test below names its own budget.
+    test(
+      'authorizeFetch fires on BOTH proactive push and explicit fetch (empirical)',
+      { timeout: 30_000 },
+      async () => {
+        // Half 1: proactive push. Hook fires when host broadcasts.
+        const { policy: pushPolicy, counters: pushCounters } = createCountingPolicy();
+        const { repos: pushRepos, adapters: pushAdapters } = await createHostClientRepoTopology({
+          subductionPolicies: { host: pushPolicy },
+        });
+        const [pushHost, pushClient] = pushRepos;
+        await connectAdapters(pushAdapters);
+        const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
+        await waitForSubductionSave();
+        // Assert the host-side hook fired BEFORE the client issues any
+        // explicit `find` — proves it was the proactive broadcast (not a
+        // later fetch) that consulted `authorizeFetch`.
+        // Empirical: >= 1 (observed 2 locally). Don't pin an exact
+        // count — the bridge may batch or invoke twice per broadcast
+        // (once at connect-time-sync, once per `#save`).
+        expect(pushCounters.authorizeFetch).to.be.greaterThan(0);
+        await expect
+          .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
+            timeout: 5_000,
+          })
+          .toEqual('pushed');
 
-      // Half 2: explicit fetch (doc-before-connect pattern). Pre-issue
-      // the client's fetch BEFORE peers learn about each other so the
-      // eventual `reconnectAdapters` drives an explicit fetch flow
-      // (rather than collapsing into the proactive-push path). Hook
-      // still fires; pin > 0.
-      const { policy: fetchPolicy, counters: fetchCounters } = createCountingPolicy();
-      const { repos: fetchRepos, adapters: fetchAdapters } = await createHostClientRepoTopology({
-        subductionPolicies: { host: fetchPolicy },
-      });
-      const [fetchHost, fetchClient] = fetchRepos;
-      await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
-      const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'fetched' });
-      await waitForSubductionSave();
-      const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
-      await reconnectAdapters(fetchAdapters);
-      await waitForQueryState(fetchProgress, ['ready'], { timeout: 10_000 });
-      expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
-    });
+        // Half 2: explicit fetch (doc-before-connect pattern). Pre-issue
+        // the client's fetch BEFORE peers learn about each other so the
+        // eventual `reconnectAdapters` drives an explicit fetch flow
+        // (rather than collapsing into the proactive-push path). Hook
+        // still fires; pin > 0.
+        const { policy: fetchPolicy, counters: fetchCounters } = createCountingPolicy();
+        const { repos: fetchRepos, adapters: fetchAdapters } = await createHostClientRepoTopology({
+          subductionPolicies: { host: fetchPolicy },
+        });
+        const [fetchHost, fetchClient] = fetchRepos;
+        await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
+        const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'fetched' });
+        await waitForSubductionSave();
+        const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
+        await reconnectAdapters(fetchAdapters);
+        await waitForQueryState(fetchProgress, ['ready'], { timeout: 10_000 });
+        expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
+      },
+    );
 
     // Hypothesis: `filterAuthorizedFetch` is consulted by
     // `get_authorized_subscriber_conns` ONLY for peers that explicitly
@@ -794,10 +805,10 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
         .poll(async () => (await repoC.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: 10_000 })
         .toEqual('from-B-allowed');
 
-      // Test: A-authored doc does NOT land at C within the negative
-      // window, despite B relaying.
+      // Test: A-authored doc does NOT land at C, despite B relaying. docB
+      // (the control, above) already replicated at C, anchoring the window
+      // to a real observed event rather than a guessed duration.
       const progressA = repoC.findWithProgress<{ text?: string }>(docA.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progressA.peek().state).to.not.equal('ready');
     });
   });

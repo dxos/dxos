@@ -10,7 +10,7 @@ import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
 
 import { NavTreeNode } from '#types';
 
-import type { L1PanelProps } from './Sidebar';
+import type { L1PanelProps } from './Sidebar/index.ts';
 
 export type NavTreeContextValue = {
   model: TreeModel<NavTreeNode.NavTreeItemGraphNode>;

@@ -4,9 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { StorageType } from '../common';
-import { storageTests } from '../testing';
-import { createStorage } from './storage';
+import { StorageType } from '../common/index.ts';
+import { storageTests } from '../testing/index.ts';
+import { createStorage } from './storage.ts';
 
 const ROOT_DIRECTORY = 'testing';
 

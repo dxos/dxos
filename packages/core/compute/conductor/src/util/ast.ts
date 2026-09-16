@@ -40,7 +40,7 @@ export const getPropertyKeyIndexedAccess = (ast: SchemaAST.AST, name: PropertyKe
         name,
         new SchemaAST.Union(
           ast.types.map((member) => getPropertyKeyIndexedAccess(member, name).type),
-          ast.mode,
+          ast.options,
         ),
       );
     case 'Suspend':

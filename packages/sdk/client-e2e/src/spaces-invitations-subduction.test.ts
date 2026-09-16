@@ -10,10 +10,23 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { specificCredential } from '@dxos/credentials';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { toPublicKey } from '@dxos/protocols/buf';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type SpaceGenesis } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 // Mirror of `spaces-invitations.test.ts`, run with `useSubduction: true`. Subduction
 // is the sedimentree-based byte transport (see `.claude/skills/effect/subduction/SKILL.md`)
@@ -40,12 +53,15 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1, guest: client2.spaces }),
     );
-    expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);
+    expect(toPublicKey(guestInvitation?.spaceKey)).to.deep.eq(space1.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
     {
-      const space = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
+      invariant(guestInvitation);
+      const guestSpaceKey = toPublicKey(guestInvitation.spaceKey);
+      invariant(guestSpaceKey);
+      const space = await waitForSpace(client2, guestSpaceKey, { ready: true });
       await testSpaceAutomerge(expect, space.db);
     }
   });
@@ -58,13 +74,13 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
       // Alice invites Bob.
       const space = await alice.spaces.create();
       const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space, guest: bob.spaces }));
-      expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+      expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
       // Alice creates a delegated invitation.
       const bobInvitations = createInvitationTracker(bob);
       const observableInvitation = space.share({
-        type: Invitation.Type.DELEGATED,
-        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+        type: Invitation_Type.DELEGATED,
+        authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
         multiUse: false,
       });
       await bobInvitations.waitForInvitation(observableInvitation.get());
@@ -88,13 +104,13 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
       // Alice invites Bob.
       const space = await alice.spaces.create();
       const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host: space, guest: bob.spaces }));
-      expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+      expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
       // Alice creates a delegated invitation.
       const bobInvitations = createInvitationTracker(bob);
       const observableInvitation = space.share({
-        type: Invitation.Type.DELEGATED,
-        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+        type: Invitation_Type.DELEGATED,
+        authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
         multiUse: true,
       });
       await bobInvitations.waitForInvitation(observableInvitation.get());
@@ -119,11 +135,11 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
     expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
 
     const credentials = await space.internal.getCredentials();
-    const genesisCredential = credentials.find(
-      (c) => c.subject.assertion['@type'] === 'dxos.halo.credentials.SpaceGenesis',
-    );
-    expect(genesisCredential).toBeDefined();
-    expect(genesisCredential!.subject.assertion.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
+    const genesis = credentials.flatMap(
+      (credential) => specificCredential<SpaceGenesis>(credential, 'dxos.halo.credentials.SpaceGenesis') ?? [],
+    )[0];
+    expect(genesis).toBeDefined();
+    expect(genesis.assertion.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
   });
 
   const createInvitationTracker = (peer: Client) => {
@@ -134,16 +150,16 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
     const invitationStream = peer.services.services.InvitationsService!.queryInvitations();
     onTestFinished(() => invitationStream.close());
     invitationStream.subscribe((msg) => {
-      if (msg.type === QueryInvitationsResponse.Type.ACCEPTED) {
+      if (msg.type === QueryInvitationsResponse_Type.ACCEPTED) {
         return;
       }
-      if (msg.action === QueryInvitationsResponse.Action.ADDED) {
+      if (msg.action === QueryInvitationsResponse_Action.ADDED) {
         msg.invitations?.forEach((inv) => invitationIds.add(inv.invitationId));
         if (awaitedInvitationId != null && invitationIds.has(awaitedInvitationId)) {
           awaitedInvitationId = null;
           onInvitationAppeared.wake();
         }
-      } else if (msg.action === QueryInvitationsResponse.Action.REMOVED) {
+      } else if (msg.action === QueryInvitationsResponse_Action.REMOVED) {
         msg.invitations?.forEach((inv) => invitationIds.delete(inv.invitationId));
         if (invitationIds.size > 0) {
           invitationsEmpty.wake();

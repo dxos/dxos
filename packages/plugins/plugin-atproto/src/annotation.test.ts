@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { DXN, Type } from '@dxos/echo';
 import { AtprotoVisibilityAnnotation } from '@dxos/schema';
 
-import { getFieldPublishFlags } from './annotation';
+import { getFieldPublishFlags } from './annotation.ts';
 
 // A partially-published struct (`meta`), a mirrored struct (`link`, whose unannotated fields are
 // visible via an external record, with one field forced private), plus non-optional published,

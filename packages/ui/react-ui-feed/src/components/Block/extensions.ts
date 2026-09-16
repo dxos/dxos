@@ -3,27 +3,34 @@
 //
 
 import { type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 
 import {
+  type ObjectLinkProps,
+  type WidgetDef,
+  WidgetHostOptions,
   type XmlWidgetRegistry,
-  type XmlWidgetState,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   extendedMarkdown,
+  objectLinks,
+  widgetHost,
   xmlBlockDecoration,
   xmlFormatting,
   xmlTags,
 } from '@dxos/ui-editor';
 
-import { highlights, highlightTheme } from './highlight';
+import { highlights, highlightTheme } from './highlight.ts';
 
 export type ItemExtensionOptions = {
   registry?: XmlWidgetRegistry;
+  /** The block widget for `![label](echo://…)` — an object embedded as a card; none by default. */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   editable?: boolean;
   themeMode?: 'light' | 'dark';
-  setWidgets?: (widgets: XmlWidgetState[]) => void;
+  setWidgets?: WidgetHostOptions['setWidgets'];
 };
 
 /**
@@ -41,13 +48,16 @@ export type ItemExtensionOptions = {
  */
 export const createBlockExtensions = ({
   registry,
+  objectImage,
   editable = false,
   themeMode = 'light',
   setWidgets,
 }: ItemExtensionOptions = {}): Extension[] => [
   ...sharedExtensions(registry, editable, themeMode),
   // The one part that cannot be shared: the callback that hands this item's widgets back to it.
-  ...(registry ? [xmlTags({ registry, setWidgets: setWidgets ?? (() => {}), bookmarks: ['prompt'] })] : []),
+  ...(registry
+    ? [widgetHost({ setWidgets, bookmarks: ['prompt'] }), xmlTags({ registry }), objectLinks({ image: objectImage })]
+    : []),
 ];
 
 /** Registries are compared by identity, so a feed's single registry is a single cache scope. */
@@ -92,4 +102,21 @@ const build = (registry: XmlWidgetRegistry | undefined, editable: boolean, theme
     registry?.prompt && xmlBlockDecoration({ tag: 'prompt', hideTags: true }),
     highlights,
     highlightTheme,
+    blockScrollerTheme,
   ].filter(Boolean) as Extension[];
+
+/**
+ * An item's editor never scrolls on the block axis: it is auto-height and the feed around it is
+ * what scrolls, so its content fits by construction.
+ *
+ * Left to `auto`, that invariant is broken transiently by any widget that changes height — a tool
+ * block's disclosure animating open grows the content every frame while `requestMeasure` lands the
+ * editor's new height a frame later, so the scroller is a frame short throughout and paints a
+ * scrollbar for the length of the animation. The inline axis keeps `auto`; a wide payload still
+ * scrolls.
+ */
+const blockScrollerTheme = EditorView.theme({
+  '.cm-scroller': {
+    overflowY: 'hidden',
+  },
+});

@@ -9,7 +9,6 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Annotation, DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { FAVORITE_TAG } from '@dxos/plugin-space/dashboard';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -19,12 +18,12 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { StreamDeckDashboard } from './StreamDeckDashboard';
+import { StreamDeckDashboard } from './StreamDeckDashboard.tsx';
 
 /** Story-local type so the keys exercise real label and icon annotations. */
 class StoryItem extends Type.makeObject<StoryItem>(DXN.make('org.dxos.type.test.streamDeckStoryItem', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'cyan' }),
   ),
 ) {}

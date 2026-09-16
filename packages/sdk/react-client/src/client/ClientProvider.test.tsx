@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
 import React, { Component, type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
@@ -10,10 +11,11 @@ import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus } from '@dxos/client';
 import { fromHost } from '@dxos/client/local';
 import { log } from '@dxos/log';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { useIdentity } from '../halo';
-import { ClientProvider } from './ClientProvider';
-import { useClient } from './useClient';
+import { useIdentity } from '../halo/index.ts';
+import { ClientProvider } from './ClientProvider.tsx';
+import { useClient } from './useClient.ts';
 
 log.config({ filter: 'ClientContext:debug,warn' });
 
@@ -31,13 +33,11 @@ const TestComponent = () => {
 };
 
 describe('Client hook', function () {
-  const render = () => useClient();
-
   test.skip('should throw when used outside a context', function () {
     // TODO(wittjosiah): Fix and factor out.
     // Based on https://github.com/testing-library/react-testing-library/pull/991#issuecomment-1207138334
     let error;
-    const { result } = renderHook(render, {
+    const { result } = renderHook(() => useClient(), {
       wrapper: class Wrapper extends Component<PropsWithChildren<unknown>> {
         constructor(props: PropsWithChildren<unknown>) {
           super(props);
@@ -79,7 +79,7 @@ describe('Client hook', function () {
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
-    const { result } = renderHook(render, { wrapper });
+    const { result } = renderHook(() => useClient(), { wrapper });
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
     });
@@ -94,7 +94,7 @@ describe('ClientProvider', () => {
     // TODO(wittjosiah): Use test builder to avoid warnings.
     client = new Client({ services: fromHost() });
     await client.initialize();
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
   });
 
   afterEach(() => {

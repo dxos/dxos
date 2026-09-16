@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import type * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { Key } from '@dxos/echo';
 
-import { findTypeSectionPath } from './type-section-path';
+import { findTypeSectionPath } from './type-section-path.ts';
 
 const spaceId = Key.SpaceId.random();
 const objectId = Key.EntityId.random();

@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { ContentBlock, Message } from '@dxos/types';
 
-import * as Host from './Host';
+import * as Host from './Host.ts';
 
 /** Spawns the real SDK and spends real tokens, so it is opt-in: `moon run agent-claude:demo`. */
 const ENABLED = !!process.env.DX_RUN_LIVE;

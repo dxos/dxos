@@ -8,11 +8,11 @@ import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
+import { SpanAttributes } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker';
-import { chunkArray } from './utils';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker/index.ts';
+import { chunkArray } from './utils.ts';
 
 export const IndexCursor = Schema.Struct({
   /**
@@ -43,13 +43,9 @@ export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
 export class IndexTracker {
   /**
    * Applies any migrations this database has not recorded yet.
-   *
-   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
-   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
    */
   migrate = Effect.fn('IndexTracker.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      Effect.provide(SqlTransaction.clientLayer),
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
@@ -62,6 +58,9 @@ export class IndexTracker {
     ): Effect.Effect<IndexCursor[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        if (query.spaceId) {
+          yield* Effect.annotateCurrentSpan(SpanAttributes.SPACE_ID, query.spaceId);
+        }
 
         const spaceIdParam = query.spaceId === undefined ? null : (query.spaceId ?? '');
         const sourceNameParam = query.sourceName === undefined ? null : query.sourceName;

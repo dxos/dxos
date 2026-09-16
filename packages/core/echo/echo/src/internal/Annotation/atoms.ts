@@ -7,13 +7,13 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 
-import type * as Annotation from '../../Annotation';
-import type * as Entity from '../../Entity';
-import { memoizePerEntity, memoizePerEntityKey } from '../common/atom-memo';
-import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot';
-import { subscribe } from '../common/proxy/reactive';
-import { isEntity } from '../Entity';
-import { get as getAnnotation } from './entity-dictionary';
+import type * as Annotation from '../../Annotation.ts';
+import type * as Entity from '../../Entity.ts';
+import { memoizePerEntity, memoizePerEntityKey } from '../common/atom-memo.ts';
+import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
+import { subscribe } from '../common/proxy/reactive.ts';
+import { isEntity } from '../Entity/index.ts';
+import { get as getAnnotation } from './entity-dictionary.ts';
 
 /**
  * Atom memo for an annotation value on an entity instance.

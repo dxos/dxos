@@ -6,16 +6,18 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
+import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import { EntityId } from '@dxos/keys';
+import { Annotation } from '@dxos/echo';
+import { EntityId, URI } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
 
-import { CommitSelector, buildExecutionGraph } from './execution-graph';
-import { collectTraceEvents, withMeta } from './testing';
+import { CommitSelector, buildExecutionGraph } from './execution-graph.ts';
+import { collectTraceEvents, withMeta } from './testing/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -25,8 +27,6 @@ const makeCommit = (id: string, opts: Partial<Commit> = {}): Commit => ({
   message: opts.message ?? id,
   ...opts,
 });
-
-const ids = (commits: Commit[]) => commits.map((commit) => commit.id);
 
 const renderGraph = (messages: Trace.Message[], collapseCompletedSpans = false) => {
   const { commits, branches } = buildExecutionGraph({ traceMessages: messages, collapseCompletedSpans });
@@ -149,7 +149,11 @@ describe('CommitSelector', () => {
       const a = makeCommit('a');
       const b = makeCommit('b');
       const c = makeCommit('c');
-      expect(ids(CommitSelector.last().select([a, b, c]))).toEqual(['c']);
+      expect(
+        CommitSelector.last()
+          .select([a, b, c])
+          .map((commit) => commit.id),
+      ).toEqual(['c']);
     });
 
     test('produces the most recent commit on a branch when composed', ({ expect }) => {
@@ -157,7 +161,7 @@ describe('CommitSelector', () => {
       const b = makeCommit('b', { branch: 'main' });
       const c = makeCommit('c', { branch: 'main' });
       const selector = CommitSelector.branch('main').pipe(CommitSelector.compose(CommitSelector.last()));
-      expect(ids(selector.select([a, b, c]))).toEqual(['c']);
+      expect(selector.select([a, b, c]).map((commit) => commit.id)).toEqual(['c']);
     });
   });
 
@@ -166,7 +170,12 @@ describe('CommitSelector', () => {
       const a = makeCommit('a', { branch: 'main' });
       const b = makeCommit('b', { branch: 'feature' });
       const selector = CommitSelector.unionAll(CommitSelector.branch('main'), CommitSelector.branch('feature'));
-      expect(ids(selector.select([a, b])).toSorted()).toEqual(['a', 'b']);
+      expect(
+        selector
+          .select([a, b])
+          .map((commit) => commit.id)
+          .toSorted(),
+      ).toEqual(['a', 'b']);
     });
 
     test('dedupes by id', ({ expect }) => {
@@ -1157,5 +1166,41 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
     const running = commits.find((commit) => commit.message === 'Running...');
     expect(running?.tags).toContain(SHIMMER_EFFECT_TAG);
     expect(commits.at(-1)).toBe(running);
+  });
+
+  test('agent Generating... after a collapsed request anchors to the tail of main', ({ expect }) => {
+    // A completed request collapses onto `main`, so the agent's own branch holds nothing; a fresh
+    // turn on the same process must still hang off the previous completion rather than float.
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent' },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({
+      traceMessages: messages,
+      activeProcesses: [
+        makeActiveProcess({
+          pid: Process.ID.make('agent'),
+          key: AGENT_PROCESS_KEY,
+          state: Process.State.RUNNING,
+          params: {
+            name: null,
+            annotations: Annotation.buildDictionary((dictionary) => {
+              Annotation.setDictionary(dictionary, Process.TargetAnnotation, URI.make('dxn:echo:@:chat'));
+            }),
+          },
+        }),
+      ],
+    });
+
+    const completed = commits.find((commit) => commit.message === 'Agent completed request');
+    const generating = commits.find((commit) => commit.message === 'Generating...');
+    expect(completed?.branch).toBe('main');
+    expect(generating?.parents).toEqual([completed?.id]);
   });
 });

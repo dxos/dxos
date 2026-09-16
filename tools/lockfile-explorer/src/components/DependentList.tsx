@@ -12,8 +12,8 @@ import {
   type PackagePath,
   type VersionId,
   parsePackageId,
-} from '../lockfile';
-import { ellipsis } from '../util';
+} from '../lockfile/index.ts';
+import { ellipsis } from '../util/index.ts';
 
 export type DependentListProps = {
   dependants: [

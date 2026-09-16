@@ -4,7 +4,7 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { isProxy } from './proxy/proxy-utils';
+import { isProxy } from './proxy/proxy-utils.ts';
 
 /**
  * Memoization for atoms derived from an ECHO entity, replacing `Atom.family` so that an atom lives

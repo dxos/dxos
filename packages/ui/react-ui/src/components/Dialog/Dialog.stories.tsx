@@ -4,16 +4,18 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Input } from '../Input';
-import { ScrollArea } from '../ScrollArea';
-import { Dialog, type DialogContentProps } from './Dialog';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Field } from '../Field/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog.tsx';
 
-type StoryArgs = Pick<DialogContentProps, 'size'> &
+type StoryArgs = Pick<DialogContentProps, 'size' | 'elevation'> &
   Partial<{
     title: string;
     description: string;
@@ -26,14 +28,14 @@ type StoryArgs = Pick<DialogContentProps, 'size'> &
  * Standard Dialog with non-scrolling content in Dialog.Body.
  * Dialog.Body propagates the Column grid via subgrid. Children auto-center via --dx-col.
  */
-const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
+const DefaultStory = ({ size, elevation, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
         <Button>{openTrigger}</Button>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
-        <Dialog.Content size={size}>
+        <Dialog.Content size={size} elevation={elevation}>
           <Dialog.Header>
             <Dialog.Title>{title}</Dialog.Title>
             {closeTrigger && (
@@ -44,9 +46,9 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
           </Dialog.Header>
           <Dialog.Body>
             <Dialog.Description>{description}</Dialog.Description>
-            <Input.Root>
-              <Input.TextInput placeholder='Enter value' />
-            </Input.Root>
+            <Field.Root>
+              <Field.Input placeholder='Enter value' />
+            </Field.Root>
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
@@ -64,14 +66,14 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
  * The ScrollArea breaks out of Body's gutter padding via `--gutter`
  * and applies its own asymmetric padding (accounting for scrollbar width).
  */
-const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
+const ScrollingStory = ({ size, elevation, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
         <Button>{openTrigger}</Button>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
-        <Dialog.Content size={size}>
+        <Dialog.Content size={size} elevation={elevation}>
           <Dialog.Header>
             <Dialog.Title>{title}</Dialog.Title>
             {closeTrigger && (
@@ -103,6 +105,9 @@ const meta = {
   component: Dialog as any,
   render: DefaultStory,
   decorators: [withTheme()],
+  argTypes: {
+    elevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -172,5 +177,124 @@ export const Scrolling: Story = {
     closeTrigger: 'Close',
     blockAlign: 'center',
     size: 'md',
+  },
+};
+
+const dialogElement = () => document.querySelector<HTMLElement>('[role="dialog"]');
+
+/** Opens from the trigger, is labelled and described by its parts, and closes on Escape. */
+export const TestOpenClose: StoryObj = {
+  render: () => (
+    <Dialog.Root>
+      <Dialog.Trigger asChild>
+        <Button>Open dialog</Button>
+      </Dialog.Trigger>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Described dialog</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.ActionIconButton action='close' />
+            </Dialog.Close>
+          </Dialog.Header>
+          <Dialog.Body>
+            <Dialog.Description>A description the dialog points at.</Dialog.Description>
+          </Dialog.Body>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole('button', { name: 'Open dialog' });
+    await expect(dialogElement()).toBeNull();
+    await userEvent.click(trigger);
+    const dialog = await waitFor(async () => {
+      const element = dialogElement();
+      await expect(element).not.toBeNull();
+      invariant(element);
+      return element;
+    });
+    await expect(dialog.getAttribute('aria-modal')).toBe('true');
+    await waitFor(async () => {
+      const labelledBy = dialog.getAttribute('aria-labelledby');
+      const describedBy = dialog.getAttribute('aria-describedby');
+      await expect(labelledBy && document.getElementById(labelledBy)?.textContent).toBe('Described dialog');
+      await expect(describedBy && document.getElementById(describedBy)?.textContent).toContain('description');
+    });
+    // Focus lands inside the dialog.
+    await waitFor(async () => expect(dialog.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => expect(dialogElement()).toBeNull());
+  },
+};
+
+/** The action bar's first control takes focus, not the close button that precedes it in the DOM. */
+export const TestActionBarFocus: StoryObj = {
+  render: () => (
+    <Dialog.Root defaultOpen>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Actionable dialog</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.ActionIconButton action='close' />
+            </Dialog.Close>
+          </Dialog.Header>
+          <Dialog.Body>
+            <Field.Root>
+              <Field.Input placeholder='A field that comes first too' />
+            </Field.Root>
+          </Dialog.Body>
+          <Dialog.ActionBar>
+            <Button>Cancel</Button>
+            <Button variant='primary'>Commit</Button>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async () => {
+    await waitFor(async () => expect(dialogElement()).not.toBeNull());
+    await waitFor(async () => expect(document.activeElement?.textContent).toBe('Cancel'));
+  },
+};
+
+/** Without a `Description` the dialog carries no `aria-describedby`; the marked control wins over the action bar. */
+export const TestNoDescriptionAutoFocus: StoryObj = {
+  render: () => (
+    <Dialog.Root defaultOpen>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Undescribed dialog</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.ActionIconButton action='close' />
+            </Dialog.Close>
+          </Dialog.Header>
+          <Dialog.ActionBar>
+            <Dialog.Close asChild>
+              <Button>Cancel</Button>
+            </Dialog.Close>
+            <Button variant='primary' {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}>
+              Commit
+            </Button>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async () => {
+    const dialog = await waitFor(async () => {
+      const element = dialogElement();
+      await expect(element).not.toBeNull();
+      invariant(element);
+      return element;
+    });
+    // The machine assumes both parts until its first-frame check finds which are rendered.
+    await waitFor(async () => {
+      await expect(dialog.getAttribute('aria-labelledby')).not.toBeNull();
+      await expect(dialog.getAttribute('aria-describedby')).toBeNull();
+    });
+    await waitFor(async () => expect(document.activeElement?.textContent).toBe('Commit'));
   },
 };

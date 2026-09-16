@@ -5,7 +5,7 @@
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import { createProgressRegistry } from './progress-registry';
+import { createProgressRegistry } from './progress-registry.ts';
 
 describe('createProgressRegistry', () => {
   test('register surfaces a task in the snapshot atom', () => {

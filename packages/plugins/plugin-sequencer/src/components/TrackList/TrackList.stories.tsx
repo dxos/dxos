@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Track } from '#types';
 
-import { TrackList } from './TrackList';
+import { TrackList } from './TrackList.tsx';
 
 const initialTracks: Track.Track[] = [
   {

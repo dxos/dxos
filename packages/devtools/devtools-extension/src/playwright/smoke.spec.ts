@@ -4,7 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 
-import { ExtensionManager } from './extension-manager';
+import { ExtensionManager } from './extension-manager.ts';
 
 // CircleCI does not support headed mode of Playwright.
 // And Playwright does not support extensions in headless mode.

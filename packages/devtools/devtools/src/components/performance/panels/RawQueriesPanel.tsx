@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type CustomPanelProps, Panel } from '../Panel';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
 
 export const RawQueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: Map<string, number> }>) => {
   const keys = Array.from(queries.keys()).sort();

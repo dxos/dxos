@@ -12,8 +12,8 @@ import { Branch, Version } from '@dxos/versioning';
 import { type UseVersioningResult } from '#hooks';
 import { ReviewCapabilities } from '#types';
 
-import { authorHue } from '../../util';
-import { VersionBanner } from './VersionBanner';
+import { authorHue } from '../../util/index.ts';
+import { VersionBanner } from './VersionBanner.tsx';
 
 export type VersionToolbarProps = {
   versioning: UseVersioningResult;

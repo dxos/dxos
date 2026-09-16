@@ -2,20 +2,29 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { credentialPayload, getCredentialAssertion } from '@dxos/credentials';
+import { type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { AuthorizedDeviceSchema, ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { MetadataStore } from '../metadata';
-import { valueEncoding } from '../pipeline';
-import { AuthStatus, SpaceManager } from '../space';
-import { IdentityManager } from './identity-manager';
+import { MetadataStore } from '../metadata/index.ts';
+import { valueEncoding } from '../pipeline/index.ts';
+import { AuthStatus, SpaceManager } from '../space/index.ts';
+import { openCredentialsDocument } from '../spaces/credentials-document-store.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { IdentityManager } from './identity-manager.ts';
 
 describe('identity/identity-manager', () => {
   const setupPeer = async ({
@@ -28,8 +37,8 @@ describe('identity/identity-manager', () => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 
     const keyring = new Keyring(storage.createDirectory('keyring'));
-    const feedStore = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
         root: storage.createDirectory('feeds'),
         signer: keyring,
         hypercore: {
@@ -38,24 +47,31 @@ describe('identity/identity-manager', () => {
       }),
     });
 
-    onTestFinished(() => feedStore.close());
+    onTestFinished(() => hypercoreStore.close());
 
     const networkManager = new SwarmNetworkManager({
       signalManager: new MemorySignalManager(signalContext),
       transportFactory: MemoryTransportFactory,
     });
     const spaceManager = new SpaceManager({
-      feedStore,
+      hypercoreStore,
       networkManager,
       metadataStore,
     });
-    const identityManager = new IdentityManager({ metadataStore, keyring, feedStore, spaceManager });
+    // The automerge scheme is opt-in in the product; these tests are what cover it.
+    const identityManager = new IdentityManager({
+      metadataStore,
+      keyring,
+      hypercoreStore,
+      spaceManager,
+      automergeCredentials: true,
+    });
 
     return {
       networkManager,
       metadataStore,
       identityManager,
-      feedStore,
+      hypercoreStore,
       keyring,
     };
   };
@@ -69,6 +85,42 @@ describe('identity/identity-manager', () => {
     expect(identity).to.exist;
   });
 
+  test('anchors the halo space on a space root document and mirrors its credentials', async () => {
+    const peer = await createServiceContext({ runtimeProps: { automergeCredentials: true } });
+    await peer.open(new Context());
+    onTestFinished(() => peer.close());
+
+    await peer.createIdentity();
+    const identity = peer.identityManager.identity!;
+    const spaceId = identity.haloSpaceId;
+
+    // HALO has never had a directory of its own, so anchoring has to mint one for the root to point at.
+    const refs = peer.echoHost.getSpaceRootRefs(spaceId);
+    expect(refs?.spaceRootDocUrl).to.exist;
+
+    // The id stays key-derived: recovery reconstructs the halo space from `haloSpaceKey` alone, so a
+    // root-derived id would leave a recovering device computing an id no document belongs to.
+    expect(spaceId).to.equal(await createIdFromSpaceKey(identity.haloSpaceKey));
+
+    const root = await peer.echoHost.loadDoc<SpaceRoot>(new Context(), refs!.spaceRootDocUrl);
+    expect(isSpaceRoot(root?.doc())).to.be.true;
+    expect(root!.doc()!.spaceId).to.equal(spaceId);
+
+    // Every credential the control feed carries is mirrored into the credentials document.
+    const store = await openCredentialsDocument(new Context(), peer.echoHost, spaceId);
+    await waitForCondition({ condition: () => store.read().length >= identity.space.spaceState.credentials.length });
+
+    const mirrored = new Set(store.read().map((entry) => entry.id));
+    for (const credential of identity.space.spaceState.credentials) {
+      expect(mirrored.has(requirePublicKey(credential.id).toHex())).to.be.true;
+    }
+
+    // The genesis credential is what makes the chain processable on its own.
+    const types = store.read().map((entry) => getCredentialAssertion(entry.credential).$typeName);
+    expect(types).to.include('dxos.halo.credentials.SpaceGenesis');
+    expect(types).to.include('dxos.halo.credentials.AuthorizedDevice');
+  });
+
   test('reload from storage', async () => {
     const storage = createStorage({ type: StorageType.RAM });
 
@@ -77,7 +129,7 @@ describe('identity/identity-manager', () => {
     await peer1.identityManager.open(new Context());
     const identity1 = await peer1.identityManager.createIdentity();
     await peer1.identityManager.close(Context.default());
-    await peer1.feedStore.close();
+    await peer1.hypercoreStore.close();
     await peer1.metadataStore.close();
 
     const peer2 = await setupPeer({ storage });
@@ -98,7 +150,7 @@ describe('identity/identity-manager', () => {
 
     const identity = await identityManager.createIdentity();
     expect(identity.profileDocument?.displayName).to.be.undefined;
-    await identityManager.updateProfile({ displayName: 'Example' });
+    await identityManager.updateProfile(create(ProfileDocumentSchema, { displayName: 'Example' }));
     expect(identity.profileDocument?.displayName).to.equal('Example');
   });
 
@@ -107,10 +159,12 @@ describe('identity/identity-manager', () => {
 
     const peer1 = await setupPeer({ signalContext });
     const identity1 = await peer1.identityManager.createIdentity();
-    peer1.networkManager.setPeerInfo({
-      peerKey: identity1.deviceKey.toHex(),
-      identityKey: identity1.identityKey.toHex(),
-    });
+    peer1.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        peerKey: identity1.deviceKey.toHex(),
+        identityKey: identity1.identityKey.toHex(),
+      }),
+    );
     await identity1.joinNetwork(Context.default());
 
     const peer2 = await setupPeer({ signalContext });
@@ -121,18 +175,13 @@ describe('identity/identity-manager', () => {
 
     const credential = await identity1.getIdentityCredentialSigner().createCredential({
       subject: deviceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        'identityKey': identity1.identityKey,
-        deviceKey,
-      },
+      assertion: create(AuthorizedDeviceSchema, {
+        identityKey: fromPublicKey(identity1.identityKey),
+        deviceKey: fromPublicKey(deviceKey),
+      }),
     });
 
-    await identity1.controlPipeline.writer.write({
-      credential: {
-        credential,
-      },
-    });
+    await identity1.controlPipeline.writer.write(credentialPayload(credential));
 
     const { identity: identity2, identityRecord } = await peer2.identityManager.prepareIdentity({
       identityKey: identity1.identityKey,
@@ -143,10 +192,12 @@ describe('identity/identity-manager', () => {
       dataFeedKey,
       authorizedDeviceCredential: credential,
     });
-    peer2.networkManager.setPeerInfo({
-      peerKey: identity2.deviceKey.toHex(),
-      identityKey: identity2.identityKey.toHex(),
-    });
+    peer2.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        peerKey: identity2.deviceKey.toHex(),
+        identityKey: identity2.identityKey.toHex(),
+      }),
+    );
     await identity2.joinNetwork(Context.default());
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.

@@ -11,7 +11,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from './sync';
+import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from './sync.ts';
 
 describe('createDailySyncTrigger', () => {
   let builder: EchoTestBuilder;

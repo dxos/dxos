@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as RemoteProcessManager from './RemoteProcessManager';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
 
 describe('RemoteProcessManager', () => {
   test('layerNoop yields an empty process tree', async ({ expect }) => {

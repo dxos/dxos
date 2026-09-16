@@ -5,14 +5,15 @@
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { SpaceMember, useMembers } from '@dxos/react-client/echo';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { SpaceMember_PresenceState, useMembers } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState } from '../../../hooks';
+import { MasterDetailTable } from '../../../components/index.ts';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsState } from '../../../hooks/index.ts';
 
 export const MembersPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
@@ -42,18 +43,19 @@ export const MembersPanel = (props: { space?: Space }) => {
     return members.map((member) => {
       let status = 'unknown';
       switch (member.presence) {
-        case SpaceMember.PresenceState.ONLINE:
+        case SpaceMember_PresenceState.ONLINE:
           status = 'online';
           break;
-        case SpaceMember.PresenceState.OFFLINE:
+        case SpaceMember_PresenceState.OFFLINE:
           status = 'offline';
           break;
       }
 
+      const identityKey = toPublicKey(member.identity?.identityKey);
       return {
-        id: member.identity.identityKey.toString(),
-        identityKey: member.identity.identityKey,
-        displayName: member.identity.profile?.displayName,
+        id: identityKey?.toString() ?? '',
+        identityKey,
+        displayName: member.identity?.profile?.displayName,
         status,
         _original: member,
       };

@@ -8,11 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 
-import type * as Database from './Database';
-import * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Type from './Type';
+import type * as Database from './Database.ts';
+import * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Type from './Type.ts';
 
 export class Tag extends Type.makeObject<Tag>(internal.TagTypeDXN)(
   Schema.Struct({

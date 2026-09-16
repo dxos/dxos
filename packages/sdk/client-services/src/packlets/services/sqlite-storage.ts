@@ -11,15 +11,11 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { FeedStorageDirectoryService } from '@dxos/feed-store';
+import { HypercoreStorageDirectoryService } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos/random-access-storage';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/hypercore';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/hypercore/index.ts';
 
 /**
  * True when a rejected SQL op failed because its connection was already closed — the message
@@ -37,7 +33,7 @@ export const isClosedConnectionError = (err: unknown): boolean => {
 };
 
 export type SqliteStorageOptions = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
 
 /**
@@ -171,7 +167,7 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
 
   constructor(
     private readonly filePath: string,
-    private readonly runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>,
+    private readonly runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
   ) {
     super();
     const parts = filePath.split('/');
@@ -351,7 +347,7 @@ export class SqliteStorage implements Storage {
   readonly path: string;
   readonly type = StorageType.NODE;
 
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   readonly #files = new Map<string, File>();
   readonly #nativeFiles = new Map<string, SqliteRandomAccessFile>();
   #closed = false;
@@ -362,14 +358,12 @@ export class SqliteStorage implements Storage {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -473,29 +467,57 @@ export type SqliteStorageLayerOptions = {
  */
 export const SqliteStorageLayer = (
   options: SqliteStorageLayerOptions = {},
-): Layer.Layer<SqliteStorageService, never, SqlClient.SqlClient | SqlTransactionTag> =>
+): Layer.Layer<SqliteStorageService, never, SqlClient.SqlClient> =>
   Layer.effect(
     SqliteStorageService,
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       return new SqliteStorage({ runtime }, options.path);
     }),
   );
 
-export type FeedStorageDirectoryLayerOptions = {
+export type HypercoreStorageDirectoryLayerOptions = {
   sub?: string;
 };
 
 /**
  * Effect Layer providing the hypercore feeds root directory from {@link SqliteStorage}.
  */
-export const FeedStorageDirectoryLayer = (
-  options: FeedStorageDirectoryLayerOptions = {},
-): Layer.Layer<FeedStorageDirectoryService, never, SqliteStorageService> =>
+export const HypercoreStorageDirectoryLayer = (
+  options: HypercoreStorageDirectoryLayerOptions = {},
+): Layer.Layer<HypercoreStorageDirectoryService, never, SqliteStorageService> =>
   Layer.effect(
-    FeedStorageDirectoryService,
+    HypercoreStorageDirectoryService,
     Effect.gen(function* () {
       const storage = yield* SqliteStorageService;
       return storage.createDirectory(options.sub ?? 'feeds');
     }),
   );
+
+/**
+ * Deletes every row the stack persists, so the next open starts from an empty database.
+ */
+export const wipeSqliteStorage: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient;
+  // Echo metadata + large space data.
+  yield* sql`DELETE FROM space_metadata`;
+  yield* sql`DELETE FROM space_large`;
+  // Keyring.
+  yield* sql`DELETE FROM keyring`;
+  // Automerge chunks + heads.
+  yield* sql`DELETE FROM automerge_chunks`;
+  yield* sql`DELETE FROM automerge_heads`;
+  // Hypercore feed files.
+  yield* sql`DELETE FROM hypercore_files`;
+  // Feed store (queue feeds, blocks, etc.).
+  yield* sql`DELETE FROM feeds`;
+  yield* sql`DELETE FROM blocks`;
+  yield* sql`DELETE FROM subscriptions`;
+  yield* sql`DELETE FROM cursor_tokens`;
+  yield* sql`DELETE FROM sync_state`;
+  // Index tables.
+  yield* sql`DELETE FROM indexCursor`;
+  yield* sql`DELETE FROM objectMeta`;
+  yield* sql`DELETE FROM reverseRef`;
+  yield* sql`DELETE FROM ftsIndex`;
+});

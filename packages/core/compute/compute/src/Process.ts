@@ -17,16 +17,16 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { Annotation } from '@dxos/echo';
+import { Annotation, type Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SerializedError } from '@dxos/protocols';
 
-import * as Operation from './Operation';
-import * as OperationHandlerSet from './OperationHandlerSet';
-import * as StorageService from './StorageService';
-import * as Trace from './Trace';
+import * as Operation from './Operation.ts';
+import * as OperationHandlerSet from './OperationHandlerSet.ts';
+import * as StorageService from './StorageService.ts';
+import * as Trace from './Trace.ts';
 
 //
 // Process.
@@ -135,11 +135,12 @@ export interface ProcessContext<I, O> {
   submitOutput(output: O): void;
 
   /**
-   * Set an alarm for the process to be woken up later.
+   * Set an alarm for the process to be woken up later. `onAlarm` runs with the process's own
+   * context, not the caller's: an alarm scheduled from inside a handler does not nest under it.
    *
    * @param timeout - Optional timeout in milliseconds. If not provided, the process is woken up as soon as possible.
    */
-  setAlarm(timeout?: number): void;
+  setAlarm(timeout?: number): Effect.Effect<void>;
 }
 
 /**
@@ -188,15 +189,6 @@ export const NotifyAnnotation = Annotation.make({
 });
 
 /**
- * URI of the Instructions object steering the process's conversation. Persisted at spawn (like
- * {@link TargetAnnotation}) so a re-hydrated process recovers its steering without reaching the Chat.
- */
-export const InstructionsAnnotation = Annotation.make({
-  id: 'org.dxos.process.instructions',
-  schema: URI.Schema,
-});
-
-/**
  * Marks a process as the harness host for its conversation (discovery substrate).
  */
 export const HarnessHostAnnotation = Annotation.make({
@@ -234,6 +226,17 @@ export interface Process<
   readonly name?: string;
 
   readonly services: readonly Context.Key<any, any>[];
+
+  /**
+   * Codecs for the process's inputs and outputs, from {@link MakeProcessOpts}. Exposed on the
+   * interface so a caller that moves a value across a boundary (a remote runtime) can encode it
+   * with the definition's own schema rather than assuming the value is already JSON.
+   */
+  readonly input: Schema.Codec<_Input, any>;
+  readonly output: Schema.Codec<_Output, any>;
+
+  /** Schemas to register with the process's database; see {@link MakeProcessOpts.types}. */
+  readonly types?: readonly Type.AnyEntity[];
 
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
@@ -279,6 +282,16 @@ export interface MakeProcessOpts {
   readonly output: Schema.Codec<any, any>;
   readonly services: readonly Context.Key<any, any>[];
   readonly rpcs?: RpcGroup.RpcGroup<any>;
+
+  /**
+   * Schemas the process's own data model needs, registered with its database at spawn.
+   *
+   * Declared here beside `services` because a host cannot know them: it resolves a process by key
+   * and has no view of the types that process queries. Unregistered, a TYPED query silently matches
+   * nothing — a queue append succeeds and the read back returns empty, which reads as a lost write
+   * rather than a missing schema.
+   */
+  readonly types?: readonly Type.AnyEntity[];
 }
 
 export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts, Opts>>(
@@ -493,11 +506,63 @@ export interface Monitor {
   processTreeAtom: Atom.Atom<readonly Info[]>;
 
   /**
+   * The process tree narrowed by {@link MonitorFilter} — the read a caller looking for *its* process
+   * wants, without reaching past this read-only surface into a manager.
+   *
+   * The aggregate monitor spans local and remote runtimes, so this answers "is my agent running,
+   * wherever it runs" — which is what a UI renders and what a caller holding no handle can ask.
+   */
+  list(filter?: MonitorFilter): Effect.Effect<readonly Info[]>;
+
+  /**
    * Stream ephemeral trace messages matching `filter` (DX-1125), sourced from local in-process
    * runtimes and remote runtimes broadcasting over the space swarm. Used to drive live progress UI.
    */
   subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
 }
+
+/** Filters for {@link Monitor.list}; an absent field matches everything. */
+export interface MonitorFilter {
+  readonly key?: string;
+  /** Target object the process was spawned against ({@link TargetAnnotation}). */
+  readonly target?: URI.URI;
+  readonly state?: State;
+  /** Space from the process's {@link Environment}; a process with no space matches no space filter. */
+  readonly space?: SpaceId;
+  readonly parentPid?: ID | null;
+}
+
+/**
+ * Whether `info` satisfies `filter`. Exported so every {@link Monitor} filters identically rather
+ * than each implementation growing its own notion of a match.
+ */
+export const matchesFilter = (info: Info, filter: MonitorFilter = {}): boolean => {
+  if (filter.key !== undefined && info.key !== filter.key) {
+    return false;
+  }
+  if (filter.state !== undefined && info.state !== filter.state) {
+    return false;
+  }
+  if (filter.space !== undefined && info.environment.space !== filter.space) {
+    return false;
+  }
+  if (filter.parentPid !== undefined && info.parentPid !== filter.parentPid) {
+    return false;
+  }
+  if (
+    filter.target !== undefined &&
+    Option.getOrUndefined(Annotation.getDictionary(info.params.annotations, TargetAnnotation)) !== filter.target
+  ) {
+    return false;
+  }
+  return true;
+};
+
+/** {@link Monitor.list} over a tree read, so a monitor implements it by supplying only that read. */
+export const listFromTree =
+  (processTree: Effect.Effect<readonly Info[]>) =>
+  (filter?: MonitorFilter): Effect.Effect<readonly Info[]> =>
+    Effect.map(processTree, (tree) => tree.filter((info) => matchesFilter(info, filter)));
 
 export class ProcessMonitorService extends Context.Service<ProcessMonitorService, Monitor>()(
   '@dxos/functions/ProcessMonitorService',

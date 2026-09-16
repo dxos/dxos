@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
@@ -13,13 +12,21 @@ import React, {
   useState,
 } from 'react';
 
-import { type FeedModel, MessageList, type MessageListController, type MessageRange } from '@dxos/react-ui-feed';
-import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { IconButton, createContext, useTranslation } from '@dxos/react-ui';
+import {
+  type FeedModel,
+  MessageList,
+  type MessageListController,
+  type MessageRange,
+  useMessageList,
+} from '@dxos/react-ui-feed';
+import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { assistantRegistry } from '../../registry';
-import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer';
-import { type ChatThreadEvent, type ChatView } from '../../types';
-import { MessageChrome, MessageChromeProvider } from '../MessageChrome';
+import { assistantRegistry } from '../../registry.tsx';
+import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
+import { translationKey } from '../../translations.ts';
+import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { MessageChrome, MessageChromeProvider } from '../MessageChrome/index.ts';
 
 //
 // Context
@@ -56,6 +63,8 @@ type ChatThreadRootProps = PropsWithChildren<
     viewType?: ChatView;
     /** Extends {@link assistantRegistry}; the host's entries win (e.g. a real `surface` widget). */
     registry?: XmlWidgetRegistry;
+    /** The block widget for an object embedded as a card (`![label](echo://…)`); the host's, since only it can render one. */
+    objectImage?: WidgetDef<ObjectLinkProps>;
     /** The reader's identity hue, published to the DOM for the prompt frame's tokens. */
     userHue?: string;
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
@@ -79,6 +88,7 @@ const ChatThreadRoot = ({
   model,
   viewType,
   registry,
+  objectImage,
   getObjectLabel,
   userHue,
   tailLines,
@@ -115,6 +125,7 @@ const ChatThreadRoot = ({
           model={model}
           renderer={renderer}
           registry={merged}
+          objectImage={objectImage}
           Chrome={MessageChrome}
           estimateSize={estimateRow}
           debug={debug}
@@ -145,7 +156,7 @@ type ChatThreadViewportProps = ComponentPropsWithoutRef<typeof MessageList.Viewp
  * `data-action="submit"` buttons; one delegated listener here turns those clicks into `submit`
  * events, which is what keeps the widgets renderable from the tag alone.
  */
-const ChatThreadViewport = ({ children, classNames, ...props }: ChatThreadViewportProps) => {
+const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThreadViewportProps) => {
   const { userHue, onEvent } = useChatThreadContext(CHAT_THREAD_VIEWPORT_NAME);
 
   const handleClick = useCallback(
@@ -165,7 +176,16 @@ const ChatThreadViewport = ({ children, classNames, ...props }: ChatThreadViewpo
     <div className='contents' data-testid='assistant.thread' data-hue={userHue} onClickCapture={handleClick}>
       {/* Every chat host is a flex column with a composer below: the scroll-container pair is the
           default, and a caller's classNames extend or override it. */}
-      <MessageList.Viewport {...props} classNames={['grow min-h-0', classNames]}>
+      <MessageList.Viewport
+        {...props}
+        classNames={['dx-grow', classNames]}
+        overlay={
+          <>
+            <ScrollToBottom />
+            {overlay}
+          </>
+        }
+      >
         {children}
       </MessageList.Viewport>
     </div>
@@ -175,12 +195,54 @@ const ChatThreadViewport = ({ children, classNames, ...props }: ChatThreadViewpo
 ChatThreadViewport.displayName = CHAT_THREAD_VIEWPORT_NAME;
 
 //
+// ScrollToBottom
+//
+
+const CHAT_THREAD_SCROLL_TO_BOTTOM_NAME = 'ChatThread.ScrollToBottom';
+
+/**
+ * Returns the reader to the tail, and re-arms the follow with it (`scrollToBottom` does both).
+ *
+ * Hidden by opacity rather than unmounted, because a control leaving the layout would move the
+ * scroller's own box — which the placement measures; `disabled` and `aria-hidden` then keep the
+ * invisible button out of the focus order and off the accessibility tree.
+ */
+const ScrollToBottom = () => {
+  const { t } = useTranslation(translationKey);
+  const { atEnd, following, scrollToBottom } = useMessageList(CHAT_THREAD_SCROLL_TO_BOTTOM_NAME);
+  // Hidden while the list follows the tail itself: a streaming turn outruns the glide a frame at a
+  // time, and `atEnd` alone would blink the button through every response.
+  const hidden = atEnd || following;
+
+  return (
+    <IconButton
+      variant='primary'
+      icon='ph--arrow-line-down--regular'
+      iconOnly
+      density='sm'
+      label={t('scroll-to-bottom.label')}
+      disabled={hidden}
+      aria-hidden={hidden}
+      classNames={[
+        'absolute bottom-2 left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300',
+        hidden && 'opacity-0 pointer-events-none',
+      ]}
+      data-testid='assistant.thread.scroll-to-bottom'
+      onClick={() => scrollToBottom({ behavior: 'smooth' })}
+    />
+  );
+};
+
+ScrollToBottom.displayName = CHAT_THREAD_SCROLL_TO_BOTTOM_NAME;
+
+//
 // ChatThread
 //
 
 export const ChatThread = {
   Root: ChatThreadRoot,
   Viewport: ChatThreadViewport,
+  ScrollToBottom,
 };
 
 export type { ChatThreadRootProps, ChatThreadViewportProps };

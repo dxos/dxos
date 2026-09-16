@@ -23,7 +23,7 @@ import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
 import { Blog } from '#types';
 
-import { getPublicationsSectionId } from '../paths';
+import { getPublicationsSectionId } from '../paths.ts';
 
 /** Node type of the "Publications" section under a space's content group. */
 const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;
@@ -158,7 +158,8 @@ export default Capability.makeModule(
             }),
             AppGraphNode.makeAction({
               id: SpaceOperation.RemoveObjects.meta.key,
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }),
+              data: () =>
+                Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }, { spaceId: db?.spaceId }),
               properties: {
                 label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Blog.Publication)),
                 icon: 'ph--trash--regular',

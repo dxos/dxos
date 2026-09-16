@@ -8,8 +8,15 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { IdentityRecovery } from './proto/gen/dxos/halo/credentials.ts';
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { IdentitySchema, RecoverIdentityRequestSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
+import {
+  CredentialSchema,
+  DeviceProfileDocumentSchema,
+  IdentityRecovery_Kind,
+  PresentationSchema,
+  ProfileDocumentSchema,
+} from './buf/proto/gen/dxos/halo/credentials_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { publicKey } from './service-schemas.ts';
 
 //
@@ -17,8 +24,8 @@ import { publicKey } from './service-schemas.ts';
 //
 
 export const CreateIdentityRequest = Schema.Struct({
-  profile: Schema.optional(protoMessage('dxos.halo.credentials.ProfileDocument')),
-  deviceProfile: Schema.optional(protoMessage('dxos.halo.credentials.DeviceProfileDocument')),
+  profile: Schema.optional(bufMessage(ProfileDocumentSchema)),
+  deviceProfile: Schema.optional(bufMessage(DeviceProfileDocumentSchema)),
 });
 export interface CreateIdentityRequest extends Schema.Schema.Type<typeof CreateIdentityRequest> {}
 
@@ -49,7 +56,7 @@ export const RecoveryCredentialData = Schema.Struct({
   /**
    * How the recovery key is held.
    */
-  kind: Schema.optional(Schema.Enum(IdentityRecovery.Kind)),
+  kind: Schema.optional(Schema.Enum(IdentityRecovery_Kind)),
 });
 export interface RecoveryCredentialData extends Schema.Schema.Type<typeof RecoveryCredentialData> {}
 
@@ -75,12 +82,12 @@ export const CreateRecoveryCredentialResponse = Schema.Struct({
 export interface CreateRecoveryCredentialResponse extends Schema.Schema.Type<typeof CreateRecoveryCredentialResponse> {}
 
 export const QueryIdentityResponse = Schema.Struct({
-  identity: Schema.optional(protoMessage('dxos.client.services.Identity')),
+  identity: Schema.optional(bufMessage(IdentitySchema)),
 });
 export interface QueryIdentityResponse extends Schema.Schema.Type<typeof QueryIdentityResponse> {}
 
 export const SignPresentationRequest = Schema.Struct({
-  presentation: protoMessage('dxos.halo.credentials.Presentation'),
+  presentation: bufMessage(PresentationSchema),
   nonce: Schema.optional(Schema.Uint8Array),
 });
 export interface SignPresentationRequest extends Schema.Schema.Type<typeof SignPresentationRequest> {}
@@ -93,7 +100,7 @@ export interface SignPresentationRequest extends Schema.Schema.Type<typeof SignP
 export class Rpcs extends RpcGroup.make(
   Rpc.make('createIdentity', {
     payload: CreateIdentityRequest,
-    success: protoMessage('dxos.client.services.Identity'),
+    success: bufMessage(IdentitySchema),
     error: serviceError,
   }),
   Rpc.make('requestRecoveryChallenge', {
@@ -101,8 +108,8 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('recoverIdentity', {
-    payload: protoMessage('dxos.client.services.RecoverIdentityRequest'),
-    success: protoMessage('dxos.client.services.Identity'),
+    payload: bufMessage(RecoverIdentityRequestSchema),
+    success: bufMessage(IdentitySchema),
     error: serviceError,
   }),
   Rpc.make('createRecoveryCredential', {
@@ -121,17 +128,17 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('updateProfile', {
-    payload: protoMessage('dxos.halo.credentials.ProfileDocument'),
-    success: protoMessage('dxos.client.services.Identity'),
+    payload: bufMessage(ProfileDocumentSchema),
+    success: bufMessage(IdentitySchema),
     error: serviceError,
   }),
   Rpc.make('signPresentation', {
     payload: SignPresentationRequest,
-    success: protoMessage('dxos.halo.credentials.Presentation'),
+    success: bufMessage(PresentationSchema),
     error: serviceError,
   }),
   Rpc.make('createAuthCredential', {
-    success: protoMessage('dxos.halo.credentials.Credential'),
+    success: bufMessage(CredentialSchema),
     error: serviceError,
   }),
 ).prefix('IdentityService.') {}

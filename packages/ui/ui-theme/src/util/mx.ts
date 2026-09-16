@@ -4,7 +4,7 @@
 
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
-import { type AdditionalClassGroups, twMergeConfig } from './tw-merge-config';
+import { type AdditionalClassGroups, twMergeConfig } from './tw-merge-config.ts';
 
 export const mx = extendTailwindMerge<AdditionalClassGroups>({
   extend: {

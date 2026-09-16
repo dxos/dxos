@@ -11,11 +11,11 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
 import { File } from '@dxos/types';
 
-import { FileArticle, FileSettings } from '#containers';
+import { FileArticle, FileCard, FileProperties, FileSettings } from '#containers';
 import { meta } from '#meta';
 
-import { FileAction } from '../types/FileCapabilities';
-import { FileUploadField } from './FileUploadField';
+import { FileAction } from '../types/FileCapabilities.ts';
+import { FileUploadField } from './FileUploadField.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -28,7 +28,21 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Slide, File.File),
         ),
         component: FileArticle,
-        props: ({ role, data: { subject } }) => ({ role, subject }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      // The file's contents as a card body: what a chat embed or a link preview shows.
+      Surface.create({
+        id: 'card',
+        filter: AppSurface.object(AppSurface.CardContent, File.File),
+        component: FileCard,
+        props: ({ data: { subject } }) => ({ subject }),
+      }),
+      Surface.create({
+        id: 'objectProperties',
+        // Renders inside `DefaultProperties`' `ObjectProperties` slot, so Name and Tags stay.
+        filter: AppSurface.object(AppSurface.ObjectProperties, File.File),
+        component: FileProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'createForm',

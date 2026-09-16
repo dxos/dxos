@@ -13,6 +13,13 @@ name: Publish
 #     then `changeset publish --tag next`. Ephemeral versions, no commit, no git tags, no `pre` mode.
 #
 # Apps deploy via deploy-apps.yml (which also cuts the versioned Composer production release), never here.
+#
+# TODO(wittjosiah): stays on GitHub Actions, for two independent reasons (flagged by CodeRabbit on
+# #12779): npm's trusted-publisher OIDC only trusts GitHub-hosted Actions runners (plus GitLab.com and
+# CircleCI cloud) - Depot CI's runner identity isn't one of them, so the `id-token: write` provenance
+# flow would fail there. Separately, this job's `container:` pulls ghcr.io/dxos/gh-actions using
+# `secrets.GITHUB_TOKEN`, which doesn't authenticate to GHCR from Depot CI either. The OIDC constraint
+# alone is enough to keep this on GitHub Actions regardless of the GHCR one.
 
 on:
   push:
@@ -62,7 +69,7 @@ jobs:
           fi
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           # Published artifacts are built from source, never trusted from a cache any CI job can
           # write to — the same reasoning as the isolated pnpm scope below.
@@ -131,6 +138,9 @@ jobs:
         run: moon run cli:publish
         env:
           NODE_ENV: production
+          # Baked into the binary by `scripts/build.ts` rather than committed. A build without it
+          # reports nowhere, so a fork's binary cannot land in this project.
+          DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
 
       - name: Publish the CLI (@next snapshot)
@@ -138,6 +148,7 @@ jobs:
         run: moon run cli:publish -- --tag next
         env:
           NODE_ENV: production
+          DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}
           NPM_CONFIG_PROVENANCE: 'true'
 
       # One tag + one GitHub Release per lockstep group (`v<version>` for core/SDK, `plugins-v<version>` for

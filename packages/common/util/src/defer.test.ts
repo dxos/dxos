@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { defer, deferAsync } from './defer';
+import { defer, deferAsync } from './defer.ts';
 
 describe('defer', () => {
   test('defer', () => {

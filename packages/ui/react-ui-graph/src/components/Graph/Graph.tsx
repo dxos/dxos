@@ -19,8 +19,8 @@ import {
   GraphRenderer,
   type GraphRendererOptions,
   createGraphDrag,
-} from '../../graph';
-import { useSvgContext } from '../../hooks';
+} from '../../graph/index.ts';
+import { useSvgContext } from '../../hooks/index.ts';
 
 export type GraphController = {
   refresh: () => void;

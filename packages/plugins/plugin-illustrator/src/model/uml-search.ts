@@ -13,9 +13,8 @@
 // See `docs/DESIGN.md`.
 //
 
-import type * as Scene from './scene';
-import { type UmlModel, parse, relationRanks } from './uml';
-import { GRID, type CompileOptions as GridCompileOptions, type Rect, emit, measureCell, zRouter } from './uml-grid';
+import type * as Scene from './scene.ts';
+import { GRID, type CompileOptions as GridCompileOptions, type Rect, emit, measureCell, zRouter } from './uml-grid.ts';
 import {
   type Group,
   type GroupRule,
@@ -25,7 +24,8 @@ import {
   linearChainRule,
   packGroups,
   resolveRects,
-} from './uml-rules';
+} from './uml-rules.ts';
+import { type UmlModel, parse, relationRanks } from './uml.ts';
 
 const GAP = GRID * 3;
 

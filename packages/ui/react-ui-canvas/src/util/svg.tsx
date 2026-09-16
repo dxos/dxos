@@ -7,8 +7,8 @@ import React, { type PropsWithChildren, type SVGProps } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type Dimension, type Point } from '../types';
-import { createPath } from './svg-path';
+import { type Dimension, type Point } from '../types.ts';
+import { createPath } from './svg-path.ts';
 
 // Refs
 //  - https://airbnb.io/visx/gallery

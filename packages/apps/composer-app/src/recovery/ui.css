@@ -6,41 +6,75 @@
    cannot leak into a host that merely renders the UI (storybook). */
 html[data-recovery-page] {
   block-size: 100%;
-  color-scheme: dark;
-  background: #0b0f14;
+  /* Safe mode runs without the theme plugin, so the OS preference is the only signal available;
+     the `.dark`/`.light` overrides below keep a host that does set a class authoritative. */
+  color-scheme: light dark;
+  background: light-dark(#e6ebf1, #070a0e);
 }
 
-html[data-recovery-page] body,
-html[data-recovery-page] #root {
+html[data-recovery-page] body {
   margin: 0;
+  block-size: 100%;
+}
+
+/* Must not set `margin`: an id-specificity shorthand here would defeat the chrome's own
+   `margin: 0 auto` centering. */
+html[data-recovery-page] #root {
   block-size: 100%;
 }
 
 .dxos-recovery {
   display: flex;
   flex-direction: column;
-  block-size: 100%;
+  /* Viewport-relative rather than `100%`: the chrome must fill the screen whether or not the host
+     gives it a sized ancestor chain, and `dvh` survives a mobile browser's collapsing toolbar. */
+  block-size: 100dvh;
   max-width: 60rem;
   margin: 0 auto;
   min-block-size: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: #0b0f14;
-  color: #d7e0ea;
+  color-scheme: light dark;
+  background: var(--dx-recovery-bg);
+  color: var(--dx-recovery-fg);
+
+  /* Every pair is resolved against the used `color-scheme`, so the palette needs no media query
+     and no duplicate token block. */
+  --dx-recovery-bg: light-dark(#f7f9fb, #0b0f14);
+  --dx-recovery-bg-translucent: light-dark(rgba(247, 249, 251, 0.96), rgba(11, 15, 20, 0.96));
+  --dx-recovery-fg: light-dark(#1e293b, #d7e0ea);
+  --dx-recovery-fg-muted: light-dark(#64748b, #8fa3b8);
+  --dx-recovery-separator: light-dark(#dbe2ea, #1e2936);
+  --dx-recovery-button-bg: light-dark(#ffffff, #111827);
+  --dx-recovery-button-bg-hover: light-dark(#eef2f7, #1e293b);
+  --dx-recovery-button-border: light-dark(#cbd5e1, #334155);
+  --dx-recovery-accent-fg: #f8fafc;
+  --dx-recovery-primary-bg: light-dark(#2563eb, #1d4ed8);
+  --dx-recovery-primary-border: light-dark(#1d4ed8, #2563eb);
+  --dx-recovery-danger-bg: light-dark(#dc2626, #991b1b);
+  --dx-recovery-danger-border: light-dark(#b91c1c, #7f1d1d);
+  --dx-recovery-running-bg: light-dark(#d97706, #92400e);
+  --dx-recovery-running-border: light-dark(#b45309, #b45309);
+}
+
+/* Honour an explicit appearance when the host sets one (Composer's theme plugin and storybook both
+   toggle these classes on `html`); scoped to the chrome so the stylesheet cannot restyle the host. */
+html.dark[data-recovery-page],
+html.dark .dxos-recovery {
+  color-scheme: dark;
+}
+
+html.light[data-recovery-page],
+html.light .dxos-recovery {
+  color-scheme: light;
 }
 
 .dxos-recovery * {
   box-sizing: border-box;
 }
 
-/* Hosts that embed the chrome rather than owning the document (storybook) have no 100%-height
-   ancestor chain to inherit from. */
-.dxos-recovery-fill {
-  block-size: 100dvh;
-}
-
 .dxos-recovery header {
   padding: 1rem 1.25rem 0.5rem;
-  border-bottom: 1px solid #1e2936;
+  border-bottom: 1px solid var(--dx-recovery-separator);
 }
 
 .dxos-recovery header h1 {
@@ -52,7 +86,7 @@ html[data-recovery-page] #root {
 .dxos-recovery header p {
   margin: 0.35rem 0 0;
   font-size: 0.8rem;
-  color: #8fa3b8;
+  color: var(--dx-recovery-fg-muted);
 }
 
 .dxos-recovery .header-actions {
@@ -81,7 +115,7 @@ html[data-recovery-page] #root {
 .dxos-recovery footer {
   flex: none;
   padding: 0.5rem 0.75rem;
-  background: rgba(11, 15, 20, 0.96);
+  background: var(--dx-recovery-bg-translucent);
   backdrop-filter: blur(8px);
 }
 
@@ -94,8 +128,8 @@ html[data-recovery-page] #root {
 .dxos-recovery button {
   flex: 1 1 0;
   min-width: 0;
-  border: 1px solid #334155;
-  background: #111827;
+  border: 1px solid var(--dx-recovery-button-border);
+  background: var(--dx-recovery-button-bg);
   color: inherit;
   border-radius: 0.25rem;
   padding: 0.55rem 0.35rem;
@@ -109,7 +143,7 @@ html[data-recovery-page] #root {
 }
 
 .dxos-recovery button:hover:not(:disabled) {
-  background: #1e293b;
+  background: var(--dx-recovery-button-bg-hover);
 }
 
 .dxos-recovery button:disabled {
@@ -118,17 +152,34 @@ html[data-recovery-page] #root {
 }
 
 .dxos-recovery button.primary {
-  border-color: #2563eb;
-  background: #1d4ed8;
+  border-color: var(--dx-recovery-primary-border);
+  background: var(--dx-recovery-primary-bg);
+  color: var(--dx-recovery-accent-fg);
 }
 
 .dxos-recovery button.danger {
-  border-color: #7f1d1d;
-  background: #991b1b;
+  border-color: var(--dx-recovery-danger-border);
+  background: var(--dx-recovery-danger-bg);
+  color: var(--dx-recovery-accent-fg);
 }
 
 /* The debug port evaluates arbitrary agent-supplied code; it must be unmistakable while live. */
 .dxos-recovery button.running {
-  border-color: #b45309;
-  background: #92400e;
+  border-color: var(--dx-recovery-running-border);
+  background: var(--dx-recovery-running-bg);
+  color: var(--dx-recovery-accent-fg);
+}
+
+/* The generic hover outranks the accent classes, so each accent restates it — otherwise a light-mode
+   hover would paint the accent's own light text onto the neutral hover fill. */
+.dxos-recovery button.primary:hover:not(:disabled) {
+  background: light-dark(#1d4ed8, #2563eb);
+}
+
+.dxos-recovery button.danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.dxos-recovery button.running:hover:not(:disabled) {
+  background: #b45309;
 }

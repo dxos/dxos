@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { PublicRegistryArticle, PublicRegistryArticle as default } from './PublicRegistryArticle';
+export { PublicRegistryArticle, PublicRegistryArticle as default } from './PublicRegistryArticle.tsx';

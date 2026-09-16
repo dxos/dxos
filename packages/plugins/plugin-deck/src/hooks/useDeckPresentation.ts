@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Breakpoint, useBreakpoints } from './useBreakpoints';
+import { type Breakpoint, useBreakpoints } from './useBreakpoints.ts';
 
 export type DeckPresentation = 'fullbleed' | 'sliding';
 

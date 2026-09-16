@@ -22,7 +22,7 @@ import {
   messagesAscending,
   senderMatches,
   setDocumentContent,
-} from './helpers';
+} from './helpers.ts';
 
 /** The artifact the pipeline owns; regenerated wholesale each run. */
 export const INVESTOR_LOG_NAME = 'Investor Conversations';

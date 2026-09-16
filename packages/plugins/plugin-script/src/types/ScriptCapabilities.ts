@@ -10,11 +10,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-import { type Compiler as CompilerType } from '../compiler';
+import { type Compiler as CompilerType } from '../compiler/index.ts';
 
 // Inline import to avoid `Settings` namespace alias colliding with the
 // `Settings` capability export below.
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 export const Compiler = Capability.makeSingleton<CompilerType>()(`${meta.profile.key}.capability.compiler`);

@@ -8,7 +8,7 @@ import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type EncodedTrackName, TrackNameCodec, type TrackObject } from './types';
+import { type EncodedTrackName, TrackNameCodec, type TrackObject } from './types.ts';
 import {
   type CallsServiceConfig,
   CallsServicePeer,
@@ -16,7 +16,7 @@ import {
   createInaudibleAudioStreamTrack,
   getScreenshare,
   getUserMediaTrack,
-} from './util';
+} from './util/index.ts';
 
 export type MediaState = {
   audioDeviceId?: string;

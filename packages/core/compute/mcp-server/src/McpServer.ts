@@ -22,15 +22,15 @@ import { makeRegistry } from '@dxos/echo-client';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
-import { ToolFailure, failure } from './internal/failure';
-import * as iconInternal from './internal/icon';
-import * as identityInternal from './internal/identity';
-import * as inputInternal from './internal/input';
-import * as snapshotInternal from './internal/snapshot';
-import * as spaceInternal from './internal/space';
-import * as viewInternal from './internal/view';
-import * as wireInternal from './internal/wire';
+export { ToolFailure, type ToolFailureCode, failure } from './internal/failure.ts';
+import { ToolFailure, failure } from './internal/failure.ts';
+import * as iconInternal from './internal/icon.ts';
+import * as identityInternal from './internal/identity.ts';
+import * as inputInternal from './internal/input.ts';
+import * as snapshotInternal from './internal/snapshot.ts';
+import * as spaceInternal from './internal/space.ts';
+import * as viewInternal from './internal/view.ts';
+import * as wireInternal from './internal/wire.ts';
 
 //
 // Host contract.
@@ -75,6 +75,20 @@ export class Host extends Context.Service<Host, HostShape>()('@dxos/mcp-server/H
  * carries none of its properties through JSON.
  */
 export const snapshot = snapshotInternal.entities;
+
+/**
+ * Parameter schema for a tool that takes no input.
+ *
+ * Spelled as a record with an uninhabited value type rather than `Schema.Struct({})` because v4
+ * emits an empty struct as `{not: {type: 'null'}}` — the bare `object` keyword, which states no
+ * `type` at all. Effect's own MCP server decodes every tool's input schema against a shape that
+ * requires `type`, so a tool spelled the obvious way takes the whole server down at startup, and a
+ * provider's strict tool mode likewise rejects an object that does not state
+ * `additionalProperties`. A `Never` value type admits no keys, so this emits
+ * `{type: 'object', additionalProperties: false}` — the same contract, and valid under both.
+ * A JSON-schema annotation cannot express it: v4 honours such an annotation only on a check.
+ */
+export const NoParameters = Schema.Record(Schema.String, Schema.Never);
 
 //
 // The fixed tool surface.
@@ -267,10 +281,12 @@ export const loadSkillByName = (
   catchCollision(
     viewInternal.mcpSkills(registry).pipe(
       Effect.flatMap((projected) => {
+        // `description` is spread in only when it resolved, for the reason `operationView` gives:
+        // an explicit `undefined` survives encoding and MCP's structured content must be JSON.
         const summarize = (candidate: viewInternal.McpSkill) => ({
           name: candidate.promptName,
           key: candidate.key,
-          description: candidate.description,
+          ...(candidate.description === undefined ? {} : { description: candidate.description }),
         });
         if (skill == null) {
           return Effect.succeed<SkillListing>({ skills: projected.map(summarize) });
@@ -415,7 +431,9 @@ export const invoke = (
 
       // Nothing to qualify against when the call named no space: a space-less result carries no
       // same-space references.
-      const result = resolvedSpaceId === undefined ? output : spaceInternal.qualifyRefs(output, resolvedSpaceId);
+      const qualified = resolvedSpaceId === undefined ? output : spaceInternal.qualifyRefs(output, resolvedSpaceId);
+      // Structured content must be JSON: a void output becomes `{}` and `undefined` values are dropped.
+      const result: unknown = qualified === undefined ? {} : JSON.parse(JSON.stringify(qualified));
       return result !== null && typeof result === 'object' && !Array.isArray(result)
         ? (result as Record<string, unknown>)
         : { output: result };

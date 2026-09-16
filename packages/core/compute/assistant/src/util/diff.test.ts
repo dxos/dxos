@@ -9,7 +9,7 @@ import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { applyDiffs } from './diff';
+import { applyDiffs } from './diff.ts';
 
 describe('diff', () => {
   let builder: EchoTestBuilder;

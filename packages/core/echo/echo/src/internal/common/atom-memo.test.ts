@@ -5,8 +5,8 @@
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import * as Obj from '../../Obj';
-import { TestSchema } from '../../testing';
+import * as Obj from '../../Obj.ts';
+import { TestSchema } from '../../testing/index.ts';
 
 const makePerson = (name: string) => Obj.make(TestSchema.Person, { name });
 

@@ -22,7 +22,7 @@ import { Event as EventType } from '@dxos/types';
 import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
 import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
-import { getCalendarEventPath, getEventNodeId } from '../../paths';
+import { getCalendarEventPath, getEventNodeId } from '../../paths.ts';
 
 // Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
 const NOT_STARRED = Atom.make(false);
@@ -106,7 +106,11 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
 
   // Delete the event locally.
   const handleDelete = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [event] });
+    void invokePromise(
+      SpaceOperation.RemoveObjects,
+      { objects: [event] },
+      { spaceId: Obj.getDatabase(event)?.spaceId },
+    );
   }, [invokePromise, event]);
 
   return (

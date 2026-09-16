@@ -8,7 +8,9 @@ Idiomatic patterns for UI development.
 
 - **Container composition**
   Use `composable()` for self-rendering containers.
-  Use `dx-container` for expandable layouts.
+  Use `dx-expand` for expandable layouts — or `dx-grow` / `dx-fill` when you know the parent is a
+  flex/grid container or a definite-size block respectively. None of them clip: add
+  `overflow-hidden` only where a clip is actually wanted.
 
 - **Avoid redundant class names**
   E.g., don't add `font-medium`/`text-sm` to components that already style themselves.

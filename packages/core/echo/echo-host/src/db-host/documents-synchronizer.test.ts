@@ -7,17 +7,50 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { AutomergeHost } from '../automerge';
-import { createTestSqliteRuntime } from '../testing';
-import { DocumentsSynchronizer } from './documents-synchronizer';
+import { AutomergeHost } from '../automerge/index.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 
 describe('DocumentsSynchronizer', () => {
+  test('splits pending documents over the batch cap and delivers the remainder', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const handles = await Promise.all(
+      Array.from({ length: 5 }, (_, index) => host.createDoc<{ text: string }>({ text: `doc-${index}` })),
+    );
+
+    const batches: number[] = [];
+    const delivered = new Set<string>();
+    const allDelivered = new Trigger();
+    const synchronizer = new DocumentsSynchronizer({
+      automergeHost: host,
+      maxBatchDocuments: 2,
+      sendUpdates: (batch) => {
+        const updates = (batch.updates ?? []).filter((update) => update.mutation);
+        batches.push(updates.length);
+        updates.forEach((update) => delivered.add(update.documentId));
+        if (delivered.size === handles.length) {
+          allDelivered.wake();
+        }
+      },
+    });
+    await openAndClose(synchronizer);
+
+    await synchronizer.addDocuments(handles.map((handle) => handle.documentId));
+    await allDelivered.wait({ timeout: 5_000 });
+
+    expect(Math.max(...batches)).toBeLessThanOrEqual(2);
+    expect(batches.filter((size) => size > 0).length).toBeGreaterThanOrEqual(3);
+  });
+
   test('two synchronizers receive updates for shared document', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
@@ -93,10 +126,12 @@ describe('DocumentsSynchronizer', () => {
     onTestFinished(() => dispose());
     const host = new AutomergeHost({ runtime });
     await openAndClose(host);
+    const sentUpdate = new Trigger();
     const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
       sendUpdates: () => {
         counter++;
+        sentUpdate.wake();
       },
     });
     await openAndClose(synchronizer);
@@ -107,12 +142,12 @@ describe('DocumentsSynchronizer', () => {
     // Add document to synchronizer (simulates updateSubscription with addIds).
     await synchronizer.addDocuments([handle.documentId]);
 
-    // Wait for the changes to be processed.
-    await sleep(100);
+    // Wait for the scheduled job to flush the initial sync.
+    await asyncTimeout(sentUpdate.wait(), 1_000);
 
     // Updates will be sent for the initial sync (this is expected behavior).
     // The key is that subsequent updates from the client should be properly synced.
-    expect(counter).to.be.greaterThanOrEqual(0);
+    expect(counter).to.be.greaterThanOrEqual(1);
   });
 
   describe('persistence', () => {
@@ -138,8 +173,8 @@ describe('DocumentsSynchronizer', () => {
         // Add to synchronizer (simulates updateSubscription with addIds).
         await synchronizer.addDocuments([documentId]);
 
-        // Wait for auto-save (no explicit flush).
-        await sleep(500);
+        // Wait for the background auto-save to persist the document to disk (no explicit flush).
+        await waitForCondition({ condition: () => host.hasDocOnDisk(documentId), timeout: 2_000 });
 
         await host.close();
         await synchronizer.close();
@@ -155,12 +190,36 @@ describe('DocumentsSynchronizer', () => {
 
         const handle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
         invariant(handle);
-        await handle.whenReady();
+        await handle.waitUntilReady();
 
         expect(handle.doc().text).to.equal(text);
 
         await host.close();
       }
     });
+  });
+
+  // Unsubscribing must release the host's lease, or a client releasing an object frees nothing here.
+  test('unsubscribing releases the document on the host', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+
+    const created = await host.createDoc<{ text: string }>({ text: 'subscribed' });
+    const documentId = created.documentId;
+    await host.flush(Context.default());
+    created[Symbol.dispose]();
+
+    const synchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
+    await openAndClose(synchronizer);
+    await synchronizer.addDocuments([documentId]);
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).to.contain(documentId);
+
+    synchronizer.removeDocuments([documentId]);
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).to.not.contain(documentId);
+    expect(host.leasedDocsCount).to.equal(0);
   });
 });

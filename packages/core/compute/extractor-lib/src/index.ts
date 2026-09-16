@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './domain';
-export * from './identity';
-export * from './selection';
-export * from './contact';
-export * from './resolver';
-export * from './contact-extractor';
+export * from './domain.ts';
+export * from './identity.ts';
+export * from './selection.ts';
+export * from './contact.ts';
+export * from './resolver.ts';
+export * from './contact-extractor.ts';

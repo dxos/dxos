@@ -6,9 +6,9 @@ import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import type * as Type from '../../Type';
-import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
-import { attachTypedJsonSerializer, defineHiddenProperty } from '../common/proxy';
+import type * as Type from '../../Type.ts';
+import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation/index.ts';
+import { attachTypedJsonSerializer, defineHiddenProperty } from '../common/proxy/index.ts';
 import {
   EntityKind,
   KindId,
@@ -17,9 +17,9 @@ import {
   getStaticTypeSchema,
   setSchema,
   setType,
-} from '../common/types';
-import { type EntityMeta } from '../common/types/meta';
-import { MetaId } from '../common/types/model-symbols';
+} from '../common/types/index.ts';
+import { type EntityMeta } from '../common/types/meta.ts';
+import { MetaId } from '../common/types/model-symbols.ts';
 import {
   RelationSourceDXNId,
   RelationSourceId,
@@ -27,8 +27,8 @@ import {
   RelationTargetId,
   assertObjectModel,
   getObjectEchoUri,
-} from '../Entity';
-import { attachedTypedObjectInspector } from './inspect';
+} from '../Entity/index.ts';
+import { attachedTypedObjectInspector } from './inspect.ts';
 
 // Omits the brand slots — those get stamped on the instance by the entity
 // handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap

@@ -12,7 +12,7 @@ import { useMemo } from 'react';
 
 import { Identity } from '@dxos/halo';
 
-import { useHaloServices } from './HaloProvider';
+import { useHaloServices } from './HaloProvider.tsx';
 
 /**
  * Returns the local identity, or `undefined` if none exists. Reactive: re-renders when the

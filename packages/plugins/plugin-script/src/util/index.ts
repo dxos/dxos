@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './deploy';
-export * from './functions';
+export * from './deploy.ts';
+export * from './functions.ts';

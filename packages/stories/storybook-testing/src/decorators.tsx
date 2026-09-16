@@ -36,9 +36,9 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { StoryLayout } from './layout';
-import { type ModuleLayout } from './ModuleContainer';
-import { initClientFromSpaceSnapshot } from './snapshot';
+import { StoryLayout } from './layout.ts';
+import { type ModuleLayout } from './ModuleContainer.tsx';
+import { initClientFromSpaceSnapshot } from './snapshot.ts';
 
 type LazyPluginsResult = {
   plugins: Plugin.Plugin[];

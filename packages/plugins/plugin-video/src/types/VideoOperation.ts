@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Video from './Video';
+import * as Video from './Video.ts';
 
 // TODO(burdon): @wittjosiah extend and factor out?
 

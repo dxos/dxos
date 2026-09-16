@@ -7,7 +7,8 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { ContactBookSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 
 /**
  * Effect RPC definitions for the client contacts service (formerly `dxos.client.services.ContactsService`).
@@ -15,11 +16,11 @@ import { protoMessage, serviceError } from './service-rpc.ts';
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('getContacts', {
-    success: protoMessage('dxos.client.services.ContactBook'),
+    success: bufMessage(ContactBookSchema),
     error: serviceError,
   }),
   Rpc.make('queryContacts', {
-    success: protoMessage('dxos.client.services.ContactBook'),
+    success: bufMessage(ContactBookSchema),
     error: serviceError,
     stream: true,
   }),

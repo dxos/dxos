@@ -6,11 +6,11 @@ import React, { useMemo } from 'react';
 
 import { TerraObject } from '#types';
 
-import { type TerraConfigValues } from '../../engine';
-import { type SimObject, toUnit } from '../../sim';
-import { MAP_HEIGHT, MAP_WIDTH, project, projectPath } from './projection';
-import { renderTerrain } from './terrain';
-import { useEasedHeadings } from './useEasedHeadings';
+import { type TerraConfigValues } from '../../engine/index.ts';
+import { type SimObject, toUnit } from '../../sim/index.ts';
+import { MAP_HEIGHT, MAP_WIDTH, project, projectPath } from './projection.ts';
+import { renderTerrain } from './terrain.ts';
+import { useEasedHeadings } from './useEasedHeadings.ts';
 
 /**
  * Brightened relatives of the hues `scene/object-forms.ts` gives each kind in 3D — those materials
@@ -56,7 +56,7 @@ export const TerraMap = ({ objects, config, selectedId, onSelect, terrain = true
     <svg
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       preserveAspectRatio='xMidYMid meet'
-      className='w-full h-full text-description'
+      className='dx-fill text-description'
       data-testid='terra.map'
     >
       {/* Catches clicks outside any object, which clear the selection. */}

@@ -127,10 +127,13 @@
       "path": "../../plugins/plugin-chess-com"
     },
     {
-      "path": "../../plugins/plugin-claude-agents"
+      "path": "../../plugins/plugin-claude"
     },
     {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-cloudflare"
     },
     {
       "path": "../../plugins/plugin-code"
@@ -158,6 +161,9 @@
     },
     {
       "path": "../../plugins/plugin-deck"
+    },
+    {
+      "path": "../../plugins/plugin-deepseek"
     },
     {
       "path": "../../plugins/plugin-devtools"
@@ -200,6 +206,9 @@
     },
     {
       "path": "../../plugins/plugin-heygen"
+    },
+    {
+      "path": "../../plugins/plugin-higgsfield"
     },
     {
       "path": "../../plugins/plugin-ibkr"
@@ -292,6 +301,9 @@
       "path": "../../plugins/plugin-pwa"
     },
     {
+      "path": "../../plugins/plugin-qa"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {
@@ -299,6 +311,9 @@
     },
     {
       "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-s3"
     },
     {
       "path": "../../plugins/plugin-sample"
@@ -422,6 +437,9 @@
     },
     {
       "path": "../../sdk/worker-framework"
+    },
+    {
+      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-primitives/react-error-boundary"

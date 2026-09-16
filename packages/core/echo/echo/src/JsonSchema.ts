@@ -6,7 +6,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import * as jsonSchemaInternal from './internal/JsonSchema';
+import * as jsonSchemaInternal from './internal/JsonSchema/index.ts';
 
 /**
  * Decode JSON Schema to Effect Schema.

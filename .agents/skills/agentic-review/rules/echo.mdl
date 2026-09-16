@@ -1,0 +1,70 @@
+---
+id: org.dxos.review.echo
+name: Echo
+version: 0.1.0
+---
+
+ECHO object-graph conventions a linter cannot express. Each `rule` block below
+is discovered by the agentic-review harness.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule inline-obj-parent: Set parent at make time with [Obj.Parent]
+  When the parent is already known at construction, pass it inline as
+  `[Obj.Parent]: parent` on `Obj.make` (or a type factory that forwards to it)
+  rather than `Obj.make(...)` followed by `Obj.setParent(obj, parent)`. Inline
+  parent is the supported make-time API and keeps the cascade edge on the same
+  statement as the object. Flag a newly created object that is then immediately
+  parented with `Obj.setParent` when that parent was in scope at `make`. Do not
+  flag `Obj.setParent` used to reparent or unparent an *existing* object, to
+  set parent to `undefined`, or when the parent is only determined after
+  construction (conditional, async lookup). Do not flag comments or docs that
+  mention `Obj.setParent`.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: Obj\.setParent
+  severity: warn
+```
+
+```mdl
+rule obj-update-push: Append inside Obj.update with push, not spread
+  Inside `Obj.update`, append to an object array with `.push` (or `.unshift` /
+  `.splice` for insert-at-index). Do not assign a spread copy
+  (`arr = [...arr, item]`, `arr = [...arr, ...items]`, `arr = arr.concat(...)`)
+  — Automerge array spread is O(n) per append; `push` is O(1). Canonical
+  example: `Obj.update(set, (set) => { set.tasks.push(Ref.make(task)); })`.
+  Flag a spread/concat assign of an object's own array field inside an
+  `Obj.update` callback (or an equivalent in-place mutation block on a live
+  proxy). Do not flag replacing the array with a *different* sequence
+  (`filter`, `map`, reorder, slice-out) — that is not an append. Do not flag
+  spreads of local non-proxy arrays, or spreads outside `Obj.update`.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: Obj\.update
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent to changed files.
+  inline-prose: true
+  fields:
+    files:      Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:      Prose             # optional regex pre-filter over file contents
+    severity?:  warn | error      # defaults to warn
+    scope?:     dir | repo        # glob base: this file's dir (default) or repo root
+```

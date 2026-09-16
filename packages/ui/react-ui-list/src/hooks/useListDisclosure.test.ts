@@ -5,7 +5,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, test, vi } from 'vitest';
 
-import { useListDisclosure } from './useListDisclosure';
+import { useListDisclosure } from './useListDisclosure.ts';
 
 describe('useListDisclosure', () => {
   describe('single mode', () => {

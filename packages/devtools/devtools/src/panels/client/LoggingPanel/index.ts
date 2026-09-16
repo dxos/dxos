@@ -2,4 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-export { LoggingPanel as default } from './LoggingPanel';
+export { LoggingPanel as default } from './LoggingPanel.tsx';

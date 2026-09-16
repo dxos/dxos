@@ -2,11 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
-import { type GossipMessage, type GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  type GossipMessage,
+  GossipService as GossipServiceDesc,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
@@ -38,16 +44,17 @@ export class GossipExtension implements TeleportExtension {
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
+        GossipService: getBufService<GossipService>('dxos.mesh.teleport.gossip.GossipService'),
       },
       exposed: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
+        GossipService: getBufService<GossipService>('dxos.mesh.teleport.gossip.GossipService'),
       },
       handlers: {
         GossipService: {
           announce: async (message: GossipMessage) => {
             log('received announce', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
             await this._callbacks.onAnnounce?.(message);
+            return create(EmptySchema, {});
           },
         },
       },
@@ -87,6 +94,8 @@ export class GossipExtension implements TeleportExtension {
     await this._rpc.rpc.GossipService.announce(message);
   }
 }
+
+type GossipService = BufService<typeof GossipServiceDesc>;
 
 type ServiceBundle = {
   GossipService: GossipService;

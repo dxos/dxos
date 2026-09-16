@@ -11,10 +11,15 @@ import { Obj } from '@dxos/echo';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { Message } from '@dxos/types';
 
-import { FREEQ_BACKEND_KIND } from '../constants';
-import * as FreeqCapabilities from '../FreeqCapabilities';
-import { ConnectionManager, FreeqRestApi, type IncomingMessage, makeAppPasswordCredentialProvider } from '../services';
-import { FreeqChannel, makeFreeqChannel } from '../types';
+import { FREEQ_BACKEND_KIND } from '../constants.ts';
+import * as FreeqCapabilities from '../FreeqCapabilities.ts';
+import {
+  ConnectionManager,
+  FreeqRestApi,
+  type IncomingMessage,
+  makeAppPasswordCredentialProvider,
+} from '../services/index.ts';
+import { FreeqChannel, makeFreeqChannel } from '../types.ts';
 
 /** Resolves stored credentials for a handle, or `undefined` for a guest (read-only) connection. */
 export type LookupCredential = (handle: string) => { appPassword: string } | undefined;
@@ -26,8 +31,6 @@ export const toMessage = (incoming: IncomingMessage): Message.Message =>
     created: new Date(incoming.ts).toISOString(),
     blocks: [{ _tag: 'text', text: incoming.text }],
   });
-
-const toMessageFromRest = (rest: FreeqRestApi.FreeqRestMessage): Message.Message => toMessage(rest);
 
 /** Builds the `manager.acquire` params for a channel config, resolving credentials when a handle is present. */
 const acquireParamsFor = (
@@ -113,7 +116,7 @@ export const makeFreeqChannelBackend = (
             }
             for (const rest of history) {
               if (!byId.has(rest.id)) {
-                byId.set(rest.id, toMessageFromRest(rest));
+                byId.set(rest.id, toMessage(rest));
               }
             }
             emit();

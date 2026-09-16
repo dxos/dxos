@@ -11,7 +11,7 @@ import { type WindowController } from '@dxos/react-ui-virtual';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { type FeedScenario, MessageWindow, createScenario } from '../testing';
+import { type FeedScenario, MessageWindow, createScenario } from '../testing/index.ts';
 
 /**
  * Real messages, placed by the new module.
@@ -73,7 +73,7 @@ const DefaultStory = ({
           onClick={() => controller.current?.scrollToIndex(messages.length - 1, 'end')}
         />
       </Toolbar.Root>
-      <div ref={bodyRef} className='grow min-h-0'>
+      <div ref={bodyRef} className='dx-grow'>
         <MessageWindow
           messages={messages}
           renderer={definition.renderer}

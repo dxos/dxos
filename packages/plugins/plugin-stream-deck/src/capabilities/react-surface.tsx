@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { StreamDeckDashboardSurface, StreamDeckStatusSurface } from './StreamDeckSurfaces';
+import { StreamDeckDashboardSurface, StreamDeckStatusSurface } from './StreamDeckSurfaces.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed([

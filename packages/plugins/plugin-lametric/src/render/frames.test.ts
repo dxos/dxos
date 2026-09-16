@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { type MetricSpec } from '@dxos/plugin-space/dashboard';
 
-import { toFrames } from './frames';
-import { overflows } from './pixels';
+import { toFrames } from './frames.ts';
+import { overflows } from './pixels.ts';
 
 describe('toFrames', () => {
   test('maps a determinate task to a goal frame', ({ expect }) => {

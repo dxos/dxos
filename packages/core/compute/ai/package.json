@@ -58,6 +58,7 @@
   "devDependencies": {
     "@bufbuild/protobuf": "catalog:",
     "@dxos/protocols": "workspace:*",
+    "@opentelemetry/sdk-trace-base": "catalog:",
     "@types/parsimmon": "catalog:",
     "diff": "catalog:",
     "effect": "catalog:",

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FetchLike } from './LaMetricTransport';
+import { type FetchLike } from './LaMetricTransport.ts';
 
-export * from './LaMetricTransport';
+export * from './LaMetricTransport.ts';
 
 /**
  * Tauri's HTTP client issues the request from Rust, which is why it reaches a LAN device at all: the

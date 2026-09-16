@@ -13,12 +13,15 @@ import { CommandConfig, print } from '@dxos/cli-util';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { ConfigService } from '@dxos/config';
 
-import { printProfileReset } from './util';
+import { printProfileReset } from './util.ts';
 
 export const reset = Command.make(
   'reset',
   {
-    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt')),
+    force: Options.Boolean('force').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Skip confirmation prompt'),
+    ),
   },
   Effect.fnUntraced(function* ({ force }) {
     const fs = yield* FileSystem.FileSystem;
@@ -26,7 +29,7 @@ export const reset = Command.make(
     const { json, profile } = yield* CommandConfig;
     const path = config.values.runtime?.client?.storage?.dataRoot ?? getProfilePath(DX_DATA, profile);
     if (!force) {
-      const confirmed = yield* Prompt.confirm({
+      const confirmed = yield* Prompt.Confirm({
         message: `Are you sure you want to reset the profile (${profile})?`,
         initial: false,
       });

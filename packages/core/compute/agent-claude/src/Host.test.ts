@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as Host from './Host';
-import * as Options from './Options';
+import * as Host from './Host.ts';
+import * as Options from './Options.ts';
 
 describe('Session', () => {
   test('starts without a session until a turn reports one', () => {

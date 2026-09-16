@@ -8,7 +8,7 @@ import ChartStreaming from '@robloche/chartjs-plugin-streaming';
 import { Chart, registerables } from 'chart.js';
 import React, { createRef, useEffect, useState } from 'react';
 
-import { type CustomPanelProps, Panel } from '../Panel';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
 
 Chart.register(...registerables);
 Chart.register(ChartStreaming);

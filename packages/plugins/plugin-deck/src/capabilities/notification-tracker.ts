@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
 
-import { upsertToast } from '../util';
+import { upsertToast } from '../util/index.ts';
 
 const NOTIFY_TOAST_DURATION = 5_000;
 const ERROR_TOAST_DURATION = 10_000;

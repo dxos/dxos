@@ -15,8 +15,9 @@ import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { toPublicKey } from '@dxos/protocols/buf';
 
-import { acceptInvitation } from './util';
+import { acceptInvitation } from './util.ts';
 
 export const handler = Effect.fn(function* ({
   invitationCode,
@@ -43,7 +44,7 @@ export const handler = Effect.fn(function* ({
         }
         // TODO(dxos): `acceptInvitation` runs callbacks without a context, so the prompt's terminal
         // requirement cannot be provided here — the interactive path dies without a terminal.
-        return Prompt.text({ message: 'Enter the authentication code' })
+        return Prompt.String({ message: 'Enter the authentication code' })
           .pipe(Prompt.run)
           .pipe(Effect.catch(() => Effect.succeed(undefined))) as Effect.Effect<string | undefined>;
       },
@@ -51,7 +52,7 @@ export const handler = Effect.fn(function* ({
   });
 
   // Wait for space to be available with retry logic
-  const spaceKey = invitation.spaceKey;
+  const spaceKey = toPublicKey(invitation.spaceKey);
   if (!spaceKey) {
     if (json) {
       yield* Console.log(JSON.stringify({ error: 'No space key in invitation' }, null, 2));
@@ -112,8 +113,8 @@ export const handler = Effect.fn(function* ({
 export const join = Command.make(
   'join',
   {
-    invitationCode: Args.string('invitationCode').pipe(Args.withDescription('The invitation code.')),
-    authCode: Options.string('authCode').pipe(Options.withDescription('The authentication code.'), Options.optional),
+    invitationCode: Args.String('invitationCode').pipe(Args.withDescription('The invitation code.')),
+    authCode: Options.String('authCode').pipe(Options.withDescription('The authentication code.'), Options.optional),
   },
   handler,
 ).pipe(Command.withDescription('Join a space via invitation.'));

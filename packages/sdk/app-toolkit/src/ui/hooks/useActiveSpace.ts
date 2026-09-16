@@ -4,8 +4,8 @@
 
 import { useSpace } from '@dxos/react-client/echo';
 
-import { AppSpace } from '../../echo';
-import { useLayout } from './useLayout';
+import { AppSpace } from '../../echo/index.ts';
+import { useLayout } from './useLayout.ts';
 
 export const useActiveSpace = () => {
   const layout = useLayout();

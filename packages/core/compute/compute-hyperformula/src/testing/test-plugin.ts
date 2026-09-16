@@ -6,9 +6,9 @@ import { getDeep } from '@dxos/util';
 import { type InterpreterState, type ProcedureAst } from '@dxos/vendor-hyperformula';
 import { FunctionArgumentType } from '@dxos/vendor-hyperformula';
 
-import { type ComputeGraphPlugin } from '../compute-graph-registry';
-import { type AsyncFunction, AsyncFunctionPlugin } from '../functions';
-import { parseNumberString } from '../util';
+import { type ComputeGraphPlugin } from '../compute-graph-registry.ts';
+import { type AsyncFunction, AsyncFunctionPlugin } from '../functions/index.ts';
+import { parseNumberString } from '../util.ts';
 
 /**
  * Testing functions run locally (not run via EDGE).

@@ -12,8 +12,8 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
-import { OllamaError } from '../../errors';
-import { DEFAULT_OLLAMA_ENDPOINT } from './OllamaResolver';
+import { OllamaError } from '../../errors.ts';
+import { DEFAULT_OLLAMA_ENDPOINT } from './OllamaResolver.ts';
 
 /**
  * An Ollama model as reported by `GET /api/tags`.

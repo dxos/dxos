@@ -9,9 +9,9 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { Subscription } from '#types';
 
-import { makeSnippet } from '../../util/text';
-import { type FeedFetcher, FeedFetchError, type FetchOptions } from './feed-fetcher';
-import { getJson } from './http';
+import { makeSnippet } from '../../util/text.ts';
+import { type FeedFetcher, FeedFetchError, type FetchOptions } from './feed-fetcher.ts';
+import { getJson } from './http.ts';
 
 // Standard.site (`site.standard.*`) is the AT Protocol lexicon for long-form articles. Reading is
 // fully decentralized and auth-free: resolve handle → DID → PDS, then list the actor's public

@@ -17,10 +17,10 @@ import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { doLayout } from '../../layout';
-import { Container, DragTest, useSelection } from '../../testing';
-import { type CanvasGraphModel, Polygon, isPolygon } from '../../types';
-import { Editor, type EditorController, type EditorRootProps } from './Editor';
+import { doLayout } from '../../layout/index.ts';
+import { Container, DragTest, useSelection } from '../../testing/index.ts';
+import { type CanvasGraphModel, Polygon, isPolygon } from '../../types/index.ts';
+import { Editor, type EditorController, type EditorRootProps } from './Editor.tsx';
 
 const generator: ValueGenerator = random as any;
 
@@ -60,7 +60,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [selection, selected] = useSelection(graph);
 
   return (
-    <div className='grid grid-cols-[1fr_360px] h-full w-full'>
+    <div className='grid grid-cols-[1fr_360px] dx-fill'>
       <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>
@@ -87,7 +87,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
               >
                 <Form.Viewport>
                   <Form.Content>
-                    <Form.FieldSet />
+                    <Form.Fields />
                     <Form.Actions />
                   </Form.Content>
                 </Form.Viewport>

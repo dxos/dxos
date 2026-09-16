@@ -32,7 +32,7 @@ import {
   METHOD_ALIASES,
   hubClient,
   methodOption,
-} from '../util';
+} from '../util.ts';
 
 type SignupMethod = 'email' | typeof ATMOSPHERE_METHOD;
 
@@ -51,10 +51,10 @@ const INPUT_PROMPT: Record<SignupMethod, string> = {
 export const signup = Command.make(
   'signup',
   {
-    code: Args.string('code').pipe(
+    code: Args.String('code').pipe(
       Args.withDescription('Access code (8-character invitation code) to redeem. Validated before signing up.'),
     ),
-    input: Args.string('input').pipe(
+    input: Args.String('input').pipe(
       Args.withDescription('Method input: email address / Atmosphere handle. Prompted if omitted.'),
       Args.optional,
     ),
@@ -87,11 +87,11 @@ export const signup = Command.make(
 
     const resolvedMethod: SignupMethod = Option.isSome(method)
       ? method.value
-      : yield* Prompt.select({ message: 'Choose a sign-up method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
+      : yield* Prompt.Select({ message: 'Choose a sign-up method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
 
     const resolvedInput = Option.isSome(input)
       ? input.value
-      : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
+      : yield* Prompt.String({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
 
     const result = yield* Match.value(resolvedMethod).pipe(
       Match.when('email', () => signUpWithEmail({ client, hub, invoke, code, email: resolvedInput })),

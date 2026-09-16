@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, classify, colorFor, makeSampler } from '../../engine';
-import { toUnit } from '../../sim';
-import { MAP_HEIGHT, MAP_WIDTH } from './projection';
+import { type TerraConfigValues, classify, colorFor, makeSampler } from '../../engine/index.ts';
+import { toUnit } from '../../sim/index.ts';
+import { MAP_HEIGHT, MAP_WIDTH } from './projection.ts';
 
 /**
  * One sample per degree. Enough to read coastlines at map scale (the nav grid the router works from

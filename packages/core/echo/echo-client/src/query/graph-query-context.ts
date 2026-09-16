@@ -11,11 +11,16 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
-import { type DatabaseImpl } from '../proxy-db';
-import { type QueryContext, type SourceEntry } from './query-context';
-import { getTargetSpacesForQuery, isSimpleSelectionQuery, queryHasWindowing, queryTargetsSpacesOrFeeds } from './util';
-import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
+import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { type QueryContext, type SourceEntry } from './query-context.ts';
+import {
+  getTargetSpacesForQuery,
+  isSimpleSelectionQuery,
+  queryHasWindowing,
+  queryTargetsSpacesOrFeeds,
+} from './util.ts';
+import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor.ts';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.
@@ -233,9 +238,10 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+    const resultIds = new Set(this._results.map((result) => result.id));
     const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
       // If any updated object was in previous results, invalidate.
-      if (this._results!.find((result) => result.id === objectId)) {
+      if (resultIds.has(objectId)) {
         return true;
       }
 

@@ -2,19 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { useState } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Identity } from '@dxos/react-client/halo';
 import { useClipboard, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type IdentityEvent } from '../identityMachine';
-import { type IdentityPanelStepProps } from '../IdentityPanelProps';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { profileString } from '../../../util/index.ts';
+import { type IdentityEvent } from '../identityMachine.ts';
+import { type IdentityPanelStepProps } from '../IdentityPanelProps.ts';
 
 export type ProfileFormProps = Omit<IdentityPanelStepProps, 'send' | 'devices'> & {
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
@@ -48,8 +52,8 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
   const [hue, setHue] = useState<string>(getHueValue(identity));
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
   const { textValue, setTextValue } = useClipboard();
-  const identityHex = identity?.identityKey.toHex();
-  const copied = textValue === identityHex;
+  const identityKeyHex = identityHex(identity);
+  const copied = textValue === identityKeyHex;
   return (
     <>
       <div className='grow flex flex-col justify-center'>
@@ -79,8 +83,8 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           variant='ghost'
           disabled={disabled}
           onClick={() => {
-            if (identityHex) {
-              void setTextValue(identityHex);
+            if (identityKeyHex) {
+              void setTextValue(identityKeyHex);
             }
           }}
           data-testid='update-profile-form-copy-key'
@@ -99,10 +103,12 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           variant='primary'
           disabled={disabled}
           onClick={() =>
-            onUpdateProfile?.({
-              ...(displayName && { displayName }),
-              ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
-            })
+            onUpdateProfile?.(
+              create(ProfileDocumentSchema, {
+                ...(displayName && { displayName }),
+                ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
+              }),
+            )
           }
           data-testid='update-profile-form-continue'
         >
@@ -113,7 +119,7 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
   );
 };
 
-const getHueValue = (identity?: Identity) =>
-  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+const identityHex = (identity?: Identity) => toPublicKey(identity?.identityKey)?.toHex() ?? '0';
+
+const getHueValue = (identity?: Identity) => profileString(identity, 'hue') || hexToHue(identityHex(identity));
+const getEmojiValue = (identity?: Identity) => profileString(identity, 'emoji') || hexToEmoji(identityHex(identity));

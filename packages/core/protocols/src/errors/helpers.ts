@@ -5,7 +5,7 @@
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
-import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error.ts';
+import { type Error as SerializedErrorProto } from '../buf/proto/gen/dxos/error_pb.ts';
 
 export const reconstructError = (error: SerializedErrorProto) => {
   const { name, message, context } = error;

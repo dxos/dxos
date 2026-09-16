@@ -7,7 +7,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Button, Flex, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
@@ -28,9 +28,9 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   return (
     <Flex gap='sm' classNames='p-2'>
       <div className='flex-1'>
-        <Input.Root>
-          <Input.Label srOnly>{t('saved-filter-name.label')}</Input.Label>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Label srOnly>{t('saved-filter-name.label')}</Field.Label>
+          <Field.Input
             defaultValue={name}
             placeholder={t('save-filter.placeholder')}
             onChange={({ target: { value } }) => setName(value)}
@@ -38,7 +38,7 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
             //   Currently this is not possible because Radix does not expose the popover context.
             onKeyDown={({ key }) => key === 'Enter' && doneButton.current?.click()}
           />
-        </Input.Root>
+        </Field.Root>
       </div>
       <Popover.Close asChild>
         <Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>

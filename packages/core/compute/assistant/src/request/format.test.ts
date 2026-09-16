@@ -14,7 +14,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { Text } from '@dxos/schema';
 
-import { formatSystemPrompt } from './format';
+import { formatSystemPrompt } from './format.ts';
 
 const testLayer = () =>
   Layer.mergeAll(

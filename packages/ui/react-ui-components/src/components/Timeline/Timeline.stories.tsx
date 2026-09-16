@@ -16,8 +16,8 @@ import { useExecutionGraph } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { research } from './testing';
-import { type Commit, Timeline, TimelineProps } from './Timeline';
+import { research } from './testing/index.ts';
+import { type Commit, Timeline, TimelineProps } from './Timeline.tsx';
 
 random.seed(1);
 

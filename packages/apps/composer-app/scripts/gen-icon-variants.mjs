@@ -10,10 +10,11 @@
 // recolourings rather than redraws: only the hue and saturation of the shared four-colour ramp change, so
 // every variant keeps production's geometry and contrast.
 //
-// Three pieces of artwork carry the mark, all drawn from the same ramp:
+// Two pieces of raster artwork carry the mark, both drawn from the same ramp:
 //   - the desktop app icon        (`assets/icon.svg`, on its near-black tile)
 //   - the favicon set             (`assets/favicon.svg`, transparent)
-//   - the boot loader's mark      (`@dxos/brand`'s `composer-icon.svg`, transparent)
+// The boot loader's mark is an SVG the loader recolours with a CSS filter (`src/vite/channel-branding.ts`),
+// so it needs no generated copy; keep that filter's hue and saturation in step with `VARIANTS` here.
 //
 // Usage: pnpm icons:variants
 
@@ -23,33 +24,19 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { CHANNEL_COLORS, CHANNELS } from '@dxos/brand/channels';
+
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const assets = join(root, 'assets');
 const tauri = join(root, 'node_modules', '.bin', 'tauri');
-const brandMark = join(root, '..', '..', 'ui', 'brand', 'assets', 'icons', 'composer-icon.svg');
 
 /**
- * `hue` in degrees replaces the ramp's own hue; `saturation` and `lightness` scale what is there.
- * Lightness is scaled rather than set so the four steps stay proportional to one another.
- * `icons` is the `src-tauri` directory `cn-config` points `bundle.icon` at.
+ * The channels and their colours come from `@dxos/brand` (built, so `moon run brand:build` first);
+ * this script only knows which `src-tauri` directory `cn-config` points `bundle.icon` at for each.
  */
-const VARIANTS = {
-  purple: {
-    icons: 'icons-preview',
-    hue: 282,
-    saturation: 1,
-    lightness: 1,
-  },
-  rust: {
-    icons: 'icons-rust',
-    hue: 20,
-    // Held below the source ramp's near-full saturation: at full it reads as a warning colour rather
-    // than as rust, and competes with the app's own error states.
-    saturation: 0.75,
-    lightness: 1,
-  },
-};
-
+const VARIANTS = Object.fromEntries(
+  CHANNELS.map((channel) => [channel, { ...CHANNEL_COLORS[channel], icons: `icons-${channel}` }]),
+);
 /** The ramp shared by all three pieces of artwork, brightest first. */
 const RAMP = [
   [6, 197, 253],
@@ -153,7 +140,6 @@ const write = (dir, name, contents) => {
 
 const appSource = readFileSync(join(assets, 'icon.svg'), 'utf8');
 const faviconSource = readFileSync(join(assets, 'favicon.svg'), 'utf8');
-const bootSource = readFileSync(brandMark, 'utf8');
 
 for (const [name, variant] of Object.entries(VARIANTS)) {
   const appSvg = recolour(appSource, 'assets/icon.svg', variant);
@@ -176,7 +162,4 @@ for (const [name, variant] of Object.entries(VARIANTS)) {
     }
   });
   console.log(`assets/favicon.svg -> assets/favicons-${name}`);
-
-  writeFileSync(join(assets, `boot-mark-${name}.svg`), recolour(bootSource, '@dxos/brand composer-icon.svg', variant));
-  console.log(`@dxos/brand composer-icon.svg -> assets/boot-mark-${name}.svg`);
 }

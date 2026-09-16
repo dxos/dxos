@@ -15,9 +15,9 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 
-import { AssistantTestLayer } from '../testing';
-import * as AgentService from './AgentService';
-import { type DelegationStrategy } from './delegation-strategy';
+import { AssistantTestLayer } from '../testing/index.ts';
+import * as AgentService from './AgentService.ts';
+import { type DelegationStrategy } from './delegation-strategy.ts';
 
 const { text, scriptedAiService } = ScriptedLanguageModel;
 
@@ -63,7 +63,7 @@ const delegationHarness: DelegationHarness = { pending: [], completed: [] };
  * (the real strategy is covered by `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`).
  */
 const StubDelegationStrategy: DelegationStrategy = {
-  reconcile: (_feed, activeIds) =>
+  reconcile: (_chat, activeIds) =>
     Effect.succeed(
       delegationHarness.pending
         .filter((work) => !activeIds.has(work.id))
@@ -76,7 +76,7 @@ const StubDelegationStrategy: DelegationStrategy = {
           }),
         })),
     ),
-  onComplete: (_feed, id, exit) =>
+  onComplete: (_chat, id, exit) =>
     Effect.sync(() => {
       delegationHarness.completed.push({ id, exit });
       delegationHarness.pending = delegationHarness.pending.filter((work) => work.id !== id);

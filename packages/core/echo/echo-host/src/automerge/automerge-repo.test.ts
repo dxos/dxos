@@ -38,10 +38,10 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { isNonNullable, range } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing';
-import { EchoNetworkAdapter } from './echo-network-adapter';
-import { type HandleQueryState } from './handle-state';
-import { MeshEchoReplicator } from './mesh-echo-replicator';
+import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
+import { EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { type HandleQueryState } from './handle-state.ts';
+import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 
@@ -1063,9 +1063,9 @@ const connectPeers = async (
   peer2: TeleportTestPeer,
 ) => {
   const [connection1, connection2] = await builder.connect(peer1.teleport, peer2.teleport);
-  await peer1.meshAdapter.authorizeDevice(spaceKey, peer2.teleport.peerId);
+  await peer1.meshAdapter.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer2.teleport.peerId);
   connection1.teleport.addExtension('automerge', peer1.meshAdapter.createExtension());
-  await peer2.meshAdapter.authorizeDevice(spaceKey, peer1.teleport.peerId);
+  await peer2.meshAdapter.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer1.teleport.peerId);
   connection2.teleport.addExtension('automerge', peer2.meshAdapter.createExtension());
 };
 

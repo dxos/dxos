@@ -5,24 +5,23 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readdirSync } from 'node:fs';
 import { test } from 'vitest';
 
-import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlMigrations } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 import init from './migrations/0001_init.sql?raw';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
-const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
+const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 /** Mirrors `FeedStore.migrate`, so the tests exercise the production configuration. */
 const migrate = Migrator.make({})({
   loader: Migrator.fromRecord(MIGRATIONS),
   table: MIGRATIONS_TABLE,
-}).pipe(Effect.provide(SqlTransaction.clientLayer), Effect.orDie);
+}).pipe(Effect.orDie);
 
 /** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
 const ids = Object.keys(MIGRATIONS).map((key) => [

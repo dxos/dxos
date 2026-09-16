@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { type URI } from '@dxos/keys';
 
-import { type GraphExecutor, compileOrThrow } from '../compiler';
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { type GraphExecutor, compileOrThrow } from '../compiler/index.ts';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
 import {
   type ComputeGraphModel,
   type ComputeNode,
@@ -16,8 +16,8 @@ import {
   type Executable,
   NotExecuted,
   ValueBag,
-} from '../types';
-import { createDefectLogger, pickProperty } from '../util';
+} from '../types/index.ts';
+import { createDefectLogger, pickProperty } from '../util/index.ts';
 
 /**
  * Compute graph executor.

@@ -6,5 +6,5 @@
 // readiness gate. Tool *definitions* live in `../tools` so they can be
 // embedded into a different MCP runtime without dragging in this server.
 
-export { type ServerOptions, createServer } from './server';
-export { main } from './main';
+export { type ServerOptions, createServer } from './server.ts';
+export { main } from './main.ts';

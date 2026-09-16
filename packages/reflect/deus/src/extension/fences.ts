@@ -6,7 +6,7 @@ import { syntaxTree } from '@codemirror/language';
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { BLOCK_TYPES } from './constants';
+import { BLOCK_TYPES } from './constants.ts';
 
 // Per-type hue palette for block type keyword.
 const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
@@ -14,12 +14,13 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   type: 'var(--color-blue-400)',
   op: 'var(--color-orange-400)',
   feat: 'var(--color-emerald-400)',
-  test: 'var(--color-cyan-400)',
+  scenario: 'var(--color-cyan-400)',
+  test: 'var(--color-teal-400)',
   component: 'var(--color-pink-400)',
   service: 'var(--color-yellow-400)',
   db: 'var(--color-red-400)',
   module: 'var(--color-indigo-400)',
-  flow: 'var(--color-teal-400)',
+  suite: 'var(--color-lime-400)',
 };
 
 const theme = EditorView.baseTheme({

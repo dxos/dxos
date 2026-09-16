@@ -1,6 +1,8 @@
 # Agent Service
 
-`AgentService` spawns and caches a process-backed **agent** per conversation feed. 
+`AgentService` spawns and caches a process-backed **agent** per `Chat`. The chat is the process's
+spawn target, and the message feed, the steering instructions and the checklist are all read from
+it — so a rehydrated process recovers them by re-reading the chat. 
 The agent is a long-lived `AgentProcess` that handles user turns; 
 when a `DelegationStrategy` is injected it also acts as a **supervisor** that delegates work 
 to linked child processes and folds their results back into the conversation.
@@ -62,7 +64,7 @@ sequenceDiagram
 
   U->>AP: submitInput(prompt)
   AP->>AP: onAlarm → run AiSession turn (tools may record delegated plan tasks)
-  AP->>ST: reconcile(feed, activeIds)
+  AP->>ST: reconcile(chat, activeIds)
   ST-->>AP: Delegation[] { id, spawn }
   loop per delegation
     AP->>POI: invokeFiber(op, input)
@@ -76,7 +78,7 @@ sequenceDiagram
   AP->>AP: onChildEvent: match pid → id, drop from DelegationsKey
   AP->>POI: attachFiber(pid) + await
   POI-->>AP: Exit of output value
-  AP->>ST: onComplete(feed, id, exit)
+  AP->>ST: onComplete(chat, id, exit)
   ST->>U: update Task status + post message (reference blocks → dx-anchor)
 ```
 
@@ -84,7 +86,7 @@ sequenceDiagram
 
 | Symbol | Where | Role |
 | --- | --- | --- |
-| `AgentService` / `layer` | `AgentService.ts` | Per-feed session cache (model-aware); wires `delegationStrategy` into `AgentProcess`. |
+| `AgentService` / `layer` | `AgentService.ts` | Per-chat session cache (model-aware); wires `delegationStrategy` into `AgentProcess`. |
 | `AgentProcess` | `agent-process.ts` | Turn loop (`onAlarm`) + child-exit wake (`onChildEvent`); owns `DelegationsKey`. |
 | `DelegationStrategy`, `Delegation` | `delegation-strategy.ts` | Type-only seam: `reconcile` / `onComplete`; `Delegation = { id, spawn }`. |
 | `ProcessOperationInvoker.invokeFiber` / `attachFiber` | `@dxos/compute-runtime` | Linked-child spawn + result read. |

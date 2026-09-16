@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type InboxStackAction } from './InboxStack';
+import { type InboxStackAction } from './InboxStack.tsx';
 
 /** One entry in a mailbox tile's overflow menu. */
 export type TileMenuItem = {

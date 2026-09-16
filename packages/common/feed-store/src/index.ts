@@ -2,11 +2,11 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './feed-factory';
-export * from './feed-iterator';
-export * from './feed-set-iterator';
-export * from './feed-queue';
-export * from './feed-store';
-export * from './feed-wrapper';
-export * from './feed-writer';
-export type * from './types';
+export * from './hypercore-factory.ts';
+export * from './hypercore-iterator.ts';
+export * from './hypercore-set-iterator.ts';
+export * from './hypercore-queue.ts';
+export * from './hypercore-store.ts';
+export * from './hypercore-wrapper.ts';
+export * from './hypercore-writer.ts';
+export type * from './types.ts';

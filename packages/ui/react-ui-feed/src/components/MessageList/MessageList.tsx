@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentType,
   type PropsWithChildren,
+  type ReactNode,
   type Ref,
   useCallback,
   useEffect,
@@ -22,14 +22,15 @@ import {
   type ScrollAreaRootProps,
   composable,
   composableProps,
+  createContext,
   setRef,
 } from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
-import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { type FeedNavigation, useDecorations, useFeedNavigation, useItemSelectionValue } from '../../hooks';
-import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer } from '../../model';
+import { type FeedNavigation, useDecorations, useFeedNavigation, useItemSelectionValue } from '../../hooks/index.ts';
+import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer } from '../../model/index.ts';
 import {
   type HighlightRange,
   HtmlBlock,
@@ -39,8 +40,8 @@ import {
   WidgetStateProvider,
   createSelectionGroup,
   createWidgetStateStore,
-} from '../Block';
-import { useJumpDetector, usePositionLog } from './position-log';
+} from '../Block/index.ts';
+import { useJumpDetector, usePositionLog } from './position-log.ts';
 
 //
 // Context
@@ -76,6 +77,8 @@ type MessageListContextValue = {
   model: FeedModel;
   renderer: MessageRenderer;
   registry?: XmlWidgetRegistry;
+  /** The block widget for an object embedded as a card (`![label](echo://…)`); the host supplies one that can render a card. */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   Chrome: ComponentType<MessageChromeProps>;
   Custom?: ComponentType<{ content: ItemContent & { kind: 'custom' }; message: Message.Message }>;
   debug?: boolean;
@@ -83,6 +86,10 @@ type MessageListContextValue = {
   range?: MessageRange;
   /** Index the reader is on: moved by the arrow keys and by any navigation, tracked while scrolling. */
   currentIndex: number;
+  /** Whether the reader is resting on the tail — what a scroll-to-bottom affordance hides against. */
+  atEnd: boolean;
+  /** Whether the list is keeping the tail in view itself; an affordance to return there has no place while it is. */
+  following: boolean;
   /** The one seam every navigation driver calls: toolbar, arrows, outline, minimap (SPEC F-3.2). */
   navigation: FeedNavigation;
   /** Rows mounted right now: the window the reader is paying for. */
@@ -125,6 +132,8 @@ export const useMessageList = (consumerName = 'useMessageList') => {
   const {
     range,
     currentIndex,
+    atEnd,
+    following,
     navigation,
     mountedRows,
     mountedWidgets,
@@ -139,6 +148,8 @@ export const useMessageList = (consumerName = 'useMessageList') => {
   return {
     range,
     currentIndex,
+    atEnd,
+    following,
     navigation,
     mountedRows,
     mountedWidgets,
@@ -170,6 +181,8 @@ export type MessageListRootProps = PropsWithChildren<{
   model: FeedModel;
   renderer?: MessageRenderer;
   registry?: XmlWidgetRegistry;
+  /** The block widget for an object embedded as a card (`![label](echo://…)`). */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   /**
    * Chrome wrapper; receives the item as `children`. Defaults to a bare frame.
    * Chrome must be layout-stable: a control that changes a row's height on hover or focus
@@ -225,6 +238,7 @@ const MessageListRoot = ({
   model,
   renderer = defaultRenderer,
   registry,
+  objectImage,
   Chrome = DefaultChrome,
   Custom,
   debug,
@@ -498,11 +512,14 @@ const MessageListRoot = ({
           model={model}
           renderer={renderer}
           registry={registry}
+          objectImage={objectImage}
           Chrome={Chrome}
           Custom={Custom}
           debug={debug}
           range={range}
           currentIndex={currentIndex}
+          atEnd={follow.atEnd}
+          following={follow.following}
           navigation={navigation}
           mountedRows={mounted}
           mountedWidgets={mountedWidgets}
@@ -539,7 +556,15 @@ type MessageListViewportExtra = Pick<
   ScrollAreaRootProps,
   'autoHide' | 'centered' | 'native' | 'padding' | 'scrollbars' | 'thin'
 > &
-  Pick<ColumnRootProps, 'gutter'>;
+  Pick<ColumnRootProps, 'gutter'> & {
+    /**
+     * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
+     *
+     * Mounted inside `ScrollArea.Root` because it is positioned and does not scroll, so nothing has
+     * to enter the flex-height chain the placement measures.
+     */
+    overlay?: ReactNode;
+  };
 
 /**
  * The scroll container and the mounted window of rows.
@@ -559,7 +584,7 @@ const isEmptyContent = (content: ItemContent, hasCustomRenderer: boolean): boole
   (content.kind === 'custom' && !hasCustomRenderer);
 
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
-  ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'md', ...props }, forwardedRef) => {
+  ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'md', overlay, ...props }, forwardedRef) => {
     const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
     // The value once, per-row state derived: hooks do not run in loops, and the row loop below is
@@ -591,7 +616,9 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         <div key={message.id} data-index={index} data-object-id={message.id}>
           {!empty && (
             <Column.Root gutter={gutter}>
-              <Column.Center>
+              {/* The widgets' query container: it must be an element whose width is definite, since
+                  containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
+              <Column.Center classNames='dx-container-type-inline-size'>
                 <Chrome
                   message={message}
                   index={index}
@@ -637,6 +664,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
             {rows}
           </div>
         </ScrollArea.Viewport>
+        {overlay}
       </ScrollArea.Root>
     );
   },
@@ -659,7 +687,8 @@ type MessageListItemExtra = {
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
 const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
-  const { model, renderer, registry, Custom, debug, reportWidgets } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
+  const { model, renderer, registry, objectImage, Custom, debug, reportWidgets } =
+    useMessageListContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
   // The item asks for its own cross-cutting data by id (SPEC §Aspects); the list never routed it.
   const decorations = useDecorations(message.id);
@@ -694,6 +723,7 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
             // change (an edit, a view switch) lands atomically.
             stream={model.streamingId === message.id}
             registry={registry}
+            objectImage={objectImage}
             hits={hits}
             onWidgetsChange={handleWidgetsChange}
           />

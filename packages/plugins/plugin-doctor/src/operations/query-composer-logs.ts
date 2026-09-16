@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 
 import { DoctorOperation } from '#types';
 
-import { HARD_LIMIT_ENTRIES, type LogRecord, type QueryInput, runQuery } from './internal/log-query';
-import { readLogRows } from './internal/log-reader';
+import { HARD_LIMIT_ENTRIES, type LogRecord, type QueryInput, runQuery } from './internal/log-query.ts';
+import { readLogRows } from './internal/log-reader.ts';
 
 // TODO(plugin-doctor): add an AssistantTestLayer end-to-end test that exercises
 // the tool through Operation.invoke once a fake IDB is available in test deps.

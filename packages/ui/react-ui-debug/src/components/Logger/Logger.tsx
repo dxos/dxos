@@ -15,9 +15,9 @@ import React, {
 import { logFileRegistry } from '@dxos/log';
 import {
   ErrorStack,
+  Field,
   Icon,
   IconButton,
-  Input,
   Panel,
   Popover,
   ScrollArea,
@@ -32,16 +32,16 @@ import {
 } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { formatLogEntry, packageName } from './format';
-import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer';
-import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext';
-import { type LevelName, LEVELS, composeFilter } from './recorder';
+import { formatLogEntry, packageName } from './format.ts';
+import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer.ts';
+import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
+import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 
 //
 // Shared
@@ -233,20 +233,19 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
 
   return (
     <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           placeholder={t('filter.placeholder')}
           value={filter}
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setFilter(ev.target.value)}
         />
-      </Input.Root>
+      </Field.Root>
       <Select.Root value={selectedLevel} onValueChange={setFilter}>
         <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
         <Select.Portal>
           <Select.Content>
-            <Select.ScrollUpButton />
             <Select.Viewport>
               {LEVELS.map((level) => (
                 <Select.Option key={level} value={level} classNames='text-sm'>
@@ -254,8 +253,6 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
                 </Select.Option>
               ))}
             </Select.Viewport>
-            <Select.ScrollDownButton />
-            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>
@@ -308,15 +305,15 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
             <Panel.Root>
               <Panel.Toolbar asChild>
                 <Toolbar.Root>
-                  <Input.Root>
-                    <Input.TextInput
+                  <Field.Root>
+                    <Field.Input
                       placeholder={t('levels.filter.placeholder')}
                       value={fileFilter}
                       autoComplete='off'
                       spellCheck={false}
                       onChange={(ev) => setFileFilter(ev.target.value)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                   <Toolbar.IconButton
                     icon='ph--trash--regular'
                     iconOnly
@@ -367,7 +364,6 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                   />
                                   <Select.Portal>
                                     <Select.Content>
-                                      <Select.ScrollUpButton />
                                       <Select.Viewport>
                                         <Select.Option value='inherit' classNames='text-sm'>
                                           {t('levels.inherit.label')}
@@ -378,8 +374,6 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                           </Select.Option>
                                         ))}
                                       </Select.Viewport>
-                                      <Select.ScrollDownButton />
-                                      <Select.Arrow />
                                     </Select.Content>
                                   </Select.Portal>
                                 </Select.Root>
@@ -422,7 +416,7 @@ const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [rows]);
 
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
         {children}
       </ScrollArea.Viewport>
@@ -490,14 +484,14 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
               >
                 <div className='flex items-center pl-2'>
-                  <Input.Root>
-                    <Input.Checkbox
+                  <Field.Root>
+                    <Field.Checkbox
                       tabIndex={-1}
                       size={3}
                       checked={checked.has(id)}
                       onCheckedChange={() => toggleChecked(id)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                 </div>
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
@@ -521,14 +515,17 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 />
                 {isExpanded && (
                   <div className='col-span-full'>
-                    <JsonHighlighter
-                      classNames='p-2'
-                      data={{
-                        file: record.line ? `${record.file}:${record.line}` : record.file,
-                        message: record.message,
-                        context: record.context,
-                      }}
-                    />
+                    {/* The viewport owns the scrolling, so a long line gets the themed bar, not the native one. */}
+                    <Syntax.Viewport>
+                      <JsonHighlighter
+                        classNames='p-2 overflow-visible'
+                        data={{
+                          file: record.line ? `${record.file}:${record.line}` : record.file,
+                          message: record.message,
+                          context: record.context,
+                        }}
+                      />
+                    </Syntax.Viewport>
                     {frames && <ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
                   </div>
                 )}
@@ -554,9 +551,9 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
   const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
 
   return (
-    <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent p-1.5' })} ref={forwardedRef}>
-      <Input.Root>
-        <Input.TextInput
+    <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
+      <Field.Root>
+        <Field.Input
           placeholder={t('search.placeholder')}
           value={textFilter}
           autoComplete='off'
@@ -564,7 +561,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
           onChange={(ev) => setTextFilter(ev.target.value)}
           start={<Icon icon='ph--magnifying-glass--regular' />}
         />
-      </Input.Root>
+      </Field.Root>
       {textFilter.length > 0 && (
         <Toolbar.IconButton
           icon='ph--x--regular'

@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 
 import { Ibkr } from '#types';
 
-import { meta } from './meta';
+import { meta } from './meta.ts';
 
 export const translations = [
   {

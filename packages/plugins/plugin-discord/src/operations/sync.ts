@@ -18,9 +18,9 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 import { meta } from '#meta';
 import { DiscordOperation } from '#types';
 
-import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
-import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors';
-import { makeDiscordLayerFromToken } from '../services';
+import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants.ts';
+import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors.ts';
+import { makeDiscordLayerFromToken } from '../services/index.ts';
 
 /**
  * Hard cap on `maxDays` to keep a misconfigured (or fat-fingered) value

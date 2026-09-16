@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import type * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
 
-import { offerRequestBody, parseOffers } from './duffel-mapping';
+import { offerRequestBody, parseOffers } from './duffel-mapping.ts';
 
 const QUERY: BookingSearch.FlightSearchQuery = {
   _tag: 'flight',

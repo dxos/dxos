@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './PageActions';
+export * from './PageActions.tsx';

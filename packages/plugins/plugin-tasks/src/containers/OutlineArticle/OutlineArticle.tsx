@@ -10,13 +10,15 @@ import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
 import { meta } from '#meta';
+
+import { useMarkdownExtensions } from '../../hooks/index.ts';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline> & {
   /**
@@ -69,10 +71,18 @@ export const OutlineArticle = ({
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
   const handleBack = useCallback(() => setSelected(undefined), []);
 
+  const extensions = useMarkdownExtensions(outline);
+
+  // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
+  // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
+  const text = useResolveRef(outline.content);
+
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
-  const tasks = useQuery(db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
+  // Membership is the ECHO parent edge; transitive `childOf` also catches legacy sub-tasks still
+  // parented to their parent task.
+  const tasks = useQuery(db, taskSet ? Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
   // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new
   // identity re-runs the editor's label sync.
@@ -86,12 +96,9 @@ export const OutlineArticle = ({
   const [convertible, setConvertible] = useState(true);
 
   const resolveLinkLabel = useMemo(() => {
-    const members = new Set(taskSet?.tasks.map((ref) => ref.target?.id));
-    const labels = new Map(
-      tasks.filter((task) => members.has(task.id)).map((task) => [Obj.getURI(task).toString(), task.title]),
-    );
+    const labels = new Map(tasks.map((task) => [Obj.getURI(task).toString(), task.title]));
     return (url: string) => labels.get(url);
-  }, [taskSet, tasks, tick]);
+  }, [tasks, tick]);
 
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>
@@ -129,50 +136,43 @@ export const OutlineArticle = ({
 
   if (task) {
     return (
-      <Menu.Root {...taskActions} attendableId={attendableId}>
-        <Panel.Root role={role}>
-          <Panel.Toolbar>
-            <Menu.Toolbar classNames='dx-document'>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-          <Panel.Content>
-            <TaskForm task={task} classNames='dx-document' />
-          </Panel.Content>
-        </Panel.Root>
-      </Menu.Root>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
+        </Panel.Toolbar>
+        <Panel.Content>
+          <TaskForm task={task} classNames='dx-document' />
+        </Panel.Content>
+      </Panel.Root>
     );
   }
 
-  if (!outline.content.target) {
-    return null;
-  }
-
   return (
-    <Outline.Root
-      ref={outlineRef}
-      id={outline.content.target.id}
-      text={outline.content.target}
-      onConvertToTask={taskSet ? handleConvertToTask : undefined}
-      onConvertibleChange={setConvertible}
-      onSelectLink={handleSelectLink}
-      resolveLinkLabel={resolveLinkLabel}
-    >
-      <Menu.Root {...outlineActions} attendableId={attendableId}>
-        <Panel.Root role={role}>
-          {toolbar && (
-            <Panel.Toolbar>
-              <Menu.Toolbar classNames='dx-document'>
-                <Menu.Items />
-              </Menu.Toolbar>
-            </Panel.Toolbar>
-          )}
-          <Panel.Content asChild>
-            <Outline.Content classNames='dx-document' />
-          </Panel.Content>
-        </Panel.Root>
-      </Menu.Root>
-    </Outline.Root>
+    <Show when={text}>
+      {(text) => (
+        <Outline.Root
+          ref={outlineRef}
+          id={text.id}
+          text={text}
+          onConvertToTask={taskSet ? handleConvertToTask : undefined}
+          onConvertibleChange={setConvertible}
+          onSelectLink={handleSelectLink}
+          resolveLinkLabel={resolveLinkLabel}
+          extensions={extensions}
+        >
+          <Panel.Root role={role}>
+            <Show when={toolbar}>
+              <Panel.Toolbar asChild>
+                <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
+              </Panel.Toolbar>
+            </Show>
+            <Panel.Content asChild>
+              <Outline.Content classNames='dx-document' />
+            </Panel.Content>
+          </Panel.Root>
+        </Outline.Root>
+      )}
+    </Show>
   );
 };
 
@@ -183,7 +183,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {
-      Obj.update(task, () => {
+      Obj.update(task, (task) => {
         for (const path of Object.keys(changed).filter((path) => changed[path])) {
           if (SchemaEx.isJsonPath(path)) {
             Obj.setValue(task, SchemaEx.splitJsonPath(path), values[path]);
@@ -198,7 +198,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
     <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
       <Form.Viewport classNames={classNames} scroll>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

@@ -7,12 +7,13 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import {
   ABSOLUTE_CEILING,
   CREEP_TICK_MS,
+  PLUGIN_DRAIN_MAX_MS,
   STATE_1_ASYMPTOTE,
   clampPercent,
   createLoaderStore,
   displayText,
   easeToward,
-} from './store';
+} from './store.ts';
 
 describe('easeToward', () => {
   test('eases toward the ceiling without overshooting', ({ expect }) => {
@@ -186,5 +187,90 @@ describe('createLoaderStore', () => {
     vi.advanceTimersByTime(CREEP_TICK_MS * 500);
     expect(store.progress()).toBeLessThanOrEqual(ABSOLUTE_CEILING + 0.1);
     store.dispose();
+  });
+});
+
+describe('plugin activation row', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  test('registration alone draws nothing', ({ expect }) => {
+    const store = createLoaderStore();
+    store.setPlugins([{ id: 'markdown', icon: 'ph--text-aa--regular' }]);
+    expect(store.plugins()).toHaveLength(0);
+    store.dispose();
+  });
+
+  test('a burst of activations drains one icon per interval', ({ expect }) => {
+    const store = createLoaderStore();
+    store.setPlugins([
+      { id: 'markdown', icon: 'ph--text-aa--regular' },
+      { id: 'table', icon: 'ph--table--regular' },
+      { id: 'sheet', icon: 'ph--grid-nine--regular' },
+    ]);
+
+    // The whole burst arrives within one frame, as it does during boot.
+    store.activatePlugin('markdown');
+    store.activatePlugin('table');
+    store.activatePlugin('sheet');
+    expect(store.plugins().map(({ id }) => id)).toEqual(['markdown']);
+
+    // Advance by the top of the range: each gap is sampled, so only the maximum is guaranteed.
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS);
+    expect(store.plugins().map(({ id }) => id)).toEqual(['markdown', 'table']);
+
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS);
+    expect(store.plugins().map(({ id }) => id)).toEqual(['markdown', 'table', 'sheet']);
+    store.dispose();
+  });
+
+  test('unregistered and repeated ids are ignored', ({ expect }) => {
+    const store = createLoaderStore();
+    store.setPlugins([{ id: 'markdown', icon: 'ph--text-aa--regular' }, { id: 'noicon' }]);
+
+    store.activatePlugin('never-registered');
+    store.activatePlugin('noicon');
+    store.activatePlugin('markdown');
+    store.activatePlugin('markdown');
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS * 4);
+    expect(store.plugins().map(({ id }) => id)).toEqual(['markdown']);
+    store.dispose();
+  });
+});
+
+describe('loadSprite', () => {
+  const sprite =
+    '<svg xmlns="http://www.w3.org/2000/svg"><symbol id="ph--planet--regular" viewBox="0 0 256 256"><path d="M0 0h1"/></symbol></svg>';
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('requests the sprite at once and exposes its symbols once it lands', async ({ expect }) => {
+    const fetchMock = vi.fn(async () => new Response(sprite, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const store = createLoaderStore();
+    const loading = store.loadSprite('/icons.svg');
+    expect(fetchMock).toHaveBeenCalledWith('/icons.svg');
+    expect(store.sprite()).toBeUndefined();
+    await loading;
+    expect(store.sprite()).toContain('id="ph--planet--regular"');
+    store.dispose();
+  });
+
+  test('leaves the sprite unset on a failed response, a network error, or a non-svg body', async ({ expect }) => {
+    for (const impl of [
+      async () => new Response('missing', { status: 404 }),
+      async () => {
+        throw new Error('offline');
+      },
+      async () => new Response('<html></html>', { status: 200 }),
+    ]) {
+      vi.stubGlobal('fetch', vi.fn(impl));
+      const store = createLoaderStore();
+      await store.loadSprite('/icons.svg');
+      expect(store.sprite()).toBeUndefined();
+      store.dispose();
+    }
   });
 });

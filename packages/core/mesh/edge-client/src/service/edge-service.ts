@@ -22,7 +22,7 @@ const DEFAULT_TIMEOUT = Duration.seconds(15);
 const ERROR_BODY_LIMIT = 512;
 
 export type EdgeServiceClientOptions = {
-  /** Base URL the service is hosted at; request paths resolve against it. */
+  /** Base URL the service is hosted at. */
   baseUrl: string;
   /** Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header for metering. */
   clientTag?: string;
@@ -49,7 +49,8 @@ export class EdgeServiceClient {
   readonly #authHeaders: (() => Effect.Effect<Record<string, string>>) | undefined;
 
   constructor(options: EdgeServiceClientOptions) {
-    this.#baseUrl = options.baseUrl;
+    // Slash-terminated: `new URL('thumbnail', '…/image')` would otherwise drop the `/image` prefix.
+    this.#baseUrl = options.baseUrl.endsWith('/') ? options.baseUrl : `${options.baseUrl}/`;
     this.#clientTag = options.clientTag;
     this.#timeout = Duration.fromInputUnsafe(options.timeout ?? DEFAULT_TIMEOUT);
     // Bind so `fetch` keeps its expected `this` when injected as a method reference.

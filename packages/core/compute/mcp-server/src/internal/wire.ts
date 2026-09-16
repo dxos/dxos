@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { identity } from './identity';
+import { identity } from './identity.ts';
 
 /**
  * Response passes applied to outgoing JSON-RPC messages.
@@ -48,8 +48,8 @@ export const SERVER_INSTRUCTIONS = [
 /**
  * Ensures every advertised tool declares an object input schema.
  *
- * Effect renders a *parameterless* tool's schema as `{ anyOf: [{type: 'object'}, {type: 'array'}] }`,
- * which carries no top-level `type`. MCP clients validate that field and reject the entire
+ * Effect renders a *parameterless* tool's schema as `{ not: { type: 'null' } }` -- the bare `object`
+ * keyword -- which carries no top-level `type`. MCP clients validate that field and reject the entire
  * `tools/list` response over it — "expected object" at `tools[N].inputSchema.type` — so a single
  * parameterless tool takes every other tool down with it and the server appears to expose nothing.
  *

@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './overlay-layer';
-export * from './static-layer';
+export * from './overlay-layer.ts';
+export * from './static-layer.ts';

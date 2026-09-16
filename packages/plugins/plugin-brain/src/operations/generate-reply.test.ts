@@ -17,7 +17,7 @@ import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import { generateReply, replySubject } from './generate-reply';
+import { generateReply, replySubject } from './generate-reply.ts';
 
 const makeMessage = (sender: string, subject: string, text: string, created: string) =>
   Obj.make(Message.Message, {

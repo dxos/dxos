@@ -7,12 +7,18 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
-import { type Anchor, type ShapeLayout, defaultAnchorSize } from '../components';
-import { createNormalsFromRectangles, findClosestIntersection, getDistance, getRect, pointAdd } from '../layout';
-import { createAnchorId, createPath, parseAnchorId } from '../shapes';
-import { type CanvasBoard, type CanvasGraphModel, type PathShape, type Polygon, isPolygon } from '../types';
-import { type DragDropPayload } from './useDragMonitor';
-import { useEditorContext } from './useEditorContext';
+import { type Anchor, type ShapeLayout, defaultAnchorSize } from '../components/index.ts';
+import {
+  createNormalsFromRectangles,
+  findClosestIntersection,
+  getDistance,
+  getRect,
+  pointAdd,
+} from '../layout/index.ts';
+import { createAnchorId, createPath, parseAnchorId } from '../shapes/index.ts';
+import { type CanvasBoard, type CanvasGraphModel, type PathShape, type Polygon, isPolygon } from '../types/index.ts';
+import { type DragDropPayload } from './useDragMonitor.ts';
+import { useEditorContext } from './useEditorContext.ts';
 
 /**
  * Generate layout from graph (including linking).

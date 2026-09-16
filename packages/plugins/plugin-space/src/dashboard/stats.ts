@@ -4,7 +4,7 @@
 
 import { Feed, Obj, Type } from '@dxos/echo';
 
-import { type SpaceStats } from './types';
+import { type SpaceStats } from './types.ts';
 
 const FEED_TYPENAME = Type.getTypename(Feed.Feed);
 

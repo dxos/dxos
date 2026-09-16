@@ -4,7 +4,6 @@
 
 import { callbackify } from 'node:util';
 
-import { type Codec, type EncodingOptions } from '@dxos/codec-protobuf';
 import { type Signer, verifySignature } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -12,11 +11,19 @@ import { arrayToBuffer } from '@dxos/util';
 import { type AbstractValueEncoding, type Crypto } from '@dxos/vendor-hypercore/hypercore';
 
 /**
- * Create encoding (e.g., from protobuf codec).
+ * A value codec, structural so a buf codec and a protobuf.js one both satisfy it.
  */
-export const createCodecEncoding = <T>(codec: Codec<T>, opts?: EncodingOptions): AbstractValueEncoding<T> => ({
-  encode: (obj: T) => arrayToBuffer(codec.encode(obj, opts)),
-  decode: (buffer: Buffer) => codec.decode(buffer, opts),
+export type ValueCodec<T> = {
+  encode(value: T): Uint8Array;
+  decode(buffer: Uint8Array): T;
+};
+
+/**
+ * Create encoding (e.g., from a protobuf codec).
+ */
+export const createCodecEncoding = <T>(codec: ValueCodec<T>): AbstractValueEncoding<T> => ({
+  encode: (obj: T) => arrayToBuffer(codec.encode(obj)),
+  decode: (buffer: Buffer) => codec.decode(buffer),
 });
 
 /**

@@ -4,17 +4,27 @@
 
 import { type Mutex, type MutexGuard } from '@dxos/async';
 import { type Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { bufWkt } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-export const stateToString = (state: Invitation.State): string => {
-  return Object.entries(Invitation.State).find(([key, val]) => val === state)?.[0] ?? 'unknown';
+/** Names an invitation state for logging; falls back to `unknown` for a value outside the enum. */
+export const stateToString = (state: Invitation_State): string => {
+  return Object.entries(Invitation_State).find(([key, val]) => val === state)?.[0] ?? 'unknown';
 };
 
+/**
+ * When the invitation expires, or `undefined` where it carries no lifetime.
+ *
+ * An invitation with no `created` timestamp is treated as created now, which is what the host does
+ * when it mints one.
+ */
 export const computeExpirationTime = (invitation: Partial<Invitation>): Date | undefined => {
   if (!invitation.lifetime) {
     return;
   }
-  return new Date((invitation.created?.getTime() ?? Date.now()) + invitation.lifetime * 1000);
+  const created = invitation.created ? Number(bufWkt.timestampMs(invitation.created)) : Date.now();
+  return new Date(created + invitation.lifetime * 1000);
 };
 
 export const tryAcquireBeforeContextDisposed = async (ctx: Context, mutex: Mutex): Promise<MutexGuard> => {
@@ -32,3 +42,11 @@ export const tryAcquireBeforeContextDisposed = async (ctx: Context, mutex: Mutex
     })(),
   );
 };
+
+/**
+ * The role an invitation admits with.
+ *
+ * An invitation without a role admits an administrator, as it did before the role was carried.
+ */
+export const toSpaceMemberRole = (role: SpaceMember_Role | undefined): SpaceMember_Role =>
+  role ?? SpaceMember_Role.ADMIN;

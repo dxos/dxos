@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN } from '@dxos/keys';
-import { type Observability } from '@dxos/observability';
+import type * as Observability from '@dxos/observability/Observability';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -18,33 +18,29 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { FeedbackPanel } from './FeedbackPanel';
+import { FeedbackPanel } from './FeedbackPanel.tsx';
 
-// Minimal Observability stub — just enough surface to satisfy FeedbackPanel's
-// `isAvailable('feedback')` probe and a no-op `captureUserFeedback`. The full
-// interface is large; the cast keeps the story fixture readable.
-const makeObservability = ({ available = true }: { available?: boolean } = {}): Observability.Observability =>
+const makeObservability = (): Observability.Observability =>
   ({
-    isAvailable: () => Effect.succeed(available),
-    feedback: {
-      captureUserFeedback: async (form: any) => {
+    isAvailable: () => Effect.succeed(true),
+    support: {
+      uploadLogs: async () => 'story/logs.ndjson',
+      sessionContext: () => undefined,
+      flushLogs: async (ticketId: string) => {
         // eslint-disable-next-line no-console
-        console.log('[story] captureUserFeedback', form);
-        return 'story-event-uuid';
+        console.log('[story] flushLogs', ticketId);
       },
     },
   }) as unknown as Observability.Observability;
 
 /** Contributes a mock Observability capability to the story plugin manager. */
-const StoryObservabilityPlugin = ({ available = true }: { available?: boolean } = {}) =>
+const StoryObservabilityPlugin = () =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.story.observability'), name: 'Story Observability' })).pipe(
     Plugin.addModule({
       id: 'observability',
       provides: [ObservabilityCapabilities.Observability],
       activate: () =>
-        Effect.succeed([
-          Capability.contribute(ObservabilityCapabilities.Observability, makeObservability({ available })),
-        ]),
+        Effect.succeed([Capability.contribute(ObservabilityCapabilities.Observability, makeObservability())]),
     }),
     Plugin.make,
   );
@@ -91,7 +87,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Feedback is available; submission paths log to the console. */
 export const Default: Story = {
   decorators: [
     withPluginManager({
@@ -125,25 +120,6 @@ export const WithDownloadLogs: Story = {
         }),
         StoryObservabilityPlugin()(),
         StoryLogDownloaderPlugin()(),
-      ],
-    }),
-  ],
-};
-
-/** Observability reports feedback unavailable — submit buttons disabled. */
-export const FeedbackUnavailable: Story = {
-  decorators: [
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin.make({
-          config: makeConfig(),
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              yield* initializeIdentity(client);
-            }),
-        }),
-        StoryObservabilityPlugin({ available: false })(),
       ],
     }),
   ],

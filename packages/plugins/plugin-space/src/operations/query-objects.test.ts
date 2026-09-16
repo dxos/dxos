@@ -6,17 +6,70 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import QueryObjectsHandler from './query-objects';
-import { TestObject, labelOf, makeTestLayer } from './testing';
+import AddTypeHandler from './add-type.ts';
+import QueryObjectsHandler from './query-objects.ts';
+import { TestObject, labelOf, makeTestLayer } from './testing.ts';
 
-const TestLayer = makeTestLayer(QueryObjectsHandler);
+const TestLayer = makeTestLayer(QueryObjectsHandler, AddTypeHandler);
 
 describe('SpaceOperation.QueryObjects', () => {
+  it.effect(
+    'a typename-only query returns every object of the type at any limit',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const count = 5;
+        for (let index = 0; index < count; index++) {
+          yield* Database.add(Obj.make(TestObject, { name: `typed-${index}` }));
+        }
+        yield* Database.flush();
+
+        // A limit above the result count must not truncate, and must not vary run to run.
+        for (const limit of [3, count, count + 1, 200]) {
+          const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+            typename: Type.getTypename(TestObject),
+            limit,
+          });
+          expect(results).toHaveLength(Math.min(limit, count));
+        }
+
+        // `includeContent` changes the shape of a row, never which rows match.
+        const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+          typename: Type.getTypename(TestObject),
+          includeContent: true,
+          limit: 200,
+        });
+        expect(results).toHaveLength(count);
+
+        // A second registration of the same typename persisted in the space. Resolving the typename
+        // to one registration and filtering on that pinned the query to whichever copy the registry
+        // returned first, so the objects — written under the static declaration — stopped matching.
+        yield* Operation.invoke(SpaceOperation.AddType, {
+          typename: Type.getTypename(TestObject),
+          name: 'Test Object',
+          jsonSchema: {
+            $schema: 'http://json-schema.org/draft-07/schema#',
+            type: 'object',
+            title: 'Test Object',
+            properties: { name: { type: 'string' } },
+          },
+        });
+
+        const { results: afterShadow } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+          typename: Type.getTypename(TestObject),
+          limit: 200,
+        });
+        expect(afterShadow).toHaveLength(count);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   it.effect(
     'finds feed content only with includeQueues',
     Effect.fnUntraced(

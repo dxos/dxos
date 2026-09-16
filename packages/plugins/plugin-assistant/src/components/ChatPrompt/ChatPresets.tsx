@@ -18,7 +18,6 @@ export const ChatPresets = ({ presets, preset, onPresetChange }: AssistantPreset
             {label}
           </Select.Option>
         ))}
-        <Select.Arrow />
       </Select.Content>
     </Select.Root>
   );

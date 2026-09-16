@@ -5,3 +5,10 @@ language: typescript
 tags:
   - vite-plugin
   - ts-compile
+  - ts-test
+
+tasks:
+  test:
+    options:
+      mergeOutputs: replace
+    outputs: []

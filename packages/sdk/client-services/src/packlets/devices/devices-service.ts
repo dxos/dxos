@@ -3,17 +3,26 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList } from '@dxos/async';
-import { type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Device, DeviceKind, EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DevicesService } from '@dxos/protocols/rpc';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  type Device,
+  Device_PresenceState,
+  DeviceKind,
+  DeviceSchema,
+  EdgeStatus_ConnectionState,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { DevicesService } from '@dxos/protocols/rpc';
 
-import { type IdentityManager } from '../identity';
+import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
   'constructor'(
@@ -23,7 +32,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
 
   ['DevicesService.updateDevice'](request: DeviceProfileDocument): Effect.Effect<Device, Error> {
     return Effect.tryPromise({
-      try: async () => this._identityManager.updateDeviceProfile(request),
+      try: async () => await this._identityManager.updateDeviceProfile(request),
       catch: (error) => error as Error,
     });
   }
@@ -36,30 +45,31 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
           void emit.single({ devices: [] });
         } else {
           invariant(this._identityManager.identity?.presence, 'presence not present');
-          const peers = this._identityManager.identity.presence.getPeersOnline();
+          const identityPresence = this._identityManager.identity.presence;
           void emit.single({
             devices: Array.from(deviceKeys.entries()).map(([key, profile]) => {
               const isMe = this._identityManager.identity?.deviceKey.equals(key);
               let presence;
               if (isMe) {
-                presence = Device.PresenceState.ONLINE;
+                presence = Device_PresenceState.ONLINE;
               } else if (profile.os?.toUpperCase() === 'EDGE') {
                 presence =
-                  this._edgeConnection?.status.state === EdgeStatus.ConnectionState.CONNECTED
-                    ? Device.PresenceState.ONLINE
-                    : Device.PresenceState.OFFLINE;
+                  this._edgeConnection?.status.state === EdgeStatus_ConnectionState.CONNECTED
+                    ? Device_PresenceState.ONLINE
+                    : Device_PresenceState.OFFLINE;
               } else {
-                presence = peers.some((peer) => peer.identityKey.equals(key))
-                  ? Device.PresenceState.ONLINE
-                  : Device.PresenceState.OFFLINE;
+                presence =
+                  identityPresence.getPeersByIdentityKey(key).length > 0
+                    ? Device_PresenceState.ONLINE
+                    : Device_PresenceState.OFFLINE;
               }
 
-              return {
-                deviceKey: key,
+              return buf.create(DeviceSchema, {
+                deviceKey: fromPublicKey(key),
                 kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
-                profile,
+                profile: profile,
                 presence,
-              };
+              });
             }),
           });
         }
@@ -109,3 +119,13 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
     });
   }
 }
+
+export const DevicesServiceLayer = Layer.effect(
+  DevicesService.Tag,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    // Edge connection is absent in the non-edge stack, so resolve it optionally.
+    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
+    return new DevicesServiceImpl(identityManager, edgeConnection);
+  }),
+);

@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './life';
-export * from './models';
+export * from './life.ts';
+export * from './models.ts';

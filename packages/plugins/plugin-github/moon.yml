@@ -4,12 +4,14 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
+  - ts-test-storybook
   - pack
+  - storybook
 
 tasks:
   check-module-structure:
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./GitHubPlugin
       --to "{react,react-dom}"
       --conditions workerd,worker

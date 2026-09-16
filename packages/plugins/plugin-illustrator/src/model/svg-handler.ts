@@ -9,9 +9,9 @@
 // there is no renderer-native encoding to compile to. See `docs/DESIGN.md`.
 //
 
-import { makeBuilder } from './builder';
-import { type ContentHandler, type ContentMap, type ReadWorldObject } from './content';
-import type * as Scene from './scene';
+import { makeBuilder } from './builder.ts';
+import { type ContentHandler, type ContentMap, type ReadWorldObject } from './content.ts';
+import type * as Scene from './scene.ts';
 
 /** Discriminates the base `Drawing.Canvas` as SVG-rendered scene content. */
 export const SVG_SCHEMA = 'dxos.org/svg/1';
@@ -22,6 +22,8 @@ type SvgRecord = {
   /** Insertion order, so `read` reproduces element paint order. */
   order: number;
   placement: { origin: Scene.Point; scale: number };
+  /** The object's `ref`, repeated on each of its records so `read` restores it. */
+  ref?: string;
   data: Scene.Element;
 };
 
@@ -41,6 +43,10 @@ export const SvgHandler: ContentHandler = {
           .filter(isSvgRecord)
           .map((record) => record.order),
       ) + 1;
+    // `upsert-elements` supplies only elements; the object's ref then comes from its existing records.
+    const ref =
+      ('ref' in object && object.ref) ||
+      Object.values(content).find((record) => isSvgRecord(record) && record.object === object.id)?.ref;
     const records: ContentMap = {};
     for (const element of object.elements) {
       records[`${object.id}/${element.id}`] = {
@@ -48,6 +54,7 @@ export const SvgHandler: ContentHandler = {
         element: element.id,
         order: order++,
         placement: { origin: { ...placement.origin }, scale: placement.scale },
+        ...(ref ? { ref } : {}),
         // Structured clone: scene elements are plain data, and the record must not alias the input.
         data: JSON.parse(JSON.stringify(element)),
       } satisfies SvgRecord;
@@ -73,6 +80,7 @@ export const SvgHandler: ContentHandler = {
           id: record.object,
           origin: { ...record.placement.origin },
           scale: record.placement.scale,
+          ...(record.ref ? { ref: record.ref } : {}),
           elements: [],
         };
         objects.set(record.object, object);

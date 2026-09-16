@@ -5,8 +5,8 @@
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Obj, type Tag } from '@dxos/echo';
 
-import { toSlots } from './slots';
-import { type Shortcut } from './types';
+import { toSlots } from './slots.ts';
+import { type Shortcut } from './types.ts';
 
 /**
  * Label of the canonical tag marking an object as a favorite. ECHO tags are first-class

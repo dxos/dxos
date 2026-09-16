@@ -12,7 +12,7 @@ import {
   parseTimedText,
   parseYouTubeDescription,
   selectCaptionTrack,
-} from './youtube';
+} from './youtube.ts';
 
 describe('parseYouTubeDescription', () => {
   test('extracts the full shortDescription from ytInitialPlayerResponse', ({ expect }) => {

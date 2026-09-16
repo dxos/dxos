@@ -4,8 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { EntityList, entitiesFromFacts } from '../components';
-import { useFactsStory } from './context';
+import { EntityList, entitiesFromFacts } from '../components/index.ts';
+import { useFactsStory } from './context.ts';
 
 /** RIGHT: the entities mentioned in the facts; selecting one scopes the viewer (shared selection). */
 export const EntitiesModule = () => {

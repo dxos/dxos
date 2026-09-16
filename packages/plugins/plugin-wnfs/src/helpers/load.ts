@@ -13,8 +13,8 @@ import { type Space } from '@dxos/react-client/echo';
 
 import { WnfsCapabilities } from '#types';
 
-import { WnfsStateAnnotation } from '../annotations';
-import { Rng, store } from './common';
+import { WnfsStateAnnotation } from '../annotations.ts';
+import { Rng, store } from './common.ts';
 
 //
 // LOAD

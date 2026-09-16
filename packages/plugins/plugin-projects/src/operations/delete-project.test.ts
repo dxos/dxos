@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
@@ -147,7 +147,7 @@ describe('deleting a project', () => {
     // An artifact is listed on the project by ref; its parent stays wherever it was created.
     const artifact = db.add(Feed.make());
     Obj.update(project, (project) => {
-      project.artifacts = [...project.artifacts, Ref.make(artifact)];
+      project.artifacts.push(Ref.make(artifact));
     });
     await db.flush();
 

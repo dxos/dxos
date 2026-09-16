@@ -6,9 +6,9 @@ import { describe, expect, test } from 'vitest';
 
 import { failUndefined } from '@dxos/debug';
 
-import { SnapshotsRegistry } from './snapshots-registry';
-import { SpacesDumper } from './space-json-dump';
-import { withSnapshot } from './util';
+import { SnapshotsRegistry } from './snapshots-registry.ts';
+import { SpacesDumper } from './space-json-dump.ts';
+import { withSnapshot } from './util.ts';
 
 describe('Load client from storage snapshot', () => {
   // Snapshot regenerated on the canonical-URI migration (2026-06-12), which dropped all legacy

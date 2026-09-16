@@ -15,9 +15,13 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { type ConstructionCase, type ConstructionResult, profileConstruction } from '../components/Block/construction';
-import { createBlockExtensions } from '../components/Block/extensions';
-import { chatRegistry } from '../testing/widgets';
+import {
+  type ConstructionCase,
+  type ConstructionResult,
+  profileConstruction,
+} from '../components/Block/construction.ts';
+import { createBlockExtensions } from '../components/Block/extensions.ts';
+import { chatRegistry } from '../testing/widgets.tsx';
 
 /** The uniform ladder's document: one short paragraph, one line at the story's width. */
 const SHORT = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do.';

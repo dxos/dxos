@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { Jmap } from '#apis';
 
-import { JMAP_DEFAULT_HOST } from '../constants';
-import { buildJmapCredential, jmapCredentialForm } from './credential-form';
+import { JMAP_DEFAULT_HOST } from '../constants.ts';
+import { buildJmapCredential, jmapCredentialForm } from './credential-form.ts';
 
 const session = (username?: string): Jmap.Session => ({
   apiUrl: 'https://api.fastmail.com/jmap/api/',

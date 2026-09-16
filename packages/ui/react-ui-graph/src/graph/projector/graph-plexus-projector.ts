@@ -7,13 +7,13 @@ import { cluster as d3Cluster, hierarchy, linkRadial } from 'd3';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
+import { type GraphLayoutEdge, type GraphLayoutNode } from '../types.ts';
 import {
   GraphRadialProjector,
   type GraphRadialProjectorOptions,
   layoutRadial,
   updateNode,
-} from './graph-radial-projector';
+} from './graph-radial-projector.ts';
 
 /** Display info for a relation group. */
 export type PlexusRelation = {

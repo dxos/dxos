@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { migrateDocument } from './migrate-document';
+import { migrateDocument } from './migrate-document.ts';
 
 describe('migrateDocument', () => {
   test('migrates strings', () => {

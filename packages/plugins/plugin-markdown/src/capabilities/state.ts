@@ -9,7 +9,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 
 import { MarkdownCapabilities } from '#types';
 
-import { createEditorViewStateStore } from './editor-view-state';
+import { createEditorViewStateStore } from './editor-view-state.ts';
 
 const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => {
   const views = new Map<string, MarkdownCapabilities.EditorViewEntry>();

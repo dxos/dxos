@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Fact } from '../../types';
+import { Fact } from '../../types/index.ts';
 
 const HEADER = `//
 // Copyright 2026 DXOS.org

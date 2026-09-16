@@ -19,8 +19,8 @@ import { fileURLToPath } from 'node:url';
 
 import { EffectEx } from '@dxos/effect';
 
-import { makeDiscordLayerFromToken } from '../services';
-import { type DiscordChannelFixture, fetchChannelMessages } from './index';
+import { makeDiscordLayerFromToken } from '../services/index.ts';
+import { type DiscordChannelFixture, fetchChannelMessages } from './index.ts';
 
 const token = process.env.DISCORD_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;

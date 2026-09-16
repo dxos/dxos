@@ -14,7 +14,7 @@ import * as Binding from '@dxos/plugin-connector/Binding';
 import { GoogleCalendarApi, GoogleCredentials } from '#services';
 import { GoogleOperation } from '#types';
 
-import { syncCalendar } from './sync';
+import { syncCalendar } from './sync.ts';
 
 const handler = GoogleOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(({ connection, priority, googleCalendarId, syncBackDays, syncForwardDays, pageSize }) =>

@@ -27,6 +27,6 @@ export const addToRootCollection = (space: Space, objects: Obj.Unknown[]): void 
 
   const refs = objects.map((object) => Ref.make(object));
   Obj.update(collection, (collection) => {
-    collection.objects = [...collection.objects, ...refs];
+    collection.objects.push(...refs);
   });
 };
