@@ -78,6 +78,20 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
     heapByTarget[`heapUsed_${reading.name.replace(/[^a-z0-9]+/gi, '_')}`] = reading.usedBytes;
   }
 
+  // Per-realm CPU as flat keys alongside a page/worker split, so "did the workers get busier"
+  // is one series rather than a question needing the raw rows.
+  const cpuByRealm: Record<string, number> = {};
+  let workerCpuMs = 0;
+  let pageCpuMs = 0;
+  for (const realm of row.cpuMsByRealm ?? []) {
+    cpuByRealm[`cpuMs_${realm.name.replace(/[^a-z0-9]+/gi, '_')}`] = realm.cpuMs;
+    if (realm.kind === 'page') {
+      pageCpuMs += realm.cpuMs;
+    } else {
+      workerCpuMs += realm.cpuMs;
+    }
+  }
+
   return {
     event: EVENT_NAME,
     ...(timestamp ? { timestamp } : {}),
@@ -98,6 +112,8 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       layoutMs: row.thread.layoutMs,
       recalcStyleMs: row.thread.recalcStyleMs,
 
+      ...(row.cpuMsByRealm ? { pageCpuMs, workerCpuMs, ...cpuByRealm } : {}),
+
       peakRssBytes: row.peakRssBytes,
       heapUsedTotalBytes: row.heapUsedTotalBytes,
       ...heapByTarget,
@@ -117,7 +133,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       pluginSet: row.comparability.pluginSet,
       profileState: row.comparability.profileState,
       settleMs: row.comparability.settleMs,
-      instrumented: row.comparability.instrumented,
+      instruments: row.comparability.instruments,
     },
   };
 };

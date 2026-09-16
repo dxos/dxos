@@ -29,20 +29,24 @@ The dialect is [`packages/reflect/deus/lang/qa.mdl`](../../../reflect/deus/lang/
 What the harness (`@dxos/perf-harness`) records per stage, and the rules that make two runs
 comparable at all:
 
-- **Two modes, never mixed.** `measure` reads counters at stage boundaries only and is the sole
-  mode trended; `diagnose` runs an always-on V8 sampling profiler and a screencast and produces
-  artifacts. An attached CDP client makes Blink retain response bodies, which reads as linear
-  memory growth (the finding behind `scripts/memory/plain-soak.mjs`), so the memory-authoritative
-  run cannot be the profiled one.
-- **Per stage:** wall ms; total CPU ms across every Chrome process (`SystemInfo.getProcessInfo`,
-  which is the only reading that includes the shared worker where ECHO runs); the main thread's
-  `script`/`layout`/`recalcStyle` split; JS heap per target after a forced GC; peak RSS over the
-  browser process tree; DOM node and listener counts; network bytes split code-load vs API; long
-  tasks, TBT, and timer-drift lag sampled in the page AND in every worker realm.
+- **Two modes, never mixed.** `measure` reads counters at stage boundaries and runs the V8 sampling
+  profiler, writing no profiles, so that per-realm CPU is trended; it is the sole mode trended.
+  `diagnose` adds a screencast and keeps the profiles. The line between them is the SCREENCAST:
+  measured on one flow, profiler-only costs +2.6% against `measure` — below the run-to-run noise —
+  while adding the screencast costs +47%, because it encodes a JPEG per frame and waits on an ack
+  before the next. Note also that Playwright's own Network domain makes Blink retain response
+  bodies in EVERY mode (the finding behind `scripts/memory/plain-soak.mjs`), so absolute RSS is
+  inflated by an unmeasured constant while a trend across runs stays valid.
+- **Per stage:** wall ms; total CPU ms across every Chrome process (`SystemInfo.getProcessInfo`);
+  CPU per REALM from the profiler, the only instrument that reaches a worker — process CPU folds a
+  dedicated worker into its renderer, and the `Performance` domain does not exist on a worker target
+  at all; the page main thread's `script`/`layout`/`recalcStyle` split; JS heap per target after a
+  forced GC; peak RSS over the browser process tree; DOM node and listener counts; network bytes
+  split code-load vs API; long tasks and TBT for the page, and timer-drift lag per realm.
 - **Recorded on every row, or the trend is noise:** serving mode (`vite preview` over a production
   bundle — `vite serve` costs ~2.5x on the main thread), plugin set, profile state (first-run
   performs onboarding and loads a different module set), settle time, and whether the run was
-  instrumented. Per `scripts/memory/README.md` §"Comparing runs".
+  which instruments were attached. Per `scripts/memory/README.md` §"Comparing runs".
 - **Memory means four different things** that differ by 3-5x. The trended one is peak RSS, because
   it is what a user feels and the only one that counts wasm linear memory — where automerge
   documents live, outside every JS-heap reading, never returned to the OS.

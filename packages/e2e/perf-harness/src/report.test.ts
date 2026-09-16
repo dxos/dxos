@@ -25,7 +25,7 @@ const comparability: Comparability = {
   pluginSet: 'production',
   profileState: 'first-run',
   settleMs: 20_000,
-  instrumented: false,
+  instruments: 'profiler',
 };
 
 describe('toPosthogEvent', () => {
@@ -56,7 +56,7 @@ describe('toPosthogEvent', () => {
     expect(event.properties.pluginSet).toBe('production');
     expect(event.properties.profileState).toBe('first-run');
     expect(event.properties.settleMs).toBe(20_000);
-    expect(event.properties.instrumented).toBe(false);
+    expect(event.properties.instruments).toBe('profiler');
   });
 
   test('dedup distinguishes stages of one run', ({ expect }) => {

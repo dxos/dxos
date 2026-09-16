@@ -3,6 +3,8 @@
 //
 
 import { type Page } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import path from 'node:path';
 
 import { type Attached, type Cdp, detachAll, refreshTargets } from './cdp.ts';
 import {
@@ -60,6 +62,14 @@ export type RunnerOptions = {
   debugPort: number;
   network: () => NetworkMetrics;
   comparability: Comparability;
+  /**
+   * Where to write one screenshot per stage. Omit to take none.
+   *
+   * Taken AFTER every boundary read, so the capture cannot land inside the interval it depicts —
+   * one `page.screenshot` per stage is a rounding error next to the flow, but only because it is
+   * outside the measured window rather than because it is fast.
+   */
+  screenshotDir?: string;
 };
 
 /** A boundary reading: everything sampled together, so a stage's deltas describe one interval. */
@@ -115,6 +125,21 @@ export class StageRunner {
    */
   attachInstruments(instruments: Instruments): void {
     this.#instruments = instruments;
+  }
+
+  /** One PNG per stage, for a reviewer who wants to see what the numbers describe. */
+  async #screenshot(id: string): Promise<string | undefined> {
+    const { screenshotDir, page } = this.#options;
+    if (!screenshotDir) {
+      return undefined;
+    }
+    mkdirSync(screenshotDir, { recursive: true });
+    const file = path.join(screenshotDir, `${id}.png`);
+    // Never fatal: a stage that measured fine should not fail over its illustration.
+    return page
+      .screenshot({ path: file })
+      .then(() => file)
+      .catch(() => undefined);
   }
 
   /** Runs one stage, bracketing `body` with the boundary reads. */
@@ -182,7 +207,11 @@ export class StageRunner {
     // stage, and read before the DOM counters it would drop nodes the stage had just created.
     const heap = await readHeap(this.#targets);
 
-    const artifacts = [...profiles, ...(stills?.files ?? [])];
+    // After the heap read, which is the last thing charged to the stage: a screenshot forces a
+    // paint and a PNG encode, and neither belongs in this stage's numbers or the next one's.
+    const shot = await this.#screenshot(id);
+
+    const artifacts = [...profiles, ...(stills?.files ?? []), ...(shot ? [shot] : [])];
     const row: StageRow = {
       flow: this.#options.flow,
       stage: id,

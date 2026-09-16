@@ -34,8 +34,14 @@ export type Comparability = {
   profileState: 'first-run' | 'returning';
   /** Idle time allowed after ready before the first stage; modules keep arriving for ~3 minutes. */
   settleMs: number;
-  /** True whenever a profiler or screencast was attached — i.e. always in `diagnose`. */
-  instrumented: boolean;
+  /**
+   * Which instruments were attached, because neither mode is bare any more.
+   *
+   * The profiler runs in both modes — measured at +2.6% on the whole flow, below the run-to-run
+   * noise — so that worker CPU is trended rather than diagnose-only. The screencast is what makes
+   * `diagnose` timings incomparable: it costs +45%.
+   */
+  instruments: 'profiler' | 'profiler+screencast';
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */
@@ -179,7 +185,7 @@ export type StageRow = {
    * invisible there — this is the only field that attributes it.
    */
   threadByRealm: RealmThreadMetrics[];
-  /** Present in `diagnose` only: the profiler-measured CPU per realm, page and workers alike. */
+  /** Profiler-measured CPU per realm, page and workers alike. Present in both modes. */
   cpuMsByRealm?: RealmCpu[];
 
   heap: HeapReading[];

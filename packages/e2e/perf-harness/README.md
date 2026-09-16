@@ -34,7 +34,7 @@ than trusting a caller to remember.
 | Metric                     | Source                                | Note |
 | -------------------------- | ------------------------------------- | ---- |
 | `cpuMsTotal`               | `SystemInfo.getProcessInfo` (browser) | The only reading covering the shared worker, GPU and browser process. A renderer-only number misleads for a DXOS flow, where the shared worker running ECHO is usually the dominant cost. |
-| `thread.*`                 | `Performance.getMetrics` (page)       | `taskMs` is the envelope; the script/layout/recalcStyle split is what separates "the database is slow" from "the list re-renders every row". |
+| `thread.*`                 | `Performance.getMetrics` (page only — the domain does not exist on a worker) | `taskMs` is the envelope; the script/layout/recalcStyle split is what separates "the database is slow" from "the list re-renders every row". |
 | `heap[]`                   | `Runtime.getHeapUsage` per target     | After a three-pass forced GC, per realm. |
 | `peakRssBytes`             | `ps` over the browser process tree    | Sampled through the stage, so a spike that is freed before the boundary still counts. The only number that includes wasm linear memory. |
 | `domNodes`, `domListeners` | `Memory.getDOMCounters`               | The cheap leak canary, and the direct signal for a list that renders every row rather than a viewport. |
@@ -60,7 +60,7 @@ Every row carries `comparability`, and a comparison that does not hold these con
 - **pluginSet** — a different set is a different app.
 - **profileState** — a first run performs onboarding and loads a different module set.
 - **settleMs** — modules keep arriving for ~3 minutes after ready.
-- **instrumented** — true for every `diagnose` row.
+- **instruments** — `profiler` or `profiler+screencast`; neither mode is bare.
 
 Memory means four different things that differ by 3-5x (JS heap, snapshot self size, attributed
 allocators, private footprint). The trended one is peak RSS, because it is what a user feels.
@@ -73,4 +73,4 @@ Written under `test-results/perf/`:
 - `<flow>-<mode>-<scale>.events.ndjson` — `measure` rows as PostHog events, for
   `node scripts/ci-event.mjs --batch`.
 - `artifacts/<mode>-<scale>-<runId>/` — `.cpuprofile` per stage per realm, and each stage's first
-  and last frame. Never committed: a large tier's profiles run to hundreds of MB.
+  and last frame, plus one screenshot per stage. ~19 MB for a whole run. Never committed.

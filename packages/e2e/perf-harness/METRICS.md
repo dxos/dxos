@@ -11,16 +11,16 @@ Field names below match the JSON in `test-results/perf/<flow>-<mode>.rows.ndjson
 
 ## Identity and comparability
 
-| Field                 | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `flow`                | The flow id, e.g. `projects-tasks`. One `.mdl` `test` block.                                                                                                                                                                                                                                                                                                                                                              |
-| `stage`, `stageIndex` | The stage id, matching the step `id:` in the flow's `.mdl` exactly. Renaming one means renaming both.                                                                                                                                                                                                                                                                                                                     |
-| `mode`                | `measure` or `diagnose`. **Never compare across these** — see [Modes](#modes-and-why-timings-do-not-cross-them).                                                                                                                                                                                                                                                                                                          |
-| `scale`               | The fixture shape, e.g. `tasks=200,depth=2,projects=1,docs=3x400`. The join key for a trend: if the fixture changes shape, the label changes and the trend visibly breaks rather than silently shifting.                                                                                                                                                                                                                  |
-| `fixtureSize`         | Tasks actually created. Deliberately outside the `scale` join key, because a fixture that produces 199 of 200 tasks is still the same tier.                                                                                                                                                                                                                                                                               |
-| `iteration`           | Which repeat of the flow this row is. Present for multi-sample runs; the nightly currently writes one iteration per mode.                                                                                                                                                                                                                                                                                                 |
-| `ok`, `error`         | Whether the stage body completed. **A failed stage's `wallMs` is its timeout, not a measurement** — `writePosthogBatch` drops `ok: false` rows so a timeout can never enter a trend as a regression.                                                                                                                                                                                                                      |
-| `comparability`       | Five things that change what every other number means: `servingMode` (`preview` over a production bundle vs `serve`, which costs ~2.5× on the main thread), `pluginSet`, `profileState` (`first-run` performs onboarding and loads a different module set), `settleMs`, and `instrumented`. Two rows that differ here are not comparable, whatever their stage ids say. Per `scripts/memory/README.md` §"Comparing runs". |
+| Field                 | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flow`                | The flow id, e.g. `projects-tasks`. One `.mdl` `test` block.                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `stage`, `stageIndex` | The stage id, matching the step `id:` in the flow's `.mdl` exactly. Renaming one means renaming both.                                                                                                                                                                                                                                                                                                                                                                                 |
+| `mode`                | `measure` or `diagnose`. **Never compare across these** — see [Modes](#modes-and-why-timings-do-not-cross-them).                                                                                                                                                                                                                                                                                                                                                                      |
+| `scale`               | The fixture shape, e.g. `tasks=200,depth=2,projects=1,docs=3x400`. The join key for a trend: if the fixture changes shape, the label changes and the trend visibly breaks rather than silently shifting.                                                                                                                                                                                                                                                                              |
+| `fixtureSize`         | Tasks actually created. Deliberately outside the `scale` join key, because a fixture that produces 199 of 200 tasks is still the same tier.                                                                                                                                                                                                                                                                                                                                           |
+| `iteration`           | Which repeat of the flow this row is. Present for multi-sample runs; the nightly currently writes one iteration per mode.                                                                                                                                                                                                                                                                                                                                                             |
+| `ok`, `error`         | Whether the stage body completed. **A failed stage's `wallMs` is its timeout, not a measurement** — `writePosthogBatch` drops `ok: false` rows so a timeout can never enter a trend as a regression.                                                                                                                                                                                                                                                                                  |
+| `comparability`       | Five things that change what every other number means: `servingMode` (`preview` over a production bundle vs `serve`, which costs ~2.5× on the main thread), `pluginSet`, `profileState` (`first-run` performs onboarding and loads a different module set), `settleMs`, and `instruments` (`profiler` or `profiler+screencast` — neither mode is bare). Two rows that differ here are not comparable, whatever their stage ids say. Per `scripts/memory/README.md` §"Comparing runs". |
 
 ## Time
 
@@ -55,10 +55,15 @@ moves and you need to know which process moved:
 _dedicated_ worker runs as a thread inside the renderer process, so its CPU is folded into
 `renderer:<pid>` and cannot be split out from this field. Use `cpuMsByRealm` for that.
 
-### `cpuMsByRealm` — `diagnose` only
+### `cpuMsByRealm`
 
 `{ kind, name, cpuMs, samples, idleSamples }` per realm, from the sampling profiler:
 `cpuMs = (samples - idleSamples) x samplingInterval`.
+
+**Present in both modes and trended**, as `pageCpuMs`, `workerCpuMs` and a `cpuMs_<realm>` series
+per realm. The profiler runs always, and both modes keep the profiles — a whole run's artifacts are
+~19 MB (see [Instrument cost](#instrument-cost-measured)). `boot` is the exception: no profiler
+target exists before the page, so that row carries no `cpuMsByRealm` at all.
 
 Idle ticks are counted out because a profiler samples on a wall clock — a realm that slept through
 a stage still produces a sample per interval, so raw sample count measures the stage's duration,
@@ -230,19 +235,23 @@ number and the picture come from one source.
 
 ## Modes, and why timings do not cross them
 
-`measure` reads counters at stage boundaries only. It is the **sole mode trended**.
+`measure` reads counters at stage boundaries and runs the sampling profiler for `cpuMsByRealm`,
+writing no profiles. It is the **sole mode trended**.
 
-`diagnose` adds a per-realm V8 sampling profiler and a screencast, and produces artifacts
-(`.cpuprofile` per realm, stage stills) that are never trended.
+`diagnose` adds the screencast and keeps the profiles, producing artifacts (`.cpuprofile` per
+realm, stage stills) that are never trended.
+
+The line between them is the screencast, not instrumentation in general.
 
 The separation is not fastidiousness, it is a measured effect:
 
 - An attached CDP client makes Blink **retain response bodies**, which reads as linear memory growth
   (the finding `scripts/memory/plain-soak.mjs` controls for). So the memory-authoritative run cannot
   be the profiled one.
-- Instrumentation is not a small tax. It took `open-tasks` from **6.8 s in `measure` to 15.2 s in
-  `diagnose`**, having first blown a 60 s budget outright. `diagnose` therefore gets a 300 s locator
-  budget, and its timings are meaningless next to `measure`'s.
+- The screencast is not a small tax. It took `open-tasks` from **6.8 s to past 60 s**, blowing that
+  budget outright, which is why `diagnose` gets a 300 s locator budget and its timings are
+  meaningless next to `measure`'s. The profiler is the opposite — +2.6%, below noise — which is why
+  it runs in both.
 
 `writePosthogBatch` drops every non-`measure` row rather than trusting a caller to remember, and
 `toPosthogEvent` throws on one.
@@ -257,28 +266,36 @@ One sample per configuration of the same flow, whole-flow wall time:
 | profiler only (`DX_PERF_SCREENCAST=0`) | 37,840 ms | +953 ms (+2.6%)   |
 | `diagnose` (profiler + screencast)     | 54,335 ms | +17,448 ms (+47%) |
 
-**The screencast is the whole cost; the profiler is close to free.** +2.6% sits below the
-run-to-run noise documented under [Known gaps](#known-gaps) — `open-tasks` came out _faster_ in the
-profiler-only run (4,976 ms vs 7,833 ms), which is noise, not an improvement. So the profiler's
-overhead is not measurable with one sample, while the screencast's is far outside noise.
+**Read these as bounds, not measurements.** One sample each, against a noise floor that a later
+run established directly: with the profiler always on, the `boot` stage — which has NO
+instrumentation attached in either configuration, since no target exists before the page — moved
+**+20.9%** between two runs. Run-to-run variance is therefore ~20% per stage, which swamps the
+profiler's apparent +2.6%. `open-tasks` also came out _faster_ in the profiler-only run (4,976 ms
+vs 7,833 ms), which is the same noise.
+
+What survives: the screencast's +47% is large enough to exceed that floor, and the profiler's cost
+is bounded above by something too small to separate from zero. Resolving it properly needs 3-5
+samples per configuration — the same shortfall as gap 4 below, which makes repeated iterations the
+most load-bearing gap in this list rather than a refinement.
 
 Why the screencast costs what it does: `Page.startScreencast` makes Chrome encode a JPEG per frame,
 ship it over the CDP websocket, and wait for a `Page.screencastFrameAck` before the next one —
 thousands of encode-and-transport round trips competing with the rendering being measured.
 
-This is the evidence for making the profiler always-on, which would turn `cpuMsByRealm` into a
-trended metric. Not done: one sample cannot distinguish +2.6% from 0%, so that change wants 3-5
-samples per configuration first.
+On this evidence the profiler runs in **both** modes, which makes `cpuMsByRealm` a trended metric
+rather than a diagnose artifact, and its profiles are kept in both (a whole run's artifacts come to
+~19 MB, including one screenshot per stage — not the "hundreds of MB" an earlier revision of this
+file guessed at).
 
 ## Known gaps
 
 Recorded here so nobody rediscovers them as bugs.
 
-1. **Worker CPU is `diagnose`-only.** `cpuMsByRealm` needs the profiler, so a `measure` row carries
-   no worker attribution. `Performance.getMetrics` cannot substitute: `Performance.enable` answers
+1. ~~Worker CPU is `diagnose`-only.~~ Done: the profiler runs in both modes, so `cpuMsByRealm` is
+   trended. `Performance.getMetrics` still cannot substitute — `Performance.enable` answers
    `'Performance.enable' wasn't found` on every worker target, which is why `threadByRealm` covers
-   only realms that have the domain (the page, today). See **Instrument cost** for why always-on
-   profiling looks affordable.
+   only realms that have the domain (the page, today). What remains: `boot` has no profile in
+   either mode, since there is no target to attach to before the page exists.
 2. **No disk I/O.** Nothing in CDP reports read/write bytes; `Storage.getUsageAndQuota` gives a
    stored-bytes _level_, not operations. `/proc/<pid>/io` exists on Linux but counts the browser's
    own traffic alongside ours, so an attributable measurement has to come from the storage layer.
@@ -294,9 +311,12 @@ Recorded here so nobody rediscovers them as bugs.
    The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
 4. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
    would be visible per realm.
-5. **One iteration per mode.** `open-tasks` has moved 9,172 → 6,803 → 7,833 ms across runs (~26%
-   spread), so separating a regression from noise needs several samples. `iteration` is on every row;
-   the nightly does not yet use it.
+5. **One iteration per mode, and this is the gap that limits every other number.** `open-tasks` has
+   moved 9,172 → 6,803 → 7,833 → 10,195 ms across runs, and `boot` moved +20.9% between two runs
+   whose `boot` stage was instrumented identically (not at all). So the floor for detecting a
+   regression is currently ~20-30% per stage, and any effect smaller than that — including the
+   instruments' own cost — cannot be measured with one sample. `iteration` is on every row; the
+   nightly does not yet use it.
 6. **`boot` carries no profile** in either mode: there is no target to attach to until the page
    exists, so boot-time attribution belongs to the startup harness, not this one.
 
@@ -307,5 +327,6 @@ Recorded here so nobody rediscovers them as bugs.
 - `test-results/perf/<flow>-<mode>.events.ndjson` — PostHog batch, `measure` and `ok` rows only.
   Event name `ci.perf-stage`; the dedup key is `<flow>:<scale>:<stage>:<iteration>` through a uuidV5,
   so re-running a stage updates its event rather than duplicating it.
-- `test-results/perf/artifacts/<mode>-<runId>/` — `diagnose` profiles and stills. Never committed: a
-  profiled run's output runs to hundreds of MB.
+- `test-results/perf/artifacts/<mode>-<runId>/` — per-realm `.cpuprofile` per stage (both modes;
+  load one into Chrome DevTools → Performance), `stages/<stage>.png` (both modes), and the
+  screencast stills (`diagnose`). ~19 MB for a whole run. Never committed.

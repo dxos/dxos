@@ -70,8 +70,7 @@ const sampledCpuMs = (profile: CpuProfile): { cpuMs: number; samples: number; id
 /**
  * Always-on sampling profiler across every realm, rotated at each stage boundary.
  *
- * Per stage AND per target: a whole-run profile for a flow this long runs to hundreds of MB and
- * attributes nothing to the step that regressed, and a page-only profile misses the shared worker
+ * Per stage AND per target: a whole-run profile attributes nothing to the step that regressed, and a page-only profile misses the shared worker
  * that does the database work. Files are named for the stage they cover, which is the whole reason
  * the profile is worth keeping — a reviewer reading a regression should not have to reconstruct
  * which stage an artifact belongs to.

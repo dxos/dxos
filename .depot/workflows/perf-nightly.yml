@@ -140,9 +140,9 @@ jobs:
             node scripts/ci-event.mjs --batch "$batch"
           done
 
-      # The diagnose artifacts — per-stage `.cpuprofile` per realm, and the first/last frame of
-      # each stage — are what a regression is read with. Not committed anywhere: a diagnose run's
-      # profiles run to hundreds of MB.
+      # The artifacts — a `.cpuprofile` per stage per realm, one screenshot per stage, and the
+      # screencast's first/last frames in `diagnose` — are what a regression is read with. Not
+      # committed anywhere; a run comes to ~19MB.
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v7

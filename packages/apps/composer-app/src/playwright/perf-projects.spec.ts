@@ -78,20 +78,18 @@ const SETTLE_MS = 20_000;
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
 /**
- * Lets a `diagnose` run drop the screencast, isolating the profiler's own cost.
- *
- * The two instruments are attached together, so the mode's ~47% overhead is a combined figure and
- * says nothing about whether an always-on profiler would be affordable in `measure`.
+ * Drops the screencast from a `diagnose` run, which is how its cost was isolated from the
+ * profiler's: profiler-only came in at +2.6% against `measure`, both instruments at +47%.
  */
 const screencastEnabled = process.env.DX_PERF_SCREENCAST !== '0';
 
 /**
  * Locator budget per mode.
  *
- * `diagnose` gets far more than `measure` because its instrumentation is not a small tax: the
- * per-frame screencast and the per-realm profiler took `open-tasks` from 6.8s to
- * past 60s. A budget sized for `measure` turns every instrumented run into a timeout — the one
- * failure mode that yields no artifacts, exactly when they are wanted.
+ * `diagnose` gets far more because the SCREENCAST is not a small tax — it took `open-tasks` from
+ * 6.8s to past 60s. A budget sized for `measure` turns every screencast run into a timeout, the
+ * one failure mode that yields no artifacts exactly when they are wanted. The profiler, which now
+ * runs in both modes, does not need the headroom: it costs +2.6% on the whole flow.
  */
 const locatorTimeout = (mode: Mode): number => (mode === 'diagnose' ? 300_000 : 60_000);
 
@@ -157,7 +155,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       pluginSet: process.env.DX_PLUGIN_SET ?? 'default',
       profileState: 'first-run',
       settleMs: SETTLE_MS,
-      instrumented: mode === 'diagnose',
+      instruments: mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler',
     };
 
     const runner = new StageRunner({
@@ -171,6 +169,9 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       debugPort,
       network,
       comparability,
+      // Both modes: a reviewer reading a regression wants to see the stage it is in, and one
+      // capture per stage outside the measured window costs nothing the run can feel.
+      screenshotDir: path.join(artifactDir, 'stages'),
     });
 
     // `boot` is its own stage and the profiler cannot start before it: there is no target to attach
@@ -200,17 +201,20 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     expect(fixture.taskCount).toBeGreaterThan(0);
     runner.setFixtureSize(fixture.taskCount);
 
-    if (mode === 'diagnose') {
-      // Attached after boot: neither collector has a target to bind to until the page exists, and
-      // `boot` is itself a measured stage.
-      const targets = await attachAll(debugPort);
-      runner.adopt(targets);
-      const pageTarget = targets.find((target) => target.kind === 'page');
-      runner.attachInstruments({
-        profiler: startProfiling(artifactDir),
-        ...(pageTarget && screencastEnabled ? { screencast: await startScreencast(pageTarget.cdp, artifactDir) } : {}),
-      });
-    }
+    // Attached after boot: no collector has a target to bind to until the page exists, and `boot`
+    // is itself a measured stage.
+    //
+    // The PROFILER runs in both modes, profiles and all: it costs +2.6% on the whole flow, below
+    // the run-to-run noise, it is the only instrument that can attribute CPU to a worker, and a
+    // whole run's artifacts come to ~16MB. The SCREENCAST stays diagnose-only, at +45%.
+    const targets = await attachAll(debugPort);
+    runner.adopt(targets);
+    const pageTarget = targets.find((target) => target.kind === 'page');
+    const screencast = mode === 'diagnose' && pageTarget && screencastEnabled;
+    runner.attachInstruments({
+      profiler: startProfiling(artifactDir),
+      ...(screencast ? { screencast: await startScreencast(pageTarget.cdp, artifactDir) } : {}),
+    });
 
     await runner.stage('open-space', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', {
