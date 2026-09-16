@@ -13,6 +13,7 @@ import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { Trigger } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
+import { type BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import * as WorkerProtocol from './WorkerProtocol.ts';
@@ -92,7 +93,7 @@ export type Options = {
   createRuntime: (args: {
     config: Record<string, any> | undefined;
     requestShutdown: () => void;
-  }) => Effect.Effect<RuntimeHandle, Error, Scope.Scope>;
+  }) => Effect.Effect<RuntimeHandle, BaseError, Scope.Scope>;
 };
 
 const defaultEndpoint = (): WorkerProtocol.WorkerEndpoint => {
