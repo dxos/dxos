@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @vitest-environment happy-dom
-
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { describe, test } from 'vitest';
