@@ -77,6 +77,8 @@ export enum TypeFormat {
   Formula = 'formula', // Spreadsheet (Excel, Google Sheets, etc.) formula.
   Hostname = 'hostname',
   JSON = 'json',
+  /** An opaque identifier (an API key id, a handle, a slug): monospace, no spellcheck or autocorrect. */
+  Key = 'key',
   Markdown = 'markdown',
   Password = 'password',
   Regex = 'regex',
@@ -144,6 +146,7 @@ export const formatToType: Record<TypeFormat, TypeEnum> = {
   [TypeFormat.Formula]: TypeEnum.String,
   [TypeFormat.Hostname]: TypeEnum.String,
   [TypeFormat.JSON]: TypeEnum.String,
+  [TypeFormat.Key]: TypeEnum.String,
   [TypeFormat.Markdown]: TypeEnum.String,
   [TypeFormat.Password]: TypeEnum.String,
   [TypeFormat.Regex]: TypeEnum.String,

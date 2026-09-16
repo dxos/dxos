@@ -12,9 +12,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -43,7 +42,7 @@ class Bookmark extends Type.makeObject<Bookmark>(DXN.make('com.example.type.book
   Schema.Struct({
     name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
     url: Schema.optional(Schema.String.annotate({ title: 'Url' })),
-    visits: Ref.Ref(Visits).pipe(FormInputAnnotation.set(false)),
+    visits: Ref.Ref(Visits).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(FactoryAnnotation.set(((values) => makeBookmark(values)) as FactoryFn)),
 ) {}
 

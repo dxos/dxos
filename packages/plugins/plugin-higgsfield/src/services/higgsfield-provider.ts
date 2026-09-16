@@ -192,6 +192,7 @@ const toOutput = (body: HiggsfieldRequestResponse): HiggsfieldOutput => {
 };
 
 /** Delay between polls; resolves early (without rejecting) when the signal fires so the loop re-checks it. */
+// TODO(burdon): Factor out (to @dxos/async).
 const sleep = (ms: number, signal: AbortSignal): Promise<void> =>
   new Promise<void>((resolve) => {
     if (signal.aborted) {

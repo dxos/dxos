@@ -2,60 +2,88 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Context_ from 'effect/Context';
+import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { Trigger, scheduleTask } from '@dxos/async';
-import { type Config } from '@dxos/config';
-import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import { Trigger } from '@dxos/async';
+import {
+  PROXY_CONNECTION_TIMEOUT,
+  layerClientServicesServer,
+  layerHandlersFromTag,
+  makeBridgeServiceClientOverProtocol,
+} from '@dxos/client-protocol';
+import { type Config, ConfigService } from '@dxos/config';
+import { Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { makeInProcessClient } from '@dxos/protocols';
-import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
+import {
+  ContactsService,
+  DataService,
+  DevicesService,
+  DevtoolsHost,
+  EdgeAgentService,
+  FeedService,
+  IdentityService,
+  InvitationsService,
+  LoggingService,
+  NetworkService,
+  QueryService,
+  SpacesService,
+  SystemService,
+} from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { type MaybePromise } from '@dxos/util';
 
-import { ClientServicesHost } from '../services/index.ts';
-import { WorkerSession } from './worker-session.ts';
+import {
+  ClientServicesLayer,
+  type ClientServicesStackContext,
+  HostEvents,
+  enableNetworking,
+  wipeSqliteStorage,
+} from '../services/index.ts';
+import { SessionClosed } from './events.ts';
 
 // Session transports are effect-rpc protocol layers handed over by the worker framework: appProtocol
-// serves the client services (+ WorkerService); systemProtocol carries the reverse-direction
+// serves the client services; systemProtocol carries the reverse-direction
 // BridgeService (worker→tab).
 export type CreateSessionProps = {
+  /** Forward-direction (tab→worker) protocol over which the worker serves the client services. */
   appProtocol: RpcServer.Protocol['Service'];
+  /** Reverse-direction (worker→tab) protocol serving the tab's WebRTC `BridgeService`; the worker is the client. */
   systemProtocol: RpcClient.Protocol['Service'];
-  shellPort?: MessagePort;
-  onClose?: () => Promise<void>;
 };
+
+/** A tab connection within the worker; it lives as long as the scope `createSession` ran in. */
+export interface WorkerSession {
+  /** The tab's WebRTC bridge, which the worker's network stack proxies through. */
+  readonly bridgeService: Awaited<ReturnType<typeof makeBridgeServiceClientOverProtocol>>['bridgeService'];
+}
 
 /**
  * Grace period between "worker booted" and the first edge dial. wa-sqlite runs in-process on this
  * thread, so the dial, its auth-header request, and the replication behind it contend with the boot
  * RPCs the tab is waiting on — on a document-heavy profile the session handshake loses that race and
  * the client reports a connect timeout. Yielding lets the queued handshake drain first; replication
- * then proceeds behind a live session. Owned here rather than in the host: the host exposes the
- * capability, the embedder decides the timing.
+ * then proceeds behind a live session. The stack exposes the capability; the embedder decides the timing.
  */
-const EDGE_NETWORKING_START_DELAY = 300;
+const EDGE_NETWORKING_START_DELAY = '300 millis';
 
 export type WorkerRuntimeOptions = {
-  configProvider: () => MaybePromise<Config>;
-  acquireLock: () => Promise<void>;
-  releaseLock: () => void;
-  onStop?: () => Promise<void>;
+  configProvider: Effect.Effect<Config>;
+  /** The runtime wants to terminate (its last session closed, or a reset finished); the embedder closes its scope. */
+  requestShutdown?: Effect.Effect<void>;
   /**
    * @default true
    */
@@ -66,25 +94,25 @@ export type WorkerRuntimeOptions = {
    * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
    */
   sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
+
+  /**
+   * Shared context for the in-memory signal manager used when edge signaling is off; tests pass one
+   * so several runtimes can see each other.
+   */
+  memorySignalManagerContext?: MemorySignalManagerContext;
 };
 
 /**
  * Effect service surface for the dedicated-worker runtime.
  *
- * Manages connections from proxies (in tabs): tabs make requests to the `ClientServicesHost`, and
- * provide a WebRTC gateway. Lifecycle (`start` / `stop`) is caller-driven — the worker framework
- * builds the runtime after receiving init config, then drives sessions for their lifetime — so these
- * are explicit programs rather than Layer finalizers.
+ * Manages connections from proxies (in tabs): tabs make requests to the client services stack, and
+ * provide a WebRTC gateway. The runtime lives as long as the scope it was made in.
  */
 export interface WorkerRuntimeService {
-  /** The client services host served to connected tabs. */
-  readonly host: ClientServicesHost;
-  /** Resolve config, open the services host, and signal readiness. Fails with the startup error, which also rejects the readiness gate, after tearing down without `onStop`. */
-  readonly start: () => Effect.Effect<void, Error>;
-  /** Tear down sessions' host, dispose the runtime, release the storage lock, and run `onStop`. Idempotent. */
-  readonly stop: () => Effect.Effect<void>;
-  /** Open a new tab session over the supplied effect-rpc protocols and register it for WebRTC bridging. */
-  readonly createSession: (props: CreateSessionProps) => Effect.Effect<WorkerSession>;
+  /** Effect context of the running stack: every component and RPC handler. */
+  readonly stack: () => Context.Context<ClientServicesStackContext>;
+  /** Open a tab session over the supplied effect-rpc protocols for the life of the scope, registered for WebRTC bridging. */
+  readonly createSession: (props: CreateSessionProps) => Effect.Effect<WorkerSession, never, Scope.Scope>;
   /** Route the WebRTC bridge through the given session (or disconnect when `undefined`). */
   readonly connectWebrtcBridge: (session: WorkerSession | undefined) => Effect.Effect<void>;
 }
@@ -92,257 +120,238 @@ export interface WorkerRuntimeService {
 /**
  * Context tag for the dedicated-worker runtime service. Provided by {@link layerWorkerRuntime}.
  */
-export class WorkerRuntime extends Context_.Service<WorkerRuntime, WorkerRuntimeService>()(
+export class WorkerRuntime extends Context.Service<WorkerRuntime, WorkerRuntimeService>()(
   '@dxos/client-services/WorkerRuntime',
 ) {}
 
 /**
- * Constructs the {@link WorkerRuntimeService}. The SQLite {@link ManagedRuntime} and
- * {@link ClientServicesHost} are built eagerly; the async open sequence runs in {@link start}.
+ * Builds and opens the worker runtime: {@link ClientServicesLayer} over the worker's SQLite layer.
+ * A startup error rejects the readiness gate, closes the stack and fails the effect, so the worker
+ * reports it instead of advertising `ready`. Closing the scope tears everything down.
  */
 export const makeWorkerRuntime = ({
   configProvider,
-  acquireLock,
-  releaseLock,
-  onStop,
+  requestShutdown = Effect.void,
   automaticallyConnectWebrtc = true,
   sqliteLayer,
-}: WorkerRuntimeOptions): WorkerRuntimeService => {
-  const transportFactory = new RtcTransportProxyFactory();
-  const ready = new Trigger<Error | undefined>();
-  const sessions = new Set<WorkerSession>();
-  const signalMetadataTags: any = { runtime: 'worker-runtime' };
+  memorySignalManagerContext,
+}: WorkerRuntimeOptions): Effect.Effect<WorkerRuntimeService, Error, Scope.Scope> =>
+  Effect.gen(function* () {
+    // Held so effects that outlive this construction — a session finalizer, which the framework runs
+    // when it closes a session scope — still reach the controller.
+    const controller = yield* Hook.Controller;
+    const transportFactory = new RtcTransportProxyFactory();
+    const ready = new Trigger<Error | undefined>();
+    const sessions = new Set<WorkerSession>();
+    const signalMetadataTags: any = {
+      runtime: 'worker-runtime',
+      origin: typeof location !== 'undefined' ? location.origin : 'unknown',
+    };
+    const scope = yield* Effect.scope;
 
-  let stopped = false;
-  // Set when the host's open threw: its half-built stack keeps running on the SQLite runtime and nothing can close it.
-  let hostOpenFailed = false;
-  /** Scopes the deferred networking start so a worker torn down mid-grace-period does not dial. */
-  const networkingCtx = new Context();
-  let sessionForNetworking: WorkerSession | undefined;
-  let config: Config;
-  let serviceScope: Scope.Closeable | undefined;
+    let sessionForNetworking: WorkerSession | undefined;
+    /** Owns the built stack; a reset closes it early, otherwise it closes with the runtime scope. */
+    const stackScope = yield* Scope.fork(scope);
+    let stack: Context.Context<ClientServicesStackContext> | undefined;
 
-  if (sqliteLayer) {
-    log.warn('Using testing SQLite layer');
-  }
-
-  const runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
-  );
-
-  // Everything `stop` does except `onStop`, which a failed `start` leaves to its caller.
-  const teardown = async (): Promise<void> => {
-    stopped = true;
-    void networkingCtx.dispose();
-    // Release the lock to notify remote clients that the worker is terminating.
-    releaseLock();
-    try {
-      await clientServices.close(Context.default());
-      if (serviceScope) {
-        await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
-        serviceScope = undefined;
-      }
-    } finally {
-      // Disposed even when host / scope teardown rejects, except under a half-built host whose background
-      // work would fail on closed storage; that storage lasts until the worker exits.
-      if (!hostOpenFailed) {
-        await runtime.dispose();
-      }
+    if (sqliteLayer) {
+      log.warn('Using testing SQLite layer');
     }
-  };
 
-  const stop = (): Effect.Effect<void> =>
-    Effect.promise(async () => {
-      if (stopped) {
-        return;
+    const sqlite = (sqliteLayer ?? LocalSqliteOpfsLayer).pipe(Layer.provideMerge(Reactivity.layer), Layer.orDie);
+
+    const closeStack = Effect.gen(function* () {
+      stack = undefined;
+      yield* Scope.close(stackScope, Exit.void);
+    });
+
+    const connectBridge = (session: WorkerSession | undefined): void => {
+      sessionForNetworking = session;
+      transportFactory.setBridgeService(session?.bridgeService);
+    };
+
+    // Selects one of the existing sessions for WebRTC networking.
+    const reconnectWebrtc = Effect.sync(() => {
+      log('reconnecting webrtc...');
+      // Drop the current session if it has since closed.
+      if (sessionForNetworking && !sessions.has(sessionForNetworking)) {
+        sessionForNetworking = undefined;
       }
-      try {
-        await teardown();
-      } finally {
-        await onStop?.();
+      if (!sessionForNetworking) {
+        connectBridge(Array.from(sessions).find((session) => session.bridgeService));
       }
     });
 
-  const clientServices = new ClientServicesHost({
-    // The dial is driven from `start()` below once boot has drained, not on stack open.
-    autoConnect: false,
-    callbacks: {
-      onReset: async () => {
-        await EffectEx.runPromise(stop());
-      },
-    },
-    runtime: runtime.contextEffect,
-    runtimeProps: {
-      // Auto-activate spaces that were previously active after leader changeover.
-      autoActivateSpaces: true,
-    },
-  });
-
-  const connectBridge = (session: WorkerSession | undefined): void => {
-    sessionForNetworking = session;
-    transportFactory.setBridgeService(session?.bridgeService);
-  };
-
-  // Selects one of the existing sessions for WebRTC networking.
-  const reconnectWebrtc = Effect.sync(() => {
-    log('reconnecting webrtc...');
-    // Drop the current session if it has since closed.
-    if (sessionForNetworking && !sessions.has(sessionForNetworking)) {
-      sessionForNetworking = undefined;
-    }
-    if (!sessionForNetworking) {
-      connectBridge(Array.from(sessions).find((session) => session.bridgeService));
-    }
-  });
-
-  const start = (): Effect.Effect<void, Error> =>
-    Effect.tryPromise({
-      try: async () => {
-        log('starting...');
-        try {
-          log('worker-runtime: acquiring storage lock');
-          await acquireLock();
-          log('worker-runtime: storage lock acquired, resolving config');
-          config = await configProvider();
-          log('worker-runtime: config resolved');
-          const observabilityGroup = config.get('runtime.client.observabilityGroup');
-          if (observabilityGroup) {
-            signalMetadataTags.group = observabilityGroup;
-          }
-          log('worker-runtime: initializing client services host');
-          clientServices.initialize({
-            config,
-            // Edge signaling is created in the services host from the edge connection; otherwise fall
-            // back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
-            signalManager: config.get('runtime.client.edgeFeatures')?.signaling
-              ? undefined
-              : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-            transportFactory,
-          });
-          log('worker-runtime: client services host initialized, opening');
-
-          await clientServices.open(new Context()).catch((err: unknown) => {
-            hostOpenFailed = true;
-            throw err;
-          });
-          log('worker-runtime: client services host opened, signalling ready');
-          ready.wake(undefined);
-          log('started');
-          // Bridge the host identity/devices Handlers to the effect-rpc client surface in-process.
-          serviceScope = Effect.runSync(Scope.make());
-          const { IdentityService: identityHandlers, DevicesService: devicesHandlers } = clientServices.services;
-          invariant(identityHandlers, 'IdentityService handler not available');
-          invariant(devicesHandlers, 'DevicesService handler not available');
-          const [identityService, devicesService] = await EffectEx.runPromise(
-            Effect.all([
-              makeInProcessClient(IdentityService.Rpcs, identityHandlers),
-              makeInProcessClient(DevicesService.Rpcs, devicesHandlers),
-            ]).pipe(Effect.provideService(Scope.Scope, serviceScope)),
-          );
-          setIdentityTags({
-            identityService,
-            devicesService,
-            setTag: (key: string, value: string) => {
-              signalMetadataTags[key] = value;
-            },
-          });
-
-          // Boot is done: outbound traffic can no longer starve the session handshake the tab is
-          // waiting on. Anchored here rather than inside the host so the gate opens only after the
-          // whole worker start sequence has drained, not just the stack open. The extra grace period
-          // yields the thread so any RPC already queued behind this turn is served before the dial and
-          // its auth-header request start competing for it.
-          log.info('worker-runtime: boot complete, scheduling networking start', {
-            delay: EDGE_NETWORKING_START_DELAY,
-          });
-          scheduleTask(
-            networkingCtx,
-            () => {
-              log('worker-runtime: starting networking');
-              clientServices.startNetworking();
-            },
-            EDGE_NETWORKING_START_DELAY,
-          );
-        } catch (err: any) {
-          ready.wake(err);
-          // No owner holds a runtime whose start failed, so it releases what it opened itself.
-          if (!stopped) {
-            await teardown().catch((teardownError: unknown) => {
-              throw new AggregateError([err, teardownError], 'Worker runtime failed to start and to tear down.', {
-                cause: err,
-              });
-            });
-          }
-          throw err;
+    // The runtime's own subscriptions: the reset chain and session bookkeeping.
+    yield* Hook.on(HostEvents.Closing, () => closeStack);
+    /** Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a reset gets here. */
+    yield* Hook.on(HostEvents.WipingStorage, () => wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie));
+    yield* Hook.on(HostEvents.Reset, () => requestShutdown);
+    yield* Hook.on(
+      SessionClosed,
+      Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {
+        sessions.delete(session);
+        if (sessions.size === 0) {
+          // Terminate the worker when all sessions are closed.
+          yield* requestShutdown;
+        } else if (automaticallyConnectWebrtc) {
+          yield* reconnectWebrtc;
         }
-      },
-      catch: (err) => (err instanceof Error ? err : new Error(String(err), { cause: err })),
-    });
+      }),
+    );
 
-  const createSession = ({
-    appProtocol,
-    systemProtocol,
-    shellPort,
-    onClose,
-  }: CreateSessionProps): Effect.Effect<WorkerSession> =>
-    Effect.gen(function* () {
-      const session = new WorkerSession({
-        serviceHost: clientServices,
-        appProtocol,
-        systemProtocol,
-        shellPort,
-        readySignal: ready,
-      });
-
-      // When tab is closed or client is destroyed.
-      session.onClose.set(async () => {
-        await EffectEx.runPromise(
-          Effect.gen(function* () {
-            sessions.delete(session);
-            if (sessions.size === 0) {
-              // Terminate the worker when all sessions are closed.
-              yield* stop();
-            } else if (automaticallyConnectWebrtc) {
-              yield* reconnectWebrtc;
-            }
-          }),
-        );
-        await onClose?.();
-      });
-
-      yield* session.open();
-      // A worker can only service one origin currently.
-      invariant(
-        !signalMetadataTags.origin || signalMetadataTags.origin === session.origin,
-        `worker origin changed from ${signalMetadataTags.origin} to ${session.origin}?`,
-      );
-      signalMetadataTags.origin = session.origin;
-      sessions.add(session);
-
-      if (automaticallyConnectWebrtc) {
-        yield* reconnectWebrtc;
+    yield* Effect.gen(function* () {
+      log('starting...');
+      const config = yield* configProvider;
+      const observabilityGroup = config.get('runtime.client.observabilityGroup');
+      if (observabilityGroup) {
+        signalMetadataTags.group = observabilityGroup;
       }
 
-      return session;
-    });
+      log('worker-runtime: building client services stack');
+      const stackContext = yield* Layer.build(
+        ClientServicesLayer({
+          // The dial is driven below once boot has drained, not on stack open.
+          autoConnect: false,
+          // Auto-activate spaces that were previously active after leader changeover.
+          runtimeProps: { autoActivateSpaces: true },
+          // Edge signaling is created by the platform layer from the edge connection; otherwise fall
+          // back to an in-memory manager (KUBE `WebsocketSignalManager` removed).
+          signalManager: config.get('runtime.client.edgeFeatures')?.signaling
+            ? undefined
+            : new MemorySignalManager(memorySignalManagerContext ?? new MemorySignalManagerContext()),
+          transportFactory,
+        }).pipe(
+          Layer.provideMerge(sqlite),
+          Layer.provide(Layer.succeed(ConfigService, config)),
+          Layer.provide(Layer.succeed(Hook.Controller, controller)),
+        ),
+      ).pipe(Scope.provide(stackScope));
+      stack = stackContext;
+      log('worker-runtime: stack built, opening');
+      // `StackOpened` resolves once every handler the cascade triggered has run.
+      yield* Effect.gen(function* () {
+        yield* Hook.emit(HostEvents.Opening, undefined);
+        yield* Hook.emit(HostEvents.StackOpened, undefined);
+      }).pipe(Effect.provide(stackContext));
+      log('worker-runtime: stack opened, signalling ready');
+      ready.wake(undefined);
+      log('started');
 
-  return {
-    host: clientServices,
-    start,
-    stop,
-    createSession,
-    connectWebrtcBridge: (session) => Effect.sync(() => connectBridge(session)),
-  };
-};
+      // Bridge the identity/devices Handlers to the effect-rpc client surface in-process.
+      const [identityService, devicesService] = yield* Effect.all([
+        makeInProcessClient(IdentityService.Rpcs, Context.get(stackContext, IdentityService.Tag)),
+        makeInProcessClient(DevicesService.Rpcs, Context.get(stackContext, DevicesService.Tag)),
+      ]);
+      setIdentityTags({
+        identityService,
+        devicesService,
+        setTag: (key: string, value: string) => {
+          signalMetadataTags[key] = value;
+        },
+      });
+
+      // Boot is done: outbound traffic can no longer starve the session handshake the tab is
+      // waiting on. Anchored here rather than in the stack so the gate opens only after the whole
+      // worker start sequence has drained, not just the stack open. The grace period yields the
+      // thread so any RPC already queued behind this turn is served before the dial and its
+      // auth-header request start competing for it.
+      log.info('worker-runtime: boot complete, scheduling networking start', {
+        delay: EDGE_NETWORKING_START_DELAY,
+      });
+      const networkingFiber = yield* Effect.forkDetach(
+        Effect.gen(function* () {
+          yield* Effect.sleep(EDGE_NETWORKING_START_DELAY);
+          log('worker-runtime: starting networking');
+          yield* enableNetworking;
+        }).pipe(Effect.provide(stackContext)),
+      );
+      yield* Effect.addFinalizer(() => Fiber.interrupt(networkingFiber));
+    }).pipe(
+      Effect.catchCause((cause) =>
+        Effect.gen(function* () {
+          const squashed = Cause.squash(cause);
+          const error = squashed instanceof Error ? squashed : new Error(String(squashed), { cause: squashed });
+          ready.wake(error);
+          log.error('starting', error);
+          yield* closeStack;
+          return yield* Effect.fail(error);
+        }),
+      ),
+    );
+
+    const createSession = ({
+      appProtocol,
+      systemProtocol,
+    }: CreateSessionProps): Effect.Effect<WorkerSession, never, Scope.Scope> =>
+      Effect.gen(function* () {
+        log('opening session...');
+        const { bridgeService } = yield* Effect.acquireRelease(
+          Effect.promise(() => makeBridgeServiceClientOverProtocol(systemProtocol)),
+          ({ close }) => Effect.promise(() => close()),
+        );
+
+        // Serve once the runtime is ready; the handlers come from the stack's tags.
+        const error = yield* Effect.promise(() => ready.wait({ timeout: PROXY_CONNECTION_TIMEOUT }));
+        if (error || !stack) {
+          return yield* Effect.die(error ?? new Error('worker runtime stack is not available'));
+        }
+        yield* Layer.build(
+          layerClientServicesServer(
+            Layer.mergeAll(
+              layerHandlersFromTag(SystemService.Rpcs, SystemService.Tag),
+              layerHandlersFromTag(NetworkService.Rpcs, NetworkService.Tag),
+              layerHandlersFromTag(LoggingService.Rpcs, LoggingService.Tag),
+              layerHandlersFromTag(IdentityService.Rpcs, IdentityService.Tag),
+              layerHandlersFromTag(InvitationsService.Rpcs, InvitationsService.Tag),
+              layerHandlersFromTag(DevicesService.Rpcs, DevicesService.Tag),
+              layerHandlersFromTag(SpacesService.Rpcs, SpacesService.Tag),
+              layerHandlersFromTag(DataService.Rpcs, DataService.Tag),
+              layerHandlersFromTag(QueryService.Rpcs, QueryService.Tag),
+              layerHandlersFromTag(FeedService.Rpcs, FeedService.Tag),
+              layerHandlersFromTag(ContactsService.Rpcs, ContactsService.Tag),
+              layerHandlersFromTag(EdgeAgentService.Rpcs, EdgeAgentService.Tag),
+              layerHandlersFromTag(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
+            ),
+          ).pipe(
+            Layer.provide(Layer.succeed(RpcServer.Protocol, appProtocol)),
+            Layer.provide(Layer.succeedContext(stack)),
+          ),
+        );
+
+        const session: WorkerSession = { bridgeService };
+        sessions.add(session);
+        yield* Effect.addFinalizer(() =>
+          Hook.emit(SessionClosed, { session }).pipe(
+            Effect.provideService(Hook.Controller, controller),
+            // A subscriber failing must not keep the transport open.
+            Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
+          ),
+        );
+
+        if (automaticallyConnectWebrtc) {
+          yield* reconnectWebrtc;
+        }
+
+        log('session opened');
+        return session;
+      });
+
+    return {
+      stack: () => {
+        invariant(stack, 'worker runtime not started');
+        return stack;
+      },
+      createSession,
+      connectWebrtcBridge: (session) => Effect.sync(() => connectBridge(session)),
+    } satisfies WorkerRuntimeService;
+  }).pipe(Effect.provide(Hook.controllerLayer));
 
 /**
- * Layer providing the {@link WorkerRuntime} service. The service is constructed synchronously;
- * callers drive `start` / `stop` explicitly (see {@link WorkerRuntimeService}).
+ * Layer providing the {@link WorkerRuntime} service; the runtime lives as long as the layer.
  */
-export const layerWorkerRuntime = (options: WorkerRuntimeOptions): Layer.Layer<WorkerRuntime> =>
-  Layer.sync(WorkerRuntime, () => makeWorkerRuntime(options));
+export const layerWorkerRuntime = (options: WorkerRuntimeOptions): Layer.Layer<WorkerRuntime, Error> =>
+  Layer.effect(WorkerRuntime, makeWorkerRuntime(options));
 
 const DB_NAME = 'DXOS';
 

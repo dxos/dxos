@@ -131,6 +131,26 @@ describe('computeActiveUpdates', () => {
       const { deckUpdates } = computeActiveUpdates({ next: ['a'], deck, flatten: true });
       expect(deckUpdates.companionPlanks).toEqual([]);
     });
+
+    test('stays undecided while the deck holds nothing to hang a companion off', ({ expect }) => {
+      const deck = makeDeck({ active: [], companionPlanks: undefined });
+      const { deckUpdates } = computeActiveUpdates({ next: [], deck });
+      expect(deckUpdates.companionPlanks).toBeUndefined();
+    });
+
+    test('carries an undecided companion through navigation rather than settling it', ({ expect }) => {
+      const deck = makeDeck({ active: [], companionPlanks: undefined });
+      expect(computeActiveUpdates({ next: ['a'], deck }).deckUpdates.companionPlanks).toBeUndefined();
+
+      const opened = makeDeck({ active: ['a'], companionPlanks: undefined });
+      expect(computeActiveUpdates({ next: ['a', 'b'], deck: opened }).deckUpdates.companionPlanks).toBeUndefined();
+    });
+
+    test('once the reader closes it, later navigation keeps it closed', ({ expect }) => {
+      const closed = makeDeck({ active: ['a'], companionPlanks: [] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['a', 'b'], deck: closed });
+      expect(deckUpdates.companionPlanks).toEqual([]);
+    });
   });
 
   describe('empty next', () => {

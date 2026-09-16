@@ -29,6 +29,9 @@ export interface BuildSessionTimelineInput {
 
 const ACTIVE_STATES = new Set<Process.State>([Process.State.RUNNING, Process.State.HYBERNATING]);
 
+/** How long an open lane may be silent before the axis stops following `now`. */
+const OPEN_LANE_STALE_MS = 10 * 60_000;
+
 const TASK_STATUS: Partial<Record<Task.Status, LaneStatus>> = {
   todo: 'pending',
   backlog: 'pending',
@@ -257,7 +260,14 @@ export const buildSessionTimeline = ({
     });
     const lastEnd = ends.at(-1);
     const lastEndStatus = lastEnd ? decode(AgentRequestEnd.schema, lastEnd.data)?.status : undefined;
-    const status: LaneStatus = processActive || requestOpen ? 'running' : lastEndStatus === 'error' ? 'failed' : 'done';
+    // An unmatched request begin is a run in flight only while its process is; with the process
+    // recorded as ended, the run died before writing its end, so the lane closes at its last event
+    // rather than staying open (and stretching the chart) indefinitely.
+    const processKnown = [...source.pids].some((pid) => processByPid.has(pid));
+    const died = requestOpen && processKnown && !processActive;
+    const open = requestOpen && !died;
+    const status: LaneStatus =
+      processActive || open ? 'running' : died || lastEndStatus === 'error' ? 'failed' : 'done';
 
     lanes.push({
       id: laneId,
@@ -265,7 +275,7 @@ export const buildSessionTimeline = ({
       label: source.label,
       status,
       start: begins[0]?.timestamp,
-      end: requestOpen ? undefined : lastEnd?.timestamp,
+      end: open ? undefined : died ? sessionEvents.at(-1)?.timestamp : lastEnd?.timestamp,
       chatId: source.chat?.id,
       pid: [...source.pids].at(-1),
     });
@@ -477,12 +487,37 @@ export const buildSessionTimeline = ({
     }
   }
 
+  // A session working exactly one task is that task: the two lanes would carry the same label,
+  // so the task lane folds into the session's (which keeps its run span and totals, and takes the
+  // task's id and status so it still reads as the work). Only a lone in-session task, with nothing
+  // depending on it and no spawned child, folds — a checklist of several stays a tree.
+  for (const session of lanes.filter((lane) => lane.kind === 'session' && lane.parentId === undefined)) {
+    const children = lanes.filter((lane) => lane.parentId === session.id);
+    const [task] = children;
+    if (children.length !== 1 || task.kind !== 'task' || lanes.some((lane) => lane.blockedOn?.includes(task.id))) {
+      continue;
+    }
+    lanes.splice(lanes.indexOf(task), 1);
+    session.taskId = task.taskId;
+    if (task.status === 'blocked' || task.status === 'review' || task.status === 'pending') {
+      session.status = task.status;
+    }
+    markers.forEach((marker, index) => {
+      if (marker.laneId === task.id) {
+        markers[index] = { ...marker, laneId: session.id };
+      }
+    });
+  }
+
   const times = [
     ...lanes.flatMap((lane) => [lane.start, lane.end]).filter((time): time is number => time !== undefined),
     ...markers.map((marker) => marker.timestamp),
   ];
+  // The axis reaches `now` for a run still in flight; one whose last event is long past is idle or
+  // dead whatever its status says, and stretching the axis to now would bunch its nodes into a sliver.
   const hasOpen = lanes.some((lane) => lane.start !== undefined && lane.end === undefined);
-  if (hasOpen && now !== undefined) {
+  const latest = times.length > 0 ? Math.max(...times) : undefined;
+  if (hasOpen && now !== undefined && (latest === undefined || now - latest <= OPEN_LANE_STALE_MS)) {
     times.push(now);
   }
   const start = times.length > 0 ? Math.min(...times) : (now ?? 0);

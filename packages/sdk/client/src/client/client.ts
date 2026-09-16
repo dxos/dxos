@@ -31,6 +31,7 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
+  RpcClosedError,
   runServiceCall,
   subscribeStream,
 } from '@dxos/protocols';
@@ -557,6 +558,7 @@ export class Client {
             put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
             get: (key) => edgeHttpClient.getBlob(Context.default(), key),
             has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
+            finalizeUpload: (uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId),
           },
         }),
         { default: true },
@@ -589,7 +591,10 @@ export class Client {
             return;
           }
 
-          // Closing interrupts the stream rather than failing it, and nothing resubscribes it.
+          // A lost connection is reopened by `_services.closed`, and a reset tears services down on purpose.
+          if (this._resetting || err instanceof RpcClosedError) {
+            return;
+          }
           log.error('system status stream failed', { err });
           this._fatalErrorUpdate.emit(err);
         },

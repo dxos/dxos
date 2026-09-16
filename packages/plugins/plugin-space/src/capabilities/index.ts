@@ -23,6 +23,7 @@ import { SpaceOperationConfig } from '../operations/helpers.ts';
 import { makeCreateInvitationUrl } from './helpers.ts';
 
 export * from './app-graph-builder/index.ts';
+export * from './settings-sync/index.ts';
 export { makeCreateObjectEntryForDatabaseType } from '../util/index.ts';
 
 export const Commands = AppCapability.commands(() => import('./commands.ts'));
@@ -33,12 +34,7 @@ export const Dashboard = Capability.lazyModule(
   'Dashboard',
   {
     environments: [],
-    requires: [
-      Capabilities.AtomRegistry,
-      Capabilities.PluginManager,
-      ClientCapabilities.Client,
-      AppCapabilities.Layout,
-    ],
+    requires: [Capabilities.PluginManager, ClientCapabilities.Client, AppCapabilities.Layout],
     provides: [SpaceCapabilities.Dashboard],
     activatesOn: ClientEvents.SpacesReady,
   },

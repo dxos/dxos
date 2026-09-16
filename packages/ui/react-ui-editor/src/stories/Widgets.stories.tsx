@@ -19,6 +19,7 @@ import {
   type ObjectLinkProps,
   type ObjectLinksOptions,
   type WidgetDef,
+  type WidgetProps,
   type WidgetState,
   type XmlWidgetRegistry,
   createBasicExtensions,
@@ -45,8 +46,8 @@ random.seed(123);
 const xmlRegistry = {
   test: {
     block: true,
-    Component: ({ start = '0' }: { start?: string }) => {
-      const [count, setCount] = useState<number>(safeParseInt(start, 0));
+    Component: ({ start }: WidgetProps) => {
+      const [count, setCount] = useState<number>(safeParseInt(typeof start === 'string' ? start : '0', 0));
       useEffect(() => {
         const interval = setInterval(() => {
           setCount((prev) => {

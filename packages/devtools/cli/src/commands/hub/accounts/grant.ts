@@ -15,11 +15,8 @@ import { formatHubError, hubApiRequest } from '../util.ts';
 export const grant = Command.make(
   'grant',
   {
-    identityDid: Args.string('identity-did').pipe(Args.withDescription('Account identity DID.')),
-    count: Options.integer('count').pipe(
-      Options.withDescription('Number of invitations to add.'),
-      Options.withAlias('n'),
-    ),
+    identityDid: Args.String('identity-did').pipe(Args.withDescription('Account identity DID.')),
+    count: Options.Int('count').pipe(Options.withDescription('Number of invitations to add.'), Options.withAlias('n')),
   },
   Effect.fn(function* ({ identityDid, count }) {
     const result = yield* hubApiRequest<GetAccountResponse>('POST', `/api/account/${identityDid}/invitations/grant`, {

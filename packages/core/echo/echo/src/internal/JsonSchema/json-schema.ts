@@ -153,6 +153,10 @@ const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType>
   // is inlined), and they are carried over as `$defs` rather than dropped.
   const { schema, definitions } = Schema.toJsonSchemaDocument(Schema.make(withRefinements), {
     includeAnnotationKey: isEchoJsonSchemaKey,
+    // Effect 4 serializes a struct as open (`additionalProperties: true`) by default; ECHO's wire
+    // contract states a struct as closed, and an open tool schema would let a model pass keys the
+    // handler never declared.
+    onExcessProperty: 'error',
   });
   const jsonSchema = {
     ...schema,
@@ -179,16 +183,20 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
   }
   // Recursive: `Schema.optional` is not idempotent in v4, so an already-optional field made optional
   // again nests as `(T | undefined) | undefined` and one pass would leave the inner union behind.
-  return defined.length === 1
-    ? SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {})
-    : new SchemaAST.Union(
-        defined.map(stripUndefinedMember),
-        ast.mode,
-        ast.annotations,
-        ast.checks,
-        ast.encoding,
-        ast.context,
-      );
+  if (defined.length === 1) {
+    const member = SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {});
+    // A check written for `T | undefined` still holds for `T`.
+    return ast.checks ? Schema.make<Schema.Top>(member).check(...ast.checks).ast : member;
+  }
+  return new SchemaAST.Union(
+    defined.map(stripUndefinedMember),
+    ast.options,
+    ast.annotations,
+    ast.checks,
+    ast.encoding,
+    ast.context,
+    ast.encodingChecks,
+  );
 };
 
 /**
@@ -199,6 +207,12 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
  * a thunk that rebuilt its body on each call would recurse until the stack blew.
  */
 const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, SchemaAST.AST>): SchemaAST.AST => {
+  // v4 encodes `Schema.Number` as `number | "NaN" | ±"Infinity"` so non-finite values survive JSON,
+  // and that projection drops the node's checks -- `multipleOf`, `minimum` and the rest would vanish
+  // from the emitted schema. ECHO never stores a non-finite number, so they still describe the wire
+  // form and are re-applied below.
+  const numericChecks = SchemaAST.isNumberKeyword(ast) ? ast.checks : undefined;
+
   // Generation describes the wire form, and Effect 4 serializes only the encoded side of a
   // transformed schema -- annotations left on the type side are silently dropped. Flattening to the
   // encoded node here, carrying the type-side annotations over, keeps them in the output. Safe
@@ -209,6 +223,9 @@ const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, 
       Object.keys(typeAnnotations).length > 0
         ? SchemaAST.annotate(SchemaAST.toEncoded(ast), typeAnnotations)
         : SchemaAST.toEncoded(ast);
+    if (numericChecks !== undefined && numericChecks.length > 0) {
+      ast = Schema.make<Schema.Top>(ast).check(...numericChecks).ast;
+    }
   }
 
   let recursiveResult: SchemaAST.AST;
@@ -744,22 +761,20 @@ const collapseNumberUnion = (node: Record<string, any>): Record<string, any> => 
 /**
  * Restores the object form Effect 4 drops for a struct with no properties.
  *
- * v4 serializes an empty `Objects` node as `anyOf: [object, array]` -- the shape of the bare
- * `object` keyword -- which reads back as a union rather than a struct. Keyed on `propertyOrder`,
- * which ECHO writes for every struct and never for the keyword, so no other node is affected.
+ * v4 serializes an empty `Objects` node as `not: { type: 'null' }` -- the shape of the bare `object`
+ * keyword, which admits anything non-null -- and that reads back as `Unknown` rather than a struct.
+ * Keyed on `propertyOrder`, which ECHO writes for every struct and never for the keyword, so no
+ * other node is affected.
  */
 const restoreEmptyObject = (node: Record<string, any>): Record<string, any> => {
-  if (!Array.isArray(node.anyOf) || node.anyOf.length !== 2 || !Array.isArray(node.propertyOrder)) {
+  if (!Array.isArray(node.propertyOrder)) {
     return node;
   }
-  const [first, second] = node.anyOf as [Record<string, any>, Record<string, any>];
-  if (first?.type !== 'object' || Object.keys(first).length !== 1) {
+  const negated = node.not as Record<string, any> | undefined;
+  if (negated?.type !== 'null' || Object.keys(negated).length !== 1) {
     return node;
   }
-  if (second?.type !== 'array' || Object.keys(second).length !== 1) {
-    return node;
-  }
-  const { anyOf, ...rest } = node;
+  const { not, ...rest } = node;
   return { type: 'object', properties: {}, additionalProperties: false, ...rest };
 };
 

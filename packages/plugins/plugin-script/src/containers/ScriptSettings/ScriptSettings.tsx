@@ -18,7 +18,7 @@ export type ScriptSettingsProps = AppSurface.SettingsProps<
   }
 >;
 
-export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: ScriptSettingsProps) => {
+export const ScriptSettings = ({ settings, onSettingsChange, scope, onAuthenticate }: ScriptSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
@@ -31,7 +31,7 @@ export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: S
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
             {/* TODO(wittjosiah): Hide outside of dev environments. */}
             <Form.Field
               standalone

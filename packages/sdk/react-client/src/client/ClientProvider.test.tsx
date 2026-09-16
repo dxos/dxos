@@ -52,13 +52,11 @@ class TestErrorBoundary extends Component<
 }
 
 describe('Client hook', function () {
-  const render = () => useClient();
-
   test.skip('should throw when used outside a context', function () {
     // TODO(wittjosiah): Fix and factor out.
     // Based on https://github.com/testing-library/react-testing-library/pull/991#issuecomment-1207138334
     let error;
-    const { result } = renderHook(render, {
+    const { result } = renderHook(() => useClient(), {
       wrapper: class Wrapper extends Component<PropsWithChildren<unknown>> {
         constructor(props: PropsWithChildren<unknown>) {
           super(props);
@@ -100,7 +98,7 @@ describe('Client hook', function () {
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
-    const { result } = renderHook(render, { wrapper });
+    const { result } = renderHook(() => useClient(), { wrapper });
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
     });

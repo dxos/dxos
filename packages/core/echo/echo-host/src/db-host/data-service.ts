@@ -18,7 +18,7 @@ import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId }
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
 
-// Typed failures keep their class, stack and context over `serviceError`; a defect keeps only name and message.
+// `Effect.tryPromise` needs an `Error`, and a rejection is not guaranteed to be one.
 const toError = (error: unknown): Error => (error instanceof Error ? error : new Error(String(error)));
 
 export type DataServiceProps = {

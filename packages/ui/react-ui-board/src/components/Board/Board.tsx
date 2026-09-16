@@ -147,7 +147,11 @@ type BoardRootProps = PropsWithChildren<{
 
 // Default to a compact cell (~half a default card) so a board fits more tiles on screen; consumers
 // can pass a larger `cellSize` for a card-sized board.
-const defaultCellSize: GridCellSize = { width: cardDefaultInlineSize / 2, height: cardDefaultInlineSize / 2 };
+const defaultCellSize: GridCellSize = {
+  width: cardDefaultInlineSize,
+  height: cardDefaultInlineSize,
+};
+
 const defaultGap = 1;
 
 const BoardRoot = forwardRef<BoardController, BoardRootProps>(

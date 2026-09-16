@@ -54,7 +54,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
 export const remove = Command.make(
   'remove',
   {
-    id: Args.string('id').pipe(Args.withDescription('The ID of the plugin to remove.')),
+    id: Args.String('id').pipe(Args.withDescription('The ID of the plugin to remove.')),
   },
   handler,
 ).pipe(Command.withDescription('Uninstall a plugin.'));

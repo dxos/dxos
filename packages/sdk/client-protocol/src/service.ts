@@ -49,7 +49,6 @@ import type {
   ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { AppService as AppServiceDesc, ShellService as ShellServiceDesc } from '@dxos/protocols/buf/dxos/iframe_pb';
-import type { GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import type {
   DataService as RpcDataService,
   DevicesService as RpcDevicesService,
@@ -312,7 +311,7 @@ export interface SpacesServicePromise {
   subscribeMessages: (
     request: RpcSpacesService.SubscribeMessagesRequest,
     options?: RequestOptions,
-  ) => Stream<GossipMessage>;
+  ) => Stream<RpcSpacesService.SubscribeMessagesResponse>;
   writeCredentials: (request: RpcSpacesService.WriteCredentialsRequest, options?: RequestOptions) => Promise<void>;
   queryCredentials: (request: RpcSpacesService.QueryCredentialsRequest, options?: RequestOptions) => Stream<Credential>;
   createEpoch: (request: RpcSpacesService.CreateEpochRequest, options?: RequestOptions) => Promise<CreateEpochResponse>;

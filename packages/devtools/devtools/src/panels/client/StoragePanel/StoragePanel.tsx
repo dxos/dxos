@@ -197,24 +197,25 @@ export const StoragePanel = () => {
           </Menu.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-cols-2 divide-x divide-separator'>
-        <DataTree items={items} onSelect={setSelected} />
+      {/* The tree takes the full width; a selected feed's detail opens beneath it. */}
+      <Panel.Content
+        classNames={selectedValue?.kind === 'feed' ? 'grid grid-rows-2 divide-y divide-separator' : 'grid'}
+      >
+        <ScrollArea.Root thin orientation='all'>
+          <ScrollArea.Viewport>
+            <DataTree items={items} onSelect={setSelected} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
 
-        {selectedValue && (
-          <ScrollArea.Root thin>
-            <ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
-              {selectedValue.kind === 'feed' && (
-                <>
-                  <Bitbar
-                    value={selectedValue.feed.downloaded ?? new Uint8Array()}
-                    length={Math.ceil(selectedValue.feed.length ?? 0)}
-                    className='m-2'
-                  />
-                  <JsonView data={selectedValue.feed} />
-                </>
-              )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+        {selectedValue?.kind === 'feed' && (
+          <div className='grid grid-rows-[min-content_1fr] min-h-0'>
+            <Bitbar
+              value={selectedValue.feed.downloaded ?? new Uint8Array()}
+              length={Math.ceil(selectedValue.feed.length ?? 0)}
+              className='m-2'
+            />
+            <JsonView data={selectedValue.feed} filter={false} />
+          </div>
         )}
       </Panel.Content>
     </Panel.Root>

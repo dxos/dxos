@@ -1,0 +1,272 @@
+---
+id: org.dxos.review.ui
+name: Ui
+version: 0.1.0
+---
+
+UI authoring rules distilled from the `composer-ui`, `reactivity`, and
+`composite-components` skills — the design-system and reactivity conventions a
+linter cannot express. Each `rule` block below is discovered by the
+agentic-review harness, matched against the files its globs select, and applied
+by a focused subagent.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule no-dead-logical-utilities: The `tailwindcss-logical` classes compile to nothing — use the live forms
+  The `tailwindcss-logical` dialect was dropped in the Tailwind v4 migration, so
+  every class it provided now compiles to NOTHING, silently: nothing errors,
+  nothing lints, the layout is merely wrong — and when the dead class was
+  load-bearing (a `min-bs-*` floor reserving height, a `min-is-0` letting a grid
+  child shrink) the failure surfaces far from its cause. Flag the dead infixes
+  `-is-` / `-bs-` / `-li-` / `-lb-`: `pis-*`/`pie-*` → `ps-*`/`pe-*`,
+  `pbs-*`/`pbe-*` → `pt-*`/`pb-*`, `pli-*`/`plb-*` → `px-*`/`py-*`,
+  `mis-*`/`mie-*` → `ms-*`/`me-*`, `mbs-*`/`mbe-*` → `mt-*`/`mb-*`,
+  `mli-*`/`mlb-*` → `mx-*`/`my-*`, `is-*`/`bs-*` → `w-*`/`h-*`, and their
+  `min-`/`max-` forms. Sizing is physical (`w-*`, `h-*`, `size-*`); direction-
+  sensitive spacing stays logical. Tailwind's own logical spacing — `ps-*`/`pe-*`,
+  `ms-*`/`me-*`, `start-*`/`end-*`, `border-s`/`border-e`,
+  `text-start`/`text-end` — is NOT a violation and must not be rewritten to
+  physical (`pl-`, `ml-`, `left-`, `text-left`).
+  scope: repo
+  files:
+    - packages/**/*.tsx
+    - packages/**/*.ts
+    - packages/**/*.css
+  grep: \b(p|m)(is|ie|bs|be|li|lb)-|\b(min-|max-)?(is|bs)-
+  severity: error
+```
+
+```mdl
+rule themed-primitives-take-classNames: Style a themed primitive through `classNames`, never `className`
+  Every `@dxos/react-ui*` primitive exposes `classNames` (string or array) and
+  reconciles it with the theme's own output through `tx()`; a `className` passed
+  to one is either dropped or silently overrides the themed value instead of
+  merging with it. The same rule holds when authoring a primitive: the
+  consumer-facing prop is `classNames` and the part converts it internally —
+  never publish `className` on a composite part's props. Flag a `className` prop
+  on a capitalized component imported from a `@dxos/react-ui*` package, and a
+  composite part whose exported Props type surfaces `className`. `className` on
+  an intrinsic element (`<div>`, `<span>`, `<svg>`) is NOT a violation, and
+  neither is the internal `className` a part hands to `ark.*` or to a wrapped
+  Ark/Radix primitive.
+  scope: repo
+  files:
+    - packages/**/*.tsx
+  grep: className=
+  severity: warn
+```
+
+```mdl
+rule no-invented-theme-tokens: Color classes come from the theme's custom properties, never from a guess
+  Color tokens are plain Tailwind classes generated from `--color-<name>` custom
+  properties in `packages/ui/ui-theme/src/css/theme/semantic.css`, so
+  `--color-modal-surface` yields `bg-modal-surface` / `text-modal-surface` /
+  `border-modal-surface` and nothing else does. An invented token (`bg-input`,
+  `text-primary`, `border-muted`) is not in the theme, produces no CSS, and
+  renders wrong in exactly one of the two themes — white-on-white in dark mode —
+  which is invisible until someone toggles it. Flag a `bg-`/`text-`/`border-`
+  class whose name is neither a Tailwind palette value nor a `--color-` property
+  declared in `semantic.css`; the live families are the surfaces
+  (`bg-base-surface`, `bg-card-surface`, `bg-modal-surface`,
+  `bg-toolbar-surface`, `bg-sidebar-surface`, `bg-deck-surface`,
+  `bg-group-surface`, `bg-input-surface`, `bg-hover-surface`,
+  `bg-attention-surface`, `bg-accent-bg`), the text tokens (`text-base-fg`,
+  `text-description`, `text-subdued`, `text-placeholder`, `text-accent-text`)
+  and the separators (`border-separator`, `border-subdued-separator`,
+  `border-primary-separator`, `border-active-separator`, `border-focus-ring`).
+  Functional layout hints (`p-4`, `space-y-4`, `@container`) are NOT violations.
+  scope: repo
+  files:
+    - packages/**/*.tsx
+  grep: (bg|text|border)-[a-z][a-z-]+
+  severity: warn
+```
+
+```mdl
+rule no-styling-wrapper-divs: Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`
+  A wrapper `<div>` added for styling breaks the height chain `ScrollArea`
+  depends on — a wrapper around an input once silently disabled scrolling — and
+  a hand-rolled flex or grid div is new debt in a census someone is actively
+  driving down (`packages/ui/react-ui/AUDIT.md`: 145 of 191 converted). Use
+  `Flex` (`column`, `gap`, `align`, `justify`, `grow`, `center`), `Grid`
+  (`cols`, `rows`, `gap`, including the list form `cols={['min-content','1fr']}`
+  and `cols='subgrid'`), `Column` for the gutter grid, and `Container` to merely
+  fill the parent; all take `asChild`, so the layout projects onto a semantic
+  element at no extra DOM node. `gap` takes ramp steps (`xs | sm | md | lg | xl |
+  2xl | form | form-section`), never a Tailwind number. Prefer `asChild` on a
+  `Panel.*` part whose single child is itself composable rather than nesting a
+  box inside it. Flag a `<div>` whose classes include `flex`/`grid` or which
+  exists only to carry padding or spacing, and a `gap-<number>` literal on a
+  layout primitive. A box with genuinely ad-hoc positioning that no primitive
+  expresses is NOT a violation, but say why in a comment.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: <div[^>]*className=['"`][^'"`]*(flex|grid)
+  severity: warn
+```
+
+```mdl
+rule no-hand-rolled-lists: Any collection of rows is a `@dxos/react-ui-list` primitive
+  A `map()` over `<div>`/`<li>` rows re-implements keyboard navigation,
+  current-item and selection state, and the theme's row rhythm — badly, and
+  differently in every plugin. `Listbox` (headless; omit `value`/`onValueChange`
+  for a non-selectable `role=list`) covers flat display and single-select lists,
+  `OrderedList` covers reorderable / master-detail, `Tree` / `Accordion` cover
+  hierarchy, and the Mosaic `Stack` (`@dxos/react-ui-mosaic`) covers reorderable
+  or resizable collections of surfaces; check for an existing `Picker` /
+  `Combobox` / `SearchList` before building any chooser. `dx-current` and
+  `dx-selected` are driven by the primitives — do not set them or wire focus by
+  hand — and the primitives own their padding, so they drop straight into a
+  `ScrollArea.Viewport` with no padded wrapper. Flag a mapped stack of row
+  elements, any import of the deprecated `@dxos/react-ui-stack`, and any use of
+  `@dxos/react-ui`'s deprecated core `List` / `ListItem`. A `map()` producing
+  non-row content (grid cells, chips, chart marks, `Listbox.Item` children) is
+  NOT a violation.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: \.map\(|react-ui-stack|ListItem
+  severity: warn
+```
+
+```mdl
+rule no-native-form-controls: Edit objects with the schema-driven `Form`, never a native input
+  A native `<input>` / `<textarea>` / `<select>` in a plugin inherits none of the
+  theme — a bare textarea is a white box in dark mode — and bypasses schema
+  validation entirely. Render editors from the Effect Schema with `Form` from
+  `@dxos/react-ui-form`, composed as `Form.Root` (renders no DOM) + `Viewport` /
+  `Content` / `FieldSet`. The form never mutates `values`: the parent applies the
+  change. A field the schema cannot express takes a custom renderer built from
+  themed primitives (`Input.*`, `Select.*`), registered statically per field or
+  through `fieldProvider` when the set is only known at runtime — never a native
+  element. Flag a native form element in plugin or UI code and a form component
+  that writes into its own `values`. Native elements inside the `react-ui-form` /
+  `react-ui` primitives that implement the themed controls are NOT violations.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+  grep: <(input|textarea|select)\b
+  severity: warn
+```
+
+```mdl
+rule toolbars-are-menu-actions: Container toolbars are built from menu actions with an `attendableId`
+  A bare chain of `Toolbar.IconButton`s is closed to plugin composition: graph
+  actions, plugin extensions, and keyboard shortcuts all arrive as menu actions,
+  so a toolbar that does not compose them silently drops half the app's
+  behaviour. Build actions with `MenuBuilder` inside an `Atom`, thread them
+  through `useMenuActions`, render with `Menu.Root`, and always pass the
+  `attendableId` from `AppSurface.ObjectArticleProps` so attention-driven
+  contributions target the right surface — never underscore it as unused. Encode
+  dynamic state (disabled, busy/idle icon swap) in the action properties and list
+  that state in the `useMemo` deps, so the atom rebuilds and the toolbar updates.
+  Flag a container rendering `Toolbar.IconButton` children directly, and a
+  toolbar built without `attendableId`. A toolbar inside a low-level `react-ui-*`
+  component that takes its actions as props is NOT a violation.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+  grep: Toolbar\.|useMenuActions|attendableId
+  severity: warn
+```
+
+```mdl
+rule subscribe-where-you-read: Reading an ECHO object or a ref in render requires a subscription
+  An ECHO object is a singleton with stable identity, so a bare property read in
+  render (`<h1>{doc.title}</h1>`) renders once and never updates — no prop ever
+  changes. It compiles, and it survives manual testing; only navigation or a
+  concurrent edit exposes it, as data that appears after navigating away and
+  back. Subscribe where you read, as narrowly as you read: `useObject(obj)` for
+  the object, `useObject(obj, 'field')` when the component renders one field (a
+  whole-object subscription re-renders on every unrelated change), `useQuery` for
+  a collection, and a single derived atom (`Atom.make((get) => …)` over
+  `Obj.atom` / `Obj.atomProperty`) instead of a pileup of hooks plus a `useMemo`
+  when the value combines several sources. `ref.target` in render is the same
+  defect with a worse symptom: it is `undefined` until the target loads and never
+  notifies when it arrives, so the component wedges empty — use `useObject(ref)`,
+  or `useResolveRef(ref)` when a handler needs the live object. Flag a property
+  access on an ECHO object or a `.target` read in a render path with no backing
+  subscription; a surface receiving `AppSurface.ObjectArticleProps<T>` must
+  subscribe at the point it reads fields. `.target` inside a callback that runs
+  after the subscription established the object is loaded is NOT a violation, and
+  neither are purely presentational components that receive scalars.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: \.target\b|useObject|ObjectArticleProps
+  severity: warn
+```
+
+```mdl
+rule leaf-owns-its-subscription: A list subscribes to membership only; each tile subscribes to its own item
+  A list that resolves its refs — `refs.map((ref) => ref.target)`, or
+  `useObjects(refs)` — has two defects: cold loads drop items or need a
+  re-render-trigger hack, and the list now subscribes to every element, so one
+  item's edit re-renders every tile. The list owns exactly ONE subscription, the
+  membership (the ref-array property, or the query), and re-renders on
+  add/remove/reorder and nothing else; the refs pass through unresolved and each
+  leaf owns the subscription to its own item, rendering a fallback until it
+  loads. Prefer a scoped `useQuery` (`Filter.childOf(container)`) over walking a
+  ref array when membership is queryable — query subscriptions fire on
+  membership and order only — and apply container-defined order as a client-side
+  sort. Flag a `.target` or `useObject` call inside a list's `map()`, and any new
+  `useObjects` call site — it is deprecated for exactly this reason. Load-only
+  ref resolution at the list level is a tolerated stopgap when a child's
+  structure derives from target fields; list-level context (column templates,
+  shared handlers) reaching a tile through props or context is NOT a violation as
+  long as the ECHO data still enters at the leaf.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: useObjects|\.map\(.*\.target|\.map\(
+  severity: warn
+```
+
+```mdl
+rule write-through-the-live-object: Writes target the live object or the atom setter, never a snapshot
+  Subscriptions hand back snapshots — immutable values for reading — so assigning
+  to one is a silent no-op, or a type error hidden behind a cast. Write through
+  the live object: `Obj.update(subject, (obj) => …)`, or the update callback
+  `useObject` returns; append inside that callback with `push`, and reach for
+  `as Obj.Mutable<T>` inside `Obj.update` when the intentionally narrow snapshot
+  type gets in the way. The same rule holds for the other two stores: an effect
+  that mirrors an ECHO field into `useState`, or copies one atom into another,
+  creates a second source of truth that goes stale on the next remote edit —
+  derive, don't sync. And shared state travels as a single (writable) atom prop,
+  not a `value` + `onChange` pair threaded through layers that then each couple to
+  its shape; `value`/`onChange` stays correct for a leaf control wrapping a DOM
+  input. Flag an assignment to a snapshot, a `useEffect` whose only job is to
+  copy between stores, and a `value` + `onChange` pair drilled past one layer.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: useObject|Obj\.update|onChange
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent to changed files.
+  inline-prose: true
+  fields:
+    files:      Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:      Prose             # optional regex pre-filter over file contents
+    severity?:  warn | error      # defaults to warn
+    scope?:     dir | repo        # glob base: this file's dir (default) or repo root
+```

@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { DXN, Format } from '@dxos/echo';
+import { DXN, Format, Ref } from '@dxos/echo';
 
-import { type GenerationService, StudioCapabilities } from '#types';
+import { GenerationService, MediaArtifact, StudioCapabilities } from '#types';
 
 export const MOCK_PROVIDER_ID = 'mock';
 
@@ -21,6 +21,15 @@ const MockRequestSchema = Schema.Struct({
   }),
   style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
   aspectRatio: Schema.optional(Schema.Literals(['16x9', '1x1']).annotate({ title: 'Aspect ratio' })),
+  // The two field shapes the studio form dresses up: an uploadable URL and a reference artifact.
+  imageUrl: Schema.optional(
+    Schema.String.pipe(
+      Format.FormatAnnotation.set(Format.TypeFormat.URL),
+      GenerationService.FileUrlAnnotation.set({ accept: 'image/*' }),
+      Schema.annotate({ title: 'Reference URL' }),
+    ),
+  ),
+  imageArtifact: Schema.optional(Ref.Ref(MediaArtifact.MediaArtifact).annotate({ title: 'Reference image' })),
 });
 
 /** Non-reversible 32-bit FNV-1a fingerprint of the prompt: the same words give the same picture. */

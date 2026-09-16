@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
 /** Backend kind for the default local-feed-backed channel. */
 export const FeedBackendKind = 'org.dxos.channel.backend.feed';
@@ -28,7 +27,7 @@ export class Channel extends Type.makeObject<Channel>(DXN.make('org.dxos.type.ch
       kind: Schema.String,
       /** Provider-owned config object (a `Feed` for the default backend), owned by the channel. */
       config: Ref.Ref(Obj.Unknown).pipe(Annotation.SetParent.set(true)),
-    }).pipe(FormInputAnnotation.set(false)),
+    }).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--hash--regular', hue: 'rose' })),
 ) {}
 

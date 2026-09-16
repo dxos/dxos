@@ -76,6 +76,20 @@ export class Host extends Context.Service<Host, HostShape>()('@dxos/mcp-server/H
  */
 export const snapshot = snapshotInternal.entities;
 
+/**
+ * Parameter schema for a tool that takes no input.
+ *
+ * Spelled as a record with an uninhabited value type rather than `Schema.Struct({})` because v4
+ * emits an empty struct as `{not: {type: 'null'}}` — the bare `object` keyword, which states no
+ * `type` at all. Effect's own MCP server decodes every tool's input schema against a shape that
+ * requires `type`, so a tool spelled the obvious way takes the whole server down at startup, and a
+ * provider's strict tool mode likewise rejects an object that does not state
+ * `additionalProperties`. A `Never` value type admits no keys, so this emits
+ * `{type: 'object', additionalProperties: false}` — the same contract, and valid under both.
+ * A JSON-schema annotation cannot express it: v4 honours such an annotation only on a check.
+ */
+export const NoParameters = Schema.Record(Schema.String, Schema.Never);
+
 //
 // The fixed tool surface.
 //
@@ -267,10 +281,12 @@ export const loadSkillByName = (
   catchCollision(
     viewInternal.mcpSkills(registry).pipe(
       Effect.flatMap((projected) => {
+        // `description` is spread in only when it resolved, for the reason `operationView` gives:
+        // an explicit `undefined` survives encoding and MCP's structured content must be JSON.
         const summarize = (candidate: viewInternal.McpSkill) => ({
           name: candidate.promptName,
           key: candidate.key,
-          description: candidate.description,
+          ...(candidate.description === undefined ? {} : { description: candidate.description }),
         });
         if (skill == null) {
           return Effect.succeed<SkillListing>({ skills: projected.map(summarize) });

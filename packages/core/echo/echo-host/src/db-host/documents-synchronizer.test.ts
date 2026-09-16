@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -126,10 +126,12 @@ describe('DocumentsSynchronizer', () => {
     onTestFinished(() => dispose());
     const host = new AutomergeHost({ runtime });
     await openAndClose(host);
+    const sentUpdate = new Trigger();
     const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
       sendUpdates: () => {
         counter++;
+        sentUpdate.wake();
       },
     });
     await openAndClose(synchronizer);
@@ -140,12 +142,12 @@ describe('DocumentsSynchronizer', () => {
     // Add document to synchronizer (simulates updateSubscription with addIds).
     await synchronizer.addDocuments([handle.documentId]);
 
-    // Wait for the changes to be processed.
-    await sleep(100);
+    // Wait for the scheduled job to flush the initial sync.
+    await asyncTimeout(sentUpdate.wait(), 1_000);
 
     // Updates will be sent for the initial sync (this is expected behavior).
     // The key is that subsequent updates from the client should be properly synced.
-    expect(counter).to.be.greaterThanOrEqual(0);
+    expect(counter).to.be.greaterThanOrEqual(1);
   });
 
   describe('persistence', () => {
@@ -171,8 +173,8 @@ describe('DocumentsSynchronizer', () => {
         // Add to synchronizer (simulates updateSubscription with addIds).
         await synchronizer.addDocuments([documentId]);
 
-        // Wait for auto-save (no explicit flush).
-        await sleep(500);
+        // Wait for the background auto-save to persist the document to disk (no explicit flush).
+        await waitForCondition({ condition: () => host.hasDocOnDisk(documentId), timeout: 2_000 });
 
         await host.close();
         await synchronizer.close();

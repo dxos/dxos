@@ -12,7 +12,7 @@ import { Space_PipelineStateSchema } from '@dxos/protocols/buf/dxos/client/servi
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
 import { DataSpaceSelector } from '../../../containers/index.ts';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks/index.ts';
@@ -85,25 +85,27 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
       <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
       <Panel.Content>
         {space && metadata && (
-          <div>
-            <SpaceProperties space={space} metadata={metadata} />
-            <div className='h-24'>
-              <PipelineTable
-                state={pipelineState ?? create(Space_PipelineStateSchema)}
-                metadata={metadata}
-                onSelect={props.onSelectPipeline}
-              />
-            </div>
-            <div className='h-48'>
-              <FeedTable onSelect={props.onSelectFeed} />
-            </div>
-            <div className='border-t border-separator'>
-              <SyncStateInfo space={space} />
-            </div>
-            <div className='border-t border-separator'>
-              <DatabaseStatsInfo space={space} />
-            </div>
-          </div>
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport>
+              <SpaceProperties space={space} metadata={metadata} />
+              <div className='h-24'>
+                <PipelineTable
+                  state={pipelineState ?? create(Space_PipelineStateSchema)}
+                  metadata={metadata}
+                  onSelect={props.onSelectPipeline}
+                />
+              </div>
+              <div className='h-48'>
+                <FeedTable onSelect={props.onSelectFeed} />
+              </div>
+              <div className='border-t border-separator'>
+                <SyncStateInfo space={space} />
+              </div>
+              <div className='border-t border-separator'>
+                <DatabaseStatsInfo space={space} />
+              </div>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         )}
       </Panel.Content>
     </Panel.Root>

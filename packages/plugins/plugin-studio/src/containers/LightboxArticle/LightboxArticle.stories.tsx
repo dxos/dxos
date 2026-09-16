@@ -79,8 +79,8 @@ const meta = {
                   lightbox.layout.cells[added.id] = {
                     x: (index % 3) * 2,
                     y: Math.floor(index / 3) * 2,
-                    width: 2,
-                    height: 2,
+                    w: 2,
+                    h: 2,
                   };
                 }
               });

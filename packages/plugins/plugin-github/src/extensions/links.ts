@@ -39,6 +39,13 @@ export const parseGitHubLink = (url: string): GitHubLink | undefined => {
   return { owner, repo, kind: kind === 'pull' ? 'pull' : 'issue', number: Number(number), url };
 };
 
+/** The chip's leading icon for a pull request, in GitHub's open-state green. */
+export const PULL_REQUEST_ICON = { icon: 'ph--git-pull-request--regular', classNames: 'text-green-500' };
+
+/** The chip icon for a GitHub URL: a pull request's; none for an issue or a repository. */
+export const githubLinkIcon = (url: string): typeof PULL_REQUEST_ICON | undefined =>
+  parseGitHubLink(url)?.kind === 'pull' ? PULL_REQUEST_ICON : undefined;
+
 export type GitHubLinksOptions = {
   /** Overrides the default chip's preview trigger. */
   trigger?: 'hover' | 'click';
@@ -55,7 +62,8 @@ export type GitHubLinksOptions = {
 export const githubLinks = ({
   trigger,
   link = {
-    factory: ({ label, url }) => new AnchorWidget(label, url, trigger),
+    factory: ({ label, url, kind }) =>
+      new AnchorWidget(label, url, trigger, undefined, kind === 'pull' ? PULL_REQUEST_ICON : undefined),
   },
 }: GitHubLinksOptions = {}): Extension =>
   linkWidgets({

@@ -39,7 +39,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.cardContent'],
+  roles: ['org.dxos.role.cardContent', 'org.dxos.role.cardMenu', 'org.dxos.role.article'],
 });
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

@@ -66,8 +66,12 @@ export const useCliApp = (client: Client) => {
       // Shared so they parse anywhere in the line — a plain command config is only read when `dx`
       // itself is the leaf.
       Command.withSharedFlags({
-        json: Options.boolean('json').pipe(Options.withDescription('JSON output.')),
-        verbose: Options.boolean('verbose').pipe(Options.withAlias('v'), Options.withDescription('Verbose output.')),
+        json: Options.Boolean('json').pipe(Options.withDefault(false), Options.withDescription('JSON output.')),
+        verbose: Options.Boolean('verbose').pipe(
+          Options.withDefault(false),
+          Options.withAlias('v'),
+          Options.withDescription('Verbose output.'),
+        ),
       }),
       Command.withSubcommands([first, ...rest]),
       // After the subcommands so the config reaches them: `provide` wraps the handler it is applied

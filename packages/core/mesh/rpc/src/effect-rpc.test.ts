@@ -12,6 +12,7 @@ import * as Stream from 'effect/Stream';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, onTestFinished, test } from 'vitest';
 
@@ -40,13 +41,16 @@ const handlers = TestRpcs.toLayer(
   }),
 );
 
+/** A port carries bytes, so the protocols need a binary serialization on both ends. */
+const SERIALIZATION = RpcSerialization.layerSchemaBinary();
+
 describe('effect-rpc over RpcPort', () => {
   const setup = async (options?: { serverDelay?: number }) => {
     const [clientPort, serverPort] = createLinkedPorts();
 
     const serverLayer = RpcServer.layer(TestRpcs, { disableTracing: true }).pipe(
       Layer.provide(handlers),
-      Layer.provide(layerProtocolRpcPortServer(serverPort)),
+      Layer.provide(layerProtocolRpcPortServer(serverPort).pipe(Layer.provide(SERIALIZATION))),
     );
     const serverRuntime = ManagedRuntime.make(serverLayer);
     onTestFinished(() => serverRuntime.dispose());
@@ -61,7 +65,7 @@ describe('effect-rpc over RpcPort', () => {
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
     const clientPromise = EffectEx.runPromise(
       Effect.gen(function* () {
-        const protocol = yield* makeProtocolRpcPortClient(clientPort);
+        const protocol = yield* makeProtocolRpcPortClient(clientPort).pipe(Effect.provide(SERIALIZATION));
         return yield* RpcClient.make(TestRpcs, { disableTracing: true }).pipe(
           Effect.provideService(RpcClient.Protocol, protocol),
         );
