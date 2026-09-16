@@ -15,11 +15,14 @@ import { useSpaces } from '@dxos/react-client/echo';
 /** Cap on retained broadcasts so a long-lived session does not grow the list unbounded. */
 const MAX_MESSAGES = 200;
 
-/** One received swarm broadcast, annotated with local receipt metadata. */
+/**
+ * One received swarm broadcast, annotated with local receipt metadata. Typed by the wire shape
+ * rather than the ECHO object so a fixture can be a plain literal.
+ */
 export type ReceivedMessage = {
   readonly id: string;
   readonly receivedAt: number;
-  readonly message: Trace.Message;
+  readonly message: Pick<Trace.MessageData, 'meta' | 'events'>;
 };
 
 export type SwarmTrace = {

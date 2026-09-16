@@ -4,8 +4,6 @@
 
 import { create } from '@bufbuild/protobuf';
 
-import * as Trace from '@dxos/compute/Trace';
-import { Obj } from '@dxos/echo';
 import { type EchoDataStats } from '@dxos/echo-host';
 import { ConnectionState } from '@dxos/network-manager';
 import { type EdgeStatus } from '@dxos/protocols';
@@ -184,11 +182,10 @@ export const syncRows: SyncRow[] = [
 const traceMessage = (index: number, type: string, space: string): ReceivedMessage => ({
   id: String(index),
   receivedAt: Date.now() - (10 - index) * 1_250,
-  message: Obj.make(Trace.Message, {
-    isEphemeral: true,
+  message: {
     meta: { space },
     events: [{ type, timestamp: Date.now() - (10 - index) * 1_250 - 40, data: undefined }],
-  }),
+  },
 });
 
 export const traceMessages: ReceivedMessage[] = [
