@@ -30,7 +30,7 @@ test.describe('HALO tests', () => {
   //   because the production edge's two-peer path stalls endemically (invitations and replication,
   //   ~2% per operation); the defect is known, tracked, and not maskable — Trunk still records every
   //   first-attempt failure. Do not copy this pattern to any suite without a tracked issue.
-  test.describe.configure({ retries: 2 });
+  test.describe.configure({ retries: 0 });
 
   let host: AppManager;
   let guest: AppManager;

@@ -1398,6 +1398,21 @@ export class AutomergeHost extends Resource {
     this._nonConvergingSyncPasses.set(syncKey, passes);
     const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
     if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
+      log.warn(
+        `DIAG non-convergence ${JSON.stringify({
+          collectionId,
+          peerId,
+          passes,
+          missingOnLocal,
+          missingOnRemote,
+          different,
+          localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
+          remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
+          handleStates: Object.fromEntries(
+            different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+          ),
+        })}`,
+      );
       log.warn('collection sync not converging', {
         collectionId,
         peerId,
