@@ -52,8 +52,8 @@
       "allow": [
         {
           "args": ["serve"],
-          "name": "sidecar/ollama",
-          "sidecar": true
+          "cmd": "$RESOURCE/ollama",
+          "name": "ollama"
         }
       ]
     },

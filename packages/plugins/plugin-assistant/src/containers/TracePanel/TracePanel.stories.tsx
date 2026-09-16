@@ -23,7 +23,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -52,13 +52,7 @@ const JsonInspectorPanel = ({ data }: { data: unknown }) => (
   <ScrollContainer.Root pin>
     <ScrollContainer.Content thin>
       <ScrollContainer.Viewport>
-        <Syntax.Root data={data}>
-          <Syntax.Content>
-            <Syntax.Viewport>
-              <Syntax.Code classNames='text-xs' />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
+        <JsonHighlighter data={data} classNames='text-xs' />
       </ScrollContainer.Viewport>
       <ScrollContainer.ScrollDownButton />
       <ScrollContainer.Fade />

@@ -494,6 +494,7 @@ Checkbox.displayName = 'Field.Checkbox';
 
 type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & {
+    density?: Density;
     onCheckedChange?: (checked: boolean) => void;
     /** The control's own label, laid out beside it; without one a `Field.Label` names the control. */
     children?: ReactNode;
@@ -505,6 +506,7 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
   (
     {
       classNames,
+      density: densityProp,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
@@ -514,6 +516,7 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
+    const density = useDensityContext(densityProp);
     const [checked, onCheckedChange] = useControllableState({
       prop: propsChecked,
       defaultProp: propsDefaultChecked ?? false,
@@ -526,7 +529,8 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
     const control = (
       <input
         type='checkbox'
-        className={tx('field.switch', { disabled: props.disabled }, classNames)}
+        data-density={density}
+        className={tx('field.switch', { disabled: props.disabled, density }, classNames)}
         checked={checked}
         onChange={(event) => {
           onCheckedChange(event.target.checked);

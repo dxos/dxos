@@ -10,7 +10,8 @@ export type AccordionStyleProps = {
   hover?: boolean;
 };
 
-const root = () => mx('flex flex-col w-full rounded-md border-y border-separator divide-y divide-subdued-separator');
+const root: ComponentFunction<AccordionStyleProps> = (_props, ...etc) =>
+  mx('flex flex-col w-full rounded-md border-y border-separator divide-y divide-subdued-separator', ...etc);
 
 // No `overflow-hidden` here: the body does its own clipping for the slide, and clipping at the item
 // would cut the top and bottom edges off the trigger's inset focus ring. The end items instead carry

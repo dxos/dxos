@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { InvocationTraceContainer, SpaceInfoPanel, SpaceListPanel, TestingPanel } from '@dxos/devtools';
+import { InvocationTraceContainer, SpaceInfoArticle, SpaceListArticle, TestingArticle } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
@@ -20,31 +20,32 @@ import { type Space } from '@dxos/react-client/echo';
 import { Devtools } from '#types';
 
 export type ActiveSpacePanelProps = {
-  /** Stable module-level panel component; the surface passes it through its `props` mapper. */
-  Panel: ComponentType<{ space: Space }>;
+  role?: string;
+  /** Stable module-level article component; the surface passes it through its `props` mapper. */
+  Panel: ComponentType<{ role?: string; space: Space }>;
 };
 
 /**
  * Most devtools panels take the active space and render nothing without one. A mapper cannot read
  * the active space (it is a hook) nor decline to render, so they share this wrapper.
  */
-export const ActiveSpacePanel = ({ Panel }: ActiveSpacePanelProps) => {
+export const ActiveSpacePanel = ({ role, Panel }: ActiveSpacePanelProps) => {
   const space = useActiveSpace();
 
-  return space ? <Panel space={space} /> : null;
+  return space ? <Panel role={role} space={space} /> : null;
 };
 
-export const SpaceListSurface = () => {
+export const SpaceListSurface = ({ role }: { role?: string }) => {
   const { invokePromise } = useOperationInvoker();
   const handleSelect = useCallback(
     () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Space] }),
     [invokePromise],
   );
 
-  return <SpaceListPanel onSelect={handleSelect} />;
+  return <SpaceListArticle role={role} onSelect={handleSelect} />;
 };
 
-export const SpaceInfoSurface = () => {
+export const SpaceInfoSurface = ({ role }: { role?: string }) => {
   const space = useActiveSpace();
   const { invokePromise } = useOperationInvoker();
   const handleSelect = useCallback(
@@ -55,10 +56,10 @@ export const SpaceInfoSurface = () => {
     return null;
   }
 
-  return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
+  return <SpaceInfoArticle role={role} space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
 };
 
-export const EdgeTracesSurface = () => {
+export const EdgeTracesSurface = ({ role }: { role?: string }) => {
   const space = useActiveSpace();
   if (!space) {
     return null;
@@ -67,10 +68,10 @@ export const EdgeTracesSurface = () => {
   const feed = space.properties.invocationTraceFeed?.target;
   const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
 
-  return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
+  return <InvocationTraceContainer role={role} db={space.db} feedDXN={feedDXN} detailAxis='block' />;
 };
 
-export const EdgeTestingSurface = () => {
+export const EdgeTestingSurface = ({ role }: { role?: string }) => {
   const { invokePromise } = useOperationInvoker();
   const onScriptPluginOpen = useCallback(
     async (space: Space) => {
@@ -93,5 +94,5 @@ export const EdgeTestingSurface = () => {
     [invokePromise],
   );
 
-  return <TestingPanel onScriptPluginOpen={onScriptPluginOpen} />;
+  return <TestingArticle role={role} onScriptPluginOpen={onScriptPluginOpen} />;
 };

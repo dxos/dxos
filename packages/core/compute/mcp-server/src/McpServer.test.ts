@@ -95,7 +95,9 @@ const testHost = (
   host: McpServer.HostShape;
   invocations: Invocation[];
 } => {
-  const { output = { ok: true }, fail: shouldFail } = options;
+  // `in`, not a destructuring default: an explicit `undefined` output is a case under test.
+  const output = 'output' in options ? options.output : { ok: true };
+  const shouldFail = options.fail;
   // Read through `in`, since a destructuring default cannot tell an explicit `undefined` from an
   // omitted key.
   const spaceIds = 'spaceIds' in options ? options.spaceIds : [SPACE_A];
@@ -169,6 +171,13 @@ describe('McpServer', () => {
     test('a non-object output is wrapped, because structuredContent must be an object', async ({ expect }) => {
       const { result } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output: 42 }) });
       expect(successOf(await result)).to.deep.equal({ output: 42 });
+    });
+
+    test('a void output or an undefined field still yields JSON structured content', async ({ expect }) => {
+      const run = async (output: unknown) =>
+        successOf(await runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output }) }).result);
+      expect(await run(undefined)).to.deep.equal({});
+      expect(Object.keys(await run({ id: 'T-1', note: undefined }))).to.deep.equal(['id']);
     });
 
     test('space-less references in the result are qualified with the space they resolved in', async ({ expect }) => {
