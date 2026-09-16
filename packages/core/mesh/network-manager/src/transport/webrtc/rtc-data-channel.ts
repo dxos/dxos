@@ -115,7 +115,14 @@ export const bindDataChannel = (
     // Release a writer parked on the watermark, otherwise the pipe never unwinds.
     flushed?.();
     flushed = null;
-    duplex = undefined;
+    if (duplex) {
+      // Both pipe directions have to go: the wire-protocol stream outlives this channel, and a
+      // chunk it writes afterwards would otherwise reach `send` on a closed channel.
+      duplex.unpipe(stream);
+      stream.unpipe(duplex);
+      duplex.destroy();
+      duplex = undefined;
+    }
     try {
       channel.close();
     } catch (err: any) {

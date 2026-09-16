@@ -19,7 +19,7 @@ import * as Rpc from './Rpc.ts';
  * itself cross the boundary.
  */
 
-/** Serves the tab's `RtcService` to the worker over a {@link MessagePort}. */
+/** Serves the tab's {@link RTCService} implementation (`RtcService`) to the worker over a {@link MessagePort}. */
 export const serveRtcService = (port: MessagePort, service: RTCService.Handlers): Rpc.GroupServer =>
   Rpc.serve(
     port,
@@ -30,7 +30,7 @@ export const serveRtcService = (port: MessagePort, service: RTCService.Handlers)
     { disableTracing: true, concurrency: 'unbounded' },
   );
 
-/** Builds the worker's client for the tab's `RtcService` over a {@link MessagePort}. */
+/** Builds the worker's {@link RTCService} client for the tab's implementation, over a {@link MessagePort}. */
 export const makeRtcServiceClient = (port: MessagePort): Effect.Effect<RTCService.Client, never, Scope.Scope> =>
   Rpc.makeClient(port, RTCService.Rpcs) as Effect.Effect<RTCService.Client, never, Scope.Scope>;
 

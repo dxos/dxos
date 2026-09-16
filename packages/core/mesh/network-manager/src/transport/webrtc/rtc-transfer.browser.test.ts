@@ -22,10 +22,6 @@ import { type ProxyWorkerRequest, type ProxyWorkerResponse } from './testing/rtc
  * `RtcTransportProxy` and receives each `RTCDataChannel` as a transfer. Data therefore never crosses
  * the rpc boundary — if the transfer did not work, nothing would ever connect.
  */
-/** Rejects as soon as the worker reports a proxy error, rather than waiting out the timeout. */
-const orFailed = <T>(promise: Promise<T>, failed: Trigger<string>): Promise<T> =>
-  Promise.race([promise, failed.wait().then((message) => Promise.reject(new Error(message)))]);
-
 describe('RTCDataChannel handover to a worker', () => {
   const setup = async () => {
     const service = new RtcService();
@@ -105,3 +101,7 @@ describe('RTCDataChannel handover to a worker', () => {
     await expectReceived('a', 'hello from b');
   });
 });
+
+/** Rejects as soon as the worker reports a proxy error, rather than waiting out the timeout. */
+const orFailed = <T>(promise: Promise<T>, failed: Trigger<string>): Promise<T> =>
+  Promise.race([promise, failed.wait().then((message) => Promise.reject(new Error(message)))]);
