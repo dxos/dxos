@@ -16,12 +16,11 @@ export type SyncCardProps = {
 };
 
 /**
- * The chip track is `max-content`, not `auto`: the button clips its overflow, which zeroes a grid
- * item's automatic minimum, so an `auto` track could shrink under it and let it run into the next
- * column. The two figure tracks share the rest, named by the header row rather than per cell so a
- * narrow card still fits.
+ * Fixed figure tracks: every row is its own grid, so a content-sized track would resolve
+ * differently under the header's label and the data rows' chips and the columns would drift.
+ * The chip track takes the slack; the figures are sized for `pending/total`.
  */
-const ROW_TRACKS = ['max-content', '1fr', '1fr'];
+const ROW_TRACKS = ['1fr', '4.5rem', '4rem'];
 
 const Metric = ({ pending, total }: { pending: number; total: number }) => (
   <span className={mx('font-mono tabular-nums', pending > 0 ? 'text-warning-text' : 'text-success-text')}>
