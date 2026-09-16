@@ -6,21 +6,25 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import * as Scope from 'effect/Scope';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { inspect } from 'node:util';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { RpcClosedError, makeInProcessClient } from '@dxos/protocols';
+import { DataService, QueryService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
-import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing/index.ts';
 
 /** Narrows `db.rootUrl` once at the point the database is known to have persisted its root, per `no-casts`. */
 const getRootUrl = (db: DatabaseImpl): string => {
@@ -746,6 +750,42 @@ describe('Database', () => {
       }
     });
   });
+
+  describe('flush over a lost connection', () => {
+    test('writes made before the service disconnects make flush throw', async () => {
+      await using peer = await builder.createPeer();
+      const db = await peer.createDatabase();
+      const existing = db.add(Obj.make(TestSchema.Expando, { name: 'before' }));
+      await db.flush();
+
+      const connection = await connectServices(peer);
+      connection.disconnect();
+      Obj.update(existing, (existing) => {
+        existing.name = 'after';
+      });
+      db.add(Obj.make(TestSchema.Expando, { name: 'added' }));
+
+      await expect(db.flush({ indexes: false })).rejects.toThrow();
+    });
+
+    test('an object added while the service is disconnected reaches the host after it reconnects', async () => {
+      await using peer = await builder.createPeer();
+      const db = await peer.createDatabase();
+      await db.flush();
+
+      const connection = await connectServices(peer);
+      connection.disconnect();
+      db.add(Obj.make(TestSchema.Expando, { name: 'added while disconnected' }));
+      await expect(db.flush({ indexes: false })).rejects.toThrow();
+
+      await connection.reconnect();
+      await db.flush();
+
+      const reader = await peer.openLastDatabase({ client: await peer.createClient() });
+      const names = (await reader.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name);
+      expect(names).toContain('added while disconnected');
+    });
+  });
 });
 
 const expectObjects = <T>(echoObjects: readonly T[], expectedObjects: unknown): void => {
@@ -754,4 +794,46 @@ const expectObjects = <T>(echoObjects: readonly T[], expectedObjects: unknown): 
 
 const mapEchoToPlainJsObject = <T>(array: readonly T[]): unknown[] => {
   return array.map((entry) => (Array.isArray(entry) ? mapEchoToPlainJsObject(entry) : { ...entry }));
+};
+
+/** Calls a closed connection fails; the subscription stream is left to the reconnect that replaces it. */
+const CLOSED_CALLS = new Set([
+  'DataService.createDocument',
+  'DataService.flush',
+  'DataService.update',
+  'DataService.updateSubscription',
+]);
+
+/**
+ * Swaps the peer's client onto its own service connection, which `disconnect` closes and `reconnect` replaces the way a
+ * dedicated worker leader change does.
+ */
+const connectServices = async (peer: EchoTestPeer) => {
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const connect = (dataHandlers: DataService.Handlers) =>
+    EffectEx.runPromise(
+      Effect.all([
+        makeInProcessClient(DataService.Rpcs, dataHandlers),
+        makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
+      ]).pipe(Effect.provideService(Scope.Scope, scope)),
+    );
+  const closedHandlers = new Proxy(peer.host.dataService, {
+    get: (target, key) => {
+      if (typeof key === 'string' && CLOSED_CALLS.has(key)) {
+        return () => Effect.fail(new RpcClosedError());
+      }
+      const value = Reflect.get(target, key);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  const [closedData, closedQuery] = await connect(closedHandlers);
+  return {
+    disconnect: () => peer.client._updateServices({ dataService: closedData, queryService: closedQuery }),
+    reconnect: async () => {
+      const [dataService, queryService] = await connect(peer.host.dataService);
+      peer.client._updateServices({ dataService, queryService });
+      await peer.client._notifyReconnect();
+    },
+  };
 };

@@ -267,14 +267,35 @@ describe('RepoProxy', () => {
     }
   });
 
-  test('a document the host refuses to create settles instead of staying pending', { timeout: 5_000 }, async () => {
+  test('flush throws while the host refuses to create a document', { timeout: 5_000 }, async () => {
     const { dataService } = await setup(undefined, (props) => new RefusingDataService(props));
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+
+    // Closing settles the handle rather than leaving `whenReady` pending forever.
+    await clientRepo.close();
+    await expect(handle.whenReady()).rejects.toThrow('document creation refused');
+  });
+
+  test('a document the host failed to create is created by the next flush', { timeout: 5_000 }, async () => {
+    let refusing: RefusingDataService | undefined;
+    const { dataService, host } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
+    invariant(refusing);
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
 
-    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
-    await expect(handle.whenReady()).rejects.toThrow();
+    const handle = clientRepo.create<{ text: string }>({ text: 'retried' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+
+    refusing.refuse = false;
     await clientRepo.flush();
+    await handle.whenReady();
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), handle.url!);
+    invariant(hostHandle);
+    expect(hostHandle.doc()?.text).toEqual('retried');
   });
 
   test('document mutation persists with `flush`', async () => {
@@ -570,8 +591,14 @@ const setupWithDroppableSubscription = async () => {
 
 /** Fails every document creation, as a host that is gone or refuses the call does. */
 class RefusingDataService extends DataServiceImpl {
-  override ['DataService.createDocument'](): Effect.Effect<DataService.CreateDocumentResponse, Error> {
-    return Effect.fail(new Error('document creation refused'));
+  'refuse' = true;
+
+  override ['DataService.createDocument'](
+    request: DataService.CreateDocumentRequest,
+  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
+    return this.refuse
+      ? Effect.fail(new Error('document creation refused'))
+      : super['DataService.createDocument'](request);
   }
 }
 

@@ -208,8 +208,7 @@ export class EntityManager implements IDatabaseBinding {
     ({ url, objectId }) => `${url}:${objectId}`,
   );
 
-  /** Settles once the object's document is created, carrying the failure when it was not. */
-  private readonly _pendingDocumentCreations = new Map<string, Promise<{ error: unknown } | void>>();
+  private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
 
   // ── Update scheduling ────────────────────────────────────────────────────
   private _objectsForNextDbUpdate = new Set<string>();
@@ -1588,8 +1587,7 @@ export class EntityManager implements IDatabaseBinding {
         });
       })
       .catch((error: unknown) => {
-        log.error('object not bound: its document was not created', { objectId, err: error });
-        return { error };
+        log('object not bound: the database closed before its document was created', { objectId, err: error });
       })
       .finally(() => {
         this._pendingDocumentCreations.delete(objectId);
@@ -1600,10 +1598,10 @@ export class EntityManager implements IDatabaseBinding {
     return spaceDocHandle;
   }
 
-  /** The failures of the document creations pending when called, once they have all settled. */
-  private async _waitForPendingCreations(): Promise<unknown[]> {
-    const results = await Promise.all([...this._pendingDocumentCreations.values()]);
-    return results.flatMap((result) => (result ? [result.error] : []));
+  /** Throws if a document could not be created, since its object would otherwise never reach the host. */
+  private async _waitForPendingCreations(): Promise<void> {
+    await this._repoProxy.flushCreations();
+    await Promise.all([...this._pendingDocumentCreations.values()]);
   }
 
   private _clearHandleReferences(): string[] {
