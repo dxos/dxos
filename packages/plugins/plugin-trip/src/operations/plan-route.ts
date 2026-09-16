@@ -7,12 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
 
-import { BookingSearch, Place, Routing, RoutingOperation, Segment, Trip, TripCapabilities } from '#types';
+import { Place, Routing, RoutingOperation, Segment, Trip, TripCapabilities } from '#types';
 
-import { BookingSearchError } from './errors.ts';
+import { RoutePlanError } from './errors.ts';
 
 const EMPTY = { legs: 0, distanceMeters: 0, durationSeconds: 0 } as const;
 
@@ -48,16 +47,11 @@ export default RoutingOperation.PlanRoute.pipe(
           continue;
         }
 
-        // `tryPromise` routes a rejection (GeocodeError / RouteError / MissingApiKeyError)
-        // to the operation's failure channel, preserving the original Error for the UI.
+        // `tryPromise` routes a rejection to the operation's failure channel, passing a routing
+        // error through untouched so the UI can tell a missing key from a failed geocode.
         const result = yield* Effect.tryPromise({
           try: () => service.route({ waypoints, profile: 'driving' }),
-          catch: (error) =>
-            error instanceof BookingSearch.MissingApiKeyError ||
-            error instanceof Routing.GeocodeError ||
-            error instanceof Routing.RouteError
-              ? error
-              : new BookingSearchError({ message: messageOf(error), cause: error }),
+          catch: (error) => (Routing.isFailure(error) ? error : RoutePlanError.wrap()(error)),
         });
 
         const route = result.routes[0];

@@ -89,7 +89,6 @@ export interface BookingService {
 export class MissingApiKeyError extends BaseError.extend('MissingApiKeyError') {
   constructor(public readonly serviceId: string) {
     super({ message: `Missing API key for booking service: ${serviceId}` });
-    this.name = 'MissingApiKeyError';
   }
 }
 
@@ -97,15 +96,21 @@ export class MissingApiKeyError extends BaseError.extend('MissingApiKeyError') {
  * Thrown by a `BookingService` when the provider rejects an otherwise well-formed
  * request (e.g. a Duffel 422 for a past departure date). The `message` carries the
  * provider's human-readable explanation so the UI can surface it directly rather
- * than a generic fallback. Matched by `name` since class identity does not survive
- * the operation/process boundary.
+ * than a generic fallback. Matched by `_tag`, which survives the operation/process
+ * boundary even though class identity does not.
  */
-export class BookingProviderError extends Error {
+export class BookingProviderError extends BaseError.extend('BookingProviderError') {
   constructor(
     public readonly serviceId: string,
     message: string,
   ) {
-    super(message);
-    this.name = 'BookingProviderError';
+    super({ message });
   }
 }
+
+/** Any failure a `BookingService` raises. */
+export type Failure = MissingApiKeyError | BookingProviderError;
+
+/** `instanceof` across every booking failure, for a boundary that passes them through. */
+export const isFailure = (error: unknown): error is Failure =>
+  error instanceof MissingApiKeyError || error instanceof BookingProviderError;
