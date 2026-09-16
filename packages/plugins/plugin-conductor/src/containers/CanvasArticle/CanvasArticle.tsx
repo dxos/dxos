@@ -91,7 +91,7 @@ export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: Ca
   );
 };
 
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square max-h-full min-h-0' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />;
 
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);
