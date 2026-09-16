@@ -12,7 +12,6 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE, DEEPSEEK_PROVIDER_ID, DEEPSEEK_SOURCE } from '../constants.ts';
 import { ConnectorKeyInvalidError } from '../operations/errors.ts';
-import { AssistantOperationError } from '../operations/errors.ts';
 
 /** API-key form for the Anthropic BYOK provider; key is best-effort validated against `/v1/models`. */
 const AnthropicTokenForm = ConnectorSpec.TokenForm({
@@ -24,7 +23,7 @@ const AnthropicTokenForm = ConnectorSpec.TokenForm({
  * Best-effort validation: 401/403 from Anthropic blocks the save; CORS/network failures
  * are tolerated so the form still works in environments where the direct browser call is blocked.
  */
-const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
+const validateAnthropicKey = (apiKey: string): Effect.Effect<void, ConnectorKeyInvalidError> =>
   Effect.tryPromise(() =>
     fetch('https://api.anthropic.com/v1/models', {
       headers: {
@@ -54,7 +53,7 @@ const DeepSeekTokenForm = ConnectorSpec.TokenForm({
 });
 
 /** Best-effort validation, on the same terms as {@link validateAnthropicKey}. */
-const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, Error> =>
+const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, ConnectorKeyInvalidError> =>
   Effect.tryPromise(() =>
     fetch('https://api.deepseek.com/models', { headers: { Authorization: `Bearer ${apiKey}` } }),
   ).pipe(
@@ -62,7 +61,7 @@ const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, Error> =>
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
           ? Effect.fail(
-              new AssistantOperationError({
+              new ConnectorKeyInvalidError({
                 message: 'Invalid DeepSeek API key. Check it at https://platform.deepseek.com/api_keys.',
               }),
             )
@@ -83,7 +82,7 @@ const makeCredentialForm = ({
   schema: Schema.Codec<TokenValues, any>;
   source: string;
   label: string;
-  validate: (apiKey: string) => Effect.Effect<void, Error>;
+  validate: (apiKey: string) => Effect.Effect<void, ConnectorKeyInvalidError>;
 }): ConnectorSpec.CredentialForm<TokenValues> => ({
   schema,
   defaultValues: { token: '' },

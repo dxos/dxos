@@ -10,6 +10,7 @@ import * as EffectStream from 'effect/Stream';
 import { Context } from '@dxos/context';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { type SignalManager, SignalManagerService, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import { toServiceError } from '@dxos/protocols';
@@ -52,7 +53,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.updateConfig'](request: NetworkService.UpdateConfigRequest): Effect.Effect<void, Error> {
+  ['NetworkService.updateConfig'](request: NetworkService.UpdateConfigRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.networkManager.setConnectionState(request.swarm);
@@ -61,7 +62,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.joinSwarm'](request: JoinRequest): Effect.Effect<void, Error> {
+  ['NetworkService.joinSwarm'](request: JoinRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.signalManager.join(Context.default(), request);
@@ -70,7 +71,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.leaveSwarm'](request: LeaveRequest): Effect.Effect<void, Error> {
+  ['NetworkService.leaveSwarm'](request: LeaveRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.signalManager.leave(Context.default(), request);
@@ -79,7 +80,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.querySwarm'](request: QueryRequest): Effect.Effect<SwarmResponse, Error> {
+  ['NetworkService.querySwarm'](request: QueryRequest): Effect.Effect<SwarmResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         return this.signalManager.query(Context.default(), request);
@@ -103,7 +104,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.sendMessage'](message: Message): Effect.Effect<void, Error> {
+  ['NetworkService.sendMessage'](message: Message): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.signalManager.sendMessage(Context.default(), message);

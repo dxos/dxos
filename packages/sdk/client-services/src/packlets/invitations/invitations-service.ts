@@ -8,6 +8,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { toServiceError } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -68,7 +69,9 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
     });
   }
 
-  ['InvitationsService.authenticate'](request: InvitationsService.AuthenticationRequest): Effect.Effect<void, Error> {
+  ['InvitationsService.authenticate'](
+    request: InvitationsService.AuthenticationRequest,
+  ): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: () => this._invitationsManager.authenticate(request),
       catch: toServiceError,
@@ -77,7 +80,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
 
   ['InvitationsService.cancelInvitation'](
     request: InvitationsService.CancelInvitationRequest,
-  ): Effect.Effect<void, Error> {
+  ): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: () => this._invitationsManager.cancelInvitation(request),
       catch: toServiceError,
