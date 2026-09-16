@@ -10,7 +10,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Entity, Obj } from '@dxos/echo';
 
-import { constructPendingSpaceNode, constructSpaceNode, isPendingSpace } from './spaces';
+import { constructPendingSpaceNode, constructSpaceNode, isPendingSpace, isSpacePlaceholder } from './spaces';
 
 describe('isPendingSpace', () => {
   test('a space on its way to ready is pending', ({ expect }) => {
@@ -126,5 +126,23 @@ describe('pending and ready space nodes', () => {
     // Reordering writes through the space's own database, and dropping onto it would need one.
     expect(properties.onRearrange).toBeUndefined();
     expect(properties.canDrop).toBeUndefined();
+  });
+});
+
+describe('isSpacePlaceholder', () => {
+  test('an opened space renders as itself once the ordering has resolved', ({ expect }) => {
+    expect(isSpacePlaceholder({ state: SpaceState.SPACE_READY, orderResolved: true })).toBe(false);
+  });
+
+  test('every space waits for the ordering, however ready it is', ({ expect }) => {
+    // Rendering before the ordering lands puts spaces in arrival order and re-sorts them under the
+    // user once it arrives, so they wait together rather than jumping.
+    expect(isSpacePlaceholder({ state: SpaceState.SPACE_READY, orderResolved: false })).toBe(true);
+  });
+
+  test('a space that has not opened is a placeholder either way', ({ expect }) => {
+    expect(isSpacePlaceholder({ state: SpaceState.SPACE_INITIALIZING, orderResolved: true })).toBe(true);
+    expect(isSpacePlaceholder({ state: SpaceState.SPACE_CLOSED, orderResolved: false })).toBe(true);
+    expect(isSpacePlaceholder({ state: undefined, orderResolved: true })).toBe(true);
   });
 });

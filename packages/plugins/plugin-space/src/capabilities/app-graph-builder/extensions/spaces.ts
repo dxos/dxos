@@ -247,6 +247,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           const spacesOrderSnapshot = spacesOrder ? get(Obj.atom(spacesOrder)) : undefined;
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
+          // The ordering object is created for every profile as the first step of the settings-space
+          // migration, so its absence means not-yet-loaded rather than never-coming.
+          const orderResolved = !!spacesOrder;
 
           // Keyed by id rather than position: the array below is re-sorted by `orderMap`, so a
           // positional lookup would test one space's readiness against another's state.
@@ -275,7 +278,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               })
               .filter((space) => AppSpace.isVisibleSpace(space))
               .map((space) =>
-                spaceStates.get(space.id) === SpaceState.SPACE_READY
+                !isSpacePlaceholder({ state: spaceStates.get(space.id), orderResolved })
                   ? constructSpaceNode({
                       space,
                       navigable: ephemeralState.navigableCollections,
@@ -354,6 +357,19 @@ export const isPendingSpace = (state: SpaceState | undefined, lazySpaceOpen = fa
   state === SpaceState.SPACE_INITIALIZING ||
   state === SpaceState.SPACE_ACTIVE ||
   (state === SpaceState.SPACE_CLOSED && !lazySpaceOpen);
+
+/**
+ * Whether a listed space renders as a placeholder rather than itself: it has not opened, or the
+ * cross-space ordering has not resolved. Rendering before the ordering lands would show every space
+ * in arrival order and then re-sort them under the user, so they all wait for it together.
+ */
+export const isSpacePlaceholder = ({
+  state,
+  orderResolved,
+}: {
+  state: SpaceState | undefined;
+  orderResolved: boolean;
+}): boolean => !orderResolved || state !== SpaceState.SPACE_READY;
 
 /**
  * Builds an app-graph node for a space that has not opened yet. `data` is null so
