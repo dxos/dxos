@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Flex, IconButton, Panel, ScrollArea, Toggle, Toolbar, Icon } from '@dxos/react-ui';
+import { Flex, Icon, IconButton, Panel, ScrollArea, Toggle, Toolbar } from '@dxos/react-ui';
 
 const LIVE_INTERVAL = 5_000;
 

@@ -117,4 +117,4 @@ export const StatCard = {
   Content: StatCardContent,
 };
 
-export type { StatCardRootProps, StatCardHeaderProps, StatCardRowProps, StatCardContentProps };
+export type { StatCardContentProps, StatCardHeaderProps, StatCardRootProps, StatCardRowProps };
