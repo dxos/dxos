@@ -38,7 +38,7 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
       {rows.length === 0 && <StatCard.Row span label='No messages.' />}
       {rows.length > 0 && (
         <StatCard.Row>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
             <span className='text-start'>type</span>
             <span>KB</span>
             <span>↓</span>
@@ -52,7 +52,7 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
             <span className='truncate text-start' title={row.type}>
               {row.type}
             </span>
-            <span className='text-subdued'>{row.size !== undefined ? Unit.KB(row.size) : '–'}</span>
+            <span className='text-description'>{row.size !== undefined ? Unit.KB(row.size) : '–'}</span>
             <span>{row.received.toLocaleString()}</span>
             <span>{row.sent.toLocaleString()}</span>
           </Grid>

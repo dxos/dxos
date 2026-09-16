@@ -43,7 +43,7 @@ export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
                 <span className='truncate text-start' title={shape}>
                   {shape}
                 </span>
-                <span className='text-subdued'>×{group.length}</span>
+                <span className='text-description'>×{group.length}</span>
                 <span className={mx('tabular-nums', slowest > SLOW_TIME && 'text-error-text')}>{Unit.ms(slowest)}</span>
               </Grid>
             </StatCard.Row>

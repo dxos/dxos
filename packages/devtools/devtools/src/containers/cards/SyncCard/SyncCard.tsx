@@ -48,7 +48,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
       {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
       {spaces.length > 0 && (
         <StatCard.Row>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
             <span className='text-start'>space</span>
             <span>automerge</span>
             <span>feed</span>

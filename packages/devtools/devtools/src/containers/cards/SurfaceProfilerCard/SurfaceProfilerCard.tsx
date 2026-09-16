@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Field, Grid, IconButton, Tooltip } from '@dxos/react-ui';
+import { Field, Flex, Grid, IconButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -96,16 +96,25 @@ const groupByRole = (stats: SurfaceProfilerStats[]): RoleGroup[] => {
   return [...groups.values()].sort((a, b) => b.maxActualDuration - a.maxActualDuration || a.role.localeCompare(b.role));
 };
 
-const describe = (group: RoleGroup): string =>
-  [
-    `${group.ids.length} mounted`,
-    `renders: ${group.totalRenders}`,
-    `errors: ${group.errors}`,
-    group.trouble ? 'unstable data or errors' : undefined,
-    ...group.ids,
-  ]
-    .filter(Boolean)
-    .join('\n');
+/** The surface id of a profiler id (`surface/<id>/<role>`). */
+const surfaceId = (id: string): string => id.slice('surface/'.length, id.lastIndexOf('/'));
+
+/** Tooltip body for a role row: the pooled figures, then the mounted surfaces by id. */
+const RoleDetail = ({ group }: { group: RoleGroup }) => (
+  <Flex column gap='xs' classNames='max-w-64 text-xs'>
+    <span>
+      {group.ids.length} mounted · {group.totalRenders} renders · {group.errors} errors
+    </span>
+    {group.trouble && <span className='text-error-text'>unstable data or errors</span>}
+    <Flex column classNames='font-mono text-description'>
+      {group.ids.map((id) => (
+        <span key={id} className='truncate'>
+          {surfaceId(id)}
+        </span>
+      ))}
+    </Flex>
+  </Flex>
+);
 
 /** Role takes the slack; fixed count, average and maximum tracks line the figures up as a grid. */
 const ROW_TRACKS = ['1fr', '2rem', '2rem', '2rem'];
@@ -142,7 +151,7 @@ export const SurfaceProfilerCard = ({
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
             <span className='text-start'>role</span>
             <span>×</span>
             <span>avg</span>
@@ -164,10 +173,10 @@ export const SurfaceProfilerCard = ({
             gap='sm'
             classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIME && 'text-error-text')}
           >
-            <Tooltip.Trigger asChild content={<span className='whitespace-pre-line'>{describe(group)}</span>}>
+            <Tooltip.Trigger asChild content={<RoleDetail group={group} />}>
               <span className='truncate text-start'>{group.role}</span>
             </Tooltip.Trigger>
-            <span className='text-subdued'>{group.ids.length}</span>
+            <span className='text-description'>{group.ids.length}</span>
             <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
             <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
           </Grid>
