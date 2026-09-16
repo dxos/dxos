@@ -1,24 +1,30 @@
-# Agent activity — data model and unified dashboard design
+# Runtime activity — data model and unified dashboard design
 
-How agent work is recorded (processes, trace events, chats, tasks, projects), how the two
+How the work the process runtime does is recorded — agent sessions and the tasks they work, and
+the long-running operations that triggers start (a mailbox sync, a scheduled routine) — how the two
 existing views read it (`TracePanel`, the project pipeline chart), and the design of a single
 space-wide activity chart surfaced as a devtools page in the debug panel.
+
+The scope is every process the platform runs in a space, not only AI sessions: the same runtime
+spawns an agent turn, a tool call, a delegated sub-agent, a UI-invoked operation and a triggered
+routine, and the dashboard shows them on one axis.
 
 Source of truth is the code cited as `path`; line numbers are omitted because the files move.
 Status: **design** — sections 1–7 describe what exists and what is missing; sections 8–10 are the proposal.
 
-## 1. The five records of agent activity
+## 1. The six records of runtime activity
 
-Agent activity is written to five places. None of them is "the" activity log; each records one
+Runtime activity is written to six places. None of them is "the" activity log; each records one
 aspect, and every view joins two or more.
 
-| Record                 | Where it lives                                                                         | Lifetime                | Records                                                                                                 |
-| ---------------------- | -------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------- |
-| `Process.Info`         | In-memory process tree, read through `Capabilities.ProcessMonitor` (`processTreeAtom`) | While the runtime is up | What is running _now_: pid tree, state, `startedAt`/`completedAt`, wall time, input/output counts.      |
-| `Trace.Message`        | ECHO feed(s) in the space (`FeedTraceSink`), queried by `useTraceMessages`             | Durable                 | What happened: batched `Trace.Event`s with a `Meta` naming the pid, parent pid, conversation, trigger.  |
-| `Chat.Chat`            | ECHO object, `@dxos/assistant/Chat`                                                    | Durable                 | A **session**: its message `feed`, its `tasks` checklist, its `instructions`; parented under a project. |
-| `Task.Task` (in a set) | ECHO objects, `@dxos/types` `Task`/`TaskSet`; the project's `taskSet` is the ledger    | Durable                 | The unit of work: `status`, `dependsOn`, `parentTask`, `assignee`, `history` (created/updated only).    |
-| `Project.Project`      | ECHO object, `@dxos/compute/Project`                                                   | Durable                 | The container: owns `instructions`, `taskSet`; chats are filed under it by the ECHO parent edge.        |
+| Record                              | Where it lives                                                                                            | Lifetime                          | Records                                                                                                                                                                                                                                                |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Process.Info`                      | In-memory process tree, read through `Capabilities.ProcessMonitor` (`processTreeAtom`)                    | While the runtime is up           | What is running _now_: pid tree, state, `startedAt`/`completedAt`, wall time, input/output counts.                                                                                                                                                     |
+| `Trace.Message`                     | ECHO feed(s) in the space (`FeedTraceSink`), queried by `useTraceMessages`                                | Durable                           | What happened: batched `Trace.Event`s with a `Meta` naming the pid, parent pid, conversation, trigger.                                                                                                                                                 |
+| `Chat.Chat`                         | ECHO object, `@dxos/assistant/Chat`                                                                       | Durable                           | A **session**: its message `feed`, its `tasks` checklist, its `instructions`; parented under a project.                                                                                                                                                |
+| `Task.Task` (in a set)              | ECHO objects, `@dxos/types` `Task`/`TaskSet`; the project's `taskSet` is the ledger                       | Durable                           | The unit of work: `status`, `dependsOn`, `parentTask`, `assignee`, `history` (created/updated only).                                                                                                                                                   |
+| `Project.Project`                   | ECHO object, `@dxos/compute/Project`                                                                      | Durable                           | The container: owns `instructions`, `taskSet`; chats are filed under it by the ECHO parent edge.                                                                                                                                                       |
+| `Trigger.Trigger` + `Trigger.State` | ECHO object, `@dxos/compute/Trigger`; runtime state via `Trigger.TriggerMonitorService` (`triggers` atom) | Durable / while the runtime is up | What starts non-conversational work: `spec` (timer, feed, subscription, email, webhook, direct), `runnable` → operation, `enabled`, `remote`. `State` adds `nextExecution`, `cooldownUntil`, `retry`, `lastResult` — the current run only, no history. |
 
 ### 1.1 `Process` — `packages/core/compute/compute/src/Process.ts`
 
@@ -57,8 +63,9 @@ Event   = { type: string; timestamp: number; data: unknown }
 FlatEvent = Event & { meta: Meta; isEphemeral }                    // Trace.flatten(message)
 ```
 
-`Meta` is per message, not per event; every event of a message shares the pid. Events that the
-views consume:
+`Meta` is per message, not per event; every event of a message shares the pid. `conversation` is
+stamped on an agent process's messages, `trigger` on a triggered process's; neither is inherited by
+children (§2.2). Events that the views consume:
 
 | Event type                                                 | Defined in                      | Persisted | Meaning / payload                                                              |
 | ---------------------------------------------------------- | ------------------------------- | --------- | ------------------------------------------------------------------------------ |
@@ -127,6 +134,9 @@ flowchart LR
   C -- "tasks[]" --> K
   C -- "parent edge (peekProject)" --> J[Project]
   J -- "taskSet.tasks[]" --> K
+  T -- "trigger = trigger ref" --> G[Trigger]
+  G -- "runnable" --> O[PersistentOperation]
+  P -- "params.name = operation name (key)" --> O
 ```
 
 Notes on the joins:
@@ -140,6 +150,9 @@ Notes on the joins:
 - A sub-agent's trace carries neither the task nor the conversation, so a child span reaches its
   session only through `parentPid` and its task only through the parent's `delegationSpawned`.
 - Nothing links a trace event to a **project** directly; the project is reached via chat.
+- A triggered process is joined to its trigger only through `meta.trigger`; the `Process.Info`
+  carries the operation's name and the space but no trigger annotation, so a live triggered process
+  with no trace yet reads as an anonymous operation.
 
 ## 2. What is collected, and how it flows today
 
@@ -150,6 +163,7 @@ Notes on the joins:
 | Every agentic operation runs in a process managed by a platform process manager (local or edge).       | yes    | The app's `Capabilities.OperationInvoker` _is_ `ProcessOperationInvoker` (`app-framework/…/process-manager-capability.ts`), so a UI-invoked operation is a top-level process; `AgentService.getSession` spawns the agent as a process targeting the chat; tools and delegations are child processes (`invokeFiber` with `parentProcessId`). Edge runs its own manager; `Process.Monitor` aggregates both.                   |
 | A chat session (`Chat`) is long-lived and has an attached feed.                                        | yes    | `Chat.feed` is owning (`SetParent`). The chat outlives every process that serves it: each prompt after the agent has completed spawns a **new** agent process against the same chat, so one session accumulates several pids over its life.                                                                                                                                                                                 |
 | Some sessions have a directly connected `TaskSet`; others reach `TaskSet`s of other objects via tools. | partly | A chat never holds a `TaskSet`. It holds a **checklist** — `Chat.tasks: Ref<Task>[]`, non-owning. Tasks the chat creates (`Chat.addTask`) are parented to the chat; tasks delegated from a project stay parented in the project's `TaskSet` and are only _referenced_. The planning tools (`update_tasks`, `ask_question`) operate on `Harness.getChat().tasks`, so "the tasks a session can see" is exactly its checklist. |
+| Triggered long-running operations (sync, scheduled routines) go through the same runtime.              | yes    | `TriggerDispatcher.invokeTrigger` spawns `Process.fromOperation(runnable)` through `ProcessManager.spawn` with `traceMeta.trigger`; an edge trigger runs the same way on the edge's manager (`EdgeTriggerManager`). Their `operation.start/end` and `status.update` events land in the same feed and hub as an agent's (§2.4).                                                                                              |
 | Every trace event is associated with a process.                                                        | yes    | `createProcessTraceService` (`compute-runtime/src/process-trace.ts`) is the only `TraceService`; it stamps `pid`, `parentPid`, `processName`, `runtimeName`, `space` on every message. `Meta.pid` is typed optional only because `Trace` cannot depend on `Process`.                                                                                                                                                        |
 
 ### 2.2 Collection
@@ -247,6 +261,45 @@ restarts; the persisted store drops terminal records on hydrate and skips them i
 a restart the only memory of a finished process is its trace — and the trace has no exit record
 (§4).
 
+### 2.4 Triggered work
+
+A trigger is the non-conversational entry point into the same runtime: instead of a prompt on a
+feed, an event (a cron tick, a feed append, a subscription change, an email, a webhook, or a direct
+call) selects a `Trigger` whose `runnable` is a persisted operation, and the dispatcher runs that
+operation as a process.
+
+```mermaid
+flowchart TB
+  EV["Trigger event<br/>timer · feed · subscription · email · webhook · direct"] --> TD
+  TD["TriggerDispatcher (local) / edge dispatcher (remote: true)"] -->|"Database.load(trigger.runnable) → Operation.deserialize"| DEF[Operation definition]
+  DEF --> SP["ProcessManager.spawn(Process.fromOperation)<br/>name = op name (key), environment.space, traceMeta.trigger"]
+  SP --> RUN["handle.runAndExit({ inputs: [event data] })"]
+  RUN -->|"operation.start … status.update (progress) … operation.end"| TS[createProcessTraceService]
+  TS -->|durable| FEED[("space trace feed")]
+  TS -->|ephemeral| HUB["hub → Trace.Sink adapters"]
+  HUB --> PR["plugin-progress: createProgressTraceSink<br/>→ AppCapabilities.ProgressRegistry (meters, cancel)"]
+  RUN -->|Exit| ST["Trigger.State.lastResult / cooldownUntil / retry<br/>(TriggerMonitorService.triggers atom)"]
+  ST --> TSTAT["TriggerStatus indicator, routine UI"]
+  FEED --> TP["TracePanel (as a pid span)"]
+  PR --> METER["MailboxArticle meter, R0 popover"]
+```
+
+What is and is not recorded for a triggered run:
+
+- **Start, end, outcome** — durable, as the operation's own `operation.start` / `operation.end`
+  (`outcome`, `error`, `errorCode`) with `meta.trigger` naming the trigger and `meta.runtimeName`
+  saying where it ran. A run is therefore one span in the span tree, and a trigger's history over a
+  window is the set of spans whose `meta.trigger` resolves to it.
+- **Progress** — ephemeral only. `mail-sync.ts` and the mailbox analysis operations write
+  `status.update { message, progress { key, current, total, estimate, phase } }` through the
+  `TraceService`; `plugin-progress` projects those into the `ProgressRegistry` for the live meter
+  and its cancel button (which terminates the local process, or cancels the edge run by trigger
+  id). Nothing of the progress survives the run.
+- **Schedule and retry state** — runtime-only, on `Trigger.State`: the next execution, the cooldown,
+  a pending retry and the **last** result. There is no durable run log on the trigger object.
+- **Sub-steps** — only if the operation writes them. A sync that calls other operations through the
+  invoker gets child spans; one that loops in-process is a single span with progress.
+
 ## 3. Type map
 
 ```mermaid
@@ -300,6 +353,16 @@ classDiagram
   class Event {
     type, timestamp, data
   }
+  class Trigger {
+    spec: timer|feed|subscription|email|webhook|direct
+    runnable: Ref~PersistentOperation~
+    enabled, remote
+  }
+  class TriggerState {
+    environment: local|edge
+    nextExecution, cooldownUntil, retry
+    lastResult: Exit
+  }
   Project "1" --> "0..1" TaskSet : owns
   Project "1" --> "0..*" Chat : parent edge (peekProject)
   TaskSet "1" --> "0..*" Task : tasks[]
@@ -316,6 +379,9 @@ classDiagram
   Meta ..> Feed : conversation
   Event ..> Task : task.statusChanged.taskId, delegationSpawned.taskId
   Event ..> ProcessInfo : delegationSpawned.pid
+  Meta ..> Trigger : trigger
+  TriggerState --> Trigger : trigger
+  Trigger ..> ProcessInfo : dispatcher spawns runnable as a process
 ```
 
 Solid arrows are stored references; dotted arrows are joins a reader has to perform.
@@ -347,10 +413,14 @@ Ordered by how much each costs the unified view.
 4. **Nothing names the project.** Project is reached only via `Chat.peekProject`, i.e. by loading
    every chat in the space and walking parents. Acceptable for a space-scoped view; a
    `Trace.Meta.project` would only be worth adding if the view ever spans spaces.
-5. **Tasks have no timestamps.** `Task.history` records `created`/`updated` dates with no status,
-   so "when did this task start/finish" is unanswerable from the object. This is the ledger
-   backlog item (terminal-status dates on `Task`); with (2) in place the trace answers it, and the
-   object field becomes a denormalisation for views that have no trace.
+5. **Task history is not yet a usable timeline.** `Task.history` already exists and `Task.update`
+   appends an entry with `date` and `actor` on every status move — but the move itself is only in
+   the prose `description` ("Status changed from todo to started."), and the supervisor paths in
+   (2) bypass `Task.update` entirely. Two changes make the log the object-side answer to "when did
+   this task start/finish", independent of any trace: a structured `status` / `previousStatus` on
+   `HistoryEntry` (the prose stays for display), and every status write routed through
+   `Task.update`. With that, the project chart can draw a task's bar from the task alone and the
+   trace's `task.statusChanged` becomes the attribution to a session, not the source of the times.
 6. **Human task edits are unattributable.** A status change from the ledger runs as its own
    top-level process (no `parentPid`, no `conversation`), so `buildSessionTimeline` drops it. The
    event carries `taskId`; the activity builder should attribute such events by task rather than
@@ -362,9 +432,19 @@ Ordered by how much each costs the unified view.
 8. **Sessions with an empty checklist are skipped** by `buildSessionTimeline` when `chats` is
    supplied. For a runtime dashboard every session with an agent turn is activity — an option, not
    a redesign.
+9. **Triggered runs have no durable progress and no run log.** `status.update` is ephemeral, so a
+   completed sync shows as a bare span with no phases; `Trigger.State` keeps only the last result.
+   The span is enough for the chart's bar; a durable per-run summary (items processed, phases) would
+   need either a persisted `operation.output` for triggered runs or a final non-ephemeral status
+   event — worth adding only if the dashboard is to answer "how much did last night's sync do".
+10. **A live triggered process is anonymous.** `Process.Info` carries neither the trigger nor the
+    routine; only the trace meta does, so a run that has not yet written `operation.start` cannot
+    be placed under its trigger. Stamping `TargetAnnotation` with the trigger's URI at spawn (the
+    agent already does this with the chat) closes it.
 
-Items 1–3 are runtime changes outside `plugin-assistant` and are prerequisites for the chart to be
-trustworthy after a restart; the rest are absorbed by the builder.
+Items 1–3 and 10 are runtime changes outside `plugin-assistant`; 1–3 are prerequisites for the
+chart to be trustworthy after a restart. Item 5 is a `@dxos/types` change. The rest are absorbed
+by the builder.
 
 ## 5. `TracePanel` — `containers/TracePanel/TracePanel.tsx`
 
@@ -515,9 +595,14 @@ session, then task — with the trace detail of the `TracePanel` one click away.
      chat that ran an agent turn is activity).
   3. **Task lanes and sub-sessions** exactly as `buildSessionTimeline` produces them today.
   4. An **"Unfiled"** group for sessions not under any project.
-  5. A **"Processes"** group for non-agent processes (trigger-driven functions, operations spawned
-     outside a chat): one lane per top-level process spanning `startedAt`..`completedAt`, status
-     from `State`, children as task-kind lanes. This is what makes it a runtime dashboard rather
+  5. **Trigger groups** — one per trigger (routine) with a run in the window, labelled by the
+     trigger's name or its runnable's; under it one lane per run, spanning the run's
+     `operation.start`..`operation.end` (or the live process's `startedAt`..now), status from the
+     span outcome / process state, with the live progress meter's `current/total` shown on a
+     running lane. A nightly sync that ran four times is one group with four bars.
+  6. An **"Operations"** group for every other top-level process — UI-invoked operations and
+     anything the dispatcher did not start — one lane per process, hidden by default behind a
+     toolbar toggle because most are sub-second. This is what makes it a runtime dashboard rather
      than a second project chart.
 
 ### 8.2 Data layer
@@ -533,6 +618,7 @@ interface BuildActivityTimelineInput {
   chats: readonly Chat.Chat[];        // every chat in the space
   tasks: readonly Task.Task[];        // every task in the space (the ledgers' union)
   projects: readonly Project.Project[];
+  triggers?: readonly Trigger.Trigger[];
   window?: { start: number; end?: number };
   now?: number;
 }
@@ -546,11 +632,15 @@ Steps:
 3. For each partition call `buildSessionTimeline({ traceMessages, processes, chats, tasks, now,
 includeEmptySessions: true })` and re-parent its root lanes under a **group lane**
    `{ id: 'project:<id>', kind: 'group', label, status: worst-of-children, start/end: hull }`.
-4. Add the processes group: top-level `Process.Info` whose pid is not already a session pid (via
-   `laneByPid` — exposed by the builder rather than recomputed) become session-kind lanes labelled
-   by `params.name ?? key`, spanning `startedAt`..`completedAt`, status from `State`; their children
-   become task-kind lanes.
-5. Merge lanes and markers, prefixing lane ids by group so ids stay unique across partitions;
+4. Add the trigger groups: every top-level span whose `meta.trigger` resolves (plus live processes
+   matched by `TargetAnnotation` once gap 10 is closed) is a run lane under a `group` lane per
+   trigger, labelled from the `Trigger` object (`useQuery` on `Trigger.Trigger`); status from the
+   span's `outcome` or the process `State`; the `ProgressRegistry` entry for a running pid supplies
+   `current/total` for the lane's meta column.
+5. Add the operations group: top-level `Process.Info` and spans whose pid is neither a session pid
+   (`laneByPid`, exposed by the builder rather than recomputed) nor a triggered run, one
+   session-kind lane each labelled `params.name ?? key`; their children become task-kind lanes.
+6. Merge lanes and markers, prefixing lane ids by group so ids stay unique across partitions;
    compute the range over the union.
 
 One change to `buildSessionTimeline`: an `includeEmptySessions` option that stops skipping chats
@@ -605,7 +695,8 @@ ACTIVITY)` rendering `ActivityPanel` with `useActiveSpace()`.
 Taken 2026-09-16:
 
 1. Owner: `plugin-assistant`.
-2. The non-agent "Processes" group ships in the first cut.
+2. Scope is the whole runtime: agent sessions, triggered runs (grouped per trigger) and other
+   operations all ship in the first cut; operations are toggled off by default.
 3. Live view over a historical window, default 24 h.
 4. Marker detail inline under the chart.
 5. Group rows drawn as hull bars.
@@ -616,13 +707,16 @@ Taken 2026-09-16:
 
 1. Runtime: write `process.spawned` / `process.exited` from `ProcessHandle`; stamp
    `conversation` from the environment in `createProcessTraceService`; route the supervisor's and
-   `DelegateTaskToChat`'s task moves through `Task.update` + `TaskStatusChanged`. Tests in
-   `compute-runtime` and `assistant-toolkit`.
-2. `Gantt`: `'group'` lane kind + story.
-3. `buildSessionTimeline`: consume `process.exited` for lane ends, `includeEmptySessions`,
+   `DelegateTaskToChat`'s task moves through `Task.update` + `TaskStatusChanged`; stamp the
+   trigger as `TargetAnnotation` in `TriggerDispatcher`. Tests in `compute-runtime` and
+   `assistant-toolkit`.
+2. `@dxos/types`: structured `status` / `previousStatus` on `Task.HistoryEntry`, written by
+   `Task.update`.
+3. `Gantt`: `'group'` lane kind + story.
+4. `buildSessionTimeline`: consume `process.exited` for lane ends, `includeEmptySessions`,
    `laneByPid`, attribution by `taskId` for events with no session; tests.
-4. `buildActivityTimeline` + tests over two projects, an unfiled chat, a human edit and a trigger
-   process.
-5. `useActivityTimeline` (24 h window).
-6. `ActivityPanel` + story; graph node + surface; translations.
-7. Verify in storybook and in the running app's debug panel; changeset.
+5. `buildActivityTimeline` + tests over two projects, an unfiled chat, a human edit, a trigger with
+   several runs (one failed, one live) and a bare operation.
+6. `useActivityTimeline` (24 h window).
+7. `ActivityPanel` + story; graph node + surface; translations.
+8. Verify in storybook and in the running app's debug panel; changeset.
