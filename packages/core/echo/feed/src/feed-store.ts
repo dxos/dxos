@@ -32,6 +32,9 @@ type SubscribeResponse = FeedProtocol.SubscribeResponse;
 /** A block payload ready for insertion, encrypted when the cypher asked for it. */
 type SealedBlock = { data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null };
 
+/** Key for the per-space, per-namespace remote backlog estimate. */
+const backlogKey = (spaceId: string, feedNamespace: string) => `${spaceId}:${feedNamespace}`;
+
 export interface FeedStoreOptions {
   /**
    * The actor ID of the local user.
@@ -462,7 +465,7 @@ export class FeedStore {
    * Records an estimate of how many blocks the sync server holds beyond the last pull.
    */
   setRemoteBacklog(opts: { spaceId: SpaceId; feedNamespace: string; blocksToPull: number }): void {
-    const key = `${opts.spaceId}:${opts.feedNamespace}`;
+    const key = backlogKey(opts.spaceId, opts.feedNamespace);
     if (this.#remoteBacklog.get(key) === opts.blocksToPull) {
       return;
     }
@@ -474,7 +477,7 @@ export class FeedStore {
    * Remote backlog last recorded by {@link FeedStore.setRemoteBacklog}; 0 before the first pull.
    */
   getRemoteBacklog(opts: { spaceId: SpaceId; feedNamespace: string }): number {
-    return this.#remoteBacklog.get(`${opts.spaceId}:${opts.feedNamespace}`) ?? 0;
+    return this.#remoteBacklog.get(backlogKey(opts.spaceId, opts.feedNamespace)) ?? 0;
   }
 
   /**
@@ -511,6 +514,7 @@ export class FeedStore {
           `;
         }),
       );
+      this.#remoteBacklog.delete(backlogKey(opts.spaceId, opts.feedNamespace));
       this.#emitBlocksChanged(opts.spaceId);
     }).pipe(Effect.withSpan('FeedStore.resetSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
@@ -661,7 +665,7 @@ export class FeedStore {
           });
         }),
       );
-      this.#remoteBacklog.set(`${request.spaceId}:${request.feedNamespace}`, request.blocksToPull);
+      this.#remoteBacklog.set(backlogKey(request.spaceId, request.feedNamespace), request.blocksToPull);
       this.#emitBlocksChanged(request.spaceId);
     }).pipe(Effect.withSpan('FeedStore.applyPulledBatch'), SpanAttributes.annotateSpace(request.spaceId));
 

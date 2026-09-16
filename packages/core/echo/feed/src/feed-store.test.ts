@@ -904,6 +904,7 @@ describe('FeedStore server token', () => {
         lastPulledPosition: 2,
         serverToken: 'old',
       });
+      feed.setRemoteBacklog({ spaceId, feedNamespace: WellKnownNamespaces.data, blocksToPull: 5 });
 
       const changed: string[] = [];
       const blocksChanged: string[] = [];
@@ -915,6 +916,8 @@ describe('FeedStore server token', () => {
       expect(changed).toEqual([spaceId]);
       // Stripping positions changes what a feed subscription serves, not just the sync state.
       expect(blocksChanged).toEqual([spaceId]);
+      // The estimate belonged to the server whose positions were just discarded.
+      expect(feed.getRemoteBacklog({ spaceId, feedNamespace: WellKnownNamespaces.data })).toBe(0);
       expect(yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: 'new',
@@ -923,26 +926,6 @@ describe('FeedStore server token', () => {
       expect(blocks.map((block) => block.position)).toEqual([null, null, null]);
     }).pipe(Effect.provide(TestLayer)),
   );
-
-  const pulledBatch = (spaceId: SpaceId, blocksToPull: number) => ({
-    spaceId,
-    feedNamespace: WellKnownNamespaces.data,
-    blocks: [
-      {
-        feedId: EntityId.random(),
-        actorId: 'bob',
-        sequence: 0,
-        prevActorId: null,
-        prevSequence: null,
-        position: 1,
-        timestamp: 0,
-        data: new Uint8Array([1]),
-      },
-    ],
-    lastPulledPosition: 1,
-    serverToken: 'token',
-    blocksToPull,
-  });
 
   it.effect('applyPulledBatch notifies once for the blocks and the backlog together', () =>
     Effect.gen(function* () {
@@ -973,6 +956,26 @@ describe('FeedStore server token', () => {
       expect(blocks).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  const pulledBatch = (spaceId: SpaceId, blocksToPull: number) => ({
+    spaceId,
+    feedNamespace: WellKnownNamespaces.data,
+    blocks: [
+      {
+        feedId: EntityId.random(),
+        actorId: 'bob',
+        sequence: 0,
+        prevActorId: null,
+        prevSequence: null,
+        position: 1,
+        timestamp: 0,
+        data: new Uint8Array([1]),
+      },
+    ],
+    lastPulledPosition: 1,
+    serverToken: 'token',
+    blocksToPull,
+  });
 
   const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>
     feed.appendLocal(
