@@ -2,21 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
-
-import { mx } from '@dxos/ui-theme';
-import { Unit as BaseUnit } from '@dxos/util';
-
 import { type QueryInfo, removeEmpty } from '../../hooks/index.ts';
 
+/** Milliseconds above which a duration reads as a warning. */
 export const SLOW_TIME = 250;
 
-export const Duration = ({ duration }: { duration: number }) => (
-  <span className={mx(duration > SLOW_TIME && 'text-error-text')}>{String(BaseUnit.Duration(duration))}</span>
-);
-
+/** Figures for a `StatCard.Row` value; the unit goes in the row's `unit`. */
 export const Unit = {
   KB: (value?: number) => ((value ?? 0) / 1_000).toFixed(2),
+  MB: (value?: number) => ((value ?? 0) / 1_000_000).toFixed(1),
+  ms: (value?: number) => (value ?? 0).toFixed(value !== undefined && value < 10 ? 1 : 0),
+  percent: (value?: number) => ((value ?? 0) * 100).toFixed(1),
 };
 
 /** Suffix naming the averaging window of a rate, e.g. ` (10s)`. */

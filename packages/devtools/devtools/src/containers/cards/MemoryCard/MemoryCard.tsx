@@ -4,10 +4,9 @@
 
 import React from 'react';
 
-import { Unit } from '@dxos/util';
-
 import { StatCard } from '../../../components/index.ts';
 import { type MemoryInfo } from '../../../hooks/index.ts';
+import { Unit } from '../util.tsx';
 
 const MEM_WARNING = 40 / 100;
 
@@ -20,13 +19,14 @@ export const MemoryCard = ({ memory }: MemoryCardProps) => {
   return (
     <StatCard.Root>
       <StatCard.Header icon='ph--cpu--regular' title='Memory' />
-      <StatCard.Row label='Used heap' value={String(Unit.Megabyte(memory?.usedJSHeapSize ?? 0))} />
-      <StatCard.Row label='Allocated heap' value={String(Unit.Megabyte(memory?.totalJSHeapSize ?? 0))} />
+      <StatCard.Row label='Used heap' value={Unit.MB(memory?.usedJSHeapSize)} unit='MB' />
+      <StatCard.Row label='Allocated heap' value={Unit.MB(memory?.totalJSHeapSize)} unit='MB' />
       <StatCard.Row
         icon={warning ? 'ph--warning--regular' : undefined}
         iconClassNames='text-error-text'
         label='Used of available'
-        value={String(Unit.Percent(memory?.used ?? 0))}
+        value={Unit.percent(memory?.used)}
+        unit='%'
         warning={warning}
       />
     </StatCard.Root>

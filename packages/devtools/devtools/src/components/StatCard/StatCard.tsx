@@ -4,18 +4,26 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { Card, type CardMenuProps, Flex, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import {
+  Card,
+  type CardMenuProps,
+  type CardRootProps,
+  Flex,
+  Icon,
+  IconButton,
+  type ThemedClassName,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 //
 // Root
 //
 
-type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string }>>;
+type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string; density?: CardRootProps['density'] }>>;
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
-const StatCardRoot = ({ id, classNames, children }: StatCardRootProps) => (
-  <Card.Root id={id} fullWidth classNames={classNames}>
+const StatCardRoot = ({ id, density = 'sm', classNames, children }: StatCardRootProps) => (
+  <Card.Root id={id} density={density} fullWidth classNames={classNames}>
     {children}
   </Card.Root>
 );
@@ -97,9 +105,10 @@ const StatCardRow = ({
       <Card.Block compact>
         {onToggle ? (
           <IconButton
-            iconOnly
             variant='ghost'
             icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+            iconOnly
+            density='sm'
             label={open ? 'Collapse' : 'Expand'}
             onClick={() => onToggle(!open)}
           />

@@ -73,9 +73,10 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             }
             action={
               <IconButton
-                iconOnly
                 variant='ghost'
+                density='sm'
                 icon='ph--copy--regular'
+                iconOnly
                 label='Copy space id'
                 onClick={() => void navigator.clipboard.writeText(row.spaceId)}
               />
