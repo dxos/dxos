@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
 import { Config, defs } from '@dxos/config';
-import * as AtomEx from '@dxos/effect/AtomEx';
+import { AtomEx } from '@dxos/effect';
 import { ClientProvider, createClientServices } from '@dxos/react-client';
 
 import { getConfig } from '../config.ts';

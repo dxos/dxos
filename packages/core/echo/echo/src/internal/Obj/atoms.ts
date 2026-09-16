@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import * as AtomEx from '@dxos/effect/AtomEx';
+import { AtomEx } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 
 import type * as Entity from '../../Entity.ts';

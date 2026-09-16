@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import * as AtomEx from '@dxos/effect/AtomEx';
+import { AtomEx } from '@dxos/effect';
 import { defaultMap } from '@dxos/util';
 
 import type * as Annotation from '../../Annotation.ts';

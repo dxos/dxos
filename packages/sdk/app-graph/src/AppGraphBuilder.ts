@@ -10,7 +10,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Entity, type Type } from '@dxos/echo';
-import * as AtomEx from '@dxos/effect/AtomEx';
+import { AtomEx } from '@dxos/effect';
 import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { DXN } from '@dxos/keys';

@@ -3,6 +3,7 @@
 //
 
 export * from './atom-kvs.ts';
+export * as AtomEx from './AtomEx.ts';
 export * as DynamicRuntime from './dynamic-runtime.ts';
 export * as EffectEx from './EffectEx.ts';
 export * as Hook from './Hook.ts';

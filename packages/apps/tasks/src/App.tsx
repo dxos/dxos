@@ -15,7 +15,7 @@ import {
 
 import { Config, defs } from '@dxos/config';
 import { Filter, Obj, Query } from '@dxos/echo';
-import * as AtomEx from '@dxos/effect/AtomEx';
+import { AtomEx } from '@dxos/effect';
 import { parseId } from '@dxos/keys';
 import { ClientProvider, createClientServices, useShell } from '@dxos/react-client';
 import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
