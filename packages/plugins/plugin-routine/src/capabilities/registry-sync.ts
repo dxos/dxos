@@ -94,15 +94,15 @@ export default Capability.makeModule(
             if (prevOperationKeys.has(key)) {
               continue;
             }
-            // Claimed before any yield, so a run the atom starts meanwhile skips it.
-            prevOperationKeys.add(key);
             if (handler.meta.skipRegistry) {
+              prevOperationKeys.add(key);
               continue;
             }
             try {
               batch.push(Operation.serialize(handler));
             } catch {
               log.verbose('skipping operation with unserializable schema', { key });
+              prevOperationKeys.add(key);
             }
             if (performance.now() - sliceStart > SLICE_MS) {
               await yieldToEventLoop();
@@ -110,7 +110,15 @@ export default Capability.makeModule(
             }
           }
           if (batch.length > 0) {
+            // Marked only once added, so a failed add is retried on the next update. A run that overlaps this one
+            // across a yield adds the same operations again, which the registry replaces by id.
             client.graph.registry.add(batch);
+            for (const operation of batch) {
+              const operationKey = Operation.getKey(operation);
+              if (operationKey) {
+                prevOperationKeys.add(operationKey);
+              }
+            }
           }
         } catch (error) {
           log.catch(error);
