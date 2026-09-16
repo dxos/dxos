@@ -22,7 +22,7 @@ import {
 } from '@dxos/perf-harness';
 
 import { INITIAL_URL } from './app-manager.ts';
-import { SCALES, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
+import { type Scale, SCALES, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
