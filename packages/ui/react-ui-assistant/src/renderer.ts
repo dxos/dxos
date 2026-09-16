@@ -273,7 +273,7 @@ export const estimateRow = (message: Message.Message): number => {
 };
 
 /** Code fences and spans, which a URI rewrite must leave alone. */
-const CODE = /(```[\s\S]*?```|`[^`\n]*`)/g;
+const CODE = /(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g;
 
 /** A bare object URI in prose, with the `@` the model is told it may prefix an in-text reference with. */
 const BARE_OBJECT_URI = /(^|\s)@?(echo:\/\/[A-Za-z0-9]+(?:\/[A-Za-z0-9]+)?)(?=$|[\s.,;:!?)])/gm;

@@ -170,7 +170,8 @@ describe('linkBareObjectUris', () => {
   });
 
   test('code is left alone, and an already-linked URI is not rewritten twice', ({ expect }) => {
-    const text = 'Use `echo://SPACE1/OBJ1` and [x](echo://SPACE1/OBJ1)\n\n```\necho://SPACE1/OBJ1\n```';
+    const text =
+      'Use `echo://SPACE1/OBJ1` and [x](echo://SPACE1/OBJ1)\n\n```\necho://SPACE1/OBJ1\n```\n\n~~~\n@echo://SPACE1/OBJ1\n~~~';
     expect(linkBareObjectUris(text, label)).toBe(text);
   });
 });
