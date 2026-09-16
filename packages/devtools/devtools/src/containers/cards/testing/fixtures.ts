@@ -203,3 +203,12 @@ export const stats: Stats = {
   queries,
   performanceEntries,
 };
+
+/** What the stack passes as `detail` for the selected role: each mounted surface's id, data and metric. */
+export const surfaceDetail = [
+  {
+    id: 'deck',
+    data: { subject: { 'id': '01J9Z4Q5K8M2N7P3R6T9V1W4X7', 'name': 'Roadmap', '@type': 'dxos.org/type/Document' } },
+    metric: { id: 'surface/deck/org.dxos.role.article', dispatches: 3, candidates: 1, mounts: 1, unmounts: 0 },
+  },
+];

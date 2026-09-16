@@ -5,7 +5,15 @@
 import { Role } from '../../../common/index.ts';
 import { SurfaceContext } from './context.ts';
 import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent.tsx';
-import { type MountedSurface, getMountedSurfaces, isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug.tsx';
+import {
+  type MountedSurface,
+  getMountedSurfaces,
+  getSelectedSurfaceRole,
+  isSurfaceDebugEnabled,
+  setSelectedSurfaceRole,
+  setSurfaceDebug,
+  useSelectedSurfaceRole,
+} from './SurfaceDebug.tsx';
 import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics.ts';
 import {
   SurfaceProfilerProvider,
@@ -66,6 +74,10 @@ export namespace Surface {
   export type Mounted = MountedSurface;
   /** The surfaces mounted right now (dev builds), without subscribing. */
   export const getMounted = getMountedSurfaces;
+  /** Selects a role's mounted surfaces for the highlight overlay and the Surfaces card. */
+  export const select = setSelectedSurfaceRole;
+  export const getSelected = getSelectedSurfaceRole;
+  export const useSelected = useSelectedSurfaceRole;
   /** The current metrics without subscribing; see `useProfilerSnapshot`. */
   export const getMetrics = (): SurfaceMetric[] => [...surfaceMetrics.getSnapshot()];
 }

@@ -4,7 +4,7 @@
 
 // Card surfaces whose data comes from a hook rather than the stack's `DevtoolsCardData`.
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -58,12 +58,28 @@ export const SurfaceProfilerCardSurface = ({
     setDebug(enabled);
   }, []);
 
+  // The selected role's surfaces with their data and dispatch metrics; recomputed with each sample
+  // (`surfaceProfilerStats`) so a refresh picks up newly mounted surfaces.
+  const selected = Surface.useSelected();
+  const detail = useMemo(() => {
+    if (!selected) {
+      return undefined;
+    }
+    const metrics = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
+    return Surface.getMounted()
+      .filter(({ role }) => role === selected)
+      .map(({ id, role, data }) => ({ id, data, metric: metrics.get(`surface/${id}/${role}`) }));
+  }, [selected, surfaceProfilerStats]);
+
   return (
     <SurfaceProfilerCard
       stats={surfaceProfilerStats}
       debug={debug}
       onDebugChange={handleDebugChange}
       onClear={onClearSurfaceProfiler}
+      selected={selected}
+      onSelect={Surface.select}
+      detail={detail}
     />
   );
 };

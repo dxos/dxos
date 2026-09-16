@@ -98,6 +98,9 @@ type StatCardRowProps = PropsWithChildren<
     /** Trailing gutter control; takes the gutter over `unit`. */
     action?: ReactNode;
     warning?: boolean;
+    /** A selectable row: clicking it reports, and `current` marks the selected one. */
+    onClick?: () => void;
+    current?: boolean;
   }>
 >;
 
@@ -119,11 +122,17 @@ const StatCardRow = ({
   title,
   action,
   warning,
+  onClick,
+  current,
   children,
 }: StatCardRowProps) => {
   const trailing = action ?? (unit && <span className='text-xs text-subdued'>{unit}</span>);
   return (
-    <Card.Row classNames={classNames}>
+    <Card.Row
+      classNames={[classNames, onClick && 'cursor-pointer hover:bg-hover-surface', current && 'bg-hover-surface']}
+      onClick={onClick}
+      current={current}
+    >
       <Card.Block compact>
         {control ??
           (onToggle ? (
@@ -190,7 +199,7 @@ type StatCardContentProps = PropsWithChildren<ThemedClassName>;
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
   <Card.Row>
-    <Flex column grow={false} classNames={['min-w-0 text-xs [--dx-col:2/span_2]', classNames]}>
+    <Flex column grow={false} classNames={['min-w-0 overflow-x-auto text-xs [--dx-col:2/span_2]', classNames]}>
       {children}
     </Flex>
   </Card.Row>

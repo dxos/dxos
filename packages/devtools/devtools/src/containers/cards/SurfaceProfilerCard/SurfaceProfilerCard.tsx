@@ -6,6 +6,7 @@ import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
 import { Field, Grid, IconButton } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -31,14 +32,30 @@ export type SurfaceProfilerCardProps = {
   debug?: boolean;
   onDebugChange?: (debug: boolean) => void;
   onClear?: () => void;
+  /** The selected role NSID; its row is current and `detail` is shown beneath the rows. */
+  selected?: string;
+  onSelect?: (role: string | undefined) => void;
+  /** The selected role's mounted surfaces, each rendered as JSON. */
+  detail?: SurfaceDetail[];
 };
 
-/** The role segment of a profiler id (`surface/<id>/<role>`), without the shared `org.dxos.role.` prefix. */
-const roleName = (id: string): string => (id.split('/').pop() ?? id).replace(/^org\.dxos\.role\./, '');
+/** One mounted surface of the selected role: its id, the `data` it was dispatched with, and its metric. */
+export type SurfaceDetail = {
+  id?: string;
+  data?: Record<string, any>;
+  metric?: Record<string, unknown>;
+};
+
+/** The role segment of a profiler id (`surface/<id>/<role>`). */
+const roleId = (id: string): string => id.slice(id.lastIndexOf('/') + 1);
+
+/** The role without the shared `org.dxos.role.` prefix. */
+const roleName = (id: string): string => roleId(id).replace(/^org\.dxos\.role\./, '');
 
 /** Every mounted instance of one role, its timings pooled: a navtree mounts one surface per row. */
 type RoleGroup = {
   role: string;
+  roleId: string;
   ids: string[];
   totalRenders: number;
   avgActualDuration: number;
@@ -53,6 +70,7 @@ const groupByRole = (stats: SurfaceProfilerStats[]): RoleGroup[] => {
     const role = roleName(stat.id);
     const group = groups.get(role) ?? {
       role,
+      roleId: roleId(stat.id),
       ids: [],
       totalRenders: 0,
       avgActualDuration: 0,
@@ -92,8 +110,17 @@ const describe = (group: RoleGroup): string =>
 /** Role takes the slack; fixed count, average and maximum tracks line the figures up as a grid. */
 const ROW_TRACKS = ['1fr', '2rem', '2rem', '2rem'];
 
-export const SurfaceProfilerCard = ({ stats = [], debug, onDebugChange, onClear }: SurfaceProfilerCardProps) => {
+export const SurfaceProfilerCard = ({
+  stats = [],
+  debug,
+  onDebugChange,
+  onClear,
+  selected,
+  onSelect,
+  detail,
+}: SurfaceProfilerCardProps) => {
   const groups = groupByRole(stats);
+  const selectedGroup = groups.find((group) => group.roleId === selected);
   return (
     <StatCard.Root>
       <StatCard.Header
@@ -106,6 +133,12 @@ export const SurfaceProfilerCard = ({ stats = [], debug, onDebugChange, onClear 
           )
         }
       />
+      {onDebugChange && (
+        <StatCard.Row
+          label='Highlight surfaces'
+          control={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
+        />
+      )}
       {groups.length === 0 && <StatCard.Row label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
@@ -123,6 +156,8 @@ export const SurfaceProfilerCard = ({ stats = [], debug, onDebugChange, onClear 
           icon={group.trouble ? 'ph--warning--regular' : undefined}
           iconClassNames='text-error-text'
           unit='ms'
+          current={group.roleId === selected}
+          onClick={onSelect && (() => onSelect(group.roleId === selected ? undefined : group.roleId))}
         >
           <Grid
             cols={ROW_TRACKS}
@@ -138,11 +173,20 @@ export const SurfaceProfilerCard = ({ stats = [], debug, onDebugChange, onClear 
           </Grid>
         </StatCard.Row>
       ))}
-      {onDebugChange && (
-        <StatCard.Row
-          label='Highlight surfaces'
-          control={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
-        />
+      {selectedGroup && detail && (
+        <StatCard.Section title={selectedGroup.role}>
+          {/* One block per surface: the stringifier folds repeated references into back-references,
+              and sibling surfaces routinely share their `data`. */}
+          {detail.map((surface, index) => (
+            <StatCard.Content key={surface.id ?? index}>
+              <JsonHighlighter
+                classNames='text-sm'
+                data={surface}
+                replacer={{ maxDepth: 5, maxArrayLen: 10, maxStringLen: 120 }}
+              />
+            </StatCard.Content>
+          ))}
+        </StatCard.Section>
       )}
     </StatCard.Root>
   );

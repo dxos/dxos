@@ -390,7 +390,13 @@ CardSection.displayName = CARD_SECTION_NAME;
 
 const CARD_ROW_NAME = 'Card.Row';
 
-type CardRowProps = { fullWidth?: boolean };
+type CardRowProps = {
+  fullWidth?: boolean;
+  /** A selectable row (a stats table); the row itself is the target, its cells carry no controls. */
+  onClick?: MouseEventHandler<HTMLDivElement>;
+  /** The selected row, exposed as `aria-current`. */
+  current?: boolean;
+};
 
 /**
  * A row inside a Card.
@@ -400,7 +406,7 @@ type CardRowProps = { fullWidth?: boolean };
  *   `Card.Block` placement is inert in this mode.
  */
 const CardRow = slottable<HTMLDivElement, CardRowProps>(
-  ({ children, asChild, fullWidth, style, ...props }, forwardedRef) => {
+  ({ children, asChild, fullWidth, current, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
 
@@ -408,6 +414,7 @@ const CardRow = slottable<HTMLDivElement, CardRowProps>(
       <ark.div
         asChild={asChild}
         {...rest}
+        aria-current={current ? 'true' : undefined}
         style={{ ...iconSize(4), ...style }}
         className={tx('card.row', { fullWidth }, className)}
         ref={forwardedRef}

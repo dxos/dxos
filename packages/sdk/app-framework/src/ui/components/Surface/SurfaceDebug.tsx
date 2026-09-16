@@ -19,7 +19,7 @@ import { addEventListener, combine } from '@dxos/async';
 import { mx } from '@dxos/ui-theme';
 
 import { type SurfaceContext } from './context.ts';
-import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceMetrics.ts';
+import { surfaceMetrics } from './SurfaceMetrics.ts';
 
 declare global {
   interface Window {
@@ -104,6 +104,32 @@ export const setSurfaceDebug = (enabled: boolean): void => {
   }
 };
 
+// The role picked in the Surfaces card: the overlay draws its surfaces bold and the card shows their
+// data. Kept here, beside the flag, so the overlay (its own React root) can subscribe to it.
+let selectedRole: string | undefined;
+const selectionListeners = new Set<() => void>();
+const subscribeSelection = (listener: () => void): (() => void) => {
+  selectionListeners.add(listener);
+  return () => {
+    selectionListeners.delete(listener);
+  };
+};
+
+/** The selected role NSID, if any. */
+export const getSelectedSurfaceRole = (): string | undefined => selectedRole;
+
+/** Selects a role's surfaces (`undefined` clears the selection). */
+export const setSelectedSurfaceRole = (role: string | undefined): void => {
+  selectedRole = role;
+  for (const listener of selectionListeners) {
+    listener();
+  }
+};
+
+/** Subscribes to the selected role. */
+export const useSelectedSurfaceRole = (): string | undefined =>
+  useSyncExternalStore(subscribeSelection, getSelectedSurfaceRole, getSelectedSurfaceRole);
+
 let elementRegistered = false;
 
 const ensureSurfaceElement = (): void => {
@@ -175,14 +201,18 @@ class SurfaceDebugManager {
 const manager = new SurfaceDebugManager();
 
 /** A surface currently mounted in the document, as registered by its `<dx-surface>` wrapper. */
-export type MountedSurface = { id?: string; role: string };
+export type MountedSurface = { id?: string; role: string; data?: Record<string, any> };
 
 /**
  * The surfaces mounted right now, without subscribing. Populated only while the wrapper is enabled
  * (dev builds), which is also the only time the profiler runs.
  */
 export const getMountedSurfaces = (): MountedSurface[] =>
-  manager.getSnapshot().map(({ infoRef }) => ({ id: infoRef.current.id, role: infoRef.current.role }));
+  manager.getSnapshot().map(({ infoRef }) => ({
+    id: infoRef.current.id,
+    role: infoRef.current.role,
+    data: infoRef.current.data,
+  }));
 
 let overlayMounted = false;
 
@@ -302,75 +332,18 @@ const SurfaceDebugOverlay = (): ReactNode => {
   );
 };
 
-/** Subscribes to the metric for a single surface. */
-const useSurfaceMetric = (surfaceId: string, role: string): SurfaceMetric | undefined => {
-  const all = useSyncExternalStore(surfaceMetrics.subscribe, surfaceMetrics.getSnapshot, surfaceMetrics.getSnapshot);
-  const key = surfaceMetricKey(surfaceId, role);
-  return all.find((metric) => metric.id === key);
-};
-
+/** A passive outline over one surface, bold for the selected role; selection happens in the Surfaces card. */
 const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }): ReactNode => {
-  const [expand, setExpand] = useState(false);
-  const info = infoRef.current;
-  const metric = useSurfaceMetric(info.id ?? '', info.role);
-  // A surface with a likely problem (unstable data or a caught error) flags red.
-  const concern = !!metric && (metric.dataUnstable || metric.errors > 0);
+  const selected = useSelectedSurfaceRole() === infoRef.current.role;
   return (
     <div
-      className='z-[100] fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
-      style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
-    >
-      {expand ? (
-        <div
-          className='dx-fullscreen border-2 border-rose-500 border-dotted overflow-auto pointer-events-auto'
-          onPointerDown={(ev) => ev.stopPropagation()}
-          onClick={(ev) => {
-            ev.stopPropagation();
-            setExpand(false);
-          }}
-        >
-          <div className='absolute left-1 right-1 bottom-1 max-h-[20rem] overflow-auto dx-card-surface ring-2 ring-separator rounded-sm opacity-90'>
-            <pre className='inline-block p-2 text-xs text-description font-mono font-thin'>
-              {JSON.stringify({ info, metric }, null, 2)}
-            </pre>
-          </div>
-        </div>
-      ) : (
-        <span
-          className={mx(
-            concern ? 'border-error-text' : 'border-info-text',
-            // 'absolute right-1 bottom-1 flex items-center p-1 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto',
-            'dx-fullscreen border _cursor-pointer _pointer-events-auto',
-          )}
-          title={metricSummary(info.id ?? '', metric)}
-          onPointerDown={(ev) => ev.stopPropagation()}
-          onClick={(ev) => {
-            ev.stopPropagation();
-            setExpand(true);
-          }}
-        />
+      className={mx(
+        'z-[100] fixed pointer-events-none border',
+        selected ? 'border-2 border-accent-text' : 'border-info-text',
       )}
-    </div>
+      style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
+    />
   );
-};
-
-const metricSummary = (surfaceId: string, metric: SurfaceMetric | undefined): string => {
-  if (!metric) {
-    return surfaceId;
-  }
-  const parts = [
-    surfaceId,
-    `dispatches=${metric.dispatches}`,
-    `candidates=${metric.candidates}${metric.truncated ? '(+truncated)' : ''}`,
-    `mounts=${metric.mounts}/unmounts=${metric.unmounts}`,
-  ];
-  if (metric.dataUnstable) {
-    parts.push(`UNSTABLE data (churn=${metric.dataChurn})`);
-  }
-  if (metric.errors > 0) {
-    parts.push(`errors=${metric.errors}`);
-  }
-  return parts.join(' · ');
 };
 
 /**
