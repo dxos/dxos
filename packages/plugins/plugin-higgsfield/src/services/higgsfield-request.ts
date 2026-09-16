@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format } from '@dxos/echo';
+import { Format, Ref } from '@dxos/echo';
+import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 
 const model = Schema.NonEmptyString.annotate({
   title: 'Model',
@@ -32,27 +33,40 @@ export const HiggsfieldImageConfig = Schema.Struct({ model, prompt, aspectRatio 
 export interface HiggsfieldImageConfig extends Schema.Schema.Type<typeof HiggsfieldImageConfig> {}
 
 /**
- * The video service's request config. Higgsfield's video models animate a still (`image_url`), so a
- * frame is either given a still (`imageUrl`) or has one generated from the prompt first
- * (`stillModel`), then animated by `model`.
+ * The video service's request config. Higgsfield's video models (DoP) animate a still (`image_url`),
+ * which is the cover of a referenced image artifact: an image is generated as its own artifact and
+ * then animated, so a clip's still is always a produced, reviewable object.
  */
 export const HiggsfieldVideoConfig = Schema.Struct({
   model,
   prompt,
-  // The animation follows its still's shape, so the ratio is the still's.
-  aspectRatio,
-  imageUrl: Schema.optional(
-    Schema.String.pipe(
-      Format.FormatAnnotation.set(Format.TypeFormat.URL),
-      Schema.annotate({ title: 'Still', description: 'Image to animate; generated from the prompt when empty.' }),
-    ),
-  ),
-  stillModel: Schema.optional(
-    Schema.String.annotate({ title: 'Still model', description: 'Image model used when no still is given.' }),
+  imageArtifact: Ref.Ref(MediaArtifact.MediaArtifact).annotate({
+    title: 'Reference image',
+    description: 'The generated image whose cover is animated.',
+  }),
+  duration: Schema.optional(
+    Schema.Int.annotate({
+      title: 'Duration',
+      description: 'Clip length in seconds (Kling and Wan: 5 or 10; Hailuo: 6 or 10; DoP clips are a fixed length).',
+    }),
   ),
 });
 export interface HiggsfieldVideoConfig extends Schema.Schema.Type<typeof HiggsfieldVideoConfig> {}
 
 /** Decodes the kind-specific config from a generation request (excess keys like count ignored). */
 export const decodeImageConfig = Schema.decodeUnknownSync(HiggsfieldImageConfig);
-export const decodeVideoConfig = Schema.decodeUnknownSync(HiggsfieldVideoConfig);
+
+const decodeVideoEncoded = Schema.decodeUnknownSync(HiggsfieldVideoConfig);
+const decodeVideoTyped = Schema.decodeUnknownSync(Schema.toType(HiggsfieldVideoConfig));
+
+/**
+ * The video config's `imageArtifact` arrives as a live `Ref` from the form (the type side) or as its
+ * `{ '/': dxn }` encoding from JSON (an agent's config), so both sides are accepted.
+ */
+export const decodeVideoConfig = (request: unknown): HiggsfieldVideoConfig => {
+  try {
+    return decodeVideoTyped(request);
+  } catch {
+    return decodeVideoEncoded(request);
+  }
+};

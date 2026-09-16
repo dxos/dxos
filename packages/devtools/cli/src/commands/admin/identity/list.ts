@@ -25,8 +25,8 @@ const formatIdentityRow = (identity: IdentityItem): string => {
 export const list = Command.make(
   'list',
   {
-    limit: Options.integer('limit').pipe(Options.withDescription('Max results per page.'), Options.optional),
-    cursor: Options.string('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
+    limit: Options.Int('limit').pipe(Options.withDescription('Max results per page.'), Options.optional),
+    cursor: Options.String('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
   },
   Effect.fn(function* ({ limit, cursor }) {
     const query: Record<string, string> = {};

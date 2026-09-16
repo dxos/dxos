@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot, CardMenuSlot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import {
@@ -19,7 +19,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { ActionMenu } from '@dxos/react-ui-menu';
+import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
@@ -93,6 +93,8 @@ export const PopoverContent = () => {
   const pivotId =
     state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
   const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
+  const menu = useMenuActions();
+  const menuItems = useMenuItems(menu, undefined, objectMenuItems);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const iconAnnotation = isObjectPopover ? Obj.getIcon(popoverSubject) : undefined;
   const icon = isObjectPopover ? (iconAnnotation?.icon ?? 'ph--circle-dashed--regular') : undefined;
@@ -191,7 +193,8 @@ export const PopoverContent = () => {
                 <Card.Title>{title}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
                 <Card.Block end>
-                  <ActionMenu disabled={!objectMenuItems.length} actions={objectMenuItems}>
+                  {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
+                  <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
                     <IconButton
                       variant='ghost'
                       density='sm'

@@ -7,13 +7,27 @@ import React, { type FC } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
-// TODO(burdon): Move util to SyntaxHighlighter.
-export const JsonView: FC<{ data?: object; truncate?: boolean }> = ({ data, truncate = true }) => {
-  return <JsonHighlighter classNames='dx-expand' data={data} replacer={replacer(truncate)} />;
+export type JsonViewProps = {
+  data?: object;
+  truncate?: boolean;
+  /** Off for a section inside a larger scrolling panel, where a JSONPath input per block is noise. */
+  filter?: boolean;
 };
+
+/** Highlighted JSON in its own scrolling viewport, with a JSONPath filter unless embedded. */
+export const JsonView: FC<JsonViewProps> = ({ data, truncate = true, filter = true }) => (
+  <Syntax.Root data={data} replacer={replacer(truncate)}>
+    <Syntax.Content>
+      {filter && <Syntax.Filter />}
+      <Syntax.Viewport>
+        <Syntax.Code />
+      </Syntax.Viewport>
+    </Syntax.Content>
+  </Syntax.Root>
+);
 
 // TODO(burdon): Factor out.
 // TODO(mykola): Add proto schema. Decode bytes.

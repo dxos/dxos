@@ -5,6 +5,7 @@
 export * from './effect-rpc.ts';
 export * from './errors.ts';
 export * from './rpc.ts';
+export * as RpcRouter from './RpcRouter.ts';
 export * from './service.ts';
 export * from './testing.ts';
 export * from './trace.ts';

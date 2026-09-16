@@ -4,38 +4,32 @@
 
 import React from 'react';
 
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-
-import { meta } from '#meta';
-
-import { type PlayControl } from '../MediaArtifactArticle/MediaArtifactVariants.tsx';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 export type EmptyPanelProps = {
   label: string;
   attendableId?: string;
-  play?: PlayControl;
 };
 
-/** The storyboard's main panel with nothing to show: a message, and Play in the toolbar all the same. */
-export const EmptyPanel = ({ label, attendableId, play }: EmptyPanelProps) => {
-  const menuActions = useMenuBuilder((): ActionGraphProps => {
-    const builder = MenuBuilder.make().separator('gap');
-    if (play) {
-      builder.action(
-        'play',
-        {
-          label: ['play.label', { ns: meta.profile.key }],
-          icon: 'ph--play--regular',
-          disposition: 'toolbar',
-          disabled: play.disabled,
-        },
-        play.onPlay,
-      );
-    }
-    return builder.build();
-  }, [play]);
+/**
+ * The storyboard's main panel with nothing to show: a message, and the storyboard node's toolbar
+ * actions (Play) all the same.
+ */
+export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
+  const { graph } = useAppGraph();
+  const menuActions = useMenuBuilder(
+    (get) => {
+      const builder = MenuBuilder.make().separator('gap');
+      if (attendableId) {
+        builder.subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }));
+      }
+      return builder.build();
+    },
+    [graph, attendableId],
+  );
 
   return (
     <Panel.Root>

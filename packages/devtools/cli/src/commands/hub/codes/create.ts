@@ -15,12 +15,12 @@ import { formatHubError, hubApiRequest } from '../util.ts';
 export const create = Command.make(
   'create',
   {
-    count: Options.integer('count').pipe(
+    count: Options.Int('count').pipe(
       Options.withDescription('Number of bootstrap codes to create.'),
       Options.withAlias('n'),
       Options.withDefault(1),
     ),
-    note: Options.string('note').pipe(Options.withDescription('Optional note for these codes.'), Options.optional),
+    note: Options.String('note').pipe(Options.withDescription('Optional note for these codes.'), Options.optional),
   },
   Effect.fn(function* ({ count, note }) {
     const body: { count: number; note?: string } = { count };

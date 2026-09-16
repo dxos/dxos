@@ -41,7 +41,7 @@ import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { type ListenHandle, RpcClosedError, decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { fromPublicKey, packJson, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
@@ -106,6 +106,9 @@ export class SpaceProxy implements Space, CustomInspectable {
    * Sent whenever any space data changes.
    */
   private readonly _anySpaceUpdate = new Event<SpaceData>();
+
+  /** The root last handed to the database, so an unchanged root is not re-applied on every update. */
+  private _appliedSpaceRoot: string | undefined;
 
   /**
    * @internal
@@ -386,11 +389,13 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
 
     if (this._initialized) {
-      // Transition onto new automerge root.
+      // Transition onto new automerge root. The host re-sends the space several times a second while
+      // its feeds advance, and the root is the same in nearly all of them, so the unchanged case is
+      // dropped here rather than walked down into the database only to be discarded.
       const automergeRoot = space.pipeline?.directoryUrl;
-      if (automergeRoot) {
+      if (automergeRoot && automergeRoot !== this._appliedSpaceRoot) {
         log('set space root', { spaceKey: this.key, automergeRoot });
-        // NOOP if the root is the same.
+        this._appliedSpaceRoot = automergeRoot;
         await this._db.setSpaceRoot(automergeRoot);
       }
     }
@@ -490,6 +495,9 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._initializing = false;
     this._initialized = false;
     this._databaseOpen = false;
+    // Dropped with the database it tracked, so the next update re-applies the root rather than
+    // matching a cache that outlived it.
+    this._appliedSpaceRoot = undefined;
     log('destroyed');
   }
 
@@ -564,15 +572,41 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * Listen for messages posted to the space.
    */
-  listen(channel: string, callback: (message: GossipMessage) => void): () => Promise<void> {
+  listen(channel: string, callback: (message: GossipMessage) => void): ListenHandle {
+    const registered = new Trigger();
     const cleanup = subscribeStream(
       this._runtime,
       this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: this.key, channel }),
       {
-        onData: (message) => callback(message),
+        onData: (response) => {
+          switch (response._tag) {
+            case 'Ready':
+              registered.wake();
+              break;
+            case 'Message':
+              callback(response.message);
+              break;
+          }
+        },
+        onError: (err) => {
+          registered.throw(err);
+          if (!(err instanceof RpcClosedError)) {
+            log.catch(err);
+          }
+        },
+        onClose: () => registered.throw(new RpcClosedError()),
       },
     );
-    return async () => cleanup();
+    const ready = registered.wait();
+    // Most callers never await readiness; a closed connection is expected and anything else is logged above.
+    ready.catch(() => {});
+    return Object.assign(
+      () => {
+        registered.throw(new RpcClosedError());
+        cleanup();
+      },
+      { ready },
+    );
   }
 
   /**

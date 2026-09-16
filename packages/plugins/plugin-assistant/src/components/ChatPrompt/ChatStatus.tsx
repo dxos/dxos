@@ -104,7 +104,7 @@ export const ChatStatusView = ({
   }
 
   return (
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['gap-2 text-sm', classNames]}>
+    <NaturalChatStatus.Root defaultRunning={false} classNames={['p-1.5 gap-2 text-sm', classNames]}>
       {icon && (
         <NaturalChatStatus.Icon>
           <Matrix
@@ -121,7 +121,7 @@ export const ChatStatusView = ({
       {show && (
         <div className='flex items-center'>
           {requestTiming && (
-            <NaturalChatStatus.Text>
+            <NaturalChatStatus.Text classNames={isRunning && 'text-sky-500'}>
               <Elapsed timing={requestTiming} />
             </NaturalChatStatus.Text>
           )}

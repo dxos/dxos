@@ -9,7 +9,6 @@ import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 export type CrawlStores =
   | StateStore.StateStore
@@ -29,11 +28,7 @@ const storesLayer: Layer.Layer<CrawlStores> = Layer.mergeAll(
   MessageStore.layerSql,
   QuestionStore.layerSql,
   ExtractedQuestionStore.layerSql,
-).pipe(
-  // Store migrations run inside the SqlTransaction service; derive it from the same client.
-  Layer.provide(SqlTransaction.layer),
-  Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)),
-);
+).pipe(Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)));
 
 let runtime: ManagedRuntime.ManagedRuntime<CrawlStores, never> | undefined;
 

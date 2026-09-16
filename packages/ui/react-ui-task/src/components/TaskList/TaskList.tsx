@@ -40,7 +40,7 @@ import {
   executeMenuAction,
   fallbackIcon,
 } from '@dxos/react-ui-menu';
-import { type Actor, RemoteSession, Task } from '@dxos/types';
+import { type Actor, Question, RemoteSession, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -734,22 +734,45 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
  * Click, not hover or focus: the tag sits inside a listbox option, where a tab stop of its own would
  * split the row into several arrow-key stops, and a hover card would fire while the pointer crosses
  * the row on its way somewhere else.
+ *
+ * A {@link Question.Question} also opens on hover: it is not something the task produced but the
+ * reason it is stopped, so it should not need a click to find. `useCardHover`'s grace period
+ * answers the objection above. No tab stop is added — that half of the objection still stands, so
+ * the tag carries no `button` role either: a role promising keyboard activation that a
+ * non-focusable element cannot deliver is worse than none. A question is answered from its card in
+ * the conversation, which is keyboard-operable throughout.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   const tagRef = useRef<HTMLSpanElement>(null);
   const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
+  const question = Obj.instanceOf(Question.Question, artifact);
+  // Keyed on the URI string, not the object: `useCardHover` cancels its timer whenever `open`
+  // changes, and the live query re-identifies the artifact on every tick, so an object dependency
+  // means any re-render inside the hover delay swallows the hover.
+  const uri = Obj.getURI(artifact);
+  const openCard = useCallback(() => {
+    const trigger = tagRef.current;
+    trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: uri, label, kind: 'card' }));
+  }, [uri, label]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, question);
   const handleClick = useCallback(
     (event: MouseEvent<HTMLSpanElement>) => {
       // The row is an option: without this the click selects the task as well as opening the card.
       event.stopPropagation();
-      const trigger = tagRef.current;
-      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: Obj.getURI(artifact), label, kind: 'card' }));
+      openCard();
     },
-    [artifact, label],
+    [openCard],
   );
 
   return (
-    <Tag ref={tagRef} hue='amber' role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Tag
+      ref={tagRef}
+      hue='amber'
+      classNames='cursor-pointer'
+      onClick={handleClick}
+      onPointerEnter={question ? startHover : undefined}
+      onPointerLeave={question ? cancelHover : undefined}
+    >
       {label}
     </Tag>
   );
@@ -947,8 +970,9 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             data-testid='taskList.edit.description'
             // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
             // description left to auto-place would take the cell it vacates and fall into the icon
-            // column — a field one word wide.
-            className={mx('flex min-w-0 -col-end-2', grid ? 'col-start-[title]' : 'col-start-2')}
+            // column — a field one word wide. It runs to the row's end: the toolbar sits on the
+            // title line only.
+            className={mx('flex min-w-0 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
           >
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
@@ -958,7 +982,10 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             <MarkdownEditable
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
-              classNames='text-sm'
+              // A long description scrolls within the field rather than growing the pane past the
+              // list it edits from: eight lines, with the scroller's line-height set to the lines'
+              // (CodeMirror's base theme gives it a smaller one) so `lh` measures a real line.
+              classNames='text-sm [&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
               editing
               multiline
               placeholder={descriptionPlaceholder}

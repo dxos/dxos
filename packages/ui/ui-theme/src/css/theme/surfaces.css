@@ -189,7 +189,7 @@
    * controls (buttons) keep --color-hover-surface.
    */
   --color-hover-surface-subtle: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.02) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.025) c h
   );
 
   /* current (aria-current) */

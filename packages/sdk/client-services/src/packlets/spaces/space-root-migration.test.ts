@@ -12,8 +12,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { fromPublicKey } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-import { type ServiceContext } from '../services/index.ts';
-import { createPeers, performInvitation } from '../testing/index.ts';
+import { type ServiceContext, createPeers, performInvitation } from '../testing/index.ts';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   onTestFinished(async () => {
@@ -55,6 +54,8 @@ class TestEdge {
   }
 
   readonly client: EdgeHttpClient = {
+    // The stack sets the identity on every HTTP client once the identity opens; edge needs none here.
+    setIdentity: () => {},
     recordSpaceRoot: async (_ctx: Context, spaceId: SpaceId, body: { rootDocumentUrl?: string }) => {
       const recorded = this.#roots.get(spaceId);
       if (recorded !== undefined) {
@@ -92,7 +93,7 @@ describe('spaces/space-root-migration', () => {
       const edge = new TestEdge();
       // Every peer gets the SAME client: edge is one writer, not one per device.
       const [a1, a2, b1] = await chain<ServiceContext>([closeAfterTest])(
-        createPeers(3, undefined, { automergeCredentials: true, edgeHttpClient: edge.client }),
+        createPeers(3, undefined, { automergeCredentials: true }, edge.client),
       );
       edge.setMintingHost(a1);
 

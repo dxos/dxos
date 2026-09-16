@@ -3,6 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
@@ -34,10 +35,24 @@ export const getTraceMessagesAtom = (space: Space): Atom.Atom<readonly Trace.Mes
     (atom) => Atom.make((get) => get(get(atom))),
   );
 
+export type UseTraceMessagesOptions = {
+  /** Caps the re-render rate; the feed emits per message, which is far faster than a reader can read. */
+  debounce?: Duration.Duration;
+};
+
 /**
  * Subscribes to the space invocation trace feed.
  */
-export const useTraceMessages = (space?: Space): readonly Trace.Message[] => {
-  const atom = useMemo(() => (space ? getTraceMessagesAtom(space) : atomEmpty), [space]);
+export const useTraceMessages = (
+  space?: Space,
+  { debounce }: UseTraceMessagesOptions = {},
+): readonly Trace.Message[] => {
+  const atom = useMemo(() => {
+    if (!space) {
+      return atomEmpty;
+    }
+    const traces = getTraceMessagesAtom(space);
+    return debounce ? traces.pipe(Atom.debounce(debounce)) : traces;
+  }, [space, debounce]);
   return useAtomValue(atom);
 };

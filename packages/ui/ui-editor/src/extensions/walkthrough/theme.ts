@@ -166,6 +166,28 @@ export const diffBlockTheme = EditorView.theme({
     tabSize: '2',
     color: 'var(--color-base-fg)',
   },
+  '.cm-diff-commentable': { position: 'relative' },
+  // Hangs into the gutter to the left of the code so it never shifts the text it annotates.
+  '.cm-diff-comment': {
+    position: 'absolute',
+    insetInlineStart: '-1.25rem',
+    insetBlockStart: '0.125rem',
+    width: '1.125rem',
+    height: '1.125rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '0.25rem',
+    border: 'none',
+    background: 'var(--color-accent-bg)',
+    color: 'var(--color-accent-fg)',
+    fontSize: '0.875rem',
+    lineHeight: '1',
+    cursor: 'pointer',
+    opacity: '0',
+    transition: 'opacity 100ms ease',
+  },
+  '.cm-diff-commentable:hover .cm-diff-comment, .cm-diff-comment:focus-visible': { opacity: '1' },
   // The split gutter is a rule between the two versions, not a border on every cell.
   '.cm-diff-body[data-layout="split"] .cm-diff-split': {
     borderInlineStart: '1px solid var(--color-separator)',

@@ -34,7 +34,6 @@ import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
-import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
 import {
@@ -79,7 +78,7 @@ export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   /**
    * This peer is allowed to assign positions (global-order) to items appended to the queue.
@@ -143,7 +142,7 @@ export class EchoHost extends Resource {
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexEngine: IndexEngine;
   private readonly _convergenceKeyMerger: ConvergenceKeyMerger;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
 
@@ -1369,11 +1368,11 @@ export type EchoHostLayerOptions = Pick<
  */
 export const EchoHostLayer = (
   options: EchoHostLayerOptions = {},
-): Layer.Layer<EchoHostService, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+): Layer.Layer<EchoHostService, never, SqlClient.SqlClient> =>
   Layer.effect(
     EchoHostService,
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       return new EchoHost({ runtime, ...options });
     }),
   );
