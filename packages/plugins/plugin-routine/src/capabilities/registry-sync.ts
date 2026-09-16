@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { yieldToEventLoop } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { log } from '@dxos/log';
@@ -14,8 +15,6 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 /** Serialization runs at about a millisecond per operation, so a long batch is split to keep the page responsive. */
 const SLICE_MS = 8;
-
-const yieldToHost = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /**
  * Syncs plugin capability contributions into `client.graph.registry`.
@@ -106,7 +105,7 @@ export default Capability.makeModule(
               log.verbose('skipping operation with unserializable schema', { key });
             }
             if (performance.now() - sliceStart > SLICE_MS) {
-              await yieldToHost();
+              await yieldToEventLoop();
               sliceStart = performance.now();
             }
           }
