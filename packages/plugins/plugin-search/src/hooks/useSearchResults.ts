@@ -20,7 +20,6 @@ export const filterObjects = async <T extends Entity.Unknown>(
     return result;
   }
 
-  // Sequential, so yielding splits the matching across turns of the event loop.
   for (const object of objects) {
     if (Obj.instanceOf(Text.Text, object)) {
       continue;

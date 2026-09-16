@@ -29,8 +29,7 @@ import {
   queryTargetsSpacesOrFeeds,
 } from '../query/index.ts';
 
-/** Records hydrated together between checks for a turn of the event loop in {@link IndexQuerySource._mapRecords}. */
-const HYDRATE_CHUNK_SIZE = 64;
+const HYDRATE_RECORDS_PER_YIELD_CHECK = 64;
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -390,7 +389,7 @@ export class IndexQuerySource implements QuerySource {
     const hydratedIntoFeedHandle = new Set<string>();
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null)[] = [];
-    for (const chunk of chunkArray([...records], HYDRATE_CHUNK_SIZE)) {
+    for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
       await yieldOrContinue('smooth');
       processedResults.push(
         ...(await Promise.all(

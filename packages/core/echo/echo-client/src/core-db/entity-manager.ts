@@ -210,7 +210,6 @@ export class EntityManager implements IDatabaseBinding {
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
 
-  /** Links seen on the space root that nothing has asked for yet, loaded a slice at a time. */
   #queuedLinkLoads = new Map<string, NonNullable<SpaceDocumentLinks>[string]>();
   #drainingLinkLoads = false;
 
@@ -1492,8 +1491,6 @@ export class EntityManager implements IDatabaseBinding {
     try {
       // Speculative, so the update that queued these links finishes its own slice first.
       await yieldToEventLoop();
-      // A space root arriving over sync names every object at once, and opening a handle per link is enough work per
-      // link to block input for the lot.
       for (const [objectId, link] of this.#queuedLinkLoads) {
         if (!this._ctx || this._ctx.disposed) {
           break;
