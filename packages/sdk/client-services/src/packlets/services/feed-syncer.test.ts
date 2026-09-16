@@ -46,10 +46,12 @@ const createEdgeConnection = ({
   syncServer,
   serverRuntime,
   messageListeners,
+  sentMessages,
 }: {
   syncServer: SyncServer;
   serverRuntime: ReturnType<typeof createRuntime>;
   messageListeners: Set<(message: RouterMessage) => void>;
+  sentMessages: ProtocolMessage[];
 }): EdgeConnection => {
   const reconnectListeners = new Set<ReconnectListener>();
 
@@ -75,6 +77,11 @@ const createEdgeConnection = ({
     close: async () => {},
     send: async (ctx, routerMessage: RouterMessage) => {
       const decoded = cborDecode(routerMessage.payload!.value) as ProtocolMessage;
+      sentMessages.push(decoded);
+      // `SyncServer` knows only the request/response RPCs; a subscribe would fall through it.
+      if (decoded._tag === 'SubscribeRequest') {
+        return;
+      }
       await syncServer.handleMessage(ctx, decoded).pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
     },
     onMessage: (listener: (message: RouterMessage) => void) => {
@@ -92,10 +99,12 @@ const createFeedSyncHarness = async ({
   spaceId,
   pollingInterval,
   syncNamespaces: namespaces = [syncNamespace],
+  reconcilePollingInterval,
 }: {
   spaceId: SpaceId;
   pollingInterval?: number;
   syncNamespaces?: string[];
+  reconcilePollingInterval?: number;
 }) => {
   const serverRuntime = createRuntime();
   const clientRuntime = createRuntime();
@@ -106,6 +115,7 @@ const createFeedSyncHarness = async ({
   await clientFeedStore.migrate().pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
 
   const messageListeners = new Set<(message: RouterMessage) => void>();
+  const sentMessages: ProtocolMessage[] = [];
   const syncServer = new SyncServer({
     peerId: 'server',
     feedStore: serverFeedStore,
@@ -126,7 +136,19 @@ const createFeedSyncHarness = async ({
       }),
   });
 
-  const edgeClient = createEdgeConnection({ syncServer, serverRuntime, messageListeners });
+  const edgeClient = createEdgeConnection({ syncServer, serverRuntime, messageListeners, sentMessages });
+
+  /** Deliver a server-initiated frame the client did not ask for. */
+  const pushToClient = (message: ProtocolMessage) => {
+    const routerMessage = createBuf(MessageSchema, {
+      source: { identityKey: 'server-identity', peerKey: 'server-peer' },
+      serviceId: `${EdgeService.QUEUE_REPLICATOR}:test`,
+      payload: { value: bufferToArray(encoder.encode(message)) },
+    });
+    for (const listener of messageListeners) {
+      listener(routerMessage);
+    }
+  };
 
   const syncer = new FeedSyncer({
     runtime: clientRuntime.contextEffect,
@@ -136,6 +158,7 @@ const createFeedSyncHarness = async ({
     getSpaceIds: () => [spaceId],
     syncNamespaces: namespaces,
     pollingInterval,
+    reconcilePollingInterval,
   });
 
   const close = async () => {
@@ -146,7 +169,7 @@ const createFeedSyncHarness = async ({
 
   onTestFinished(close);
 
-  return { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer, close };
+  return { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer, close, sentMessages, pushToClient };
 };
 
 describe('FeedSyncer', () => {
@@ -376,5 +399,82 @@ describe('FeedSyncer', () => {
       expect(dataResult.blocks[0].data).toEqual(new Uint8Array([1, 2, 3]));
       expect(traceResult.blocks[0].data).toEqual(new Uint8Array([7, 8, 9]));
     });
+  });
+
+  test('announces a namespace-wide subscription for every synced namespace on open', async () => {
+    const spaceId = SpaceId.random();
+    const { syncer, sentMessages } = await createFeedSyncHarness({
+      spaceId,
+      pollingInterval: 60_000,
+      syncNamespaces,
+    });
+
+    await syncer.open(new Context());
+
+    await vi.waitFor(() => {
+      const subscribes = sentMessages.filter((message) => message._tag === 'SubscribeRequest');
+      expect(subscribes.map((message) => message.feedNamespace).sort()).toEqual([...syncNamespaces].sort());
+      // Empty, because the client cannot enumerate a namespace's feed ids before it has pulled them.
+      expect(subscribes.every((message) => message.feedIds.length === 0)).toBe(true);
+      expect(subscribes.every((message) => message.spaceId === spaceId)).toBe(true);
+    });
+  });
+
+  test('a server hint pulls the named space without waiting for the poll interval', async () => {
+    const spaceId = SpaceId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer, pushToClient } =
+      await createFeedSyncHarness({ spaceId, pollingInterval: 60_000 });
+    const serverFeedId = EntityId.random();
+
+    await syncer.open(new Context());
+
+    // Written after the initial round, so only a hint can bring it across inside the test's lifetime.
+    await serverFeedStore
+      .appendLocal([{ spaceId, feedId: serverFeedId, feedNamespace: syncNamespace, data: new Uint8Array([7, 8, 9]) }])
+      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    {
+      const { blocks } = await clientFeedStore
+        .query({ spaceId, feedNamespace: syncNamespace, position: -1, query: { feedIds: [serverFeedId] } })
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
+      expect(blocks).toHaveLength(0);
+    }
+
+    pushToClient({
+      _tag: 'FeedAdvanced',
+      spaceId,
+      feedNamespace: syncNamespace,
+      position: 1,
+      senderPeerId: 'server',
+      recipientPeerId: 'client',
+    });
+
+    await vi.waitFor(async () => {
+      const { blocks } = await clientFeedStore
+        .query({ spaceId, feedNamespace: syncNamespace, position: -1, query: { feedIds: [serverFeedId] } })
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
+
+      expect(blocks).toHaveLength(1);
+      expect(blocks[0].data).toEqual(new Uint8Array([7, 8, 9]));
+    });
+  });
+
+  test('a hint for an unknown space id is ignored rather than throwing', async () => {
+    const spaceId = SpaceId.random();
+    const { syncer, pushToClient } = await createFeedSyncHarness({ spaceId, pollingInterval: 60_000 });
+
+    await syncer.open(new Context());
+
+    expect(() =>
+      pushToClient({
+        _tag: 'FeedAdvanced',
+        spaceId: 'not-a-space-id',
+        feedNamespace: syncNamespace,
+        position: 1,
+        senderPeerId: 'server',
+        recipientPeerId: 'client',
+      }),
+    ).not.toThrow();
   });
 });
