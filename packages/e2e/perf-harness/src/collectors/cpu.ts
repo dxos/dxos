@@ -4,7 +4,7 @@
 
 import { type Cdp } from '../cdp.ts';
 import { type Attached } from '../cdp.ts';
-import { type ThreadMetrics } from '../types.ts';
+import { type RealmThreadMetrics, type ThreadMetrics } from '../types.ts';
 
 /** CDP reports every duration in seconds; every metric this harness emits is milliseconds. */
 const toMs = (seconds: number | undefined): number => Math.round((seconds ?? 0) * 1000);
@@ -71,6 +71,33 @@ const EMPTY_THREAD: ThreadMetrics = {
  * This is what separates "the database is slow" from "the list re-renders every row": `taskMs` is
  * the envelope, and `scriptMs`/`layoutMs`/`recalcStyleMs` say which part of it moved.
  */
+export const readRealmThreadMetrics = async (targets: Attached[]): Promise<RealmThreadMetrics[]> =>
+  Promise.all(
+    targets.map(async (target) => ({
+      kind: target.kind,
+      name: target.name,
+      ...(await readThreadMetrics(target)),
+    })),
+  );
+
+/**
+ * Per-realm deltas, matched by `kind` and `name`.
+ *
+ * A realm present at only one boundary is reported as its own absolute reading rather than dropped:
+ * a worker a stage CREATED did all its work inside that stage, so the whole counter is the delta.
+ */
+export const diffRealmThreadMetrics = (
+  before: RealmThreadMetrics[],
+  after: RealmThreadMetrics[],
+): RealmThreadMetrics[] => {
+  const key = ({ kind, name }: RealmThreadMetrics): string => `${kind}:${name}`;
+  const byKey = new Map(before.map((entry) => [key(entry), entry]));
+  return after.map((entry) => {
+    const match = byKey.get(key(entry));
+    return { kind: entry.kind, name: entry.name, ...(match ? diffThreadMetrics(match, entry) : entry) };
+  });
+};
+
 export const readThreadMetrics = async (target: Attached): Promise<ThreadMetrics> => {
   const result = await target.cdp.trySend<{ metrics: Array<{ name: string; value: number }> }>(
     'Performance.getMetrics',

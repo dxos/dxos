@@ -5,7 +5,7 @@
 import { type Page } from '@playwright/test';
 
 import { type Attached } from '../cdp.ts';
-import { type ResponsivenessMetrics } from '../types.ts';
+import { type RealmLag, type ResponsivenessMetrics } from '../types.ts';
 
 /**
  * How long a timer may overshoot before the overshoot counts as lag.
@@ -115,6 +115,14 @@ const drainTarget = async (target: Attached): Promise<number[]> => {
   return result?.result?.value ?? [];
 };
 
+const summarizeLag = (kind: RealmLag['kind'], name: string, samples: number[]): RealmLag => ({
+  kind,
+  name,
+  p95Ms: percentile(samples, 0.95),
+  maxMs: Math.round(Math.max(0, ...samples)),
+  count: samples.length,
+});
+
 /**
  * Nearest-rank percentile of a sample set, rounded.
  *
@@ -149,13 +157,22 @@ export const readResponsiveness = async (
   targets: Attached[],
 ): Promise<Omit<ResponsivenessMetrics, 'stillFrameMaxMs' | 'stillFrameCount'>> => {
   const pageSamples = await drainPage(page).catch(() => ({ lag: [], longTasks: [] }));
-  const workerLag = await Promise.all(targets.filter((target) => target.kind !== 'page').map(drainTarget));
+  const workers = targets.filter((target) => target.kind !== 'page');
+  const workerLag = await Promise.all(workers.map(drainTarget));
+
+  // The page is named `page` to match how `heap[]` labels the same realm, so the two arrays join.
+  const lagByRealm: RealmLag[] = [
+    summarizeLag('page', 'page', pageSamples.lag),
+    ...workers.map((target, index) => summarizeLag(target.kind, target.name, workerLag[index])),
+  ];
   const lag = [...pageSamples.lag, ...workerLag.flat()];
+
   return {
     longTaskCount: pageSamples.longTasks.length,
     longTaskMaxMs: Math.round(Math.max(0, ...pageSamples.longTasks.map((task) => task.duration))),
     tbtMs: blockingTime(pageSamples.longTasks),
     lagP95Ms: percentile(lag, 0.95),
     lagMaxMs: Math.round(Math.max(0, ...lag)),
+    lagByRealm,
   };
 };

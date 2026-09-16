@@ -73,6 +73,29 @@ export type ThreadMetrics = {
   recalcStyleCount: number;
 };
 
+/** One realm's `thread` reading, labelled the way `heap[]` labels its own. */
+export type RealmThreadMetrics = ThreadMetrics & {
+  kind: TargetKind;
+  /** The realm's script name, which is how the coordinator worker is told from the observability one. */
+  name: string;
+};
+
+/**
+ * One realm's timer drift.
+ *
+ * Per realm rather than pooled, because a pooled percentile is not attributable: page and worker
+ * samples in one distribution let whichever realm samples most dilute the other, so a wedged
+ * dedicated worker hides behind a calm page.
+ */
+export type RealmLag = {
+  kind: TargetKind;
+  name: string;
+  p95Ms: number;
+  maxMs: number;
+  /** Samples over the floor. Zero means the realm was responsive, not that the probe was missing. */
+  count: number;
+};
+
 /** Bytes split by what the request was for. The code/API split is the point. */
 export type NetworkMetrics = {
   /** Scripts, stylesheets, wasm, fonts, the document itself — the cost of loading the app. */
@@ -95,8 +118,11 @@ export type ResponsivenessMetrics = {
   longTaskCount: number;
   longTaskMaxMs: number;
   tbtMs: number;
+  /** Pooled across realms; kept for continuity, but `lagByRealm` is what attributes a stall. */
   lagP95Ms: number;
   lagMaxMs: number;
+  /** One entry per realm, so a stall is attributable to the page or to a specific worker. */
+  lagByRealm: RealmLag[];
   /** Absent in `measure` mode, which attaches no screencast. */
   stillFrameMaxMs?: number;
   stillFrameCount?: number;
@@ -128,6 +154,14 @@ export type StageRow = {
   cpuMsTotal: number;
   cpuMsByProcess: Record<string, number>;
   thread: ThreadMetrics;
+  /**
+   * The same accounting per realm, so worker cost is separable from the page's.
+   *
+   * `thread` above is the page alone. `cpuMsByProcess` separates a SHARED worker, which gets its
+   * own process, but a dedicated worker runs as a thread inside the renderer process and is
+   * invisible there — this is the only field that attributes it.
+   */
+  threadByRealm: RealmThreadMetrics[];
 
   heap: HeapReading[];
   heapUsedTotalBytes: number;

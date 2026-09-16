@@ -7,6 +7,19 @@ import { describe, test } from 'vitest';
 import { EVENT_NAME, toPosthogEvent } from './report.ts';
 import { type Comparability, type StageRow } from './types.ts';
 
+/** Zeroed so a row fixture states only the fields its assertion is about. */
+const EMPTY_REALM_THREAD = {
+  taskMs: 0,
+  scriptMs: 0,
+  layoutMs: 0,
+  recalcStyleMs: 0,
+  v8CompileMs: 0,
+  threadTimeMs: 0,
+  processTimeMs: 0,
+  layoutCount: 0,
+  recalcStyleCount: 0,
+};
+
 const comparability: Comparability = {
   servingMode: 'preview',
   pluginSet: 'production',
@@ -95,6 +108,10 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
     layoutCount: 12,
     recalcStyleCount: 30,
   },
+  threadByRealm: [
+    { kind: 'page', name: 'page', ...EMPTY_REALM_THREAD },
+    { kind: 'worker', name: 'worker:dedicated.js', ...EMPTY_REALM_THREAD },
+  ],
   heap: [
     { kind: 'page', name: 'page', usedBytes: 50_000_000, totalBytes: 80_000_000 },
     { kind: 'shared_worker', name: 'shared_worker:worker.js', usedBytes: 120_000_000, totalBytes: 160_000_000 },
@@ -105,7 +122,17 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
   domListeners: 3_100,
   domDocuments: 2,
   network: { codeBytes: 1_000, apiBytes: 2_000, otherBytes: 3, requests: 9, apiRequests: 4 },
-  responsiveness: { longTaskCount: 5, longTaskMaxMs: 400, tbtMs: 700, lagP95Ms: 60, lagMaxMs: 812 },
+  responsiveness: {
+    longTaskCount: 5,
+    longTaskMaxMs: 400,
+    tbtMs: 700,
+    lagP95Ms: 60,
+    lagMaxMs: 812,
+    lagByRealm: [
+      { kind: 'page', name: 'page', p95Ms: 40, maxMs: 90, count: 12 },
+      { kind: 'worker', name: 'worker:dedicated.js', p95Ms: 300, maxMs: 812, count: 4 },
+    ],
+  },
   comparability,
   ...overrides,
 });

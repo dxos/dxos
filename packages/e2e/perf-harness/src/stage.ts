@@ -8,8 +8,10 @@ import { type Attached, type Cdp, detachAll, refreshTargets } from './cdp.ts';
 import {
   type ProcessCpu,
   diffProcessCpu,
+  diffRealmThreadMetrics,
   diffThreadMetrics,
   readProcessCpu,
+  readRealmThreadMetrics,
   readThreadMetrics,
 } from './collectors/cpu.ts';
 import { type Screencast } from './collectors/frames.ts';
@@ -17,7 +19,14 @@ import { readDomCounters, readHeap, sumHeapUsed, trackPeakRss } from './collecto
 import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
 import { installWorkerProbe, readResponsiveness } from './collectors/responsiveness.ts';
-import { type Comparability, type Mode, type NetworkMetrics, type StageRow, type ThreadMetrics } from './types.ts';
+import {
+  type Comparability,
+  type Mode,
+  type NetworkMetrics,
+  type RealmThreadMetrics,
+  type StageRow,
+  type ThreadMetrics,
+} from './types.ts';
 
 const EMPTY_THREAD: ThreadMetrics = {
   taskMs: 0,
@@ -58,6 +67,7 @@ type Boundary = {
   at: number;
   cpu: ProcessCpu;
   thread: ThreadMetrics;
+  threadByRealm: RealmThreadMetrics[];
   network: NetworkMetrics;
 };
 
@@ -128,6 +138,7 @@ export class StageRunner {
       at: Date.now(),
       cpu: await readProcessCpu(browserCdp),
       thread: pageTarget ? await readThreadMetrics(pageTarget) : { ...EMPTY_THREAD },
+      threadByRealm: await readRealmThreadMetrics(this.#targets),
       network: network(),
     };
     const stopRss = trackPeakRss(browserPid);
@@ -150,6 +161,10 @@ export class StageRunner {
       ? diffThreadMetrics(before.thread, await readThreadMetrics(pageTarget))
       : { ...EMPTY_THREAD };
     const networkDelta = diffNetwork(before.network, network());
+    // Read before the target refresh below, so a realm is diffed against the same realm set the
+    // opening boundary saw; one that appeared mid-stage is picked up by the refresh and reported
+    // whole, which is correct — it did all its work inside this stage.
+    const threadByRealm = diffRealmThreadMetrics(before.threadByRealm, await readRealmThreadMetrics(this.#targets));
 
     // Refreshed again before the per-realm readings: a stage can BRING a realm into existence —
     // `boot` is where the shared worker running ECHO first appears — and a set captured only at
@@ -181,6 +196,7 @@ export class StageRunner {
       cpuMsTotal: cpu.totalMs,
       cpuMsByProcess: cpu.byProcess,
       thread,
+      threadByRealm,
       heap,
       heapUsedTotalBytes: sumHeapUsed(heap),
       peakRssBytes,
