@@ -36,6 +36,10 @@ test.describe('Tour tests', () => {
   });
 
   test('a document tour picks up steps contributed by other plugins', async () => {
+    // Boots the app twice, once more after the reload; a Firefox reboot alone has taken 18s in CI, so the pair does not
+    // fit the default 60s timeout alongside creating the space and document.
+    test.slow();
+
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
