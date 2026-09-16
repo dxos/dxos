@@ -8,73 +8,73 @@ import { PublicKey } from '@dxos/keys';
 
 import { TestItemBuilder } from './testing/index.ts';
 
-describe('FeedStore', () => {
+describe('HypercoreStore', () => {
   test('creates feeds', async () => {
     const builder = new TestItemBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
 
     const numFeeds = 5;
     const feedKeys = await Promise.all(
       Array.from(Array(numFeeds)).map(async () => {
         const feedKey = PublicKey.random();
-        await feedStore.openFeed(feedKey);
+        await hypercoreStore.openHypercore(feedKey);
         return feedKey;
       }),
     );
 
     {
       for (const feedKey of feedKeys) {
-        const feed = feedStore.getFeed(feedKey)!;
+        const feed = hypercoreStore.getHypercore(feedKey)!;
         expect(feed.key).to.eq(feedKey);
         expect(feed.properties.opened).to.be.true;
         expect(feed.properties.readable).to.be.true;
         expect(feed.properties.writable).to.be.false;
       }
 
-      expect(feedStore.size).to.eq(feedKeys.length);
+      expect(hypercoreStore.size).to.eq(feedKeys.length);
     }
 
     {
-      await feedStore.close();
-      expect(feedStore.size).to.eq(0);
+      await hypercoreStore.close();
+      expect(hypercoreStore.size).to.eq(0);
     }
   });
 
   test('gets an opened feed', async () => {
     const builder = new TestItemBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const feedKey = PublicKey.random();
 
     {
-      const feed = await feedStore.openFeed(feedKey);
+      const feed = await hypercoreStore.openHypercore(feedKey);
       expect(feed.key).to.eq(feedKey);
       expect(feed.properties.writable).to.be.false;
-      expect(feedStore.size).to.eq(1);
+      expect(hypercoreStore.size).to.eq(1);
     }
 
     {
-      const feed = await feedStore.openFeed(feedKey);
+      const feed = await hypercoreStore.openHypercore(feedKey);
       expect(feed.key).to.eq(feedKey);
       expect(feed.properties.writable).to.be.false;
-      expect(feedStore.size).to.eq(1);
+      expect(hypercoreStore.size).to.eq(1);
     }
   });
 
   test('tries to open an existing readable feed as writable', async () => {
     const builder = new TestItemBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const feedKey = PublicKey.random();
 
     {
-      const feed = await feedStore.openFeed(feedKey);
+      const feed = await hypercoreStore.openHypercore(feedKey);
       expect(feed.key).to.eq(feedKey);
       expect(feed.properties.writable).to.be.false;
-      expect(feedStore.size).to.eq(1);
+      expect(hypercoreStore.size).to.eq(1);
     }
 
     // Attempt to reopen as writable (fail).
     {
-      await expect(feedStore.openFeed(feedKey, { writable: true })).rejects.toBeInstanceOf(Error);
+      await expect(hypercoreStore.openHypercore(feedKey, { writable: true })).rejects.toBeInstanceOf(Error);
     }
   });
 });

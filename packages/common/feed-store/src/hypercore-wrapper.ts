@@ -16,12 +16,12 @@ import { type Directory } from '@dxos/random-access-storage';
 import { arrayToBuffer, rangeFromTo } from '@dxos/util';
 import type { GetOptions, Proof } from '@dxos/vendor-hypercore/hypercore';
 
-import { type FeedWriter, type WriteReceipt } from './feed-writer.ts';
+import { type HypercoreWriter, type WriteReceipt } from './hypercore-writer.ts';
 
 /**
  * Async feed wrapper.
  */
-export class FeedWrapper<T extends {}> {
+export class HypercoreWrapper<T extends {}> {
   private _hypercore: Hypercore<T>;
   private readonly _pendingWrites = new Set<StackTrace>();
 
@@ -93,7 +93,10 @@ export class FeedWrapper<T extends {}> {
     return transform;
   }
 
-  createFeedWriter(): FeedWriter<T> {
+  /**
+   * Creates a writer that appends to this hypercore.
+   */
+  createHypercoreWriter(): HypercoreWriter<T> {
     return {
       write: async (data: T, { afterWrite } = {}) => {
         log('write', { feed: this._key, seq: this._hypercore.length });

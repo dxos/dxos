@@ -26,7 +26,7 @@ import {
 } from '@dxos/client-services';
 import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Event as EffectEvent, EffectEx } from '@dxos/effect';
+import { EffectEx, Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
@@ -215,8 +215,8 @@ export class LocalClientServices implements ClientServicesProvider {
   private readonly _ctx = new Context();
   private readonly _params: LocalClientServicesParams;
   /** Outlives the stack: the reset chain runs on it after the stack is gone. */
-  private readonly _bus = EffectEvent.makeBus();
-  private _busScope?: Scope.Closeable;
+  private readonly _controller = Hook.makeController();
+  private _controllerScope?: Scope.Closeable;
   private _runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
   private _stack?: EffectContext.Context<ClientServicesStackContext>;
   signalMetadataTags: any = {
@@ -285,7 +285,7 @@ export class LocalClientServices implements ClientServicesProvider {
       }).pipe(
         Layer.provideMerge(sqliteLayerFromParams(this._params)),
         Layer.provide(Layer.succeed(ConfigService, config)),
-        Layer.provide(Layer.succeed(EffectEvent.Bus, this._bus)),
+        Layer.provide(Layer.succeed(Hook.Controller, this._controller)),
         Layer.orDie,
       ),
     );
@@ -296,27 +296,27 @@ export class LocalClientServices implements ClientServicesProvider {
       await runtime.runPromise(
         EffectEx.withContext(this._ctx)(
           Effect.gen(function* () {
-            yield* EffectEvent.emit(HostEvents.Opening, undefined);
-            yield* EffectEvent.emit(HostEvents.StackOpened, undefined);
+            yield* Hook.emit(HostEvents.Opening, undefined);
+            yield* Hook.emit(HostEvents.StackOpened, undefined);
           }),
         ),
       );
 
       // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
-      this._busScope = Effect.runSync(Scope.make());
+      this._controllerScope = Effect.runSync(Scope.make());
       Effect.runSync(
         Effect.gen({ self: this }, function* () {
-          yield* EffectEvent.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
-          yield* EffectEvent.on(HostEvents.WipingStorage, () =>
+          yield* Hook.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
+          yield* Hook.on(HostEvents.WipingStorage, () =>
             wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
           );
-          yield* EffectEvent.on(HostEvents.Reset, () =>
+          yield* Hook.on(HostEvents.Reset, () =>
             Effect.promise(async () => {
               this.closed.emit(undefined);
               await this._params.callbacks?.onReset?.();
             }),
           );
-        }).pipe(Effect.provideService(EffectEvent.Bus, this._bus), Scope.provide(this._busScope)),
+        }).pipe(Effect.provideService(Hook.Controller, this._controller), Scope.provide(this._controllerScope)),
       );
       const handlers = handlersFromStack(this._stack);
 
@@ -353,9 +353,9 @@ export class LocalClientServices implements ClientServicesProvider {
 
     await this._closeStack();
 
-    if (this._busScope) {
-      await EffectEx.runPromise(Scope.close(this._busScope, Exit.void));
-      this._busScope = undefined;
+    if (this._controllerScope) {
+      await EffectEx.runPromise(Scope.close(this._controllerScope, Exit.void));
+      this._controllerScope = undefined;
     }
     if (this._serviceScope) {
       await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
