@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { afterEach, describe, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { yieldOrContinue } from './yield.ts';
+import { type YieldStrategy, yieldOrContinue } from './yield.ts';
 
-/** Whether a timer queued before the call ran before the call resolved, i.e. whether it yielded. */
-const yielded = async (strategy: Parameters<typeof yieldOrContinue>[0]): Promise<boolean> => {
+/** Whether a timer queued before the call ran before the call resolved, i.e. whether the call yielded. */
+const yielded = async (strategy: YieldStrategy): Promise<boolean> => {
   let ran = false;
   setTimeout(() => {
     ran = true;
@@ -17,16 +17,21 @@ const yielded = async (strategy: Parameters<typeof yieldOrContinue>[0]): Promise
 };
 
 describe('yieldOrContinue', () => {
+  let now = 0;
+
+  beforeEach(async () => {
+    now = 1_000_000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    // Ends any slice an earlier test left open.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   test('continues within the strategy budget and yields once it is spent', async ({ expect }) => {
-    let now = 1_000_000;
-    vi.spyOn(performance, 'now').mockImplementation(() => now);
-    now += 1_000;
-    expect(await yielded('idle')).toBe(true);
-
+    expect(await yielded('idle')).toBe(false);
     now += 4;
     expect(await yielded('idle')).toBe(false);
     now += 2;
@@ -34,16 +39,21 @@ describe('yieldOrContinue', () => {
   });
 
   test('gives each strategy its own budget', async ({ expect }) => {
-    let now = 2_000_000;
-    vi.spyOn(performance, 'now').mockImplementation(() => now);
-    now += 1_000;
-    await yieldOrContinue('idle');
-
+    expect(await yielded('smooth')).toBe(false);
     now += 10;
     expect(await yielded('smooth')).toBe(false);
     expect(await yielded('idle')).toBe(true);
+
+    expect(await yielded('interactive')).toBe(false);
     now += 50;
     expect(await yielded('interactive')).toBe(false);
     expect(await yielded('smooth')).toBe(true);
+  });
+
+  test('does not count time the event loop spent idle', async ({ expect }) => {
+    expect(await yielded('idle')).toBe(false);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    now += 1_000;
+    expect(await yielded('idle')).toBe(false);
   });
 });
