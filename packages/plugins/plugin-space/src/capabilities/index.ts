@@ -55,13 +55,10 @@ export const IdentityCreated = Capability.lazyModule(
 );
 export { NavigationHandler } from './navigation-handler/index.ts';
 export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
-// Excluded from the workerd barrel: a worker host has no navigation and cannot provide `Client`,
-// so this would fail the dependency graph rather than be skipped. Node keeps it — the composer
-// test harness runs there and does provide the app-shell capabilities.
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
-    environments: ['node'],
+    environments: [],
     requires: [ClientCapabilities.Client],
   },
 );

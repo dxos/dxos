@@ -56,13 +56,10 @@ export const AutomationTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates.ts'),
 );
-// Excluded from the workerd barrel: a worker host has no navigation and cannot provide `Client`,
-// so this would fail the dependency graph rather than be skipped. Node keeps it — the composer
-// test harness runs there and does provide the app-shell capabilities.
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
-    environments: ['node'],
+    environments: [],
     requires: [ClientCapabilities.Client],
   },
 );
