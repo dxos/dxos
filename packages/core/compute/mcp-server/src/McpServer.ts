@@ -431,7 +431,9 @@ export const invoke = (
 
       // Nothing to qualify against when the call named no space: a space-less result carries no
       // same-space references.
-      const result = resolvedSpaceId === undefined ? output : spaceInternal.qualifyRefs(output, resolvedSpaceId);
+      const qualified = resolvedSpaceId === undefined ? output : spaceInternal.qualifyRefs(output, resolvedSpaceId);
+      // Structured content must be JSON: a void output becomes `{}` and `undefined` values are dropped.
+      const result: unknown = qualified === undefined ? {} : JSON.parse(JSON.stringify(qualified));
       return result !== null && typeof result === 'object' && !Array.isArray(result)
         ? (result as Record<string, unknown>)
         : { output: result };

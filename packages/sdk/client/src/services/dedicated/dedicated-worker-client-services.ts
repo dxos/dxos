@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ClientServices, type ClientServicesProvider, Rpc, serveBridgeService } from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, Rpc, serveRtcService } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -32,7 +32,7 @@ export interface DedicatedWorkerClientServicesOptions {
 export class DedicatedWorkerClientServices extends Resource implements ClientServicesProvider {
   readonly #connection: Client.Connection;
   #services: ClientServicesProxy | undefined;
-  #bridgeServer: Rpc.GroupServer | undefined;
+  #rtcServer: Rpc.GroupServer | undefined;
 
   constructor(options: DedicatedWorkerClientServicesOptions) {
     super();
@@ -46,17 +46,16 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       onConnect: async ({ clientToWorker, workerToClient }) => {
         const config = options.config ?? new Config();
 
-        // Serve the tab's WebRTC BridgeService (RtcTransportService) to the worker over the
-        // worker→client port. Imported lazily so the RTC stack is only pulled in when a worker
-        // connection opens.
-        const { RtcTransportService, createIceProvider } = await import('@dxos/network-manager');
+        // Serve the tab's WebRTC RTCService to the worker over the worker→client port. Imported
+        // lazily so the RTC stack is only pulled in when a worker connection opens.
+        const { RtcService, createIceProvider } = await import('@dxos/network-manager');
         const iceProviders = config.get('runtime.services.iceProviders');
-        const transportService = new RtcTransportService(
+        const rtcService = new RtcService(
           { iceServers: [...(config.get('runtime.services.ice') ?? [])] },
           iceProviders ? createIceProvider(iceProviders) : undefined,
         );
-        this.#bridgeServer = serveBridgeService(workerToClient, transportService);
-        await this.#bridgeServer.open();
+        this.#rtcServer = serveRtcService(workerToClient, rtcService);
+        await this.#rtcServer.open();
 
         // Client services over the client→worker port. The framework's session lock tells the worker
         // when this tab goes away.
@@ -66,9 +65,9 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         return {
           close: async () => {
             await this.#services?.close();
-            await this.#bridgeServer?.close();
+            await this.#rtcServer?.close();
             this.#services = undefined;
-            this.#bridgeServer = undefined;
+            this.#rtcServer = undefined;
           },
         };
       },

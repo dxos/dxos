@@ -204,8 +204,8 @@ export const MediaArtifactForm = ({
 
   // Undo-aware removal (trashes the object, removing it from any collection + closing its plank).
   const handleDelete = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] });
-  }, [invokePromise, artifact]);
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [artifact] }, { spaceId: db?.spaceId });
+  }, [invokePromise, artifact, db]);
 
   const busy = generating || running || pendingIndex >= 0;
   // Generation is enabled only when the draft satisfies the provider's request schema (required

@@ -64,6 +64,9 @@ const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.make,
 );
 
+/** The document embedded inside the story's own document; the story renders the other one. */
+const EMBEDDED_NOTES = 'Embedded notes';
+
 type StoryArgs = {
   title: string;
   content: string;
@@ -73,7 +76,8 @@ type StoryArgs = {
 const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
   const [space] = useSpaces();
-  const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
+  const docs = useQuery(space?.db, Query.type(Markdown.Document));
+  const doc = docs.find((candidate) => candidate.name !== EMBEDDED_NOTES);
   const id = doc && Obj.getURI(doc);
   const data = useMemo(() => ({ subject: doc, attendableId: id ?? 'story' }), [doc, id]);
   const attentionAttrs = useAttentionAttributes(id);
@@ -136,6 +140,13 @@ const meta = {
                   Drawing.make({
                     name: 'Test Sketch',
                     canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: SKETCH_CONTENT }),
+                  }),
+                  // A document embeds as a section preview, whose content outgrows the resize box.
+                  Markdown.make({
+                    name: EMBEDDED_NOTES,
+                    content: Array.from({ length: 40 }, (_, line) => `Line ${line + 1} of the embedded notes.`).join(
+                      '\n\n',
+                    ),
                   }),
                 );
 

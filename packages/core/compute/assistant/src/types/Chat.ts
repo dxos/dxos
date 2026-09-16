@@ -281,7 +281,8 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
 /**
  * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order, each followed by an indented
  * note line carrying the task's ref and any status/dependency notes — appended to the title, models
- * paste the notes back into it.
+ * paste the notes back into it. The ref renders as `[MNEMONIC](uri)` so the mnemonic the user reads
+ * and the handle the tools take travel together and get pasted back verbatim.
  */
 const formatTasks = (tasks: readonly Task.Task[]): string => {
   const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
@@ -289,7 +290,7 @@ const formatTasks = (tasks: readonly Task.Task[]): string => {
     .map((task, index) => {
       const line = `${index + 1}. [${task.status === 'done' ? 'x' : ' '}] ${task.title}`;
       // The ref is the handle update-tasks takes, so every line carries one the model can pass back.
-      const notes: string[] = [`ref: ${Obj.getURI(task)}`];
+      const notes: string[] = [`ref: [${Obj.getMnemonic(task)}](${Obj.getURI(task)})`];
       if (task.status && task.status !== 'todo' && task.status !== 'done') {
         notes.push(task.status);
       }
