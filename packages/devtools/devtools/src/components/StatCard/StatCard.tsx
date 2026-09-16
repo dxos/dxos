@@ -83,6 +83,8 @@ type StatCardRowProps = PropsWithChildren<
     /** Leading gutter icon; the gutter is kept even when empty so labels align across rows. */
     icon?: string;
     iconClassNames?: string;
+    /** Leading gutter control (a switch); takes the gutter over `icon` and the disclosure toggle. */
+    control?: ReactNode;
     /** A disclosure row: the leading gutter holds the toggle instead of an icon. */
     open?: boolean;
     onToggle?: (open: boolean) => void;
@@ -100,14 +102,15 @@ type StatCardRowProps = PropsWithChildren<
 >;
 
 /**
- * A label/value row: icon or disclosure toggle in the leading gutter, a unit or control in the
- * trailing one. With nothing trailing, the content runs through the trailing gutter. `children`
+ * A label/value row: icon, disclosure toggle or control in the leading gutter, a unit or control in
+ * the trailing one. With nothing trailing, the content runs through the trailing gutter. `children`
  * replace the label/value pair for rows that need their own columns (a `Grid`).
  */
 const StatCardRow = ({
   classNames,
   icon,
   iconClassNames,
+  control,
   open,
   onToggle,
   label,
@@ -122,18 +125,19 @@ const StatCardRow = ({
   return (
     <Card.Row classNames={classNames}>
       <Card.Block compact>
-        {onToggle ? (
-          <IconButton
-            variant='ghost'
-            icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-            iconOnly
-            density='sm'
-            label={open ? 'Collapse' : 'Expand'}
-            onClick={() => onToggle(!open)}
-          />
-        ) : (
-          icon && <Icon icon={icon} classNames={iconClassNames} />
-        )}
+        {control ??
+          (onToggle ? (
+            <IconButton
+              variant='ghost'
+              icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+              iconOnly
+              density='sm'
+              label={open ? 'Collapse' : 'Expand'}
+              onClick={() => onToggle(!open)}
+            />
+          ) : (
+            icon && <Icon icon={icon} classNames={iconClassNames} />
+          ))}
       </Card.Block>
       <Flex
         align='center'

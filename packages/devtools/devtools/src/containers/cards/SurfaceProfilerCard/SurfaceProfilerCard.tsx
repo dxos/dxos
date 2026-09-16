@@ -100,19 +100,12 @@ export const SurfaceProfilerCard = ({ stats = [], debug, onDebugChange, onClear 
         icon='ph--frame-corners--regular'
         hue={STAT_CARD_HUES.ui}
         title='Surfaces'
-        info={stats.length.toLocaleString()}
         action={
           onClear && (
             <IconButton iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
           )
         }
       />
-      {onDebugChange && (
-        <StatCard.Row
-          label='Highlight surfaces'
-          action={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
-        />
-      )}
       {groups.length === 0 && <StatCard.Row label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
@@ -145,6 +138,12 @@ export const SurfaceProfilerCard = ({ stats = [], debug, onDebugChange, onClear 
           </Grid>
         </StatCard.Row>
       ))}
+      {onDebugChange && (
+        <StatCard.Row
+          label='Highlight surfaces'
+          control={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
+        />
+      )}
     </StatCard.Root>
   );
 };
