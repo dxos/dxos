@@ -10,12 +10,14 @@ export type AccordionStyleProps = {
   hover?: boolean;
 };
 
+const root = () => mx('flex flex-col w-full rounded-md border-y border-separator divide-y divide-subdued-separator');
+
 // No `overflow-hidden` here: the body does its own clipping for the slide, and clipping at the item
 // would cut the top and bottom edges off the trigger's inset focus ring. The end items instead carry
 // the frame's own rounding, which the header and trigger inherit so a focus ring at either end
 // follows the corner rather than cutting across it.
 const item: ComponentFunction<AccordionStyleProps> = (_props, ...etc) =>
-  mx('first:rounded-t-md last:rounded-b-md', ...etc);
+  mx('first:rounded-t-md last:rounded-b-md border-x border-separator', ...etc);
 
 const header: ComponentFunction<AccordionStyleProps> = (_props, ...etc) =>
   mx('flex items-start rounded-[inherit]', ...etc);
@@ -24,6 +26,8 @@ const header: ComponentFunction<AccordionStyleProps> = (_props, ...etc) =>
 const trigger: ComponentFunction<AccordionStyleProps> = ({ hover }, ...etc) =>
   mx(
     'group flex items-start justify-between gap-trim-sm p-trim-sm dx-focus-ring-inset w-full text-start rounded-[inherit]',
+    // A disabled item is a plain row: no pointer affordance and no hover lift.
+    'data-[disabled]:cursor-default data-[disabled]:hover:bg-transparent!',
     hover && 'dx-hover',
     ...etc,
   );
@@ -45,6 +49,7 @@ const body: ComponentFunction<AccordionStyleProps> = (_props, ...etc) =>
 const bodyContent: ComponentFunction<AccordionStyleProps> = (_props, ...etc) => mx('p-trim-sm', ...etc);
 
 export const accordionTheme = {
+  root,
   item,
   header,
   trigger,

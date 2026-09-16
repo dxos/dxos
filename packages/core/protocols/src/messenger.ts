@@ -9,13 +9,24 @@ import { type CleanupFn } from '@dxos/async';
 import { type GossipMessage } from './buf/proto/gen/dxos/mesh/teleport/gossip_pb.ts';
 
 /**
+ * Registered channel listener; calling it unsubscribes.
+ */
+export type ListenHandle = CleanupFn & {
+  /**
+   * Resolves once the listener is registered, since a message posted before then can be dropped.
+   * Rejects if the subscription ends first.
+   */
+  readonly ready: Promise<void>;
+};
+
+/**
  * Message passing abstraction.
  */
 export interface Messenger {
   /**
    * Register channel listener.
    */
-  listen(channel: string, callback: (message: GossipMessage) => void): CleanupFn;
+  listen(channel: string, callback: (message: GossipMessage) => void): ListenHandle;
 
   /**
    * Send message to channel.

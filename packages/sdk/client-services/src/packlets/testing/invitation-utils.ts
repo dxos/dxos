@@ -15,7 +15,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { ClientServicesHost, type ServiceContext } from '../services/index.ts';
+import { ServiceContext } from './test-builder.ts';
 
 /**
  * Strip secrets from invitation before giving it to the peer.
@@ -236,7 +236,7 @@ export const createInvitation = async (
     ...(options ?? {}),
   };
 
-  if (host instanceof ClientServicesHost) {
+  if (host instanceof ServiceContext) {
     return host.invitationsManager.createInvitation(new Context(), {
       kind: Invitation_Kind.SPACE,
       ...options,
@@ -253,7 +253,7 @@ export const acceptInvitation = (
 ): AuthenticatingInvitation => {
   invitation = sanitizeInvitation(invitation);
 
-  if (guest instanceof ClientServicesHost) {
+  if (guest instanceof ServiceContext) {
     return guest.invitationsManager.acceptInvitation(new Context(), {
       invitation,
       deviceProfile: guestDeviceProfile,

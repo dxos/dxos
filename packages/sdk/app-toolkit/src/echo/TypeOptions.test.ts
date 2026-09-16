@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import * as TypeOptions from './TypeOptions.ts';
@@ -14,7 +13,7 @@ import * as TypeOptions from './TypeOptions.ts';
 const UserType = Type.makeObject(DXN.make('com.example.type.user', '0.1.0'))(Schema.Struct({ name: Schema.String }));
 
 const HiddenType = Type.makeObject(DXN.make('com.example.type.hidden', '0.1.0'))(
-  Schema.Struct({ name: Schema.String }).pipe(HiddenAnnotation.set(true)),
+  Schema.Struct({ name: Schema.String }).pipe(Annotation.HiddenAnnotation.set(true)),
 );
 
 const Relation = Type.makeRelation(DXN.make('com.example.type.relation', '0.1.0'))({

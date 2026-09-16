@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
@@ -35,7 +36,7 @@ const DefaultStory = ({ settings }: StoryArgs) => {
 const meta = {
   title: 'plugins/plugin-excalidraw/containers/ExcalidrawSettings',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',

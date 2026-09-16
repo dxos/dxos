@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type FeedWriter } from '@dxos/feed-store';
+import { type HypercoreWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
@@ -11,8 +11,8 @@ import { type MaybePromise } from '@dxos/util';
  */
 export const createMappedFeedWriter = <Source extends {}, Target extends {}>(
   mapper: (arg: Source) => MaybePromise<Target>,
-  writer: FeedWriter<Target>,
-): FeedWriter<Source> => {
+  writer: HypercoreWriter<Target>,
+): HypercoreWriter<Source> => {
   invariant(mapper);
   invariant(writer);
 

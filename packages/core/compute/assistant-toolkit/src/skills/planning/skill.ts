@@ -8,7 +8,7 @@ import * as Template from '@dxos/compute/Template';
 import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { PlanReminder, UpdateTasks } from './operations/definitions.ts';
+import { AskQuestion, PlanReminder, UpdateTasks } from './operations/definitions.ts';
 
 const SKILL_KEY = 'org.dxos.skill.planning';
 
@@ -18,7 +18,7 @@ const make = () =>
     name: 'Planning',
     description: 'Plans and tracks complex tasks using artifacts.',
     agentCanEnable: true,
-    tools: Skill.toolDefinitions({ operations: [UpdateTasks] }),
+    tools: Skill.toolDefinitions({ operations: [UpdateTasks, AskQuestion] }),
     instructions: Template.make({
       source: trim`
         {{! Planning }}

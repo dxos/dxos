@@ -71,6 +71,11 @@
       "types": "./dist/types/src/app-graph/AppNodeMatcher.d.ts",
       "import": "./dist/lib/app-graph/AppNodeMatcher.mjs"
     },
+    "./AppSettings": {
+      "source": "./src/types/AppSettings.ts",
+      "types": "./dist/types/src/types/AppSettings.d.ts",
+      "import": "./dist/lib/types/AppSettings.mjs"
+    },
     "./AppSpace": {
       "source": "./src/echo/AppSpace.ts",
       "types": "./dist/types/src/echo/AppSpace.d.ts",
@@ -196,6 +201,11 @@
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
+    },
+    "./Tour": {
+      "source": "./src/app-framework/Tour.ts",
+      "types": "./dist/types/src/app-framework/Tour.d.ts",
+      "import": "./dist/lib/app-framework/Tour.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

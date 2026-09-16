@@ -23,6 +23,10 @@ const atomEmpty = Atom.make(() => [] as const as readonly Process.Info[]);
 /** How often `now` advances while a session is open, so a running lane's range keeps growing. */
 const TICK_MS = 5_000;
 
+// The trace feed emits continuously while anything runs, and every emission rebuilds the whole
+// timeline from the full message history — so the rebuild rate is capped rather than the feed's.
+const TRACE_DEBOUNCE = Duration.millis(500);
+
 export type UseSessionTimelineOptions = {
   /** The chats whose sessions are shown; each contributes a session lane and its checklist's task lanes. */
   chats: readonly Chat.Chat[];
@@ -37,7 +41,7 @@ export const useSessionTimeline = (
   space: Space | undefined,
   { chats, tasks }: UseSessionTimelineOptions,
 ): SessionTimeline => {
-  const traceMessages = useTraceMessages(space);
+  const traceMessages = useTraceMessages(space, { debounce: TRACE_DEBOUNCE });
   const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),

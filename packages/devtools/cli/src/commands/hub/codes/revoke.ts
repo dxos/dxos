@@ -12,7 +12,7 @@ import { formatHubError, hubApiRequest } from '../util.ts';
 export const revoke = Command.make(
   'revoke',
   {
-    code: Args.string('code').pipe(Args.withDescription('Invitation code to revoke.')),
+    code: Args.String('code').pipe(Args.withDescription('Invitation code to revoke.')),
   },
   Effect.fn(function* ({ code }) {
     yield* hubApiRequest<{ revoked: boolean }>('DELETE', `/api/code/${code}`).pipe(

@@ -4,11 +4,14 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 import { Frame, Lightbox, MediaArtifact, Storyboard, Variant } from '#types';
 
 export const translations = [
+  // The request form's own strings (ref pickers, comboboxes) render inside the studio's articles.
+  ...formTranslations,
   {
     'en-US': {
       [Type.getTypename(MediaArtifact.MediaArtifact)]: {
@@ -81,8 +84,9 @@ export const translations = [
         'frame-companion.label': 'Frame',
         'frame-empty.message': 'No artifact yet.',
         'add-frame-artifact.label': 'Add artifact',
-        'storyboard-empty.message': 'No frames yet — append one from the toolbar.',
+        'storyboard-empty.message': 'No frames',
         'play.label': 'Play',
+        'upload-file.label': 'Upload file',
         'stop.label': 'Back to frames',
         'previous-frame.label': 'Previous frame',
         'next-frame.label': 'Next frame',

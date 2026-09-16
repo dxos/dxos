@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Format, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
@@ -14,15 +14,9 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { HIGGSFIELD_CONNECTOR_ID, HIGGSFIELD_SOURCE } from '../constants.ts';
 import { joinCredential } from '../services/higgsfield-credential.ts';
 
-const HiggsfieldCredentialForm = Schema.Struct({
-  keyId: Schema.String.annotate({
-    title: 'API key ID',
-    description: 'The key ID from https://cloud.higgsfield.ai (API keys).',
-  }),
-  keySecret: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
-    title: 'API key secret',
-    description: 'The secret issued with the key ID.',
-  }),
+const HiggsfieldCredentialForm = ConnectorSpec.KeyPairForm({
+  keyId: { title: 'API key ID', description: 'The key ID from https://cloud.higgsfield.ai (API keys).' },
+  keySecret: { title: 'API key secret', description: 'The secret issued with the key ID.' },
 });
 type HiggsfieldCredentialFormValues = Schema.Schema.Type<typeof HiggsfieldCredentialForm>;
 
