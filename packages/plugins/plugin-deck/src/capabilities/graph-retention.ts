@@ -6,28 +6,32 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { DeckCapabilities } from '#types';
 
-import { DEFAULT_LOADED_WORKSPACES, evictableWorkspaces } from '../util';
+import { evictableWorkspaces } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
-    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
-    const settingsAtom = yield* DeckCapabilities.Settings;
+    const stateAtom = yield* DeckCapabilities.State;
+    const layoutAtom = yield* AppCapabilities.Layout;
+    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
 
     const retention: AppGraphBuilder.Retention = {
-      // Read straight from the deck's own atoms: the visit order, the exemptions and the limit all
-      // already live here, so the builder holds no second copy of any of it. Called once per settled
-      // flush, so this stays two synchronous reads and a slice.
-      evictable: () =>
-        evictableWorkspaces(
-          registry.get(ephemeralAtom).recentWorkspaces,
-          registry.get(settingsAtom).loadedWorkspaces ?? DEFAULT_LOADED_WORKSPACES,
-        ),
+      evictable: () => {
+        const { activeDeck, previousDeck } = registry.get(stateAtom);
+        return evictableWorkspaces({
+          rootChildren: AppGraph.getConnections(graph, GraphNode.RootId, 'child').map(({ id }) => id),
+          activeDeck,
+          previousDeck,
+          active: registry.get(layoutAtom).active,
+        });
+      },
     };
 
     return Capability.contribute(AppCapabilities.AppGraphRetention, retention);

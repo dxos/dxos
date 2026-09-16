@@ -131,31 +131,13 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
    * unloading a subgraph it expects to rebuild from source.
    */
   release?(ids: readonly string[]): void;
-  /**
-   * Ids reachable from `root` that nothing outside the set holds, if the store can answer. Paired
-   * with {@link Store.release}: a store that cannot enumerate a subgraph cannot be asked to unload
-   * one, and {@link collect} does nothing without both.
-   */
-  subgraph?(root: string, relation?: string | readonly string[]): readonly string[];
+  /** Ids below `roots` that nothing outside them holds; retention needs this alongside {@link Store.release}. */
+  subgraph?(roots: Iterable<string>): readonly string[];
 }
 
-/**
- * Which subgraphs the builder may unload.
- *
- * The builder owns the mechanism — collect the subgraph, tear down the expansion state that would
- * otherwise keep it from re-expanding, hand the ids to the store — and has no view of what a
- * releasable unit is. The implementor owns that, and answers from state it already keeps: nothing
- * here is stored on the builder, so there is one copy of the answer and it lives with whatever knows
- * it. Install it with {@link setRetention}; without one the builder releases nothing.
- */
+/** Names the subgraphs the builder may unload; the implementor answers from state it already keeps. */
 export interface Retention {
-  /**
-   * Roots whose subgraphs should be unloaded, if any. The roots themselves are kept, so the node a
-   * caller returns to is still there to expand.
-   *
-   * A query, not a command: the builder does the releasing. Asked once per settled flush, so
-   * answering with nothing must be cheap.
-   */
+  /** Roots whose subgraphs may be unloaded, asked after every flush; the roots themselves stay. */
   evictable(): Iterable<string>;
 }
 
@@ -246,7 +228,6 @@ export type TypeId = typeof TypeId;
  */
 // TODO(wittjosiah): Add api for setting subscription set and/or radius.
 //   Should unsubscribe from nodes that are not in the set/radius.
-//   The LRU half of this is now {@link Retention}, which leaves the policy to the implementor.
 export class GraphBuilder<
   Node extends NodeLike = NodeLike,
   Arg extends NodeArgLike = NodeArgLike,
@@ -281,6 +262,8 @@ export class GraphBuilder<
   _flushScheduled = false;
   /** The installed retention port, if any; see {@link setRetention}. */
   _retention?: Retention;
+  /** The roots the last collection released. */
+  _evicted: ReadonlySet<string> = new Set();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
   /** Registered extensions keyed by extension ID. */
@@ -408,31 +391,35 @@ export class GraphBuilder<
           this._store.batch ? this._store.batch(apply) : apply();
         }
 
-        // Once the queue has drained: the graph has just settled, which is the only point at which
-        // the retention port's answer is worth asking for.
         this._collect();
       });
     }
   }
 
-  /** {@link collect}. */
+  /**
+   * Releases below the port's roots when its answer changes, so a root something expands again under
+   * the same answer stays loaded instead of being rebuilt and dropped on every flush.
+   */
   _collect(): string[] {
-    // Bound up front: the calls in the loop below cost the narrowing on the optional method.
-    const collectSubgraph = this._store.subgraph?.bind(this._store);
-    if (!this._retention || !collectSubgraph || !this._store.release) {
+    const store = this._store;
+    if (!this._retention || !store.subgraph || !store.release) {
       return [];
     }
 
-    const released: string[] = [];
-    for (const root of this._retention.evictable()) {
-      const ids = collectSubgraph(root);
-      if (ids.length > 0) {
-        release(this, ids);
-        released.push(...ids);
-      }
+    // Everything hangs below the graph root, so it is never a releasable unit.
+    const roots = new Set([...this._retention.evictable()].filter((id) => id !== GraphNode.RootId));
+    const previous = this._evicted;
+    if (roots.size === previous.size && [...roots].every((id) => previous.has(id))) {
+      return [];
     }
 
-    return released;
+    this._evicted = roots;
+    const ids = store.subgraph(roots);
+    if (ids.length > 0) {
+      release(this, ids);
+    }
+
+    return [...ids];
   }
 
   /**
@@ -734,7 +721,7 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     constructNode: ({ nodes: _, ...node }) => Option.some(node),
     batch: (fn) => model.batch(fn),
     release: (ids) => model.release(ids),
-    subgraph: (root, relation) => model.subgraph(root, relation),
+    subgraph: (roots) => model.subgraph(roots),
   };
 };
 
@@ -817,24 +804,11 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   builder._store.release?.(ids);
 };
 
-/**
- * Installs the retention port; `undefined` turns releasing back off.
- *
- * A setter rather than a constructor option because the builder is typically constructed before
- * whatever knows the policy exists.
- */
+/** Installs the retention port, or removes it with `undefined`; the builder usually predates the policy. */
 export const setRetention = (builder: Any, retention: Retention | undefined): void => {
   builder._retention = retention;
+  builder._evicted = new Set();
 };
-
-/**
- * Unloads the subgraphs the retention port nominates, and reports what left.
- *
- * Runs itself at the end of each settled flush; exported so a caller can force a pass, which is
- * mostly what tests want. A no-op without a port, or against a store that cannot enumerate or
- * release a subgraph.
- */
-export const collect = (builder: Any): string[] => builder._collect();
 
 /**
  * Release every expansion subscription the builder holds.

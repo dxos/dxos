@@ -56,8 +56,7 @@ export default Capability.makeModule(
       { immediate: true },
     );
 
-    // Retention is contributed by whichever plugin knows what a releasable unit is, which loads
-    // after this one; without a port the builder never releases anything.
+    // Contributed by a plugin that loads after this one.
     const retentionAtom = yield* Capability.atom(AppCapabilities.AppGraphRetention);
     const unsubscribeRetention = registry.subscribe(
       retentionAtom,

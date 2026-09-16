@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -20,7 +22,8 @@ import { openableChildren } from '../util/index.ts';
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+      const builder = yield* Capability.get(AppCapabilities.AppGraph);
+      const { graph } = builder;
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
@@ -35,8 +38,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const { open } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
       const remembered = open[input.subject]?.active ?? [];
 
-      const seeded =
-        remembered.length === 0 && platform !== 'mobile' ? openableChildren(graph, input.subject).slice(0, 1) : [];
+      const seeds = remembered.length === 0 && platform !== 'mobile';
+      if (seeds) {
+        // An unloaded workspace has no children until its expansion flushes.
+        AppGraph.expandSync(graph, input.subject, 'child');
+        yield* Effect.promise(() => AppGraphBuilder.flush(builder));
+      }
+      const seeded = seeds ? openableChildren(graph, input.subject).slice(0, 1) : [];
       const active = remembered.length > 0 ? remembered : seeded;
 
       const workspace = GraphPath.getWorkspaceToken(input.subject);

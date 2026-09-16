@@ -4,20 +4,18 @@
 '@dxos/app-toolkit': minor
 '@dxos/plugin-graph': patch
 '@dxos/plugin-deck': minor
+'@dxos/plugin-navtree': patch
 ---
 
 Unload the graph of workspaces you are not looking at.
 
-Until now every node the session ever materialized stayed in the graph: its slot, its indexes, its
-provenance and a mounted atom apiece. A session that visited ten workspaces held all ten, none of it
-reachable from anything on screen.
+Every node a session materialized stayed in the graph, with its slot, indexes, provenance and a
+mounted atom, so a session that visited ten workspaces held all ten.
 
-`GraphBuilder` gains a `Retention` port beside `Store`. It asks one question, once per settled
-flush: which subgraph roots may be unloaded. The builder owns the mechanism and the cadence and
-stores no policy state of its own, so an implementor answers from state it already keeps.
-`GraphModel.subgraph` collects what is safe to release, which is narrower than plain reachability:
-a node an outside parent also holds stays, along with everything reachable only through it.
+`GraphBuilder` has a `Retention` port beside `Store`. After each flush it asks which roots may be
+unloaded, and when the answer changes it releases what `GraphModel.subgraph` finds below them: the
+nodes nothing outside those roots still points at. The graph root is never released.
 
-plugin-deck implements the port as an LRU over workspace roots, keeping the two most recent
-(`loadedWorkspaces`). Pinned workspaces are exempt. Unloading is not deletion: revisiting a workspace
-rebuilds it from its connectors.
+plugin-deck answers with every space workspace except the active one, the previous one, and any
+workspace a plank on screen belongs to. Revisiting a workspace rebuilds it from its connectors, and
+the nav tree re-expands the items that were open in it.

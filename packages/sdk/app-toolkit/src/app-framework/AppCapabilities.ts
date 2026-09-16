@@ -162,11 +162,7 @@ export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
   'org.dxos.app-framework.capability.appGraphBuilder',
 );
 
-/**
- * Which subgraphs the builder may unload. Contributed by whichever plugin knows what a releasable
- * unit is; the builder holds no policy state of its own, so the implementor answers from state it
- * already keeps. Without one the graph grows with everything the session has ever visited.
- */
+/** Which subgraphs the graph may unload, contributed by the plugin that knows what a releasable unit is. */
 export type AppGraphRetention = AppGraphBuilder$.Retention;
 
 /**

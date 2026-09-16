@@ -127,31 +127,45 @@ export default Capability.makeModule(
       queueMicrotask(handleUpdate);
     });
 
-    // Once graph is ready, expand every node marked open in state so the graph has children loaded for rendering.
+    // Expand the nodes marked open in state so the graph has children loaded for rendering: all of them
+    // once the graph is ready, then a workspace's again whenever it becomes current, since the graph may
+    // have unloaded it in between.
+    let unsubscribeWorkspace: (() => void) | undefined;
     yield* Effect.gen(function* () {
       const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
-
-      // Always expand the active workspace so its subtree is initialized.
-      const layout = registry.get(layoutAtom);
-      if (layout.workspace) {
-        AppGraph.expandSync(graph, layout.workspace, 'child');
-      }
-
-      // Expand persisted open nodes, skipping inactive workspace tabs.
-      const openPaths = Array.from(backingState.entries())
-        .filter(([, state]) => state.open)
-        .map(([pathString]) => Path.parts(pathString))
-        .filter((path) => !isTopLevelPath(path));
-      for (const path of openPaths) {
-        const nodeId = path[path.length - 1];
-        if (!nodeId) {
-          continue;
+      const expandOpen = (workspace: string | undefined, all: boolean) => {
+        if (workspace) {
+          AppGraph.expandSync(graph, workspace, 'child');
         }
-        AppGraph.expandSync(graph, nodeId, 'child');
-      }
+
+        const openPaths = Array.from(backingState.entries())
+          .filter(([, state]) => state.open)
+          .map(([pathString]) => Path.parts(pathString))
+          .filter((path) => !isTopLevelPath(path));
+        for (const path of openPaths) {
+          const nodeId = path[path.length - 1];
+          if (nodeId && (all || (workspace !== undefined && nodeId.startsWith(`${workspace}/`)))) {
+            AppGraph.expandSync(graph, nodeId, 'child');
+          }
+        }
+      };
+
+      let workspace = registry.get(layoutAtom).workspace;
+      expandOpen(workspace, true);
+      unsubscribeWorkspace = registry.subscribe(layoutAtom, (layout) => {
+        if (layout.workspace !== workspace) {
+          workspace = layout.workspace;
+          expandOpen(workspace, false);
+        }
+      });
     }).pipe(Effect.forkDetach);
 
-    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        unsubscribe();
+        unsubscribeWorkspace?.();
+      }),
+    );
     return Capability.contribute(NavTreeCapabilities.State, {
       getItem,
       getItemAtom,

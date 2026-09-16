@@ -122,8 +122,7 @@ describe('retention', () => {
     expect(registry.getNodes().has(graph.node(child))).to.be.true;
 
     // Releasing the subgraph cancels the mounts; the registry drops the atoms.
-    const internal = Graph.getInternal(graph);
-    GraphBuilder.release(builder, [root, ...internal._model.subgraph(root)]);
+    GraphBuilder.release(builder, [root, ...Graph.subgraph(graph, [root])]);
     await settle();
     expect(registry.getNodes().has(graph.node(child))).to.be.false;
     expect(registry.getNodes().size).to.be.lessThan(pinned);
@@ -156,10 +155,9 @@ describe('retention', () => {
     }
     expect(counts(harness).modelNodes).to.equal(baseline.modelNodes + WORKSPACES * CHILDREN);
 
-    const internal = Graph.getInternal(graph);
     for (const id of workspaceIds()) {
       const root = `${GraphNode.RootId}/${id}`;
-      GraphBuilder.release(builder, internal._model.subgraph(root));
+      GraphBuilder.release(builder, Graph.subgraph(graph, [root]));
     }
     await settle();
 
@@ -180,8 +178,7 @@ describe('retention', () => {
     const before = registry.get(graph.connections(root, 'child')).map(({ id }) => id);
     expect(before).to.have.length(CHILDREN);
 
-    const internal = Graph.getInternal(graph);
-    GraphBuilder.release(builder, [root, ...internal._model.subgraph(root)]);
+    GraphBuilder.release(builder, [root, ...Graph.subgraph(graph, [root])]);
     await settle();
     expect(registry.get(graph.connections(root, 'child'))).to.deep.equal([]);
 
@@ -207,9 +204,8 @@ describe('retention', () => {
     registry.get(graph.connections(retained, 'child'));
     notifications = 0;
 
-    const internal = Graph.getInternal(graph);
     const released = `${GraphNode.RootId}/w0`;
-    GraphBuilder.release(builder, [released, ...internal._model.subgraph(released)]);
+    GraphBuilder.release(builder, [released, ...Graph.subgraph(graph, [released])]);
     await settle();
 
     expect(notifications).to.equal(0);
@@ -219,54 +215,64 @@ describe('retention', () => {
 });
 
 describe('retention port', () => {
-  test('the builder unloads what the port names, and a revisit rebuilds it', async () => {
+  /** The deck's policy in miniature: keep the current and previous workspace, answer with the rest. */
+  const policy = ({ builder, graph }: ReturnType<typeof setup>) => {
+    let current: string | undefined;
+    let previous: string | undefined;
+    GraphBuilder.setRetention(builder, {
+      evictable: () =>
+        Graph.getConnections(graph, GraphNode.RootId, 'child')
+          .map(({ id }) => id)
+          .filter((id) => id !== current && id !== previous),
+    });
+    return (root: string) => {
+      previous = current;
+      current = root;
+    };
+  };
+
+  test('the builder keeps what the port retains, and a revisit rebuilds the rest', async () => {
     const harness = setup();
-    const { builder, graph } = harness;
+    const { graph, registry } = harness;
     await visit(harness, GraphNode.RootId);
     const baseline = counts(harness);
-
-    // A workspace-switch policy in miniature: keep the two most recent, unload the rest. The dedupe
-    // is load-bearing — leave a revisited root further down the list and the flush that re-expands
-    // it evicts it again in the same pass.
-    let recent: string[] = [];
-    const touch = (root: string) => {
-      recent = [root, ...recent.filter((id) => id !== root)];
-    };
-    GraphBuilder.setRetention(builder, { evictable: () => recent.slice(2) });
+    const switchTo = policy(harness);
 
     for (const id of workspaceIds()) {
       const root = `${GraphNode.RootId}/${id}`;
-      touch(root);
+      switchTo(root);
       await visit(harness, root);
     }
 
-    // Ten visited, two loaded. Nothing called release: the flush each expansion schedules asked.
-    const after = counts(harness);
-    expect(after.modelNodes).to.equal(baseline.modelNodes + 2 * CHILDREN);
-    expect(after.provenance).to.equal(baseline.provenance + 2 * CHILDREN);
-
-    // The workspace roots themselves are all still there, so the nav list is intact.
+    // Ten visited, two loaded, and every workspace root still in place for the nav list.
+    expect(counts(harness).modelNodes).to.equal(baseline.modelNodes + 2 * CHILDREN);
     for (const id of workspaceIds()) {
       expect(Option.isSome(Graph.getNode(graph, `${GraphNode.RootId}/${id}`))).to.be.true;
     }
 
-    // Revisiting an unloaded workspace rebuilds it from its connectors.
     const stale = `${GraphNode.RootId}/w0`;
-    expect(harness.registry.get(graph.connections(stale, 'child'))).to.deep.equal([]);
-    touch(stale);
+    expect(registry.get(graph.connections(stale, 'child'))).to.deep.equal([]);
+    switchTo(stale);
     await visit(harness, stale);
-    expect(harness.registry.get(graph.connections(stale, 'child'))).to.have.length(CHILDREN);
+    expect(registry.get(graph.connections(stale, 'child'))).to.have.length(CHILDREN);
   });
 
-  test('the port sees an empty answer as leave everything alone', async () => {
+  test('a workspace expanded without a switch stays loaded until the next switch', async () => {
     const harness = setup();
-    const { builder } = harness;
-    GraphBuilder.setRetention(builder, { evictable: () => [] });
+    const { graph, registry } = harness;
     await visit(harness, GraphNode.RootId);
-    for (const id of workspaceIds()) {
+    const switchTo = policy(harness);
+    for (const id of ['w0', 'w1', 'w2']) {
+      switchTo(`${GraphNode.RootId}/${id}`);
       await visit(harness, `${GraphNode.RootId}/${id}`);
     }
 
-    expect(counts(harness).modelNodes).to.be.greaterThan(WORKSPACES * CHILDREN);
+    const hovered = `${GraphNode.RootId}/w0`;
+    await visit(harness, hovered, { mounted: false });
+    expect(registry.get(graph.connections(hovered, 'child'))).to.have.length(CHILDREN);
+
+    switchTo(`${GraphNode.RootId}/w3`);
+    await visit(harness, `${GraphNode.RootId}/w3`);
+    expect(registry.get(graph.connections(hovered, 'child'))).to.deep.equal([]);
   });
 });

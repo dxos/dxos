@@ -356,87 +356,66 @@ describe('retention', () => {
     return harness;
   };
 
-  /** Expand a node and let the flush settle. */
   const visit = async ({ builder, children }: ReturnType<typeof setup>, id: string) => {
     children(id);
     await GraphBuilder.flush(builder);
   };
 
-  test('nothing is released without a port', async () => {
+  const loaded = async () => {
     const harness = workspaces();
     await visit(harness, GraphNode.RootId);
     await visit(harness, 'root/w0');
+    await visit(harness, 'root/w1');
+    return harness;
+  };
 
-    expect(GraphBuilder.collect(harness.builder)).to.deep.equal([]);
+  test('nothing is released without a port', async () => {
+    const harness = await loaded();
+    expect(harness.builder._collect()).to.deep.equal([]);
     expect(harness.children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
   });
 
-  test('the port names roots and the builder unloads their subgraphs', async () => {
-    const harness = workspaces();
+  test('a settled flush unloads below the roots the port names and keeps the roots', async () => {
+    const harness = await loaded();
     const { builder, model, children } = harness;
-    await visit(harness, GraphNode.RootId);
-    await visit(harness, 'root/w0');
-    await visit(harness, 'root/w1');
-    const loaded = model.nodes.length;
+    GraphBuilder.setRetention(builder, { evictable: () => ['root/w0'] });
+    await visit(harness, 'root/w1/c0');
 
-    let evictable: string[] = [];
-    GraphBuilder.setRetention(builder, { evictable: () => evictable });
-
-    // Asked on every settled flush, and answering with nothing leaves the graph alone.
-    await GraphBuilder.flush(builder);
-    expect(model.nodes.length).to.equal(loaded);
-
-    evictable = ['root/w0'];
-    expect(GraphBuilder.collect(builder).sort()).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
-
-    // The root itself stays, so the node a caller returns to is still there to expand.
     expect(model.findNode('root/w0')?.id).to.equal('root/w0');
     expect(children('root/w0')).to.deep.equal([]);
-    // And the workspace beside it is untouched.
     expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
   });
 
-  test('a released subgraph re-expands on the next read', async () => {
-    const harness = workspaces();
-    const { builder, children } = harness;
-    await visit(harness, GraphNode.RootId);
-    await visit(harness, 'root/w0');
-    const before = children('root/w0');
-
-    GraphBuilder.setRetention(builder, { evictable: () => ['root/w0'] });
-    GraphBuilder.collect(builder);
-    expect(children('root/w0')).to.deep.equal([]);
-
-    // Release is an unload, not a deletion: the root forgot it ever expanded.
-    GraphBuilder.setRetention(builder, undefined);
-    await visit(harness, 'root/w0');
-    expect(children('root/w0')).to.deep.equal(before);
+  test('the graph root is never released, whatever the port answers', async () => {
+    const harness = await loaded();
+    GraphBuilder.setRetention(harness.builder, { evictable: () => [GraphNode.RootId] });
+    expect(harness.builder._collect()).to.deep.equal([]);
+    expect(harness.children(GraphNode.RootId)).to.deep.equal(['root/w0', 'root/w1']);
   });
 
-  test('a settled flush runs a collection pass', async () => {
-    const harness = workspaces();
+  test('a root expanded again under the same answer stays loaded until the answer changes', async () => {
+    const harness = await loaded();
     const { builder, children } = harness;
-    await visit(harness, GraphNode.RootId);
-    await visit(harness, 'root/w0');
-
-    // Nothing triggers this but the flush the second expansion schedules.
-    GraphBuilder.setRetention(builder, { evictable: () => ['root/w0'] });
-    await visit(harness, 'root/w1');
-
+    let evictable = ['root/w0'];
+    GraphBuilder.setRetention(builder, { evictable: () => evictable });
+    builder._collect();
     expect(children('root/w0')).to.deep.equal([]);
-    expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
+
+    // A prefetch expands the unloaded root; the flush it triggers must not drop it again.
+    await visit(harness, 'root/w0');
+    expect(children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
+
+    evictable = ['root/w0', 'root/w1'];
+    builder._collect();
+    expect(children('root/w0')).to.deep.equal([]);
+    expect(children('root/w1')).to.deep.equal([]);
   });
 
   test('a store that cannot enumerate a subgraph is left alone', async () => {
-    const harness = workspaces();
-    const { builder, children } = harness;
-    await visit(harness, GraphNode.RootId);
-    await visit(harness, 'root/w0');
-
-    delete builder._store.subgraph;
-    GraphBuilder.setRetention(builder, { evictable: () => ['root/w0'] });
-
-    expect(GraphBuilder.collect(builder)).to.deep.equal([]);
-    expect(children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
+    const harness = await loaded();
+    delete harness.builder._store.subgraph;
+    GraphBuilder.setRetention(harness.builder, { evictable: () => ['root/w0'] });
+    expect(harness.builder._collect()).to.deep.equal([]);
+    expect(harness.children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
   });
 });

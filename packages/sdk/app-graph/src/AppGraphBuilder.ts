@@ -282,7 +282,7 @@ const makeStore = (
     setNode: (id, node) => graph._setNode(id, node),
     batch: (fn) => Graph.batch(graph, fn),
     release: (ids) => void Graph.release(graph, ids),
-    subgraph: (root, relation) => Graph.getInternal(graph)._model.subgraph(root, relation),
+    subgraph: (roots) => Graph.subgraph(graph, roots),
     constructNode: (node) => graph._constructNode(node),
   };
 };

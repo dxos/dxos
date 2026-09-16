@@ -40,6 +40,14 @@ export const NotificationTracker = Capability.lazyModule(
   },
   () => import('./notification-tracker.ts'),
 );
+export const GraphRetention = Capability.lazyModule(
+  'GraphRetention',
+  {
+    requires: [Capabilities.AtomRegistry, DeckCapabilities.State, AppCapabilities.Layout, AppCapabilities.AppGraph],
+    provides: [AppCapabilities.AppGraphRetention],
+  },
+  () => import('./graph-retention.ts'),
+);
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
