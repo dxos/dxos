@@ -31,9 +31,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/errors"
-    },
-    {
       "path": "../../common/feed-store"
     },
     {
