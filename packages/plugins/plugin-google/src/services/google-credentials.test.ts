@@ -71,10 +71,18 @@ describe('GoogleCredentials', () => {
           yield* GoogleCredentials.get();
           yield* GoogleCredentials.get();
         }).pipe(
-          Effect.provide(GoogleCredentials.fromConnection(Ref.make(connection))),
-          Effect.provide(credentialsLayerFromDatabase()),
-          Effect.provide(Database.layer(db)),
-          Effect.provide(resolver.layer),
+          Effect.provide(
+            Layer.provideMerge(
+              Layer.provideMerge(
+                Layer.provideMerge(
+                  GoogleCredentials.fromConnection(Ref.make(connection)),
+                  credentialsLayerFromDatabase(),
+                ),
+                Database.layer(db),
+              ),
+              resolver.layer,
+            ),
+          ),
         ),
       );
 
@@ -116,10 +124,15 @@ const runFromAccessToken = (
 ) =>
   EffectEx.runPromise(
     GoogleCredentials.get().pipe(
-      Effect.provide(GoogleCredentials.fromAccessToken(ref)),
-      Effect.provide(credentialsLayerFromDatabase()),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(resolverLayer),
+      Effect.provide(
+        Layer.provideMerge(
+          Layer.provideMerge(
+            Layer.provideMerge(GoogleCredentials.fromAccessToken(ref), credentialsLayerFromDatabase()),
+            Database.layer(db),
+          ),
+          resolverLayer,
+        ),
+      ),
     ),
   );
 
@@ -130,9 +143,14 @@ const runFromConnection = (
 ) =>
   EffectEx.runPromise(
     GoogleCredentials.get().pipe(
-      Effect.provide(GoogleCredentials.fromConnection(ref)),
-      Effect.provide(credentialsLayerFromDatabase()),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(resolverLayer),
+      Effect.provide(
+        Layer.provideMerge(
+          Layer.provideMerge(
+            Layer.provideMerge(GoogleCredentials.fromConnection(ref), credentialsLayerFromDatabase()),
+            Database.layer(db),
+          ),
+          resolverLayer,
+        ),
+      ),
     ),
   );

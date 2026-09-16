@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
@@ -139,8 +140,7 @@ describe('sync pipeline harness', () => {
     return withFault.pipe(
       Stream.grouped(2),
       Pipeline.run({ sink: Cursor.commit }),
-      Effect.provide(Cursor.layer(options)),
-      Effect.provide(Database.layer(options.db)),
+      Effect.provide(Layer.provideMerge(Cursor.layer(options), Database.layer(options.db))),
     );
   };
 
@@ -210,8 +210,12 @@ describe('sync pipeline harness', () => {
     const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
       Cursor.commit([makeUnit(RAWS[0]), makeUnit(RAWS[1])]).pipe(
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
-        Effect.provide(Database.layer(db)),
+        Effect.provide(
+          Layer.provideMerge(
+            Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats }),
+            Database.layer(db),
+          ),
+        ),
       ),
     );
 
@@ -293,8 +297,12 @@ describe('sync pipeline harness', () => {
         EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
-        Effect.provide(Database.layer(db)),
+        Effect.provide(
+          Layer.provideMerge(
+            Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats }),
+            Database.layer(db),
+          ),
+        ),
       ),
     );
 
@@ -371,8 +379,12 @@ describe('sync pipeline harness', () => {
         EmailStage.toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: Cursor.commit }),
-        Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
-        Effect.provide(Database.layer(db)),
+        Effect.provide(
+          Layer.provideMerge(
+            Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats }),
+            Database.layer(db),
+          ),
+        ),
       ),
     );
 

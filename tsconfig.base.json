@@ -63,9 +63,6 @@
           // channel, 340 findings across the two.
           "globalErrorInEffectFailure": "off",
           "globalErrorInEffectCatch": "off",
-          // TODO(wittjosiah): Re-enable once cleared. Stacked Effect.provide calls,
-          // 82 findings.
-          "multipleEffectProvide": "off",
           // TODO(wittjosiah): Re-enable once cleared. Fires on the generic capability
           // factories, always naming the MultiTag arm of AnyTag. Ruled out by experiment:
           // a minimal generic Effect parameter does not fire, nor does the type

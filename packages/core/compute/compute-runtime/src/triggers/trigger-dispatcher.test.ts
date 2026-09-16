@@ -771,8 +771,12 @@ describe('TriggerDispatcher', () => {
             expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpans.map(({ name }) => name))}`).toBe(true);
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },
-        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
-        Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpans))),
+        Effect.provide(
+          Layer.provideMerge(
+            TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) }),
+            Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpans)),
+          ),
+        ),
       ),
     );
   });
