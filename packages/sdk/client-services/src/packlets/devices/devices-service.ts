@@ -3,10 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList } from '@dxos/async';
-import { type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
@@ -15,12 +17,12 @@ import {
   Device_PresenceState,
   DeviceKind,
   DeviceSchema,
+  EdgeStatus_ConnectionState,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type DevicesService } from '@dxos/protocols/rpc';
+import { DevicesService } from '@dxos/protocols/rpc';
 
-import { type IdentityManager } from '../identity/index.ts';
+import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
   'constructor'(
@@ -117,3 +119,13 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
     });
   }
 }
+
+export const DevicesServiceLayer = Layer.effect(
+  DevicesService.Tag,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    // Edge connection is absent in the non-edge stack, so resolve it optionally.
+    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
+    return new DevicesServiceImpl(identityManager, edgeConnection);
+  }),
+);

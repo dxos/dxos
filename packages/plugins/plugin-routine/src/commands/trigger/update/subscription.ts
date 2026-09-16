@@ -105,7 +105,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   const currentFunctionName = currentFn ? (currentFn.name ?? currentFn.id) : undefined;
   const shouldChangeFunction = yield* Option.match(functionIdOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: `Change the function${currentFunctionName ? ` (current: ${currentFunctionName})` : ''}?`,
         initial: false,
       }).pipe(Prompt.run),
@@ -165,14 +165,14 @@ const updateSpec = Effect.fn(function* (
   const hasSpecOption = Option.isSome(typenameOption) || Option.isSome(deepOption) || Option.isSome(delayOption);
   const shouldChangeSpec = yield* hasSpecOption
     ? Effect.succeed(true)
-    : Prompt.confirm({
+    : Prompt.Confirm({
         message: `Change the trigger spec (current: ${currentSpecStr})?`,
         initial: false,
       }).pipe(Prompt.run);
   if (shouldChangeSpec) {
     const typename = yield* Option.match(typenameOption, {
       onNone: () =>
-        Prompt.text({
+        Prompt.String({
           message: `Enter type name${currentTypenameStr ? ` (current: ${currentTypenameStr})` : ''}:`,
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
@@ -181,7 +181,7 @@ const updateSpec = Effect.fn(function* (
 
     const deepOptionValue = yield* Option.match(deepOption, {
       onNone: () =>
-        Prompt.confirm({
+        Prompt.Confirm({
           message: 'Watch changes to nested properties (deep)?',
           initial: currentSpec?.options?.deep ?? false,
         }).pipe(
@@ -195,7 +195,7 @@ const updateSpec = Effect.fn(function* (
       onNone: () =>
         Effect.gen(function* () {
           const currentDelay = currentSpec?.options?.delay;
-          const delayStr = yield* Prompt.text({
+          const delayStr = yield* Prompt.String({
             message: `Debounce delay in milliseconds (optional, press Enter to skip)${currentDelay ? ` (current: ${currentDelay})` : ''}:`,
           }).pipe(Prompt.run);
           return delayStr === '' ? Option.none<number>() : Option.some(parseInt(delayStr, 10));
@@ -237,7 +237,7 @@ const updateInput = Effect.fn(function* (
     onNone: () =>
       Effect.gen(function* () {
         yield* Console.log(`Current input: ${currentInputStr}`);
-        return yield* Prompt.confirm({
+        return yield* Prompt.Confirm({
           message: 'Change input?',
           initial: false,
         }).pipe(Prompt.run);
@@ -267,7 +267,7 @@ const updateEnabled = Effect.fn(function* (
 ) {
   const enabledValue = yield* Option.match(idOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: 'Enable the trigger?',
         initial: trigger.enabled,
       }).pipe(Prompt.run),

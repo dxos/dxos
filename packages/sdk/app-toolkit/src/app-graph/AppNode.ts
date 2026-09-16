@@ -334,6 +334,12 @@ export const makeCompanion = <TData = string>({
   },
 });
 
+/**
+ * When the deck mounts a companion's surface: `always`, only while it is the `selected` companion
+ * (the default), or only while selected in an expanded sidebar (`open`).
+ */
+export type DeckCompanionMount = 'always' | 'selected' | 'open';
+
 /** Build a deck-level (workspace-wide) companion panel node. */
 export const makeDeckCompanion = <TData = any>({
   id,
@@ -342,6 +348,7 @@ export const makeDeckCompanion = <TData = any>({
   data,
   position,
   joyride,
+  mount,
 }: {
   id: string;
   label: Translations.Label;
@@ -349,6 +356,7 @@ export const makeDeckCompanion = <TData = any>({
   data: TData;
   position?: Position.Position;
   joyride?: string;
+  mount?: DeckCompanionMount;
 }): AppGraphNode.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
@@ -359,6 +367,7 @@ export const makeDeckCompanion = <TData = any>({
     disposition: 'hidden',
     ...(position !== undefined && { position }),
     ...(joyride !== undefined && { joyride }),
+    ...(mount !== undefined && { mount }),
   },
 });
 

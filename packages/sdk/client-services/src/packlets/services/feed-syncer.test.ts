@@ -21,7 +21,6 @@ import { createBuf } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { bufferToArray } from '@dxos/util';
 
@@ -35,7 +34,7 @@ const syncNamespaces = [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.Well
 
 const createRuntime = () => {
   const baseLayer = layerMemory;
-  const transactionLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
+  const transactionLayer = baseLayer;
   return ManagedRuntime.make(Layer.merge(baseLayer, transactionLayer).pipe(Layer.orDie));
 };
 

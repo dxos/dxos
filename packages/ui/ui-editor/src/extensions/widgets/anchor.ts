@@ -4,6 +4,8 @@
 
 import { EditorView, WidgetType } from '@codemirror/view';
 
+import { getSize } from '@dxos/ui-theme';
+
 /**
  * Inline widget for echo/eid links (e.g., `[Label](echo:///123)`).
  * The <dx-anchor> tag is a web component that renders a link chip and popover.
@@ -16,6 +18,8 @@ export class AnchorWidget extends WidgetType {
     readonly _trigger?: 'hover' | 'click',
     /** Resolves a display label asynchronously (e.g. the object's name for a bare `#` link). */
     readonly _resolveLabel?: () => Promise<string | undefined>,
+    /** Leading icon, e.g. `{ icon: 'ph--git-pull-request--regular', classNames: 'text-green-500' }`. */
+    readonly _icon?: { icon: string; classNames?: string },
   ) {
     super();
   }
@@ -27,23 +31,34 @@ export class AnchorWidget extends WidgetType {
       this._dxn === other._dxn &&
       this._label === other._label &&
       this._trigger === other._trigger &&
-      !!this._resolveLabel === !!other._resolveLabel
+      !!this._resolveLabel === !!other._resolveLabel &&
+      this._icon?.icon === other._icon?.icon &&
+      this._icon?.classNames === other._icon?.classNames
     );
   }
 
   override toDOM(_view: EditorView) {
     const root = document.createElement('dx-anchor');
     root.classList.add('dx-tag--anchor');
-    root.textContent = this._label;
     root.setAttribute('eid', this._dxn);
     if (this._trigger) {
       root.setAttribute('trigger', this._trigger);
     }
+    if (this._icon) {
+      // An icon element carries no text, so the anchor's `textContent` stays the label it reports.
+      const icon = root.appendChild(document.createElement('dx-icon'));
+      icon.setAttribute('icon', this._icon.icon);
+      icon.className = ['inline-block align-[-0.125em] me-1', getSize(4), this._icon.classNames]
+        .filter(Boolean)
+        .join(' ');
+    }
+    // The label lives in its own node so a resolved label replaces it without removing the icon.
+    const label = root.appendChild(document.createTextNode(this._label));
     if (this._resolveLabel) {
-      void this._resolveLabel().then((label) => {
+      void this._resolveLabel().then((resolved) => {
         // The widget may have been culled/replaced; only retouch a live element.
-        if (label && root.isConnected) {
-          root.textContent = label;
+        if (resolved && root.isConnected) {
+          label.textContent = resolved;
         }
       });
     }

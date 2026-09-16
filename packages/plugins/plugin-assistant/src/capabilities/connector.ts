@@ -6,18 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Format, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE, DEEPSEEK_PROVIDER_ID, DEEPSEEK_SOURCE } from '../constants.ts';
 
 /** API-key form for the Anthropic BYOK provider; key is best-effort validated against `/v1/models`. */
-const AnthropicTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
-    title: 'API key',
-    description: 'Your Anthropic API key — find it at https://console.anthropic.com/settings/keys.',
-  }),
+const AnthropicTokenForm = ConnectorSpec.TokenForm({
+  title: 'API key',
+  description: 'Your Anthropic API key — find it at https://console.anthropic.com/settings/keys.',
 });
 
 /**
@@ -48,11 +46,9 @@ const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
   );
 
 /** API-key form for the DeepSeek BYOK provider; key is best-effort validated against `/models`. */
-const DeepSeekTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
-    title: 'API key',
-    description: 'Your DeepSeek API key — find it at https://platform.deepseek.com/api_keys.',
-  }),
+const DeepSeekTokenForm = ConnectorSpec.TokenForm({
+  title: 'API key',
+  description: 'Your DeepSeek API key — find it at https://platform.deepseek.com/api_keys.',
 });
 
 /** Best-effort validation, on the same terms as {@link validateAnthropicKey}. */

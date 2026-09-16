@@ -12,26 +12,6 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
-  "imports": {
-    "#locks-platform": {
-      "source": {
-        "browser": "./src/packlets/locks/browser.ts",
-        "default": "./src/packlets/locks/node.ts"
-      },
-      "types": "./dist/types/src/packlets/locks/node.d.ts",
-      "browser": "./dist/lib/packlets/locks/browser.mjs",
-      "default": "./dist/lib/packlets/locks/node.mjs"
-    },
-    "#diagnostics-broadcast": {
-      "source": {
-        "browser": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
-        "default": "./src/packlets/diagnostics/diagnostics-broadcast.ts"
-      },
-      "types": "./dist/types/src/packlets/diagnostics/diagnostics-broadcast.d.ts",
-      "browser": "./dist/lib/packlets/diagnostics/browser-diagnostics-broadcast.mjs",
-      "default": "./dist/lib/packlets/diagnostics/diagnostics-broadcast.mjs"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -71,7 +51,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
@@ -85,7 +64,6 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/websocket-rpc": "workspace:*",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
     "crc-32": "catalog:",

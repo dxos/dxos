@@ -130,16 +130,16 @@ describe('space/space-protocol', () => {
     //
 
     const builder1 = new TestFeedBuilder();
-    const feedStore1 = builder1.createFeedStore();
+    const hypercoreStore1 = builder1.createHypercoreStore();
 
     const builder2 = new TestFeedBuilder();
-    const feedStore2 = builder2.createFeedStore();
+    const hypercoreStore2 = builder2.createHypercoreStore();
 
-    const feed1 = await feedStore1.openFeed(await builder1.keyring.createKey(), { writable: true });
-    const feed2 = await feedStore2.openFeed(feed1.key);
+    const feed1 = await hypercoreStore1.openHypercore(await builder1.keyring.createKey(), { writable: true });
+    const feed2 = await hypercoreStore2.openHypercore(feed1.key);
 
-    await protocol1.addFeed(feed1);
-    await protocol2.addFeed(feed2);
+    await protocol1.addHypercore(feed1);
+    await protocol2.addHypercore(feed2);
 
     //
     // Append message.

@@ -14,6 +14,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -38,10 +39,14 @@ const DefaultStory = () => {
     return null;
   }
 
+  // The host's `Card.Root` and header, as a board cell supplies them.
   return (
-    <div className='w-64'>
+    <Card.Root classNames='w-64'>
+      <Card.Header>
+        <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
+      </Card.Header>
       <MediaArtifactCard subject={artifact} />
-    </div>
+    </Card.Root>
   );
 };
 

@@ -12,6 +12,7 @@ import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
+import { EffectEx, Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,6 +24,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { DeviceAdmissionRequestSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity/index.ts';
+import { DataSpacesReady } from '../services/events.ts';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
@@ -214,18 +216,28 @@ export type EdgeAgentManagerLayerOptions = {
  */
 export const EdgeAgentManagerLayer = (
   options: EdgeAgentManagerLayerOptions = {},
-): Layer.Layer<EdgeAgentManagerService, never, DataSpaceManagerService | IdentityProviderService> =>
+): Layer.Layer<EdgeAgentManagerService, never, Hook.Controller | DataSpaceManagerService | IdentityProviderService> =>
   Layer.effect(
     EdgeAgentManagerService,
     Effect.gen(function* () {
       const dataSpaceManager = yield* DataSpaceManagerService;
       const identityProvider = yield* IdentityProviderService;
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
-      return new EdgeAgentManager(
+      const edgeAgentManager = new EdgeAgentManager(
         options.edgeFeatures,
         Option.getOrUndefined(edgeHttpClient),
         dataSpaceManager,
         identityProvider,
       );
+
+      const ctx = yield* EffectEx.contextFromScope();
+      yield* Effect.addFinalizer(() => Effect.promise(() => edgeAgentManager.close()));
+      yield* Hook.on(
+        DataSpacesReady,
+        Effect.fn('EdgeAgentManager.onDataSpacesReady')(function* () {
+          yield* Effect.promise(() => edgeAgentManager.open(ctx));
+        }),
+      );
+      return edgeAgentManager;
     }),
   );

@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { MockFeedWriter } from '@dxos/feed-store/testing';
+import { MockHypercoreWriter } from '@dxos/feed-store/testing';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,7 +22,7 @@ import { NotarizationPlugin, type NotarizationPluginProps } from './notarization
 class TestAgent extends TestPeer {
   private readonly _ctx = new Context();
 
-  feed = new MockFeedWriter<Credential>();
+  feed = new MockHypercoreWriter<Credential>();
   notarizationPlugin: NotarizationPlugin;
 
   constructor(params: NotarizationPluginProps) {

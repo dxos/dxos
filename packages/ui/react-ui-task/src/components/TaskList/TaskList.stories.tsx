@@ -457,7 +457,7 @@ export const TestAgentSpinner: Story = {
     const spinning = () =>
       [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')]
         .filter((row) => row.querySelector('[data-testid="taskList.item.status"] .animate-spin'))
-        .map((row) => row.querySelector('span.truncate')?.textContent ?? '');
+        .map((row) => row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '');
 
     await waitFor(async () => expect(spinning()).toEqual(['Draft launch email']), { timeout: 10_000 });
   },
@@ -597,7 +597,7 @@ export const TestEdit: Story = {
 
     // Selecting a task fills the pane with it.
     const first = rows()[0];
-    const firstTitleElement = first.querySelector('.truncate');
+    const firstTitleElement = first.querySelector('[data-testid="taskList.item.title"]');
     if (!firstTitleElement) {
       throw new Error('Task title element not found.');
     }
@@ -789,7 +789,7 @@ export const TestEditWithoutDescription: Story = {
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
     const first = rows()[0];
-    const firstTitle = first.querySelector('.truncate')!.textContent;
+    const firstTitle = first.querySelector('[data-testid="taskList.item.title"]')!.textContent;
     first.click();
 
     // The task IS selected — the title proves the pane followed the selection — and the description
@@ -849,7 +849,7 @@ export const TestHierarchy: Story = {
         .filter((row) => !row.closest('[hidden]'))
         .map((row) => ({
           row,
-          title: row.querySelector('.truncate')?.textContent ?? '',
+          title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
           // A leaf IS the `treeitem`, but a branch's `treeitem` is a `display: contents` wrapper
           // around the focusable row — so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),

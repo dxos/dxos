@@ -36,7 +36,7 @@ export const add: Command.Command<
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.string('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
+    typename: Options.String('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
   },
   ({ typename }) =>
     Effect.gen(function* () {
@@ -112,7 +112,7 @@ const selectTypename = Effect.fn(function* (
     description: Type.getTypename(schema),
   }));
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: 'Select a type:',
     choices,
   });

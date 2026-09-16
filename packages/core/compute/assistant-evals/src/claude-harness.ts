@@ -94,6 +94,14 @@ export type ClaudeHarnessOptions = {
 /** What a scenario drives and reads inside {@link runClaudeEval}. */
 export type ClaudeHarness = {
   readonly spaceId: SpaceId;
+  /**
+   * The agent's working directory — a throwaway tree, and the only one its file tools may touch.
+   *
+   * Exposed so a scenario can plant a fixture the agent will act on from disk rather than from the
+   * prompt, which is the only way to exercise a flow whose whole point is that the bytes never
+   * enter the conversation.
+   */
+  readonly workdir: string;
   /** The surface this run is driving. */
   readonly target: McpTarget.Target;
   /** Endpoint the agent dials — the in-process listener's, or the deployed worker's. */
@@ -539,6 +547,7 @@ export const runClaudeEval = async <T>(
       return await body({
         spaceId,
         target,
+        workdir,
         url,
         query,
         score,

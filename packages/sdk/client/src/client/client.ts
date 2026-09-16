@@ -548,6 +548,7 @@ export class Client {
             put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
             get: (key) => edgeHttpClient.getBlob(Context.default(), key),
             has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
+            finalizeUpload: (uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId),
           },
         }),
         { default: true },

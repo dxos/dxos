@@ -42,6 +42,21 @@ export type DiffBlocksOptions = {
   layout?: DiffLayout;
   /** Syntax-highlight the code; the language is loaded lazily. Defaults to true. */
   highlight?: boolean;
+  /**
+   * Offers a comment button on each hovered line of a diff that names its file; called with the line
+   * the reader picked. Absent means no button.
+   */
+  onLineComment?: (target: DiffLineTarget) => void;
+};
+
+/** A single line of a rendered diff, as a review comment addresses it. */
+export type DiffLineTarget = {
+  file: string;
+  /** `before` is the removed/old column, `after` the added/new one (context lines count as `after`). */
+  side: 'before' | 'after';
+  /** 1-based line number in that version of the file. */
+  line: number;
+  text: string;
 };
 
 /**
@@ -149,7 +164,8 @@ class DiffBlockWidget extends WidgetType {
     return (
       this.#source === other.#source &&
       (this.#options.layout ?? 'auto') === (other.#options.layout ?? 'auto') &&
-      highlighted(this.#options) === highlighted(other.#options)
+      highlighted(this.#options) === highlighted(other.#options) &&
+      this.#options.onLineComment === other.#options.onLineComment
     );
   }
 
@@ -315,6 +331,7 @@ class DiffBlockWidget extends WidgetType {
     if (row.before) {
       grid.appendChild(number(row.before.number, removal ? '-' : undefined, removal ? 'removed' : undefined));
       const cell = grid.appendChild(code(row.before.text, removal ? 'removed' : undefined));
+      this.#attachComment(cell, 'before', row.before.number, row.before.text);
       pending.push({ element: cell, side: 'before', index: before.length });
       before.push(row.before.text);
     } else {
@@ -327,6 +344,7 @@ class DiffBlockWidget extends WidgetType {
         number(row.after.number, addition ? '+' : undefined, addition ? 'added' : undefined, 'cm-diff-split'),
       );
       const cell = grid.appendChild(code(row.after.text, addition ? 'added' : undefined));
+      this.#attachComment(cell, 'after', row.after.number, row.after.text);
       pending.push({ element: cell, side: 'after', index: after.length });
       after.push(row.after.text);
     } else {
@@ -357,10 +375,36 @@ class DiffBlockWidget extends WidgetType {
       const element = grid.appendChild(code(cell.text, status));
       // Context lines are highlighted from the `after` text, which holds every line the result has.
       const side = line.kind === 'removed' ? 'before' : 'after';
+      const lineNumber = side === 'before' ? line.before?.number : line.after?.number;
+      if (lineNumber !== undefined) {
+        this.#attachComment(element, side, lineNumber, cell.text);
+      }
       const source = side === 'before' ? before : after;
       pending.push({ element, side, index: source.length });
       source.push(cell.text);
     }
+  }
+
+  /** Adds the hover comment button to a code cell, when a callback was given and the diff names its file. */
+  #attachComment(cell: HTMLElement, side: DiffLineTarget['side'], line: number, text: string): void {
+    const { onLineComment } = this.#options;
+    const { file } = this.#diff;
+    if (!onLineComment || !file) {
+      return;
+    }
+    cell.classList.add('cm-diff-commentable');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'cm-diff-comment';
+    button.setAttribute('aria-label', `Comment on line ${line}`);
+    button.textContent = '+';
+    button.addEventListener('mousedown', (event) => event.preventDefault());
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      onLineComment({ file, side, line, text });
+    });
+    // Prepended so highlighting, which replaces the cell's text content, is applied after and must keep it.
+    cell.prepend(button);
   }
 
   async #highlight(language: string, before: string[], after: string[], pending: PendingCell[]): Promise<void> {
@@ -375,7 +419,12 @@ class DiffBlockWidget extends WidgetType {
     for (const { element, side, index } of pending) {
       const fragment = (side === 'before' ? beforeLines : afterLines)?.[index];
       if (fragment) {
+        // The comment button lives in the cell; keep it across the text swap.
+        const button = element.querySelector(':scope > .cm-diff-comment');
         element.textContent = '';
+        if (button) {
+          element.appendChild(button);
+        }
         element.appendChild(fragment);
       }
     }

@@ -13,16 +13,15 @@ import { AiService } from '@dxos/ai';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Connection } from '@dxos/link';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { PullRequest } from '@dxos/types';
 
 import { GitHubOperation } from '#types';
 
-import { GITHUB_PROVIDER_ID } from '../constants.ts';
 import { GitHubPullRequestUnstoredError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
 import { GENERATE_PHASES, generateWalkthrough } from '../walkthrough/index.ts';
+import { githubToken } from './pull-request.ts';
 
 /**
  * One-shot for now; a multi-turn agent that reads the repository is the obvious next step.
@@ -121,25 +120,5 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
       }, Effect.provide(FetchHttpClient.layer)),
     ),
   );
-
-/**
- * The first GitHub connection token in the space, or empty for anonymous — which reaches any public
- * pull request, and is the only option in a space that has not connected GitHub.
- */
-const githubToken = () =>
-  Effect.gen(function* () {
-    const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
-    for (const connection of connections) {
-      if (connection.connectorId !== GITHUB_PROVIDER_ID) {
-        continue;
-      }
-      const accessToken = yield* Database.load(connection.accessToken);
-      if (accessToken.token) {
-        return accessToken.token;
-      }
-    }
-
-    return '';
-  });
 
 export default handler;

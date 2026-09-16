@@ -96,8 +96,8 @@ const meta = {
                   board.layout.cells[org.id] = {
                     x: Math.floor(Math.random() * 5) - 2,
                     y: Math.floor(Math.random() * 5) - 2,
-                    width: 1,
-                    height: 1,
+                    w: 1,
+                    h: 1,
                   };
                   return org;
                 });

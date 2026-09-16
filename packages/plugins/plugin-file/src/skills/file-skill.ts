@@ -17,7 +17,7 @@ const make = () =>
     name: 'File',
     description: 'Read the contents of files (images, videos, PDFs), and add new files to a space.',
     tools: Skill.toolDefinitions({
-      operations: [FileOperation.Read, FileOperation.CreateFromSource],
+      operations: [FileOperation.Read, FileOperation.CreateFromSource, FileOperation.CreateFromUpload],
     }),
     instructions: Template.make({
       source: trim`
@@ -35,6 +35,13 @@ const make = () =>
         - \`{ "type": "base64", "mediaType": "image/png", "data": "..." }\` when you hold the bytes
           yourself, such as an image you generated. Keep this under 1MB — the encoded payload counts
           against the conversation, so a large file is slow and expensive before it is anything else.
+
+        For a file that is already on your own disk -- a screenshot you just took, a screen
+        recording, a log bundle -- use neither arm above. Ask the host for an upload URL, transfer
+        the bytes with the shell command it returns, then call
+        ${Operation.toolName(FileOperation.CreateFromUpload)} with the \`uploadId\`. The bytes go
+        from disk to storage without passing through this conversation, so the cost is the same
+        whether the file is 40KB or 90MB. Base64 is never the right choice for a video.
 
         Images, video, PDFs, and plain text, CSV, Markdown and JSON are accepted. HTML is not.
         Always pass the true media type of the content; do not infer it from a file extension.

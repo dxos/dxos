@@ -32,5 +32,9 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
     "fast-deep-equal": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/network-manager": "workspace:*"
   }
 }
