@@ -21,11 +21,11 @@
     "dist",
     "src"
   ],
-  "devDependencies": {
-    "@playwright/test": "catalog:"
-  },
   "scripts": {
     "build": "tsc"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:"
   },
   "publishConfig": {
     "access": "restricted"
