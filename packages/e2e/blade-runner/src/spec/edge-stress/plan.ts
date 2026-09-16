@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Testing from 'effect/testing';
+import * as fc from 'fast-check';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -290,13 +290,13 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       checkpoints: spec.checkpoints,
       partitions: spec.partitions,
     });
-    const pool = Testing.FastCheck.array(command, {
+    const pool = fc.array(command, {
       minLength: spec.maxCommands,
       maxLength: spec.maxCommands * COMMAND_POOL_FACTOR,
       size: 'max',
     });
 
-    const draws = Testing.FastCheck.sample(pool, {
+    const draws = fc.sample(pool, {
       seed: hashSeed(seed ?? ''),
       numRuns: spec.sampleDraws,
     });

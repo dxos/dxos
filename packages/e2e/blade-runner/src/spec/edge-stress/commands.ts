@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Testing from 'effect/testing';
+import * as fc from 'fast-check';
 
 import { invariant } from '@dxos/invariant';
 
@@ -96,7 +96,10 @@ const ClientSlot = Schema.Int.annotate({ identifier: 'ClientSlot' });
 const SpaceSlot = Schema.Int.annotate({ identifier: 'SpaceSlot' });
 const DocumentSlot = Schema.Int.annotate({ identifier: 'DocumentSlot' });
 // Boundary-heavy on purpose: concurrent inserts at the same offset are what exercise text merge.
-const Position = Schema.Literals([0, 0.25, 0.5, 0.75, 0.999]);
+// The values are kept alongside the schema so the generator can build an arbitrary from the same
+// literals the schema accepts, rather than re-deriving them from the schema at run time.
+const POSITION_VALUES = [0, 0.25, 0.5, 0.75, 0.999] as const;
+const Position = Schema.Literals(POSITION_VALUES);
 
 const brainOf = (real: Real, client: ClientIndex) => real.replicants[client].brain;
 
@@ -511,37 +514,43 @@ export type FleetShape = { clients: number; spaces: number; documents: number };
 /**
  * The weighted generator over the whole vocabulary.
  *
- * Each command's arbitrary is built from its own declared fields, with the three slot schemas
- * bound to the fleet shape and everything else derived from the schema; the result is decoded
- * through `Command`, so a generated value that the declaration would not accept cannot exist.
+ * Each command's arbitrary is built from its own declared fields, with every field schema bound
+ * explicitly below rather than derived generically: `effect` dropped `Schema.toArbitrary` (moved,
+ * incompatibly, to `effect/unstable/arbitrary`), and the vocabulary only ever used four field
+ * schemas anyway, so an explicit table is both what still works and its own guard against a new
+ * field going unbound. The result is decoded through `Command`, so a generated value that the
+ * declaration would not accept cannot exist.
  */
 export const makeCommandArbitrary = ({
   checkpoints,
   partitions,
   ...shape
-}: FleetShape & { checkpoints: boolean; partitions: boolean }): Testing.FastCheck.Arbitrary<Command> => {
+}: FleetShape & { checkpoints: boolean; partitions: boolean }): fc.Arbitrary<Command> => {
   // Uniform over the slots, as the literal unions were: `integer` biases toward small values,
   // which would crowd draws onto slot 0 instead of colliding across the whole fleet.
-  const slots = (count: number) =>
-    Testing.FastCheck.constantFrom(...Array.from({ length: Math.max(count, 1) }, (_, index) => index));
-  const bounded = new Map<unknown, Testing.FastCheck.Arbitrary<unknown>>([
+  const slots = (count: number) => fc.constantFrom(...Array.from({ length: Math.max(count, 1) }, (_, index) => index));
+  const bounded = new Map<unknown, fc.Arbitrary<unknown>>([
     [ClientSlot, slots(shape.clients)],
     [SpaceSlot, slots(shape.spaces)],
     [DocumentSlot, slots(shape.documents)],
+    [Position, fc.constantFrom(...POSITION_VALUES)],
   ]);
   const decode = Schema.decodeUnknownSync(Command);
   const members = Object.values(COMMANDS)
     .filter(({ kind }) => (kind !== 'assertion' || checkpoints) && (kind !== 'partition' || partitions))
     .map(({ weight, schema }) => ({
       weight,
-      arbitrary: Testing.FastCheck.record(
-        Object.fromEntries(
-          Object.entries(schema.fields).map(([name, field]) => [
-            name,
-            bounded.get(field) ?? Schema.toArbitrary(field)(Testing.FastCheck),
-          ]),
-        ),
-      ).map(decode),
+      arbitrary: fc
+        .record(
+          Object.fromEntries(
+            Object.entries(schema.fields).map(([name, field]) => {
+              const arbitrary = bounded.get(field);
+              invariant(arbitrary, `no arbitrary bound for field '${name}'`);
+              return [name, arbitrary];
+            }),
+          ),
+        )
+        .map(decode),
     }));
-  return Testing.FastCheck.oneof(...members);
+  return fc.oneof(...members);
 };
