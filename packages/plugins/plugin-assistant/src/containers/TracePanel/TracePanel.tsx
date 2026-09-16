@@ -20,7 +20,15 @@ import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Accordion, Panel, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import {
+  Accordion,
+  Panel,
+  ScrollContainer,
+  ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { ActionToolbar } from '@dxos/react-ui-menu';
@@ -30,6 +38,7 @@ import { mx } from '@dxos/ui-theme';
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
+import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
 import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter.ts';
@@ -54,6 +63,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     );
 
     const menu = useTraceMenu({ selected: environments, onSelectedChange: handleEnvironmentsChange });
+    const { t } = useTranslation(meta.profile.key);
 
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
     // See the comment in `ProcessTreeContainer` for more details.
@@ -143,7 +153,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                       // TODO(burdon): Select process to show details.
                       <Accordion.Item key={section.id} item={section} classNames='border-x-0'>
                         <Accordion.ItemHeader hover>
-                          <span className='text-sm text-description'>Processes</span>
+                          <span className='text-sm text-description'>{t('trace-processes.label')}</span>
                         </Accordion.ItemHeader>
                         <Accordion.ItemBody classNames='p-0'>
                           <ProcessTreeContainer
@@ -171,7 +181,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                         )}
                       >
                         <Accordion.ItemHeader hover>
-                          <span className='text-sm text-description'>Trace</span>
+                          <span className='text-sm text-description'>{t('trace.label')}</span>
                         </Accordion.ItemHeader>
                         <Accordion.ItemBody classNames='p-0 dx-grow grid grid-rows-[minmax(0,1fr)]'>
                           <ScrollContainer.Root pin>
@@ -202,7 +212,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                       <Accordion.Item key={section.id} item={section} disabled={!commit} classNames='border-x-0'>
                         <Accordion.ItemHeader hover>
                           <span className='block truncate text-sm text-description'>
-                            {commit?.message ?? 'Details'}
+                            {commit?.message ?? t('trace-details.label')}
                           </span>
                         </Accordion.ItemHeader>
                         {commit && (
