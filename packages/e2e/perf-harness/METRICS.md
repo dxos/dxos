@@ -53,8 +53,27 @@ moves and you need to know which process moved:
 
 **Caveat on workers.** A _shared_ worker gets its own process, so it is genuinely separated here. A
 _dedicated_ worker runs as a thread inside the renderer process, so its CPU is folded into
-`renderer:<pid>` and cannot be split out from this field. Per-worker attribution needs
-`Performance.getMetrics` per target (see [Gaps](#known-gaps)).
+`renderer:<pid>` and cannot be split out from this field. Use `cpuMsByRealm` for that.
+
+### `cpuMsByRealm` — `diagnose` only
+
+`{ kind, name, cpuMs, samples, idleSamples }` per realm, from the sampling profiler:
+`cpuMs = (samples - idleSamples) x samplingInterval`.
+
+Idle ticks are counted out because a profiler samples on a wall clock — a realm that slept through
+a stage still produces a sample per interval, so raw sample count measures the stage's duration,
+not its cost.
+
+**The only instrument that reaches a worker.** `SystemInfo.getProcessInfo` folds a dedicated worker
+into its renderer, and the `Performance` domain does not exist on a worker target at all
+(`Performance.enable` answers `'Performance.enable' wasn't found` — verified, not assumed).
+
+The reference run, whole flow: page 31,194 ms (55.4%, 29.2% idle), dedicated worker 13,944 ms
+(24.7%, 62.6% idle), observability worker 11,201 ms (19.9%, 85.4% idle), coordinator shared worker
+6 ms (100% idle). **Workers are 45% of JS CPU** — so the shared worker being idle says nothing
+about worker cost generally, which is a mistake this field exists to prevent.
+
+`boot` reads 0 for every realm: the profiler cannot attach before the page exists.
 
 ### `thread.*`
 
@@ -187,9 +206,15 @@ The two instruments disagreeing is informative, not contradictory:
 | `lagP95` ≈ `lagMax`, both high | Few samples and all bad — the stage was blocked throughout. `open-space`: 1,935 = 1,935.                                   |
 | Low TBT, high `lagMax`         | Something outside the page's main thread blocked: a worker, or the process was descheduled.                                |
 
-**Known weakness:** page and worker samples go into **one pooled distribution**, so `lagP95Ms` is not
-attributable to a realm and gets diluted by whichever realm samples most. Per-realm lag would be
-strictly better — see [Gaps](#known-gaps).
+### `lagByRealm`
+
+One entry per realm — `{ kind, name, p95Ms, maxMs, count }` — because the pooled percentile is not
+attributable: page and worker samples in one distribution let whichever realm samples most dilute
+the other, so a wedged worker could hide behind a calm page. `count: 0` means the realm stayed
+responsive, not that the probe was missing.
+
+Read this rather than `lagP95Ms` when a stall needs an owner. In the reference run every stall was
+the page's: 298 page samples, worst p95 2,943 ms, and zero samples over the floor in any worker.
 
 ### `stillFrameMaxMs`, `stillFrameCount` — `diagnose` only
 
@@ -222,21 +247,51 @@ The separation is not fastidiousness, it is a measured effect:
 `writePosthogBatch` drops every non-`measure` row rather than trusting a caller to remember, and
 `toPosthogEvent` throws on one.
 
+## Instrument cost, measured
+
+One sample per configuration of the same flow, whole-flow wall time:
+
+| configuration                          | wall      | vs `measure`      |
+| -------------------------------------- | --------- | ----------------- |
+| `measure` (no instruments)             | 36,887 ms | —                 |
+| profiler only (`DX_PERF_SCREENCAST=0`) | 37,840 ms | +953 ms (+2.6%)   |
+| `diagnose` (profiler + screencast)     | 54,335 ms | +17,448 ms (+47%) |
+
+**The screencast is the whole cost; the profiler is close to free.** +2.6% sits below the
+run-to-run noise documented under [Known gaps](#known-gaps) — `open-tasks` came out _faster_ in the
+profiler-only run (4,976 ms vs 7,833 ms), which is noise, not an improvement. So the profiler's
+overhead is not measurable with one sample, while the screencast's is far outside noise.
+
+Why the screencast costs what it does: `Page.startScreencast` makes Chrome encode a JPEG per frame,
+ship it over the CDP websocket, and wait for a `Page.screencastFrameAck` before the next one —
+thousands of encode-and-transport round trips competing with the rendering being measured.
+
+This is the evidence for making the profiler always-on, which would turn `cpuMsByRealm` into a
+trended metric. Not done: one sample cannot distinguish +2.6% from 0%, so that change wants 3-5
+samples per configuration first.
+
 ## Known gaps
 
 Recorded here so nobody rediscovers them as bugs.
 
-1. **Dedicated-worker CPU is not attributed.** It lands in `renderer:<pid>` with the page.
-   `readThreadMetrics` is called for the page target only (`stage.ts`); the harness already attaches
-   every realm, so calling it per target would give per-worker `taskMs`/`scriptMs`.
+1. **Worker CPU is `diagnose`-only.** `cpuMsByRealm` needs the profiler, so a `measure` row carries
+   no worker attribution. `Performance.getMetrics` cannot substitute: `Performance.enable` answers
+   `'Performance.enable' wasn't found` on every worker target, which is why `threadByRealm` covers
+   only realms that have the domain (the page, today). See **Instrument cost** for why always-on
+   profiling looks affordable.
 2. **No disk I/O.** Nothing in CDP reports read/write bytes; `Storage.getUsageAndQuota` gives a
-   stored-bytes _level_, not operations. On Linux, `/proc/<pid>/io` gives `rchar`/`wchar` (syscall
-   bytes), `syscr`/`syscw` (op counts) and `read_bytes`/`write_bytes` (block layer), which
-   `readProcessTreeRss`'s existing tree walk could diff per stage. Caveats: Linux only, so a dev
-   machine must report _unavailable_ rather than 0; `read_bytes` is post-page-cache, so hot SQLite
-   pages appear in `rchar` but not `read_bytes`; and attribution is per process, not per subsystem —
-   SQLite-level counters (pages read, WAL churn) would need instrumentation in our own VFS.
-3. **Lag is pooled across realms**, as above.
+   stored-bytes _level_, not operations. `/proc/<pid>/io` exists on Linux but counts the browser's
+   own traffic alongside ours, so an attributable measurement has to come from the storage layer.
+   The OPFS VFS is `AccessHandlePoolVFS` from `@dxos/wa-sqlite` — vendored, not ours — but it is
+   registered in one place we own (`sql-sqlite/src/internal/opfs-client.ts`, `AccessHandlePoolVFS.create`
+   then `vfs_register`), and its `jRead`/`jWrite`/`jTruncate`/`jSync` carry the byte count and
+   offset, so a wrapper there would give bytes and ops attributable to SQLite rather than to Chrome.
+   It runs in the DEDICATED worker (`worker-runtime.ts`'s `LocalSqliteOpfsLayer`), not the shared
+   one, and node uses native SQLite with no JS VFS, so the instrument is browser-only. Nothing
+   counts VFS operations today — the existing instrumentation there is per-SQL-statement
+   (`recordSqliteQueryMetrics`, plus a slow-query log above 20 ms), a different granularity.
+3. ~~Lag is pooled across realms.~~ Done: `lagByRealm` reports p95, max and sample count per realm.
+   The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
 4. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
    would be visible per realm.
 5. **One iteration per mode.** `open-tasks` has moved 9,172 → 6,803 → 7,833 ms across runs (~26%

@@ -78,6 +78,14 @@ const SETTLE_MS = 20_000;
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
 /**
+ * Lets a `diagnose` run drop the screencast, isolating the profiler's own cost.
+ *
+ * The two instruments are attached together, so the mode's ~47% overhead is a combined figure and
+ * says nothing about whether an always-on profiler would be affordable in `measure`.
+ */
+const screencastEnabled = process.env.DX_PERF_SCREENCAST !== '0';
+
+/**
  * Locator budget per mode.
  *
  * `diagnose` gets far more than `measure` because its instrumentation is not a small tax: the
@@ -200,7 +208,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       const pageTarget = targets.find((target) => target.kind === 'page');
       runner.attachInstruments({
         profiler: startProfiling(artifactDir),
-        ...(pageTarget ? { screencast: await startScreencast(pageTarget.cdp, artifactDir) } : {}),
+        ...(pageTarget && screencastEnabled ? { screencast: await startScreencast(pageTarget.cdp, artifactDir) } : {}),
       });
     }
 
