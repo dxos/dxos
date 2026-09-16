@@ -18,10 +18,10 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   testMatch: '**/perf-*.spec.ts',
-  // No config-level bound: the spec derives each tier's budget from the measured fixture cost and
-  // sets it per test, which overrides this value anyway. A number here would only mislead — the
-  // `extra-heavy` tier's derived budget is nearly two hours, and a config expiry reports no stage
-  // at all, which is the one failure that explains nothing.
+  // No config-level bound: the spec derives the budget from the measured fixture cost and sets it
+  // per test, which overrides this value anyway, so a number here would only mislead about which
+  // limit applies. A config expiry also reports no stage at all — the one failure that explains
+  // nothing.
   timeout: 0,
   expect: { timeout: 30_000 },
   workers: 1,
