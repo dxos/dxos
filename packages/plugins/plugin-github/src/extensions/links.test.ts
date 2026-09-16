@@ -10,7 +10,8 @@ import { describe, test } from 'vitest';
 
 import { AnchorWidget, type WidgetDef, createMarkdownExtensions, decorationSetToArray } from '@dxos/ui-editor';
 
-import { type GitHubLinkProps, githubLinks, parseGitHubLink, parsePullRequestReference } from './links.ts';
+import { parseGitHubLink, parsePullRequestReference } from '../github-link.ts';
+import { type GitHubLinkProps, githubLinks } from './links.ts';
 
 /** Widget whose props are inspectable so tests can assert what the factory was handed. */
 class TestWidget extends WidgetType {

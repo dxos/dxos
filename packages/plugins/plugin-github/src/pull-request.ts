@@ -5,7 +5,7 @@
 import { type Obj } from '@dxos/echo';
 import { PullRequest } from '@dxos/types';
 
-import { type PullRequestReference } from './extensions/index.ts';
+import { type PullRequestReference } from './github-link.ts';
 import { type GitHubApi } from './services/index.ts';
 
 /** Where a pull request lives on github.com, for a reference that carried no URL of its own. */

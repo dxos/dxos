@@ -7,37 +7,12 @@ import { createElement } from 'react';
 
 import { AnchorWidget, type LinkWidgetProps, type WidgetDef, linkWidgets, matchPattern } from '@dxos/ui-editor';
 
-/**
- * `https://github.com/owner/repo`, `/pull/123` or `/issues/123`, with an optional trailing slash,
- * fragment or query. A path below the repository (`/blob/…`, `/actions`) is a page, not an object.
- */
-const GITHUB_LINK =
-  /^https:\/\/github\.com\/([^/\s?#]+)\/([^/\s?#]+)(?:\/(pull|issues)\/(\d+)(?:[/?#]\S*)?|\/?(?:[?#]\S*)?)$/;
+import { GITHUB_LINK, type GitHubLink, parseGitHubLink } from '../github-link.ts';
 
-export type GitHubLink = {
-  owner: string;
-  repo: string;
-  kind: 'repo' | 'pull' | 'issue';
-  /** Absent for a repository. */
-  number?: number;
-  url: string;
-};
+export * from '../github-link.ts';
 
 /** A link widget's props, with the URL's parts alongside it. */
 export type GitHubLinkProps<TContext = any> = LinkWidgetProps<TContext> & GitHubLink;
-
-/** The parts of a pull request or issue URL, or undefined for any other URL. */
-export const parseGitHubLink = (url: string): GitHubLink | undefined => {
-  const match = GITHUB_LINK.exec(url);
-  if (!match) {
-    return undefined;
-  }
-  const [, owner, repo, kind, number] = match;
-  if (!kind) {
-    return { owner, repo, kind: 'repo', url };
-  }
-  return { owner, repo, kind: kind === 'pull' ? 'pull' : 'issue', number: Number(number), url };
-};
 
 /** The chip's leading icon for a pull request, in GitHub's open-state green. */
 export const PULL_REQUEST_ICON = { icon: 'ph--git-pull-request--regular', classNames: 'text-green-500' };
@@ -100,38 +75,4 @@ const withGitHubLink = (def: WidgetDef<GitHubLinkProps>): WidgetDef<LinkWidgetPr
       },
     }),
   };
-};
-
-/**
- * `owner/repo#123` — how a pull request is written where a URL would be noise, and the one form a
- * reviewer can type from memory.
- */
-const PULL_REQUEST_SHORTHAND = /^([\w.-]+)\/([\w.-]+)#(\d+)$/;
-
-/** A pull request named by its coordinates, however the user wrote it. */
-export type PullRequestReference = {
-  owner: string;
-  repo: string;
-  number: number;
-};
-
-/**
- * The pull request a user's text names: a github.com URL or `owner/repo#123`.
- *
- * An `/issues/123` URL is accepted alongside `/pull/123` because GitHub itself serves a pull
- * request under both, and a reader who copied the wrong one still means the same change.
- */
-export const parsePullRequestReference = (value: string): PullRequestReference | undefined => {
-  const text = value.trim();
-  const shorthand = PULL_REQUEST_SHORTHAND.exec(text);
-  if (shorthand) {
-    const [, owner, repo, number] = shorthand;
-    return { owner, repo, number: Number(number) };
-  }
-
-  const link = parseGitHubLink(text);
-  if (!link || link.number === undefined) {
-    return undefined;
-  }
-  return { owner: link.owner, repo: link.repo, number: link.number };
 };

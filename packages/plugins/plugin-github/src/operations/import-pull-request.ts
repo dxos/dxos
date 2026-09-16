@@ -14,7 +14,7 @@ import { PullRequest } from '@dxos/types';
 import { GitHubOperation } from '#types';
 
 import { GitHubPullRequestReferenceError } from '../errors.ts';
-import { parsePullRequestReference } from '../extensions/index.ts';
+import { parsePullRequestReference } from '../github-link.ts';
 import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
 import { githubToken } from './pull-request.ts';
