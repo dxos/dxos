@@ -61,7 +61,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     sigilActions,
     popoverAnchorId,
     scrollIntoView,
-    scrollIntoViewFocus,
     expanded,
     onAction,
     onAdjust,
@@ -91,13 +90,13 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   // clear the one-shot flag. Scrolling is owned by the deck viewport, which positions the plank past the
   // pile of spines, so this focus must not scroll on its own.
   useEffect(() => {
-    if (scrollIntoView === id) {
-      if (scrollIntoViewFocus !== false) {
+    if (scrollIntoView?.id === id) {
+      if (scrollIntoView.focus !== false) {
         focusPane(rootRef.current);
       }
       onScrollIntoView(undefined);
     }
-  }, [scrollIntoView, scrollIntoViewFocus, id, onScrollIntoView]);
+  }, [scrollIntoView, id, onScrollIntoView]);
 
   // The landmark focus group should move focus to Main on Escape, but something blocks it; handle directly.
   const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
