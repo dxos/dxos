@@ -39,7 +39,7 @@ const getReactiveOption = <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>): Ef
 
 /**
  * Atom memo for ECHO objects.
- * Keyed by the entity proxy, so the atom lives exactly as long as the object does.
+ * Memoized on the object itself, so the atom lives exactly as long as the object does.
  */
 const objectFamily = memoizePerEntity(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>> => {
   return Atom.make<Obj.Snapshot<T>>((get) => {
@@ -85,7 +85,7 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
 
 /**
  * Atom memo for ECHO object properties.
- * Outer level keyed by the entity proxy, inner by property key.
+ * Memoized on the object, one atom per property key.
  *
  * One memo table spans every object type and property, so its element type is erased here; the
  * public {@link makeProperty} overloads restore it for callers.

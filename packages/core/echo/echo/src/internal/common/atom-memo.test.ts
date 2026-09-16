@@ -39,6 +39,16 @@ describe('entity atom memoization', () => {
     expect(Obj.atom(person)).not.toBe(Obj.atom(sameId));
   });
 
+  test('a mutable view shares its object atom', ({ expect }) => {
+    const person = makePerson('Alice');
+    const atom = Obj.atom(person);
+    const nameAtom = Obj.atomProperty(person, 'name');
+    Obj.update(person, (person) => {
+      expect(Obj.atom(person)).toBe(atom);
+      expect(Obj.atomProperty(person, 'name')).toBe(nameAtom);
+    });
+  });
+
   test('property atoms are per object and per key', ({ expect }) => {
     const person = makePerson('Alice');
     expect(Obj.atomProperty(person, 'name')).toBe(Obj.atomProperty(person, 'name'));

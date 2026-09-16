@@ -239,8 +239,8 @@ subscription and the family key **per distinct key ever read**. Full mechanism,
 cost model, and the complete site catalog: ATOMS-AUDIT.md.
 
 Bounding plan (work items W1–W7, full detail incl. prior-art survey in
-ATOMS-AUDIT.md): ECHO atoms become **proxy-bounded** — `WeakMap<proxy, atom>`
-families, atom lifetime = entity-proxy lifetime, no atom-level TTL, so ECHO's
+ATOMS-AUDIT.md): ECHO atoms become **proxy-bounded** — memoized on the entity's
+proxy target, atom lifetime = entity lifetime, no atom-level TTL, so ECHO's
 future object-residency policy is the single lifetime knob (decided
 2026-08-14). Everything else becomes subscriber-bounded plus a short idle TTL,
 with per-key state in owner-controlled containers. **App-graph's `_node`/`_edges`
@@ -271,8 +271,12 @@ registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
 - [x] **W2. ECHO families → proxy-bounded.** `memoizePerEntity` /
       `memoizePerEntityKey` (`internal/common/atom-memo.ts`) replace
       `Atom.family` for the 8 entity-keyed families across `Obj/atoms.ts` and
-      `Annotation/atoms.ts`: a `WeakMap` keyed by the entity proxy, with inner
-      property/annotation tables owned by the entry so they die with it.
+      `Annotation/atoms.ts`. Each memo stores its atom (or, for the two-level
+      property/annotation memos, a `Map` of them) in a hidden symbol slot on the
+      proxy target, the same way `createProxy` memoizes the proxy, so the entity
+      owns its atoms and no module-level table exists. A mutable view resolves to
+      its read-only proxy, so both share one atom and the atom never captures the
+      callback-scoped write capability.
       Non-proxy entities (queue-stored objects and other branded shapes, which
       reach these families and can mint a fresh object per read) keep
       `Atom.family`'s structural memoization — identity keying would churn an
@@ -280,9 +284,11 @@ registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
       `refSimpleFamily`, `refPropertyFamily`) keep `Atom.family` since
       `RefImpl` mints a fresh wrapper per read; `keepAlive` dropped from all 11. No `setIdleTTL` on any of them, so ECHO's future object-residency
       policy stays the single knob. Tests: `atom-memo.test.ts` (memo identity,
-      per-key property atoms, node released when unobserved, clean rebuild +
-      re-subscribe, and a `--expose-gc`-gated collection test). Verified:
-      echo 577, echo-client 523, app-graph 158, app-framework 232, schema 51.
+      mutable view shares the atom, per-key property atoms, node released when
+      unobserved, clean rebuild + re-subscribe, and a `--expose-gc`-gated
+      collection test). Verified 2026-09-16 after merging main: echo 616,
+      echo-client 560, app-graph 129, app-framework 275. The GC-gated test has
+      not been run against the target-slot version.
 - [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
       is the store); `MemoryBackend`/`AttentionManager` hold values in their
       existing `Map`s, one pinned notify atom per owner; prune ids on

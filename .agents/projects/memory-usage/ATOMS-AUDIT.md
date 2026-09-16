@@ -293,13 +293,13 @@ component's lifetime) — so no Effect changes are needed.
 Two models, chosen by whether the atom's key is a live domain object:
 
 **ECHO atoms are proxy-bounded.** The atom's identity lives exactly as long as
-the entity proxy that keys it: the family map becomes a
-`WeakMap<proxy, atom>`, so the entry (and the atom) is collected with the
-proxy and never independently pinned. Ephemeron semantics make this sound —
-the atom's read closure strongly references the proxy, but a WeakMap value
-referencing its own key does not keep the key alive. This is Jotai's model
-verbatim (state in a WeakMap keyed by the atom object; lifetime = reference
-reachability), chosen there deliberately over subscriber-eviction. The point
+the entity it derives from: the atom is stored in a hidden slot on the
+entity's proxy target, so the entity owns it and it is collected with the
+entity, never independently pinned. The atom's read closure references the
+proxy, which references the target, which references the atom; that cycle is
+unreachable as a whole once the entity is, so it is collected as a unit. This
+is Jotai's reference-bounded model (lifetime = reachability), chosen there
+deliberately over subscriber-eviction. The point
 of proxy-bounding here: ECHO will eventually need its own residency policy
 (idle TTL / LRU over materialized objects), and atom lifetime must simply
 follow it — one knob, not two stacked TTLs. When ECHO evicts a proxy, its
@@ -363,7 +363,7 @@ default context registry uses 400 ms).
   subscribe → unsubscribe → clock advance → node gone; and (under
   `--expose-gc`) family key released.
 
-### W2. ECHO atom families — proxy-bounded via WeakMap
+### W2. ECHO atom families — proxy-bounded, memoized on the entity
 
 Scope: `echo/src/internal/Obj/atoms.ts` (8 families),
 `internal/Annotation/atoms.ts` (2), `internal/Ref/atoms.ts` (1).
@@ -375,17 +375,19 @@ residency policy there is exactly one lifetime knob and the atoms inherit it.
 - **Entity-keyed families** (`objectFamily`, `objectWithReactiveFamily`,
   `entityFamily`, `relationFamily`, `labelAtomFamily`, `annotationFamily`
   outer, `propertyFamily` outer): replace `Atom.family` with a per-family
-  `WeakMap<Entity, Atom>`. Entry lifetime = proxy reachability; no
-  `FinalizationRegistry`, no TTL, no `keepAlive`. Proxy identity is already
-  canonical per object (`proxy-identity.test.ts` asserts exactly this), so
-  WeakMap-by-identity preserves current family semantics.
-- **Inner keying** (property name, annotation): a plain `Map` hung off the
-  WeakMap entry — bounded by schema keys, dies with the proxy. This also
+  hidden symbol slot on the proxy target, following `createProxy`, which
+  memoizes the proxy on its target the same way. Atom lifetime = entity
+  reachability; no module-level table, no `FinalizationRegistry`, no TTL, no
+  `keepAlive`. The target is canonical per object, so one atom per object is
+  preserved, and a mutable view resolves to its read-only proxy before the atom
+  is built.
+- **Inner keying** (property name, annotation): a plain `Map` in the
+  entity's slot — bounded by schema keys, dies with the entity. This also
   fixes the documented hazard that a nested `Atom.family` intermediate is
   only weakly held and can be collected out from under mounted leaf atoms
   (see the comment in `plugin-magazine/atoms/magazine-posts.ts`).
 - **Ref-keyed families** (`refFamily`, `refSimpleFamily`, `refPropertyFamily`
-  outer) cannot be WeakMap-keyed: `RefImpl` mints a fresh wrapper per
+  outer) cannot be identity-keyed: `RefImpl` mints a fresh wrapper per
   property read, so instance identity is useless — they memoize by
   `Equal`/`Hash` over the URI today. Keep `Atom.family` for these, minus
   `keepAlive`; entries self-clean via the `FinalizationRegistry` once the
@@ -411,7 +413,7 @@ residency policy there is exactly one lifetime knob and the atoms inherit it.
 - Tests: existing `echo-react` `useObject` suite, `proxy-identity.test.ts`,
   `entity-hash.test.ts`; a node-lifecycle test (subscribe → unsubscribe →
   grace → node gone); and a GC test under `--expose-gc` — drop all references
-  to a proxy, collect, assert the WeakMap entry and atom are gone.
+  to a proxy, collect, assert the atom is gone.
 - Record the unblocked follow-up in Phase 2: with neither the registry nor the
   family holding proxies or subscriptions on unwatched objects, ECHO can
   evict object cores/doc handles by residency policy (idle TTL or LRU over
@@ -563,8 +565,8 @@ What it confirms:
 - **Proxy-bounding for ECHO is Jotai's model.** Jotai deliberately abandoned
   subscriber-count eviction ("that was troublesome" — values resetting
   between subscriptions surprised users) in favour of reference-bounded GC
-  via WeakMap. W2 keys the WeakMap by the domain object instead of the atom
-  config — same mechanism, same ephemeron soundness argument.
+  via WeakMap. W2 gets the same reachability-bounded lifetime by storing the
+  atom on the domain object itself rather than in a table keyed by it.
 - **Subscriber+TTL for the rest is the consensus for derived/query data.**
   TanStack Query (renamed `cacheTime` → `gcTime` because users misread it),
   MobX suspension, the TC39 signals proposal's stated design goal, and Zedux's

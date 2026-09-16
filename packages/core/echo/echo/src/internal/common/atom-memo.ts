@@ -4,56 +4,50 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { isProxy } from './proxy/proxy-utils.ts';
+import { defineHiddenProperty } from './proxy/define-hidden-property.ts';
+import { canonicalOf, getProxyTarget, isProxy } from './proxy/proxy-utils.ts';
 
 /**
  * Memoization for atoms derived from an ECHO entity, replacing `Atom.family` so that an atom lives
- * exactly as long as the entity proxy it derives from.
+ * exactly as long as the entity it derives from.
  *
- * A proxy is keyed weakly by identity: a `WeakMap` value may close over its own key without keeping
- * that key alive, so an entity the database releases takes its atoms, their cached snapshots, and
- * their subscriptions with it. Atom lifetime therefore follows object residency and needs no cache
- * policy of its own — one lifetime to reason about rather than an atom TTL layered under an object
- * TTL.
+ * Each memo stores its atom on the entity's proxy target under its own slot, the way `createProxy`
+ * memoizes the proxy itself, so the entity owns its atoms and they are collected with it. `Atom.family`
+ * cannot express this: it holds its keys strongly, so an atom the registry pins (`Atom.keepAlive`) pins
+ * the entity with it, forever.
  *
- * `Atom.family` cannot express this: it holds its keys strongly until the memoized atom is
- * collected, so an atom the registry pins (`Atom.keepAlive`) pins the entity with it, forever.
+ * A mutable view resolves to its read-only proxy, so both share one atom and the atom never captures
+ * the callback-scoped write capability.
  *
- * Non-proxy entities reach these families legitimately (queue-stored objects and other branded
- * shapes — see `subscribe`, which no-ops for them) and can mint a fresh object per read, so they
- * fall back to `Atom.family`'s id-based memoization; keying those by identity would churn a new
- * atom per render. Such an atom never updates in either case, its subscription being a no-op.
+ * Non-proxy entities (queue-stored objects and other branded shapes, for which `subscribe` no-ops) can
+ * mint a fresh object per read, so they fall back to `Atom.family`'s id-based memoization.
  */
 export const memoizePerEntity = <K extends object, A extends object>(make: (key: K) => A): ((key: K) => A) => {
-  const byProxy = new WeakMap<K, A>();
+  const slot = Symbol('atom');
   const byId = Atom.family<K, A>(make);
   return (key) => {
     if (!isProxy(key)) {
       return byId(key);
     }
-    const existing = byProxy.get(key);
+    const target = getProxyTarget(key);
+    const existing: A | undefined = Reflect.get(target, slot);
     if (existing) {
       return existing;
     }
-    const created = make(key);
-    byProxy.set(key, created);
+    const created = make(canonicalOf(key));
+    defineHiddenProperty(target, slot, created);
     return created;
   };
 };
 
 /**
  * Two-level variant of {@link memoizePerEntity}, for atoms keyed by an entity and a second key
- * (a property name, an annotation).
- *
- * The inner table is a plain `Map` held by the entity's entry, so it dies with the entity; its key
- * space is the entity's schema, which bounds it. Keeping the second level inside one entry also
- * avoids the nested-family hazard where the intermediate is only weakly held and can be collected
- * out from under its own mounted leaves.
+ * (a property name, an annotation), whose table is bounded by the entity's schema.
  */
 export const memoizePerEntityKey = <K extends object, K2, A extends object>(
   make: (key: K, subKey: K2) => A,
 ): ((key: K) => (subKey: K2) => A) => {
-  const byProxy = new WeakMap<K, Map<K2, A>>();
+  const slot = Symbol('atoms');
   const byId = Atom.family<K, { readonly get: (subKey: K2) => A }>((key) => ({
     get: Atom.family<K2, A>((subKey) => make(key, subKey)),
   }));
@@ -61,19 +55,21 @@ export const memoizePerEntityKey = <K extends object, K2, A extends object>(
     if (!isProxy(key)) {
       return byId(key).get;
     }
-    let inner = byProxy.get(key);
-    if (!inner) {
-      inner = new Map<K2, A>();
-      byProxy.set(key, inner);
+    const target = getProxyTarget(key);
+    let table: Map<K2, A> | undefined = Reflect.get(target, slot);
+    if (!table) {
+      table = new Map();
+      defineHiddenProperty(target, slot, table);
     }
-    const table = inner;
+    const entries = table;
+    const entity: K = canonicalOf(key);
     return (subKey) => {
-      const existing = table.get(subKey);
+      const existing = entries.get(subKey);
       if (existing) {
         return existing;
       }
-      const created = make(key, subKey);
-      table.set(subKey, created);
+      const created = make(entity, subKey);
+      entries.set(subKey, created);
       return created;
     };
   };
