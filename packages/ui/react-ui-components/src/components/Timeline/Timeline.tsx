@@ -299,7 +299,7 @@ export const Timeline = memo(
           {...composableProps(props, { classNames: 'grid auto-rows-min outline-none' })}
           tabIndex={0}
           style={{
-            gridTemplateColumns: ['min-content', showTimestamp && 'max-content', showIcon && '1.25rem', '1fr']
+            gridTemplateColumns: ['min-content', showIcon && '1.25rem', '1fr', showTimestamp && 'max-content']
               .filter(Boolean)
               .join(' '),
           }}
@@ -354,11 +354,6 @@ export const Timeline = memo(
                       options={options}
                     />
                   </div>
-                  {showTimestamp && (
-                    <div className='text-xs tabular-nums items-center text-description font-thin'>
-                      {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
-                    </div>
-                  )}
                   {showIcon && <CommitIcon commit={commit} />}
                   <div
                     className={mx(
@@ -368,6 +363,11 @@ export const Timeline = memo(
                   >
                     {hasShimmerEffect(commit) ? <Shimmer>{message}</Shimmer> : message}
                   </div>
+                  {showTimestamp && (
+                    <div className='text-xs tabular-nums items-center text-description font-thin'>
+                      {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
+                    </div>
+                  )}
                 </div>
               );
             })
