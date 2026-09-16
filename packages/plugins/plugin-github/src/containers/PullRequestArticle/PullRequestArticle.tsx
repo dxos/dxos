@@ -75,17 +75,29 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   const body = walkthrough?.body;
 
   const [status, setStatus] = useState<Status>();
+  // The live state where it has arrived, the stored one until then — an absent status is unknown,
+  // not "open", and GitHub accepts an approval on a merged pull request rather than rejecting it.
+  const state = status?.state ?? pullRequest.state;
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [composing, setComposing] = useState(false);
   const [comment, setComment] = useState('');
   // Set when the composer was opened from a diff line; the comment then goes on that line.
-  const [lineTarget, setLineTarget] = useState<DiffLineTarget>();
+  const [lineTarget, setLineTarget] = useState<{ target: DiffLineTarget; commit: string }>();
 
-  const handleLineComment = useCallback((target: DiffLineTarget) => {
-    setLineTarget(target);
-    setComposing(true);
-  }, []);
+  const handleLineComment = useCallback(
+    (target: DiffLineTarget) => {
+      if (!walkthrough) {
+        return;
+      }
+      // The commit travels with the target: a regeneration between opening the composer and posting
+      // would otherwise pair the NEW commit with line numbers read from the old diff, which GitHub
+      // either rejects or anchors to the wrong line.
+      setLineTarget({ target, commit: walkthrough.commit });
+      setComposing(true);
+    },
+    [walkthrough],
+  );
 
   const handleCloseComposer = useCallback(() => {
     setComposing(false);
@@ -162,7 +174,15 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     if (!pullRequest.url) {
       return;
     }
-    await navigator.clipboard.writeText(pullRequest.url);
+    try {
+      await navigator.clipboard.writeText(pullRequest.url);
+    } catch (error) {
+      // Denied permission, or a document that is not focused; either way the link is not on the
+      // clipboard and the success toast would be a lie.
+      log.warn('copy link failed', { error });
+      await toast('copy-link', 'copy-link-error.title', false);
+      return;
+    }
     await toast('copy-link', 'copy-link-success.title', true);
   }, [pullRequest.url, toast]);
 
@@ -172,27 +192,24 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       return;
     }
     setBusy(true);
-    // The line numbers a diff chunk carries are the walkthrough's commit's, so a line comment only
-    // exists where a walkthrough does.
-    const { error } =
-      lineTarget && walkthrough
-        ? await invokePromise(
-            GitHubOperation.AddPullRequestReviewComment,
-            {
-              pullRequest: pullRequestRef,
-              body: text,
-              commit: walkthrough.commit,
-              path: lineTarget.file,
-              line: lineTarget.line,
-              side: lineTarget.side === 'before' ? ('LEFT' as const) : ('RIGHT' as const),
-            },
-            { spaceId },
-          )
-        : await invokePromise(
-            GitHubOperation.AddPullRequestComment,
-            { pullRequest: pullRequestRef, body: text },
-            { spaceId },
-          );
+    const { error } = lineTarget
+      ? await invokePromise(
+          GitHubOperation.AddPullRequestReviewComment,
+          {
+            pullRequest: pullRequestRef,
+            body: text,
+            commit: lineTarget.commit,
+            path: lineTarget.target.file,
+            line: lineTarget.target.line,
+            side: lineTarget.target.side === 'before' ? ('LEFT' as const) : ('RIGHT' as const),
+          },
+          { spaceId },
+        )
+      : await invokePromise(
+          GitHubOperation.AddPullRequestComment,
+          { pullRequest: pullRequestRef, body: text },
+          { spaceId },
+        );
     setBusy(false);
     if (error) {
       log.warn('comment failed', { error });
@@ -202,7 +219,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     setComment('');
     handleCloseComposer();
     await toast('comment', 'comment-success.title', true);
-  }, [comment, lineTarget, walkthrough, invokePromise, pullRequestRef, spaceId, toast, handleCloseComposer]);
+  }, [comment, lineTarget, invokePromise, pullRequestRef, spaceId, toast, handleCloseComposer]);
 
   const menuActions = useMenuBuilder(
     () =>
@@ -214,7 +231,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
             icon: 'ph--check-circle--regular',
             variant: 'primary',
             iconOnly: false,
-            disabled: busy || status?.state === 'merged' || status?.state === 'closed',
+            disabled: busy || state === 'merged' || state === 'closed',
             disposition: 'toolbar',
             testId: 'pull-request.toolbar.approve',
           },
@@ -269,7 +286,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
           () => void handleCopyLink(),
         )
         .build(),
-    [busy, generating, walkthrough, pullRequest.url, status?.state, handleApprove, handleGenerate, handleCopyLink],
+    [busy, generating, walkthrough, pullRequest.url, state, handleApprove, handleGenerate, handleCopyLink],
   );
 
   const extensions = useMemo(
@@ -286,8 +303,6 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   );
   // The body is replaced wholesale on regeneration, so the editor is rebuilt rather than patched.
   const { parentRef } = useTextEditor({ initialValue: body ?? '', extensions }, [extensions, body]);
-
-  const state = status?.state ?? pullRequest.state;
 
   return (
     <Panel.Root role={role}>
@@ -314,7 +329,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
           <div className='flex flex-col gap-2 px-4 py-2 border-b border-separator'>
             {lineTarget && (
               <span className='text-sm text-description'>
-                {t('comment-line.label', { file: lineTarget.file, line: lineTarget.line })}
+                {t('comment-line.label', { file: lineTarget.target.file, line: lineTarget.target.line })}
               </span>
             )}
             <Field.Root>

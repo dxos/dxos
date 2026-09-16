@@ -37,6 +37,7 @@ export const translations = [
         'open-on-github.label': 'Open on GitHub',
         'copy-link.label': 'Copy link to pull request',
         'copy-link-success.title': 'Link copied',
+        'copy-link-error.title': 'Could not copy the link',
         'ci-status.success': 'CI passing',
         'ci-status.failure': 'CI failing',
         'ci-status.pending': 'CI running',
