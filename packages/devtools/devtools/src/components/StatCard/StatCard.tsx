@@ -71,7 +71,7 @@ type StatCardRowProps = ThemedClassName<{
   /** A disclosure row: the leading gutter holds the toggle instead of an icon. */
   open?: boolean;
   onToggle?: (open: boolean) => void;
-  label: ReactNode;
+  label?: ReactNode;
   value?: ReactNode;
   /** Shown in the trailing gutter, so values end on one edge whether or not they carry a unit. */
   unit?: string;
@@ -122,9 +122,11 @@ const StatCardRow = ({
         gap='sm'
         classNames={['min-w-0 text-xs', !trailing && '[--dx-col:2/span_2]']}
       >
-        <span className='truncate' title={title}>
-          {label}
-        </span>
+        {label !== undefined && (
+          <span className='truncate' title={title}>
+            {label}
+          </span>
+        )}
         {value !== undefined && (
           <span className={mx('shrink-0 font-mono tabular-nums', warning && 'text-error-text')}>{value}</span>
         )}

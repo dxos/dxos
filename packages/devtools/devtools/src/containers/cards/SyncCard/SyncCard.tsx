@@ -63,14 +63,15 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             key={row.spaceId}
             icon={syncing ? 'ph--arrows-down-up--regular' : 'ph--check-circle--regular'}
             iconClassNames={syncing ? 'text-warning-text' : 'text-success-text'}
-            label={row.name}
             title={describe(row)}
             value={
-              <Grid cols={METRIC_TRACKS} gap='xs' grow={false} classNames='text-end'>
+              <Grid cols={METRIC_TRACKS} gap='sm' grow={false} classNames='text-end'>
+                <span>{row.name}</span>
                 <Metric label='automerge' pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
                 <Metric label='feed' pending={feedPending} total={row.feedState?.total ?? 0} />
               </Grid>
             }
+            // TODO(burdon): Use system.
             action={
               <IconButton
                 variant='ghost'
