@@ -61,17 +61,43 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 
 ## Phase 4: devtools surfaces — audit, articles, cards (design §6)
 
-- [ ] `packages/plugins/plugin-debug/docs/AUDIT.md`: the three deck companions, the twenty-six large
-      panels and the thirteen small panels, by section (Client / HALO / ECHO / MESH / EDGE / performance),
-      with the superset module list.
-- [ ] Remove `deckCompanion.logs` (graph extension, surface, role list, translation, `PLUGIN.mdl`, test).
-- [ ] `@dxos/devtools`: move `src/panels` → `src/containers/panels`; standalone app, extension and
-      testbench imports follow.
-- [ ] Articles: every panel in the `Panel.Root role` + toolbar + `ScrollArea` shape, renamed `*Article`.
-- [ ] `StatRow` component; `containers/cards/<Name>Card` for the thirteen small panels + fixtures + stories;
-      delete `components/performance`.
-- [ ] `StatsPanel` as the card stack (toolbar with live toggle); `DevtoolsOverviewContainer` renders the
-      `AppSurface.DevtoolsOverview` surface inside it with `DevtoolsCardData`.
-- [ ] plugin-devtools `react-surface.ts`: articles (renamed) + one surface per card with `position`.
-- [ ] plugin-debug compartment `StatsPanel` as cards, contributed to `AppSurface.DevtoolsOverview`.
-- [ ] Builds, graph-builder tests, card stories, Composer check; `PLUGIN.mdl` (debug, devtools) updated.
+- [x] `packages/plugins/plugin-debug/docs/AUDIT.md`: the three deck companions, the twenty-six large
+      panels and the thirteen small panels, by section, with the superset module list (§5).
+- [x] Remove `deckCompanion.logs` (graph extension, surface, role list, translation).
+- [x] `@dxos/devtools`: `src/panels` → `src/containers/panels`; standalone app, extension and
+      testbench imports follow; the `echo` barrel no longer star-exports `SpaceInfoArticle/` and the
+      `edge` barrel's `InvocationTraceContainer` resolves to the container.
+- [x] Articles: every panel `Panel.Root role` + toolbar + content, renamed `*Article` (`ArticleProps`);
+      `KeyringArticle` and `ToolsExplorerContainer` gained the Panel shell; plugin-devtools threads
+      `role` through `ActiveSpacePanel` and every surface.
+- [x] `StatCard` composite (`components/StatCard`: Root / Header / Row / Content) + story;
+      `containers/cards/<Name>Card` for the thirteen small panels with fixtures
+      (`cards/testing/fixtures.ts`) and a story each; `components/performance` deleted.
+- [x] `StatsPanel` (`containers/StatsPanel`) as the card stack (toolbar: refresh, live toggle);
+      `DevtoolsOverviewContainer` renders `AppSurface.DevtoolsOverview` inside it with
+      `DevtoolsCardData`; hooks `useEdgeStatus` / `useSwarmTrace` / `useSyncRows` feed the three
+      cards that need a client.
+- [x] plugin-devtools `react-surface.ts`: articles + one surface per card with `position` 0–12.
+- [x] plugin-debug compartment `StatsPanel` as cards, contributed to `AppSurface.DevtoolsOverview` (20).
+- [x] plugin-calls `CallDebugPanel` onto `StatCard`; testbench lists the stats cards directly.
+- [x] Builds (devtools, plugin-devtools, plugin-debug, plugin-calls, testbench-app, storybook-testing),
+      lint, plugin-debug tests (24), plugin-devtools tests, devtools type tests; `PLUGIN.mdl` (debug,
+      devtools) updated; changeset `.changeset/devtools-articles-and-cards.md`.
+- [ ] Verify in Composer: the Stats companion shows the card stack; the `logs` R0 button is gone; every
+      DevTools tree page renders in the panel.
+
+### Phase 4 follow-ups (from the audit, §6)
+
+- [ ] `Stats.queries` is never assigned (`useStats`), so the Queries and Query types cards are always
+      empty; wire the query stats or drop both cards.
+- [ ] `QueuesArticle` has no data source; `InvocationTraceContainer`'s Logs / Raw / Graph tabs read a
+      hard-coded empty array.
+- [ ] `SwarmArticle` calls `useMembers` in a loop; `useStats` mutates state during render and carries
+      two non-null service assertions; `LoggingArticle`, `StorageArticle`, `SignalStatusTable` return
+      before hooks.
+- [ ] `ConfigArticle` in the plugin keeps the config-mutating Edge selector.
+- [ ] Duplication: `ObjectsArticle` / `SchemaArticle` layout; feed-key gathering; JSON download;
+      the `props.space ?? state.space` fallback in nine articles; two space selectors.
+- [ ] `GithubPanel` (plugin-devtools) is built and exported but never registered; `Devtools.Agent.*`
+      ids and the standalone `AGENT` / `/client/tracing` sidebar rows have no page.
+- [ ] Stories for the article panels (five of twenty-six have one).
