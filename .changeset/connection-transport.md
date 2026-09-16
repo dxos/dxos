@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: a layer of stacked PR #13161, whose diff from main includes the entries of the layers below it
 '@dxos/network-manager': patch
 ---
 
