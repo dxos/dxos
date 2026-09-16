@@ -310,8 +310,8 @@ export class FeedSyncer extends Resource {
    * subscribe that does not land costs freshness rather than correctness.
    */
   #sendServerBoundMessage(message: FeedProtocol.ProtocolMessage, serviceId: string): void {
-    void this.#edgeClient
-      .send(
+    const send = Effect.tryPromise(async () =>
+      this.#edgeClient.send(
         this._ctx,
         createBuf(MessageSchema, {
           source: {
@@ -321,14 +321,20 @@ export class FeedSyncer extends Resource {
           serviceId,
           payload: { value: bufferToArray(encoder.encode(message)) },
         }),
-      )
-      .catch((cause) =>
-        log('feed sync server-bound send failed', {
-          tag: message._tag,
-          serviceId,
-          cause: cause instanceof Error ? cause.message : String(cause),
-        }),
-      );
+      ),
+    ).pipe(
+      Effect.tapError((cause) =>
+        Effect.sync(() =>
+          log('feed sync server-bound send failed', {
+            tag: message._tag,
+            serviceId,
+            cause: cause instanceof Error ? cause.message : String(cause),
+          }),
+        ),
+      ),
+      Effect.ignore,
+    );
+    void Effect.runPromise(send);
   }
 
   /**
@@ -358,9 +364,15 @@ export class FeedSyncer extends Resource {
     if (!this.#backgroundSync) {
       return;
     }
-    const spaceId = message.spaceId as SpaceId;
+    const { spaceId } = message;
     if (!SpaceId.isValid(spaceId)) {
       log.warn('feed sync hint carried an invalid space id', { spaceId: message.spaceId });
+      return;
+    }
+    // A well-formed id is not yet one this client tracks, and the hint is server-supplied: without
+    // this the server could drive pulls for arbitrary spaces.
+    if (!this.#getSpaceIds().includes(spaceId)) {
+      log.warn('feed sync hint named an untracked space', { spaceId });
       return;
     }
     log('feed sync hint received', {
@@ -377,7 +389,14 @@ export class FeedSyncer extends Resource {
     if (this.#subscriptionExpiresAt == null) {
       return;
     }
-    const delay = Math.max(this.#subscriptionExpiresAt - Date.now() - SUBSCRIPTION_REFRESH_MARGIN_MS, 0);
+    const remaining = this.#subscriptionExpiresAt - Date.now();
+    if (remaining <= 0) {
+      return;
+    }
+    // Halving is what keeps a short-lived subscription from refreshing at zero delay, which would
+    // spin subscribe/response as fast as the socket allows.
+    const margin = Math.min(SUBSCRIPTION_REFRESH_MARGIN_MS, remaining / 2);
+    const delay = remaining - margin;
     scheduleTask(
       this._ctx,
       () => {

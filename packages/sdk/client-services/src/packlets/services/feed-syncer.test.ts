@@ -464,6 +464,46 @@ describe('FeedSyncer', () => {
     });
   });
 
+  test('a hint for a space this client does not sync is ignored', async () => {
+    const spaceId = SpaceId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer, pushToClient } =
+      await createFeedSyncHarness({ spaceId, pollingInterval: 60_000 });
+    const serverFeedId = EntityId.random();
+
+    const queryClient = () =>
+      clientFeedStore
+        .query({ spaceId, feedNamespace: syncNamespace, position: -1, query: { feedIds: [serverFeedId] } })
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
+
+    const appendToServer = (data: Uint8Array) =>
+      serverFeedStore
+        .appendLocal([{ spaceId, feedId: serverFeedId, feedNamespace: syncNamespace, data }])
+        .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
+
+    await appendToServer(new Uint8Array([1]));
+    await syncer.open(new Context());
+
+    // Waiting for the first block lands the initial round, so the next append cannot ride it.
+    await vi.waitFor(async () => {
+      expect((await queryClient()).blocks).toHaveLength(1);
+    });
+
+    await appendToServer(new Uint8Array([2]));
+
+    // Well-formed but untracked: the id is server-supplied, so validity alone must not drive a pull.
+    pushToClient({
+      _tag: 'FeedAdvanced',
+      spaceId: SpaceId.random(),
+      feedNamespace: syncNamespace,
+      position: 2,
+      senderPeerId: 'server',
+      recipientPeerId: 'client',
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect((await queryClient()).blocks).toHaveLength(1);
+  });
+
   test('a hint for an unknown space id is ignored rather than throwing', async () => {
     const spaceId = SpaceId.random();
     const { syncer, pushToClient } = await createFeedSyncHarness({ spaceId, pollingInterval: 60_000 });
