@@ -722,18 +722,100 @@ Taken 2026-09-16:
 
 ## 10. Plan
 
-1. Runtime: write `process.spawned` / `process.exited` from `ProcessHandle`; stamp
-   `conversation` from the environment in `createProcessTraceService`; route the supervisor's and
-   `DelegateTaskToChat`'s task moves through `Task.update` + `TaskStatusChanged`; stamp the
-   trigger as `TargetAnnotation` in `TriggerDispatcher`. Tests in `compute-runtime` and
-   `assistant-toolkit`.
-2. `@dxos/types`: structured `status` / `previousStatus` on `Task.HistoryEntry`, written by
-   `Task.update`.
-3. `Gantt`: `'group'` lane kind + story.
-4. `buildSessionTimeline`: consume `process.exited` for lane ends, `includeEmptySessions`,
-   `laneByPid`, attribution by `taskId` for events with no session; tests.
-5. `buildActivityTimeline` + tests over two projects, an unfiled chat, a human edit, a trigger with
-   several runs (one failed, one live) and a bare operation.
-6. `useActivityTimeline` (24 h window).
-7. `ActivityPanel` + story; graph node + surface; translations.
-8. Verify in storybook and in the running app's debug panel; changeset.
+The plan runs bottom-up: the runtime is made to record what the chart needs before the chart is
+taught to read it, and the chart is built from pure, tested builders before any of it is wired to
+a page. Each step lands on its own and leaves the existing views working; nothing waits on the
+panel to be useful.
+
+### 10.1 Why this order
+
+Three facts from §4 shape the sequence. First, the trace is the only durable record of a process,
+and today it never says when a process ended — so any lane the chart draws for a finished run is a
+guess made from the run's last event and from a live tree that forgets it at restart. Second, the
+supervisor moves tasks without saying so in the trace, so a delegated task's finish is invisible to
+the very view that exists to show delegation. Third, the pieces the chart joins on (session,
+trigger) are stamped on some processes' trace meta and inherited by none. Fixing those in the
+runtime first (steps 1–2) is cheaper than compensating for them in the builder, and it makes every
+later step simpler than it would otherwise be: with `process.exited` in the feed the builder has
+no open-lane heuristics, with `TaskStatusChanged` on every move the task bars are exact, and with
+`conversation`/`trigger` on every child event the pid chain is a fallback rather than the join.
+
+The chart work (steps 3–6) is ordered from the leaf up. `Gantt` is presentation-only and gets one
+new lane kind. `buildSessionTimeline` is extended rather than replaced, because the project chart
+already depends on its behaviour and its tests pin the delegation semantics that took several
+rounds to get right (§6). `buildActivityTimeline` composes it per partition and adds the two
+non-session groups; it is a pure function over the same inputs, so it is testable with fixtures
+alone, and the hook that feeds it is a thin subscription. The page (step 7) is the last piece
+because it is the least reusable and the most host-bound: it needs the process monitor, the space,
+the settings and the debug-panel graph, all of which live in the plugin, and none of which the
+package should know about (§8.4, and the split the `TracePanel` container already follows).
+
+### 10.2 Steps
+
+1. **Runtime: record what the chart needs.** `ProcessHandle` writes `process.spawned` on spawn
+   and `process.exited { outcome }` from `#handlerCompleted` and `terminate`, so a run's end and
+   its outcome are in the feed whether or not the process is still in the tree.
+   `createProcessTraceService` defaults `conversation` from `environment.conversation` and
+   `trigger` from the spawning dispatcher's meta, so a tool's or a sub-agent's event names its
+   session on its own. `DelegateTaskToChat`, `DelegationStrategy.reconcile`/`onComplete` and the
+   orphan sweep move tasks through `Task.update` and write `TaskStatusChanged`, so the trace sees
+   every status move and the task's history gains an entry for each. `TriggerDispatcher` stamps the
+   trigger's URI as `TargetAnnotation` at spawn, the way the agent stamps its chat, so a live
+   triggered process is attributable before it has written a single event. Tests in
+   `compute-runtime` (lifecycle events on the three terminal paths, meta defaulting for a child)
+   and `assistant-toolkit` (a status event per supervisor move).
+   _Rationale_: these are the gaps the doc found (§4 items 1–3, 10); each is a few lines at the
+   source and removes a heuristic downstream. They are also independently valuable — the
+   `TracePanel` and the project chart read the same feed and get more accurate for free.
+2. **`@dxos/types`: make task history a timeline.** `Task.HistoryEntry` gains structured
+   `status`/`previousStatus`, written by `Task.update` beside the prose, so a task alone answers
+   when it started and finished. _Rationale_: §4 item 5 — the log already exists and is already
+   stamped with date and actor; the move itself is only in prose. With this the project chart can
+   draw a task bar from the object and the trace becomes the attribution to a session rather than
+   the source of the times, which also covers views that have no trace at hand.
+3. **`Gantt`: a `group` lane kind.** `orderRows` visits a group as a header and recurses into its
+   children one level deeper; a group draws a hull bar and no nodes; the legend indents by depth as
+   it does now. Story. _Rationale_: the only presentational change the dashboard needs; dependency
+   and delegation connectors already work across ordered rows (§8.3), so nothing else in the
+   component moves.
+4. **`buildSessionTimeline`: read the new facts, expose the joins.** Lane ends come from
+   `process.exited` when present (falling back to the current end-event rule for old traces);
+   `includeEmptySessions` stops skipping chats with no checklist; `laneByPid` is returned so a
+   caller can tell which processes are already drawn; events that carry a `taskId` but no session
+   (a person's edit in the ledger) attach to the task's lane by id. Tests for each.
+   _Rationale_: §4 items 6 and 8 are builder concerns, and the builder is where the delegation
+   semantics are pinned — extending it keeps one source of truth for what a session lane means.
+5. **`buildActivityTimeline`.** Pure: windows the trace per event (keeping the begins of spans
+   still open at the window's start), partitions sessions by project through `Chat.peekProject`,
+   runs `buildSessionTimeline` per partition under a project `group`, adds one group per trigger
+   with a lane per run, adds process lanes for the remaining top-level processes (live process and
+   traced span merged by pid), and merges the partitions with every id namespaced and every
+   reference rewritten (§8.2). Tests over two projects, an unfiled chat, a human edit, a trigger
+   with several runs (one failed, one live) and a bare operation. _Rationale_: composing the
+   session builder rather than re-implementing it keeps the project chart and the dashboard in
+   agreement about what a session is; keeping the function pure keeps the fixtures the only test
+   harness needed.
+6. **`useActivityTimeline`.** The subscription: trace messages (debounced), the process tree
+   (debounced), chats, tasks, projects and triggers by query, a `now` tick, and the 24 h window
+   applied before the build. _Rationale_: mirrors `useSessionTimeline` so the two hooks read the
+   same sources the same way; the window is the one new cost control (§4 item 7) and belongs at
+   the subscription, before anything is built.
+7. **`ActivityPanel` and its page.** The panel in `@dxos/react-ui-trace` (toolbar with window,
+   group filter and the operations toggle; `Gantt` in a `ScrollArea`; the marker detail pane); the
+   container and the debug-root node in `plugin-assistant` (`whenDebugGroup` extension,
+   `AppSurface.literal(Article, …)` surface, lane → chat and marker → event resolution, translations).
+   Story over the fixtures plus a second project's chats. _Rationale_: the same presentational /
+   container split the `TracePanel` now has, so the panel is usable outside the app and the page
+   adds no dependency beyond `@dxos/compute/Project` (§8.4).
+8. **Verify and ship.** Storybook for the panel and the group chart; the running app's debug panel
+   with a delegated project, a mailbox sync and a plain operation on one axis; one changeset.
+
+### 10.3 What is deliberately left out
+
+- A materialised activity index or a feed-side range query: the client-side window is expected to
+  hold for a space's day of activity; the builder is pure so either can be added behind it later.
+- A durable per-run progress summary for triggered runs (§4 item 9): the span is enough for a bar,
+  and a persisted summary is a runtime change worth making only once the dashboard is asked "how
+  much did that run do".
+- Cross-space views: everything here is space-scoped, like both existing views; a space selector is
+  a toolbar affordance, not a data change.
