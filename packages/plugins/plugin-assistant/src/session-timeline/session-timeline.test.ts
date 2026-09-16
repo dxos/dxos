@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
-import { AgentRequestBegin, AgentRequestEnd, CompleteBlock, DelegationSpawned } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import { TestTraceService } from '@dxos/compute/testing';
@@ -121,13 +120,13 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'user',
             block: { _tag: 'text', text: 'go' },
           });
-          yield* Trace.write(DelegationSpawned, { taskId: first.id, pid: 'sub' });
+          yield* Trace.write(Trace.DelegationSpawned, { taskId: first.id, pid: 'sub' });
           yield* TestTraceService.withMeta(
             { pid: 'sub', parentPid: 'agent' },
             Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' }),
@@ -179,7 +178,7 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* toolCall('Search'); // 2 — before any task started, stays on the session.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 3.
           yield* toolCall('Read file'); // 4.
@@ -238,7 +237,7 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* toolCall('Read file'); // 2.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: first.id,
@@ -253,7 +252,7 @@ describe('buildSessionTimeline', () => {
             status: 'done',
             previousStatus: 'started',
           }); // 5.
-          yield* Trace.write(AgentRequestEnd, { status: 'success' }); // 6.
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' }); // 6.
         }),
       );
 
@@ -280,7 +279,7 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: mine.id, title: 'Mine', status: 'started' }); // 2.
           yield* toolCall('Read file'); // 3.
           // A task on somebody else's list: it must neither close `Mine` nor move the boundary.
@@ -314,7 +313,7 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
           yield* toolCall('Read file'); // 3.
           // No close for the first: starting the second is what ends it.
@@ -347,7 +346,7 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Only', status: 'started' }); // 2.
           yield* toolCall('Read file'); // 3.
         }),
@@ -370,8 +369,8 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
-          yield* toolCall('Read file'); // 2 — the run dies here: no AgentRequestEnd.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* toolCall('Read file'); // 2 — the run dies here: no Trace.AgentRequestEnd.
         }),
       );
 
@@ -406,7 +405,7 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Deferred', status: 'started' }); // 2.
           yield* toolCall('Read file'); // 3.
           yield* Trace.write(Trace.TaskStatusChanged, {
@@ -437,7 +436,7 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           // Never started, so it owns nothing — not the reading the agent did before it said so.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: dismissed.id,
@@ -485,7 +484,7 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 3.
           yield* toolCall('Write file'); // 4.
@@ -522,15 +521,15 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Delegated', status: 'started' }); // 2.
-          yield* Trace.write(DelegationSpawned, { taskId: task.id, pid: 'sub' }); // 3.
+          yield* Trace.write(Trace.DelegationSpawned, { taskId: task.id, pid: 'sub' }); // 3.
           yield* toolCall('Wait'); // 4.
           yield* TestTraceService.withMeta(
             { pid: 'sub', parentPid: 'agent' },
             Effect.gen(function* () {
               yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' }); // 5.
-              yield* Trace.write(CompleteBlock, {
+              yield* Trace.write(Trace.CompleteBlock, {
                 messageId: MESSAGE_ID,
                 role: 'assistant',
                 block: { _tag: 'text', text: 'done' },
@@ -571,10 +570,10 @@ describe('buildSessionTimeline', () => {
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestBegin, {});
           yield* stats(10, 20, 1);
-          yield* Trace.write(DelegationSpawned, { taskId: task.id, pid: 'sub' });
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.DelegationSpawned, { taskId: task.id, pid: 'sub' });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
           yield* TestTraceService.withMeta(
             { pid: 'sub', parentPid: 'agent' },
             Effect.gen(function* () {
@@ -628,14 +627,14 @@ const makeChat = (name: string, tasks: readonly Task.Task[]) =>
   Chat.make({ name, feed: Ref.make(Feed.make()), tasks: tasks.map((task) => Ref.make(task)) });
 
 const toolCall = (name: string) =>
-  Trace.write(CompleteBlock, {
+  Trace.write(Trace.CompleteBlock, {
     messageId: MESSAGE_ID,
     role: 'assistant',
     block: { _tag: 'toolCall', toolCallId: name, name, input: '{}', providerExecuted: false },
   });
 
 const stats = (input: number, output: number, toolCalls: number) =>
-  Trace.write(CompleteBlock, {
+  Trace.write(Trace.CompleteBlock, {
     messageId: MESSAGE_ID,
     role: 'assistant',
     block: {

@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { AgentRequestBegin, AgentRequestEnd } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 
 import {
@@ -67,7 +66,7 @@ describe('buildSpanTree', () => {
   test('a nested operation attaches to its open parent', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestBegin, {}));
         yield* withMeta(
           { pid: 'op-1', parentPid: 'agent-1' },
           Effect.gen(function* () {
@@ -75,7 +74,7 @@ describe('buildSpanTree', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestEnd, { status: 'success' }));
       }),
     );
     const tree = buildSpanTree(messages);
@@ -92,10 +91,10 @@ describe('buildSpanTree', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -111,18 +110,18 @@ describe('buildSpanTree', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestBegin, {});
           yield* Trace.write(NoteEvent, {});
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
     const tree = buildSpanTree(messages);
     expect(tree.children[0].events).toHaveLength(3);
     expect(tree.children[0].events.map((event) => event.type)).toEqual([
-      AgentRequestBegin.key,
+      Trace.AgentRequestBegin.key,
       'note',
-      AgentRequestEnd.key,
+      Trace.AgentRequestEnd.key,
     ]);
   });
 
@@ -176,18 +175,22 @@ describe('buildSpanTree', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestBegin, {});
           yield* Trace.write(NoteEvent, { text: 'note 1' });
           yield* Trace.write(NoteEvent, { text: 'note 2' });
           yield* Trace.write(NoteEvent, { text: 'note 3' });
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
     const tree = buildSpanTree(messages, { eventLimit: 1 });
     expect(tree.children).toHaveLength(1);
     const agentSpan = tree.children[0];
-    expect(agentSpan.events.map((event) => event.type)).toEqual([AgentRequestBegin.key, 'note', AgentRequestEnd.key]);
+    expect(agentSpan.events.map((event) => event.type)).toEqual([
+      Trace.AgentRequestBegin.key,
+      'note',
+      Trace.AgentRequestEnd.key,
+    ]);
     expect((agentSpan.events[1].data as { text: string }).text).toBe('note 3');
   });
 
@@ -200,7 +203,7 @@ describe('buildSpanTree', () => {
         yield* withMeta(
           { pid: 'parent-1' },
           Effect.gen(function* () {
-            yield* Trace.write(AgentRequestBegin, {});
+            yield* Trace.write(Trace.AgentRequestBegin, {});
             for (let index = 0; index < 20; index += 1) {
               yield* Trace.write(NoteEvent, { index });
             }
@@ -213,7 +216,7 @@ describe('buildSpanTree', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'parent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+        yield* withMeta({ pid: 'parent-1' }, Trace.write(Trace.AgentRequestEnd, { status: 'success' }));
       }),
     );
     const tree = buildSpanTree(messages, {
@@ -234,7 +237,7 @@ describe('buildSpanTree', () => {
   test('flattenSpanTree returns root + all descendants in depth-first order', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestBegin, {}));
         yield* withMeta(
           { pid: 'op-1', parentPid: 'agent-1' },
           Effect.gen(function* () {
@@ -242,7 +245,7 @@ describe('buildSpanTree', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'a', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestEnd, { status: 'success' }));
       }),
     );
     const tree = buildSpanTree(messages);
@@ -267,11 +270,11 @@ describe('buildSpanTree', () => {
   });
 
   test('an open agent request span past the timeout is force-closed as interrupted', ({ expect }) => {
-    const messages = collectTraceEvents(withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {})));
+    const messages = collectTraceEvents(withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestBegin, {})));
     const tree = buildSpanTree(messages, { now: 1 + DEFAULT_SPAN_TIMEOUT_MS });
     const span = tree.children[0];
     expect(span.events).toHaveLength(2);
-    expect(span.events[1].type).toBe(AgentRequestEnd.key);
+    expect(span.events[1].type).toBe(Trace.AgentRequestEnd.key);
     expect(span.events[1].data).toMatchObject({ status: 'interrupted' });
   });
 
@@ -302,9 +305,9 @@ describe('buildSpanTree', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -312,7 +315,7 @@ describe('buildSpanTree', () => {
     expect(tree.children).toHaveLength(2);
     const [superseded, current] = tree.children;
     expect(superseded.events).toHaveLength(2);
-    expect(superseded.events[1].type).toBe(AgentRequestEnd.key);
+    expect(superseded.events[1].type).toBe(Trace.AgentRequestEnd.key);
     expect(superseded.events[1].data).toMatchObject({ status: 'interrupted' });
     expect(current.events).toHaveLength(2);
     expect(current.events[1].data).toMatchObject({ status: 'success' });

@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { type ProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
@@ -124,8 +123,8 @@ export const SimulatedAgent = Process.make(
           Effect.gen(function* () {
             switch (step._tag) {
               case 'begin': {
-                yield* writeAndFlush(AgentRequestBegin, {});
-                yield* writeAndFlush(CompleteBlock, {
+                yield* writeAndFlush(Trace.AgentRequestBegin, {});
+                yield* writeAndFlush(Trace.CompleteBlock, {
                   messageId,
                   role: 'user',
                   block: { _tag: 'text', text: step.prompt },
@@ -134,7 +133,7 @@ export const SimulatedAgent = Process.make(
               }
 
               case 'toolCall': {
-                yield* writeAndFlush(CompleteBlock, {
+                yield* writeAndFlush(Trace.CompleteBlock, {
                   messageId,
                   role: 'assistant',
                   block: {
@@ -149,7 +148,7 @@ export const SimulatedAgent = Process.make(
               }
 
               case 'toolResult': {
-                yield* writeAndFlush(CompleteBlock, {
+                yield* writeAndFlush(Trace.CompleteBlock, {
                   messageId,
                   role: 'assistant',
                   block: {
@@ -163,7 +162,7 @@ export const SimulatedAgent = Process.make(
               }
 
               case 'end': {
-                yield* writeAndFlush(AgentRequestEnd, { status: step.status });
+                yield* writeAndFlush(Trace.AgentRequestEnd, { status: step.status });
                 if (step.status === 'error') {
                   ctx.fail(new Error('Simulated agent failure'));
                 } else {

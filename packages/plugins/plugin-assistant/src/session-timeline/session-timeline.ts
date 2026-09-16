@@ -6,7 +6,6 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
-import { AgentRequestBegin, AgentRequestEnd, CompleteBlock, DelegationSpawned } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
@@ -185,7 +184,7 @@ export const buildSessionTimeline = ({
   const events = spans.flatMap((span) => span.events).sort((a, b) => a.timestamp - b.timestamp);
   const requestBegins = events.filter(
     (event): event is Trace.FlatEvent & { meta: { pid: string } } =>
-      event.type === AgentRequestBegin.key && event.meta.pid !== undefined,
+      event.type === Trace.AgentRequestBegin.key && event.meta.pid !== undefined,
   );
 
   // The agent process targets the chat; its trace meta carries the chat's feed.
@@ -251,15 +250,15 @@ export const buildSessionTimeline = ({
   for (const source of sources) {
     const laneId = sessionLaneId(source.key);
     const sessionEvents = events.filter((event) => event.meta.pid && source.pids.has(event.meta.pid));
-    const begins = sessionEvents.filter((event) => event.type === AgentRequestBegin.key);
-    const ends = sessionEvents.filter((event) => event.type === AgentRequestEnd.key);
+    const begins = sessionEvents.filter((event) => event.type === Trace.AgentRequestBegin.key);
+    const ends = sessionEvents.filter((event) => event.type === Trace.AgentRequestEnd.key);
     const requestOpen = begins.length > ends.length;
     const processActive = [...source.pids].some((pid) => {
       const process = processByPid.get(pid);
       return process !== undefined && ACTIVE_STATES.has(process.state);
     });
     const lastEnd = ends.at(-1);
-    const lastEndStatus = lastEnd ? decode(AgentRequestEnd.schema, lastEnd.data)?.status : undefined;
+    const lastEndStatus = lastEnd ? decode(Trace.AgentRequestEnd.schema, lastEnd.data)?.status : undefined;
     // An unmatched request begin is a run in flight only while its process is; with the process
     // recorded as ended, the run died before writing its end, so the lane closes at its last event
     // rather than staying open (and stretching the chart) indefinitely.
@@ -287,8 +286,8 @@ export const buildSessionTimeline = ({
     // neither the task nor the conversation.
     const taskByPid = new Map<string, string>();
     for (const event of sessionEvents) {
-      if (event.type === DelegationSpawned.key) {
-        const data = decode(DelegationSpawned.schema, event.data);
+      if (event.type === Trace.DelegationSpawned.key) {
+        const data = decode(Trace.DelegationSpawned.schema, event.data);
         if (data) {
           taskByPid.set(data.pid, data.taskId);
         }
@@ -308,7 +307,7 @@ export const buildSessionTimeline = ({
       ) {
         return [];
       }
-      const isAgent = taskByPid.has(pid) || span.events.some((event) => event.type === CompleteBlock.key);
+      const isAgent = taskByPid.has(pid) || span.events.some((event) => event.type === Trace.CompleteBlock.key);
       return isAgent ? [{ span, pid, startEvent }] : [];
     });
 
@@ -438,21 +437,21 @@ export const buildSessionTimeline = ({
     // Everything the session did while a task was active is that task's, so the session bar keeps
     // only what brackets the whole run (its request markers) and the timeline reads per task.
     const markerLaneId =
-      event.type === AgentRequestBegin.key || event.type === AgentRequestEnd.key
+      event.type === Trace.AgentRequestBegin.key || event.type === Trace.AgentRequestEnd.key
         ? laneId
         : (segmentFor(segmentsBySession.get(laneId), event)?.laneId ?? laneId);
     const marker = toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
     if (marker) {
       markers.push(marker);
       if (marker.kind === 'delegation') {
-        const data = decode(DelegationSpawned.schema, event.data);
+        const data = decode(Trace.DelegationSpawned.schema, event.data);
         if (data) {
           spawnMarkerByPid.set(data.pid, marker.id);
         }
       }
     }
-    if (event.type === CompleteBlock.key) {
-      const data = decode(CompleteBlock.schema, event.data);
+    if (event.type === Trace.CompleteBlock.key) {
+      const data = decode(Trace.CompleteBlock.schema, event.data);
       if (data?.block._tag === 'stats') {
         const entry = tokens.get(laneId) ?? { usage: { input: 0, output: 0, total: 0 }, toolCalls: 0 };
         // A provider that reports no total still reports the parts.
@@ -546,10 +545,10 @@ const subSessionStatus = (endEvent: Trace.FlatEvent | undefined, process: Proces
 const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | undefined => {
   const base = { id, laneId, timestamp: event.timestamp, pid: event.meta.pid };
   switch (event.type) {
-    case AgentRequestBegin.key:
+    case Trace.AgentRequestBegin.key:
       return { ...base, kind: 'request', label: 'Request started' };
-    case AgentRequestEnd.key: {
-      const data = decode(AgentRequestEnd.schema, event.data);
+    case Trace.AgentRequestEnd.key: {
+      const data = decode(Trace.AgentRequestEnd.schema, event.data);
       return {
         ...base,
         kind: 'request',
@@ -568,8 +567,8 @@ const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | 
         detail: data,
       };
     }
-    case DelegationSpawned.key: {
-      const data = decode(DelegationSpawned.schema, event.data);
+    case Trace.DelegationSpawned.key: {
+      const data = decode(Trace.DelegationSpawned.schema, event.data);
       return { ...base, kind: 'delegation', label: 'Delegated', detail: data };
     }
     case Trace.OperationStart.key: {
@@ -587,8 +586,8 @@ const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | 
         detail: failed ? data?.error : undefined,
       };
     }
-    case CompleteBlock.key: {
-      const data = decode(CompleteBlock.schema, event.data);
+    case Trace.CompleteBlock.key: {
+      const data = decode(Trace.CompleteBlock.schema, event.data);
       if (data?.block._tag === 'toolCall') {
         return { ...base, kind: 'tool', label: data.block.name };
       }

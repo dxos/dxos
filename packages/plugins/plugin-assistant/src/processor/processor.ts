@@ -19,9 +19,6 @@ import {
   AiContext,
   AiSession,
   Harness,
-  McpServerError,
-  PartialBlock,
-  RequestPhase,
   ToolExecutionServices,
   createSystemPrompt,
   formatSystemPrompt,
@@ -238,7 +235,7 @@ export class AiChatProcessor {
    * Misconfigured/unreachable servers are dropped from the toolkit so the chat
    * keeps working; the entries here let the UI display which servers failed.
    */
-  public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
+  public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]);
 
   /**
    * Stage the in-flight request has reached, or `undefined` when there is nothing to report.
@@ -247,7 +244,7 @@ export class AiChatProcessor {
    * a little, then calls tools for a long time, so a line cleared at the first block reads as a
    * request that has finished. Cleared when the turn settles or is cancelled.
    */
-  public readonly activity = Atom.make<Trace.PayloadType<typeof RequestPhase> | undefined>(undefined);
+  public readonly activity = Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined);
 
   constructor(
     private readonly _conversation: AiSession.Session,
@@ -540,11 +537,11 @@ export class AiChatProcessor {
       Stream.runForEach((message) =>
         Effect.sync(() => {
           for (const event of message.events) {
-            if (Trace.isOfType(PartialBlock, event)) {
+            if (Trace.isOfType(Trace.PartialBlock, event)) {
               this.#handleEphemeralMessage(event.data);
-            } else if (Trace.isOfType(RequestPhase, event)) {
+            } else if (Trace.isOfType(Trace.RequestPhase, event)) {
               this.#registry.set(this.activity, event.data);
-            } else if (Trace.isOfType(McpServerError, event)) {
+            } else if (Trace.isOfType(Trace.McpServerError, event)) {
               this.#handleMcpError(event.data);
             }
           }
@@ -617,7 +614,7 @@ export class AiChatProcessor {
    * against messages already written to the feed queue to handle the race between
    * ephemeral delivery and feed replication.
    */
-  #handleEphemeralMessage(event: Trace.PayloadType<typeof PartialBlock>) {
+  #handleEphemeralMessage(event: Trace.PayloadType<typeof Trace.PartialBlock>) {
     // Content arriving is what "generating" means, and deriving it here keeps it out of the agent's
     // streaming pipeline, where the extra yield a trace write costs is observable to the turn's
     // tools. A tool call the agent reports supersedes it for as long as the tool runs.
@@ -660,7 +657,7 @@ export class AiChatProcessor {
    * Records a per-server MCP failure, deduped by url+protocol so repeat misconfigurations
    * across turns do not spam the UI.
    */
-  #handleMcpError(event: Trace.PayloadType<typeof McpServerError>) {
+  #handleMcpError(event: Trace.PayloadType<typeof Trace.McpServerError>) {
     log.warn('MCP server error', event);
     this.#registry.update(this.mcpErrors, (errors) => {
       if (errors.some((existing) => existing.url === event.url && existing.protocol === event.protocol)) {

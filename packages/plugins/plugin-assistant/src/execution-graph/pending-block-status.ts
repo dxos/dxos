@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { PartialBlock } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { type ContentBlock } from '@dxos/types';
 
@@ -47,7 +46,7 @@ export const formatPendingBlockStatus = (block: ContentBlock.Any): string | unde
  */
 export const pendingStatusFromEphemeralMessage = (message: Trace.Message): string | undefined => {
   for (const event of message.events) {
-    if (Trace.isOfType(PartialBlock, event)) {
+    if (Trace.isOfType(Trace.PartialBlock, event)) {
       const status = formatPendingBlockStatus(event.data.block);
       if (status) {
         return status;

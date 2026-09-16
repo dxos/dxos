@@ -5,7 +5,6 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AgentRequestBegin, AgentRequestEnd } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { EID } from '@dxos/keys';
 
@@ -39,8 +38,8 @@ export interface SpanMeta {
  * A span in the trace hierarchy.
  *
  * Each span represents a single bounded unit of work — an operation invocation or an
- * agent request. Spans are opened by `OperationStart` / `AgentRequestBegin` events and
- * closed by their matching `OperationEnd` / `AgentRequestEnd` events. A single process
+ * agent request. Spans are opened by `OperationStart` / `Trace.AgentRequestBegin` events and
+ * closed by their matching `OperationEnd` / `Trace.AgentRequestEnd` events. A single process
  * (pid) may produce multiple sequential spans (for example, an agent session that serves
  * three prompts produces three sibling spans sharing the agent's pid).
  *
@@ -54,8 +53,8 @@ export interface Span {
   readonly children: Span[];
 }
 
-export const BEGIN_EVENT_TYPES = new Set<string>([Trace.OperationStart.key, AgentRequestBegin.key]);
-export const END_EVENT_TYPES = new Set<string>([Trace.OperationEnd.key, AgentRequestEnd.key]);
+export const BEGIN_EVENT_TYPES = new Set<string>([Trace.OperationStart.key, Trace.AgentRequestBegin.key]);
+export const END_EVENT_TYPES = new Set<string>([Trace.OperationEnd.key, Trace.AgentRequestEnd.key]);
 
 export const isSpanBeginEvent = (event: Trace.FlatEvent): boolean => BEGIN_EVENT_TYPES.has(event.type);
 export const isSpanEndEvent = (event: Trace.FlatEvent): boolean => END_EVENT_TYPES.has(event.type);
@@ -97,7 +96,7 @@ export interface BuildSpanTreeOptions {
   /**
    * If provided, caps how many *non-boundary* events (status updates, partial blocks, etc.)
    * are retained — only the most recent `eventLimit` of them survive. Span boundary events
-   * (`OperationStart` / `OperationEnd` / `AgentRequestBegin` / `AgentRequestEnd`) are *always*
+   * (`OperationStart` / `OperationEnd` / `Trace.AgentRequestBegin` / `Trace.AgentRequestEnd`) are *always*
    * retained regardless of the limit, because dropping them would orphan their child spans
    * and collapse them onto the root branch.
    */
@@ -124,10 +123,10 @@ export interface BuildSpanTreeOptions {
  * Algorithm:
  *   1. Flatten messages into events and sort them chronologically.
  *   2. For each event:
- *      - Begin events (`OperationStart`, `AgentRequestBegin`) open a new span whose parent
+ *      - Begin events (`OperationStart`, `Trace.AgentRequestBegin`) open a new span whose parent
  *        is the currently-open span of the event's `meta.parentPid`, or the root if there is
  *        none. The begin event itself becomes the first event of the new span.
- *      - End events (`OperationEnd`, `AgentRequestEnd`) close the currently-open span for
+ *      - End events (`OperationEnd`, `Trace.AgentRequestEnd`) close the currently-open span for
  *        the event's `meta.pid` and become its last event.
  *      - Other events attach to the currently-open span for their `meta.pid`, or to the
  *        root span if no span is currently open for that pid (or the event has no pid).
@@ -268,13 +267,13 @@ const SPAN_TIMEOUT_MESSAGE = 'No end event was recorded for this span; it was cl
 
 /**
  * Synthesizes the end event that closes an abandoned span, matching the event type its begin
- * event opened it with (`OperationStart` → `OperationEnd`, `AgentRequestBegin` → `AgentRequestEnd`).
+ * event opened it with (`OperationStart` → `OperationEnd`, `Trace.AgentRequestBegin` → `Trace.AgentRequestEnd`).
  */
 const makeTimeoutEndEvent = (span: MutableSpan, timestamp: number): Trace.FlatEvent => {
   const beginEvent = span.events[0]!;
-  if (beginEvent.type === AgentRequestBegin.key) {
+  if (beginEvent.type === Trace.AgentRequestBegin.key) {
     return {
-      type: AgentRequestEnd.key,
+      type: Trace.AgentRequestEnd.key,
       timestamp,
       meta: beginEvent.meta,
       isEphemeral: false,

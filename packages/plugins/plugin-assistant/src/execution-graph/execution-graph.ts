@@ -10,7 +10,6 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
-import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
@@ -167,7 +166,7 @@ const buildToolCallContext = (messages: readonly Trace.Message[]): ToolCallConte
   const resultByCallId = new Map<string, ContentBlock.ToolResult>();
   for (const message of messages) {
     for (const event of message.events) {
-      if (event.type !== CompleteBlock.key) {
+      if (event.type !== Trace.CompleteBlock.key) {
         continue;
       }
       const data = event.data as { block?: ContentBlock.Any } | undefined;
@@ -196,20 +195,20 @@ interface EventPresentation {
   idSuffix?: string;
 }
 
-type AgentRequestEndData = Schema.Schema.Type<typeof AgentRequestEnd.schema>;
+type AgentRequestEndData = Schema.Schema.Type<typeof Trace.AgentRequestEnd.schema>;
 
 /**
- * Parses `AgentRequestEnd` payload, accepting legacy traces that omitted `status`.
+ * Parses `Trace.AgentRequestEnd` payload, accepting legacy traces that omitted `status`.
  */
 const parseAgentRequestEnd = (data: unknown): AgentRequestEndData | undefined => {
-  if (Schema.is(AgentRequestEnd.schema)(data)) {
+  if (Schema.is(Trace.AgentRequestEnd.schema)(data)) {
     return data;
   }
   // Traces emitted before `status` was added wrote an empty object.
   if (data != null && typeof data === 'object' && Object.keys(data).length === 0) {
     return { status: 'success' };
   }
-  log('invalid trace event', { type: AgentRequestEnd.key });
+  log('invalid trace event', { type: Trace.AgentRequestEnd.key });
   return undefined;
 };
 
@@ -237,8 +236,8 @@ const presentAgentRequestEnd = (data: AgentRequestEndData): EventPresentation =>
 };
 
 const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): EventPresentation | undefined => {
-  if (Trace.isOfType(AgentRequestBegin, event)) {
-    if (!Schema.is(AgentRequestBegin.schema)(event.data)) {
+  if (Trace.isOfType(Trace.AgentRequestBegin, event)) {
+    if (!Schema.is(Trace.AgentRequestBegin.schema)(event.data)) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }
@@ -248,15 +247,15 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       message: 'Agent processing request...',
     };
   }
-  if (Trace.isOfType(AgentRequestEnd, event)) {
+  if (Trace.isOfType(Trace.AgentRequestEnd, event)) {
     const endData = parseAgentRequestEnd(event.data);
     if (!endData) {
       return undefined;
     }
     return presentAgentRequestEnd(endData);
   }
-  if (Trace.isOfType(CompleteBlock, event)) {
-    if (!Schema.is(CompleteBlock.schema)(event.data)) {
+  if (Trace.isOfType(Trace.CompleteBlock, event)) {
+    if (!Schema.is(Trace.CompleteBlock.schema)(event.data)) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }
@@ -457,12 +456,12 @@ export const deriveInFlightActivityLine = (
       openOperations.delete(`${pid}:${event.data.key}`);
       continue;
     }
-    if (Trace.isOfType(AgentRequestBegin, event)) {
+    if (Trace.isOfType(Trace.AgentRequestBegin, event)) {
       agentRequestOpen = true;
       lastLine = 'Generating...';
       continue;
     }
-    if (Trace.isOfType(AgentRequestEnd, event)) {
+    if (Trace.isOfType(Trace.AgentRequestEnd, event)) {
       agentRequestOpen = false;
     }
   }
@@ -497,7 +496,7 @@ const collectDescendantPids = (messages: readonly Trace.Message[], rootPid: stri
 };
 
 const isPendingToolCallEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): boolean => {
-  if (!Trace.isOfType(CompleteBlock, event)) {
+  if (!Trace.isOfType(Trace.CompleteBlock, event)) {
     return false;
   }
   if (event.data.block._tag !== 'toolCall') {

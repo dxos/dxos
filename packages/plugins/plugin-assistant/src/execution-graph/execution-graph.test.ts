@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
-import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
@@ -237,8 +236,8 @@ describe('buildExecutionGraph (span-tree based)', () => {
         yield* withMeta(
           { pid: 'agent-1' },
           Effect.gen(function* () {
-            yield* Trace.write(AgentRequestBegin, {});
-            yield* Trace.write(CompleteBlock, {
+            yield* Trace.write(Trace.AgentRequestBegin, {});
+            yield* Trace.write(Trace.CompleteBlock, {
               messageId: MESSAGE_ID,
               role: 'user',
               block: { _tag: 'text', text: 'hello', pending: false },
@@ -252,7 +251,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestEnd, { status: 'success' }));
       }),
     );
     const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
@@ -273,7 +272,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
         { pid: 'op-1' },
         Effect.gen(function* () {
           yield* Trace.write(Trace.OperationStart, { key: 'work', name: 'Work' });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: { _tag: 'status', statusText: 'thinking', pending: false },
@@ -294,7 +293,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
   test('child process (sub-agent) forks onto its own branch from its first event', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
-        yield* withMeta({ pid: 'supervisor' }, Trace.write(AgentRequestBegin, {}));
+        yield* withMeta({ pid: 'supervisor' }, Trace.write(Trace.AgentRequestBegin, {}));
         // A delegated sub-agent runs as a separate process: its own pid, parented to the supervisor.
         // With an inner status event the span is non-collapsible, so its begin event is emitted as a
         // real fork — and because it crosses a process boundary it forks onto its OWN branch.
@@ -302,7 +301,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
           { pid: 'sub', parentPid: 'supervisor' },
           Effect.gen(function* () {
             yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Run Routine' });
-            yield* Trace.write(CompleteBlock, {
+            yield* Trace.write(Trace.CompleteBlock, {
               messageId: MESSAGE_ID,
               role: 'assistant',
               block: { _tag: 'status', statusText: 'working', pending: false },
@@ -310,7 +309,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'routine', name: 'Run Routine', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'supervisor' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+        yield* withMeta({ pid: 'supervisor' }, Trace.write(Trace.AgentRequestEnd, { status: 'success' }));
       }),
     );
     const { commits } = buildExecutionGraph({ traceMessages: messages });
@@ -327,8 +326,8 @@ describe('buildExecutionGraph (span-tree based)', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'user',
             block: { _tag: 'text', text: 'hello', pending: false },
@@ -355,7 +354,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
   test('pending span with collapsed sub-span then user message → user on own branch', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestBegin, {}));
         // Sub-span completes (will be collapsed).
         yield* withMeta(
           { pid: 'op-1', parentPid: 'agent-1' },
@@ -367,7 +366,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
         // User message arrives after the sub-span; agent is still pending.
         yield* withMeta(
           { pid: 'agent-1' },
-          Trace.write(CompleteBlock, {
+          Trace.write(Trace.CompleteBlock, {
             messageId: '01HQ0000000000000000000001',
             role: 'user',
             block: { _tag: 'text', text: 'hello', pending: false },
@@ -388,7 +387,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
   test('orders sub-spans categorically under their parent', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestBegin, {}));
         yield* withMeta(
           { pid: 'op-1', parentPid: 'agent-1' },
           Effect.gen(function* () {
@@ -403,7 +402,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'b', name: 'B', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestEnd, { status: 'success' }));
       }),
     );
     const { commits } = buildExecutionGraph({ traceMessages: messages });
@@ -580,20 +579,20 @@ describe('buildExecutionGraph scenarios', () => {
       withMeta(
         { pid: 'session-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'user',
             block: { _tag: 'text', text: 'First question', pending: false },
           });
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'user',
             block: { _tag: 'text', text: 'Follow-up question', pending: false },
           });
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -621,17 +620,17 @@ describe('buildExecutionGraph scenarios', () => {
         { pid: 'op-1' },
         Effect.gen(function* () {
           yield* Trace.write(Trace.OperationStart, { key: 'work', name: 'Work' });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: { _tag: 'status', statusText: 'thinking', pending: false },
           });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: { _tag: 'status', statusText: 'searching', pending: false },
           });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: { _tag: 'status', statusText: 'writing', pending: false },
@@ -662,8 +661,8 @@ describe('buildExecutionGraph scenarios', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: {
@@ -675,7 +674,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -700,8 +699,8 @@ describe('buildExecutionGraph scenarios', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: {
@@ -713,7 +712,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'tool',
             block: {
@@ -725,7 +724,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -748,8 +747,8 @@ describe('buildExecutionGraph scenarios', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: {
@@ -761,7 +760,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'tool',
             block: {
@@ -773,7 +772,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -799,8 +798,8 @@ describe('buildExecutionGraph scenarios', () => {
         yield* withMeta(
           { pid: 'agent-1' },
           Effect.gen(function* () {
-            yield* Trace.write(AgentRequestBegin, {});
-            yield* Trace.write(CompleteBlock, {
+            yield* Trace.write(Trace.AgentRequestBegin, {});
+            yield* Trace.write(Trace.CompleteBlock, {
               messageId: MESSAGE_ID,
               role: 'assistant',
               block: {
@@ -823,7 +822,7 @@ describe('buildExecutionGraph scenarios', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestEnd, { status: 'success' }));
       }),
     );
 
@@ -844,13 +843,13 @@ describe('buildExecutionGraph scenarios', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'user',
             block: { _tag: 'text', text: 'hello', pending: false },
           });
-          yield* Trace.write(AgentRequestEnd, {
+          yield* Trace.write(Trace.AgentRequestEnd, {
             status: 'error',
             error: 'Unsupported schema AST: UnknownKeyword',
           });
@@ -879,8 +878,8 @@ describe('buildExecutionGraph scenarios', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(AgentRequestEnd, { status: 'interrupted' });
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'interrupted' });
         }),
       ),
     );
@@ -1004,12 +1003,12 @@ describe('buildExecutionGraph collapseCompletedSpans', () => {
         { pid: 'op-1' },
         Effect.gen(function* () {
           yield* Trace.write(Trace.OperationStart, { key: 'work', name: 'Work' });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: { _tag: 'status', statusText: 'thinking', pending: false },
           });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: { _tag: 'status', statusText: 'writing', pending: false },
@@ -1031,8 +1030,8 @@ describe('buildExecutionGraph collapseCompletedSpans', () => {
         yield* withMeta(
           { pid: 'agent-1' },
           Effect.gen(function* () {
-            yield* Trace.write(AgentRequestBegin, {});
-            yield* Trace.write(CompleteBlock, {
+            yield* Trace.write(Trace.AgentRequestBegin, {});
+            yield* Trace.write(Trace.CompleteBlock, {
               messageId: MESSAGE_ID,
               role: 'user',
               block: { _tag: 'text', text: 'hello', pending: false },
@@ -1046,7 +1045,7 @@ describe('buildExecutionGraph collapseCompletedSpans', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestEnd, { status: 'success' }));
       }),
     );
 
@@ -1062,8 +1061,8 @@ describe('buildExecutionGraph collapseCompletedSpans', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'user',
             block: { _tag: 'text', text: 'hello', pending: false },
@@ -1085,7 +1084,7 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestBegin, {});
         }),
       ),
     );
@@ -1100,8 +1099,8 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
       withMeta(
         { pid: 'agent-1' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: {
@@ -1143,7 +1142,7 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
         { pid: 'worker' },
         Effect.gen(function* () {
           yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Lookup' });
-          yield* Trace.write(CompleteBlock, {
+          yield* Trace.write(Trace.CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'assistant',
             block: { _tag: 'status', statusText: 'searching', pending: false },
@@ -1175,8 +1174,8 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
       withMeta(
         { pid: 'agent' },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          yield* Trace.write(Trace.AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
