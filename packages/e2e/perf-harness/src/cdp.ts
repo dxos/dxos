@@ -52,11 +52,29 @@ export class Cdp {
     return client;
   }
 
+  /**
+   * Sends a command and resolves with its result.
+   *
+   * The readyState guard is load-bearing rather than defensive: Node's global `WebSocket` SILENTLY
+   * ignores `send()` once the socket is closing or closed, so a request enqueued after the `close`
+   * listener has already drained `#pending` would never settle — and `trySend` has no timeout, so
+   * the awaiting stage would hang until playwright's outer budget aborted the whole flow. A target
+   * that disappears between `refreshTargets` and a read is exactly that case.
+   */
   send<T = any>(method: string, params: Record<string, unknown> = {}): Promise<T> {
+    if (this.#ws.readyState !== WebSocket.OPEN) {
+      return Promise.reject(new Error(`CDP socket is not open (readyState ${this.#ws.readyState})`));
+    }
     const id = ++this.#id;
     return new Promise<T>((resolve, reject) => {
       this.#pending.set(id, { resolve, reject });
-      this.#ws.send(JSON.stringify({ id, method, params }));
+      try {
+        this.#ws.send(JSON.stringify({ id, method, params }));
+      } catch (error) {
+        // Removed before rejecting, so a later drain cannot settle it twice.
+        this.#pending.delete(id);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      }
     });
   }
 
@@ -181,6 +199,7 @@ export const refreshTargets = async (port: number, attached: Attached[]): Promis
 /** First attachment for a run. */
 export const attachAll = (port: number): Promise<Attached[]> => refreshTargets(port, []);
 
+/** Closes every session in the set; the run's own teardown. */
 export const detachAll = (attached: Attached[]): void => {
   for (const { cdp } of attached) {
     cdp.close();

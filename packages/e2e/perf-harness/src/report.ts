@@ -19,6 +19,12 @@ export const appendRows = (workspaceRoot: string, name: string, rows: StageRow[]
   return file;
 };
 
+/**
+ * Writes one run's rows as indented JSON, alongside the appended NDJSON.
+ *
+ * A per-run file as well as the accumulating one, because the NDJSON grows across runs: this is
+ * the artifact to attach to a report or read by hand.
+ */
 export const writeRunReport = (workspaceRoot: string, name: string, rows: StageRow[]): string => {
   const dir = reportDir(workspaceRoot);
   mkdirSync(dir, { recursive: true });
@@ -46,11 +52,23 @@ export type PosthogEvent = {
   properties: Record<string, string | number | boolean>;
 };
 
+/** The PostHog event name every stage row is captured under. */
 export const EVENT_NAME = 'ci.perf-stage';
 
+/**
+ * Maps one stage row to its PostHog event, refusing the rows that must not be trended.
+ *
+ * Throws rather than returning undefined: both refusals are caller errors, and a silent skip here
+ * would leave a gap in the trend that looks like missing data rather than a rejected row.
+ */
 export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent => {
   if (row.mode !== 'measure') {
     throw new Error(`refusing to trend a ${row.mode} row: only measure rows are comparable`);
+  }
+  // A failed stage's `wallMs` is its TIMEOUT, not a measurement — the budget, in the units the
+  // trend is read in. Trending one publishes a fabricated regression that no code change caused.
+  if (!row.ok) {
+    throw new Error(`refusing to trend a failed stage (${row.stage}): its timings are its timeouts`);
   }
 
   // Per-target heap as flat keys, so the shared worker's heap is its own queryable series — the
@@ -105,10 +123,11 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
 };
 
 /**
- * Writes the events NDJSON for `ci-event.mjs --batch`, skipping every non-`measure` row.
+ * Writes the events NDJSON for `ci-event.mjs --batch`, skipping every row that must not be trended.
  *
- * Skipped rather than rejected: a nightly runs both modes, and the diagnose rows reaching this
- * function is the normal case, not a caller error.
+ * Skipped rather than rejected: a nightly runs both modes, so diagnose rows reaching this function
+ * is the normal case. Failed stages are dropped for a different reason — their durations are the
+ * locator budgets they exhausted, so publishing them would invent a regression.
  */
 export const writePosthogBatch = (
   workspaceRoot: string,
@@ -119,7 +138,7 @@ export const writePosthogBatch = (
   const dir = reportDir(workspaceRoot);
   mkdirSync(dir, { recursive: true });
   const file = path.join(dir, `${name}.events.ndjson`);
-  const events = rows.filter((row) => row.mode === 'measure').map((row) => toPosthogEvent(row, timestamp));
+  const events = rows.filter((row) => row.mode === 'measure' && row.ok).map((row) => toPosthogEvent(row, timestamp));
   writeFileSync(file, events.map((event) => JSON.stringify(event)).join('\n') + '\n');
   return file;
 };

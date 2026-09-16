@@ -142,5 +142,11 @@ export const trackPeakRss = (rootPid: number, intervalMs = 250): (() => number) 
   };
 };
 
+/**
+ * Live JS heap summed across every realm.
+ *
+ * A convenience total for the trend, NOT a substitute for the per-realm readings: the breakdown is
+ * what says which realm grew, and the sum alone hides it.
+ */
 export const sumHeapUsed = (readings: HeapReading[]): number =>
   readings.reduce((total, reading) => total + reading.usedBytes, 0);

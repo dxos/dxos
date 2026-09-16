@@ -115,12 +115,21 @@ const drainTarget = async (target: Attached): Promise<number[]> => {
   return result?.result?.value ?? [];
 };
 
-const percentile = (values: number[], fraction: number): number => {
+/**
+ * Nearest-rank percentile of a sample set, rounded.
+ *
+ * Exported for its own test: the index arithmetic is the kind that reads correct and is off by
+ * one, and it feeds a trended metric where that error reports the worst sample as the 95th.
+ */
+export const percentile = (values: number[], fraction: number): number => {
   if (values.length === 0) {
     return 0;
   }
   const sorted = [...values].sort((left, right) => left - right);
-  const index = Math.min(sorted.length - 1, Math.floor(fraction * sorted.length));
+  // Nearest-rank: `ceil(fraction * n) - 1`. `floor(fraction * n)` overshoots by one whenever the
+  // product is an integer — p95 of 20 samples would return the maximum (index 19) rather than
+  // index 18, which reports the worst sample as if it were the 95th percentile.
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil(fraction * sorted.length) - 1));
   return Math.round(sorted[index]);
 };
 

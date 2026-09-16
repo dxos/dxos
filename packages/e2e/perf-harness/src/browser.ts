@@ -51,11 +51,20 @@ export const launchInstrumentedBrowser = async (): Promise<InstrumentedBrowser> 
     ],
   });
 
-  const browserCdp = await Cdp.connect(await browserEndpoint(DEBUG_PORT));
-
-  // Playwright does not expose the browser pid, and the RSS reading needs the root of the process
-  // tree. The debug-port flag is unique to this launch, so the command line identifies it.
-  const browserPid = await resolveBrowserPid();
+  // Everything between the launch and the return is wrapped: the caller only gets a handle it can
+  // close once this resolves, so a throw here would leak the browser — and it holds the fixed debug
+  // port, which the nightly's NEXT serial tier would then fail to bind.
+  let browserCdp: Cdp;
+  let browserPid: number;
+  try {
+    browserCdp = await Cdp.connect(await browserEndpoint(DEBUG_PORT));
+    // Playwright does not expose the browser pid, and the RSS reading needs the root of the process
+    // tree. The debug-port flag is unique to this launch, so the command line identifies it.
+    browserPid = await resolveBrowserPid();
+  } catch (error) {
+    await browser.close().catch(() => {});
+    throw error;
+  }
 
   return {
     browser,

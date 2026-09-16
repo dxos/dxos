@@ -42,6 +42,7 @@ export const startScreencast = async (page: Cdp, outputDir: string): Promise<Scr
   let files: string[] = [];
   let lastFrameAt: number | undefined;
   let framesThisStage = 0;
+  let pendingLastFrame: string | undefined;
 
   const onFrame = ({ data, sessionId }: { data: string; sessionId: number }) => {
     const now = Date.now();
@@ -54,12 +55,15 @@ export const startScreencast = async (page: Cdp, outputDir: string): Promise<Scr
     lastFrameAt = now;
 
     // First and last only: a stage at 10 fps is hundreds of PNGs, and the pair is what a reviewer
-    // compares. `last` is overwritten as frames arrive, so it ends as the stage's final state.
-    const which = framesThisStage === 0 ? 'first' : 'last';
-    const file = path.join(outputDir, `${label}-${which}.png`);
-    writeFileSync(file, Buffer.from(data, 'base64'));
-    if (!files.includes(file)) {
+    // compares. The last is BUFFERED rather than rewritten per frame — decoding and writing a full
+    // PNG on every frame, ahead of the ack below, is instrumentation cost charged to the very
+    // stage being measured.
+    if (framesThisStage === 0) {
+      const file = path.join(outputDir, `${label}-first.png`);
+      writeFileSync(file, Buffer.from(data, 'base64'));
       files.push(file);
+    } else {
+      pendingLastFrame = data;
     }
     framesThisStage += 1;
 
@@ -77,14 +81,23 @@ export const startScreencast = async (page: Cdp, outputDir: string): Promise<Scr
       gaps = [];
       files = [];
       framesThisStage = 0;
+      pendingLastFrame = undefined;
       // `lastFrameAt` deliberately survives the boundary: the interval spanning it is real time in
       // which the screen did not update.
     },
-    endStage: (): StillFrames => ({
-      maxMs: Math.round(Math.max(0, ...gaps)),
-      count: gaps.length,
-      files,
-    }),
+    endStage: (): StillFrames => {
+      if (pendingLastFrame !== undefined) {
+        const file = path.join(outputDir, `${label}-last.png`);
+        writeFileSync(file, Buffer.from(pendingLastFrame, 'base64'));
+        files.push(file);
+        pendingLastFrame = undefined;
+      }
+      return {
+        maxMs: Math.round(Math.max(0, ...gaps)),
+        count: gaps.length,
+        files,
+      };
+    },
     stop: () => {
       page.off('Page.screencastFrame', onFrame);
       void page.trySend('Page.stopScreencast');

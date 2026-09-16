@@ -90,6 +90,7 @@ export const trackNetwork = (page: Page): (() => NetworkMetrics) => {
   return () => ({ ...totals });
 };
 
+/** Difference of two running totals — the bytes and requests a single stage accounted for. */
 export const diffNetwork = (before: NetworkMetrics, after: NetworkMetrics): NetworkMetrics => ({
   codeBytes: after.codeBytes - before.codeBytes,
   apiBytes: after.apiBytes - before.apiBytes,
