@@ -90,8 +90,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     }, [traceMessages]);
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
-    // Remembered across selections, so collapsing the details once keeps them collapsed.
+    // Remembered across selections, so collapsing a section once keeps it collapsed.
     const [detailsOpen, setDetailsOpen] = useState(true);
+    const [processesOpen, setProcessesOpen] = useState(true);
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
@@ -139,18 +140,20 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           )}
         >
           {/* TODO(burdon): Select process to show details. */}
-          <div className='min-w-0'>
-            <Field.Root>
-              <Field.Label classNames='px-1'>Processes</Field.Label>
-            </Field.Root>
-            <ProcessTreeContainer
-              classNames='max-h-[8lh]'
-              space={space}
-              environments={environments}
-              onProcessSelect={handleProcessSelect}
-              onProcessTerminate={onProcessTerminate}
-            />
-          </div>
+          <TogglePanel.Root classNames='min-w-0' open={processesOpen} onChangeOpen={setProcessesOpen}>
+            <TogglePanel.Header classNames='text-sm'>
+              <span className='text-description'>Processes</span>
+            </TogglePanel.Header>
+            <TogglePanel.Body>
+              <ProcessTreeContainer
+                classNames='max-h-[8lh]'
+                space={space}
+                environments={environments}
+                onProcessSelect={handleProcessSelect}
+                onProcessTerminate={onProcessTerminate}
+              />
+            </TogglePanel.Body>
+          </TogglePanel.Root>
 
           {/* Rows, not a block: `ScrollContainer.Root` fills its parent (`dx-expand` resolves `h-full`
               against it), so in a block box it would take the whole track and hang its own height
@@ -180,7 +183,6 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           </div>
 
           {!tracePanelDebug && selectedCommit && (
-<<<<<<< HEAD
             <TogglePanel.Root classNames='p-2' open={detailsOpen} onChangeOpen={setDetailsOpen}>
               <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
                 <TogglePanel.Header classNames='text-sm'>
@@ -194,24 +196,6 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                 </TogglePanel.Body>
               </TogglePanel.Content>
             </TogglePanel.Root>
-||||||| 4862c8eaca
-            <div className='p-2'>
-              <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
-                <Syntax.Content classNames='border border-subdued-separator rounded-sm'>
-                  <Syntax.Viewport>
-                    <Syntax.Code classNames='max-h-[20lh] text-xs' />
-                  </Syntax.Viewport>
-                </Syntax.Content>
-              </Syntax.Root>
-            </div>
-=======
-            <div className='p-2'>
-              <JsonHighlighter
-                data={details[selectedCommit.id] ?? selectedCommit}
-                classNames='max-h-[20lh] border border-subdued-separator rounded-sm text-xs'
-              />
-            </div>
->>>>>>> origin/main
           )}
         </Panel.Content>
       </Panel.Root>

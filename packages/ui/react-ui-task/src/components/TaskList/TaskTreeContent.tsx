@@ -364,7 +364,6 @@ const TaskTreeHeading = ({
         ))}
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
       <div className='inline-flex min-w-0 items-center gap-2 col-[title] self-center'>
-<<<<<<< HEAD
         <SystemIconButton.Clipboard
           classNames='font-mono'
           density='sm'
@@ -375,18 +374,6 @@ const TaskTreeHeading = ({
           onCopy={() => '@' + Obj.getMnemonic(current)}
           data-testid='taskList.item.mnemonic'
         />
-||||||| 4862c8eaca
-=======
-        <SystemIconButton.Clipboard
-          density='sm'
-          variant='tag'
-          hue='emerald'
-          label={Obj.getMnemonic(current)}
-          iconEnd
-          onCopy={() => Obj.getMnemonic(current)}
-          data-testid='taskList.item.mnemonic'
-        />
->>>>>>> origin/main
         <span data-testid='taskList.item.title' className='truncate'>
           {current.title}
         </span>
