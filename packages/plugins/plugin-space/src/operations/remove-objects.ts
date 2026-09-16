@@ -9,9 +9,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo';
+import { Annotation, Collection, Database, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EID } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceOperation } from '#types';
@@ -40,7 +39,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       // return -1 for them and the splice/active-tracking branches are skipped.
       const indices = entities.map((entity) =>
         Obj.instanceOf(Collection.Collection, parentCollection)
-          ? parentCollection.objects.findIndex((ref) => refersTo(ref, entity))
+          ? parentCollection.objects.findIndex((ref) => ref.peek() === entity)
           : -1,
       );
 
@@ -58,7 +57,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
 
       for (const entity of entities) {
         if (Obj.instanceOf(Collection.Collection, parentCollection)) {
-          const index = parentCollection.objects.findIndex((ref) => refersTo(ref, entity));
+          const index = parentCollection.objects.findIndex((ref) => ref.peek() === entity);
           if (index !== -1) {
             Obj.update(parentCollection, (parentCollection) => {
               parentCollection.objects.splice(index, 1);
@@ -83,10 +82,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
   ),
 );
 export default handler;
-
-/** Compared by entity id: a ref a headless host has not loaded has no `target`. */
-const refersTo = (ref: Ref.Ref<Obj.Unknown>, entity: Entity.Unknown): boolean =>
-  EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) === entity.id : ref.target === entity;
 
 const loadRootCollection = Effect.fnUntraced(function* () {
   const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
