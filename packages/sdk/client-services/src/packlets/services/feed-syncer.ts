@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
+import { AsyncTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
@@ -115,7 +115,6 @@ export class FeedSyncer extends Resource {
   #lastFullPoll: number | null = null;
   #throttledPollScheduled = false;
   #lastRequestedPollAt: number | null = null;
-  readonly #feedStoreMutex = new Mutex();
   #pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
 
   constructor(options: FeedSyncerOptions) {
@@ -172,7 +171,7 @@ export class FeedSyncer extends Resource {
           ),
         );
 
-        void this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(handleMessageEffect));
+        void RuntimeProvider.runPromise(this.#runtime)(handleMessageEffect);
       }),
     );
 
@@ -255,66 +254,6 @@ export class FeedSyncer extends Resource {
   }
 
   /**
-   * Returns per-namespace queue sync backlog for a space.
-   * `blocksToPull` and `blocksToPush` of 0 mean caught up for that namespace.
-   */
-  async getSyncState(
-    ctx: Context,
-    request: FeedProtocol.GetSyncStateRequest,
-  ): Promise<FeedProtocol.GetSyncStateResponse> {
-    const spaceId = request.spaceId as SpaceId;
-    invariant(SpaceId.isValid(spaceId));
-    const namespaces =
-      request.namespaces != null && request.namespaces.length > 0 ? request.namespaces : this.#syncNamespaces;
-    for (const feedNamespace of namespaces) {
-      invariant(FeedProtocol.isWellKnownNamespace(feedNamespace));
-    }
-
-    return this.#runSerialized(() =>
-      RuntimeProvider.runPromise(this.#runtime)(
-        Effect.gen({ self: this }, function* () {
-          const namespaceStates = yield* Effect.forEach(
-            namespaces,
-            (feedNamespace) =>
-              Effect.gen({ self: this }, function* () {
-                const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
-                  spaceId,
-                  feedNamespace,
-                });
-                const totalBlocks = yield* this.#feedStore.countNamespaceBlocks({
-                  spaceId,
-                  feedNamespace,
-                });
-                const { blocksToPull } = yield* this.#syncClient
-                  .peekPull(ctx, {
-                    spaceId,
-                    feedNamespace,
-                    limit: this.#messageBlocksLimit,
-                  })
-                  .pipe(
-                    Effect.catch((cause) =>
-                      Effect.gen({ self: this }, function* () {
-                        this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
-                        return { blocksToPull: 0 };
-                      }),
-                    ),
-                  );
-                return {
-                  namespace: feedNamespace,
-                  blocksToPull: String(blocksToPull),
-                  blocksToPush: String(blocksToPush),
-                  totalBlocks: String(totalBlocks),
-                };
-              }),
-            { concurrency: 'unbounded' },
-          );
-          return { namespaces: namespaceStates };
-        }),
-      ),
-    );
-  }
-
-  /**
    * Performs queue sync and blocks until there are no pending sync batches.
    */
   async syncBlocking(
@@ -337,43 +276,36 @@ export class FeedSyncer extends Resource {
       return;
     }
 
-    await this.#runSerialized(() =>
-      RuntimeProvider.runPromise(this.#runtime)(
-        Effect.gen({ self: this }, function* () {
-          let done = false;
-          let iterations = 0;
-          while (!done) {
-            done = true;
-            if (shouldPull) {
-              const pullResult = yield* this.#syncClient.pull(ctx, {
-                spaceId,
-                feedNamespace: subspaceTag,
-                limit: this.#messageBlocksLimit,
-              });
-              done &&= pullResult.done;
-            }
-
-            if (shouldPush) {
-              const pushResult = yield* this.#syncClient.push(ctx, {
-                spaceId,
-                feedNamespace: subspaceTag,
-                limit: this.#messageBlocksLimit,
-              });
-              done &&= pushResult.done;
-            }
-            iterations++;
-            if (iterations > MAX_BLOCKING_SYNC_ITERATIONS) {
-              throw new Error('Blocking sync exceeded max iterations.');
-            }
+    await RuntimeProvider.runPromise(this.#runtime)(
+      Effect.gen({ self: this }, function* () {
+        let done = false;
+        let iterations = 0;
+        while (!done) {
+          done = true;
+          if (shouldPull) {
+            const pullResult = yield* this.#syncClient.pull(ctx, {
+              spaceId,
+              feedNamespace: subspaceTag,
+              limit: this.#messageBlocksLimit,
+            });
+            done &&= pullResult.done;
           }
-        }),
-      ),
-    );
-  }
 
-  async #runSerialized<A>(run: () => Promise<A>): Promise<A> {
-    using _guard = await this.#feedStoreMutex.acquire('feed-sync');
-    return run();
+          if (shouldPush) {
+            const pushResult = yield* this.#syncClient.push(ctx, {
+              spaceId,
+              feedNamespace: subspaceTag,
+              limit: this.#messageBlocksLimit,
+            });
+            done &&= pushResult.done;
+          }
+          iterations++;
+          if (iterations > MAX_BLOCKING_SYNC_ITERATIONS) {
+            throw new Error('Blocking sync exceeded max iterations.');
+          }
+        }
+      }),
+    );
   }
 
   #schedulePushRetry({ hadFailure, needsMore }: { hadFailure: boolean; needsMore: boolean }): void {
@@ -443,7 +375,7 @@ export class FeedSyncer extends Resource {
   }
 
   #logSyncFailure(
-    operation: 'pull' | 'push' | 'peekPull',
+    operation: 'pull' | 'push',
     { spaceId, feedNamespace, cause }: { spaceId: SpaceId; feedNamespace: string; cause: unknown },
   ): void {
     log('feed sync operation failed', {
@@ -511,7 +443,7 @@ export class FeedSyncer extends Resource {
           Math.max(this.#pollingInterval - (Date.now() - (this.#lastFullPoll ?? 0)), 0),
         );
       }
-    }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
+    }).pipe(RuntimeProvider.runPromise(this.#runtime)),
   );
 
   readonly #pushTask = new AsyncTask(async () =>
@@ -551,7 +483,7 @@ export class FeedSyncer extends Resource {
           }),
         { concurrency: this.#syncConcurrency },
       );
-    }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
+    }).pipe(RuntimeProvider.runPromise(this.#runtime)),
   );
 }
 
@@ -599,7 +531,6 @@ export const FeedSyncerLayer = (
             shouldPush: request.shouldPush,
             shouldPull: request.shouldPull,
           }),
-        getSyncState: (ctx, request) => feedSyncer.getSyncState(ctx, request),
       });
 
       const ctx = yield* EffectEx.contextFromScope();
