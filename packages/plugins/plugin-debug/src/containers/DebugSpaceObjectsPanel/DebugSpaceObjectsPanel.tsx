@@ -19,6 +19,7 @@ export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
 
 export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObjectsPanelProps) => {
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
+  // TODO(burdon): Guard.
   const [selectedObject] = useQuery(
     space.db,
     selectedId ? Query.select(Filter.id(selectedId)) : Query.select(Filter.nothing()),
