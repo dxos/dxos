@@ -328,6 +328,17 @@ export const Switch: Story = {
     togglesFromItsLabel(canvasElement, 'This is a switch'),
 };
 
+export const SwitchCompact: Story = {
+  args: {
+    kind: 'switch',
+    density: 'sm',
+    label: 'This is a compact switch',
+    description: 'On or off',
+  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    togglesFromItsLabel(canvasElement, 'This is a compact switch'),
+};
+
 export const PinInput: Story = {
   args: {
     kind: 'pin',

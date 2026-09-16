@@ -139,7 +139,10 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
 
   const handleSelect = useCallback(
     (commit: Commit | undefined) => {
+      // Clearing the timeline's selection (clicking the selected commit, or Enter on it) returns to
+      // the current version; otherwise the view would keep showing a version the timeline no longer marks.
       if (!commit) {
+        setSelection({ kind: 'current' });
         return;
       }
       const next = commitToSelection(subject, commit);
