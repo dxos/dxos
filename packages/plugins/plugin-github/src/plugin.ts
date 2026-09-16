@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AppGraphBuilder,
   Connector,
   LinkResolver,
   MarkdownExtension,
@@ -17,6 +18,7 @@ import {
 import { meta } from '#meta';
 
 export const GitHubPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(Connector),
   Plugin.addModule(LinkResolver),
   Plugin.addModule(MarkdownExtension),
