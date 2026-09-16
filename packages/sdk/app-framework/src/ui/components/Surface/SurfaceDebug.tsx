@@ -382,7 +382,7 @@ const SurfaceDebugOverlay = (): ReactNode => {
 const SurfaceHighlight = ({ rect, selected }: { rect: DOMRect; selected: boolean }): ReactNode => (
   <div
     className={mx(
-      'z-100 fixed pointer-events-none border',
+      'z-40 fixed pointer-events-none border',
       selected ? 'border-2 border-error-text' : 'border-info-text',
     )}
     style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
