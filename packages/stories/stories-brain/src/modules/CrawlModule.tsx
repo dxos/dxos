@@ -116,8 +116,9 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
         }
         await EffectEx.runPromise(
           FactPipeline.run([{ text, source: `file:${name}` }]).pipe(
-            Effect.provide(registry.layerFor(space.id)),
-            Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote'))),
+            Effect.provide(
+              Layer.provideMerge(registry.layerFor(space.id), Layer.fresh(AiServiceTestingPreset('edge-remote'))),
+            ),
           ),
         );
         const facts = await EffectEx.runPromise(registry.forSpace(space.id).query({}));

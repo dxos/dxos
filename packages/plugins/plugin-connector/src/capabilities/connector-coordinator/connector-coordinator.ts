@@ -105,12 +105,12 @@ const runOnTokenCreated = (
     return Effect.void;
   }
   return onTokenCreated(input).pipe(
-    Effect.provide(FetchHttpClient.layer),
-    // Resolved through the process manager so the connector reads its credential from the same
-    // space-scoped `CredentialsService` operations use.
     Effect.provide(
-      ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
-        Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+      Layer.provideMerge(
+        FetchHttpClient.layer,
+        ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
+          Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+        ),
       ),
     ),
     Effect.catch((error) =>

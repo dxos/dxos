@@ -126,9 +126,9 @@ describe('LanguageModel', () => {
     Effect.fn(function* ({ expect }) {
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
-          Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-          Effect.provide(OpenAiLayer),
-          Effect.provide(CalculatorLayer),
+          Effect.provide(
+            Layer.provideMerge(Layer.provideMerge(OpenAiLanguageModel.model('gpt-4o'), OpenAiLayer), CalculatorLayer),
+          ),
         );
 
       const result = yield* createProgram('What is six times seven?');
@@ -142,9 +142,12 @@ describe('LanguageModel', () => {
     Effect.fn(function* ({ expect }) {
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
-          Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-          Effect.provide(AnthropicLayer),
-          Effect.provide(CalculatorLayer),
+          Effect.provide(
+            Layer.provideMerge(
+              Layer.provideMerge(AnthropicLanguageModel.model('claude-3-5-sonnet-latest'), AnthropicLayer),
+              CalculatorLayer,
+            ),
+          ),
         );
 
       const result = yield* createProgram('What is six times seven?');
@@ -166,8 +169,7 @@ describe('LanguageModel', () => {
           }),
         );
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(Layer.provideMerge(AnthropicLanguageModel.model('claude-3-5-sonnet-latest'), AnthropicLayer)),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -187,8 +189,12 @@ describe('LanguageModel', () => {
           }),
         );
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        Layer.provideMerge(
+          AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } }),
+          AnthropicLayer,
+        ),
+      ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -218,9 +224,12 @@ describe('LanguageModel', () => {
 
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        Layer.provideMerge(
+          Layer.provideMerge(CalculatorLayer, AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          AnthropicLayer,
+        ),
+      ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -251,9 +260,15 @@ describe('LanguageModel', () => {
 
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        Layer.provideMerge(
+          Layer.provideMerge(
+            CalculatorLayer,
+            AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } }),
+          ),
+          AnthropicLayer,
+        ),
+      ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -287,9 +302,12 @@ describe('LanguageModel', () => {
 
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        Layer.provideMerge(
+          Layer.provideMerge(CalculatorLayer, AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          AnthropicLayer,
+        ),
+      ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
@@ -312,8 +330,7 @@ describe('LanguageModel', () => {
         const result = yield* LanguageModel.generateText({ toolkit, prompt });
         log.info('result', { result });
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-0')),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(Layer.provideMerge(AnthropicLanguageModel.model('claude-opus-4-0'), AnthropicLayer)),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['manual'] },
