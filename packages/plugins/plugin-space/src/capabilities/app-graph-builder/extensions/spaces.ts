@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -48,6 +49,32 @@ import {
 // node emits, and a tuple rebuilt inline each time creates a new array reference, causing the graph
 // to re-emit the node and remount the Home article on every evaluation.
 const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }] as const;
+
+/**
+ * How long a listed space may stay unopened before it is dropped from the rail. Well beyond any
+ * plausible open, so reaching it means the space is broken rather than slow; hiding it restores the
+ * pre-placeholder behaviour instead of leaving a placeholder nothing can act on.
+ */
+// TODO(wittjosiah): Surface it as a deletable node once space nodes carry actions.
+const SPACE_OPEN_TIMEOUT = 60_000;
+
+/** Spaces that exhausted {@link SPACE_OPEN_TIMEOUT}; held outside the atom so a drop cannot undo itself. */
+const openTimedOutSpaces = new Set<string>();
+
+/**
+ * Fires once per space at its open deadline. A stuck space produces no state change of its own, so
+ * without this the connector would never re-run to drop it.
+ */
+const openDeadlineFamily = Atom.family((spaceId: string) =>
+  Atom.make((get) => {
+    const timeout = setTimeout(() => {
+      openTimedOutSpaces.add(spaceId);
+      get.setSelf(true);
+    }, SPACE_OPEN_TIMEOUT);
+    get.addFinalizer(() => clearTimeout(timeout));
+    return false;
+  }),
+);
 
 /** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {
@@ -259,6 +286,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
           spaces.forEach((space) => {
             if (space.state.get() === SpaceState.SPACE_READY) {
+              openTimedOutSpaces.delete(space.id);
               get(Obj.atom(space.properties));
             }
           });
@@ -274,10 +302,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             ]
               // A space that is listed but still opening gets a node too, so the rail shows how
               // many workspaces are arriving instead of filling in from nothing.
-              .filter((space) => {
-                const spaceState = spaceStates.get(space.id);
-                return spaceState === SpaceState.SPACE_READY || isPendingSpace(spaceState, lazySpaceOpen);
-              })
+              .filter((space) =>
+                shouldListSpace({
+                  state: spaceStates.get(space.id),
+                  timedOut: openTimedOutSpaces.has(space.id) || get(openDeadlineFamily(space.id)),
+                  lazySpaceOpen,
+                }),
+              )
               .filter((space) => AppSpace.isVisibleSpace(space))
               .map((space) =>
                 !isSpacePlaceholder({ state: spaceStates.get(space.id), orderResolved })
@@ -360,6 +391,21 @@ export const isPendingSpace = (state: SpaceState | undefined, lazySpaceOpen = fa
   state === SpaceState.SPACE_INITIALIZING ||
   state === SpaceState.SPACE_ACTIVE ||
   (state === SpaceState.SPACE_CLOSED && !lazySpaceOpen);
+
+/**
+ * Whether a listed space appears in the rail at all. A space that never opened is dropped once it
+ * times out, since a placeholder it can never resolve is worse than the absence it replaced.
+ * Keyed on the space's own state, so holding every space for the ordering cannot hide them all.
+ */
+export const shouldListSpace = ({
+  state,
+  timedOut,
+  lazySpaceOpen = false,
+}: {
+  state: SpaceState | undefined;
+  timedOut: boolean;
+  lazySpaceOpen?: boolean;
+}): boolean => state === SpaceState.SPACE_READY || (isPendingSpace(state, lazySpaceOpen) && !timedOut);
 
 /**
  * Whether a listed space renders as a placeholder rather than itself: it has not opened, or the

@@ -10,7 +10,13 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Entity, Obj } from '@dxos/echo';
 
-import { constructPendingSpaceNode, constructSpaceNode, isPendingSpace, isSpacePlaceholder } from './spaces.ts';
+import {
+  constructPendingSpaceNode,
+  constructSpaceNode,
+  isPendingSpace,
+  isSpacePlaceholder,
+  shouldListSpace,
+} from './spaces.ts';
 
 describe('isPendingSpace', () => {
   test('a space on its way to ready is pending', ({ expect }) => {
@@ -144,5 +150,29 @@ describe('isSpacePlaceholder', () => {
     expect(isSpacePlaceholder({ state: SpaceState.SPACE_INITIALIZING, orderResolved: true })).toBe(true);
     expect(isSpacePlaceholder({ state: SpaceState.SPACE_CLOSED, orderResolved: false })).toBe(true);
     expect(isSpacePlaceholder({ state: undefined, orderResolved: true })).toBe(true);
+  });
+});
+
+describe('shouldListSpace', () => {
+  test('an opened space is listed, timed out or not', ({ expect }) => {
+    // Every space is held as a placeholder until the ordering resolves, so an opened space must
+    // survive the timeout — otherwise a slow settings space would empty the whole rail.
+    expect(shouldListSpace({ state: SpaceState.SPACE_READY, timedOut: false })).toBe(true);
+    expect(shouldListSpace({ state: SpaceState.SPACE_READY, timedOut: true })).toBe(true);
+  });
+
+  test('a space still opening is listed', ({ expect }) => {
+    expect(shouldListSpace({ state: SpaceState.SPACE_INITIALIZING, timedOut: false })).toBe(true);
+  });
+
+  test('a space that never opened is dropped once it times out', ({ expect }) => {
+    expect(shouldListSpace({ state: SpaceState.SPACE_INITIALIZING, timedOut: true })).toBe(false);
+    expect(shouldListSpace({ state: SpaceState.SPACE_CLOSED, timedOut: true })).toBe(false);
+  });
+
+  test('states a space rests in are never listed', ({ expect }) => {
+    expect(shouldListSpace({ state: SpaceState.SPACE_INACTIVE, timedOut: false })).toBe(false);
+    expect(shouldListSpace({ state: SpaceState.SPACE_ERROR, timedOut: false })).toBe(false);
+    expect(shouldListSpace({ state: SpaceState.SPACE_CLOSED, timedOut: false, lazySpaceOpen: true })).toBe(false);
   });
 });
