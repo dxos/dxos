@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { BookmarkCard as default } from './BookmarkCard';
+export { BookmarkCard as default } from './BookmarkCard.tsx';

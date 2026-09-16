@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { type LegacyListActiveIdentitiesResponse, type ListActiveIdentitiesResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 type IdentityItem =
   | ListActiveIdentitiesResponse['identities'][number]
@@ -25,8 +25,8 @@ const formatIdentityRow = (identity: IdentityItem): string => {
 export const list = Command.make(
   'list',
   {
-    limit: Options.integer('limit').pipe(Options.withDescription('Max results per page.'), Options.optional),
-    cursor: Options.string('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
+    limit: Options.Int('limit').pipe(Options.withDescription('Max results per page.'), Options.optional),
+    cursor: Options.String('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
   },
   Effect.fn(function* ({ limit, cursor }) {
     const query: Record<string, string> = {};

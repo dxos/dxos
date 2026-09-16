@@ -16,7 +16,7 @@ import { ContentBlock, Message } from '@dxos/types';
 
 import { Booking, Segment, Trip } from '#types';
 
-import { TripMessageExtractor } from './trip-extractor';
+import { TripMessageExtractor } from './trip-extractor.ts';
 
 // Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
 const noResolver = fromResolvers({});

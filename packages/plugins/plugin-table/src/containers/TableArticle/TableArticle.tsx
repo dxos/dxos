@@ -33,6 +33,7 @@ import {
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
+import { downloadBlob } from '@dxos/util';
 
 import { meta } from '#meta';
 import { TableOperation } from '#types';
@@ -66,9 +67,9 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const handleDeleteRows = useCallback(
       (_row: number, objects: any[]) => {
-        void invokePromise(SpaceOperation.RemoveObjects, { objects });
+        void invokePromise(SpaceOperation.RemoveObjects, { objects }, { spaceId: db?.spaceId });
       },
-      [invokePromise],
+      [invokePromise, db],
     );
 
     const handleDeleteColumn = useCallback(
@@ -174,12 +175,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
             }
 
             const blob = new Blob([result.data.content], { type: result.data.mimeType });
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement('a');
-            anchor.href = url;
-            anchor.download = result.data.filename;
-            anchor.click();
-            URL.revokeObjectURL(url);
+            void downloadBlob(blob, result.data.filename);
           },
         );
       },

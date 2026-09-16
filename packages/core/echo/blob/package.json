@@ -1,0 +1,49 @@
+{
+  "name": "@dxos/blob",
+  "version": "0.11.1",
+  "description": "Blob storage contract and registry: pluggable content-addressed backends for ECHO.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./hosted": {
+      "source": "./src/hosted/index.ts",
+      "types": "./dist/types/src/hosted/index.d.ts",
+      "import": "./dist/lib/hosted.mjs"
+    },
+    "./s3": {
+      "source": "./src/s3/index.ts",
+      "types": "./dist/types/src/s3/index.d.ts",
+      "import": "./dist/lib/s3.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -12,19 +12,19 @@ import { writeFileSync } from 'node:fs';
 import { CommandConfig, formatBytes } from '@dxos/cli-util';
 import { type SpaceExportResult } from '@dxos/protocols';
 
-import { adminDownload, adminRequest, formatAdminError } from '../util';
+import { adminDownload, adminRequest, formatAdminError } from '../util.ts';
 
 type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
 
 export const exportSpace = Command.make(
   'export',
   {
-    spaceId: Args.string('spaceId'),
-    download: Options.boolean('download').pipe(
+    spaceId: Args.String('spaceId'),
+    download: Options.Boolean('download').pipe(
       Options.withDescription('Download the export after triggering it.'),
       Options.withDefault(false),
     ),
-    output: Options.string('output').pipe(
+    output: Options.String('output').pipe(
       Options.withDescription('Output file path for download.'),
       Options.withAlias('o'),
       Options.optional,

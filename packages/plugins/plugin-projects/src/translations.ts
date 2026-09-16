@@ -5,6 +5,7 @@
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -21,21 +22,44 @@ export const translations = [
         'delete-object.label': 'Delete project',
         'object-deleted.label': 'Project deleted',
       },
+      [Type.getTypename(Repo.Repo)]: {
+        'typename.label': 'Repository',
+        'typename.label_zero': 'Repositories',
+        'typename.label_one': 'Repository',
+        'typename.label_other': 'Repositories',
+        'object-name.placeholder': 'owner/name',
+        'rename-object.label': 'Rename repository',
+        'delete-object.label': 'Delete repository',
+        'object-deleted.label': 'Repository deleted',
+      },
       [meta.profile.key]: {
         'plugin.name': 'Projects',
+        'project-tour.label': 'Take the project tour',
         'project.label': 'Project',
         'projects.label': 'Projects',
         'instructions.label': 'Instructions',
         'context.label': 'Context',
         'milestones.label': 'Milestones',
+        'views.label': 'Views',
+        'overview.label': 'Overview',
         'tasks.label': 'Tasks',
+        'view.label': 'View',
+        'pipeline.label': 'Show pipeline',
+        'no-sessions.message': 'No agent sessions yet. Assign tasks to an agent to start one.',
+        'no-task-set.message': 'This project has no task set yet.',
         'artifacts.label': 'Artifacts',
-        'outline.label': 'Outline',
-        'add-artifact.label': 'Add artifact',
+        'artifacts-empty.message': 'This project has no artifacts yet.',
+        'chats.label': 'Sessions',
+        'chats-empty.message': 'This project has no sessions yet.',
+        'outline.label': 'Notes',
+        'outline.description':
+          'Notes are a scratch surface for the project. Use the menu to promote items into assignable tasks.',
+        'create-artifact.label': 'Create artifact',
+        'create-chat.label': 'Create session',
+        'delegate-tasks.label': 'Assign selected tasks to agent',
         'create-panel.name.placeholder': 'Project name (optional)',
         'create-panel.template.placeholder': 'Filter templates…',
         'setup-project.label': 'Set up project',
-        'create-chat.label': 'New chat',
         'object-card.untitled.label': 'Untitled',
         'object-card.delete.label': 'Delete',
       },

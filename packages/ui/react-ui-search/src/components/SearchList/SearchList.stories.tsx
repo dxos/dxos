@@ -6,14 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { useSearchListInput, useSearchListItem, useSearchListResults } from './hooks';
-import { SearchList } from './SearchList';
+import { useSearchListInput, useSearchListItem, useSearchListResults } from './hooks/index.ts';
+import { SearchList } from './SearchList.tsx';
 
 random.seed(1234);
 
@@ -350,15 +350,15 @@ const CustomInput = () => {
 
   return (
     <Toolbar.Root>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           type='text'
           value={query}
           placeholder='Custom input...'
           onChange={(ev) => onQueryChange(ev.target.value)}
           onKeyDown={handleKeyDown}
         />
-      </Input.Root>
+      </Field.Root>
       {query && <Toolbar.IconButton icon='ph--x--regular' iconOnly label='Clear' onClick={() => onQueryChange('')} />}
     </Toolbar.Root>
   );

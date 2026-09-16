@@ -4,7 +4,7 @@
 
 import { type RefObject, useLayoutEffect, useRef } from 'react';
 
-import { type Rect } from './layout';
+import { type Rect } from './layout.ts';
 
 const DURATION = 200;
 const EASING = 'cubic-bezier(0.2, 0, 0, 1)';

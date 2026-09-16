@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { latch } from '@dxos/async';
 import { range } from '@dxos/util';
 
-import { type Storage, type StorageType } from '../common';
+import { type Storage, type StorageType } from '../common/index.ts';
 
 export const randomText = () => Math.random().toString(36).substring(2);
 

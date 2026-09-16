@@ -49,17 +49,16 @@ key controlled-ness off the _presence_ of the `value` prop (so clearing to
 
 ### Components
 
-| Component     | Shape                                       | Aspects used                                                                             |
-| ------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `Listbox`     | styled list; **selection opt-in**           | `useListNavigation`, `useListSelection('single')` when wired                             |
-| `OrderedList` | reorderable master-detail rows              | `useReorder*`, `useListDisclosure('single')`, `useListNavigation('list')`, `useListGrid` |
-| `Tree`        | reactive hierarchical tree                  | atom-based `TreeModel` (own model — see note) + pragmatic-dnd; renders via `Treegrid`    |
-| `Treegrid`    | `role=treegrid` grid layout (rows/cells)    | own `tv` theme + arrow-key row nav (`@fluentui/react-tabster`)                           |
-| `Accordion`   | collapsible sections                        | Radix Accordion (own disclosure — see note)                                              |
-| `Combobox`    | popover list + text input                   | composes `Picker`                                                                        |
-| `Picker`      | input-driven option list (virtual focus)    | own registry + keyboard (activedescendant pattern)                                       |
-| `ItemContent` | presentational row layout (icon/title/desc) | none (layout only)                                                                       |
-| `Empty`       | empty-state placeholder                     | none                                                                                     |
+| Component     | Shape                                       | Aspects used                                                                                     |
+| ------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `Listbox`     | styled list; **selection opt-in**           | `useListNavigation`, `useListSelection('single')` when wired                                     |
+| `OrderedList` | reorderable master-detail rows              | `useReorder*`, `useListDisclosure('single')`, `useListNavigation('list')`, `useListGrid`         |
+| `Tree`        | reactive hierarchical tree                  | `@ark-ui/react` TreeView machine + atom-based `TreeModel` (own model — see note) + pragmatic-dnd |
+| `Accordion`   | collapsible sections                        | Radix Accordion (own disclosure — see note)                                                      |
+| `Combobox`    | popover list + text input                   | composes `Picker`                                                                                |
+| `Picker`      | input-driven option list (virtual focus)    | own registry + keyboard (activedescendant pattern)                                               |
+| `ItemContent` | presentational row layout (icon/title/desc) | none (layout only)                                                                               |
+| `Empty`       | empty-state placeholder                     | none                                                                                             |
 
 > **`Listbox` selection is opt-in.** Pass `value`/`defaultValue`/`onValueChange` on
 > `Listbox.Root` for a single-select `role=listbox` (options carry `aria-selected`
@@ -114,29 +113,21 @@ OrderedList.Root                   owns reorder + disclosure + nav
 
 ```
 Tree                               props: model: TreeModel, rootId, draggable, renderColumns…
-└─ Treegrid.Root                   grid container (this package); one row per node
-   └─ TreeItem (per node)          Treegrid.Row + indent
+└─ TreeView.Root (@ark-ui/react)   role=tree · machine owns focus/expansion/ARIA
+   └─ TreeView.Branch / Item       role=treeitem · grid-cols-subgrid row
       ├─ TreeItemToggle            expand/collapse caret (branches)
-      ├─ TreeItemHeading           icon + label + count badge
-      └─ renderColumns(item) *     caller-supplied trailing cells
+      └─ renderColumns(item) *     caller-supplied trailing columns
 ```
 
 `TreeModel` is an interface of `@effect-atom` atom families the caller supplies:
 `item(id)`, `childIds(parentId?)`, `itemOpen(path)`, `itemCurrent(path)`,
-`itemProps(path)`. The tree subscribes per-node, so only changed rows re-render.
+`itemProps(path)`. One atom walks those families into an immutable
+`TreeCollection` the machine consumes, with `expandedValue`/`selectedValue`
+controlled; node value is the joined path. Full design, decisions and the
+experiment log: [docs/TREE.md](./docs/TREE.md).
 
-### Treegrid — `role=treegrid` grid layout
-
-```
-Treegrid.Root                      <div role=treegrid> · grid · arrow-key row nav
-└─ Treegrid.Row                    <div role=row> · aria-level / aria-expanded / aria-owns
-   └─ Treegrid.Cell                <div role=gridcell> · `indent` carries per-level padding
-```
-
-The low-level grid primitive `Tree` builds on; also used directly by navtree
-(`NavTreeItemColumns`) and devtools (`ObjectsTree`). Self-contained `tv` theme
-(`Treegrid.theme.ts`) — no central theme registration. Row depth derives from the
-id's `~`-separated path; `Treegrid.theme.rowLevel(level)` supplies the indent class.
+`renderColumns` output lands inside a `role=treeitem`, **not** a grid row — it
+must not carry `role=gridcell`.
 
 ### Accordion — collapsible sections
 
@@ -175,8 +166,7 @@ fuzzy/search filtering, pair with `@dxos/react-ui-search`.
 ## Conventions
 
 - **Theme.** Component classes live in `components/List.theme.ts` (tailwind-variants);
-  per-instance overrides flow through `classNames`. `Treegrid` carries its own
-  `tv` theme (`Treegrid.theme.ts`). Mirror this when adding a component — add a
+  per-instance overrides flow through `classNames`. Mirror this when adding a component — add a
   slot, don't inline literals.
 - **`dx-*` ↔ ARIA grammar.** `aria-selected` ↔ `dx-selected` (chosen row);
   `aria-current` ↔ `dx-current` (you-are-here); `dx-hover` is free. Definitions

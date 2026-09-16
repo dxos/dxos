@@ -17,9 +17,9 @@ import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 import { GoogleCalendar } from '#apis';
 import { type GoogleCalendarApi, type GoogleCalendarApiError } from '#services';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { mapEvent } from '../mapper';
-import { fetchEvents } from './fetch';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants.ts';
+import { mapEvent } from '../mapper.ts';
+import { fetchEvents } from './fetch.ts';
 
 /** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 const CALENDAR_SYNC_CONFIG = {

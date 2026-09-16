@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Plugin from './plugin';
-import * as PluginAssetCache from './plugin-asset-cache';
-import * as UrlLoader from './url-loader';
+import * as PluginAssetCache from './plugin-asset-cache.ts';
+import * as Plugin from './plugin.ts';
+import * as UrlLoader from './url-loader.ts';
 
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test' });
 
@@ -80,6 +80,48 @@ describe('UrlLoader', () => {
       const malformed: UrlLoader.Storage = { get: () => '{not json', set: () => {} };
       expect(UrlLoader.getRemoteEntries({ storage: empty })).toEqual([]);
       expect(UrlLoader.getRemoteEntries({ storage: malformed })).toEqual([]);
+    });
+  });
+
+  describe('setRemoteEntries', () => {
+    it('replaces the persisted entries wholesale', ({ expect }) => {
+      const stored: Record<string, string> = {};
+      const storage: UrlLoader.Storage = {
+        get: (key) => stored[key] ?? null,
+        set: (key, value) => {
+          stored[key] = value;
+        },
+      };
+
+      UrlLoader.setRemoteEntries([{ id: 'p1', url: 'http://example.com/p1.mjs', version: 'v1.0.0' }], {
+        storage,
+        key: 'test-key',
+      });
+      expect(UrlLoader.getRemoteEntries({ storage, key: 'test-key' })).toEqual([
+        { id: 'p1', url: 'http://example.com/p1.mjs', version: 'v1.0.0' },
+      ]);
+
+      // Replacement, not a merge — the device-sync layer writes the whole set it resolved.
+      UrlLoader.setRemoteEntries([{ id: 'p2', url: 'http://example.com/p2.mjs' }], { storage, key: 'test-key' });
+      expect(UrlLoader.getRemoteEntries({ storage, key: 'test-key' })).toEqual([
+        { id: 'p2', url: 'http://example.com/p2.mjs' },
+      ]);
+
+      UrlLoader.setRemoteEntries([], { storage, key: 'test-key' });
+      expect(UrlLoader.getRemoteEntries({ storage, key: 'test-key' })).toEqual([]);
+    });
+
+    it('swallows a failing storage rather than breaking the caller', ({ expect }) => {
+      const storage: UrlLoader.Storage = {
+        get: () => null,
+        set: () => {
+          throw new Error('quota exceeded');
+        },
+      };
+
+      expect(() =>
+        UrlLoader.setRemoteEntries([{ id: 'p1', url: 'http://example.com/p1.mjs' }], { storage }),
+      ).not.toThrow();
     });
   });
 

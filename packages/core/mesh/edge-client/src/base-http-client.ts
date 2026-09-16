@@ -8,10 +8,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
 
-import { authenticateViaChallengeEndpoint, handleAuthChallenge, parseChallengeHeader } from './auth-challenge';
-import { type EdgeIdentity } from './edge-identity';
-import { encodeAuthHeader } from './http-client';
-import { getEdgeUrlWithProtocol } from './utils';
+import { authenticateViaChallengeEndpoint, handleAuthChallenge, parseChallengeHeader } from './auth-challenge.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { encodeAuthHeader } from './http-client.ts';
+import { getEdgeUrlWithProtocol } from './utils.ts';
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
@@ -82,7 +82,9 @@ export abstract class BaseHttpClient {
   private _authPrefetch: Promise<void> | undefined;
 
   constructor(baseUrl: string, options?: BaseHttpClientOptions) {
-    this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
+    // Slash-terminated: `new URL('account/me', '…/hub')` would otherwise drop the `/hub` prefix.
+    const url = getEdgeUrlWithProtocol(baseUrl, 'http');
+    this._baseUrl = url.endsWith('/') ? url : `${url}/`;
     this._clientTag = options?.clientTag;
     this._apiKey = options?.apiKey;
     log('created', { url: this._baseUrl });
@@ -219,7 +221,7 @@ export abstract class BaseHttpClient {
    * non-ok, non-retryable statuses throw `EdgeCallFailedError`, mirroring `_call`.
    *
    * NOTE: Duplicates `_call`'s auth/retry loop rather than sharing it, to avoid touching `_call`'s
-   * broadly-depended-on JSON-envelope behavior. `EdgeHttpClient.anthropicAiRequest`'s separate
+   * broadly-depended-on JSON-envelope behavior. `EdgeHttpClient.aiRequest`'s separate
    * duplicate loop is a follow-up candidate for consolidating onto this method.
    */
   protected async _callRaw(ctx: Context, url: URL, args: RawHttpRequestArgs): Promise<Response> {

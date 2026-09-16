@@ -14,7 +14,7 @@ import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-
 
 import { meta } from '#meta';
 
-import { getMessageMetadata } from '../../util';
+import { getMessageMetadata } from '../../util.ts';
 
 export type MessageThreadProps = ThemedClassName<{
   /** Stable id used for the underlying thread root and message metadata. */
@@ -78,12 +78,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
 
     return (
       <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
-        <Thread.Content
-          id={id}
-          current={current}
-          classNames={['dx-container h-full border', classNames]}
-          ref={forwardedRef}
-        >
+        <Thread.Content id={id} current={current} classNames={['dx-expand border', classNames]} ref={forwardedRef}>
           <Thread.Messages id={id} messages={messages} />
           {!readOnly && (
             <>

@@ -6,8 +6,8 @@ import { Client, type ClientOptions } from '@dxos/client';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
-import { type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph-registry';
-import { createMockedComputeRuntimeProvider } from './test-runtime';
+import { type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph-registry.ts';
+import { createMockedComputeRuntimeProvider } from './test-runtime.ts';
 
 export type TestBuilderOptions = ClientOptions & Partial<ComputeGraphOptions>;
 

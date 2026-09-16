@@ -14,7 +14,7 @@ import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
 // TODO(wittjosiah): Remove or restore graph caching.
-// import { meta } from './meta';
+// import { meta } from './meta.ts';
 
 // const KEY = `${meta.id}.app-graph`;
 

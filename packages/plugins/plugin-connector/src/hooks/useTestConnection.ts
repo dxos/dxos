@@ -33,9 +33,12 @@ export type TestConnectionStatus =
   | 'unsupported';
 
 export type UseTestConnectionResult = {
+  /** The last completed verdict. Holds its value across a retest rather than resetting. */
   readonly status: TestConnectionStatus;
   /** User-facing failure reason when `status` is `'invalid'`. */
   readonly error?: string;
+  /** Whether a probe is in flight. Orthogonal to `status`, which still shows the previous result. */
+  readonly testing: boolean;
   /** Re-run the test (e.g. after the user reauthenticates). */
   readonly retest: () => void;
 };
@@ -56,6 +59,10 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
   const accessToken = connection?.accessToken?.target;
   const [status, setStatus] = useState<TestConnectionStatus>('idle');
   const [error, setError] = useState<string | undefined>(undefined);
+  // Tracked separately from `status` so a retest does not have to discard the previous verdict to
+  // say it is running. Folding the two together blanks the failure message for the duration of the
+  // probe and then restores it, which reads as a flicker rather than as progress.
+  const [testing, setTesting] = useState(false);
   const [nonce, setNonce] = useState(0);
 
   const retest = useCallback(() => setNonce((value) => value + 1), []);
@@ -81,12 +88,17 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
 
   useAsyncEffect(
     async (controller) => {
+      // Every early exit clears `testing`, including these: a probe may already have been in flight
+      // when its subject went away, and the superseding run returns here without ever reaching the
+      // code that would clear the flag — leaving the button disabled on "Testing…" for good.
       if (!connection || !connector) {
+        setTesting(false);
         return;
       }
       if (!testConnection) {
         setStatus('unsupported');
         setError(undefined);
+        setTesting(false);
         return;
       }
       if (!accessToken || !db) {
@@ -94,17 +106,19 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
         // database went away, which would otherwise leave the status on 'testing' indefinitely.
         setStatus('idle');
         setError(undefined);
+        setTesting(false);
         return;
       }
 
-      setStatus('testing');
-      setError(undefined);
+      // The previous verdict stays on screen while this runs; only the in-flight flag changes.
+      setTesting(true);
 
       // Service resolution failing rejects rather than yielding an exit; treat it as a failed probe.
       const exit = await runTest().catch(Exit.die);
       if (controller.signal.aborted) {
         return;
       }
+      setTesting(false);
       if (Exit.isSuccess(exit)) {
         setStatus('valid');
         setError(undefined);
@@ -117,5 +131,5 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
     [connection, connector, testConnection, accessToken, accessTokenSnapshot?.token, db?.spaceId, runTest, nonce],
   );
 
-  return { status, error, retest };
+  return { status, error, testing, retest };
 };

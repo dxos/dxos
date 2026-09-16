@@ -15,7 +15,7 @@ import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN, SpaceId } from '@dxos/keys';
 
-import * as McpServer from './McpServer';
+import * as McpServer from './McpServer.ts';
 
 const SPACE = SpaceId.random();
 const SPACE_A = SpaceId.random();
@@ -95,7 +95,9 @@ const testHost = (
   host: McpServer.HostShape;
   invocations: Invocation[];
 } => {
-  const { output = { ok: true }, fail: shouldFail } = options;
+  // `in`, not a destructuring default: an explicit `undefined` output is a case under test.
+  const output = 'output' in options ? options.output : { ok: true };
+  const shouldFail = options.fail;
   // Read through `in`, since a destructuring default cannot tell an explicit `undefined` from an
   // omitted key.
   const spaceIds = 'spaceIds' in options ? options.spaceIds : [SPACE_A];
@@ -169,6 +171,13 @@ describe('McpServer', () => {
     test('a non-object output is wrapped, because structuredContent must be an object', async ({ expect }) => {
       const { result } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output: 42 }) });
       expect(successOf(await result)).to.deep.equal({ output: 42 });
+    });
+
+    test('a void output or an undefined field still yields JSON structured content', async ({ expect }) => {
+      const run = async (output: unknown) =>
+        successOf(await runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output }) }).result);
+      expect(await run(undefined)).to.deep.equal({});
+      expect(Object.keys(await run({ id: 'T-1', note: undefined }))).to.deep.equal(['id']);
     });
 
     test('space-less references in the result are qualified with the space they resolved in', async ({ expect }) => {
@@ -269,7 +278,7 @@ describe('McpServer', () => {
     // Input arrives as raw JSON rather than through a per-operation tool schema, so this handler is
     // the only thing standing between a malformed call and the operation's own internals.
     test('input is validated against the schema, naming the lookup that returns it', async ({ expect }) => {
-      const { result, invocations } = runInvoke({ input: { title: 42 as unknown as string }, spaceId: SPACE_A });
+      const { result, invocations } = runInvoke({ input: { title: 42 }, spaceId: SPACE_A });
       expect(failureOf(await result).code).to.equal('invalid_request');
       expect(failureOf(await result).message).to.include('queryOperations');
       expect(invocations).to.have.length(0);
@@ -332,7 +341,7 @@ describe('McpServer', () => {
     test('naming keys is the lookup that returns the schemas', async ({ expect }) => {
       const [row] = await run(testRegistry(), { keys: [KEY] });
       expect(row.key).to.equal(KEY);
-      expect((row.schema?.input as any).properties.title).to.exist;
+      expect(row.schema?.input?.properties?.title).to.exist;
       expect(row.schema?.output).to.exist;
     });
 
@@ -602,16 +611,20 @@ type StubInvocation = { key: string; input: unknown; spaceId?: string };
 /** A stub invoker recording each call; `McpServer.host` needs nothing else from the runtime. */
 const stubInvoker = (output: unknown = { id: 'T-1' }) => {
   const invocations: StubInvocation[] = [];
-  const service = {
-    invoke: (op: Operation.Definition.Any, input: unknown, options?: Operation.InvokeOptions) => {
+  const service: Operation.OperationService = {
+    invoke: <I, O>(
+      op: Operation.Definition<I, O>,
+      ...args: void extends I
+        ? [input?: I, options?: Operation.InvokeOptions]
+        : [input: I, options?: Operation.InvokeOptions]
+    ) => {
+      const [input, options] = args;
       invocations.push({ key: String(op.meta.key), input, spaceId: options?.spaceId });
-      return Effect.succeed(output);
+      return Effect.succeed(output as O);
     },
     schedule: () => Effect.void,
     invokePromise: () => Promise.resolve({}),
-    // Operation.OperationService.invoke is a complex overloaded type; a partial test stub
-    // cannot express all overload variants without the cast.
-  } as unknown as Operation.OperationService;
+  };
   return { service, invocations };
 };
 

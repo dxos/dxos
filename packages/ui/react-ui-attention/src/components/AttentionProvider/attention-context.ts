@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { useEffect, useMemo, useState } from 'react';
 
-import { ATTENDABLE_ATTRIBUTE, type Attention, AttentionManager } from '../../types/Attention';
+import { createContext } from '@dxos/react-hooks';
+
+import { ATTENDABLE_ATTRIBUTE, type Attention, AttentionManager } from '../../types/Attention.ts';
 
 // Kept out of `AttentionProvider.tsx`: react-refresh only fast-refreshes a module whose exports are
 // all components, so the context and hooks exported beside them force a full page reload on every edit.

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './load-drawing';
+export * from './load-drawing.ts';

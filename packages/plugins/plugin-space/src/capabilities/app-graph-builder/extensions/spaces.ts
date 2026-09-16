@@ -28,7 +28,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
-import { getSpaceDisplayName } from '../../../util';
+import { getSpaceDisplayName } from '../../../util/index.ts';
 import {
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
@@ -37,7 +37,7 @@ import {
   checkPendingMigration,
   spaceActionsCache,
   spaceRearrangeCache,
-} from './shared';
+} from './shared.ts';
 
 //
 // Extension Factory
@@ -75,6 +75,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               label: SPACE_HOME_NODE_LABEL,
               icon: 'ph--house--regular',
               iconHue: 'emerald',
+              testId: 'spacePlugin.spaceHome',
               position: Position.first,
               draggable: false,
               droppable: false,

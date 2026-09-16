@@ -8,5 +8,5 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { MapOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
-  MapOperation.SetControlType.pipe(Operation.lazyHandler(() => import('./set-control-type'))),
+  MapOperation.SetControlType.pipe(Operation.lazyHandler(() => import('./set-control-type.ts'))),
 ]);

@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Obj } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/Obj';
 import { random } from '@dxos/random';
 import { renderObjectLink, textStream } from '@dxos/react-ui-markdown';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
@@ -20,6 +19,27 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
 };
 
 export type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService>;
+
+/**
+ * A system-generated turn carrying no reader words — the shape a trigger, or the planning skill's
+ * continuation nudge, takes — followed by the answer it produced. Kept separate from the main
+ * generator so a story can assert this case without the other fixtures on screen.
+ */
+export const createSyntheticTurnGenerator = (): MessageGenerator[] => [
+  Effect.gen(function* () {
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
+      createMessage('user', [
+        {
+          _tag: 'text',
+          disposition: 'synthetic',
+          text: 'Your checklist still has unchecked items — continue working before finishing.',
+        },
+      ]),
+      createMessage('assistant', [{ _tag: 'text', text: 'Picking up the next unchecked item.' }]),
+    ]);
+  }),
+];
 
 export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
@@ -69,14 +89,11 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           text: [random.lorem.paragraph(), renderObjectLink(obj1), random.lorem.paragraph(), '\n'].join(' '),
         },
 
-        // Inline cards.
-        // ...[obj1, obj2, obj3, obj4].map(
-        //   (obj) =>
-        //     ({
-        //       _tag: 'text',
-        //       text: renderObjectLink(obj, true) + '\n',
-        //     }) satisfies ContentBlock.Text,
-        // ),
+        // An embedded card.
+        {
+          _tag: 'text',
+          text: renderObjectLink(obj1, true) + '\n',
+        },
       ]),
     ]);
   }),
@@ -98,14 +115,14 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     yield* Effect.promise(async () => {
       for await (const chunk of textStream(fullText, { wordsPerChunk: 2, chunkDelay: 60 })) {
         Obj.update(message, (message) => {
-          const block = message.blocks[0] as Mutable<ContentBlock.Text>;
+          const block = message.blocks[0] as Obj.Mutable<ContentBlock.Text>;
           block.text += chunk;
         });
         // Feed queries only react to feed-level updates, not in-place object mutations.
         await db.appendToFeed(feed, []);
       }
       Obj.update(message, (message) => {
-        const block = message.blocks[0] as Mutable<ContentBlock.Text>;
+        const block = message.blocks[0] as Obj.Mutable<ContentBlock.Text>;
         block.pending = false;
       });
       await db.appendToFeed(feed, []);

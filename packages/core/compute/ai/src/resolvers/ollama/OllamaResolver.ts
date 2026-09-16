@@ -9,11 +9,11 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { DXN } from '@dxos/keys';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import { AiModelNotAvailableError } from '../../errors';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
-import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import { AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
+import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter.ts';
 
 /**
  * Ollama resolver using the native Ollama API.
@@ -53,7 +53,7 @@ export const make = ({
   // Map each model id (DXN) to the raw Ollama tag passed to the back-end.
   const backendById = new Map(models.map((model) => [model.id, model.backend]));
 
-  return AiModelResolver.AiModelResolver.resolver(
+  return AiModelResolver.resolver(
     {
       name: 'Ollama',
     },

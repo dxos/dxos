@@ -26,11 +26,9 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/util": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@ark-ui/react": "catalog:",
+    "@dxos/react-hooks": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -11,7 +11,7 @@ import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
+import { type ComputeGraph, ValueBag, type WorkflowLoader, layerNoop } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
@@ -22,11 +22,11 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { Avatar, Field, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { useDevtoolsState } from '../../../hooks';
+import { useDevtoolsState } from '../../../hooks/index.ts';
 
 // TODO: reconcile with DebugPanel in ScriptPlugin
 
@@ -138,7 +138,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
               Effect.withSpan('runWorkflow'),
               Effect.flatMap(ValueBag.unwrap),
               Effect.provide(createLocalExecutionContext(space)),
-              Effect.provide(ComputeNodeContext.layerNoop),
+              Effect.provide(layerNoop),
               Effect.scoped,
             ),
         );
@@ -158,12 +158,12 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   return (
-    <div className={mx('dx-container flex flex-col', props.classNames)}>
+    <div className={mx('dx-expand flex flex-col', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
       <Toolbar.Root>
-        <Input.Root>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Input
             ref={inputRef}
             autoFocus
             placeholder={'Input JSON'}
@@ -171,7 +171,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             onChange={(ev) => setInput(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
-        </Input.Root>
+        </Field.Root>
         <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
         <Toolbar.IconButton
           icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}

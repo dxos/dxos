@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 
 import { DXN } from '@dxos/keys';
 
-import * as ActivationEvent from './activation-event';
-import * as Capability from './capability';
-import * as CapabilityManager from './capability-manager';
-import * as Plugin from './plugin';
-import * as PluginManager from './plugin-manager';
+import * as ActivationEvent from './activation-event.ts';
+import * as CapabilityManager from './capability-manager.ts';
+import * as Capability from './capability.ts';
+import * as PluginManager from './plugin-manager/index.ts';
+import * as Plugin from './plugin.ts';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
 const Number = Capability.makeSingleton<{ number: number }>()('org.dxos.test.number');

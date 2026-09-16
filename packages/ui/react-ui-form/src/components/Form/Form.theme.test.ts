@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { formTheme } from './Form.theme';
+import { formTheme } from './Form.theme.ts';
 
 describe('formTheme', () => {
   test('default variant adds no chrome to the field', ({ expect }) => {
@@ -34,5 +34,22 @@ describe('formTheme', () => {
     const styles = formTheme.styles({ variant: 'settings' });
     expect(styles.fieldLabelText({ class: 'text-2xl' })).toContain('text-2xl');
     expect(styles.fieldLabelText({ class: 'text-2xl' })).not.toContain('text-lg');
+  });
+
+  test('a root section hangs its top gap on the legend', ({ expect }) => {
+    const styles = formTheme.styles({ variant: 'settings', depth: 'root', labelled: true });
+    expect(styles.fieldSetLegend()).toContain('pt-form-section-gap');
+    expect(styles.fieldSet()).not.toContain('pt-form-section-gap');
+  });
+
+  test('a root section with no legend carries the top gap itself', ({ expect }) => {
+    const styles = formTheme.styles({ variant: 'settings', depth: 'root', labelled: false });
+    expect(styles.fieldSet()).toContain('pt-form-section-gap');
+  });
+
+  test('the default variant keeps its first section flush either way', ({ expect }) => {
+    const styles = formTheme.styles({ variant: 'default', depth: 'root', labelled: false });
+    expect(styles.fieldSet()).toContain('first:pt-0');
+    expect(styles.fieldSet()).toContain('[&:first-child>legend]:pt-0');
   });
 });

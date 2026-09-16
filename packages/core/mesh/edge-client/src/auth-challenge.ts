@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { toBinary } from '@bufbuild/protobuf';
+
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type EdgeIdentity } from './edge-identity';
+import { type EdgeIdentity } from './edge-identity.ts';
 
 /**
  * The VerifiablePresentation challenge/response handshake, shared by the HTTP and WebSocket
@@ -203,7 +205,7 @@ export const presentCredentialsForChallenge = async (
   challenge: string,
 ): Promise<Uint8Array> => {
   const presentation = await identity.presentCredentials({ challenge: Buffer.from(challenge, 'base64') });
-  return schema.getCodecForType('dxos.halo.credentials.Presentation').encode(presentation);
+  return toBinary(PresentationSchema, presentation);
 };
 
 export type ChallengeAuthentication = {

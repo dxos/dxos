@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { make } from '../types/Provider';
-import { applyProviderTemplate } from './set-provider-template';
+import { make } from '../types/Provider.ts';
+import { applyProviderTemplate } from './set-provider-template.ts';
 
 describe('applyProviderTemplate', () => {
   test('writes the derived search schema, request, and result onto the provider', ({ expect }) => {

@@ -11,8 +11,8 @@ import { afterEach, beforeEach, describe, it } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { HttpConfig, withLogging, withRetry, withRetryConfig } from './http-client';
-import { type TestServer, createTestServer, responseHandler } from './testing';
+import { HttpConfig, withLogging, withRetry, withRetryConfig } from './http-client.ts';
+import { type TestServer, createTestServer, responseHandler } from './testing/index.ts';
 
 describe('HttpClient', () => {
   let server: TestServer | undefined;

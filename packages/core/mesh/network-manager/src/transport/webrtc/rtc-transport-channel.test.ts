@@ -7,10 +7,10 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 
-import { type TransportOptions } from '../transport';
-import { type RtcPeerConnection } from './rtc-peer-connection';
-import { RtcTransportChannel } from './rtc-transport-channel';
-import { handleChannelErrors } from './test-utils';
+import { type TransportOptions } from '../transport.ts';
+import { type RtcPeerConnection } from './rtc-peer-connection.ts';
+import { RtcTransportChannel } from './rtc-transport-channel.ts';
+import { handleChannelErrors } from './test-utils.ts';
 
 describe('RtcTransportChannel', () => {
   test('transport error raised if channel creation fails', async () => {

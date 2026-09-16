@@ -19,7 +19,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
 
-import { getProvidersSectionId } from '../paths';
+import { getProvidersSectionId } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -84,7 +84,12 @@ export default Capability.makeModule(
             },
             {
               id: 'delete',
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [search] }),
+              data: () =>
+                Operation.invoke(
+                  SpaceOperation.RemoveObjects,
+                  { objects: [search] },
+                  { spaceId: Obj.getDatabase(search)?.spaceId },
+                ),
               properties: {
                 label: ['delete-object.label', { ns: Type.getTypename(Search.Search) }],
                 icon: 'ph--trash--regular',
@@ -113,7 +118,12 @@ export default Capability.makeModule(
             }),
             {
               id: 'delete',
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [provider] }),
+              data: () =>
+                Operation.invoke(
+                  SpaceOperation.RemoveObjects,
+                  { objects: [provider] },
+                  { spaceId: Obj.getDatabase(provider)?.spaceId },
+                ),
               properties: {
                 label: ['delete-object.label', { ns: Type.getTypename(Provider.Provider) }],
                 icon: 'ph--trash--regular',

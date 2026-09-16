@@ -15,10 +15,13 @@ import * as IdGenerator from 'effect/unstable/ai/IdGenerator';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
 import type * as Response from 'effect/unstable/ai/Response';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+
+import { log } from '@dxos/log';
 
 /**
  * Effect 4 reshaped the AI errors the way it reshaped `HttpClientError`: one `AiError` wrapper
@@ -90,6 +93,8 @@ type ChatMessage =
   | {
       role: 'assistant';
       content: string;
+      /** Sent back to a provider that asks for it; see {@link replaysReasoning}. */
+      reasoning_content?: string;
       tool_calls?: ChatToolCall[];
     }
   | {
@@ -116,8 +121,11 @@ type ChatTool = {
  */
 type OpenAiChatRequest = {
   model: string;
+  /** Provider-specific fields passed through from {@link RequestOptions.body} (e.g. DeepSeek `thinking`). */
+  [key: string]: unknown;
   messages: ChatMessage[];
   stream?: boolean;
+  stream_options?: { include_usage: boolean };
   response_format?: { type: 'json_object' };
   temperature?: number;
   tools?: ChatTool[];
@@ -151,6 +159,8 @@ type OpenAiChatResponse = {
     message: {
       role: string;
       content: string | null;
+      /** DeepSeek (and other reasoning models) return chain-of-thought alongside the answer. */
+      reasoning_content?: string | null;
       tool_calls?: ChatToolCall[];
     };
     finish_reason: string;
@@ -193,6 +203,7 @@ type OpenAiStreamChunk = {
     delta: {
       role?: string;
       content?: string | null;
+      reasoning_content?: string | null;
       tool_calls?: Array<{
         index: number;
         id?: string;
@@ -205,6 +216,12 @@ type OpenAiStreamChunk = {
     };
     finish_reason: string | null;
   }>;
+  /** Present only on the final chunk, and only when `stream_options.include_usage` was requested. */
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 };
 
 /**
@@ -240,6 +257,17 @@ export type ApiFormat = 'ollama' | 'openai';
 export type ChatCompletionsClientConfig = {
   readonly baseUrl: string;
   readonly apiFormat: ApiFormat;
+  /**
+   * The serving product, reported as `gen_ai.system`. Distinct from {@link ApiFormat}, which is the
+   * wire dialect: LM Studio and any other OpenAI-compatible endpoint speak `'openai'` without being
+   * OpenAI, and consumers price on this field. Defaults to the API format.
+   */
+  readonly provider?: string;
+  /**
+   * Request `stream_options.include_usage` on streamed OpenAI-format calls. Providers that meter on
+   * reported usage (DeepSeek via EDGE) need it; local servers that reject unknown fields do not.
+   */
+  readonly streamUsage?: boolean;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
   /**
    * Maximum duration to wait for the HTTP response to start. Applies to both
@@ -297,7 +325,25 @@ export class ChatCompletionsClient extends Context.Service<
  * result messages are mapped to the OpenAI function-calling convention which
  * Ollama also accepts.
  */
-const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat): ChatMessage[] => {
+/**
+ * Whether a provider wants an assistant turn's reasoning sent back with it. DeepSeek's thinking mode
+ * refuses a request whose earlier tool-calling turns come back without their `reasoning_content`,
+ * an empty one included, so a tool-calling turn always carries the field; OpenAI-format servers that
+ * never produced any would be sent a field they do not know.
+ */
+const replaysReasoning = (config: ChatCompletionsClientConfig): boolean => config.provider === 'deepseek';
+
+/** The messages of a request by role and what each carries, without their content. */
+const describeMessages = (messages: ChatMessage[]) =>
+  messages.map((message) => ({
+    role: message.role,
+    content: typeof message.content === 'string' ? message.content.length : undefined,
+    ...('reasoning_content' in message ? { reasoning: message.reasoning_content?.length } : {}),
+    ...('tool_calls' in message ? { toolCalls: message.tool_calls?.length } : {}),
+    ...('tool_call_id' in message ? { toolCallId: message.tool_call_id } : {}),
+  }));
+
+const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat, replayReasoning = false): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
   for (const message of prompt.content) {
@@ -321,10 +367,13 @@ const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat): ChatMess
     } else if (message.role === 'assistant') {
       const assistantMsg = message as Prompt.AssistantMessage;
       const textParts: string[] = [];
+      const reasoningParts: string[] = [];
       const toolCalls: ChatToolCall[] = [];
       for (const part of assistantMsg.content) {
         if (part.type === 'text') {
           textParts.push(part.text);
+        } else if (part.type === 'reasoning') {
+          reasoningParts.push(part.text);
         } else if (part.type === 'tool-call') {
           toolCalls.push({
             id: part.id,
@@ -337,10 +386,14 @@ const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat): ChatMess
         }
       }
       const text = textParts.join('\n');
+      const reasoning = reasoningParts.join('\n');
       if (toolCalls.length > 0 || text.length > 0) {
         messages.push({
           role: 'assistant',
           content: text,
+          ...(replayReasoning && (reasoning.length > 0 || toolCalls.length > 0)
+            ? { reasoning_content: reasoning }
+            : {}),
           ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
         });
       }
@@ -453,6 +506,8 @@ const buildRequestBody = (
   jsonFormat: boolean,
   apiFormat: ApiFormat,
   tools: ChatTool[] | undefined,
+  streamUsage = false,
+  extraBody: Readonly<Record<string, unknown>> = {},
 ): OllamaChatRequest | OpenAiChatRequest => {
   switch (apiFormat) {
     case 'ollama':
@@ -465,9 +520,11 @@ const buildRequestBody = (
       };
     case 'openai':
       return {
+        ...extraBody,
         model,
         messages,
         stream,
+        stream_options: stream && streamUsage ? { include_usage: true } : undefined,
         response_format: jsonFormat ? { type: 'json_object' } : undefined,
         tools,
         tool_choice: tools ? 'auto' : undefined,
@@ -547,6 +604,7 @@ const extractResponse = (
       const mappedReason = mapOpenAiFinishReason(choice?.finish_reason);
       return {
         text: choice?.message?.content ?? '',
+        reasoning: choice?.message?.reasoning_content ?? undefined,
         toolCalls,
         inputTokens: r.usage?.prompt_tokens,
         outputTokens: r.usage?.completion_tokens,
@@ -623,6 +681,9 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
         }
         const chunk = JSON.parse(data) as OpenAiStreamChunk;
         const choice = chunk.choices?.[0];
+        // The chunk is an unvalidated cast over `JSON.parse`; a non-numeric count would otherwise
+        // reach the finish payload and telemetry as a string.
+        const tokenCount = (value: unknown): number | undefined => (typeof value === 'number' ? value : undefined);
         const deltas = choice?.delta?.tool_calls?.map((tc) => ({
           index: tc.index,
           id: tc.id,
@@ -631,7 +692,10 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
         }));
         return {
           content: choice?.delta?.content ?? undefined,
+          reasoning: choice?.delta?.reasoning_content ?? undefined,
           done: choice?.finish_reason !== null && choice?.finish_reason !== undefined,
+          inputTokens: tokenCount(chunk.usage?.prompt_tokens),
+          outputTokens: tokenCount(chunk.usage?.completion_tokens),
           finishReason: choice?.finish_reason ? mapOpenAiFinishReason(choice.finish_reason) : undefined,
           toolCallDeltas: deltas,
         };
@@ -643,9 +707,20 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
 };
 
 /**
+ * Per-model request options.
+ */
+export type RequestOptions = {
+  /**
+   * Provider-specific request-body fields merged into every OpenAI-format call (DeepSeek's
+   * `thinking` and `reasoning_effort`, say). Ignored for the Ollama dialect.
+   */
+  readonly body?: Readonly<Record<string, unknown>>;
+};
+
+/**
  * Create a chat completions language model service.
  */
-export const make = (model: string) =>
+export const make = (model: string, requestOptions: RequestOptions = {}) =>
   Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) => {
     const requestTimeout = config.requestTimeout ?? DEFAULT_REQUEST_TIMEOUT;
     const streamIdleTimeout = config.streamIdleTimeout ?? DEFAULT_STREAM_IDLE_TIMEOUT;
@@ -654,11 +729,21 @@ export const make = (model: string) =>
       generateText: (options) =>
         Effect.gen(function* () {
           const idGen = yield* IdGenerator.IdGenerator;
+          annotateRequest(options.span, model, config);
 
-          const messages = promptToMessages(options.prompt, config.apiFormat);
+          const messages = promptToMessages(options.prompt, config.apiFormat, replaysReasoning(config));
           const jsonFormat = options.responseFormat.type === 'json';
           const tools = toolsToRequest(options.tools);
-          const requestBody = buildRequestBody(model, messages, false, jsonFormat, config.apiFormat, tools);
+          const requestBody = buildRequestBody(
+            model,
+            messages,
+            false,
+            jsonFormat,
+            config.apiFormat,
+            tools,
+            false,
+            requestOptions.body,
+          );
           const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
@@ -689,6 +774,7 @@ export const make = (model: string) =>
             response,
             config.apiFormat,
           );
+          annotateResponse(options.span, { inputTokens, outputTokens, finishReason });
 
           const parts: Response.PartEncoded[] = [];
           if (reasoning && reasoning.length > 0) {
@@ -724,11 +810,21 @@ export const make = (model: string) =>
         Stream.unwrap(
           Effect.gen(function* () {
             const idGen = yield* IdGenerator.IdGenerator;
+            annotateRequest(options.span, model, config);
 
-            const messages = promptToMessages(options.prompt, config.apiFormat);
+            const messages = promptToMessages(options.prompt, config.apiFormat, replaysReasoning(config));
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
-            const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat, tools);
+            const requestBody = buildRequestBody(
+              model,
+              messages,
+              true,
+              jsonFormat,
+              config.apiFormat,
+              tools,
+              config.streamUsage,
+              requestOptions.body,
+            );
             const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
             const response = yield* httpRequest.pipe(
@@ -747,6 +843,12 @@ export const make = (model: string) =>
                   ) as Effect.Effect<never, any, never>;
                 }
 
+                // A client that rejects a non-2xx response itself lands here with the body in the
+                // error; the shape of what was sent goes next to it, as below.
+                log.warn('chat completions request failed', {
+                  error: describe('request failed', err),
+                  messages: describeMessages(messages),
+                });
                 return Effect.fail(unknownError('streamText', 'request failed', err)) as Effect.Effect<
                   never,
                   any,
@@ -756,6 +858,13 @@ export const make = (model: string) =>
             );
             if (response.status !== 200) {
               const body = yield* response.text;
+              // A rejection is about the request, so the shape of what was sent goes next to it: a
+              // provider that wants a field on a turn names the turn, not the field it saw.
+              log.warn('chat completions request rejected', {
+                status: response.status,
+                body: body.slice(0, 500),
+                messages: describeMessages(messages),
+              });
               try {
                 const json = JSON.parse(body);
                 const error = json.error;
@@ -772,6 +881,16 @@ export const make = (model: string) =>
             let textEnded = false;
             let reasoningStarted = false;
             let reasoningEnded = false;
+
+            // The finish part is emitted once, after the source completes, rather than on the first
+            // chunk reporting `done`. Two shapes force this: OpenAI-format streams end with a
+            // `data: [DONE]` sentinel *after* the `finish_reason` chunk, so emitting per `done` sent
+            // a second, usage-less finish; and a provider may report usage in a trailing chunk whose
+            // `choices` is empty (OpenAI proper does), which arrives after `finish_reason`.
+            let finishSeen = false;
+            let finishReason: Response.FinishReason | undefined;
+            let inputTokens: number | undefined;
+            let outputTokens: number | undefined;
 
             /**
              * Ensure reasoning is closed before emitting non-reasoning parts.
@@ -790,8 +909,33 @@ export const make = (model: string) =>
               args: string;
               emittedId?: string;
               started: boolean;
+              flushed: boolean;
             };
             const openAiCalls = new Map<number, OpenAiCallState>();
+
+            /**
+             * Emits the terminating `tool-params-end` / `tool-call` pair for every started call whose
+             * index is below `before`. Consumers track a single open tool call, so a parallel call's
+             * `tool-params-start` must not arrive while the previous one is still open.
+             */
+            const flushOpenAiCalls = (parts: Response.StreamPartEncoded[], before: number) =>
+              Effect.gen(function* () {
+                for (const [index, call] of openAiCalls) {
+                  if (index >= before || call.flushed || !call.started || !call.name || !call.emittedId) {
+                    continue;
+                  }
+                  call.flushed = true;
+                  parts.push({ type: 'tool-params-end', id: call.emittedId });
+                  const params = yield* parseToolArguments(call.args, call.name, 'streamText');
+                  parts.push({
+                    type: 'tool-call',
+                    id: call.emittedId,
+                    name: call.name,
+                    params,
+                    providerExecuted: false,
+                  });
+                }
+              });
 
             // Buffer lines across chunk boundaries — newline-delimited frames and UTF-8
             // characters can be split across network chunks.
@@ -815,6 +959,11 @@ export const make = (model: string) =>
                     if (!parsed) {
                       continue;
                     }
+
+                    // Last reported value wins: a trailing usage-only chunk supersedes the counts on
+                    // the chunk that carried `finish_reason`.
+                    inputTokens = parsed.inputTokens ?? inputTokens;
+                    outputTokens = parsed.outputTokens ?? outputTokens;
 
                     if (parsed.reasoning && parsed.reasoning.length > 0) {
                       if (!reasoningStarted) {
@@ -867,6 +1016,7 @@ export const make = (model: string) =>
                         const existing: OpenAiCallState = openAiCalls.get(delta.index) ?? {
                           args: '',
                           started: false,
+                          flushed: false,
                         };
                         if (delta.id) {
                           existing.id = delta.id;
@@ -875,6 +1025,9 @@ export const make = (model: string) =>
                           existing.name = delta.name;
                         }
                         if (!existing.started && existing.name) {
+                          // Calls stream one index at a time, so a new index means every earlier call
+                          // is complete.
+                          yield* flushOpenAiCalls(parts, delta.index);
                           existing.started = true;
                           existing.emittedId = existing.id ?? (yield* idGen.generateId());
                           parts.push({
@@ -905,31 +1058,12 @@ export const make = (model: string) =>
                       }
                       closeReasoningIfOpen(parts);
 
-                      // Flush accumulated OpenAI tool calls.
-                      for (const [, call] of openAiCalls) {
-                        if (!call.started || !call.name || !call.emittedId) {
-                          continue;
-                        }
-                        parts.push({ type: 'tool-params-end', id: call.emittedId });
-                        const params = yield* parseToolArguments(call.args, call.name, 'streamText');
-                        parts.push({
-                          type: 'tool-call',
-                          id: call.emittedId,
-                          name: call.name,
-                          params,
-                          providerExecuted: false,
-                        });
-                      }
+                      // Flush whichever OpenAI tool call is still open.
+                      yield* flushOpenAiCalls(parts, Number.POSITIVE_INFINITY);
                       openAiCalls.clear();
 
-                      parts.push({
-                        type: 'finish',
-                        reason: parsed.finishReason ?? 'stop',
-                        usage: {
-                          inputTokens: { total: parsed.inputTokens },
-                          outputTokens: { total: parsed.outputTokens },
-                        },
-                      });
+                      finishSeen = true;
+                      finishReason = parsed.finishReason ?? finishReason;
                     }
                   }
 
@@ -943,12 +1077,53 @@ export const make = (model: string) =>
                 }
                 return Stream.fail(unknownError('streamText', 'request failed', err));
               }),
+              // Suspended so the accumulators are read after the source drains. A stream that ended
+              // without reporting `done` (truncated, or failed above) emits nothing, as before.
+              (stream) =>
+                Stream.concat(
+                  stream,
+                  Stream.suspend((): Stream.Stream<Response.StreamPartEncoded, never, never> => {
+                    if (!finishSeen) {
+                      return Stream.empty;
+                    }
+                    const reason = finishReason ?? 'stop';
+                    annotateResponse(options.span, { inputTokens, outputTokens, finishReason: reason });
+                    return Stream.succeed({
+                      type: 'finish',
+                      reason,
+                      usage: {
+                        inputTokens: { total: inputTokens },
+                        outputTokens: { total: outputTokens },
+                      },
+                    });
+                  }),
+                ),
             );
 
             return parsedStream;
           }),
         ),
     });
+  });
+
+const annotateRequest = (
+  span: LanguageModel.ProviderOptions['span'],
+  model: string,
+  config: ChatCompletionsClientConfig,
+): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    system: config.provider ?? config.apiFormat,
+    operation: { name: 'chat' },
+    request: { model },
+  });
+
+const annotateResponse = (
+  span: LanguageModel.ProviderOptions['span'],
+  { inputTokens, outputTokens, finishReason }: { inputTokens?: number; outputTokens?: number; finishReason?: string },
+): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    response: { finishReasons: finishReason ? [finishReason] : undefined },
+    usage: { inputTokens, outputTokens },
   });
 
 /**
@@ -969,7 +1144,8 @@ const withIdleTimeout =
 /**
  * Create a chat completions language model layer.
  */
-export const layer = (model: string) => Layer.effect(LanguageModel.LanguageModel, make(model));
+export const layer = (model: string, options?: RequestOptions) =>
+  Layer.effect(LanguageModel.LanguageModel, make(model, options));
 
 /**
  * Create a chat completions client layer.

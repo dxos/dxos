@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from '../../.storybook/manager';
+export * from '../../.storybook/manager.ts';

@@ -19,6 +19,15 @@ export type ChatEvent =
       type: 'submit';
       text: string;
     }
+  /**
+   * System-generated turn content — an inline flow (a connector authorized, a plugin enabled)
+   * reporting itself. Submitted as a synthetic block, so it reads as a system note rather than as
+   * words the user typed.
+   */
+  | {
+      type: 'report';
+      text: string;
+    }
   | {
       type: 'retry';
     }
@@ -66,4 +75,8 @@ export type ChatEvent =
     }
   | {
       type: 'thread-close';
+    }
+  /** Show or hide the checklist beside the prompt. */
+  | {
+      type: 'toggle-tasks';
     };

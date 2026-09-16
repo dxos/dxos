@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { GitHubOperation } from '#types';
 
-import { GitHubApi } from '../services';
+import { GitHubApi } from '../services/index.ts';
 
 /**
  * Discovery only — list GitHub repositories reachable from the connection's
@@ -44,10 +44,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
             description: repo.description ?? undefined,
           }));
           return { targets };
-        }).pipe(
-          Effect.provide(Database.layer(db)),
-          Effect.provide(GitHubApi.GitHubCredentials.fromConnection(connection)),
-        );
+        }).pipe(Effect.provide(Database.layer(db)), Effect.provide(GitHubApi.fromConnection(connection)));
       }, Effect.provide(FetchHttpClient.layer)),
     ),
   );

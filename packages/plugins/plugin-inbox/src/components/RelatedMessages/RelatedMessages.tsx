@@ -9,7 +9,7 @@ import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { formatAge } from '../../util';
+import { formatAge } from '../../util/index.ts';
 
 export type RelatedMessagesProps = {
   messages: Message.Message[];

@@ -41,6 +41,9 @@ export interface Service {
  */
 export class StorageService extends Context.Service<StorageService, Service>()('@dxos/functions/StorageService') {}
 
+/** Re-exported so callers importing this module as a namespace avoid `StorageService.StorageService.key`. */
+export const key = StorageService.key;
+
 export const get = (...args: Parameters<Context.Service.Shape<typeof StorageService>['get']>) =>
   StorageService.use((service) => service.get(...args));
 export const set = (...args: Parameters<Context.Service.Shape<typeof StorageService>['set']>) =>

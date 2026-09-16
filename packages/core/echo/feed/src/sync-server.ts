@@ -8,9 +8,8 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
 
-import type { FeedStore } from './feed-store';
+import type { FeedStore } from './feed-store.ts';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
@@ -55,10 +54,7 @@ export class SyncServer {
   /**
    * Receive a message from a client. Handles QueryRequest and AppendRequest; sends response via sendMessage with correct peer ids.
    */
-  handleMessage(
-    ctx: Context,
-    message: ProtocolMessage,
-  ): Effect.Effect<void, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  handleMessage(ctx: Context, message: ProtocolMessage): Effect.Effect<void, unknown, SqlClient.SqlClient> {
     const self = this;
     log('feed sync server received message', {
       peerId: self.#peerId,

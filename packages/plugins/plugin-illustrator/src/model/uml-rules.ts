@@ -10,10 +10,17 @@
 // a column. See `docs/DESIGN.md`.
 //
 
-import * as Layout from './layout';
-import type * as Scene from './scene';
-import { type UmlModel, parse, relationRanks } from './uml';
-import { type Cell, GRID, type CompileOptions as GridCompileOptions, type Rect, emit, measureCell } from './uml-grid';
+import * as Layout from './layout.ts';
+import type * as Scene from './scene.ts';
+import {
+  type Cell,
+  GRID,
+  type CompileOptions as GridCompileOptions,
+  type Rect,
+  emit,
+  measureCell,
+} from './uml-grid.ts';
+import { type UmlModel, parse, relationRanks } from './uml.ts';
 
 const GAP = GRID * 2;
 const GROUP_GAP = GRID * 3;

@@ -7,7 +7,7 @@ import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { clamp } from '@dxos/util';
 
-import { FormatAnnotation, TypeFormat } from './types';
+import { FormatAnnotation, TypeFormat } from './types.ts';
 
 /**
  * GeoJSON Format

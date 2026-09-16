@@ -15,9 +15,9 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protocols';
 
-import * as ActivationEvent from './activation-event';
-import * as Capability from './capability';
-import type * as PluginManager from './plugin-manager';
+import * as ActivationEvent from './activation-event.ts';
+import * as Capability from './capability.ts';
+import type * as PluginManager from './plugin-manager/index.ts';
 
 //
 // Plugin Service Layer

@@ -6,6 +6,7 @@ import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
   type Echo,
@@ -33,15 +34,15 @@ import {
   runServiceCall,
   subscribeStream,
 } from '@dxos/protocols';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeBlobBackend, createEdgeIdentity } from '../edge';
-import { type MeshProxy } from '../mesh/mesh-proxy';
-import type { IFrameManager, Shell, ShellManager } from '../services';
-import { DXOS_VERSION } from '../version';
-import { ClientRuntime } from './client-runtime';
+import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge/index.ts';
+import { type MeshProxy } from '../mesh/mesh-proxy.ts';
+import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
+import { DXOS_VERSION } from '../version.ts';
+import { ClientRuntime } from './client-runtime.ts';
 
 /**
  * This options object configures the DXOS Client.
@@ -368,7 +369,7 @@ export class Client {
 
     performance.mark('client.initialize:called');
     log('initializing client');
-    const { createClientServices, IFrameManager, ShellManager } = await import('../services');
+    const { createClientServices, IFrameManager, ShellManager } = await import('../services/index.ts');
     const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
       await import('@dxos/protocols/buf/dxos/config_pb');
     performance.mark('client.initialize:imports-loaded');
@@ -427,7 +428,7 @@ export class Client {
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
       log('client.initialize: mounting devtools hooks');
-      const { mountDevtoolsHooks } = await import('../devtools');
+      const { mountDevtoolsHooks } = await import('../devtools/index.ts');
       mountDevtoolsHooks({ client: this });
       log('client.initialize: devtools hooks mounted');
     }
@@ -445,10 +446,10 @@ export class Client {
     log('opening...');
     invariant(this._services);
     log('client._open: importing proxy modules');
-    const { SpaceList } = await import('../echo/space-list');
-    const { HaloProxy } = await import('../halo/halo-proxy');
-    const { MeshProxy } = await import('../mesh/mesh-proxy');
-    const { Shell } = await import('../services');
+    const { SpaceList } = await import('../echo/space-list.ts');
+    const { HaloProxy } = await import('../halo/halo-proxy.ts');
+    const { MeshProxy } = await import('../mesh/mesh-proxy.ts');
+    const { Shell } = await import('../services/index.ts');
     log('client._open: proxy modules loaded');
 
     const trigger = new Trigger<Error | undefined>();
@@ -539,7 +540,17 @@ export class Client {
 
       this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
         Blob.Storage.edge,
-        createEdgeBlobBackend({ edgeClient: edgeHttpClient }),
+        // Adapted rather than passed: the backend takes the four operations it needs, so it does not
+        // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
+        createEdgeBlobBackend({
+          transport: {
+            url: (key) => edgeHttpClient.getBlobUrl(key),
+            put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
+            get: (key) => edgeHttpClient.getBlob(Context.default(), key),
+            has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
+            finalizeUpload: (uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId),
+          },
+        }),
         { default: true },
       );
     }

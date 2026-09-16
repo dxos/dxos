@@ -8,9 +8,9 @@ import { type AiService } from '@dxos/ai';
 import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { generateText, parseJsonObject } from '../llm';
-import { type ModelVariant } from '../models';
-import { emailDomain } from './contacts';
+import { generateText, parseJsonObject } from '../llm.ts';
+import { type ModelVariant } from '../models.ts';
+import { emailDomain } from './contacts.ts';
 
 // Sender-type triage (REPORT §5): classify each sender as a PERSON (an individual human) or an ORG
 // (automated / organizational — invoices, newsletters, notifications, no-reply). This gates all

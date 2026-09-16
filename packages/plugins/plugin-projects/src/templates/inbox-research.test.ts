@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
-import { inboxResearch } from './inbox-research';
+import { inboxResearch } from './inbox-research.ts';
 
 describe('inbox research project template', () => {
   let builder: EchoTestBuilder;

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Button, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '../../meta.ts';
 
 /**
  * Shown after the native app has been successfully opened via custom scheme.

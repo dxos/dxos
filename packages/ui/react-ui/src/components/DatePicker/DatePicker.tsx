@@ -16,18 +16,18 @@ import React, {
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks';
-import { useTranslation } from '../../primitives';
-import { type ThemedClassName } from '../../util';
-import { Calendar, type DateRange } from '../Calendar';
-import { Icon } from '../Icon';
-import { Popover } from '../Popover';
-import { DatePickerProvider, useDatePickerContext } from './DatePickerContext';
+import { useThemeContext } from '../../hooks/index.ts';
+import { useTranslation } from '../../providers/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Calendar, type DateRange } from '../Calendar/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Popover } from '../Popover/index.ts';
+import { DatePickerProvider, useDatePickerContext } from './DatePickerContext.ts';
 
 //
 // Public API.
 //
-// Wraps the new react-aria-components-backed `<Calendar>` (single + range) in a Radix Popover,
+// Wraps the new react-aria-components-backed `<Calendar>` (single + range) in a `Popover`,
 // preserving the previous slot-style namespace: `<DatePicker.Root>`, `<DatePicker.Trigger>`,
 // `<DatePicker.Content>`, `<DatePicker.Calendar>`. Multi-select is no longer supported (no
 // in-repo consumers); use `<Calendar.Root>` directly with custom state if needed.

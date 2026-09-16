@@ -5,7 +5,7 @@
 import type { ComponentType } from 'solid-element';
 import type { JSX } from 'solid-js';
 
-import { HostElementContext } from './internal';
+import { HostElementContext } from './internal.ts';
 
 /**
  * Integration utilities for using Web Component Context Protocol with solid-element.

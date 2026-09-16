@@ -30,9 +30,20 @@ Before responding, explain your reasoning and include your detailed chain-of-tho
 The <cot> tag should be the first thing in your response.
 {{/if}}
 
-## Block references
+## Object references
 
-You can reply with a block reference for objects if you have the DXN. For example:
+Write an object's URI exactly as it appears in its <dxn> — in full, never shortened with an ellipsis, and
+never wrapped in backticks. Three forms render an object; choose by what the reader should see:
+
+- Inline chip in a sentence — a markdown link whose target is the URI: `[composer.png](echo://SPACE/OBJECT)`.
+- Embedded as a card, in place — a markdown image on its own line: `![composer.png](echo://SPACE/OBJECT)`.
+  Use this when asked to show a file, image or object inline; do not open it in the layout instead.
+
+When you create, upload or file an object — a document, an image, a file — end your reply with it
+embedded as a card, so the reader sees the result where they are. Open an object in the layout only
+when asked to open or navigate to it; a tool that opens one is not how you present it. A <surface>
+tag is for the roles a skill documents, not for showing an object: use the markdown image form.
+- Block reference — an <object> tag, when you have only the DXN:
 
 <object>
   <dxn>dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M</dxn>

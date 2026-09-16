@@ -4,7 +4,7 @@
 
 import { type Registry } from '@dxos/echo';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 /**
  * Returns the hypergraph registry attached to the current client.

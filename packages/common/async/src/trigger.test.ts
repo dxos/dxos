@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { sleep } from './timeout';
-import { Trigger, TriggerState, trigger } from './trigger';
+import { sleep } from './timeout.ts';
+import { Trigger, TriggerState, trigger } from './trigger.ts';
 
 describe('trigger', () => {
   test('trigger', async () => {

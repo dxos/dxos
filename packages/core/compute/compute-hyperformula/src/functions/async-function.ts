@@ -13,7 +13,7 @@ import type { InterpreterValue } from '@dxos/vendor-hyperformula';
 import type { ProcedureAst } from '@dxos/vendor-hyperformula';
 import { CellError, EmptyValue, ErrorType, FunctionPlugin, type HyperFormula } from '@dxos/vendor-hyperformula';
 
-import type { SpaceComputeRuntime } from '../compute-graph-registry';
+import type { SpaceComputeRuntime } from '../compute-graph-registry.ts';
 
 // TODO(burdon): Create API gateways:
 //  https://publicapis.io

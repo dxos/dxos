@@ -9,7 +9,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { BaseError } from '@dxos/errors';
 
-import { type McpSession, McpSession as McpSessionSchema, loadSession, sessionDir } from './client';
+import { type McpSession, McpSession as McpSessionSchema, loadSession, sessionDir } from './client.ts';
 
 export class McpSessionError extends BaseError.extend('McpSessionError', 'MCP session error') {}
 
@@ -17,7 +17,7 @@ export class McpSessionError extends BaseError.extend('McpSessionError', 'MCP se
  * Server to act on. Optional: with a single stored session the commands pick it up automatically,
  * which keeps the common case to `dx mcp tools` / `dx mcp call <tool>`.
  */
-export const serverUrlOption = Options.string('url').pipe(
+export const serverUrlOption = Options.String('url').pipe(
   Options.withDescription('MCP server URL. Defaults to the most recently connected server.'),
   Options.optional,
 );

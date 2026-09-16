@@ -6,8 +6,8 @@ import type * as JSONSchema from 'effect/JsonSchema';
 
 import { SchemaAST } from '@dxos/effect';
 
-import { createAnnotationHelper } from '../Annotation';
-import { type JsonSchemaType } from '../JsonSchema';
+import { createAnnotationHelper } from '../Annotation/index.ts';
+import { type JsonSchemaType } from '../JsonSchema/index.ts';
 
 // TODO(burdon): Rename PropertyType.
 // Effect 4 consolidated the individual draft-07 node interfaces into one `JsonSchema` model.
@@ -77,6 +77,8 @@ export enum TypeFormat {
   Formula = 'formula', // Spreadsheet (Excel, Google Sheets, etc.) formula.
   Hostname = 'hostname',
   JSON = 'json',
+  /** An opaque identifier (an API key id, a handle, a slug): monospace, no spellcheck or autocorrect. */
+  Key = 'key',
   Markdown = 'markdown',
   Password = 'password',
   Regex = 'regex',
@@ -144,6 +146,7 @@ export const formatToType: Record<TypeFormat, TypeEnum> = {
   [TypeFormat.Formula]: TypeEnum.String,
   [TypeFormat.Hostname]: TypeEnum.String,
   [TypeFormat.JSON]: TypeEnum.String,
+  [TypeFormat.Key]: TypeEnum.String,
   [TypeFormat.Markdown]: TypeEnum.String,
   [TypeFormat.Password]: TypeEnum.String,
   [TypeFormat.Regex]: TypeEnum.String,

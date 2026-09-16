@@ -26,9 +26,9 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
-import { type DatabaseImpl } from '../proxy-db';
-import { FeedCoreRegistry } from './feed-core-registry';
-import { FeedObjectCore } from './feed-object-core';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { FeedCoreRegistry } from './feed-core-registry.ts';
+import { FeedObjectCore } from './feed-object-core.ts';
 
 const TRACE_FEED_LOAD = false;
 

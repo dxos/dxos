@@ -19,7 +19,7 @@ import {
 } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, Invitation_State, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
 import { type Key } from '@dxos/echo';
 
 export const handler = Effect.fn(function* ({
@@ -41,7 +41,7 @@ export const handler = Effect.fn(function* ({
 
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = space.share({
-    authMethod: Invitation.AuthMethod.SHARED_SECRET,
+    authMethod: Invitation_AuthMethod.SHARED_SECRET,
     persistent: true,
     multiUse: multiple,
   });
@@ -79,7 +79,7 @@ export const handler = Effect.fn(function* ({
         {
           invitationCode: InvitationEncoder.encode(invitation),
           authCode: invitation.authCode,
-          state: Invitation.State[invitation.state],
+          state: Invitation_State[invitation.state],
         },
         null,
         2,
@@ -89,7 +89,7 @@ export const handler = Effect.fn(function* ({
     const builder = FormBuilder.make({ title: 'Space Invitation' }).pipe(
       FormBuilder.set('invitationCode', InvitationEncoder.encode(invitation)),
       FormBuilder.set('authCode', invitation.authCode ?? '<none>'),
-      FormBuilder.set('state', Invitation.State[invitation.state]),
+      FormBuilder.set('state', Invitation_State[invitation.state]),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }
@@ -99,9 +99,15 @@ export const share = Command.make(
   'share',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    multiple: Options.boolean('multiple').pipe(Options.withDescription('Create a multi-use invitation.')),
-    open: Options.boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.string('host').pipe(
+    multiple: Options.Boolean('multiple').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Create a multi-use invitation.'),
+    ),
+    open: Options.Boolean('open').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Open browser with invitation.'),
+    ),
+    host: Options.String('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),

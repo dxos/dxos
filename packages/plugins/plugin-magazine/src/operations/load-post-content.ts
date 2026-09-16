@@ -10,8 +10,8 @@ import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '#types';
 
-import { makeSnippet, stripHtml } from '../util/text';
-import { browserCorsProxy, fetchArticle } from './sources';
+import { makeSnippet, stripHtml } from '../util/text.ts';
+import { browserCorsProxy, fetchArticle } from './sources/index.ts';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(

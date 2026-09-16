@@ -4,10 +4,10 @@
 
 import { getDebugName } from '@dxos/util';
 
-import { type LogConfig, type LogFilter, type LogLevel } from './config';
-import { type CallMetadata } from './meta';
-import { getRelativeFilename } from './processors/common';
-import { gatherLogInfoFromScope } from './scope';
+import { type LogConfig, type LogFilter, type LogLevel } from './config.ts';
+import { type CallMetadata } from './meta.ts';
+import { getRelativeFilename } from './processors/common.ts';
+import { gatherLogInfoFromScope } from './scope.ts';
 
 /**
  * Optional object passed to the logging API.
@@ -202,6 +202,12 @@ export const shouldLog = (entry: LogEntry, filters?: LogFilter[]): boolean => {
   return results.length > 0 && !results.some((results) => results === false);
 };
 
+/** An error's own structured detail, which `BaseError` declares and a plain `Error` may carry. */
+const readErrorContext = (value: unknown): object | undefined =>
+  value instanceof Error && 'context' in value && typeof value.context === 'object' && value.context
+    ? value.context
+    : undefined;
+
 /**
  * Merges scope info, entry context, and error into a single record — preserving nested
  * objects and Error instances so rich consumers (console inspect, devtools) can format them.
@@ -217,14 +223,20 @@ export const getContextFromEntry = (entry: LogEntry): Record<string, any> | unde
     }
   }
 
+  // An error reaches an entry three ways — as `entry.error`, as the call's context, or as a value
+  // inside it — and carries the same `context` in all three. Lifting only the second left callers
+  // hand-lifting the others at every site. Merged before the call's own keys, so those win.
+  context = Object.assign(context ?? {}, readErrorContext(entry.error));
+
   const entryContext = typeof entry.context === 'function' ? entry.context() : entry.context;
   if (entryContext) {
     if (entryContext instanceof Error) {
-      // Additional context from Error.
-      const c = (entryContext as any).context;
       // If ERROR then show stacktrace.
-      context = Object.assign(context ?? {}, { error: entryContext.stack, ...c });
+      context = Object.assign(context ?? {}, { error: entryContext.stack, ...readErrorContext(entryContext) });
     } else if (typeof entryContext === 'object') {
+      for (const value of Object.values(entryContext)) {
+        context = Object.assign(context ?? {}, readErrorContext(value));
+      }
       context = Object.assign(context ?? {}, entryContext);
     }
   }

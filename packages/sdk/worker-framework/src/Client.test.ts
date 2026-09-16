@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 
-import * as Client from './Client';
-import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks';
-import * as Worker from './Worker';
-import * as WorkerProtocol from './WorkerProtocol';
+import * as Client from './Client.ts';
+import { WorkerConnectionError } from './errors.ts';
+import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks.ts';
+import * as Worker from './Worker.ts';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 /**
  * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request
@@ -79,6 +80,12 @@ const createWorkerFactory = (storageLockKey: string) => () => {
   return channel.port2 as WorkerProtocol.WorkerOrPort;
 };
 
+/** Reads the diagnostics the connection merges into a failure. */
+const diagnosticsOf = (error: unknown): Record<string, unknown> =>
+  error instanceof Error && 'context' in error && typeof error.context === 'object' && error.context
+    ? { ...error.context }
+    : {};
+
 /**
  * A coordinator link that is broken in both directions: nothing this tab sends reaches a peer, and
  * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
@@ -111,6 +118,7 @@ const makeConnection = (
     maxLeaderFailures: options.maxLeaderFailures,
     onPersistentFailure: (error) => failures.push(error),
     onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
+      postRunnerReady(workerToClient);
       connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
       return { close: async () => {} };
     },
@@ -118,12 +126,25 @@ const makeConnection = (
   return { connection, connected: connectedTrigger.wait(), failures };
 };
 
-describe('Connection multi-client', () => {
-  const uniqueKeys = () => {
-    const id = crypto.randomUUID();
-    return { leaderLockKey: `test-leader-${id}`, storageLockKey: `test-storage-${id}` };
-  };
+/**
+ * Stands in for the tab's rpc runner by posting the ready frame effect's worker protocol sends on
+ * start-up (`@effect/platform-browser`'s `BrowserWorkerRunner`, a bare `[0]`).
+ *
+ * The worker's client transport over the reverse port awaits that frame uninterruptibly, so without
+ * it a session scope cannot close (DESIGN.md D18). Read it as protocol, not as a magic number: if
+ * effect changes the frame, sessions stop closing and nothing points back here.
+ */
+const postRunnerReady = (port: MessagePort): void => {
+  port.start();
+  port.postMessage([0]);
+};
 
+const uniqueKeys = () => {
+  const id = crypto.randomUUID();
+  return { leaderLockKey: `test-leader-${id}`, storageLockKey: `test-storage-${id}` };
+};
+
+describe('Connection multi-client', () => {
   test('leader and a late-joining follower both connect', async () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -265,9 +286,8 @@ describe('Connection multi-client', () => {
       leaderLockKey: keys.leaderLockKey,
       leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
       onConnect: async () => {
-        // Fails only after the worker has handed out ports and claimed the clientId — the shape of a
-        // handle that rejects before `WorkerService.start` registers a tab-liveness lock, so nothing
-        // on the tab side will ever close the session the worker is holding.
+        // Fails only after the worker has handed out ports and claimed the clientId, so the worker is
+        // holding a session for an attempt this tab has given up on.
         if (++attempts === 1) {
           throw new Error('TEST: transient connect failure');
         }
@@ -283,6 +303,97 @@ describe('Connection multi-client', () => {
     await asyncTimeout(connected.wait(), 10_000);
     expect(attempts).toBeGreaterThan(1);
   });
+
+  test('a leader whose worker never starts rejects with the leader error, not the bare timeout', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const connection = new Client.Connection({
+      createWorker: () => {
+        throw new Error('TEST: worker creation failed');
+      },
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 200, retryBackoff: 10 },
+      onConnect: async () => ({ close: async () => {} }),
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: no leader session can ever open in this test.');
+      },
+      (err) => err,
+    );
+
+    expect(String(error)).toContain('TEST: worker creation failed');
+    expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
+  }, 30_000);
+
+  test('a tab that never receives a port reports the port timeouts it accrued', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+    const leader = makeConnection(hub, keys, timeouts);
+    await asyncTimeout(leader.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+
+    const wedged = makeConnection(hub, keys, timeouts, {
+      maxLeaderFailures: 2,
+      createCoordinator: createBrokenCoordinator,
+    });
+    onTestFinished(async () => {
+      await wedged.connection.close();
+    });
+
+    const error = await wedged.connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: this coordinator never delivers a port.');
+      },
+      (err) => err,
+    );
+
+    // Typed, so a consumer discriminates on the class rather than matching the message.
+    expect(WorkerConnectionError.is(error)).toBe(true);
+    const diagnostics = diagnosticsOf(error);
+    expect(diagnostics.workerPortTimeouts).toBeGreaterThan(0);
+    expect(['requesting-port', 'port-timeout']).toContain(diagnostics.workerConnectPhase);
+    expect(diagnostics.workerMsSinceLeaderHeartbeat).toBeUndefined();
+  }, 30_000);
+
+  test('a leader whose session opened reports itself as the leader when the connection stalls', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const connection = new Client.Connection({
+      createWorker: createWorkerFactory(keys.storageLockKey),
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 200, retryBackoff: 10 },
+      // Never resolving leaves the leader holding its lock with the session open, which is the
+      // state `workerIsLeader` exists to name — and the one an enumerated phase list dropped.
+      onConnect: () => new Promise<{ close: () => Promise<void> }>(() => {}),
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: onConnect never settles in this test.');
+      },
+      (err) => err,
+    );
+
+    const diagnostics = diagnosticsOf(error);
+    expect(diagnostics.workerIsLeader).toBe(true);
+    expect(diagnostics.workerLeaderPhase).toBe('session-open');
+  }, 30_000);
 
   test('a tab with a broken coordinator link stops stealing instead of restarting the leader forever', async () => {
     const hub = createHub();
@@ -317,8 +428,9 @@ describe('Connection multi-client', () => {
       await wedgedOpen;
     });
 
-    // ~20 port timeouts' worth of runway, so an unbounded steal loop has room to show itself.
-    await sleep(4_000);
+    // Anchor on the steal budget actually exhausting (escalation fires) rather than guessing a
+    // duration long enough for an unbounded steal loop to have shown itself.
+    await waitForCondition({ condition: () => wedged.failures.length > 0, timeout: 10_000 });
 
     // Bounded by the steal budget: at most `maxLeaderFailures` evictions, one worker re-creation each.
     expect(leaderWorkers).toBeLessThanOrEqual(1 + 2);
@@ -347,5 +459,151 @@ describe('Connection multi-client', () => {
           onConnect: async () => ({ close: async () => {} }),
         }),
     ).toThrow('maxLeaderFailures must be a positive integer');
+  });
+});
+
+/**
+ * A worker whose runtime records the lifetime of every scope the framework hands it: the runtime
+ * scope and one scope per session.
+ */
+const createRecordingWorker = (storageLockKey: string) => {
+  const sessionsOpened: string[] = [];
+  const sessionsClosed: string[] = [];
+  const sessionOpenedEvent = new Event<string>();
+  const sessionClosedEvent = new Event<string>();
+  const runtimeClosed = new Trigger();
+  let shutdown: (() => void) | undefined;
+
+  const createWorker = () => {
+    const channel = new MessageChannel();
+    channel.port1.start();
+    Worker.run({
+      endpoint: {
+        postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
+        addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
+        removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
+        close: () => channel.port1.close(),
+      },
+      storageLockKey,
+      createRuntime: ({ requestShutdown }) =>
+        Effect.gen(function* () {
+          shutdown = requestShutdown;
+          yield* Effect.addFinalizer(() => Effect.sync(() => runtimeClosed.wake()));
+          return {
+            // Acquires into the session scope and returns; the framework decides when it ends.
+            createSession: ({ clientId }) =>
+              Effect.gen(function* () {
+                sessionsOpened.push(clientId);
+                sessionOpenedEvent.emit(clientId);
+                yield* Effect.addFinalizer(() =>
+                  Effect.sync(() => {
+                    sessionsClosed.push(clientId);
+                    sessionClosedEvent.emit(clientId);
+                  }),
+                );
+              }),
+          };
+        }),
+    });
+    return channel.port2 as WorkerProtocol.WorkerOrPort;
+  };
+
+  return {
+    createWorker,
+    sessionsOpened,
+    sessionsClosed,
+    // The worker posts the session ports before it builds the session, so a connected tab does not
+    // imply the runtime has recorded the session yet.
+    sessionOpened: (clientId: string) =>
+      sessionsOpened.includes(clientId)
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            const off = sessionOpenedEvent.on((opened) => {
+              if (opened === clientId) {
+                off();
+                resolve();
+              }
+            });
+          }),
+    sessionClosed: (clientId: string) =>
+      sessionsClosed.includes(clientId)
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            const off = sessionClosedEvent.on((closed) => {
+              if (closed === clientId) {
+                off();
+                resolve();
+              }
+            });
+          }),
+    runtimeClosed: () => runtimeClosed.wait(),
+    requestShutdown: () => shutdown?.(),
+  };
+};
+
+describe('Worker session lifetime', () => {
+  test('a session stays open while its tab is connected', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(connection.clientId), 5_000);
+    expect(worker.sessionsOpened).toEqual([connection.clientId]);
+    await sleep(200);
+    expect(worker.sessionsClosed).toEqual([]);
+  });
+
+  test('closing a tab releases its session lock, which closes its session scope', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection: leader } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await leader.close();
+    });
+    await asyncTimeout(leader.open(), 10_000);
+
+    // A follower, so closing it does not also terminate the worker.
+    const { connection: follower } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    await asyncTimeout(follower.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(follower.clientId), 5_000);
+    expect(worker.sessionsOpened).toContain(follower.clientId);
+
+    await follower.close();
+    await asyncTimeout(worker.sessionClosed(follower.clientId), 5_000);
+    expect(worker.sessionsClosed).toEqual([follower.clientId]);
+  });
+
+  test('worker shutdown closes every session scope before the runtime scope', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection: leader } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await leader.close();
+    });
+    await asyncTimeout(leader.open(), 10_000);
+    const { connection: follower } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await follower.close();
+    });
+    await asyncTimeout(follower.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(leader.clientId), 5_000);
+    await asyncTimeout(worker.sessionOpened(follower.clientId), 5_000);
+
+    const order: string[] = [];
+    void worker.sessionClosed(leader.clientId).then(() => order.push('session'));
+    void worker.sessionClosed(follower.clientId).then(() => order.push('session'));
+    void worker.runtimeClosed().then(() => order.push('runtime'));
+
+    worker.requestShutdown();
+    await asyncTimeout(worker.runtimeClosed(), 5_000);
+    await sleep(0);
+    expect(order).toEqual(['session', 'session', 'runtime']);
   });
 });

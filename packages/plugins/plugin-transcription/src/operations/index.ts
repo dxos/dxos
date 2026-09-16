@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as TranscriptionOperationHandlerSet from './TranscriptionOperationHandlerSet';
+export * as TranscriptionOperationHandlerSet from './TranscriptionOperationHandlerSet.ts';

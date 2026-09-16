@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { LogEntry, type LogEntryInit, LogLevel } from './index';
-import { serializeToJsonl } from './jsonl';
+import { LogEntry, type LogEntryInit, LogLevel } from './index.ts';
+import { serializeToJsonl } from './jsonl.ts';
 
 const createEntry = (overrides: Partial<LogEntryInit> = {}): LogEntry =>
   new LogEntry({
@@ -103,6 +103,14 @@ describe('serializeToJsonl', () => {
       serializeToJsonl(createEntry({ message: 'm' }), { env: 'tab:http://localhost:5173:abc123' }),
     );
     expect(record.i).toBe('tab:http://localhost:5173:abc123');
+  });
+
+  test('carries the trace context the caller captured', ({ expect }) => {
+    const trace = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331' };
+    const record = parseLine(serializeToJsonl(createEntry(), { trace }));
+    expect(record.r).toBe(trace.traceId);
+    expect(record.s).toBe(trace.spanId);
+    expect(parseLine(serializeToJsonl(createEntry()))).not.toHaveProperty('r');
   });
 
   test('omits `i` when env is not provided', ({ expect }) => {

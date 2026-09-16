@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
-import { JsonSchema } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/Obj';
+import { JsonSchema, Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 
 const TestSchema = Schema.Struct({
@@ -272,7 +271,7 @@ export function addProperty({ root, path, name, schema, optional }: AddNewProper
       // Cast to mutable - this function mutates the input schema in place.
       // The readonly type in signatures is pragmatic since Mutable<T> and T are
       // incompatible due to array variance in TypeScript.
-      const mutableParent = parent as Mutable<JsonSchema.JsonSchema>;
+      const mutableParent = parent as Obj.Mutable<JsonSchema.JsonSchema>;
 
       // Add the new property definition.
       (mutableParent.properties as Record<string, JsonSchema.JsonSchema>)[name] = schema;

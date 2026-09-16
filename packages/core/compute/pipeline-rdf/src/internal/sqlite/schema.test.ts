@@ -5,17 +5,11 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
+import { migrate } from './schema.ts';
 
-import { migrate } from './schema';
-
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(SqlTransaction.layer),
-  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-);
+const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 describe('sqlite schema', () => {
   it.effect(

@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { makeProcess } from '#testing';
 
-import { ProcessTree } from './ProcessTree';
+import { ProcessTree } from './ProcessTree.tsx';
 
 const processes: Process.Info[] = [
   makeProcess({

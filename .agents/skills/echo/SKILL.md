@@ -75,7 +75,7 @@ await Effect.runPromise(program.pipe(Effect.provide(Database.layer(db))));
 
 ### React (non-Effect, subscription-based)
 
-From **`@dxos/echo-react`**: **`useQuery`**, **`useObject`**, **`useSchema`** — subscribe to query results / single object / schema state in components.
+From **`@dxos/echo-react`**: **`useQuery`**, **`useObject`**, **`useSchema`** — subscribe to query results / single object / schema state in components. Which hook for which read, and the anti-patterns (bare reads, `.target` in render, list-level ref resolution): [reactivity](../reactivity/SKILL.md) skill.
 
 ### Query & filter builders
 
@@ -160,6 +160,33 @@ export const make = (props: Obj.MakeProps<typeof Person>): Person => Obj.make(Pe
 // also acceptable
 export const make = (props: Obj.MakeProps<typeof Person>): Type.InstanceType<typeof Person> => Obj.make(Person, props);
 ```
+
+## Owned children — `Annotation.SetParent`
+
+Declare ownership on the ref field rather than calling `Obj.setParent` next to every write. Writing a
+ref into an annotated field (or creating the holder with one) sets an object-kind target's parent, so
+that child cascade-deletes and deep-clones with its holder. A ref to anything else (a relation) is
+left alone — only objects can have a parent.
+
+```ts
+Schema.Struct({
+  // Single ref, array of refs, a field nested in a struct, and a member of a union field all work.
+  content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+  sections: Schema.Array(Ref.Ref(Section)).pipe(Annotation.SetParent.set(true)),
+});
+```
+
+Do NOT annotate a field whose targets a different holder owns (a pinned or recently-used list
+referencing objects that live in their own collections) — every write to the holder would
+re-parent them to it. An app-level relationship among a container's members (e.g.
+`Task.parentTask`) is not ownership: the container's annotated array stays the one parent, and the
+relationship stays a plain ref field.
+The annotation updates the parent on write; it is not an invariant that the target's parent IS the
+holder — `Obj.setParent` can re-parent it afterwards, and an unresolved ref is skipped. Read the
+parent with `Obj.getParent`, never from the field. Removing a ref does not clear the target's
+parent; call `Obj.setParent(child, undefined)` for that.
+Reverse edges (child holds the ref) and ref-in-annotation edges (e.g. `Chat.CompanionChatAnnotation`)
+still need `Obj.setParent`.
 
 ## Related docs in-repo
 

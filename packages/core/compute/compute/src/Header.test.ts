@@ -11,8 +11,8 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as Credential from './Credential';
-import * as Header from './Header';
+import * as Credential from './Credential.ts';
+import * as Header from './Header.ts';
 
 describe('Header.byokLayer', () => {
   test('attaches X-BYOK header when a credential is found for the provider host', async ({ expect }) => {

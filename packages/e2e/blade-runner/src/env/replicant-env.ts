@@ -8,12 +8,12 @@ import { Trigger } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { type ReplicantProps } from '../plan';
-import { createRedisRpcPort, createRedisWritableStream } from '../redis';
-import { PERFETTO_EVENTS, registerPerfettoTracer } from '../tracing';
-import { initDiagnostics } from './diagnostics';
-import { type ReplicantEnv } from './interface';
-import { ReplicantRpcServer } from './replicant-rpc-server';
+import { type ReplicantProps } from '../plan/index.ts';
+import { createRedisRpcPort, createRedisWritableStream } from '../redis/index.ts';
+import { PERFETTO_EVENTS, registerPerfettoTracer } from '../tracing/index.ts';
+import { initDiagnostics } from './diagnostics.ts';
+import { type ReplicantEnv } from './interface.ts';
+import { ReplicantRpcServer } from './replicant-rpc-server.ts';
 
 export { type RedisOptions };
 

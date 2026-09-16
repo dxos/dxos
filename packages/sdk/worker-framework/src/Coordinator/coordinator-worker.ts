@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import * as WorkerProtocol from '../WorkerProtocol';
+import * as WorkerProtocol from '../WorkerProtocol.ts';
 
 /**
  * Returns the onconnect handler for the coordinator SharedWorker. Exported so apps can use

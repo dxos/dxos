@@ -5,8 +5,8 @@
 import { Compartment, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { type DiffHunk } from './diff';
-import { type SuggestionSource, suggestions } from './suggest';
+import { type DiffHunk } from './diff.ts';
+import { type SuggestionSource, suggestions } from './suggest.ts';
 
 export type SuggestionsOverlay = {
   /** Initially empty; install once alongside the editor's other extensions. */

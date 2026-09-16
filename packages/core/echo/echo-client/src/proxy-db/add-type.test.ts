@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 const TestType = Type.makeObject(DXN.make('com.example.type.addType', '0.1.0'))(
   Schema.Struct({

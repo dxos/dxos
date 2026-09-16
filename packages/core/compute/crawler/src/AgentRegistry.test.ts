@@ -8,9 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
-
-import * as AgentRegistry from './AgentRegistry';
+import * as AgentRegistry from './AgentRegistry.ts';
 
 const suite = (name: string, layer: Layer.Layer<AgentRegistry.AgentRegistry>) =>
   describe(name, () => {
@@ -87,9 +85,6 @@ describe('AgentRegistry', () => {
   suite('memory', AgentRegistry.layerMemory);
   suite(
     'sql',
-    AgentRegistry.layerSql.pipe(
-      Layer.provideMerge(SqlTransaction.layer),
-      Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
-    ),
+    AgentRegistry.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
   );
 });

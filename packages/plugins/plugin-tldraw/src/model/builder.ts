@@ -20,9 +20,9 @@ import {
 
 import { Tldraw } from '#types';
 
-import { elementBoxes, readScene } from './read';
-import { DOCUMENT_ID, PAGE_ID } from './RecordBuilder';
-import { renderObject } from './render';
+import { elementBoxes, readScene } from './read.ts';
+import { DOCUMENT_ID, PAGE_ID } from './RecordBuilder.ts';
+import { renderObject } from './render.ts';
 
 const isShape = (record: any) => record?.typeName === 'shape';
 

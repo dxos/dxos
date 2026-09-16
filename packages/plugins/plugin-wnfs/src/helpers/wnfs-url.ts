@@ -5,7 +5,7 @@
 import type { Blockstore } from 'interface-blockstore';
 import { type PrivateDirectory, type PrivateForest } from 'wnfs';
 
-import { store } from './common';
+import { store } from './common.ts';
 
 export const wnfsUrl = (filePath: string[]) => {
   return 'wnfs://' + filePath.map((f) => encodeURIComponent(f)).join('/');

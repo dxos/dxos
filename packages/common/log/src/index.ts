@@ -6,18 +6,18 @@ import { omit, pick } from '@dxos/util';
 
 export { omit, pick };
 
-export * from './config';
-export * from './context';
-export * from './environment';
-export * from './jsonl';
-export * from './log';
-export { parseFilter } from './options';
-export * from './processors';
-export * from './registry';
-export * from './scope';
-export type { CallMetadata } from './meta';
-export { LOG_META_MARKER, isLogMeta } from './meta';
-export { dbg } from './dbg';
-export * from './log-buffer';
+export * from './config.ts';
+export * from './context.ts';
+export * from './environment.ts';
+export * from './jsonl.ts';
+export * from './log.ts';
+export { parseFilter } from './options.ts';
+export * from './processors/index.ts';
+export * from './registry.ts';
+export * from './scope.ts';
+export type { CallMetadata } from './meta.ts';
+export { LOG_META_MARKER, isLogMeta } from './meta.ts';
+export { dbg } from './dbg.ts';
+export * from './log-buffer.ts';
 
-export { getCurrentOwnershipScope } from './experimental/ownership';
+export { getCurrentOwnershipScope } from './experimental/ownership.ts';

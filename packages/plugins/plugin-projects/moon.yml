@@ -13,7 +13,7 @@ tasks:
     # depends on: `./ProjectOperationHandlerSet` for the handler set. Keep it UI-free: a leak here
     # breaks that host at build time, far from here.
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./ProjectOperationHandlerSet
       --to "@dxos/react-ui"
       --to react

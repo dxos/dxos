@@ -4,11 +4,11 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { deploy } from './deploy';
-import { importCommand } from './import';
-import { invoke } from './invoke';
-import { list } from './list';
-import { trace } from './trace';
+import { deploy } from './deploy/index.ts';
+import { importCommand } from './import.ts';
+import { invoke } from './invoke.ts';
+import { list } from './list.ts';
+import { trace } from './trace/index.ts';
 
 // TODO(wittjosiah): Alias to `fn`.
 export const fn = Command.make('function').pipe(

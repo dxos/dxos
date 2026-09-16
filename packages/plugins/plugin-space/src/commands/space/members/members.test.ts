@@ -10,7 +10,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './members';
+import { handler } from './members.ts';
 
 describe('space members', () => {
   it('should list space members', () =>

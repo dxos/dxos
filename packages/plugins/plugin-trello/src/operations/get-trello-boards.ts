@@ -11,7 +11,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { TrelloOperation } from '#types';
 
-import { TrelloApi } from '../services';
+import { TrelloApi } from '../services/index.ts';
 
 /**
  * Discovery only — list Trello boards reachable from the connection's token
@@ -40,10 +40,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.GetTrelloBoards> = T
           description: board.shortUrl,
         }));
         return { targets };
-      }).pipe(
-        Effect.provide(Database.layer(db)),
-        Effect.provide(TrelloApi.TrelloCredentials.fromConnection(connection)),
-      );
+      }).pipe(Effect.provide(Database.layer(db)), Effect.provide(TrelloApi.fromConnection(connection)));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

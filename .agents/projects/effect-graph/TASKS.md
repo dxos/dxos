@@ -276,16 +276,14 @@ ids — via the new `_onReleaseRelation` hook, so the relation re-expands on nex
 - [x] **Scope call — policy is a FOLLOW-UP, not part of #12594** (jdw, 2026-08-25). The mechanism
       lands dormant: `GraphModel.release` / `GraphBuilder.release` / the `Store.release` port are in
       and tested, wired at `GraphBuilder.ts:677`, with no production caller. That is deliberate.
-- [x] **Follow-up: where the policy lives** (jdw, 2026-08-26). A `Retention` port on the builder,
-      beside `Store`: the builder owns the mechanism and the cadence, the implementor owns the
-      policy and the state behind it, and the builder stores neither. See `RELEASE-POLICY.md`.
-- [x] **Follow-up: the first policy** (jdw, 2026-08-26). LRU over workspace roots, implemented in
-      plugin-deck against its own ephemeral state, keeping the two most recent. Explicit unload is
-      still reachable through `GraphBuilder.collect`; mount-driven release stays ruled out, since
-      the graph pins every node atom deliberately.
-- [ ] **Tune the limit** — two is the aggressive end of safe (positions 0 and 1 are the workspace
-      being entered and the one being left, which are still mounted). Worth measuring on a real
-      profile before treating the number as settled.
+- [ ] **Follow-up: evaluate the policies** — explicit unload, LRU over subgraph roots, and
+      mount-driven release are all still open, and the choice is a product decision about
+      workspace-switch behaviour rather than a graph one. Note that mount-driven is already
+      half-served for _view_ atoms above the graph; with pinning, the graph's own atoms now stay
+      until an explicit release, so a policy has real memory to manage.
+- [ ] **Follow-up: decide where the policy lives** — `@dxos/graph` (generic, e.g. `evict(policy)`),
+      app-graph, or the app/plugin layer that knows what a workspace is. Recommendation on record:
+      LRU over workspace roots, in plugin-space, since only that layer knows what a workspace is.
 
 ## Phase 10: dissolve the Graph wrapper
 
@@ -337,5 +335,35 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
       pinches: incremental index maintenance; fallback: per-workspace partitioning.
 - [ ] **Upstream ask** — propose a single-clone `Graph.snapshot(mutable)` (today: `endMutation`
       kills the handle, so snapshot+continue costs two clones).
+- [x] **`@dxos/graph` in the boot graph is BY DESIGN** — traced 2026-08-26:
+      `main.tsx` → `app-framework` → `plugin-manager` → `activation-scheduler` →
+      `activation-graph.ts` → `GraphModel` → `effect/Graph`. The plugin activation scheduler builds
+      its ordering graph on `GraphModel`, so the model (and Effect's `Graph` under it) is
+      boot-critical and not a leak.
+      Only the untree-shaken remainder is waste — see the upstream ask below.
+- [ ] **Upstream ask: split `effect/Graph` by subpath** — `Graph.js` is one 131 KB module holding
+      the algorithms (`dijkstra`, `astar`, `bellmanFord`, `floydWarshall`, `stronglyConnectedComponents`)
+      and the exporters (`toGraphViz`, `toMermaid`) alongside the data structure, so whatever keeps
+      the module live keeps all of it. Composer does exactly that: `effect` is an import-map shared
+      package and `importMapPlugin` emits its wrapper with `preserveSignature: 'strict'`, which pins
+      every export. Measured 2026-08-26 by A/B bundling #12594 against its parent — the boot graph
+      pays 23.5 KB where the API `GraphModel` actually calls shakes to 6.7 KB. Standalone rolldown
+      1.2.4 and a plain `vite build` 8.2.1 both shake it clean (groups configured or not), so this
+      is our packaging and not a rolldown bug; subpaths would cap what a strict wrapper can pin.
+- [x] **Cut the app-graph boot edge** — DONE 2026-08-27. ~26 KB of `@dxos/app-graph` (18.5 KB) plus
+      the `@dxos/graph/GraphBuilder` (7.6 KB) behind it shipped eagerly. Two edges, not one — the
+      trace reports SHORTEST paths only, so the second only appeared after the first was cut.
+      (1) `plugin-registry/src/meta.ts` imported `GraphPath` for `pinnedWorkspaceId`, a pure string
+      helper. A plugin's `meta.ts` is loaded eagerly at boot for EVERY plugin, so it must stay
+      import-light; the helpers moved to `src/paths.ts` + `src/constants.ts`, the shape every other
+      plugin uses. (2) The real leak: `app-toolkit/operations/LayoutOperation.ts` reached
+      `Translations` through the `../app` BARREL, whose siblings `NotFound`/`GraphPath`/
+      `UrlResolution` pull `AppGraph`, `@dxos/echo` and `GraphNode` — while `Translations` itself
+      imports nothing but `effect/Schema`. Narrowing that ONE import to `../app/Translations` cut it
+      for all 205 `LayoutOperation` consumers at once. Result: app-graph left the static closure and
+      the budget went 4.22 → 4.19 MB. Tree-shaking could never have saved it — `@dxos/app-graph` is an
+      import-map shared package whose wrapper carries `preserveSignature: 'strict'`, pinning every
+      export, while `computeBootPartition` groups it into boot off the parse graph. Next time:
+      re-trace after every cut, and fix the barrel import rather than making one consumer lazy.
 - [ ] **Adopt shared view helpers (C)** — swap app-graph's local family/equality patterns onto
       the Phase-1 primitives.

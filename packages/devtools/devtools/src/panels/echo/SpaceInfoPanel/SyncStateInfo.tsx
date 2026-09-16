@@ -8,7 +8,7 @@ import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import type { SpaceSyncState } from '@dxos/echo-client';
 
-import { JsonView } from '../../../components';
+import { JsonView } from '../../../components/index.ts';
 
 interface SyncStateInfoProps {
   space: Space;
@@ -28,7 +28,7 @@ export const SyncStateInfo = ({ space }: SyncStateInfoProps) => {
   return (
     <div className='p-2 text-sm'>
       <p className='text-base'>Sync state</p>
-      <JsonView data={syncState} />
+      <JsonView data={syncState} filter={false} />
     </div>
   );
 };

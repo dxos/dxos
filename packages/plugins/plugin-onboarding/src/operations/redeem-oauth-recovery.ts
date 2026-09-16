@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
-import { RedeemOAuthRecovery } from './definitions';
-import { beginOAuthFlow, createEdgeHttpClient } from './shared';
+import { RedeemOAuthRecovery } from './definitions.ts';
+import { beginOAuthFlow, createEdgeHttpClient } from './shared.ts';
 
 /**
  * Recover an existing identity by completing an OAuth flow with a registered recovery provider

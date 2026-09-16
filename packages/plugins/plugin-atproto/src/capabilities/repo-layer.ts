@@ -10,7 +10,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { AtprotoCapabilities } from '#types';
 
-import * as AtprotoRepo from '../services/AtprotoRepo';
+import * as AtprotoRepo from '../services/AtprotoRepo.ts';
 
 /**
  * Default (live) repo-layer factory: resolves credentials + PDS for the connection and talks to the

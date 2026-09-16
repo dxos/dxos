@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './database';
-export * from './load-object';
-export * from './object-migration';
+export * from './database.ts';
+export * from './load-object.ts';
+export * from './object-migration.ts';

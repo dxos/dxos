@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type CustomPanelProps, Panel } from '../../Panel';
-import { SyncStatus, type SyncStatusProps } from './SyncStatus';
+import { type CustomPanelProps, Panel } from '../../Panel.tsx';
+import { SyncStatus, type SyncStatusProps } from './SyncStatus.tsx';
 
 export const SyncStatusPanel = ({ state, summary, feedState, debug, ...props }: CustomPanelProps<SyncStatusProps>) => {
   return (

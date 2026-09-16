@@ -11,7 +11,7 @@ import { useMemo } from 'react';
 import { Identity, type Invitation, Space } from '@dxos/halo';
 import { type SpaceId } from '@dxos/keys';
 
-import { useHaloServices } from './HaloProvider';
+import { useHaloServices } from './HaloProvider.tsx';
 
 const EMPTY: readonly Invitation.Flow[] = [];
 

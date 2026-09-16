@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as CollectionOperation from './CollectionOperation';
-export * as Settings from './Settings';
-export * as SpaceCapabilities from './SpaceCapabilities';
-export * as SpaceCapability from './SpaceCapability';
-export * as SpaceEvents from './SpaceEvents';
-export * as SpaceForm from './SpaceForm';
-export * as SpaceOperation from './SpaceOperation';
-export * as SpaceSchema from './SpaceSchema';
-export * as SpaceSurface from './SpaceSurface';
+export * as CollectionOperation from './CollectionOperation.ts';
+export * as Settings from './Settings.ts';
+export * as SpaceCapabilities from './SpaceCapabilities.ts';
+export * as SpaceCapability from './SpaceCapability.ts';
+export * as SpaceEvents from './SpaceEvents.ts';
+export * as SpaceForm from './SpaceForm.ts';
+export * as SpaceOperation from './SpaceOperation.ts';
+export * as SpaceSchema from './SpaceSchema.ts';
+export * as SpaceSurface from './SpaceSurface.ts';

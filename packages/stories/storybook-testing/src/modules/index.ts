@@ -5,23 +5,23 @@
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 
-import { ConfigModule } from './ConfigModule';
-import { DatabaseModule } from './DatabaseModule';
-import { ExecutionGraphModule } from './ExecutionGraphModule';
-import { InvocationsModule } from './InvocationsModule';
-import { JsonModule } from './JsonModule';
-import { LoggingModule } from './LoggingModule';
-import { ObjectsModule } from './ObjectsModule';
-import { RoutineModule } from './RoutineModule';
+import { ConfigModule } from './ConfigModule.tsx';
+import { DatabaseModule } from './DatabaseModule.tsx';
+import { ExecutionGraphModule } from './ExecutionGraphModule.tsx';
+import { InvocationsModule } from './InvocationsModule.tsx';
+import { JsonModule } from './JsonModule.tsx';
+import { LoggingModule } from './LoggingModule.tsx';
+import { ObjectsModule } from './ObjectsModule.tsx';
+import { RoutineModule } from './RoutineModule.tsx';
 
-export * from './ConfigModule';
-export * from './DatabaseModule';
-export * from './ExecutionGraphModule';
-export * from './InvocationsModule';
-export * from './JsonModule';
-export * from './LoggingModule';
-export * from './ObjectsModule';
-export * from './RoutineModule';
+export * from './ConfigModule.tsx';
+export * from './DatabaseModule.tsx';
+export * from './ExecutionGraphModule.tsx';
+export * from './InvocationsModule.tsx';
+export * from './JsonModule.tsx';
+export * from './LoggingModule.tsx';
+export * from './ObjectsModule.tsx';
+export * from './RoutineModule.tsx';
 
 /**
  * Roles for the generic diagnostic modules in this package, colocated with their components so a

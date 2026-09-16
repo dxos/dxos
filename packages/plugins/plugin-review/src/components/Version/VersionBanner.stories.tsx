@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { VersionBanner } from './VersionBanner';
+import { VersionBanner } from './VersionBanner.tsx';
 
 const meta = {
   title: 'plugins/plugin-review/components/VersionBanner',

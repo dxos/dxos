@@ -5,10 +5,10 @@
 import type * as Effect from 'effect/Effect';
 import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
-import type { FreeqAuthError } from '../errors';
-import type { CredentialProvider } from './CredentialProvider';
-import { type IrcConnection, makeIrcConnection } from './IrcConnection';
-import { makeWebSocketTransport } from './Transport';
+import type { FreeqAuthError } from '../errors.ts';
+import type { CredentialProvider } from './CredentialProvider.ts';
+import { type IrcConnection, makeIrcConnection } from './IrcConnection.ts';
+import { makeWebSocketTransport } from './Transport.ts';
 
 export interface ConnectionParams {
   serverUrl: string;

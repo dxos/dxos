@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './SheetStatusbar';
+export * from './SheetStatusbar.tsx';

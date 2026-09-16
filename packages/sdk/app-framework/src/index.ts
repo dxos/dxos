@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './common';
-export * from './config';
-export * from './context';
-export * from './core';
-export * from './devtools';
-export * from './plugin-process-manager';
+export * from './common/index.ts';
+export * from './config/index.ts';
+export * from './context.ts';
+export * from './core/index.ts';
+export * from './devtools.ts';
+export * from './plugin-process-manager/index.ts';

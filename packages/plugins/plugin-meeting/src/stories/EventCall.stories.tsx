@@ -57,8 +57,8 @@ const DefaultStory = (_: StoryArgs) => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-2 gap-2'>
-      <div className='dx-expander'>
+    <div className='dx-expand grid grid-cols-2 gap-2'>
+      <div className='dx-expand'>
         <Surface.Surface
           type={AppSurface.Article}
           data={{ subject: event, attendableId: Obj.getURI(event), companionTo: calendar }}
@@ -66,7 +66,7 @@ const DefaultStory = (_: StoryArgs) => {
         />
       </div>
       {meeting && (
-        <div className='dx-expander'>
+        <div className='dx-expand'>
           <Surface.Surface
             type={AppSurface.Article}
             data={{ subject: meeting, attendableId: Obj.getURI(meeting) }}
@@ -102,8 +102,8 @@ const meta = {
           config: new Config({
             runtime: {
               services: {
-                edge: { url: 'https://edge.dxos.workers.dev/' },
-                iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+                edge: { url: 'https://dev.dxos.network/' },
+                iceProviders: [{ urls: 'https://dxos.network/ice' }],
               },
             },
           }),

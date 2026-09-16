@@ -12,7 +12,7 @@ import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { printObject } from '../util';
+import { printObject } from '../util.ts';
 
 export const handler = ({ typename }: { typename: Option.Option<string> }) =>
   Effect.gen(function* () {
@@ -36,7 +36,7 @@ export const query = Command.make(
   'query',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.string('typename').pipe(Options.optional, Options.withDescription('The typename to query.')),
+    typename: Options.String('typename').pipe(Options.optional, Options.withDescription('The typename to query.')),
   },
   handler,
 ).pipe(

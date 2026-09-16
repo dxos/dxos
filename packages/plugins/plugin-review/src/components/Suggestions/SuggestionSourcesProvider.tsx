@@ -9,7 +9,7 @@ import { type SuggestionSource } from '@dxos/ui-editor';
 
 import { buildSuggestionSources } from '#hooks';
 
-import { SuggestionSources } from './SuggestionSources';
+import { SuggestionSources } from './SuggestionSources.tsx';
 
 export type SuggestionSourcesProviderProps = {
   /** The versioned document whose active `kind:'suggestion'` branches are enumerated. */

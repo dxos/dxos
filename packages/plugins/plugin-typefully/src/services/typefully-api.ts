@@ -19,7 +19,7 @@ import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import * as Publisher from '@dxos/plugin-blogger/Publisher';
 
-import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
+import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
 
 // Typefully API v2 (v1 key access was disabled Dec 2025 — see the v1→v2 migration guide:
 // https://support.typefully.com/en/articles/13133296-typefully-api-v1-v2-migration-guide). Drafts are
@@ -43,17 +43,18 @@ type TypefullyCredentialsValue = {
  */
 export class TypefullyCredentials extends Context.Service<TypefullyCredentials, TypefullyCredentialsValue>()(
   '@dxos/plugin-typefully/TypefullyCredentials',
-) {
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      TypefullyCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
-}
+) {}
+
+/** Loads the connection's access token into a {@link TypefullyCredentials} layer. */
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    TypefullyCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
 
 //
 // Response schema + mapping
@@ -321,7 +322,7 @@ const runConnection = <T>(connection: Ref.Ref<Connection.Connection>, program: T
   }
   return EffectEx.runPromise(
     program.pipe(
-      Effect.provide(TypefullyCredentials.fromConnection(connection)),
+      Effect.provide(fromConnection(connection)),
       Effect.provide(ProxyHttpLayer),
       Effect.provide(Database.layer(db)),
     ),

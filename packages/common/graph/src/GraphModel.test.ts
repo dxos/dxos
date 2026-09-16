@@ -10,11 +10,8 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import * as GraphModel from './GraphModel';
-import * as GraphNode from './GraphNode';
-
-// Create a registry for tests.
-const createRegistry = () => Registry.make();
+import * as GraphModel from './GraphModel.ts';
+import * as GraphNode from './GraphNode.ts';
 
 const TestNode = GraphNode.GraphNode.mapFields(Struct.assign({ value: Schema.String }));
 
@@ -37,7 +34,7 @@ describe('Graph', () => {
   });
 
   test('reactive model', async ({ expect }) => {
-    const registry = createRegistry();
+    const registry = Registry.make();
     const graph = new GraphModel.GraphModel({ registry });
 
     const done = new Trigger<GraphModel.AnyData>();
@@ -68,7 +65,7 @@ describe('Graph', () => {
   });
 
   test('reactive model fires immediately with fire option', ({ expect }) => {
-    const registry = createRegistry();
+    const registry = Registry.make();
     const graph = new GraphModel.GraphModel({ registry });
     graph.addNode({ id: 'node-1' });
 
@@ -91,7 +88,7 @@ describe('Graph', () => {
   });
 
   test('reactive model tracks node additions', ({ expect }) => {
-    const registry = createRegistry();
+    const registry = Registry.make();
     const graph = new GraphModel.GraphModel({ registry });
 
     const nodeCountHistory: number[] = [];
@@ -110,7 +107,7 @@ describe('Graph', () => {
   });
 
   test('reactive model tracks node removals', ({ expect }) => {
-    const registry = createRegistry();
+    const registry = Registry.make();
     const graph = new GraphModel.GraphModel({ registry });
     graph.addNode({ id: 'node-1' });
     graph.addNode({ id: 'node-2' });
@@ -131,7 +128,7 @@ describe('Graph', () => {
   });
 
   test('reactive model unsubscribe stops notifications', ({ expect }) => {
-    const registry = createRegistry();
+    const registry = Registry.make();
     const graph = new GraphModel.GraphModel({ registry });
 
     let callCount = 0;
@@ -153,7 +150,7 @@ describe('Graph', () => {
   });
 
   test('reactive model supports multiple subscribers', ({ expect }) => {
-    const registry = createRegistry();
+    const registry = Registry.make();
     const graph = new GraphModel.GraphModel({ registry });
 
     let subscriber1Count = 0;
@@ -260,7 +257,7 @@ describe('Graph', () => {
     }
   });
   test('batch emits a single notification', ({ expect }) => {
-    const registry = createRegistry();
+    const registry = Registry.make();
     const graph = new GraphModel.GraphModel({ registry });
 
     let count = 0;
@@ -280,7 +277,7 @@ describe('Graph', () => {
   });
 
   test('node atoms recompute only for the model version', ({ expect }) => {
-    const registry = createRegistry();
+    const registry = Registry.make();
     const graph = new GraphModel.GraphModel<TestNode>({ registry });
     graph.addNode({ id: 'node-1', value: 'one' });
     graph.addNode({ id: 'node-2', value: 'two' });
@@ -362,7 +359,7 @@ describe('Graph', () => {
       graph: source,
       change: (fn) => {
         transactions++;
-        fn();
+        fn(source);
       },
     });
 
@@ -380,7 +377,7 @@ describe('Graph', () => {
 
   test('sync reloads only when the source diverges', ({ expect }) => {
     const source: GraphModel.AnyData = { nodes: [{ id: 'node-1' }], edges: [] };
-    const graph = new GraphModel.GraphModel({ graph: source, change: (fn) => fn() });
+    const graph = new GraphModel.GraphModel({ graph: source, change: (fn) => fn(source) });
     expect(graph.nodes).to.have.length(1);
 
     // A field edit reaches the model through the node object it already holds.

@@ -29,16 +29,16 @@ export const BuildOutput = ({ state }: BuildOutputProps) => {
 
   if (!build && !run) {
     return (
-      <div className='dx-container grid p-2 overflow-auto text-xs text-description'>
+      <div className='dx-expand grid p-2 overflow-auto text-xs text-description'>
         {t('diagnostics.empty.placeholder')}
       </div>
     );
   }
 
   return (
-    <div className='dx-container grid grid-rows-[auto_1fr] overflow-hidden text-xs'>
+    <div className='dx-expand grid grid-rows-[auto_1fr] text-xs'>
       <BuildStatus build={build} run={run} />
-      <div className='dx-container grid grid-cols-2 divide-x divide-separator overflow-hidden'>
+      <div className='dx-expand grid grid-cols-2 divide-x divide-separator'>
         <DiagnosticsList diagnostics={build?.diagnostics ?? []} />
         <ConsoleView stdout={run?.stdout ?? []} stderr={run?.stderr ?? []} />
       </div>
@@ -74,7 +74,7 @@ type DiagnosticsListProps = {
 const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <div className='dx-container flex flex-col overflow-auto'>
+    <div className='dx-expand flex flex-col overflow-auto'>
       <SectionHeader label={t('diagnostics.section.label')} count={diagnostics.length} />
       {diagnostics.length === 0 ? (
         <div className='p-2 text-description'>—</div>
@@ -114,7 +114,7 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
   const { t } = useTranslation(meta.profile.key);
   const total = stdout.length + stderr.length;
   return (
-    <div className='dx-container flex flex-col overflow-auto'>
+    <div className='dx-expand flex flex-col overflow-auto'>
       <SectionHeader label={t('console.section.label')} count={total} />
       {total === 0 ? (
         <div className='p-2 text-description'>{t('console.empty.placeholder')}</div>

@@ -9,8 +9,8 @@ import { random } from '@dxos/random';
 import { ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { TogglePanel } from '../TogglePanel';
-import { NumericTabs } from './NumericTabs';
+import { TogglePanel } from '../TogglePanel/index.ts';
+import { NumericTabs } from './NumericTabs.tsx';
 
 const content = Array.from({ length: 15 }, () => ({
   title: random.lorem.paragraph(),

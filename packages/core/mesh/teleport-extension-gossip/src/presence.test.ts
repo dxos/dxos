@@ -7,7 +7,7 @@ import { describe, onTestFinished, test } from 'vitest';
 import { latch, sleep } from '@dxos/async';
 import { TestBuilder } from '@dxos/teleport/testing';
 
-import { TestAgent } from './testing';
+import { TestAgent } from './testing.ts';
 
 describe('Presence', () => {
   test('Two peers see each other', async () => {

@@ -13,8 +13,8 @@ import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import * as Segment from './Segment';
-import * as Trip from './Trip';
+import * as Segment from './Segment.ts';
+import * as Trip from './Trip.ts';
 
 /**
  * Trip-message extractor as a first-class operation. The handler at

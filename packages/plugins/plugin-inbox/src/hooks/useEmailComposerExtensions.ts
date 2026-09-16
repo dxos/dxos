@@ -16,8 +16,8 @@ import { type AssistantOptions, assistant } from '@dxos/ui-editor';
 
 import { type EditMessageProps } from '#components';
 
-import { email } from '../extensions';
-import { stripQuotedMessage } from '../util';
+import { email } from '../extensions/index.ts';
+import { stripQuotedMessage } from '../util/index.ts';
 
 /**
  * The email-aware editor extensions (AI draft-assist + email formatting) for the composer, shared by

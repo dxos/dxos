@@ -2,35 +2,37 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { fromTimeframe } from '@dxos/protocols/buf';
+import { type FeedMessage, FeedMessage_PayloadSchema, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { Pipeline } from './pipeline';
-import { TestFeedBuilder } from './testing';
+import { Pipeline } from './pipeline.ts';
+import { TestFeedBuilder } from './testing/index.ts';
 
-const TEST_MESSAGE: FeedMessage = {
-  timeframe: new Timeframe(),
-  payload: {},
-};
+const TEST_MESSAGE: FeedMessage = create(FeedMessageSchema, {
+  timeframe: fromTimeframe(new Timeframe()),
+  payload: create(FeedMessage_PayloadSchema, {}),
+});
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
     const pipeline = new Pipeline();
 
     const builder = new TestFeedBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
 
     // Remote feeds from other peers.
     const numFeeds = 5;
     const messagesPerFeed = 10;
     for (const _ in range(numFeeds)) {
       const key = await builder.keyring.createKey();
-      const feed = await feedStore.openFeed(key, { writable: true });
-      void pipeline.addFeed(feed);
+      const feed = await hypercoreStore.openHypercore(key, { writable: true });
+      void pipeline.addHypercore(feed);
 
       setTimeout(async () => {
         for (const _ in range(messagesPerFeed)) {
@@ -41,12 +43,12 @@ describe('pipeline/Pipeline', () => {
 
     // Local feed.
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-    void pipeline.addFeed(feed);
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    void pipeline.addHypercore(feed);
     pipeline.setWriteFeed(feed);
 
     for (const _ in range(messagesPerFeed)) {
-      await pipeline.writer!.write({});
+      await pipeline.writer!.write(create(FeedMessage_PayloadSchema, {}));
     }
 
     await pipeline.start();
@@ -64,10 +66,10 @@ describe('pipeline/Pipeline', () => {
     onTestFinished(() => pipeline.stop());
 
     const builder = new TestFeedBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-    await pipeline.addFeed(feed);
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    await pipeline.addHypercore(feed);
 
     const numMessages = 30;
     const sequenceNumbers: number[] = [];
@@ -107,10 +109,10 @@ describe('pipeline/Pipeline', () => {
     onTestFinished(() => pipeline.stop());
 
     const builder = new TestFeedBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-    await pipeline.addFeed(feed);
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    await pipeline.addHypercore(feed);
 
     for (const _ of range(20)) {
       await feed.appendWithReceipt(TEST_MESSAGE);
@@ -128,13 +130,62 @@ describe('pipeline/Pipeline', () => {
     });
 
     await pipeline.start();
-    await sleep(1000);
-
+    // Blocks 0-9 were cleared and cannot be re-fetched, so the consumer makes no progress until
+    // the cursor below skips past them; pausing does not need to wait on any prior consumption.
     await pipeline.pause();
     await pipeline.setCursor(new Timeframe([[feed.key, 9]]));
     await pipeline.unpause();
 
     await processedEvent.waitForCondition(() => processedSequenceNumbers.length === 10);
     expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);
+  });
+
+  test('consume started before start() delivers messages without spinning', async () => {
+    // Regression: a consumer that obtains the iterator's generator before `start()` marks it
+    // running got back a generator that finished immediately; polling it span the microtask queue
+    // forever, starving the thread (the composer boot wedge). The consumer must instead wait for
+    // the iterator to run and take a fresh generator.
+    const pipeline = new Pipeline();
+
+    const builder = new TestFeedBuilder();
+    const hypercoreStore = builder.createHypercoreStore();
+    const key = await builder.keyring.createKey();
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    await pipeline.addHypercore(feed);
+    pipeline.setWriteFeed(feed);
+
+    const messageCount = 3;
+    for (const _ of range(messageCount)) {
+      await pipeline.writer.write(create(FeedMessage_PayloadSchema, {}));
+    }
+
+    // Launch start() but do not await: its iterator is assigned early while `open()` (which marks
+    // it running) is still awaiting feed-queue opens — the window the consumer races.
+    const started = pipeline.start();
+    // `consume` requires the iterator to exist; the race under test is with it *running*. Poll on
+    // microtasks so the consumer slips in between the iterator's assignment and its `open()`.
+    while (true) {
+      try {
+        pipeline.getFeeds();
+        break;
+      } catch {
+        await Promise.resolve();
+      }
+    }
+    const consumed = (async () => {
+      let count = 0;
+      for await (const _ of pipeline.consume()) {
+        if (++count === messageCount) {
+          void pipeline.stop();
+        }
+      }
+      return count;
+    })();
+    await started;
+
+    const timeout = sleep(5_000).then(() => {
+      throw new Error('consumer starved (pre-start consume spin)');
+    });
+    expect(await Promise.race([consumed, timeout])).toEqual(messageCount);
   });
 });

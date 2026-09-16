@@ -8,8 +8,8 @@ import { asyncTimeout } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
 import { type Provider } from '@dxos/util';
 
-import { type TestPeer, type TestSwarmConnection } from '../testing';
-import { type Topology } from '../topology';
+import { type TestPeer, type TestSwarmConnection } from '../testing/index.ts';
+import { type Topology } from '../topology/index.ts';
 
 //
 // NOTE: Don't move to testing directory since not exportable outside of package.

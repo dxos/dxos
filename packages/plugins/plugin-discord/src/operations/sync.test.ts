@@ -10,8 +10,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Message } from '@dxos/types';
 
-import { makeDiscordLayerFromToken } from '../services';
-import { fetchChannelMessages } from '../testing';
+import { makeDiscordLayerFromToken } from '../services/index.ts';
+import { fetchChannelMessages } from '../testing/index.ts';
 
 const token = process.env.DISCORD_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;

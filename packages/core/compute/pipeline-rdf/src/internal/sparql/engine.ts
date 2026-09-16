@@ -6,7 +6,7 @@ import { QueryEngine } from '@comunica/query-sparql-rdfjs';
 import * as Effect from 'effect/Effect';
 import { DataFactory, type Quad } from 'n3';
 
-import { SemanticIndexError } from '../../errors';
+import { SemanticIndexError } from '../../errors.ts';
 
 const { quad } = DataFactory;
 

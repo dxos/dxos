@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../env';
+import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
 
 export type AdaptorKind = 'idb' | 'node' | 'sqlite';
 

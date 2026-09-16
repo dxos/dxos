@@ -9,7 +9,7 @@ import {
   extractDxnsFromObject,
   extractFirstDxnFromToolInput,
   extractFirstDxnFromToolResult,
-} from './dxn-extractor';
+} from './dxn-extractor.ts';
 
 describe('dxn-extractor', () => {
   describe('extractDxnFromString', () => {

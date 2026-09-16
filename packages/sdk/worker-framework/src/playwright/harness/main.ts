@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { installStressHarness } from './stress-harness';
+import { installStressHarness } from './stress-harness.ts';
 
 const STATUS_POLL_MS = 250;
 

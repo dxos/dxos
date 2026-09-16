@@ -11,7 +11,6 @@ const SKILL_KEY = 'org.dxos.skill.agent';
 /**
  * Creates the Agent skill. This is a function to avoid circular dependency issues.
  */
-// TODO(dmaretskyi): Combine with Agent Wizard.
 const make = () =>
   Skill.make({
     key: SKILL_KEY,

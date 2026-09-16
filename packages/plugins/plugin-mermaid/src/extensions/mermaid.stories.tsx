@@ -15,9 +15,7 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { mermaid } from './mermaid-extension';
-
-const str = (...lines: string[]) => lines.join('\n');
+import { mermaid } from './mermaid-extension.ts';
 
 type StoryArgs = {
   text?: string;
@@ -54,7 +52,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    text: str(
+    text: [
       '# Mermaid',
       '',
       'This is a mermaid diagram:',
@@ -71,13 +69,13 @@ export const Default: Story = {
       '',
       'Inside a markdown document.',
       '',
-    ),
+    ].join('\n'),
   },
 };
 
 export const Error: Story = {
   args: {
-    text: str(
+    text: [
       '# Mermaid',
       '',
       'This is a broken mermaid diagram:',
@@ -89,6 +87,6 @@ export const Error: Story = {
       '',
       '',
       '',
-    ),
+    ].join('\n'),
   },
 };

@@ -19,9 +19,9 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 // Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
-import README_CONTENT from '../content/readme.md?raw';
-import { OnboardingOperation } from '../operations';
-import { type OnboardingOptions } from './capabilities';
+import README_CONTENT from '../content/README.md?raw';
+import { OnboardingOperation } from '../operations/index.ts';
+import { type OnboardingOptions } from './capabilities.ts';
 
 const DEFAULT_SPACE_ICON = 'house-line';
 const DEFAULT_SPACE_ICON_HUE = 'violet';
@@ -29,7 +29,7 @@ const DEFAULT_SPACE_ICON_HUE = 'violet';
 export const README_DOCUMENT_NAME = 'README';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ generateExemplarSpace }: OnboardingOptions) {
+  Effect.fnUntraced(function* ({ generateSampleSpace }: OnboardingOptions) {
     const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
@@ -48,7 +48,7 @@ export default Capability.makeModule(
     });
 
     // Run plugin OnCreateSpace callbacks against the default space so capabilities that
-    // depend on a fresh space (e.g. skills) wire themselves up. The exemplar space
+    // depend on a fresh space (e.g. skills) wire themselves up. The sample space
     // gets the same callbacks via the regular SpaceCreated event on import.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const rootCollection = Option.getOrUndefined(
@@ -69,35 +69,28 @@ export default Capability.makeModule(
       });
     }
 
-    if (generateExemplarSpace) {
-      yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportExemplarSpace, {}));
+    if (generateSampleSpace) {
+      yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportSampleSpace, {}));
 
-      // Eagerly expand the graph so the exemplar space's content is visible in the navtree
+      // Eagerly expand the graph so the sample space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
-      const exemplarSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
+      const sampleSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.SAMPLE_SPACE_TAG));
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');
-      if (exemplarSpace) {
-        AppGraph.expandSync(graph, exemplarSpace.id, 'child');
+      if (sampleSpace) {
+        AppGraph.expandSync(graph, sampleSpace.id, 'child');
       }
     } else {
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');
     }
 
-    const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
-    yield* Effect.gen(function* () {
-      // Claim the workspace before setting the plank: `plugin-space` switches to the default space
-      // from a forked fiber, and a switch restores the target workspace's (empty) persisted deck, so
-      // a plank set first is wiped. Switching here also satisfies that fiber's `workspace === default`
-      // guard, leaving it a no-op.
-      yield* Operation.invoke(LayoutOperation.SwitchWorkspace, {
-        subject: GraphPath.getSpacePath(defaultSpace.id),
-      });
-      // Land on the default space's Home, which surfaces the seeded README among its recent objects.
-      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] });
-      // Expose is scheduled because the navtree may not have rendered yet at this point.
-      yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
+    // Land on the default space's Home, which surfaces the seeded README among its recent objects.
+    // `Open` claims the workspace and schedules the expose itself, so it does not race the switch
+    // `plugin-space` makes from its own fiber.
+    yield* Operation.invoke(LayoutOperation.Open, {
+      subject: [GraphPath.getSpaceHomePath(defaultSpace.id)],
+      workspace: GraphPath.getSpacePath(defaultSpace.id),
     }).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
     return [];

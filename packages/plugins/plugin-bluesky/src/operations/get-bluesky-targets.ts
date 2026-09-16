@@ -12,9 +12,9 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { BLUESKY_TARGET } from '../constants';
-import { BlueskyApi } from '../services';
-import { GetBlueskyTargets } from './definitions';
+import { BLUESKY_TARGET } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
+import { GetBlueskyTargets } from './definitions.ts';
 
 /**
  * Fixed self-targets every Bluesky integration exposes. The remote-id is the
@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
-        Effect.provide(BlueskyApi.Credentials.fromConnection(connectionRef, client)),
+        Effect.provide(BlueskyApi.fromConnection(connectionRef, client)),
         Effect.provide(FetchHttpClient.layer),
         Effect.catch((error) =>
           Effect.sync(() => {

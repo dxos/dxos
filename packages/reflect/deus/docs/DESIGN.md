@@ -28,7 +28,7 @@ interfaces, and acceptance criteria — from which implementation, tests, and do
 can all be derived.
 
 The language is built around a single primitive (`ext`) and a universal extension
-mechanism. The standard vocabulary (`type`, `op`, `component`, `service`, `feat`, `test`)
+mechanism. The standard vocabulary (`type`, `op`, `component`, `service`, `feat`, `scenario`)
 is itself defined using that mechanism, and any project can introduce new constructs
 the same way.
 
@@ -286,13 +286,15 @@ feat F-2: Make Move
     errors: [InvalidMove, WrongTurn]
 ```
 
-### test
+### scenario
 
-Acceptance scenarios expressed as given / when / then steps.
-Tests serve as both human-readable criteria and agent-executable verification targets.
+Acceptance criteria expressed as Gherkin-style given / when / then steps. A scenario is a
+_derivable_ criterion — the contract a vitest or storybook test is written against — and is
+deliberately not the executable `test` of the QA dialect below. (Until 2026-09-08 this block was
+named `test`; the rename freed the word for the runnable case.)
 
 ```mdl
-test T-6: Submit valid move
+scenario T-6: Submit valid move
   given: active game, white's turn
   when: white submits pawn e2→e4
   then:
@@ -336,51 +338,92 @@ backend is typically ECHO; the construct is general enough for SQL or any store.
 
 ## QA Dialect (Deus.QA)
 
-Defined in [`../lang/qa.mdl`](../lang/qa.mdl). Adds one construct, `flow`, so a specification
-doubles as a test plan a human tester and an agent tester execute from the same source.
+Defined in [`../lang/qa.mdl`](../lang/qa.mdl). Adds the executable half of a specification, with
+vocabulary borrowed from xUnit so that a spec doubles as a test plan a human tester and an agent
+tester execute from the same source:
 
-`test` and `flow` are deliberately distinct. A `test` is a _derivable_ criterion — given/when/then,
-targeting vitest or a storybook play. A `flow` is an _orchestrable_ script against the running
-app: N ordered steps, each judged on its own criterion.
+| Term        | Meaning                                                                         |
+| ----------- | ------------------------------------------------------------------------------- |
+| `suite`     | a named set of tests, selected by name or by tag; a container by reference      |
+| `test QA-n` | one executable case in three stages, `before` / `steps` / `after`               |
+| `step`      | one move: a human `do`, an `expect` both actors judge, and usually one `invoke` |
+
+`scenario` and `test` are deliberately distinct. A `scenario` is a _derivable_ criterion —
+given/when/then, targeting vitest or a storybook play. A `test` is an _orchestrable_ script against
+the running app: N ordered steps, each invoking at most one operation and each judged on its own
+criterion.
 
 ```mdl
-flow QA-1: Create and open a document
+test QA-1: Create and open a document
   actors: both
   covers: [F-1.1, T-1]
+  tags: [smoke]
   given:
-    - a space is open and contains at least one collection
+    - space: a space is open
+    - collection: a collection in that space, to create into
   steps:
     - name: Create the document
-      do: In the navtree, click + on a collection and choose Markdown. Name it "Notes".
-      invoke: [op:createMarkdown] { name: "Notes", content: "# Notes\n" }
+      do: In the navtree, click + on a collection and choose Markdown. Name it "QA: Notes $runId".
+      invoke: [op:createMarkdown] { name: "QA: Notes $runId", content: "# Notes\n" }
       capture: created
-      expect: a detached Document named "Notes" is returned; nothing is in the navtree yet
-      assert: return !!$created.object
+      expect: a Document named "QA: Notes $runId" is listed under the space, and no plank opens
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $given.space.id });
+        return rows.results.some((o) => o.dxn === $created.id) && $snapshot.planks.length === 0;
+  after:
+    - name: Delete it
+      do: Right-click the row and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($created.id)] }
+      expect: the row leaves the navtree
 ```
 
-Steps are items of a `steps` list, not repeated `step <n>:` keys — core declares block bodies as
+Which runtime operation `[op:createMarkdown]` binds to decides what that `expect` may claim, which
+is why `op@1.1` carries `key:`. `org.dxos.operation.markdown.create` persists the document and adds
+it to the space's ROOT collection, so it is listed under the space — not under the `given`
+collection, which it never reads. Its sibling `markdown.createDraft` is a true factory: it returns
+a detached object, places nothing, and a step invoking it must assert on the return alone until a
+later `space.addObject` places it. An `expect` written for one and run against the other fails for
+a reason that has nothing to do with the application.
+
+Steps are items of a stage list, not repeated `step <n>:` keys — core declares block bodies as
 `key[?]: value` with an indented `-` list as the multi-line form, and a positional pseudo-key both
 departs from that and forces hand-renumbering when a step is inserted. Numbering is by position;
 a step needing a handle stable across insertions declares `id:`.
 
-`do` and `expect` are required on every step — that is what keeps a flow human-runnable, and a
+`do` and `expect` are required on every step — that is what keeps a test human-runnable, and a
 step no human can perform is a design smell rather than a shortcut. `invoke` and `assert` are the
-agent's affordances, and their absence is meaningful: a flow containing a step with no operation
+agent's affordances, and their absence is meaningful: a test containing a step with no operation
 behind it (a drag, a reload, a judgement about flicker) cannot declare `actors: agent`.
 
-A flow runs in three stages — `before` (fixture), `steps` (the test), `after` (teardown) — so a
-partial run is meaningful and a failure is legible: a `before` failure is a broken fixture, a
-`steps` failure is a defect.
+The agent's eyes are the snapshot: after every step the runner calls
+`org.dxos.operation.debug.snapshot` and binds the result as `$snapshot` for the step's `assert`, so
+a test judges the app by its state — planks, spaces, toasts, errors since the run began — never by
+an invocation's return value. A test that needs something the snapshot does not report extends the
+snapshot operation rather than scripting the page.
 
-Flows live in a `## QA` section of each `PLUGIN.mdl`, or in `APP.mdl` for journeys crossing
-plugins. Agents execute them per the `running-qa-flows` skill; the transport is the agent debug
-port.
+Errors come in two bindings because the two uses pull opposite ways. `$snapshot.errors` is
+cumulative from the run's start, which is what the report wants: an error is recorded against the
+step where it first appeared. A pass/fail clause needs the opposite, so the runner also binds
+`$stepErrors` — only what was logged since the previous step's snapshot. An `assert` written against
+the cumulative array fails every step after the first background error, for something none of them
+did.
+
+A test runs in three stages — `before` (fixture), `steps` (the test), `after` (teardown) — so a
+partial run is meaningful and a failure is legible: a `before` failure is a broken fixture, a
+`steps` failure is a defect. Because each test owns its fixture and teardown, suites are
+order-independent by construction and carry no `before` of their own.
+
+Tests live in a `## QA` section of each `PLUGIN.mdl`, or in `spec/APP.mdl` of an application for
+journeys crossing plugins. Agents execute them per the `composer-qa` skill through `/dxos:qa`; the
+transport is the agent debug port.
 
 Two consequences reach beyond the dialect:
 
-- **`op` gains `key`** (`op@1.1`) — the runtime operation key. Without it a flow cannot say which
+- **`op` gains `key`** (`op@1.1`) — the runtime operation key. Without it a test cannot say which
   operation it means, and the ambiguity is real: `plugin-markdown` declares one `op create` but
-  ships two runtime operations with different service requirements.
+  ships two runtime operations with different service requirements. The spec mirrors the code:
+  one `op` block per runtime key, with design-only operations marked `status: unimplemented`.
 - **`requires` is informational, not a branch.** An operation's declaration cannot see the
   services its downstream calls need, so a runner invokes everything through the operation invoker
   with an explicit `spaceId` rather than deciding per step.
@@ -412,9 +455,10 @@ the spec never goes stale, and drift is surfaced as a reviewable change.
 
 ### Acceptance Criteria
 
-`test` blocks are the contract between spec and verification. An agent
-implementing a feature marks it complete only when the corresponding tests pass.
-Tests can also be rendered as user-facing acceptance criteria for review.
+`scenario` blocks are the contract between spec and verification. An agent
+implementing a feature marks it complete only when the corresponding scenarios hold, in a unit
+test or a QA `test` that `covers:` them. Scenarios can also be rendered as user-facing acceptance
+criteria for review.
 
 ## Tooling
 
@@ -426,14 +470,14 @@ A linter validates `.mdl` files against the declared extension schemas:
 - Missing required fields → error
 - Unresolved cross-references → error
 - Unknown fields → warning
-- Missing `test` coverage for `feat` blocks → warning
+- Missing `scenario` or `test` coverage for `feat` blocks → warning
 
 ### Renderers
 
 A `.mdl` file can be rendered into multiple output formats:
 
 - **FRS document** — structured Markdown requirements doc (like `FRS.md`)
-- **Test stubs** — vitest `describe`/`test` scaffolding from `test` blocks
+- **Test stubs** — vitest `describe`/`test` scaffolding from `scenario` blocks
 - **Type stubs** — TypeScript interfaces from `type` blocks
 - **Ticket list** — `feat`/`req` blocks as linear/GitHub issues
 
@@ -458,11 +502,11 @@ with the CodeMirror extension for editing and a rendered FRS view alongside.
 
 The chess plugin trilogy demonstrates incremental spec evolution:
 
-| File          | New Extensions         | What It Introduces                              |
-| ------------- | ---------------------- | ----------------------------------------------- |
-| `chess-1.mdl` | `type`, `feat`, `test` | Data model, game rules, acceptance criteria     |
-| `chess-2.mdl` | `component`            | Lobby and Gameboard UI components               |
-| `chess-3.mdl` | `op`, `service`        | Move validation, game persistence, chess engine |
+| File          | New Extensions             | What It Introduces                              |
+| ------------- | -------------------------- | ----------------------------------------------- |
+| `chess-1.mdl` | `type`, `feat`, `scenario` | Data model, game rules, acceptance criteria     |
+| `chess-2.mdl` | `component`                | Lobby and Gameboard UI components               |
+| `chess-3.mdl` | `op`, `service`            | Move validation, game persistence, chess engine |
 
 See also `FRS.spec` in `plugin-spacetime` for a full real-world example.
 

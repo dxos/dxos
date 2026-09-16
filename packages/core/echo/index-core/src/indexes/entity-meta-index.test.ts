@@ -11,10 +11,11 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { EntityMetaIndex } from './entity-meta-index';
-import type { IndexerObject } from './interface';
+import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store.ts';
+import { IndexTracker } from '../index-tracker.ts';
+import { EntityMetaIndex } from './entity-meta-index.ts';
+import type { IndexerObject } from './interface.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_PERSON_VERSIONLESS = DXN.make('com.example.type.person');
@@ -24,14 +25,9 @@ const TYPE_WITH_UNDERSCORE = DXN.make('com.example.type.personextra', '0.1.0');
 const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.make('com.example.type.personextra');
 const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.make('com.example.type.personaextra', '0.1.0');
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-  Layer.provideMerge(Reactivity.layer),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+}).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('EntityMetaIndex', () => {
   it.effect('should match versioned types when queried by versionless type', () =>
@@ -530,6 +526,113 @@ describe('EntityMetaIndex', () => {
       expect(afterUpdate[0].queueNamespace).toBe('trace');
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('indexes a string convergence key and treats any other shape as no key', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const keyed = EntityId.random();
+      const malformed = EntityId.random();
+      const makeItem = (id: EntityId, meta: unknown): IndexerObject => ({
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: `doc-${id}`,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        // Parsed from JSON because the malformed meta shape under test has no static type.
+        data: JSON.parse(JSON.stringify({ id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false, '@meta': meta })),
+      });
+
+      yield* index.update([
+        makeItem(keyed, { keys: [], convergenceKey: 'example.com/thing/a' }),
+        makeItem(malformed, { keys: [], convergenceKey: 42 }),
+      ]);
+
+      const rows = yield* index.queryByConvergenceKeys(spaceId, ['example.com/thing/a', '42']);
+      expect(rows.map((row) => row.objectId)).toEqual([keyed]);
+      const all = yield* index.queryAll({ spaceIds: [spaceId] });
+      expect(all.find((row) => row.objectId === malformed)?.convergenceKey).toBeNull();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('cursors under retired index names are purged so pre-convergenceKey data re-indexes', () =>
+    Effect.gen(function* () {
+      // A build before `convergenceKey` tracked its progress under the retired names (`fts5`,
+      // `reverseRef`); rows it indexed hold NULL keys and re-indexing is per-object, so those
+      // cursors must not survive the upgrade — the bumped names re-present every document.
+      // Simulate the old vintage: its own init created the table before the retirement
+      // migration existed, so the rows are in place when the migrations first run here.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE indexCursor (
+        indexName TEXT NOT NULL,
+        spaceId TEXT NOT NULL DEFAULT '',
+        sourceName TEXT NOT NULL,
+        resourceId TEXT NOT NULL DEFAULT '',
+        cursor,
+        PRIMARY KEY (indexName, spaceId, sourceName, resourceId)
+      )`;
+      const tracker = new IndexTracker();
+      yield* tracker.updateCursors([
+        { indexName: 'fts5', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'reverseRef', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+      ]);
+
+      yield* tracker.migrate();
+
+      expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toEqual([]);
+      expect(yield* tracker.queryCursors({ indexName: 'reverseRef' })).toEqual([]);
+      expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a fresh database keeps its index cursors across migration', () =>
+    Effect.gen(function* () {
+      const tracker = new IndexTracker();
+      yield* tracker.migrate();
+
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+      yield* tracker.updateCursors([
+        { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+      ]);
+
+      // Re-running the migrations (every startup does) must not wipe progress under live names.
+      yield* index.migrate();
+      yield* tracker.migrate();
+      expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('convergence-key intents survive until cleared, bounded by the id captured at read time', () =>
+    Effect.gen(function* () {
+      const store = new ConvergenceKeyIntentStore();
+      yield* store.migrate();
+
+      const spaceId = SpaceId.random();
+      yield* store.record([
+        { spaceId, convergenceKey: 'example.com/thing/a' },
+        { spaceId, convergenceKey: 'example.com/thing/b' },
+        { spaceId, convergenceKey: 'example.com/thing/a' }, // Re-recorded — deduplicated on read.
+      ]);
+
+      const { maxId, intents } = yield* store.take();
+      expect([...(intents.get(spaceId) ?? [])].sort()).toEqual(['example.com/thing/a', 'example.com/thing/b']);
+
+      // A key recorded after the read (a concurrent indexing pass) must survive the clear.
+      yield* store.record([{ spaceId, convergenceKey: 'example.com/thing/a' }]);
+      yield* store.clear(spaceId, 'example.com/thing/a', maxId);
+      yield* store.clear(spaceId, 'example.com/thing/b', maxId);
+
+      const remaining = yield* store.take();
+      expect([...(remaining.intents.get(spaceId) ?? [])]).toEqual(['example.com/thing/a']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('windows a queue read by cursor position and limit', () =>
     Effect.gen(function* () {
       const index = new EntityMetaIndex();
@@ -565,26 +668,165 @@ describe('EntityMetaIndex', () => {
       };
       yield* index.update([...positioned.map(({ item }) => item), unpositioned]);
 
-      const all = yield* index.queryAll({ spaceIds: [], queueIds: [queueId] });
+      const all = yield* index.queryAll({ spaceIds: [], queues: [{ queueId, spaceId }] });
       expect(all).toHaveLength(5);
 
-      const afterCursor = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: 1 } });
+      const afterCursor = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'cursor', after: 1 },
+      });
       expect(afterCursor.map((row) => row.queuePosition)).toEqual([2, 3]);
 
-      const page = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: 0, limit: 2 } });
+      const page = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'cursor', after: 0, limit: 2 },
+      });
       expect(page.map((row) => row.queuePosition)).toEqual([1, 2]);
 
       const typed = yield* index.queryTypes({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         typeDxns: [TYPE_PERSON],
-        window: { after: 2 },
+        window: { kind: 'cursor', after: 2 },
       });
       expect(typed.map((row) => row.queuePosition)).toEqual([3]);
 
       // A cursor read never sees the unpositioned block, which has no place in the ordering yet.
-      const fromStart = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: -1 } });
+      const fromStart = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'cursor', after: -1 },
+      });
       expect(fromStart.map((row) => row.queuePosition)).toEqual([0, 1, 2, 3]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('the natural cap orders by code unit, which is what the executor sorts by', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      // The id format check is case-insensitive, and BINARY puts every upper-case id before every
+      // lower-case one — the boundary a locale collation would order the other way.
+      const upper = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+      const lower = '01arz3ndektsv4rrffq69g5fab';
+      const makeItem = (objectId: string): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: objectId, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+      });
+      yield* index.update([makeItem(upper), makeItem(lower)]);
+
+      const oldest = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'natural', direction: 'asc', limit: 1 },
+      });
+      expect(oldest.map((row) => row.objectId)).toEqual([upper]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a queue read is scoped to its space, so a colliding queue id cannot leak', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      // The same queue id in two spaces — the case a bare `queueId` match cannot tell apart.
+      const queueId = EntityId.random();
+      const [mine, theirs] = [SpaceId.random(), SpaceId.random()];
+      const makeItem = (spaceId: SpaceId, objectId: string): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: objectId, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+      });
+      const mineId = EntityId.random();
+      const theirsId = EntityId.random();
+      yield* index.update([makeItem(mine, mineId), makeItem(theirs, theirsId)]);
+
+      const scoped = yield* index.queryAll({ spaceIds: [], queues: [{ queueId, spaceId: mine }] });
+      expect(scoped.map((row) => row.objectId)).toEqual([mineId]);
+
+      const typed = yield* index.queryTypes({
+        spaceIds: [],
+        queues: [{ queueId, spaceId: mine }],
+        typeDxns: [TYPE_PERSON],
+      });
+      expect(typed.map((row) => row.objectId)).toEqual([mineId]);
+
+      // An unqualified feed URI names no space to scope to, so it still matches on the id alone.
+      const unscoped = yield* index.queryAll({ spaceIds: [], queues: [{ queueId }] });
+      expect(unscoped.map((row) => row.objectId).sort()).toEqual([mineId, theirsId].sort());
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('caps a queue read in natural order without a cursor', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      const objectIds = Array.from({ length: 5 }, () => EntityId.random()).sort();
+      const makeItem = (objectId: string, deleted: boolean): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        // Unpositioned, as a locally appended block is: a natural read still has to see it.
+        queuePosition: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: objectId, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: deleted },
+      });
+      yield* index.update(objectIds.map((objectId) => makeItem(objectId, false)));
+
+      const oldest = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'natural', direction: 'asc', limit: 2 },
+      });
+      expect(oldest.map((row) => row.objectId)).toEqual(objectIds.slice(0, 2));
+
+      const newest = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'natural', direction: 'desc', limit: 2 },
+      });
+      expect(newest.map((row) => row.objectId)).toEqual(objectIds.slice(-2).reverse());
+
+      const typed = yield* index.queryTypes({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        typeDxns: [TYPE_PERSON],
+        window: { kind: 'natural', direction: 'asc', limit: 3 },
+      });
+      expect(typed.map((row) => row.objectId)).toEqual(objectIds.slice(0, 3));
+
+      // The cap counts only rows the caller keeps, so the deleted head does not eat into it.
+      yield* index.update(objectIds.slice(0, 2).map((objectId) => makeItem(objectId, true)));
+      const live = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'natural', direction: 'asc', limit: 2, deleted: false },
+      });
+      expect(live.map((row) => row.objectId)).toEqual(objectIds.slice(2, 4));
     }).pipe(Effect.provide(TestLayer)),
   );
 });

@@ -1,12 +1,15 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
-  # Single-pass type-and-JS build via `dx-build` (used by workspace tools and a handful of
+  # Single-pass type-and-JS build via raw `tsc` (used by workspace tools and a handful of
   # packages). The tag is named `ts-compile` for historical reasons; the task it contributes
   # is `build`, like every other build tag.
+  #
+  # `dist` is cleaned first because a surviving `tsconfig.tsbuildinfo` makes an incremental
+  # `tsc` consider a restored-but-stale (or moon-cache-missing) `dist` up to date and emit
+  # nothing at all.
   build:
-    command: pnpm exec dx-build
+    command: bash -c 'rm -rf dist && pnpm exec tsc'
     deps:
-      - dx-build:build
       - ^:build
     inputs:
       - /tsconfig.base.json

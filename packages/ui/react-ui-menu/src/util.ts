@@ -9,7 +9,7 @@ import { EffectEx } from '@dxos/effect';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { getHostPlatform } from '@dxos/util';
 
-import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types';
+import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types.ts';
 
 /**
  * Execute a menu action's Effect with its captured context.

@@ -15,7 +15,7 @@ import { TaskSet } from '@dxos/types';
 
 import { ProjectCapabilities } from '#types';
 
-import { defaultTemplate, defaultTemplates, scaffoldProject } from './index';
+import { defaultTemplate, defaultTemplates, scaffoldProject } from './index.ts';
 
 describe('project templates', () => {
   let builder: EchoTestBuilder;

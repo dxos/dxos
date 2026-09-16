@@ -5,20 +5,14 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { DataFactory, type Quad } from 'n3';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
-
-import { migrate } from '../sqlite/schema';
-import { insertQuads, makeSqliteSource } from './sqlite-source';
+import { migrate } from '../sqlite/schema.ts';
+import { insertQuads, makeSqliteSource } from './sqlite-source.ts';
 
 const { namedNode, literal } = DataFactory;
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(SqlTransaction.layer),
-  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-);
+const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 const collect = (stream: import('asynciterator').AsyncIterator<Quad>): Promise<Quad[]> =>
   new Promise((resolve, reject) => {

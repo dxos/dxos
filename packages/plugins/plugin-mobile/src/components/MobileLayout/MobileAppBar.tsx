@@ -8,12 +8,12 @@ import React, { Fragment } from 'react';
 
 import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { useMobileLayout } from './MobileLayoutContext';
+import { useMobileLayout } from './MobileLayoutContext.ts';
 
 const APP_BAR_NAME = 'MobileLayout.AppBar';
 
@@ -92,18 +92,15 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
           <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
           {hasActions ? (
             <AnchorRoot>
-              <Menu.Root {...menuActions} caller={meta.profile.key} onAction={onAction}>
-                <Menu.Trigger asChild>
-                  <IconButton
-                    variant='ghost'
-                    icon='ph--dots-three-vertical--regular'
-                    iconOnly
-                    label={t('actions-menu.label')}
-                    classNames={TOUCH_TARGET}
-                  />
-                </Menu.Trigger>
-                <Menu.Content />
-              </Menu.Root>
+              <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
+                <IconButton
+                  variant='ghost'
+                  icon='ph--dots-three-vertical--regular'
+                  iconOnly
+                  label={t('actions-menu.label')}
+                  classNames={TOUCH_TARGET}
+                />
+              </ActionMenu>
             </AnchorRoot>
           ) : (
             <span />

@@ -16,13 +16,13 @@ import { Database, Filter, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';
 
-import { printConnectionRemoved } from './util';
+import { printConnectionRemoved } from './util.ts';
 
 export const remove = Command.make(
   'remove',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    id: Options.string('id').pipe(Options.withDescription('The connection ID.'), Options.optional),
+    id: Options.String('id').pipe(Options.withDescription('The connection ID.'), Options.optional),
   },
   ({ id }) =>
     Effect.gen(function* () {
@@ -47,7 +47,7 @@ export const remove = Command.make(
               value: connection.id,
             }));
 
-            const selectedId = yield* Prompt.select({
+            const selectedId = yield* Prompt.Select({
               message: 'Select connection to remove:',
               choices,
             }).pipe(Prompt.run);

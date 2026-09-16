@@ -9,7 +9,7 @@ import { evalite } from 'evalite';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { type VariantConfig, createEvalRunner } from '../runner';
+import { type VariantConfig, createEvalRunner } from '../runner.ts';
 
 // TODO(dmaretskyi): Still some ways to go. I want this to be able to perform complex tasks inside composer, and then evaluate the output and effects (i.e. Database changes).
 // To that end:
@@ -30,12 +30,12 @@ evalite.each<VariantConfig>([
     input: { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') },
   },
   {
-    name: 'claude-sonnet-4-5',
-    input: { model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default') },
+    name: 'claude-sonnet-5',
+    input: { model: DXN.make('com.anthropic.model.claude-sonnet-5.default') },
   },
   {
-    name: 'claude-opus-4-6',
-    input: { model: DXN.make('com.anthropic.model.claude-opus-4-8.default') },
+    name: 'claude-opus-5',
+    input: { model: DXN.make('com.anthropic.model.claude-opus-5.default') },
   },
 ])('Question answering', {
   data: [
@@ -48,6 +48,7 @@ evalite.each<VariantConfig>([
       expected: 'Berlin',
     },
   ],
+  trialCount: 3,
   task,
   scorers: [Levenshtein],
 });

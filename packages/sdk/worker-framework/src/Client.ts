@@ -4,6 +4,7 @@
 
 import { AsyncTask, Event, Trigger, asyncTimeout, sleepWithContext } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
@@ -14,11 +15,44 @@ import {
   lockOrRpcTimeoutError,
   requestExclusiveLock,
   waitWithLockOrRpcTimeout,
-} from './internal/locks';
-import * as WorkerProtocol from './WorkerProtocol';
+} from './internal/locks.ts';
+import { workerErrorFromEvent } from './internal/worker-errors.ts';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
+
+/** How far this tab's own leader-election chain has got. */
+export type LeaderPhase =
+  | 'idle'
+  | 'awaiting-lock'
+  | 'lock-held'
+  | 'opening-session'
+  | 'session-open'
+  | 'session-failed';
+
+/** How far this tab's connect task has got towards a usable worker port. */
+export type ConnectPhase =
+  | 'idle'
+  | 'requesting-port'
+  | 'port-timeout'
+  | 'port-received'
+  | 'opening-handle'
+  | 'connected';
+
+/** Where the connection had got to when it failed. */
+export type ConnectionDiagnostics = {
+  workerLeaderPhase: LeaderPhase;
+  workerConnectPhase: ConnectPhase;
+  /** Whether this tab held the leader lock. */
+  workerIsLeader: boolean;
+  workerLeaderFailures: number;
+  workerStealCount: number;
+  /** Port requests that expired without a `provide-port`. */
+  workerPortTimeouts: number;
+  /** Age of the last heartbeat from a leader OTHER than this tab; absent when none was seen. */
+  workerMsSinceLeaderHeartbeat?: number;
+};
 
 export interface LeaderTimeouts {
   /**
@@ -143,6 +177,14 @@ export class Connection extends Resource {
   #isInitialConnection = true;
   // Last error the connect task failed with, surfaced by `_open` in place of the bare timeout.
   #lastConnectError: unknown;
+  #lastLeaderError: unknown;
+  #leaderPhase: LeaderPhase = 'idle';
+  // Whether this tab is inside the leader lock's callback, which is exactly when it is the leader.
+  // Deriving this from the phase instead drops whichever phase a later change forgets to list.
+  #holdsLeaderLock = false;
+  #connectPhase: ConnectPhase = 'idle';
+  #peerLeaderHeartbeat = 0;
+  #portTimeoutCount = 0;
   // Monotonic connect-attempt counter sent with `request-port`, so the worker can tell a raced
   // duplicate of the current attempt from a reconnect after a failed one.
   #connectAttempt = 0;
@@ -189,6 +231,9 @@ export class Connection extends Resource {
       // counting it avoids a steal in the window before its first heartbeat lands.
       if (message.type === 'leader-heartbeat' || message.type === 'new-leader') {
         this.#lastLeaderHeartbeat = Date.now();
+        if (message.leaderId !== this.#clientId) {
+          this.#peerLeaderHeartbeat = Date.now();
+        }
       }
     });
     this.#watchLeader();
@@ -205,9 +250,21 @@ export class Connection extends Resource {
       openTimeout,
       lockOrRpcTimeoutError('establishing initial worker connection', openTimeout),
     ).catch((error) => {
-      throw this.#lastConnectError ?? error;
+      throw withContext(this.#lastConnectError ?? this.#lastLeaderError ?? error, this.#diagnostics);
     });
     log('worker-connection: initial connection established');
+  }
+
+  get #diagnostics(): ConnectionDiagnostics {
+    return {
+      workerLeaderPhase: this.#leaderPhase,
+      workerConnectPhase: this.#connectPhase,
+      workerIsLeader: this.#holdsLeaderLock,
+      workerLeaderFailures: this.#leaderFailureCount,
+      workerStealCount: this.#stealCount,
+      workerPortTimeouts: this.#portTimeoutCount,
+      workerMsSinceLeaderHeartbeat: this.#peerLeaderHeartbeat ? Date.now() - this.#peerLeaderHeartbeat : undefined,
+    };
   }
 
   override async _close(): Promise<void> {
@@ -227,39 +284,54 @@ export class Connection extends Resource {
     queueMicrotask(async () => {
       try {
         log('worker-connection: requesting leader lock', { clientId: this.#clientId });
+        this.#leaderPhase = 'awaiting-lock';
         await requestExclusiveLock(this.#leaderLockKey, this._ctx.signal, async () => {
           log('worker-connection: leader lock acquired (this tab is leader)', { clientId: this.#clientId });
-          invariant(this.#coordinator);
-          invariant(!this.#leaderSession);
-
-          const sendHeartbeat = () =>
-            this.#coordinator?.sendMessage({ type: 'leader-heartbeat', leaderId: this.#clientId });
-          sendHeartbeat();
-          const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
-
-          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config, this.#clientId);
-          const done = new Trigger();
-          this.#leaderDone = done;
-          // Removed in the `finally` below: election re-enters on every steal/failure, so a
-          // permanent registration would grow the connection's dispose list for the tab's lifetime.
-          const removeDoneDisposer = this._ctx.onDispose(() => done.wake());
-          this.#leaderSession.onClose.on((error) => {
-            log('worker-connection: leader session closed', { hasError: !!error });
-            this.#leaderSession = undefined;
-            if (error) {
-              done.throw(error);
-            } else {
-              done.wake();
-            }
-          });
+          this.#leaderPhase = 'lock-held';
+          this.#holdsLeaderLock = true;
           try {
-            await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
-            this.#leaderFailureCount = 0;
-            await done.wait();
+            invariant(this.#coordinator);
+            invariant(!this.#leaderSession);
+
+            const sendHeartbeat = () =>
+              this.#coordinator?.sendMessage({ type: 'leader-heartbeat', leaderId: this.#clientId });
+            sendHeartbeat();
+            const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
+
+            this.#leaderSession = new LeaderSession(
+              this.#createWorker,
+              this.#coordinator,
+              this.#config,
+              this.#clientId,
+            );
+            const done = new Trigger();
+            this.#leaderDone = done;
+            // Removed in the `finally` below: election re-enters on every steal/failure, so a
+            // permanent registration would grow the connection's dispose list for the tab's lifetime.
+            const removeDoneDisposer = this._ctx.onDispose(() => done.wake());
+            this.#leaderSession.onClose.on((error) => {
+              log('worker-connection: leader session closed', { hasError: !!error });
+              this.#leaderSession = undefined;
+              if (error) {
+                done.throw(error);
+              } else {
+                done.wake();
+              }
+            });
+            try {
+              this.#leaderPhase = 'opening-session';
+              await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
+              this.#leaderPhase = 'session-open';
+              this.#leaderFailureCount = 0;
+              this.#lastLeaderError = undefined;
+              await done.wait();
+            } finally {
+              removeDoneDisposer();
+              clearInterval(heartbeat);
+              this.#leaderDone = undefined;
+            }
           } finally {
-            removeDoneDisposer();
-            clearInterval(heartbeat);
-            this.#leaderDone = undefined;
+            this.#holdsLeaderLock = false;
           }
         });
         this.#electionActive = false;
@@ -297,6 +369,8 @@ export class Connection extends Resource {
         const backoff = Math.min(this.#leaderRetryBackoff * 2 ** this.#leaderFailureCount, MAX_LEADER_RETRY_BACKOFF);
         const jitteredBackoff = backoff * (0.5 + Math.random() * 0.5);
         this.#leaderFailureCount++;
+        this.#leaderPhase = 'session-failed';
+        this.#lastLeaderError = error;
         log.warn('worker-connection: leader session failed, backing off and re-watching', {
           clientId: this.#clientId,
           error,
@@ -326,6 +400,9 @@ export class Connection extends Resource {
     // One attempt per run: the heartbeat-driven re-requests below belong to this same attempt, so
     // the worker keeps discarding them as duplicates rather than churning the session.
     const attempt = ++this.#connectAttempt;
+    // Held for this attempt's lifetime and handed to the worker, which ends the session when it
+    // releases — the only way the worker learns that this tab closed or died.
+    const sessionLockKey = `${this.#clientId}/session/${attempt}`;
 
     const handleLeaderStopped = async () => {
       log('worker-connection: lost connection');
@@ -337,7 +414,31 @@ export class Connection extends Resource {
     };
 
     try {
+      if (typeof navigator !== 'undefined' && typeof navigator.locks !== 'undefined') {
+        const granted = new Trigger<Error | undefined>();
+        const released = new Trigger();
+        ctx.onDispose(() => released.wake());
+        navigator.locks
+          .request(sessionLockKey, { signal: ctx.signal }, async () => {
+            granted.wake(undefined);
+            await released.wait();
+          })
+          .catch((err) => {
+            if (!isAbortError(err)) {
+              log.catch(err);
+            }
+            // The attempt waits on this trigger, so a rejection has to wake it — an already-aborted
+            // `ctx.signal` rejects immediately, and this attempt would otherwise never finish or fail.
+            granted.wake(err);
+          });
+        const grantError = await granted.wait();
+        if (grantError) {
+          throw grantError;
+        }
+      }
+
       log('worker-connection: requesting port from leader');
+      this.#connectPhase = 'requesting-port';
       const result = await new Promise<
         (WorkerProtocol.CoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT
       >((resolve) => {
@@ -358,6 +459,7 @@ export class Connection extends Resource {
               type: 'request-port',
               clientId: this.#clientId,
               attempt,
+              sessionLockKey,
             });
           }
         });
@@ -375,10 +477,13 @@ export class Connection extends Resource {
           type: 'request-port',
           clientId: this.#clientId,
           attempt,
+          sessionLockKey,
         });
       });
 
       if (result === LEADER_TIMEOUT) {
+        this.#connectPhase = 'port-timeout';
+        this.#portTimeoutCount++;
         log.warn('worker-connection: timed out waiting for provide-port', { clientId: this.#clientId });
         await this.#maybeStealStaleLeader();
         this.#connectTask.schedule();
@@ -387,6 +492,7 @@ export class Connection extends Resource {
 
       const { clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner } = result;
       log('worker-connection: connected to worker', { leaderId, isOwner });
+      this.#connectPhase = 'port-received';
       this.#lastConnectError = undefined;
       // A port proves the coordinator link works, so the steal budget below is about the incumbent
       // rather than this tab.
@@ -412,10 +518,12 @@ export class Connection extends Resource {
         }
       });
 
+      this.#connectPhase = 'opening-handle';
       this.#connectionHandle = await waitWithLockOrRpcTimeout(
         this.#onConnect({ clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner }),
         'opening worker connection handle',
       );
+      this.#connectPhase = 'connected';
 
       if (this.#isInitialConnection) {
         performance.mark('worker-connection:session-ready');
@@ -564,9 +672,10 @@ class LeaderSession extends Resource {
       }
     };
     if (isWorker(this.#worker)) {
-      this.#worker.onerror = (e) => {
-        ready.throw(e.error);
-        listening.throw(e.error);
+      this.#worker.onerror = (event) => {
+        const error = workerErrorFromEvent(event, 'dedicated');
+        ready.throw(error);
+        listening.throw(error);
       };
     }
 
@@ -599,7 +708,12 @@ class LeaderSession extends Resource {
           }
           break;
         case 'request-port':
-          this.#sendMessage({ type: 'start-session', clientId: msg.clientId, attempt: msg.attempt });
+          this.#sendMessage({
+            type: 'start-session',
+            clientId: msg.clientId,
+            attempt: msg.attempt,
+            sessionLockKey: msg.sessionLockKey,
+          });
           break;
         default:
           break;

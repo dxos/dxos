@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import './suppress-storybook-deprecation-warnings';
+import './suppress-storybook-deprecation-warnings.ts';
 
 import React from 'react';
 import { addons } from 'storybook/manager-api';
 
-import { dxosTheme } from './theme';
+import { dxosTheme } from './theme.tsx';
 
 // The manager UI is outside the app's theme, so the colour is inlined; this is the same accent blue
 // the docs theme uses.

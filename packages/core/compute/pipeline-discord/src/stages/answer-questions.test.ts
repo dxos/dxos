@@ -7,13 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 import { expect } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { QuestionStore } from '../stores';
-import { answerOpenQuestions } from './answer-questions';
+import { QuestionStore } from '../stores/index.ts';
+import { answerOpenQuestions } from './answer-questions.ts';
 
 const TestLayer = (answer?: string) =>
   Layer.mergeAll(QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));
@@ -108,18 +109,44 @@ const fact = (id: string): RDF.Fact => ({
  * Routes the two LLM calls the answer path makes: the query-generation prompt returns an
  * unconstrained query (match everything), the answer prompt returns the canned answer.
  */
+/** Concatenated user text of a prompt, which is what the routing below keys on. */
+const promptText = (prompt: Prompt.Prompt): string => {
+  let text = '';
+  for (const message of prompt.content) {
+    if (message.role === 'system') {
+      continue;
+    }
+    for (const part of message.content) {
+      if (part.type === 'text') {
+        text += part.text;
+      }
+    }
+  }
+  return text;
+};
+
 const fakeAi = (answer?: string): Layer.Layer<AiService.AiService> =>
   Layer.succeed(AiService.AiService, {
-    // The @effect/ai LanguageModel surface is large and external; this test fake fills only the
-    // methods the answer path calls.
+    // Built through `LanguageModel.make` rather than as a literal service object: the interface is
+    // branded and its methods are self-referential generics, so only the provider-level hooks can
+    // be supplied concretely. `generateObject` is derived from the text the hook returns, hence the
+    // JSON body.
     model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.succeed({ text: '', content: [] }),
-        generateObject: (request: { prompt: string }) =>
-          Effect.succeed({
-            value: request.prompt.includes('Answer the question') ? (answer ? { answer } : {}) : {},
-            content: [],
-          }),
-        streamText: () => Stream.empty,
-      } as any),
+      Layer.effect(
+        LanguageModel.LanguageModel,
+        LanguageModel.make({
+          generateText: ({ prompt }) =>
+            Effect.succeed([
+              {
+                type: 'text',
+                // The query-generation prompt wants an unconstrained query; only the answer prompt
+                // carries the canned answer.
+                text: JSON.stringify(
+                  promptText(prompt).includes('Answer the question') ? (answer ? { answer } : {}) : {},
+                ),
+              },
+            ]),
+          streamText: () => Stream.empty,
+        }),
+      ),
   });

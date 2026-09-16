@@ -17,7 +17,7 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
 
 /**
  * Find the option a ref-like form value points at. Matches on the local (entity-id) form so a bare local EID
- * (`echo:/<id>`, produced by `Ref.make`) still resolves against an option keyed by the entity's qualified
+ * (`echo:///<id>`, produced by `Ref.make`) still resolves against an option keyed by the entity's qualified
  * self URI (`echo://<space>/<id>`). Returns `undefined` when the value is not a ref or no option matches.
  *
  * Comparing by entity id is only sound within one space (ids are unique there, not globally). Two EIDs that

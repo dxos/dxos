@@ -10,8 +10,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Button } from '@dxos/react-ui';
 
-import { PlaygroundRoles } from '../roles';
-import { LogOperation } from './schema';
+import { PlaygroundRoles } from '../roles.ts';
+import { LogOperation } from './schema.ts';
 
 export const Logger = () => {
   const { invokePromise } = useOperationInvoker();

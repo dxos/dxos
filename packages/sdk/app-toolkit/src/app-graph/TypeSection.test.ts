@@ -9,8 +9,8 @@ import { describe, test } from 'vitest';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { DXN, Type } from '@dxos/echo';
 
-import * as GraphPath from '../app/GraphPath';
-import * as TypeSection from './TypeSection';
+import * as GraphPath from '../app/GraphPath.ts';
+import * as TypeSection from './TypeSection.ts';
 
 class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.testbook', '0.1.0'))(
   Schema.Struct({ title: Schema.String.pipe(Schema.optional) }),

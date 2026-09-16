@@ -76,6 +76,25 @@ export namespace QueryPlan {
      * covers positioned blocks only.
      */
     feedCursorRange?: { begin?: string; end?: string };
+
+    /**
+     * Set when the planner has proved the step's {@link limit} can be applied by the feed scan
+     * itself — see `feedScanForLimit`. Absent means the limit must be applied downstream, after the
+     * steps that would otherwise slice candidates out of an already-capped page.
+     */
+    feedScan?: FeedScan;
+  };
+
+  /**
+   * How a feed scan must run for a `limit` pushed into it to keep the same rows the unpushed plan
+   * would have returned.
+   */
+  export type FeedScan = {
+    /** Natural order the scan produces, matching the plan's `OrderStep`. */
+    direction: 'asc' | 'desc';
+
+    /** Deleted state the scan filters to, folding in the plan's `FilterDeletedStep`. */
+    deleted?: boolean;
   };
 
   /**

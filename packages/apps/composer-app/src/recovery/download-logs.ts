@@ -4,7 +4,12 @@
 
 import { IdbLogStore } from '@dxos/log-store-idb';
 
-import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, exportManualLogDownload, triggerNdjsonDownload } from '../util';
+import {
+  LOG_STORE_DB_NAME,
+  LOG_STORE_MAX_BYTES,
+  exportManualLogDownload,
+  triggerNdjsonDownload,
+} from '../util/index.ts';
 
 /** Export NDJSON logs from the IDB log collector and save them to disk. */
 export const downloadRecoveryLogs = async (): Promise<{ byteLength: number; saved: boolean }> => {

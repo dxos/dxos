@@ -6,7 +6,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { type KanbanCardProps, useKanbanBoard } from '#components';
@@ -39,45 +39,40 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
     );
 
     return (
-      <Menu.Root>
-        <Mosaic.Tile
-          asChild
-          id={model.getItemId(data)}
-          data={data}
-          location={location}
-          debug={debug}
-          draggable={draggable}
-          dragHandle={dragHandle}
-        >
-          <Focus.Item asChild>
-            <Card.Root ref={forwardedRef} data-testid='board-item'>
-              <Card.Header>
-                <Card.DragHandle ref={dragHandleRef} />
-                <Card.Title>{Obj.getLabel(data)}</Card.Title>
-                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Card.Block end>
-                  <Menu.Trigger asChild disabled={!menuItems?.length}>
-                    <IconButton
-                      iconOnly
-                      variant='ghost'
-                      icon='ph--dots-three-vertical--regular'
-                      label={t('action-menu.label')}
-                    />
-                  </Menu.Trigger>
-                  <Menu.Content items={menuItems} />
-                </Card.Block>
-              </Card.Header>
-              <Card.Body>
-                <Card.Row fullWidth>
-                  <pre className='p-2 text-xs text-description whitespace-pre-wrap'>
-                    {JSON.stringify(data, null, 2)}
-                  </pre>
-                </Card.Row>
-              </Card.Body>
-            </Card.Root>
-          </Focus.Item>
-        </Mosaic.Tile>
-      </Menu.Root>
+      <Mosaic.Tile
+        asChild
+        id={model.getItemId(data)}
+        data={data}
+        location={location}
+        debug={debug}
+        draggable={draggable}
+        dragHandle={dragHandle}
+      >
+        <Focus.Item asChild>
+          <Card.Root ref={forwardedRef} data-testid='board-item'>
+            <Card.Header>
+              <Card.DragHandle ref={dragHandleRef} />
+              <Card.Title>{Obj.getLabel(data)}</Card.Title>
+              {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+              <Card.Block end>
+                <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
+                  <IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--dots-three-vertical--regular'
+                    label={t('action-menu.label')}
+                  />
+                </ActionMenu>
+              </Card.Block>
+            </Card.Header>
+            <Card.Body>
+              <Card.Row fullWidth>
+                <pre className='p-2 text-xs text-description whitespace-pre-wrap'>{JSON.stringify(data, null, 2)}</pre>
+              </Card.Row>
+            </Card.Body>
+          </Card.Root>
+        </Focus.Item>
+      </Mosaic.Tile>
     );
   },
 );

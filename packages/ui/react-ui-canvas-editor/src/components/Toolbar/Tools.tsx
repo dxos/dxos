@@ -10,10 +10,10 @@ import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getCenter } from '../../layout';
-import { createId } from '../../testing';
-import { type ShapeRegistry } from '../Canvas';
+import { type DragDropPayload, useEditorContext } from '../../hooks/index.ts';
+import { getCenter } from '../../layout/index.ts';
+import { createId } from '../../testing/index.ts';
+import { type ShapeRegistry } from '../Canvas/index.ts';
 
 export type ToolsProps = ThemedClassName<{
   registry: ShapeRegistry;

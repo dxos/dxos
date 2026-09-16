@@ -59,9 +59,22 @@ const make = () =>
            "cardinalities" and : labels.
         4. If no drawing exists in context, create one first; then call generate with the
            mermaid source. Generation replaces the managed diagram — layout is automatic.
-        5. For manual touch-ups afterwards (moving a class, restyling an element), read the
+        5. Read the \`diagnostics\` in the result. Every \`error\` (nodes overlapping, a connector
+           drawn through a node, a label that does not fit) means the picture is wrong: shorten
+           labels, drop or split nodes, or reduce edges, then generate again. \`warning\`s
+           (crossings, bends) are quality hints — fewer is better, zero is not required.
+        6. For manual touch-ups afterwards (moving a class, restyling an element), read the
            scene and apply targeted edit commands; each class is a world object whose id is the
            class name, with title/attributes/methods elements.
+
+        ## Block diagrams
+
+        The same tool compiles a mermaid \`flowchart\` (TB or LR) for architecture and data-flow
+        diagrams: \`subgraph id [Label] … end\` groups, \`Id[Label]\` nodes, \`A --> B\` and
+        \`A -->|label| B\` edges. Add \`%% ref <Id> <target>\` lines to say what a node depicts:
+        an ECHO object reference opens when the node is activated; a URL or path is kept on the
+        node for tooling. Keep to ~14 nodes and 3 groups; split a larger system into several
+        drawings.
 
         When asked for the diagram source rather than a canvas rendering (e.g. to embed in a
         markdown document), return the same mermaid classDiagram in a fenced mermaid block.

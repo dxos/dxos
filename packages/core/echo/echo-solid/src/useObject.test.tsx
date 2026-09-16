@@ -13,7 +13,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { Registry } from '@dxos/effect-atom-solid';
 import { RegistryProvider } from '@dxos/effect-atom-solid';
 
-import { type ObjectUpdateCallback, useObject } from './useObject';
+import { type ObjectUpdateCallback, useObject } from './useObject.ts';
 
 const createWrapper = (registry: Registry.AtomRegistry) => {
   return (props: { children: JSX.Element }) => (

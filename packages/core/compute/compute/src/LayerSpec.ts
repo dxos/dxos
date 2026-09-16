@@ -8,7 +8,7 @@ import * as Types from 'effect/Types';
 
 import { SpaceId, type URI } from '@dxos/keys';
 
-import type * as Process from './Process';
+import type * as Process from './Process.ts';
 
 // @import-as-namespace
 

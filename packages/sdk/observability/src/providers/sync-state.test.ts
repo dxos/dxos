@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type Database } from '@dxos/echo';
 
-import { SyncStateTracker, foldSyncStates } from './sync-state';
+import { SyncStateTracker, foldSyncStates } from './sync-state.ts';
 
 const state = (overrides: Partial<Database.SyncState>): Database.SyncState => ({
   localDocumentCount: 0,

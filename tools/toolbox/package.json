@@ -31,7 +31,8 @@
     "deep-equal": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.sortby": "catalog:",
-    "sort-package-json": "catalog:"
+    "sort-package-json": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@types/deep-equal": "catalog:",

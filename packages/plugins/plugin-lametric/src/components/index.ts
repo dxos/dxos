@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './VirtualLaMetric';
+export * from './VirtualLaMetric/index.ts';

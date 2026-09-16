@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { type StateError, StateStore, type Type } from '@dxos/crawler';
 import { Stage } from '@dxos/pipeline';
 
-import { MessageStore } from '../stores';
+import { MessageStore } from '../stores/index.ts';
 
 const toStored = (target: Type.Target, message: Type.Message): MessageStore.StoredMessage => ({
   id: message.id,

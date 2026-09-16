@@ -4,10 +4,10 @@
 
 import { type ZoomTransform, zoomIdentity } from 'd3';
 
-import { FractionUtil } from './fraction';
-import { type Fraction } from './fraction';
-import { type Point, type Rect } from './types';
-import { type Bounds, type Vertex } from './vector';
+import { FractionUtil } from './fraction.ts';
+import { type Fraction } from './fraction.ts';
+import { type Point, type Rect } from './types.ts';
+import { type Bounds, type Vertex } from './vector.ts';
 
 /**
  * Scale to map vector space to view (screen) space.

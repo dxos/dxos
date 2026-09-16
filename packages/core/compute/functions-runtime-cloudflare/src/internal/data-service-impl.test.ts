@@ -9,7 +9,7 @@ import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { DataServiceImpl } from './data-service-impl';
+import { DataServiceImpl } from './data-service-impl.ts';
 
 describe('DataServiceImpl', () => {
   test('subscribe emits the ready beacon first', async ({ expect }) => {

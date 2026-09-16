@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
 
-import { type QueryInfo, removeEmpty } from '../../../hooks';
-import { type CustomPanelProps, Panel } from '../Panel';
-import { Duration } from '../util';
+import { type QueryInfo, removeEmpty } from '../../../hooks/index.ts';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
+import { Duration } from '../util.tsx';
 
 // TODO(burdon): Sort by time? Filter inactive?
 export const QueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: QueryInfo[] }>) => {

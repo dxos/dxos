@@ -13,7 +13,7 @@ import {
   runItemsBench,
   selectVariants,
   summarizeThread,
-} from '../testing/harness';
+} from '../testing/harness/index.ts';
 
 describe.skipIf(!fixtureExists())('summarize threads (multi-model)', () => {
   test(

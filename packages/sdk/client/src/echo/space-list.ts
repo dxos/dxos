@@ -23,15 +23,18 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { Invitation, type Space as SerializedSpace, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Space as SerializedSpace } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { RPC_TIMEOUT } from '../common';
-import { InvitationsProxy } from '../invitations';
-import { SpaceProxy } from './space-proxy';
+import { RPC_TIMEOUT } from '../common.ts';
+import { InvitationsProxy } from '../invitations/index.ts';
+import { SpaceProxy } from './space-proxy.ts';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
@@ -92,7 +95,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._setupSpacesStream();
     });
 
-    await this._setupInvitationProxy();
+    // Not awaited: its initial snapshot is not needed to use spaces, and awaiting it put the whole
+    // app boot behind the invitations stream, so a stalled snapshot made the app unbootable.
+    void this._setupInvitationProxy().catch((error) => log.warn('failed to open invitation proxy', { error }));
 
     // Subscribe to spaces and create proxies.
     const gotInitialUpdate = new Trigger();
@@ -109,15 +114,18 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * Set up the invitation proxy. Called on initial open and reconnect.
    */
   private async _setupInvitationProxy(): Promise<void> {
-    await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
+    const previous = this._invitationProxy;
+    // Assigned before the first await: the caller no longer waits for this method, so `join` would
+    // otherwise see a window where the proxy is missing and throw 'Client not open.'.
     this._invitationProxy = new InvitationsProxy(
       this._serviceProvider.services.InvitationsService,
       this._serviceProvider.services.IdentityService,
       () => ({
-        kind: Invitation.Kind.SPACE,
+        kind: Invitation_Kind.SPACE,
       }),
     );
+    await previous?.close();
     await this._invitationProxy.open();
   }
 
@@ -141,7 +149,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       // `querySpaces` always emits a full snapshot, so absence means the space is gone.
       for (let index = newSpaces.length - 1; index >= 0; --index) {
         const spaceProxy = newSpaces[index];
-        if (!incoming.some((space) => space.spaceKey.equals(spaceProxy.key))) {
+        if (!incoming.some((space) => requirePublicKey(space.spaceKey).equals(spaceProxy.key))) {
           newSpaces.splice(index, 1);
           void spaceProxy._destroy();
           emitUpdate = true;
@@ -153,7 +161,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           return;
         }
 
-        let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
+        let spaceProxy = newSpaces.find(({ key }) => key.equals(requirePublicKey(space.spaceKey))) as
+          | SpaceProxy
+          | undefined;
         if (!spaceProxy) {
           spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient, this._runtime);
 
@@ -191,7 +201,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     };
 
     this._streamSubscriptions.add(
-      subscribeStream(this._runtime, this._serviceProvider.rpc['SpacesService.querySpaces'](undefined), { onData }),
+      subscribeStream(this._runtime, this._serviceProvider.rpc['SpacesService.querySpaces'](undefined), {
+        onData: (data) => onData({ spaces: data.spaces }),
+      }),
     );
   }
 
@@ -276,7 +288,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     );
 
     await this._spaceCreated.waitForCondition(() => {
-      return this.get().some(({ key }) => key.equals(space.spaceKey));
+      return this.get().some(({ key }) => key.equals(requirePublicKey(space.spaceKey)));
     });
     const spaceProxy = this._findProxy(space);
 
@@ -328,12 +340,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._serviceProvider.rpc['SpacesService.joinBySpaceKey']({ spaceKey }),
       { label: 'SpacesService.joinBySpaceKey' },
     );
+    const space = response.space ?? failedInvariant();
     // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race —
     // same wait `createSpace` and `import` do before resolving their proxy.
     await this._spaceCreated.waitForCondition(() => {
-      return this.get().some(({ key }) => key.equals(response.space.spaceKey));
+      return this.get().some(({ key }) => key.equals(requirePublicKey(space.spaceKey)));
     });
-    return this._findProxy(response.space);
+    return this._findProxy(space);
   }
 
   // Odd way to define methods types from a typedef.
@@ -348,6 +361,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   private _findProxy(space: SerializedSpace): SpaceProxy {
-    return (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
+    return (
+      (this.get().find(({ key }) => key.equals(requirePublicKey(space.spaceKey))) as SpaceProxy) ?? failUndefined()
+    );
   }
 }

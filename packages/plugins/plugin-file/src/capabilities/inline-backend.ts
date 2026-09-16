@@ -14,7 +14,7 @@ import { FileCapabilities } from '#types';
  * Exported standalone for direct testing.
  */
 export const inlineBackend: FileCapabilities.Backend = {
-  name: 'Inline (ECHO)',
+  name: 'ECHO',
   description: 'Store the file bytes directly inside the ECHO document. Capped at 4MB; images, videos, and PDFs only.',
   storage: Blob.Storage.inline,
 };

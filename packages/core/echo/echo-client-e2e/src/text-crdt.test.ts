@@ -20,7 +20,7 @@ describe('Text (database)', () => {
     test('replaces the value', ({ expect }) =>
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'hello' }));
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           Text.update(obj, 'name', 'goodbye');
         });
         expect(obj.name).toBe('goodbye');
@@ -32,7 +32,7 @@ describe('Text (database)', () => {
     test('inserts at an index and returns the empty removed substring', ({ expect }) =>
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'helloworld' }));
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           expect(Text.splice(obj, 'name', 5, 0, ' ')).toBe('');
         });
         expect(obj.name).toBe('hello world');
@@ -41,7 +41,7 @@ describe('Text (database)', () => {
     test('deletes and returns the removed substring', ({ expect }) =>
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'hello world' }));
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           expect(Text.splice(obj, 'name', 5, 6)).toBe(' world');
         });
         expect(obj.name).toBe('hello');
@@ -50,7 +50,7 @@ describe('Text (database)', () => {
     test('replaces in place', ({ expect }) =>
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'hello world' }));
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           expect(Text.splice(obj, 'name', 6, 5, 'there')).toBe('world');
         });
         expect(obj.name).toBe('hello there');
@@ -59,7 +59,7 @@ describe('Text (database)', () => {
     test('start past end appends', ({ expect }) =>
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'abc' }));
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           expect(Text.splice(obj, 'name', 100, 0, 'def')).toBe('');
         });
         expect(obj.name).toBe('abcdef');
@@ -70,7 +70,7 @@ describe('Text (database)', () => {
     test('replaces the first occurrence', ({ expect }) =>
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'foo foo foo' }));
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           Text.apply(obj, 'name', [{ oldString: 'foo', newString: 'bar' }]);
         });
         expect(obj.name).toBe('bar foo foo');
@@ -79,7 +79,7 @@ describe('Text (database)', () => {
     test('replaces all occurrences', ({ expect }) =>
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'foo foo foo' }));
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           Text.apply(obj, 'name', [{ oldString: 'foo', newString: 'bar', replaceAll: true }]);
         });
         expect(obj.name).toBe('bar bar bar');
@@ -89,7 +89,7 @@ describe('Text (database)', () => {
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'hello' }));
         let result = '';
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           result = Text.apply(obj, 'name', [{ newString: ' world' }]);
         });
         expect(result).toBe('hello world');
@@ -100,7 +100,7 @@ describe('Text (database)', () => {
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'hello' }));
         expect(() =>
-          Obj.update(obj, () => {
+          Obj.update(obj, (obj) => {
             Text.apply(obj, 'name', [{ oldString: 'missing', newString: 'x' }]);
           }),
         ).toThrow();
@@ -125,7 +125,7 @@ describe('Text (database)', () => {
         // Anchor a cursor on 'W' (index 6). A whole-string replace would invalidate it.
         const cursor = A.getCursor(accessor.handle.doc(), accessor.path.slice(), 6);
 
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           Text.splice(obj, 'name', 0, 0, 'Say: ');
         });
 
@@ -144,7 +144,7 @@ describe('Text (database)', () => {
         const cursor = A.getCursor(accessor.handle.doc(), accessor.path.slice(), 0);
 
         // `A.updateText` rewrites only the changed suffix ('World' -> 'Mars'), so the earlier anchor holds.
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           Text.update(obj, 'name', 'Hello Mars');
         });
 

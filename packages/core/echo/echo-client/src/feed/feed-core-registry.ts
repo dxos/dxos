@@ -5,7 +5,7 @@
 import { type Entity } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 
-import { type FeedObjectCore } from './feed-object-core';
+import { type FeedObjectCore } from './feed-object-core.ts';
 
 /**
  * Identity map from feed-object id to its live {@link FeedObjectCore}, held weakly.

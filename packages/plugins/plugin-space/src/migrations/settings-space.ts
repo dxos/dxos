@@ -101,6 +101,41 @@ const writeSpacesOrder = (ordering: Expando.Expando, order: readonly string[]): 
   });
 };
 
+/** Whether an object is the cross-space ordering Expando. Pairs with {@link readSpacesOrder}. */
+export const isSpacesOrder = (object: Obj.Unknown): boolean =>
+  Obj.instanceOf(Expando.Expando, object) && object.key === SpaceSchema.SHARED;
+
+/**
+ * Fold a duplicate settings space's cross-space ordering into the canonical one before the
+ * duplicate is removed: ids the canonical ordering already carries keep their position, ids only
+ * the duplicate knows are appended, so no space drops out of the navtree when its entry lived in
+ * the losing copy.
+ *
+ * @returns Whether the duplicate's ordering is now carried by the canonical space. False means the
+ * merge could not run (e.g. the canonical is closing) — the caller must keep the duplicate, since
+ * deleting it would destroy the only copy of its ordering.
+ */
+export const mergeSpacesOrder = Effect.fnUntraced(function* (canonical: Space, duplicate: Space) {
+  const duplicateOrder = yield* readSpacesOrder(duplicate);
+  if (duplicateOrder.length === 0) {
+    return true;
+  }
+
+  // `ensureSpacesOrder` swallows a closing-canonical failure into `undefined`; with an order left
+  // to carry that must read as "not merged", never as done.
+  const ordering = yield* ensureSpacesOrder(canonical);
+  if (!ordering) {
+    return false;
+  }
+
+  const canonicalOrder = yield* readSpacesOrder(canonical);
+  const missing = duplicateOrder.filter((id) => !canonicalOrder.includes(id));
+  if (missing.length > 0) {
+    writeSpacesOrder(ordering, [...canonicalOrder, ...missing]);
+  }
+  return true;
+});
+
 /** A destroyed or closing space rejects writes; anything else is a real database failure. */
 const isSpaceClosingError = (err: unknown): boolean =>
   /clos|destroy/i.test(err instanceof Error ? err.message : String(err));

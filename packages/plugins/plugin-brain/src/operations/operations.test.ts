@@ -12,8 +12,8 @@ import { AiService } from '@dxos/ai';
 import { EffectEx } from '@dxos/effect';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { queryCompactFacts } from './query-facts';
-import { summarizeSubject } from './summarize-subject';
+import { queryCompactFacts } from './query-facts.ts';
+import { summarizeSubject } from './summarize-subject.ts';
 
 const makeFact = (options: {
   id: string;

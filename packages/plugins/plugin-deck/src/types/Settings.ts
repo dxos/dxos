@@ -20,13 +20,6 @@ export const Settings = Schema.Struct({
       description: 'Redirect supported URLs to the native desktop application.',
     }),
   ),
-  loadedWorkspaces: Schema.optional(
-    Schema.Number.annotate({
-      title: 'Workspaces kept loaded',
-      description:
-        'How many recently visited workspaces keep their navigation tree in memory. Older ones are unloaded and rebuilt when you return to them.',
-    }),
-  ),
   flatten: Schema.optional(
     Schema.Boolean.annotate({
       title: 'Flatten deck',

@@ -28,15 +28,15 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
-import * as Binding from '../../Binding';
-import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
-import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
-import * as SyncTemplate from '../../SyncTemplate';
-import { autoSyncConnection } from './auto-sync';
-import { createSingleCursor } from './create-single-cursor';
-import { beginOAuthFlow, decodeOAuthMessageData, isOAuthShapedMessage } from './oauth';
-import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
-import { reconcileCursors } from './reconcile-cursors';
+import * as Binding from '../../Binding.ts';
+import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants.ts';
+import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors.ts';
+import * as SyncTemplate from '../../SyncTemplate.ts';
+import { autoSyncConnection } from './auto-sync.ts';
+import { createSingleCursor } from './create-single-cursor.ts';
+import { beginOAuthFlow, decodeOAuthMessageData, isOAuthShapedMessage } from './oauth.ts';
+import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot.ts';
+import { reconcileCursors } from './reconcile-cursors.ts';
 
 /**
  * Pending connection awaiting an OAuth callback.

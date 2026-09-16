@@ -16,7 +16,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });

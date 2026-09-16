@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Operation from '../Operation';
-import { Fibonacci } from './definitions';
+import * as Operation from '../Operation.ts';
+import { Fibonacci } from './definitions.ts';
 
 export default Fibonacci.pipe(
   Operation.withHandler(

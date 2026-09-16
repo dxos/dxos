@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './toolbox';
-export * from './util';
+export * from './toolbox.ts';
+export * from './util/index.ts';

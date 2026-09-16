@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { splitStatements } from './SqlMigrations';
+import { splitStatements } from './SqlMigrations.ts';
 
 describe('splitStatements', () => {
   test('splits on statement boundaries and drops empty trailing statements', () => {

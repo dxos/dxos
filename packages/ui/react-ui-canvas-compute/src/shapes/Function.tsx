@@ -6,8 +6,7 @@ import React, { useCallback, useRef } from 'react';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
-import { Filter, Ref } from '@dxos/echo';
-import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { parseId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import {
@@ -17,9 +16,9 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { Box } from './common';
-import { type FunctionShape } from './function-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box } from './common/index.ts';
+import { type FunctionShape } from './function-def.ts';
 
 //
 // Component
@@ -42,7 +41,7 @@ export const FunctionShapeComponent = ({ shape, title, ...props }: FunctionShape
 
       const space = client.spaces.get(spaceId);
       const object = space?.db.query(Filter.id(objectId)).runSync()[0];
-      if (!space || !isInstanceOf(Script.Script, object)) {
+      if (!space || !Obj.instanceOf(Script.Script, object)) {
         return;
       }
 

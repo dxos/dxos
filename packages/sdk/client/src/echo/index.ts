@@ -13,11 +13,12 @@ export {
   createSubscription,
 } from '@dxos/echo-client';
 
-export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+export { type IndexKind, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+export { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+export { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+export { type SpaceMember as HaloSpaceMember, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 export { type SpaceSyncState } from '@dxos/echo-client';
 
-export { type ImportSpaceOptions, importSpace } from './import';
-export { type PeerSyncState, type SpaceSyncStateMap, getSyncSummary } from './util';
-export { getSpace } from './space-proxy';
+export { type ImportSpaceOptions, importSpace } from './import.ts';
+export { type PeerSyncState, type SpaceSyncStateMap, getSyncSummary } from './util.ts';
+export { getSpace } from './space-proxy.ts';

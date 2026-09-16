@@ -10,6 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { Generation, GenerationService, StudioCapabilities, StudioOperation, Variant } from '#types';
@@ -63,6 +64,13 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
         ...(config ?? {}),
         ...(count !== undefined ? { count } : {}),
       };
+      // The submitted config becomes the artifact's request: the compose form reopens on what was
+      // last asked for, whichever client or agent asked.
+      if (config) {
+        Obj.update(artifactObj, (artifactObj) => {
+          artifactObj.request = config;
+        });
+      }
 
       // Publish a progress monitor when the app registry is present (absent in headless tests); the
       // provider drives it via `onProgress`, and the meter's cancel aborts the in-flight request.
@@ -75,6 +83,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
       const options: GenerationService.GenerateOptions = {
         apiKey,
         signal: controller.signal,
+        load: (ref) => EffectEx.runPromise(Database.load(ref)),
         onProgress: ({ current, total }) => {
           if (total !== undefined) {
             monitor?.total(total);
@@ -103,10 +112,10 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
             config,
             generation: makeGeneration(data),
           });
-          Obj.setParent(created, artifactObj);
           yield* Database.add(created);
           Obj.update(artifactObj, (artifactObj) => {
-            artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(created)];
+            artifactObj.variants ??= [];
+            artifactObj.variants.push(Ref.make(created));
             if (!artifactObj.cover) {
               artifactObj.cover = Ref.make(created);
             }
@@ -126,10 +135,10 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
             const enqueued = yield* Effect.tryPromise({ try: () => enqueue(request, options), catch: toError });
             jobId = enqueued.jobId;
             const created = Variant.make({ name, config, jobId });
-            Obj.setParent(created, artifactObj);
             yield* Database.add(created);
             Obj.update(artifactObj, (artifactObj) => {
-              artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(created)];
+              artifactObj.variants ??= [];
+              artifactObj.variants.push(Ref.make(created));
             });
             pending = created;
           }

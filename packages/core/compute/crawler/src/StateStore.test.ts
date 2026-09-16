@@ -8,10 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
-
-import * as StateStore from './StateStore';
-import type * as Type from './types';
+import * as StateStore from './StateStore.ts';
+import type * as Type from './types.ts';
 
 const target = (id: string, over: Partial<Type.Target> = {}): Type.Target => ({
   id,
@@ -95,10 +93,7 @@ describe('StateStore', () => {
   suite('memory', StateStore.layerMemory);
   suite(
     'sql',
-    StateStore.layerSql.pipe(
-      Layer.provideMerge(SqlTransaction.layer),
-      Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
-    ),
+    StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
   );
 
   it.effect(
@@ -108,9 +103,7 @@ describe('StateStore', () => {
       // `Effect.provide` builds with its own memo map, so passing the same layer value twice would
       // open two `:memory:` databases -- build the client once and provide the resulting context
       // (`Layer.memoize` is gone in v4).
-      const client = SqlTransaction.layer.pipe(
-        Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
-      );
+      const client = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie);
       yield* Effect.scoped(
         Effect.gen(function* () {
           const shared = yield* Layer.build(client);

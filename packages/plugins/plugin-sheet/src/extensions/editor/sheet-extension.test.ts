@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 
 import { defaultFunctions } from '@dxos/compute-hyperformula';
 
-import { sheetExtension } from './sheet-extension';
+import { sheetExtension } from './sheet-extension.ts';
 
 describe('formula parser', () => {
   const {

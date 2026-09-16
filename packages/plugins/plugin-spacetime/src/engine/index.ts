@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './boolean-ops';
-export * from './extrusion';
-export * from './glb-import';
-export * from './obj-import';
-export * from './manifold-context';
-export * from './presets';
-export * from './mesh-converter';
-export * from './mesh-serializer';
-export * from './scene-manager';
-export * from './stl-export';
+export * from './boolean-ops.ts';
+export * from './extrusion.ts';
+export * from './glb-import.ts';
+export * from './obj-import.ts';
+export * from './manifold-context.ts';
+export * from './presets.ts';
+export * from './mesh-converter.ts';
+export * from './mesh-serializer.ts';
+export * from './scene-manager.ts';
+export * from './stl-export.ts';

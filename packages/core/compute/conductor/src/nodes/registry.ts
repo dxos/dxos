@@ -8,7 +8,6 @@ import { JSONPath } from 'jsonpath-plus';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
-import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -35,10 +34,10 @@ import {
   VoidOutput,
   defineComputeNode,
   synchronizedComputeFunction,
-} from '../types';
-import { gptNode } from './gpt';
-import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
-import { templateNode } from './template';
+} from '../types/index.ts';
+import { gptNode } from './gpt/index.ts';
+import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system.ts';
+import { templateNode } from './template/index.ts';
 
 export const isFalsy = (value: any) =>
   value === 'false' ||
@@ -241,7 +240,7 @@ export const registry: Record<NodeType, Executable> = {
           }
 
           const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
-          if (isInstanceOf(View.View, container)) {
+          if (Obj.instanceOf(View.View, container)) {
             const schemaTypeUri = getTypeURIFromQuery(container.query.ast);
             const types = yield* Database.query(Filter.type(Type.Type)).run;
             const type = types.find((t) => Type.getURI(t) === schemaTypeUri);

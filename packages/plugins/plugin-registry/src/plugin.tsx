@@ -15,8 +15,9 @@ import {
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
+import type { RegistryPluginOptions } from '#types';
 
-export const RegistryPlugin = Plugin.define(meta).pipe(
+export const RegistryPlugin = Plugin.define<RegistryPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(Commands),
   Plugin.addModule(DevPluginLoader),

@@ -1,0 +1,54 @@
+%% packages/core/compute — package dependency and data-flow map (edges point at what a package depends on).
+flowchart TB
+  subgraph Primitives [Primitives]
+    Ai[ai: models, providers]
+    Compute[compute umbrella]
+    OperationPkg[operation invoker]
+    McpClient[mcp-client]
+  end
+  subgraph Runtime [Runtime and hosts]
+    ComputeRuntime[compute-runtime]
+    EdgeCompute[edge-compute]
+    CfRuntime[functions-runtime-cf]
+    Conductor[conductor graphs]
+    McpServer[mcp-server]
+  end
+  subgraph Agents [Agents and pipelines]
+    AgentRuntime[agent-runtime]
+    Assistant[assistant]
+    AssistantToolkit[assistant-toolkit]
+    Link[link: cursors, creds]
+    Pipeline[pipeline]
+  end
+  Compute --> Ai
+  OperationPkg --> Compute
+  McpClient --> Ai
+  ComputeRuntime -->|processes, triggers| Compute
+  ComputeRuntime --> OperationPkg
+  ComputeRuntime --> Link
+  Link --> Pipeline
+  EdgeCompute -->|remote seams| ComputeRuntime
+  EdgeCompute --> CfRuntime
+  Conductor -->|graph nodes| Compute
+  Conductor --> Assistant
+  McpServer -->|ops as tools| Compute
+  AgentRuntime -->|spawns processes| ComputeRuntime
+  AgentRuntime -->|AgentService impl| Compute
+  Assistant --> ComputeRuntime
+  Assistant --> McpClient
+  AssistantToolkit --> Assistant
+  AssistantToolkit --> AgentRuntime
+  %% ref Ai packages/core/compute/ai
+  %% ref Compute packages/core/compute/compute
+  %% ref OperationPkg packages/core/compute/operation
+  %% ref McpClient packages/core/compute/mcp-client
+  %% ref ComputeRuntime packages/core/compute/compute-runtime
+  %% ref EdgeCompute packages/core/compute/edge-compute
+  %% ref CfRuntime packages/core/compute/functions-runtime-cloudflare
+  %% ref Conductor packages/core/compute/conductor
+  %% ref McpServer packages/core/compute/mcp-server
+  %% ref AgentRuntime packages/core/compute/agent-runtime
+  %% ref Assistant packages/core/compute/assistant
+  %% ref AssistantToolkit packages/core/compute/assistant-toolkit
+  %% ref Link packages/core/compute/link
+  %% ref Pipeline packages/core/compute/pipeline

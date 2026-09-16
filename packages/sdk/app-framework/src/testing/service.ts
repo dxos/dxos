@@ -7,8 +7,8 @@ import * as Layer from 'effect/Layer';
 
 import { invariant } from '@dxos/invariant';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { Plugin, PluginManager } from '../core';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { Plugin, PluginManager } from '../core/index.ts';
 
 /**
  * Creates a Plugin.Service layer from a list of plugins.

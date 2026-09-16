@@ -13,7 +13,7 @@ tasks:
   # surface — only a node-conditioned `#capabilities` barrel does.
   check-module-structure:
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./TripPlugin
       --to "{react,react-dom}"
       --conditions workerd,worker

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Config } from '@dxos/client';
 import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 
-import * as Account from './Account';
+import * as Account from './Account.ts';
 
 describe('getHubUrl', () => {
   test('prefers the bundler-set app env over the services key', ({ expect }) => {

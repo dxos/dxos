@@ -10,7 +10,7 @@ import path from 'node:path';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { INITIAL_URL } from './app-manager';
+import { INITIAL_URL } from './app-manager.ts';
 import {
   appendBenchmarkRow,
   appendRunSample,
@@ -19,7 +19,7 @@ import {
   trackNetwork,
   waitForReady,
   writeReport,
-} from './harness-helpers';
+} from './harness-helpers.ts';
 
 // Surface the DX_PWA requirement as a test-level failure rather than a hard
 // `process.exit` at spec-collection time — keeps the playwright report and

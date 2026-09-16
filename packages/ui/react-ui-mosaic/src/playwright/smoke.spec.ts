@@ -6,7 +6,7 @@ import { type Page, expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { BoardManager } from './board-manager';
+import { BoardManager } from './board-manager.ts';
 
 const PORT = 9008;
 const STORY_URL = storybookUrl('ui-react-ui-mosaic-board--spec', PORT);
@@ -17,9 +17,10 @@ const BELOW_OFFSET = 50;
 test.describe('Board', () => {
   let page: Page;
   let board: BoardManager;
+  let close: () => Promise<void>;
 
   test.beforeEach(async ({ browser }) => {
-    ({ page } = await setupPage(browser, { url: STORY_URL }));
+    ({ page, close } = await setupPage(browser, { url: STORY_URL }));
     // Generous, and explicit: storybook compiles the story on first request, so whichever test runs
     // first pays it. Waiting here attributes a slow story load to this locator rather than reporting a
     // bare `beforeEach` timeout.
@@ -28,7 +29,7 @@ test.describe('Board', () => {
   });
 
   test.afterEach(async () => {
-    await page.close();
+    await close();
   });
 
   test('rearrange columns', async () => {

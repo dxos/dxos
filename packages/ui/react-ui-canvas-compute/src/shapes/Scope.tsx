@@ -9,8 +9,8 @@ import { useAudioStream } from '@dxos/react-ui-audio';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import { Chaos, shaderPresets } from '@dxos/react-ui-experimental';
 
-import { useComputeNodeState } from '../hooks';
-import { type ScopeShape } from './scope-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { type ScopeShape } from './scope-def.ts';
 
 export const ScopeComponent = ({ shape }: ShapeComponentProps<ScopeShape>) => {
   const { runtime } = useComputeNodeState(shape);

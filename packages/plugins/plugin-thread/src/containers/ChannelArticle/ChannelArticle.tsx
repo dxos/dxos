@@ -10,10 +10,11 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
@@ -69,7 +70,13 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     if (!callProvider || !id) {
       return;
     }
-    await callProvider.join(id);
+    try {
+      await callProvider.join(id);
+    } catch (err) {
+      // The menu action fires this without awaiting, so a failed join (e.g. the transport rejects
+      // the room) must be reported here rather than surface as an unhandled rejection.
+      log.catch(err);
+    }
   }, [callProvider, id]);
 
   const menuActions = useMenuBuilder(() => {
@@ -107,13 +114,9 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   return (
     <Panel.Root role={role}>
       {canStartCall && (
-        <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} attendableId={attendableId} />
+        </Panel.Toolbar>
       )}
       {showCall ? (
         <Panel.Content>

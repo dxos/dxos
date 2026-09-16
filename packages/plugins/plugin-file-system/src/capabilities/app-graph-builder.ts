@@ -26,8 +26,8 @@ import { Position, isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { findDirectoryById } from '../util';
-import type { FileSystemManager } from './state';
+import { findDirectoryById } from '../util.ts';
+import type { FileSystemManager } from './state/index.ts';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
 const GENERAL_TYPE = `${meta.profile.key}.general`;
@@ -282,12 +282,15 @@ export default Capability.makeModule(
 /** Graph-facing subset of FileSystemManager used to resolve markdown nodes. */
 type MarkdownResolver = Pick<FileSystemManager.FileSystemManager, 'markdownBindingAtom' | 'getByFileId'>;
 
+/** The node's `data`: a directory/file entry, its resolved markdown text, or `null` while pending. */
+type EntryNodeData = FileSystemCapabilities.FileSystemEntry | Text.Text | null;
+
 const constructEntryNode = (
   entry: FileSystemCapabilities.FileSystemEntry,
   fileSystemManager: MarkdownResolver,
   workspaceId: string,
   get: Atom.AtomContext,
-): AppGraphNode.NodeArg<any> | null => {
+): AppGraphNode.NodeArg<EntryNodeData> | null => {
   if (FileSystemCapabilities.isFileSystemDirectory(entry)) {
     return AppGraphNode.make({
       id: entry.id,

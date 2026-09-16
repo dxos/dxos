@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { multiple } from './util';
+import { multiple } from './util.ts';
 
 describe('random', () => {
   test('multiple', ({ expect }) => {

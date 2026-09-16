@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { SearchOperation } from '#types';
 
-import { SEARCH_DIALOG } from '../constants';
+import { SEARCH_DIALOG } from '../constants.ts';
 
 const handler: Operation.WithHandler<typeof SearchOperation.OpenSearch> = SearchOperation.OpenSearch.pipe(
   Operation.withHandler(

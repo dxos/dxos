@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction } from '@dxos/ui-types';
 
-import { withColumn } from './withColumn';
+import { withColumn } from './withColumn.ts';
 
 export type ColumnGap = 'sm' | 'md' | 'lg';
 

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { SystemIconButton, type ThemedClassName } from '@dxos/react-ui';
+import { Field, SystemIconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 //
@@ -44,13 +44,18 @@ type HomeSectionHeaderProps = ThemedClassName<
  * and an optional close affordance. `children` render before the close button so section-specific
  * controls (e.g. a range selector) sit inline with it.
  */
+// TODO(burdon): Use Form.Field?
 const HomeSectionHeader = forwardRef<HTMLDivElement, HomeSectionHeaderProps>(
   ({ title, onClose, classNames, children }, forwardedRef) => (
     <div ref={forwardedRef} className={mx('flex items-center gap-2', classNames)}>
       {title && <h2 className='grow truncate text-sm font-medium text-description'>{title}</h2>}
       {!title && <span className='grow' />}
       {children}
-      {onClose && <SystemIconButton.Close variant='ghost' iconOnly onClick={onClose} />}
+      {onClose && (
+        <Field.Block>
+          <SystemIconButton.Close variant='ghost' density='sm' iconOnly onClick={onClose} />
+        </Field.Block>
+      )}
     </div>
   ),
 );

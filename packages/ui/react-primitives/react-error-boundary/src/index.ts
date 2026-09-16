@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ErrorBoundary';
-export * from './ErrorFallback';
+export * from './ErrorBoundary.tsx';
+export * from './ErrorFallback.tsx';

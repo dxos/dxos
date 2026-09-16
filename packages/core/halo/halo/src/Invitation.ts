@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import { type IdentityDid, type SpaceId } from '@dxos/keys';
 
-import { type InvitationError } from './errors';
+import { type InvitationError } from './errors.ts';
 
 /**
  * Whether an invitation admits a device to an identity or a member to a space.

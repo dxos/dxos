@@ -15,9 +15,9 @@ import {
 } from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 
-import { MediaStreamRecorder } from '../capture';
-import { type PipelinePhase } from '../types';
-import { useAudioTrack } from './useAudioTrack';
+import { MediaStreamRecorder } from '../capture/index.ts';
+import { type PipelinePhase } from '../types.ts';
+import { useAudioTrack } from './useAudioTrack.ts';
 
 // Recorder chunk interval; the transcriber's chunk threshold derives from this.
 const RECORDER_INTERVAL_MS = 200;
@@ -31,7 +31,10 @@ const DEFAULT_TRANSCRIBE_CONFIG: TranscribeConfig = {
 };
 
 export type RecordingPipelineOptions = {
-  /** Override the transcriber chunk configuration. */
+  /**
+   * Transcriber configuration. Must carry `endpoint` (there is no built-in one); a transcriber
+   * without it rejects on `open()` with `TranscriptionEndpointNotConfiguredError`.
+   */
   config?: Partial<TranscribeConfig>;
   /** Re-segment ASR output into complete sentences before the pipeline (merges mid-sentence cuts). */
   segmentSentences?: boolean;

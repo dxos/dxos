@@ -8,7 +8,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { UnsupportedType } from './UnsupportedType';
+import { UnsupportedType } from './UnsupportedType.tsx';
 
 const meta = {
   title: 'plugins/plugin-preview/UnsupportedType',

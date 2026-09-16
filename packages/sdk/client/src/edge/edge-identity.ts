@@ -6,9 +6,11 @@ import * as Context from 'effect/Context';
 
 import { type EdgeIdentity } from '@dxos/edge-client';
 import { runServiceCall } from '@dxos/protocols';
+import { buf, requirePublicKey } from '@dxos/protocols/buf';
+import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type Client } from '../client';
-import { RPC_TIMEOUT } from '../common';
+import { type Client } from '../client/index.ts';
+import { RPC_TIMEOUT } from '../common.ts';
 
 export const createEdgeIdentity = (client: Client): EdgeIdentity => {
   const identity = client.halo.identity.get();
@@ -18,7 +20,7 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
   }
   return {
     identityDid: identity.did,
-    peerKey: device.deviceKey.toHex(),
+    peerKey: requirePublicKey(device.deviceKey).toHex(),
     presentCredentials: async ({ challenge }) => {
       const rpc = client.services.rpc;
       const authCredential = await runServiceCall(
@@ -29,7 +31,7 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
       return runServiceCall(
         Context.empty(),
         rpc['IdentityService.signPresentation']({
-          presentation: { credentials: [authCredential] },
+          presentation: buf.create(PresentationSchema, { credentials: [authCredential] }),
           nonce: challenge,
         }),
         { timeout: RPC_TIMEOUT, label: 'IdentityService.signPresentation' },

@@ -12,8 +12,9 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Task } from '@dxos/types';
 
-import * as Trigger from './types/Trigger';
+import * as Trigger from './types/Trigger.ts';
 
 /**
  * Writes ephemeral or persistent events to the trace.
@@ -63,7 +64,7 @@ export const EventType = <T>(
 /**
  * Extracts the payload type from an event type.
  */
-export type PayloadType<E extends EventType<any>> = E extends EventType<infer T> ? T : never;
+export type PayloadType<E extends EventType<unknown>> = E extends EventType<infer T> ? T : never;
 
 export const Event = Schema.Struct({
   timestamp: Schema.Number,
@@ -533,6 +534,53 @@ export const OperationOutput = EventType('operation.output', {
     output: Schema.Unknown,
   }),
   isEphemeral: true,
+});
+
+/**
+ * Emitted when a task's status changes — a new task counts as a change from nothing.
+ *
+ * Nothing else in a trace says which task an agent was working on, so these events are what cut a
+ * session's timeline into per-task segments. Every tool that moves a task's status emits one.
+ */
+export const TaskStatusChanged = EventType('task.statusChanged', {
+  schema: Schema.Struct({
+    taskId: Obj.ID,
+    title: Schema.String,
+    status: Task.Status,
+    /** Absent when the task was just created, or held no status before. */
+    previousStatus: Schema.optional(Task.Status),
+  }),
+  isEphemeral: false,
+});
+
+/**
+ * An agent put a question to a person and stopped on it. Paired with {@link QuestionAnswered}, the
+ * two bound the stretch a task spent blocked on someone else — the one gap in a session's timeline
+ * that is not the agent's own latency.
+ */
+export const QuestionAsked = EventType('question.asked', {
+  schema: Schema.Struct({
+    questionId: Obj.ID,
+    /** The question as put to the reader. */
+    text: Schema.String,
+    /** The task the question blocks. */
+    taskId: Schema.optional(Obj.ID),
+    /** How many pre-baked answers were offered; free-form is always available besides these. */
+    options: Schema.optional(Schema.Number),
+  }),
+  isEphemeral: false,
+});
+
+/** A person answered a {@link QuestionAsked}. */
+export const QuestionAnswered = EventType('question.answered', {
+  schema: Schema.Struct({
+    questionId: Obj.ID,
+    text: Schema.String,
+    taskId: Schema.optional(Obj.ID),
+    /** What the reader answered — a chosen option's title, or free-form text. */
+    answer: Schema.String,
+  }),
+  isEphemeral: false,
 });
 
 /**

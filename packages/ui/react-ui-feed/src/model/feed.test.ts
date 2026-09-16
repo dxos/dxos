@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { FeedModel, fromMessages } from './feed';
+import { FeedModel, fromMessages } from './feed.ts';
 
 const message = (role: 'user' | 'assistant', text: string) =>
   Message.make({ sender: { role, name: role }, blocks: [{ _tag: 'text', text }] });
@@ -23,6 +23,23 @@ describe('FeedModel', () => {
 
     model.setStops('prompt');
     expect(model.stops().map(({ index }) => index)).to.deep.eq([0, 2]);
+  });
+
+  test('a tool result is not a prompt, though it travels back with the user role', () => {
+    const model = fromMessages(
+      [
+        message('user', 'question'),
+        message('assistant', 'calling a tool'),
+        Message.make({
+          sender: { role: 'user' },
+          blocks: [{ _tag: 'text', text: '<result pid=1>…</result>', disposition: 'synthetic' }],
+        }),
+        message('assistant', 'answer'),
+      ],
+      { stops: 'prompt' },
+    );
+
+    expect(model.stops().map(({ index }) => index)).to.deep.eq([0]);
   });
 
   test('the model owns iteration: an edge asks the source, and the page arrives as a prepend', async () => {

@@ -21,8 +21,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { RoutineOperation } from '#types';
 
-import { makeRoutine } from '../util';
-import RunRoutineHandler from './run-routine';
+import { makeRoutine } from '../util/index.ts';
+import RunRoutineHandler from './run-routine.ts';
 
 /** Captures the input each run receives so the test can assert on it after the invocation. */
 const received: unknown[] = [];

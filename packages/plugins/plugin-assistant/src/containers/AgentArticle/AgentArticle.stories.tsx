@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Agent } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -28,7 +28,7 @@ import { Message, Organization, Outline, Person } from '@dxos/types';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AgentArticle } from './AgentArticle';
+import { AgentArticle } from './AgentArticle.tsx';
 
 random.seed(1);
 

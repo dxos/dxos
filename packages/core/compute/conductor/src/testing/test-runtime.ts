@@ -8,18 +8,19 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 
-import { GraphExecutor } from '../compiler';
+import { GraphExecutor } from '../compiler/index.ts';
 import {
   type ComputeGraphModel,
   type ComputeNode,
-  ComputeNodeContext,
+  type ComputeNodeContext,
   type ComputeRequirements,
   type ConductorError,
   type Executable,
   type ValueBag,
   type ValueRecord,
-} from '../types';
-import { WorkflowLoader } from '../workflow';
+  layerNoop as computeNodeContextLayerNoop,
+} from '../types/index.ts';
+import { WorkflowLoader } from '../workflow/index.ts';
 
 export class TestRuntime {
   // TODO(burdon): Index by DXN; ComputeGraph instances.
@@ -64,7 +65,7 @@ export class TestRuntime {
     return Effect.gen({ self: this }, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(graphUri));
       return yield* program.run(input);
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(computeNodeContextLayerNoop));
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
@@ -91,6 +92,6 @@ export class TestRuntime {
       }
 
       return result;
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(computeNodeContextLayerNoop));
   }
 }

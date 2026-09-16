@@ -31,7 +31,8 @@
     "@dxos/node-std": "workspace:*",
     "@hazae41/symbol-dispose-polyfill": "catalog:",
     "@tauri-apps/plugin-dialog": "catalog:",
-    "@tauri-apps/plugin-fs": "catalog:"
+    "@tauri-apps/plugin-fs": "catalog:",
+    "@tauri-apps/plugin-opener": "catalog:"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*"

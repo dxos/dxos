@@ -10,11 +10,11 @@ import * as Command from 'effect/unstable/cli/Command';
 import { CommandConfig } from '@dxos/cli-util';
 import { type InspectIdentityResponse, type LegacyInspectIdentityResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 export const inspect = Command.make(
   'inspect',
-  { identityKey: Args.string('identityKey') },
+  { identityKey: Args.String('identityKey') },
   Effect.fn(function* ({ identityKey }) {
     const result = yield* adminRequest<InspectIdentityResponse | LegacyInspectIdentityResponse>(
       'GET',

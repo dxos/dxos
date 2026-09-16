@@ -19,9 +19,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -44,9 +41,6 @@
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/lock-file"
     },
     {
       "path": "../../common/log"
@@ -113,9 +107,6 @@
     },
     {
       "path": "../../core/mesh/teleport-extension-replicator"
-    },
-    {
-      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../core/protocols"

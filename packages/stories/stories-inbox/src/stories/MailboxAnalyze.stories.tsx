@@ -19,7 +19,7 @@ import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx, createKvsStore } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
@@ -65,9 +65,15 @@ import {
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person, Task } from '@dxos/types';
 
-import { StoryRole } from '../modules';
-import { StoryTripAiPlugin, seedFromFixture, seedFromMessages, seedFromObjects, seedFromTrips } from '../testing';
-import { StoryModulesPlugin } from '../testing/modules';
+import { StoryRole } from '../modules/index.ts';
+import {
+  StoryTripAiPlugin,
+  seedFromFixture,
+  seedFromMessages,
+  seedFromObjects,
+  seedFromTrips,
+} from '../testing/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
@@ -484,11 +490,11 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           </Select.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content data-testid='counts' classNames='dx-container grid grid-cols-2'>
+      <Panel.Content data-testid='counts' classNames='grid grid-cols-2'>
         <JsonHighlighter
           classNames='text-xs'
           data={{
-            identity: identity?.identityKey.truncate(),
+            identity: identity?.identityKey && PublicKey.from(identity.identityKey.data).truncate(),
             runs,
             mailbox: mailbox ? 1 : 0,
             messages: messages.length,

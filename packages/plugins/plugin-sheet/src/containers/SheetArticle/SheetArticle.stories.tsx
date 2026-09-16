@@ -25,8 +25,8 @@ import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testi
 import { translations } from '#translations';
 import { Sheet, SheetCapabilities, SheetOperation } from '#types';
 
-import RangeList from '../RangeList';
-import { SheetArticle } from './SheetArticle';
+import RangeList from '../RangeList/index.ts';
+import { SheetArticle } from './SheetArticle.tsx';
 
 // SheetArticle resolves the registry from its capability, so the context and the capability must
 // share one instance.

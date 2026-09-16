@@ -7,10 +7,12 @@ import { runInNewContext } from 'node:vm';
 import { describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Filter, Query } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Query } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
-import { type QueryContext } from './query-context';
-import { QueryResultImpl } from './query-result';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { type QueryContext, type SourceEntry } from './query-context.ts';
+import { QueryResultImpl } from './query-result.ts';
 
 describe('QueryResultImpl', () => {
   // Every result registers a diagnostic carrying a `StackTrace`, and an unformatted stack retains
@@ -45,10 +47,46 @@ describe('QueryResultImpl', () => {
       )
       .toBe(0);
   });
+
+  test('a grouped count excludes the tombstones the presentation collapsed', async ({ expect }) => {
+    const builder = new EchoTestBuilder();
+    await builder.open();
+    try {
+      const peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const people = [
+        db.add(Obj.make(TestSchema.Person, { name: 'Alice', age: 30 })),
+        db.add(Obj.make(TestSchema.Person, { name: 'Bob', age: 30 })),
+        db.add(Obj.make(TestSchema.Person, { name: 'Carol', age: 30 })),
+      ];
+      await db.flush();
+      db.remove(people[2]);
+      await db.flush();
+
+      // The source counts every member it grouped, tombstones included; the client drops the tombstone
+      // from the members, so the count it reports alongside them has to follow.
+      const group = { key: { age: 30 }, count: 3 };
+      const entries: SourceEntry[] = people.map((person) => ({ id: person.id, result: person, group }));
+      // Aggregate rows are not entities; the result is typed over the row as the graph types it.
+      const query: Query.Any = Query.select(Filter.type(TestSchema.Person)).aggregate({
+        age: Aggregate.group('age'),
+        count: Aggregate.count(),
+        items: Aggregate.items(),
+      });
+      const [row, ...rest] = new QueryResultImpl(makeQueryContext(entries), query).runSync();
+      expect(rest).toEqual([]);
+      expect(row).toMatchObject({ age: 30, count: 2 });
+      expect(row.items).toHaveLength(2);
+      expect(row.items).toContain(people[0]);
+      expect(row.items).toContain(people[1]);
+    } finally {
+      await builder.close();
+    }
+  });
 });
 
-const makeQueryContext = (): QueryContext => ({
-  getResults: () => [],
+const makeQueryContext = (results: SourceEntry[] = []): QueryContext => ({
+  getResults: () => results,
   isSynchronous: () => true,
   changed: new Event<void>(),
   run: async () => [],

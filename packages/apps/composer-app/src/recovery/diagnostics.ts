@@ -4,10 +4,11 @@
 
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { SpaceState } from '@dxos/client/echo';
+import { toPublicKey } from '@dxos/protocols/buf';
 
-import { bootRecoveryClient, destroyRecoveryClient, isRecoveryClientBooted } from './boot-client';
-import { getDxos } from './dxos-globals';
-import { type SqlStorageDiagnosticsResult, runSqlStorageDiagnostics } from './sql-storage-diagnostics';
+import { bootRecoveryClient, destroyRecoveryClient, isRecoveryClientBooted } from './boot-client.ts';
+import { getDxos } from './dxos-globals.ts';
+import { type SqlStorageDiagnosticsResult, runSqlStorageDiagnostics } from './sql-storage-diagnostics.ts';
 
 export type RecoverySpaceSummary = {
   id: string;
@@ -74,13 +75,16 @@ export const runRecoveryDiagnostics = async (log: (message: string) => void): Pr
 
     const identityRecord = dxos.halo?.identity.get();
     const device = dxos.halo?.device;
-    identity = identityRecord
-      ? {
-          identityKey: identityRecord.identityKey.toString(),
-          deviceKey: device?.deviceKey?.toString(),
-          displayName: identityRecord.profile?.displayName,
-        }
-      : undefined;
+    // proto3 leaves `identityKey` optional, and the report has nothing to say about a keyless identity.
+    const identityKey = identityRecord && toPublicKey(identityRecord.identityKey);
+    identity =
+      identityRecord && identityKey
+        ? {
+            identityKey: identityKey.toString(),
+            deviceKey: device?.deviceKey?.toString(),
+            displayName: identityRecord.profile?.displayName,
+          }
+        : undefined;
 
     spaces = client.spaces.get().map((space) => ({
       id: space.id,
