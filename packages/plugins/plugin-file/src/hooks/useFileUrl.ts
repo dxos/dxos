@@ -18,6 +18,7 @@ export type FileUrl = { url: string; type: string; size?: number };
  */
 export const useFileUrl = (file: File.File): FileUrl | undefined => {
   const [rendered, setRendered] = useState<FileUrl | undefined>(undefined);
+  const dataUri = file.data?.uri?.toString();
 
   useEffect(() => {
     setRendered(undefined);
@@ -43,6 +44,8 @@ export const useFileUrl = (file: File.File): FileUrl | undefined => {
       // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
       // the TS standard lib, not fixable by typing `bytes` differently.
       const url = URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type }));
+      // Only a URL this hook minted is its to revoke: the store's own `blob:` URL may be another consumer's.
+      createdBlobUrl = url;
       return { url, type, size };
     }).pipe(
       Effect.provide(Database.layer(db)),
@@ -51,13 +54,10 @@ export const useFileUrl = (file: File.File): FileUrl | undefined => {
 
     void EffectEx.runPromise(program).then((result) => {
       if (cancelled) {
-        if (result?.url.startsWith('blob:')) {
-          URL.revokeObjectURL(result.url);
+        if (createdBlobUrl) {
+          URL.revokeObjectURL(createdBlobUrl);
         }
         return;
-      }
-      if (result?.url.startsWith('blob:')) {
-        createdBlobUrl = result.url;
       }
       setRendered(result);
     });
@@ -68,12 +68,13 @@ export const useFileUrl = (file: File.File): FileUrl | undefined => {
         URL.revokeObjectURL(createdBlobUrl);
       }
     };
-    // Keyed on `file.id` rather than `file`/`file.data` directly: ECHO's reactive proxy returns a
-    // fresh `Ref` wrapper for `.data` on every access, so including it (or the proxy object itself)
+    // Keyed on the blob's URI rather than `file`/`file.data` directly: ECHO's reactive proxy returns
+    // a fresh `Ref` wrapper for `.data` on every access, so including it (or the proxy object itself)
     // here would rerun this effect on every render — clearing the render state and re-resolving it
-    // each time, which flickers the image while the object settles.
+    // each time, which flickers the image while the object settles. The URI is what changes when a
+    // download replaces the file's bytes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file.id]);
+  }, [file.id, dataUri]);
 
   return rendered;
 };

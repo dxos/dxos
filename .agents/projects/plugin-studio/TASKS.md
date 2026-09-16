@@ -15,7 +15,7 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Register in composer-app (`plugin-defs.tsx` dev defaults, `package.json`, `tsconfig.json`, `tsconfig.all.json`).
 - [x] `docs/DESIGN.md`, `PLUGIN.mdl` (+ QA flow), README; build, lint, test, format.
 - [x] Verified in the running app: registry card (scribble/lime), Connections → Higgsfield two-field form, Studio artifact provider = Higgsfield with the model default.
-- [x] PR — #13087, #13095, #13110, #13111, #13112 merged.
+- [x] PR — #13078, #13087, #13095, #13110, #13111, #13112 merged.
 - [x] Live generation: the account now answers the estimate endpoint; Kling/Hailuo/Wan paths verified 2026-09-15.
 
 ## Phase 2: adjacent fixes (same PR)
@@ -67,30 +67,17 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 
 ### Observed 2026-09-15 (Composer, project/task session)
 
-- [ ] Task list (plugin-tasks): constrain the height of the inline task editor, and enable
-      `dx-preview` object links in it, as the description's markdown view already does.
+- [x] Task list (plugin-tasks): the inline task editor scrolls past eight lines (#13112); object
+      links in it come through the host's `descriptionExtensions`.
 - [x] Chat session: inline ECHO object links — already rendered: `[label](echo://…)` in a text block
       through `objectLinks()` in the feed Block extensions, and parsed `<object>` reference blocks
       through the `<reference>` → `ReferenceWidget` chip; both carry the preview hover card. Test
       against `plugins/plugin-assistant/components/Thread → Default` (its generator emits one link).
       Embedded cards (`![label](echo://…)`) now render too: `objectImage` threads from
       `ChatThread.Root` to the block's `objectLinks({ image })`, plugin-assistant supplies
-      `ObjectCardWidget` (header + `CardContent` surface). Open: a bare `echo://…` / `@echo://…`
-      outside markdown link syntax is the one shape nothing decorates.
-- [x] Task list toolbar: text filter (title/description, keeps a match's ancestors) on the standalone `TaskSetArticle`.
-
-### Observed 2026-09-15 (Composer, project/task session)
-
-- [ ] Task list (plugin-tasks): constrain the height of the inline task editor, and enable
-      `dx-preview` object links in it, as the description's markdown view already does.
-- [x] Chat session: inline ECHO object links — already rendered: `[label](echo://…)` in a text block
-      through `objectLinks()` in the feed Block extensions, and parsed `<object>` reference blocks
-      through the `<reference>` → `ReferenceWidget` chip; both carry the preview hover card. Test
-      against `plugins/plugin-assistant/components/Thread → Default` (its generator emits one link).
-      Embedded cards (`![label](echo://…)`) now render too: `objectImage` threads from
-      `ChatThread.Root` to the block's `objectLinks({ image })`, plugin-assistant supplies
-      `ObjectCardWidget` (header + `CardContent` surface). Open: a bare `echo://…` / `@echo://…`
-      outside markdown link syntax is the one shape nothing decorates.
+      `ObjectCardWidget` (header + `CardContent` surface). A bare `echo://…` / `@echo://…` in prose
+      is rewritten by the renderer (embed alone on a line, link in a sentence), and a
+      `<surface role='card'>` shows the object's card too (#13134).
 - [x] Task list toolbar: text filter (title/description, keeps a match's ancestors) on the standalone `TaskSetArticle`.
 
 ### Observed 2026-09-14 (Composer, studio session)

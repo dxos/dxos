@@ -16,7 +16,7 @@ import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { EID, PublicKey, type URI } from '@dxos/keys';
+import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Button, type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
@@ -494,13 +494,17 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
-  // A block reference's chip reads the object's name when it is loaded; the type's title otherwise,
-  // which is still more than the package default's bare "Object".
+  // A block reference's chip reads the object's name once it is loaded — resolved through the
+  // database's own ref, which honours the URI's space and the DXN forms — and the package default's
+  // bare "Object" until then; the thread re-renders as the message's blocks settle.
   const getObjectLabel = useCallback(
     (uri: URI.URI): string => {
-      const eid = EID.tryParse(uri);
-      const entityId = eid && EID.getEntityId(eid);
-      const object = entityId ? db?.query(Filter.id(entityId)).runSync()[0] : undefined;
+      let object: Obj.Unknown | undefined;
+      try {
+        object = db?.makeRef<Obj.Unknown>(uri).target;
+      } catch {
+        object = undefined;
+      }
       return (object && Obj.getLabel(object)) || 'Object';
     },
     [db],
