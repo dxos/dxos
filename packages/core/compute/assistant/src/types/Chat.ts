@@ -46,7 +46,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * means the agent's default.
      */
     // TODO(dmaretskyi): Register `Model` in the registry so this ref resolves to a catalog object.
-    model: Schema.optional(Ref.Ref(Obj.Unknown).pipe(FormInputAnnotation.set(false))),
+    model: Schema.optional(Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
      * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
