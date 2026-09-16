@@ -388,7 +388,7 @@ export class ModuleLoader {
       return expanded;
     }).pipe(
       Effect.tapCause(() => Scope.close(scope, Exit.void)),
-      Effect.withSpan('ModuleLoader.load'),
+      Effect.withSpan('ModuleLoader.load', { attributes: { 'dx.module.id': module.id } }),
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
           Effect.andThen(

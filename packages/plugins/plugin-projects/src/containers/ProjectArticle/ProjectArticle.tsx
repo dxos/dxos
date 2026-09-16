@@ -188,9 +188,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       updateProject((project) => {
         project.artifacts = project.artifacts.filter((artifactRef) => artifactRef.target?.id !== object.id);
       });
-      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] });
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] }, { spaceId: db?.spaceId });
     },
-    [invokePromise, updateProject],
+    [invokePromise, updateProject, db],
   );
 
   // The create dialog places the object in the space; the ref array is what makes it this project's,

@@ -180,6 +180,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           </div>
 
           {!tracePanelDebug && selectedCommit && (
+<<<<<<< HEAD
             <TogglePanel.Root classNames='p-2' open={detailsOpen} onChangeOpen={setDetailsOpen}>
               <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
                 <TogglePanel.Header classNames='text-sm'>
@@ -193,6 +194,24 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                 </TogglePanel.Body>
               </TogglePanel.Content>
             </TogglePanel.Root>
+||||||| 4862c8eaca
+            <div className='p-2'>
+              <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
+                <Syntax.Content classNames='border border-subdued-separator rounded-sm'>
+                  <Syntax.Viewport>
+                    <Syntax.Code classNames='max-h-[20lh] text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            </div>
+=======
+            <div className='p-2'>
+              <JsonHighlighter
+                data={details[selectedCommit.id] ?? selectedCommit}
+                classNames='max-h-[20lh] border border-subdued-separator rounded-sm text-xs'
+              />
+            </div>
+>>>>>>> origin/main
           )}
         </Panel.Content>
       </Panel.Root>

@@ -106,7 +106,11 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
 
   // Delete the event locally.
   const handleDelete = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [event] });
+    void invokePromise(
+      SpaceOperation.RemoveObjects,
+      { objects: [event] },
+      { spaceId: Obj.getDatabase(event)?.spaceId },
+    );
   }, [invokePromise, event]);
 
   return (

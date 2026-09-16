@@ -7,23 +7,16 @@ import { create } from '@bufbuild/protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
-import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
-
-type BridgeService = BufService<typeof BridgeServiceDesc>;
 
 import { SwarmNetworkManager } from '../network-manager.ts';
 import { FullyConnectedTopology } from '../topology/index.ts';
 import {
   MemoryTransportFactory,
-  RtcTransportProxyFactory,
-  RtcTransportService,
   type TransportFactory,
   TransportKind,
   createRtcTransportFactory,
@@ -69,9 +62,6 @@ export class TestPeer {
    */
   readonly _networkManager: SwarmNetworkManager;
 
-  private _proxy?: ProtoRpcPeer<any>;
-  private _service?: ProtoRpcPeer<any>;
-
   constructor(
     private readonly testBuilder: TestBuilder,
     public readonly peerId: PublicKey,
@@ -97,31 +87,6 @@ export class TestPeer {
       case TransportKind.WEB_RTC:
         transportFactory = createRtcTransportFactory();
         break;
-      case TransportKind.WEB_RTC_PROXY:
-        {
-          // Simulates bridge to shared worker.
-          const [proxyPort, servicePort] = createLinkedPorts();
-
-          this._proxy = createProtoRpcPeer({
-            port: proxyPort,
-            requested: {
-              BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
-            },
-            noHandshake: true,
-          });
-
-          this._service = createProtoRpcPeer({
-            port: servicePort,
-            exposed: {
-              BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
-            },
-            handlers: { BridgeService: new RtcTransportService() },
-            noHandshake: true,
-          });
-
-          transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
-        }
-        break;
       default:
         throw new Error(`Unsupported transport: ${transport}`);
     }
@@ -134,16 +99,12 @@ export class TestPeer {
 
   async open(): Promise<void> {
     await this._networkManager.open();
-    await this._proxy?.open();
-    await this._service?.open();
   }
 
   async close(): Promise<void> {
     await Promise.all(Array.from(this._swarms.values()).map((swarm) => swarm.leave()));
     this._swarms.clear();
 
-    await this._proxy?.close();
-    await this._service?.close();
     await this._networkManager.close(Context.default());
   }
 
