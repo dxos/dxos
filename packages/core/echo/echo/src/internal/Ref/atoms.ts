@@ -4,7 +4,8 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { withLabel } from '../common/atom-label.ts';
+import { withLabel } from '@dxos/effect/atom';
+
 import { subscribe } from '../common/proxy/reactive.ts';
 import { ObjectDeletedId } from '../common/types/model-symbols.ts';
 import type { Ref } from './ref.ts';
@@ -28,13 +29,11 @@ export const refSimpleFamily = Atom.family(<T>(ref: Ref<T>): Atom.Atom<T | undef
         const deleted = !!(target as any)[ObjectDeletedId];
         get.setSelf(deleted ? undefined : target);
       });
+      // Runs at once when the node was disposed while the target loaded.
+      get.addFinalizer(unsubscribeTarget);
       const deleted = !!(target as any)[ObjectDeletedId];
       return deleted ? undefined : target;
     };
-
-    get.addFinalizer(() => {
-      unsubscribeTarget?.();
-    });
 
     return loadRefTarget(ref, get, setupSubscription);
   }).pipe(withLabel('echo:ref:target'));

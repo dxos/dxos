@@ -11,6 +11,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
+import { makeRegistry, withLabel } from '@dxos/effect/atom';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +21,7 @@ import { type MakeOptional, shallowEqual } from '@dxos/util';
 import { scheduleTask } from '#scheduler';
 
 import * as Node from './AppGraphNode.ts';
-import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util.ts';
+import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts } from './util.ts';
 
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module
@@ -382,7 +383,7 @@ export class GraphImpl implements WritableGraph {
   });
 
   constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
-    this._registry = registry ?? Registry.make();
+    this._registry = registry ?? makeRegistry();
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
     this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });

@@ -87,6 +87,26 @@ describe('entity atoms', () => {
     expect(Entity.atom(entity)).not.toBe(Entity.atom({ ...entity } as Entity.Unknown));
   });
 
+  test('the live atom notifies on every change', ({ expect }) => {
+    const registry = AtomRegistry.make();
+    const person = makePerson('Alice');
+    let notified = 0;
+    const unsubscribe = registry.subscribe(
+      Obj.atomReactive(person),
+      () => {
+        notified++;
+      },
+      { immediate: true },
+    );
+    const before = notified;
+    Obj.update(person, (person) => {
+      person.name = 'Bob';
+    });
+    expect(notified).toBe(before + 1);
+    expect(registry.get(Obj.atomReactive(person))).toBe(person);
+    unsubscribe();
+  });
+
   test('an unobserved entity atom is released by the registry', async ({ expect }) => {
     // The atom is memoized for the entity's lifetime, but its registry node — the cached snapshot
     // and the live subscription — is bounded by observation. `keepAlive` would pin both forever.
@@ -124,11 +144,12 @@ describe('entity atoms', () => {
       },
       { immediate: true },
     );
+    const before = notified;
     Obj.update(person, (person) => {
       person.name = 'Bob';
     });
     await settle();
-    expect(notified).toBeGreaterThan(0);
+    expect(notified).toBeGreaterThan(before);
     expect(registry.get(atom).name).toBe('Bob');
     unsubscribe();
   });

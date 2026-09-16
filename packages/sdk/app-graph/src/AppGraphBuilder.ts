@@ -10,6 +10,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Entity, type Type } from '@dxos/echo';
+import { withLabel } from '@dxos/effect/atom';
 import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { DXN } from '@dxos/keys';
@@ -20,7 +21,7 @@ import { scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Graph from './AppGraph.ts';
 import * as Node from './AppGraphNode.ts';
-import { nodeArgsUnchanged, normalizeRelation, withLabel } from './util.ts';
+import { nodeArgsUnchanged, normalizeRelation } from './util.ts';
 
 //
 // Extension Types

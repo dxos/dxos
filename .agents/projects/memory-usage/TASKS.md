@@ -249,18 +249,17 @@ as #12594**, which rebuilt the package (`graph.ts` → `AppGraph.ts` +
 `AppGraphBuilder.ts`) and replaced their `keepAlive` with revocable per-node
 registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
 
-- [x] **W1. TTL groundwork.** `DEFAULT_ATOM_IDLE_TTL` (5 s) lives with the
-      manager's other defaults in `manager-types.ts` and is applied where the
-      app's registry is actually created — `PluginManager`, via an
-      `atomIdleTTL` option alongside `loadTimeout`/`activationTimeout`. A
-      render-churn grace, explicitly not a residency policy. Other
-      `Registry.make()` sites are per-instance fallbacks for tests and
-      storybook and keep the bare constructor; the app always passes the
-      manager's registry. A registry passed in keeps its own TTL, which the
-      `registry` option's doc now says. `atomIdleTTL` must be finite
-      (`Duration.infinity` made the registry's bucket math `NaN` and swept at
-      once) and zero maps to no grace. 6 lifecycle tests in
-      `plugin-manager.test.ts` over `AtomRegistry.getNodes()`.
+- [x] **W1. TTL groundwork.** `DEFAULT_ATOM_IDLE_TTL` (5 s) and
+      `makeRegistry` live in `@dxos/effect/atom`. A render-churn grace,
+      explicitly not a residency policy. `idleTTL` must be finite
+      (`Duration.infinity` made the registry's bucket math `NaN` and removed
+      nodes at once) and zero maps to no grace; tests in `atom.test.ts`.
+      `PluginManager` builds its registry with it (`atomIdleTTL` option), and so
+      do the fallbacks that host ECHO atoms: `withRegistry` (storybook),
+      `apps/tasks`, `apps/todomvc`, `AppGraph`, `ProjectionModel`, `AiContext`.
+      Registries that host no ECHO atoms (`GraphModel`, `GraphBuilder`,
+      `selection`, `list-model`, `migrations`, the assistant processor) keep the
+      bare constructor.
       Follow-on: app-graph atoms must not throw during a rebuild, because a
       batch rebuilds every stale node regardless of `lazy`. Caught by
       plugin-navtree's storybook run. The throwing `nodeOrThrow` atom is gone
@@ -270,28 +269,26 @@ registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
 - [x] **W2. ECHO families → proxy-bounded.** One `EntityAtoms` record per
       entity (`internal/Entity/atoms.ts`, `getEntityAtoms`) replaces the 8
       entity-keyed `Atom.family`s across `Obj/atoms.ts` and
-      `Annotation/atoms.ts`. It is stored under one hidden symbol on the proxy
-      target, the way `createProxy` memoizes the proxy, and builds each atom on
-      first read: `snapshot` (serves `Obj.atom`, `Entity.atom` and
-      `Relation.atom`, previously three identical families), `live`, `label`,
-      and per-key `property`, `annotation`, `annotationProperty`. The public
-      `make*` functions are thin wrappers over it. The entity owns its atoms and
-      no module-level table exists. A mutable view resolves to its read-only
-      proxy, so both share one record and no atom captures the callback-scoped
-      write capability.
-      Non-proxy entities (queue-stored objects and other branded shapes, which
-      reach these families and can mint a fresh object per read) keep
-      an `Atom.family` of records keyed by id — identity keying would churn an
-      atom per render there. Ref-keyed families (`refFamily`,
-      `refSimpleFamily`, `refPropertyFamily`) keep `Atom.family` since
-      `RefImpl` mints a fresh wrapper per read; `keepAlive` dropped from all 11. No `setIdleTTL` on any of them, so ECHO's future object-residency
-      policy stays the single knob. Tests: `Entity/atoms.test.ts` (accessors
-      share one atom, one atom per entity, id-sharing objects, mutable view,
-      per-key property atoms, node released when unobserved, rebuild +
-      re-subscribe, and a collection test that runs under
-      `DX_DEBUG_LEAKS=1`). Verified 2026-09-16: echo 617, echo-client 560,
-      echo-react 38, schema 51, app-graph 129, app-framework 275; collection
-      test passing in leak mode.
+      `Annotation/atoms.ts`. It is stored under a `Symbol.for` key on the proxy
+      target (or on a non-proxy entity itself), the way `createProxy` memoizes
+      the proxy, and builds each atom on first read: `snapshot` (serves
+      `Obj.atom`, `Entity.atom` and `Relation.atom`, previously three identical
+      families), `live`, `label`, and per-key `property`, `annotation`,
+      `annotationProperty`. The public `make*` functions are thin wrappers
+      over it. The entity owns its atoms and no module-level table exists. A
+      mutable view resolves to its read-only proxy, so both share one record
+      and no atom captures the callback-scoped write capability. `live` now
+      notifies on change (identity equality had suppressed every update).
+      Ref-keyed families (`refFamily`, `refSimpleFamily`, `refPropertyFamily`)
+      keep `Atom.family` since `RefImpl` mints a fresh wrapper per read;
+      `refPropertyFamily` is flat, keyed by `(ref, key)`, because a nested
+      family holds its inner family only weakly. Their target subscriptions
+      are registered as finalizers, so a node removed while its target loads
+      does not leak one. `keepAlive` dropped from all 11. No `setIdleTTL` on
+      any of them. Atoms carry dev-only `echo:*` labels (`withLabel` from
+      `@dxos/effect/atom`, shared with app-graph and graph). Tests:
+      `Entity/atoms.test.ts` and `Obj/atoms.test.ts`, plus a `memory`-tagged
+      retention test run by the CI `memory` job.
 - [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
       is the store); `MemoryBackend`/`AttentionManager` hold values in their
       existing `Map`s, one pinned notify atom per owner; prune ids on

@@ -11,6 +11,7 @@ import { Format, JsonSchema, Obj, Type, View } from '@dxos/echo';
 import { TypeEnum, formatToType, typeToFormat } from '@dxos/echo/Format';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
+import { makeRegistry } from '@dxos/effect/atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
@@ -110,7 +111,7 @@ export class ProjectionModel {
   private readonly _hiddenFieldsAtom: Atom.Atom<readonly View.FieldType[]>;
   private readonly _allFieldsAtom: Atom.Atom<readonly View.FieldType[]>;
 
-  constructor({ registry = Registry.make(), view, baseSchema, change }: ProjectionModelProps) {
+  constructor({ registry = makeRegistry(), view, baseSchema, change }: ProjectionModelProps) {
     this._registry = registry;
     this._view = view;
     this._baseSchema = baseSchema;

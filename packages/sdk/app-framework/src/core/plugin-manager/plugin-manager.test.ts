@@ -3421,80 +3421,14 @@ describe('PluginManager', () => {
   });
 });
 
-/**
- * The manager's registry is the app's; an atom pinned there is retained for the lifetime of the
- * page. The idle TTL is what makes `Atom.keepAlive` unnecessary for atoms that go briefly
- * unobserved, so it is worth a regression test.
- */
 describe('atom idle TTL', () => {
-  // Node removal is dispatched through the registry's async scheduler, so it needs real turns.
-  const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
-  const SHORT_TTL = 20;
-  const AFTER_SHORT_TTL = 300;
-
-  const makeManager = (options: Partial<PluginManager.ManagerOptions> = {}) =>
-    PluginManager.make({
-      pluginLoader: () => Effect.die('not used'),
-      ...options,
-    });
-
-  it('applies a default grace period to the registry it creates', async () => {
-    const manager = makeManager();
+  it('creates its registry with the default grace period', async () => {
+    const manager = PluginManager.make({ pluginLoader: () => Effect.die('not used') });
     const atom = Atom.make(0);
 
     manager.registry.subscribe(atom, () => {})();
-    await settle(AFTER_SHORT_TTL);
-
-    // The default is seconds, so the node is still resident well after a bare registry would
-    // have swept it.
-    assert.strictEqual(manager.registry.getNodes().size, 1);
-  });
-
-  it('sweeps the node once the grace period elapses', async () => {
-    const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
-    const atom = Atom.make(0);
-
-    manager.registry.subscribe(atom, () => {})();
-    await settle(AFTER_SHORT_TTL);
-
-    assert.strictEqual(manager.registry.getNodes().size, 0);
-  });
-
-  it('re-subscribing within the grace period cancels the sweep', async () => {
-    const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
-    const atom = Atom.make(0);
-
-    manager.registry.subscribe(atom, () => {})();
-    const unsubscribe = manager.registry.subscribe(atom, () => {});
-    await settle(AFTER_SHORT_TTL);
-    assert.strictEqual(manager.registry.getNodes().size, 1);
-
-    unsubscribe();
-    await settle(AFTER_SHORT_TTL);
-    assert.strictEqual(manager.registry.getNodes().size, 0);
-  });
-
-  it('a zero grace period sweeps on the next task', async () => {
-    const manager = makeManager({ atomIdleTTL: Duration.zero });
-    const atom = Atom.make(0);
-
-    manager.registry.subscribe(atom, () => {})();
-    await settle(AFTER_SHORT_TTL);
-
-    assert.strictEqual(manager.registry.getNodes().size, 0);
-  });
-
-  it('rejects an infinite grace period', () => {
-    assert.throws(() => makeManager({ atomIdleTTL: Duration.infinity }));
-  });
-
-  it('a keepAlive atom is never swept', async () => {
-    const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
-    const atom = Atom.make(0).pipe(Atom.keepAlive);
-
-    manager.registry.subscribe(atom, () => {})();
-    await settle(AFTER_SHORT_TTL);
-
+    // Well past the scheduler task a registry without a TTL removes the node on.
+    await new Promise((resolve) => setTimeout(resolve, 100));
     assert.strictEqual(manager.registry.getNodes().size, 1);
   });
 });

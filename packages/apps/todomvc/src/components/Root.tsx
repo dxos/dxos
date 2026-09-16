@@ -3,11 +3,11 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
 import { Config, defs } from '@dxos/config';
+import { makeRegistry } from '@dxos/effect/atom';
 import { ClientProvider, createClientServices } from '@dxos/react-client';
 
 import { getConfig } from '../config.ts';
@@ -38,7 +38,7 @@ const createServices = (config?: Config) =>
 
 export const Root = () => {
   const navigate = useNavigate();
-  const registry = useMemo(() => AtomRegistry.make(), []);
+  const registry = useMemo(() => makeRegistry(), []);
 
   return (
     <ClientProvider

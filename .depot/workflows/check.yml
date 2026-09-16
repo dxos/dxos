@@ -375,7 +375,7 @@ jobs:
       - name: Entity atom retention
         env:
           DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
-        run: moon run echo:test -- src/internal/Entity/atoms.test.ts
+        run: moon run echo:test -- src/internal/Entity/atoms.test.ts -t 'collectable once unobserved'
 
   # Every vitest flavour in one sharded job: unit (`:test`), browser (`:test-browser`), storybook
   # (`:test-storybook`) and the Cloudflare Workers runtime (`:test-workerd`). They used to be three

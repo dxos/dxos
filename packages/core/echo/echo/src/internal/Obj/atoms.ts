@@ -3,18 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
 import * as Function from 'effect/Function';
+import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { withLabel } from '@dxos/effect/atom';
 import { assertArgument } from '@dxos/invariant';
 
 import type * as Entity from '../../Entity.ts';
 import type * as Obj from '../../Obj.ts';
 import type * as Ref from '../../Ref.ts';
 import type * as Relation from '../../Relation.ts';
-import { withLabel } from '../common/atom-label.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
 import { getEntityAtoms } from '../Entity/atoms.ts';
 import { getDatabase, isEntity } from '../Entity/index.ts';
@@ -52,14 +54,12 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
         // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
         get.setSelf(isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>));
       });
+      // Runs at once when the node was disposed while the target loaded.
+      get.addFinalizer(unsubscribeTarget);
       // Guard the initial value too: an already-deleted target must resolve to undefined, not leak a
       // snapshot until the next update.
       return isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>);
     };
-
-    get.addFinalizer(() => {
-      unsubscribeTarget?.();
-    });
 
     return loadRefTarget(ref, get, setupTargetSubscription);
   }).pipe(withLabel('echo:ref:snapshot'));
@@ -86,18 +86,32 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
   );
 });
 
+/** Family key for {@link refPropertyFamily}; a nested family would hold the inner family only weakly. */
+class RefPropertyKey implements Equal.Equal {
+  constructor(
+    readonly ref: Ref.Ref<any>,
+    readonly key: PropertyKey,
+  ) {}
+
+  [Equal.symbol](that: Equal.Equal): boolean {
+    return that instanceof RefPropertyKey && Equal.equals(this.ref, that.ref) && this.key === that.key;
+  }
+
+  [Hash.symbol](): number {
+    return Hash.combine(Hash.hash(this.ref), Hash.hash(this.key));
+  }
+}
+
 /**
  * Atom family for a property of a ref's target object.
  * Resolves the ref (reactively) then projects the property atom, so it fires when the ref resolves or when
  * that property changes. Yields `undefined` while the target is unresolved.
  */
-const refPropertyFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>) =>
-  Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K] | undefined> => {
-    return Atom.make<T[K] | undefined>((get) => {
-      const target = get(refWithReactiveFamily(ref));
-      return target ? (get(getEntityAtoms(target).property(key)) as T[K]) : undefined;
-    }).pipe(withLabel('echo:ref:property'));
-  }),
+const refPropertyFamily = Atom.family(({ ref, key }: RefPropertyKey): Atom.Atom<unknown> =>
+  Atom.make((get) => {
+    const target = get(refWithReactiveFamily(ref));
+    return target ? get(getEntityAtoms(target).property(key)) : undefined;
+  }).pipe(withLabel('echo:ref:property')),
 );
 
 /**
@@ -115,8 +129,7 @@ export const makeAtom: {
 
   const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
-  // The overload signatures narrow the record's `unknown` to the caller's type.
-  return getEntityAtoms(obj).snapshot;
+  return getEntityAtoms(obj).snapshot();
 };
 
 /**
@@ -129,7 +142,7 @@ export const makeProperty: {
   <T extends Obj.Unknown, K extends keyof T>(ref: Ref.Ref<T>, key: K): Atom.Atom<T[K] | undefined>;
 } = (objOrRef: Obj.Unknown | Ref.Ref<any>, key: any): Atom.Atom<any> => {
   if (isRef(objOrRef)) {
-    return refPropertyFamily(objOrRef as Ref.Ref<any>)(key);
+    return refPropertyFamily(new RefPropertyKey(objOrRef, key));
   }
 
   const obj = objOrRef as Obj.Unknown;
@@ -151,7 +164,7 @@ export const makeWithReactive: {
 
   const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
-  return getEntityAtoms(obj).live;
+  return getEntityAtoms(obj).live();
 };
 
 /**
@@ -160,7 +173,7 @@ export const makeWithReactive: {
  */
 export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
-  return getEntityAtoms(entity).snapshot as Atom.Atom<Entity.Snapshot>;
+  return getEntityAtoms(entity).snapshot();
 };
 
 /**
@@ -169,7 +182,7 @@ export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entit
  */
 export const makeRelation = <T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>> => {
   assertArgument(isEntity(relation), 'relation', 'Must be a reactive ECHO relation');
-  return getEntityAtoms(relation).snapshot as Atom.Atom<Relation.Snapshot<T>>;
+  return getEntityAtoms(relation).snapshot();
 };
 
 /**
@@ -178,5 +191,5 @@ export const makeRelation = <T extends Relation.Unknown>(relation: T): Atom.Atom
  */
 export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
-  return getEntityAtoms(entity).label;
+  return getEntityAtoms(entity).label();
 };
