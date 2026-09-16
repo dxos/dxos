@@ -1,0 +1,157 @@
+---
+id: org.dxos.app.composer.perf
+name: Composer Performance
+version: 0.1.0
+---
+
+Performance flows: journeys measured rather than asserted. Each `test` here is the top-level
+description of a flow whose stages a Playwright spec drives and instruments — this document says
+what the flow is and what "too slow" would mean, and
+[`src/playwright/perf-projects.spec.ts`](../src/playwright/perf-projects.spec.ts) is the same flow
+as executable stages. A step's `id` IS the stage id the harness records, so the description and the
+numbers join without a second mapping to keep in sync.
+
+Functional QA lives in [`APP.mdl`](./APP.mdl). Nothing here gates a merge: the flows run nightly
+from `main` and trend into PostHog.
+
+## Extensions
+
+| Term    | URI                      |
+| ------- | ------------------------ |
+| `test`  | `org.dxos.mdl.test@1.0`  |
+| `step`  | `org.dxos.mdl.step@1.0`  |
+| `suite` | `org.dxos.mdl.suite@1.0` |
+
+The dialect is [`packages/reflect/deus/lang/qa.mdl`](../../../reflect/deus/lang/qa.mdl).
+
+## Measurement contract
+
+What the harness (`@dxos/perf-harness`) records per stage, and the rules that make two runs
+comparable at all:
+
+- **Two modes, never mixed.** `measure` reads counters at stage boundaries only and is the sole
+  mode trended; `diagnose` runs an always-on V8 sampling profiler and a screencast and produces
+  artifacts. An attached CDP client makes Blink retain response bodies, which reads as linear
+  memory growth (the finding behind `scripts/memory/plain-soak.mjs`), so the memory-authoritative
+  run cannot be the profiled one.
+- **Per stage:** wall ms; total CPU ms across every Chrome process (`SystemInfo.getProcessInfo`,
+  which is the only reading that includes the shared worker where ECHO runs); the main thread's
+  `script`/`layout`/`recalcStyle` split; JS heap per target after a forced GC; peak RSS over the
+  browser process tree; DOM node and listener counts; network bytes split code-load vs API; long
+  tasks, TBT, and timer-drift lag sampled in the page AND in every worker realm.
+- **Recorded on every row, or the trend is noise:** serving mode (`vite preview` over a production
+  bundle — `vite serve` costs ~2.5x on the main thread), plugin set, profile state (first-run
+  performs onboarding and loads a different module set), settle time, and whether the run was
+  instrumented. Per `scripts/memory/README.md` §"Comparing runs".
+- **Memory means four different things** that differ by 3-5x. The trended one is peak RSS, because
+  it is what a user feels and the only one that counts wasm linear memory — where automerge
+  documents live, outside every JS-heap reading, never returned to the OS.
+
+## QA
+
+```mdl
+test QA-1: A project whose task set is large
+  desc: |
+    The champion flow for space complexity. `TaskSet.tasks` is FLAT and holds every task in the set,
+    sub-tasks included, so a large set is a large ref array: `TaskSet.loadRefs` resolves the cold
+    remainder at concurrency 16, `resolveTasks` de-duplicates the whole array on every read, and the
+    hierarchy the UI renders is derived by walking `Task.parentTask` per task. Every one of those is
+    O(set size) on a data structure the UI reads on each render, which is why this flow — rather than
+    a wide navtree or a big document — is where complexity should first become visible.
+
+    Measured, not asserted: the only failure is a stage that cannot complete.
+  actors: agent
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space created by the fixture, named "PERF: Projects $runId"
+    - >-
+      scale: one of three tiers, each run as its own set of rows —
+      `tasks=200,depth=2,projects=1` (smoke, shaped like a real project),
+      `tasks=2000,depth=3,projects=5` (working), or
+      `tasks=10000,depth=3,projects=5` (where the O(set) reads should dominate).
+      Selected by `DX_PERF_SCALE`; the label is the join key for a trend, so it never varies
+      within a tier
+    - the fixture has created `projects` Projects via `org.dxos.operation.projects.create`, each with
+      `tasks / projects` tasks filed into its own task set via `org.dxos.operation.tasks.create`,
+      nested to `depth` and spread across three milestones
+    - fixture generation happens BEFORE the first measured stage and is never itself a stage —
+      its cost is setup, not a number anyone reads
+    - plugin-projects and plugin-tasks are enabled (both are on by default)
+    - every generated task carries the creation default status `todo` — `tasks.create` takes no
+      status, so a row component's other status branches are NOT exercised by this fixture; varying
+      them needs a second `tasks.update` pass and would change what the numbers cover
+  steps:
+    - name: Boot to ready
+      id: boot
+      do: Open the app and wait for the user-account control.
+      expect: the app reaches ready with no error logged
+      note: |
+        Cold profile, so this stage carries onboarding and the whole boot module graph. Comparable
+        only against other `first-run` rows — which is why `profileState` is on every row.
+    - name: Open the fixture space
+      id: open-space
+      do: Pick the "PERF: Projects" space from the space list.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.space.id" }
+      expect: the workspace is the fixture space and its navtree lists the projects
+    - name: Open the project
+      id: open-project
+      do: Click the first project in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/$given.project.id"] }
+      expect: ProjectArticle renders on the Overview tab, showing the task-set summary and artifacts
+      note: |
+        Overview derives per-task-set open/total counts, so this stage pays one full pass over the
+        set before a single task row is rendered.
+    - name: Render the task list
+      id: open-tasks
+      do: Click the Tasks tab.
+      expect: the hierarchical task list renders and the first rows are visible
+      note: |
+        The stage this flow exists for. `domNodes` is the diagnostic to read beside `wallMs`: a list
+        whose node count rises with the set rather than the viewport is not virtualized, and that is
+        a different fix from a slow query.
+    - name: Filter the task list
+      id: filter-tasks
+      do: Type a substring matching about a tenth of the tasks into the filter field.
+      expect: the list narrows to the matching rows
+      note: |
+        Filtering re-reads the set and rebuilds the tree, so this is the O(set) read on the
+        interaction path rather than on the open path.
+    - name: Toggle a task
+      id: toggle-task
+      do: Check the first visible task's checkbox.
+      expect: the row shows as done and the change persists
+      note: |
+        One small write against a large set — the stage that would expose a write path that
+        re-resolves the whole `tasks` array to update one member.
+    - name: Scroll the task list
+      id: scroll-tasks
+      do: Scroll the list to the end and back.
+      expect: the list scrolls without a blank viewport
+      note: |
+        Read `stillFrameMaxMs` here (diagnose mode): scroll is the one stage where a frame gap is
+        precisely the symptom a user reports.
+    - name: Reopen the project
+      id: reopen-project
+      do: Navigate to another plank and back to the project.
+      expect: the task list renders again
+      note: |
+        Catches cost paid per mount rather than once — a warm re-render should be far cheaper than
+        `open-tasks`, and a run where it is not has cached nothing.
+  after:
+    - name: Delete the fixture space
+      do: Delete the space from its settings.
+      invoke: org.dxos.operation.space.delete { space: Space($given.space.id) }
+      expect: no "PERF:" space remains
+```
+
+## Suites
+
+```mdl
+suite perf-nightly: The measured flows, from main
+  desc: |
+    Runs both modes at every scale tier. `measure` rows are trended in PostHog; `diagnose`
+    artifacts are uploaded for whoever reads a regression and never trended.
+  tags: [perf, nightly]
+  tests: [QA-1]
+```

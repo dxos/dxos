@@ -1,0 +1,69 @@
+# @dxos/perf-harness
+
+Stage-scoped browser performance and memory instrumentation for e2e flows.
+
+A flow is described once, in a `.mdl` QA test, and executed once, as a Playwright spec whose
+`stage()` ids match that test's step ids. This package is the measuring half.
+
+- Flows: [`composer-app/spec/PERF.mdl`](../../apps/composer-app/spec/PERF.mdl)
+- Specs: `composer-app/src/playwright/perf-*.spec.ts`, task `composer-app:e2e-perf`
+- Nightly: [`.depot/workflows/perf-nightly.yml`](../../../.depot/workflows/perf-nightly.yml)
+
+## Two modes, never mixed
+
+| Mode       | Instrumentation                   | Authoritative for            | Trended |
+| ---------- | --------------------------------- | ---------------------------- | ------- |
+| `measure`  | counter reads at boundaries only  | memory, wall time            | yes     |
+| `diagnose` | V8 sampling profiler + screencast | CPU attribution, hotspots    | no      |
+
+The split is not caution, it is a measured effect: an attached CDP client makes Blink retain
+response bodies, which reads as linear memory growth over a run — the finding
+`composer-app/scripts/memory/plain-soak.mjs` exists to control for. So the memory-authoritative run
+cannot be the profiled one. `writePosthogBatch` drops every non-`measure` row rather than trusting
+a caller to remember.
+
+## What each metric actually reads
+
+| Metric                     | Source                                | Note |
+| -------------------------- | ------------------------------------- | ---- |
+| `cpuMsTotal`               | `SystemInfo.getProcessInfo` (browser) | The only reading covering the shared worker, GPU and browser process. A renderer-only number misleads for a DXOS flow, where the shared worker running ECHO is usually the dominant cost. |
+| `thread.*`                 | `Performance.getMetrics` (page)       | `taskMs` is the envelope; the script/layout/recalcStyle split is what separates "the database is slow" from "the list re-renders every row". |
+| `heap[]`                   | `Runtime.getHeapUsage` per target     | After a three-pass forced GC, per realm. |
+| `peakRssBytes`             | `ps` over the browser process tree    | Sampled through the stage, so a spike that is freed before the boundary still counts. The only number that includes wasm linear memory. |
+| `domNodes`, `domListeners` | `Memory.getDOMCounters`               | The cheap leak canary, and the direct signal for a list that renders every row rather than a viewport. |
+| `network.*`                | Playwright `response` events          | Classified code-load vs API. Content-length where present, body otherwise — the resource-timing buffer caps out on a graph this size. |
+| `responsiveness.lag*`      | timer-drift probe, page AND workers   | The page-side Long Tasks API cannot see a blocked shared worker; the worker probe is pushed in over CDP. |
+| `responsiveness.tbtMs`     | Long Tasks API                        | Not gated to a paint event: inside a stage, every long task blocks an interaction already made. |
+| `stillFrame*`              | `Page.screencastFrame` timestamps     | `diagnose` only. The only measurement of what the SCREEN did. Same frames serve as the stage stills. |
+
+## Why raw CDP
+
+Playwright's `newCDPSession` reaches the page and its dedicated workers, but **not a shared
+worker** — where ECHO, automerge and the database live. So the harness launches chromium with
+`--remote-debugging-port` and opens a websocket per target, the approach
+`composer-app/scripts/memory/measure.mjs` arrived at first. `SystemInfo.getProcessInfo` is
+browser-scoped and unreachable from a page session for the same reason.
+
+## Comparing runs
+
+Every row carries `comparability`, and a comparison that does not hold these constant is noise
+(`composer-app/scripts/memory/README.md` §"Comparing runs"):
+
+- **servingMode** — `vite serve` costs ~2.5x production on the main thread.
+- **pluginSet** — a different set is a different app.
+- **profileState** — a first run performs onboarding and loads a different module set.
+- **settleMs** — modules keep arriving for ~3 minutes after ready.
+- **instrumented** — true for every `diagnose` row.
+
+Memory means four different things that differ by 3-5x (JS heap, snapshot self size, attributed
+allocators, private footprint). The trended one is peak RSS, because it is what a user feels.
+
+## Output
+
+Written under `test-results/perf/`:
+
+- `<flow>-<mode>-<scale>.rows.ndjson` — one row per stage, appended across runs.
+- `<flow>-<mode>-<scale>.events.ndjson` — `measure` rows as PostHog events, for
+  `node scripts/ci-event.mjs --batch`.
+- `artifacts/<mode>-<scale>-<runId>/` — `.cpuprofile` per stage per realm, and each stage's first
+  and last frame. Never committed: a heavy tier's profiles run to hundreds of MB.
