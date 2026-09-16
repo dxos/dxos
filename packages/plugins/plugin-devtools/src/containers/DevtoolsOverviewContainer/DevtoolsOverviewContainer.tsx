@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { StatsPanel, type SurfaceProfilerStats, useStats } from '@dxos/devtools';
 
-import { type DevtoolsCardData } from '../../capabilities/DevtoolsCards.tsx';
+import { type DevtoolsCardData, isDebugSurface } from '../../capabilities/DevtoolsCards.tsx';
 
 /**
  * The stats stack: one poll of the client's stats, fanned out to every card contributed to the role.
@@ -21,17 +21,20 @@ export const DevtoolsOverviewContainer = () => {
   const [stats, refreshStats] = useStats();
   const getProfilerStats = Surface.useProfilerSnapshot();
   const clearSurfaceProfiler = Surface.useProfilerClear();
+  // Resampled as surfaces mount and unmount: with a restored layout this container mounts at boot,
+  // before most of the app, so a single sample on mount would list only what existed then.
+  const mounted = Surface.useMounted();
   const [surfaceProfilerStats, setSurfaceProfilerStats] = useState<SurfaceProfilerStats[]>([]);
 
   // One row per surface mounted right now (the profiler records renders, not mounts), with its
-  // cumulative render timings and dispatch metrics joined on `surface/<id>/<role>` where they exist. The stack's own surfaces — the companion and every card on its role — are
-  // left out so the panel does not measure itself.
+  // cumulative render timings and dispatch metrics joined on `surface/<id>/<role>` where they exist.
+  // The debug tooling's own surfaces are left out so the panel does not measure itself.
   const sampleProfiler = useCallback(() => {
     const timings = new Map(getProfilerStats().map((stat) => [stat.id, stat]));
     const metrics = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
     setSurfaceProfilerStats(
-      Surface.getMounted()
-        .filter(({ role }) => !role.endsWith('.devtoolsOverview'))
+      mounted
+        .filter((surface) => !isDebugSurface(surface))
         .map(({ id, role }) => {
           // Mirrors the profiler's own id, which prints an anonymous surface as `undefined`.
           const profilerId = `surface/${id}/${role}`;
@@ -59,7 +62,7 @@ export const DevtoolsOverviewContainer = () => {
         })
         .sort((a, b) => b.maxActualDuration - a.maxActualDuration || a.id.localeCompare(b.id)),
     );
-  }, [getProfilerStats]);
+  }, [getProfilerStats, mounted]);
   useEffect(sampleProfiler, [sampleProfiler]);
 
   const handleRefresh = useCallback(() => {

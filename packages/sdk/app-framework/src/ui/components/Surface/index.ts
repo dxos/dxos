@@ -12,6 +12,7 @@ import {
   isSurfaceDebugEnabled,
   setSelectedSurfaceRole,
   setSurfaceDebug,
+  useMountedSurfaces,
   useSelectedSurfaceRole,
 } from './SurfaceDebug.tsx';
 import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics.ts';
@@ -74,6 +75,8 @@ export namespace Surface {
   export type Mounted = MountedSurface;
   /** The surfaces mounted right now (dev builds), without subscribing. */
   export const getMounted = getMountedSurfaces;
+  /** The mounted surfaces, updated on mount and unmount. */
+  export const useMounted = useMountedSurfaces;
   /** Selects a role's mounted surfaces for the highlight overlay and the Surfaces card. */
   export const select = setSelectedSurfaceRole;
   export const getSelected = getSelectedSurfaceRole;

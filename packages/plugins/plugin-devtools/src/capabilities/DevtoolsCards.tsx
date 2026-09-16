@@ -20,6 +20,15 @@ import {
   useSyncRows,
 } from '@dxos/devtools';
 
+/** Surfaces hosting the debug tooling; they and everything rendered inside them are not listed. */
+const DEBUG_HOSTS = new Set(['devtoolsOverview', 'debugDrawer']);
+
+/** Whether a mounted surface is part of the debug tooling rather than the app being inspected. */
+export const isDebugSurface = ({ id, role, ancestors }: Surface.Mounted): boolean =>
+  role.endsWith('.devtoolsOverview') ||
+  (id !== undefined && DEBUG_HOSTS.has(id)) ||
+  ancestors.some((ancestor) => DEBUG_HOSTS.has(ancestor));
+
 /** Data the stats stack passes to every `AppSurface.DevtoolsOverview` card. */
 export type DevtoolsCardData = {
   stats: Stats;
@@ -58,18 +67,18 @@ export const SurfaceProfilerCardSurface = ({
     setDebug(enabled);
   }, []);
 
-  // The selected role's surfaces with their data and dispatch metrics; recomputed with each sample
-  // (`surfaceProfilerStats`) so a refresh picks up newly mounted surfaces.
+  // The selected role's surfaces with their data and dispatch metrics, following mounts and unmounts.
   const selected = Surface.useSelected();
+  const mounted = Surface.useMounted();
   const detail = useMemo(() => {
     if (!selected) {
       return undefined;
     }
     const metrics = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
-    return Surface.getMounted()
-      .filter(({ role }) => role === selected)
+    return mounted
+      .filter((surface) => surface.role === selected && !isDebugSurface(surface))
       .map(({ id, role, data }) => ({ id, data, metric: metrics.get(`surface/${id}/${role}`) }));
-  }, [selected, surfaceProfilerStats]);
+  }, [selected, mounted]);
 
   return (
     <SurfaceProfilerCard
