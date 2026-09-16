@@ -124,7 +124,7 @@ const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...
   mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), ...etc);
 
 const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) =>
-  mx('dx-checkbox--switch dx-focus-ring-inset my-[calc((var(--dx-control)-1.25rem)/2)]', ...etc);
+  mx('dx-checkbox--switch dx-focus-ring-inset my-[calc((var(--dx-control)-var(--dx-switch-h))/2)]', ...etc);
 
 /** A checkbox or switch laid out with its own label: the root is the `<label>`, so the text toggles it. */
 const checkboxRoot: ComponentFunction<InputStyleProps> = (props, ...etc) =>
