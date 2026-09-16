@@ -38,15 +38,6 @@ export type GanttMarker = {
   level?: 'info' | 'warn' | 'error';
 };
 
-export type GanttData = {
-  lanes: readonly GanttLane[];
-  markers?: readonly GanttMarker[];
-  range?: { start: number; end: number };
-  now?: number;
-  onLaneSelect?: (lane: GanttLane) => void;
-  onMarkerSelect?: (marker: GanttMarker) => void;
-};
-
 const ROW_HEIGHT = 28;
 const HEADER_HEIGHT = 20;
 const PAD_X = 12;
@@ -86,16 +77,45 @@ const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; node: string; thread
     thread: 'stroke-orange-300',
     text: 'text-orange-500',
   },
-  running: { fill: 'fill-sky-500/40', node: 'fill-sky-300', thread: 'stroke-sky-300', text: 'text-sky-500' },
-  review: { fill: 'fill-cyan-500/40', node: 'fill-cyan-300', thread: 'stroke-cyan-300', text: 'text-cyan-500' },
-  done: { fill: 'fill-green-500/40', node: 'fill-green-300', thread: 'stroke-green-300', text: 'text-green-500' },
-  failed: { fill: 'fill-red-500/40', node: 'fill-red-300', thread: 'stroke-red-300', text: 'text-red-500' },
+  running: {
+    fill: 'fill-sky-500/40',
+    node: 'fill-sky-300',
+    thread: 'stroke-sky-300',
+    text: 'text-sky-500',
+  },
+  review: {
+    fill: 'fill-cyan-500/40',
+    node: 'fill-cyan-300',
+    thread: 'stroke-cyan-300',
+    text: 'text-cyan-500',
+  },
+  done: {
+    fill: 'fill-green-500/40',
+    node: 'fill-green-300',
+    thread: 'stroke-green-300',
+    text: 'text-green-500',
+  },
+  failed: {
+    fill: 'fill-red-500/40',
+    node: 'fill-red-300',
+    thread: 'stroke-red-300',
+    text: 'text-red-500',
+  },
 };
 
-type Row = { lane: GanttLane; depth: number; index: number; sessionId: string | undefined };
+type Row = {
+  lane: GanttLane;
+  depth: number;
+  index: number;
+  sessionId: string | undefined;
+};
 
 /** A session's rows: the session itself followed by every task it works in-session, contiguous. */
-type SessionGroup = { session: GanttLane; first: number; last: number };
+type SessionGroup = {
+  session: GanttLane;
+  first: number;
+  last: number;
+};
 
 /**
  * Rows grouped by the session that processes them: a session, then the tasks (and subtasks) it
@@ -141,6 +161,16 @@ const orderRows = (lanes: readonly GanttLane[]): { rows: Row[]; groups: SessionG
 const formatTokens = (tokens: NonNullable<GanttLane['tokens']>): string =>
   tokens.total >= 1_000 ? Unit.Thousand(tokens.total).toString() : String(tokens.total);
 
+export type GanttData = {
+  lanes: readonly GanttLane[];
+  markers?: readonly GanttMarker[];
+  range?: { start: number; end: number };
+  now?: number;
+  showNow?: boolean;
+  onLaneSelect?: (lane: GanttLane) => void;
+  onMarkerSelect?: (marker: GanttMarker) => void;
+};
+
 /** What every part reads: the ordered rows and the shared time axis, resolved once by the root. */
 type GanttContextValue = {
   rows: Row[];
@@ -149,10 +179,7 @@ type GanttContextValue = {
   markers: readonly GanttMarker[];
   markerById: Map<string, GanttMarker>;
   range: { start: number; end: number };
-  now?: number;
-  onLaneSelect?: (lane: GanttLane) => void;
-  onMarkerSelect?: (marker: GanttMarker) => void;
-};
+} & Pick<GanttData, 'onLaneSelect' | 'onMarkerSelect' | 'now' | 'showNow'>;
 
 const [GanttProvider, useGanttContext] = createContext<GanttContextValue>('Gantt');
 
@@ -169,7 +196,10 @@ type GanttRootProps = ThemedClassName<GanttData & { children?: ReactNode }>;
  * renders the chart alone.
  */
 const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
-  ({ lanes, markers = [], range: rangeProp, now, onLaneSelect, onMarkerSelect, children, ...props }, forwardedRef) => {
+  (
+    { lanes, markers = [], range: rangeProp, now, showNow, onLaneSelect, onMarkerSelect, children, ...props },
+    forwardedRef,
+  ) => {
     const { rows, groups } = useMemo(() => orderRows(lanes), [lanes]);
     const rowById = useMemo(() => new Map(rows.map((row) => [row.lane.id, row])), [rows]);
     const markerById = useMemo(() => new Map(markers.map((marker) => [marker.id, marker])), [markers]);
@@ -193,6 +223,7 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
         markerById={markerById}
         range={range}
         now={now}
+        showNow={showNow}
         onLaneSelect={onLaneSelect}
         onMarkerSelect={onMarkerSelect}
       >
@@ -301,7 +332,7 @@ type GanttChartProps = ThemedClassName<{}>;
  */
 // `forwardRef` rather than `composable`: the drawing is an `svg`, which the HTML-element helpers do not type.
 const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, forwardedRef) => {
-  const { rows, groups, rowById, markers, markerById, range, now, onLaneSelect, onMarkerSelect } =
+  const { rows, groups, rowById, markers, markerById, range, now, showNow, onLaneSelect, onMarkerSelect } =
     useGanttContext('Gantt.Chart');
   const svgRef = useRef<SVGSVGElement | null>(null);
   const ref = useComposedRefs(svgRef, forwardedRef);
@@ -369,8 +400,15 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
 
       {/* Under the lanes and connectors: a dependency on a still-running lane anchors at `now`
           and would otherwise be hidden by this line. */}
-      {now !== undefined && (
-        <line x1={x(now)} x2={x(now)} y1={0} y2={height} strokeDasharray='3 3' className='stroke-red-500' />
+      {now !== undefined && showNow && (
+        <line
+          x1={x(now)}
+          x2={x(now)}
+          y1={0}
+          y2={height}
+          strokeDasharray='3 3'
+          className={STATUS_COLOR.running.thread}
+        />
       )}
 
       {/* A session's rectangle encloses its own bar and the tasks it works in-session; a task it
@@ -407,19 +445,35 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
           const dep = rowById.get(depId);
           // Anchored on the dependency's last node, so the line meets a node rather than a bar edge.
           const anchor = dep && (laneEnd(dep.lane) ?? dep.lane.start);
-          return dep && anchor !== undefined
-            ? [
-                <line
-                  key={`${lane.id}:${depId}`}
-                  x1={nodeX(dep.lane, anchor)}
-                  x2={nodeX(dep.lane, anchor)}
-                  y1={rowY(dep.index)}
-                  y2={rowY(index)}
-                  strokeDasharray='2 2'
-                  className='stroke-orange-500'
-                />,
-              ]
-            : [];
+          if (!dep || anchor === undefined) {
+            return [];
+          }
+          const anchorX = nodeX(dep.lane, anchor);
+          return [
+            <line
+              key={`${lane.id}:${depId}`}
+              x1={anchorX}
+              x2={anchorX}
+              y1={rowY(dep.index)}
+              y2={rowY(index)}
+              strokeDasharray='2 2'
+              className={STATUS_COLOR.blocked.thread}
+            />,
+            // A waiter with no bar has nothing on its row for the line to reach, so it ends on a
+            // hollow node: the point the waiter is held at until the dependency resolves.
+            ...(lane.start === undefined
+              ? [
+                  <circle
+                    key={`${lane.id}:${depId}:hold`}
+                    cx={anchorX}
+                    cy={rowY(index)}
+                    r={NODE_RADIUS}
+                    strokeDasharray='2 2'
+                    className={mx('fill-base-surface', STATUS_COLOR.blocked.thread)}
+                  />,
+                ]
+              : []),
+          ];
         }),
       )}
 
