@@ -49,6 +49,9 @@ export class MemoryTransport implements Transport {
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private _pipes: Promise<void>[] = [];
+  // Detaches both pipe directions without ending either peer's wire-protocol stream, which is what
+  // `unpipe` meant here: the streams outlive the transport and the peer's must survive our close.
+  private readonly _abort = new AbortController();
 
   private _closed = false;
 
@@ -108,9 +111,14 @@ export class MemoryTransport implements Transport {
 
           log('connected');
           const remote = this._remoteConnection;
+          const detach = { signal: this._abort.signal, preventCancel: true, preventClose: true, preventAbort: true };
           this._pipes = [
-            this._options.stream.readable.pipeThrough(this._outgoingDelay).pipeTo(remote._options.stream.writable),
-            remote._options.stream.readable.pipeThrough(this._incomingDelay).pipeTo(this._options.stream.writable),
+            this._options.stream.readable
+              .pipeThrough(this._outgoingDelay, detach)
+              .pipeTo(remote._options.stream.writable, detach),
+            remote._options.stream.readable
+              .pipeThrough(this._incomingDelay, detach)
+              .pipeTo(this._options.stream.writable, detach),
           ];
           // A closed peer aborts these pipes; that is the normal end of the connection, not a fault.
           this._pipes.forEach((pipe) => void pipe.catch((err) => log('memory transport pipe ended', { err })));
@@ -138,10 +146,9 @@ export class MemoryTransport implements Transport {
       this._remoteConnection._closed = true;
       MemoryTransport._connections.delete(this._remoteInstanceId);
 
-      // Cancelling the source ends each pipe; web streams have no `unpipe`, and the TODO about
-      // hypercore streams lacking it no longer applies now that the seam is a web stream.
-      void this._options.stream.readable.cancel().catch(() => {});
-      void this._remoteConnection._options.stream.readable.cancel().catch(() => {});
+      // Detach both directions. Cancelling the readables instead would destroy the wire-protocol
+      // streams — including the peer's — where the `unpipe` this replaced only detached them.
+      this._abort.abort();
       this._pipes = [];
 
       this._remoteConnection.closed.emit();
