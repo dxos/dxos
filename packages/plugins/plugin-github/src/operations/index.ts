@@ -12,6 +12,7 @@ export const GitHubOperationHandlerSet = OperationHandlerSet.lazy([
   GitHubOperation.MaterializeGitHubTarget.pipe(Operation.lazyHandler(() => import('./materialize-target.ts'))),
   GitHubOperation.SyncGitHubRepositories.pipe(Operation.lazyHandler(() => import('./sync.ts'))),
   GitHubOperation.GenerateWalkthrough.pipe(Operation.lazyHandler(() => import('./generate-walkthrough.ts'))),
+  GitHubOperation.ImportPullRequest.pipe(Operation.lazyHandler(() => import('./import-pull-request.ts'))),
   GitHubOperation.SubmitPullRequestApproval.pipe(
     Operation.lazyHandler(() => import('./submit-pull-request-approval.ts')),
   ),

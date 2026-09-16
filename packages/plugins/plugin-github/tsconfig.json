@@ -25,6 +25,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -76,6 +79,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
@@ -92,6 +98,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"
