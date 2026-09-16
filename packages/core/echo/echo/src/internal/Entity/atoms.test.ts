@@ -5,6 +5,7 @@
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import * as Entity from '../../Entity.ts';
 import * as Obj from '../../Obj.ts';
 import { TestSchema } from '../../testing/index.ts';
 
@@ -13,7 +14,13 @@ const makePerson = (name: string) => Obj.make(TestSchema.Person, { name });
 /** Node removal is dispatched through the registry's async scheduler, so a sweep needs a real turn. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-describe('entity atom memoization', () => {
+describe('entity atoms', () => {
+  test('every accessor for the same view of an entity returns the same atom', ({ expect }) => {
+    const person = makePerson('Alice');
+    expect(Obj.atom(person)).toBe(Entity.atom(person));
+    expect(Obj.labelAtom(person)).toBe(Entity.labelAtom(person));
+  });
+
   test('one atom per entity, stable across mutation', ({ expect }) => {
     const person = makePerson('Alice');
     expect(Obj.atom(person)).toBe(Obj.atom(person));

@@ -14,10 +14,8 @@ import type * as Entity from '../../Entity.ts';
 import type * as Obj from '../../Obj.ts';
 import type * as Ref from '../../Ref.ts';
 import type * as Relation from '../../Relation.ts';
-import { getLabel } from '../Annotation/index.ts';
-import { memoizePerEntity, memoizePerEntityKey } from '../common/atom-memo.ts';
-import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
+import { getEntityAtoms } from '../Entity/atoms.ts';
 import { getDatabase, isEntity } from '../Entity/index.ts';
 import { RefTypeId } from '../Ref/ref.ts';
 import { loadRefTarget } from '../Ref/utils.ts';
@@ -36,23 +34,6 @@ const getReactiveOption = <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>): Ef
     const obj = db.getObjectById((snapshot as any).id);
     return obj ? Option.some(obj as T) : Option.none();
   });
-
-/**
- * Atom memo for ECHO objects.
- * Memoized on the object itself, so the atom lives exactly as long as the object does.
- */
-const objectFamily = memoizePerEntity(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>> => {
-  return Atom.make<Obj.Snapshot<T>>((get) => {
-    const unsubscribe = subscribe(obj, () => {
-      // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
-      get.setSelf(getSnapshot(obj) as unknown as Obj.Snapshot<T>);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-
-    return getSnapshot(obj) as unknown as Obj.Snapshot<T>;
-  });
-});
 
 /**
  * Atom family for ECHO refs (snapshot version).
@@ -80,50 +61,6 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     });
 
     return loadRefTarget(ref, get, setupTargetSubscription);
-  });
-});
-
-/**
- * Atom memo for ECHO object properties.
- * Memoized on the object, one atom per property key.
- *
- * One memo table spans every object type and property, so its element type is erased here; the
- * public {@link makeProperty} overloads restore it for callers.
- */
-const makePropertyAtom = <T extends Obj.Unknown, K extends keyof T>(obj: T, key: K): Atom.Atom<any> => {
-  return Atom.make((get) => {
-    let previousSnapshot = snapshotForComparison(obj[key]);
-
-    const unsubscribe = subscribe(obj, () => {
-      const newValue = obj[key];
-      // Content comparison against the last emitted snapshot: identity would be unequal for every
-      // array/object, firing on any mutation of `obj` (see `snapshotEquals`).
-      if (!snapshotEquals(newValue, previousSnapshot)) {
-        previousSnapshot = snapshotForComparison(newValue);
-        get.setSelf(previousSnapshot);
-      }
-    });
-
-    get.addFinalizer(() => unsubscribe());
-
-    return snapshotForComparison(obj[key]);
-  });
-};
-
-const propertyFamily = memoizePerEntityKey<Obj.Unknown, any, Atom.Atom<any>>(makePropertyAtom);
-
-/**
- * Atom family for ECHO objects — returns the live object, not a snapshot.
- */
-const objectWithReactiveFamily = memoizePerEntity(<T extends Obj.Unknown>(obj: T): Atom.Atom<T> => {
-  return Atom.make<T>((get) => {
-    const unsubscribe = subscribe(obj, () => {
-      get.setSelf(obj);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-
-    return obj;
   });
 });
 
@@ -156,42 +93,10 @@ const refPropertyFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>) =
   Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K] | undefined> => {
     return Atom.make<T[K] | undefined>((get) => {
       const target = get(refWithReactiveFamily(ref));
-      return target ? get(propertyFamily(target)(key)) : undefined;
+      return target ? get(getEntityAtoms(target).property(key)) : undefined;
     });
   }),
 );
-
-/**
- * Atom family for any ECHO entity (obj or relation) — returns a snapshot.
- */
-const entityFamily = memoizePerEntity(<T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot> => {
-  return Atom.make<Entity.Snapshot>((get) => {
-    const unsubscribe = subscribe(entity, () => {
-      // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
-      get.setSelf(getSnapshot(entity) as unknown as Entity.Snapshot);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-
-    return getSnapshot(entity) as unknown as Entity.Snapshot;
-  });
-});
-
-/**
- * Atom family for ECHO relations — returns a typed relation snapshot.
- */
-const relationFamily = memoizePerEntity(<T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>> => {
-  return Atom.make<Relation.Snapshot<T>>((get) => {
-    const unsubscribe = subscribe(relation, () => {
-      // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
-      get.setSelf(getSnapshot(relation) as unknown as Relation.Snapshot<T>);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-
-    return getSnapshot(relation) as unknown as Relation.Snapshot<T>;
-  });
-});
 
 /**
  * Create a read-only snapshot atom for a reactive object or ref.
@@ -208,7 +113,7 @@ export const makeAtom: {
 
   const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
-  return objectFamily(obj as any);
+  return getEntityAtoms(obj).snapshot;
 };
 
 /**
@@ -226,7 +131,7 @@ export const makeProperty: {
 
   const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
-  return propertyFamily(obj)(key);
+  return getEntityAtoms(obj).property(key);
 };
 
 /**
@@ -243,7 +148,7 @@ export const makeWithReactive: {
 
   const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
-  return objectWithReactiveFamily(obj);
+  return getEntityAtoms(obj).live;
 };
 
 /**
@@ -252,7 +157,7 @@ export const makeWithReactive: {
  */
 export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
-  return entityFamily(entity);
+  return getEntityAtoms(entity).snapshot;
 };
 
 /**
@@ -261,29 +166,8 @@ export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entit
  */
 export const makeRelation = <T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>> => {
   assertArgument(isEntity(relation), 'relation', 'Must be a reactive ECHO relation');
-  return relationFamily(relation);
+  return getEntityAtoms(relation).snapshot;
 };
-
-/**
- * Atom family for an entity's label string.
- * Fires only when the computed label actually changes, not on every entity mutation.
- */
-const labelAtomFamily = memoizePerEntity(<T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
-  return Atom.make<string | undefined>((get) => {
-    let previous = getLabel(entity);
-
-    const unsubscribe = subscribe(entity, () => {
-      const next = getLabel(entity);
-      if (next !== previous) {
-        previous = next;
-        get.setSelf(next);
-      }
-    });
-
-    get.addFinalizer(() => unsubscribe());
-    return previous;
-  });
-});
 
 /**
  * Create a read-only atom for the label of a reactive ECHO entity.
@@ -291,5 +175,5 @@ const labelAtomFamily = memoizePerEntity(<T extends Entity.Unknown>(entity: T): 
  */
 export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
-  return labelAtomFamily(entity);
+  return getEntityAtoms(entity).label;
 };

@@ -374,13 +374,15 @@ residency policy there is exactly one lifetime knob and the atoms inherit it.
 
 - **Entity-keyed families** (`objectFamily`, `objectWithReactiveFamily`,
   `entityFamily`, `relationFamily`, `labelAtomFamily`, `annotationFamily`
-  outer, `propertyFamily` outer): replace `Atom.family` with a per-family
-  hidden symbol slot on the proxy target, following `createProxy`, which
-  memoizes the proxy on its target the same way. Atom lifetime = entity
-  reachability; no module-level table, no `FinalizationRegistry`, no TTL, no
-  `keepAlive`. The target is canonical per object, so one atom per object is
-  preserved, and a mutable view resolves to its read-only proxy before the atom
-  is built.
+  outer, `propertyFamily` outer): replace every `Atom.family` with one
+  `EntityAtoms` record stored under a hidden symbol on the proxy target,
+  following `createProxy`, which memoizes the proxy on its target the same way.
+  `objectFamily`, `entityFamily` and `relationFamily` built the same snapshot
+  atom under different types, so they collapse to one `snapshot` field. Atom
+  lifetime = entity reachability; no module-level table, no
+  `FinalizationRegistry`, no TTL, no `keepAlive`. The target is canonical per
+  object, so one atom per object is preserved, and a mutable view resolves to
+  its read-only proxy before the record is built.
 - **Inner keying** (property name, annotation): a plain `Map` in the
   entity's slot — bounded by schema keys, dies with the entity. This also
   fixes the documented hazard that a nested `Atom.family` intermediate is
@@ -428,7 +430,7 @@ with `retainId`, or a branch binding — previously collapsed to one atom, so th
 second object was handed an atom subscribed to the first and its updates never
 arrived. That is the failure `proxy-identity.test.ts` was written for, fixed
 there for branch bindings by making them unequal; proxy keying fixes the class.
-Pinned by a test in `atom-memo.test.ts`.
+Pinned by a test in `Entity/atoms.test.ts`.
 
 Risks: (a) a consumer relying on a pinned value surviving with zero
 subscribers — the ECHO families are read-only derivations, so none should

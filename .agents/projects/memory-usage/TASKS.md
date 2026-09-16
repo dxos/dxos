@@ -268,27 +268,31 @@ registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
       Both atoms moved to `AppGraph.ts` in #12594 and carry the same TTL there;
       the per-node mounts that PR added pin `_node`, not these two derived
       atoms, so the grace period still reaches them.
-- [x] **W2. ECHO families → proxy-bounded.** `memoizePerEntity` /
-      `memoizePerEntityKey` (`internal/common/atom-memo.ts`) replace
-      `Atom.family` for the 8 entity-keyed families across `Obj/atoms.ts` and
-      `Annotation/atoms.ts`. Each memo stores its atom (or, for the two-level
-      property/annotation memos, a `Map` of them) in a hidden symbol slot on the
-      proxy target, the same way `createProxy` memoizes the proxy, so the entity
-      owns its atoms and no module-level table exists. A mutable view resolves to
-      its read-only proxy, so both share one atom and the atom never captures the
-      callback-scoped write capability.
+- [x] **W2. ECHO families → proxy-bounded.** One `EntityAtoms` record per
+      entity (`internal/Entity/atoms.ts`, `getEntityAtoms`) replaces the 8
+      entity-keyed `Atom.family`s across `Obj/atoms.ts` and
+      `Annotation/atoms.ts`. It is stored under one hidden symbol on the proxy
+      target, the way `createProxy` memoizes the proxy, and builds each atom on
+      first read: `snapshot` (serves `Obj.atom`, `Entity.atom` and
+      `Relation.atom`, previously three identical families), `live`, `label`,
+      and per-key `property`, `annotation`, `annotationProperty`. The public
+      `make*` functions are thin wrappers over it. The entity owns its atoms and
+      no module-level table exists. A mutable view resolves to its read-only
+      proxy, so both share one record and no atom captures the callback-scoped
+      write capability.
       Non-proxy entities (queue-stored objects and other branded shapes, which
       reach these families and can mint a fresh object per read) keep
-      `Atom.family`'s structural memoization — identity keying would churn an
+      an `Atom.family` of records keyed by id — identity keying would churn an
       atom per render there. Ref-keyed families (`refFamily`,
       `refSimpleFamily`, `refPropertyFamily`) keep `Atom.family` since
       `RefImpl` mints a fresh wrapper per read; `keepAlive` dropped from all 11. No `setIdleTTL` on any of them, so ECHO's future object-residency
-      policy stays the single knob. Tests: `atom-memo.test.ts` (memo identity,
-      mutable view shares the atom, per-key property atoms, node released when
-      unobserved, clean rebuild + re-subscribe, and a `--expose-gc`-gated
-      collection test). Verified 2026-09-16 after merging main: echo 616,
-      echo-client 560, app-graph 129, app-framework 275. The GC-gated test has
-      not been run against the target-slot version.
+      policy stays the single knob. Tests: `Entity/atoms.test.ts` (accessors
+      share one atom, one atom per entity, id-sharing objects, mutable view,
+      per-key property atoms, node released when unobserved, rebuild +
+      re-subscribe, and a collection test that runs under
+      `DX_DEBUG_LEAKS=1`). Verified 2026-09-16: echo 617, echo-client 560,
+      echo-react 38, schema 51, app-graph 129, app-framework 275; collection
+      test passing in leak mode.
 - [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
       is the store); `MemoryBackend`/`AttentionManager` hold values in their
       existing `Map`s, one pinned notify atom per owner; prune ids on
