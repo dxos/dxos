@@ -424,11 +424,34 @@ export class GraphBuilder<
       return;
     }
 
-    this._evicted = roots;
-    const ids = this._store.subgraph(roots);
+    // A root's inline descendants arrive with the root, in its producer's output, so they stay with it;
+    // releasing one would tear down that producer, which for a workspace is the graph root's connector.
+    const kept = new Set(roots);
+    let ids = this._store.subgraph(kept);
+    for (let changed = true; changed;) {
+      changed = false;
+      const released = new Set(ids);
+      for (const [key, inline] of this._connectorPreviousInlineIds) {
+        const producer = relationFromConnectorKey(key).id;
+        if (kept.has(producer) || released.has(producer)) {
+          continue;
+        }
+        for (const id of inline) {
+          if (released.has(id) && !kept.has(id)) {
+            kept.add(id);
+            changed = true;
+          }
+        }
+      }
+      if (changed) {
+        ids = this._store.subgraph(kept);
+      }
+    }
+
     if (ids.length > 0) {
       release(this, ids);
     }
+    this._evicted = roots;
   }
 
   /**
@@ -537,11 +560,18 @@ export class GraphBuilder<
   }
 
   _onRemoveNode(id: string): void {
-    this._nodeExtensions.delete(id);
-    const forNode = this._subscriptions.get(id);
-    if (forNode) {
-      this._subscriptions.delete(id);
-      forNode.forEach((cleanup) => cleanup());
+    this._onRemoveNodes([id]);
+  }
+
+  /** {@link _onRemoveNode} for many ids at once, so a layer can unwind its bookkeeping in one pass. */
+  _onRemoveNodes(ids: readonly string[]): void {
+    for (const id of ids) {
+      this._nodeExtensions.delete(id);
+      const forNode = this._subscriptions.get(id);
+      if (forNode) {
+        this._subscriptions.delete(id);
+        forNode.forEach((cleanup) => cleanup());
+      }
     }
   }
 }
@@ -642,11 +672,12 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
     this.#expanded.delete(primaryKey(target.id, target.relation));
   }
 
-  override _onRemoveNode(id: string): void {
-    super._onRemoveNode(id);
+  override _onRemoveNodes(ids: readonly string[]): void {
+    super._onRemoveNodes(ids);
     // A node that returns must expand again, so drop its expansion marks along with its subscriptions.
+    const removed = new Set(ids);
     for (const key of this.#expanded) {
-      if (primaryParts(key)[0] === id) {
+      if (removed.has(primaryParts(key)[0])) {
         this.#expanded.delete(key);
       }
     }
@@ -823,7 +854,7 @@ export const release = (builder: Any, ids: readonly string[]): void => {
     }
   }
 
-  ids.forEach((id) => builder._onRemoveNode(id));
+  builder._onRemoveNodes(ids);
   builder._store.release(ids);
 };
 

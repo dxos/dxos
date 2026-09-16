@@ -22,8 +22,8 @@ import { DeckCapabilities } from '#types';
 
 import {
   Navigation,
+  RESOLVE_TIMEOUT_MS,
   applyWorkspace,
-  awaitNodes,
   computeActiveUpdates,
   currentNavigation,
   navigateDeck,
@@ -37,12 +37,26 @@ import {
   updatePlankNames,
 } from '../util/index.ts';
 import {
+  awaitNodes,
   isCompanionOpen,
   openableChildren,
   openCompanionPlank,
   resolveDeckSpec,
   updateActiveDeck,
 } from '../util/index.ts';
+
+/** Subjects the graph does not hold whose workspace the retention answer names as unloaded. */
+const unloadedSubjects = Effect.fnUntraced(function* (graph: AppGraph.ReadableGraph, subjects: readonly string[]) {
+  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+  const retention = yield* Capability.getOption(AppCapabilities.AppGraphRetention);
+  const evictable = Option.match(retention, {
+    onNone: () => new Set<string>(),
+    onSome: ({ evictable }) => new Set(registry.get(evictable)),
+  });
+  return subjects.filter(
+    (id) => Option.isNone(AppGraph.getNode(graph, id)) && evictable.has(GraphPath.getWorkspaceFromPath(id)),
+  );
+});
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
@@ -55,11 +69,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
+      // Read before the switch below retains the target workspace: a subject missing from a workspace the
+      // graph unloaded is being rebuilt, while one missing anywhere else may never arrive.
+      const unloaded = yield* unloadedSubjects(graph, input.subject);
       for (const subjectId of input.subject) {
         NotFound.expandPath(graph, subjectId);
       }
-      // A subject in a workspace the graph unloaded only gains the provenance its URL needs once rebuilt.
-      yield* awaitNodes(graph, input.subject);
 
       {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -67,6 +82,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           yield* applyWorkspace(input.workspace);
         }
       }
+      yield* awaitNodes(graph, unloaded, RESOLVE_TIMEOUT_MS);
 
       // Dedup subjects against the active deck using EID identity.
       // The same object can appear under different graph paths (e.g., via collections vs types).

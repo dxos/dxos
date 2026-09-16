@@ -29,12 +29,7 @@ export default Capability.makeModule(
           previousDeck,
           active: get(layoutAtom).active,
         });
-      }).pipe(
-        Atom.withEquality(
-          (a: readonly string[], b: readonly string[]) =>
-            a.length === b.length && a.every((id, index) => id === b[index]),
-        ),
-      ),
+      }),
     };
 
     return Capability.contribute(AppCapabilities.AppGraphRetention, retention);

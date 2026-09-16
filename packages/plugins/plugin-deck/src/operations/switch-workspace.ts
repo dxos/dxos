@@ -3,12 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Fiber from 'effect/Fiber';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -19,49 +18,39 @@ import { log } from '@dxos/log';
 import { DeckCapabilities } from '#types';
 
 import { RESOLVE_TIMEOUT_MS, applyWorkspace, navigateDeck } from '../url/index.ts';
-import { openableChildren } from '../util/index.ts';
+import { firstOpenableChild, openableChildren } from '../util/index.ts';
 
-/** The first openable child of `id` once the graph has one, or `undefined` past the resolve timeout. */
-const firstOpenableChild = (registry: Registry.AtomRegistry, graph: AppGraph.ExpandableGraph, id: string) =>
-  Effect.callback<string>((resume) => {
-    const unsubscribe = registry.subscribe(graph.connections(id, 'child'), () => {
-      const [first] = openableChildren(graph, id);
-      if (first) {
-        unsubscribe();
-        resume(Effect.succeed(first));
-      }
-    });
-    // Checked after subscribing, so a child that arrived in between is not missed.
-    const [first] = openableChildren(graph, id);
-    if (first) {
-      unsubscribe();
-      resume(Effect.succeed(first));
-    }
-
-    return Effect.sync(() => unsubscribe());
-  }).pipe(
-    Effect.timeoutOrElse({ duration: RESOLVE_TIMEOUT_MS, orElse: () => Effect.succeed<string | undefined>(undefined) }),
-  );
+/** The pending seed for a switch into a workspace that had no children yet; the next switch supersedes it. */
+let seeding: Fiber.Fiber<void> | undefined;
 
 /** Opens the workspace's first child once its connectors produce one, if nothing was opened meanwhile. */
-const seedWhenLoaded = Effect.fnUntraced(function* (graph: AppGraph.ExpandableGraph, workspace: string) {
+const seedWhenLoaded = Effect.fnUntraced(function* (
+  graph: AppGraph.ExpandableGraph,
+  subject: string,
+  workspace: string,
+) {
   const registry = yield* Capability.get(Capabilities.AtomRegistry);
-  const first = yield* firstOpenableChild(registry, graph, workspace);
-  const { activeDeck } = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+  const first = yield* firstOpenableChild(registry, graph, subject, RESOLVE_TIMEOUT_MS);
+  const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
   const deck = yield* DeckCapabilities.getDeck();
-  if (first && activeDeck === workspace && deck.active.length === 0) {
-    yield* Operation.invoke(LayoutOperation.Open, { subject: [first] });
+  if (first && state.activeDeck === subject && deck.active.length === 0) {
+    // Replace, so Back skips the empty deck the switch itself navigated to.
+    yield* navigateDeck({ workspace, active: [first], companionPlanks: deck.companionPlanks, method: 'replace' });
+    yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
   }
 });
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const builder = yield* Capability.get(AppCapabilities.AppGraph);
-      const { graph } = builder;
+      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
+      if (seeding) {
+        yield* Fiber.interrupt(seeding);
+        seeding = undefined;
+      }
 
       yield* applyWorkspace(input.subject);
 
@@ -73,25 +62,26 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const { open } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
       const remembered = open[input.subject]?.active ?? [];
 
-      // Seeding reads children, which an unloaded workspace only has once its expansion flushes.
+      const workspace = GraphPath.getWorkspaceToken(input.subject);
+      if (!workspace) {
+        return;
+      }
+
       const seeds = remembered.length === 0 && platform !== 'mobile';
       if (seeds) {
         AppGraph.expandSync(graph, input.subject, 'child');
-        yield* Effect.promise(() => AppGraphBuilder.flush(builder));
       }
       const seeded = seeds ? openableChildren(graph, input.subject).slice(0, 1) : [];
+      const active = remembered.length > 0 ? remembered : seeded;
+      yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
+
       if (seeds && seeded.length === 0) {
-        yield* Effect.forkDetach(
-          seedWhenLoaded(graph, input.subject).pipe(
+        // An unloaded workspace has no children until its connectors emit, which may take longer than a flush.
+        seeding = yield* Effect.forkDetach(
+          seedWhenLoaded(graph, input.subject, workspace).pipe(
             Effect.catchCause((cause) => Effect.sync(() => log.warn('seeding the workspace failed', { cause }))),
           ),
         );
-      }
-      const active = remembered.length > 0 ? remembered : seeded;
-
-      const workspace = GraphPath.getWorkspaceToken(input.subject);
-      if (workspace) {
-        yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
       }
 
       const first = active[0];

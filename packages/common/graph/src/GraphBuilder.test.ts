@@ -446,29 +446,37 @@ describe('retention', () => {
     expect(children('root/w0')).to.deep.equal([]);
   });
 
-  test('releasing an inline descendant tears down the connector that produced it', async () => {
+  test('an evicted root keeps the inline children it was emitted with, and its producer stays live', async () => {
     const harness = setup();
     const { builder, registry, children } = harness;
+    const ids = Atom.make(['w']).pipe(Atom.keepAlive);
     GraphBuilder.addExtension(builder, {
       id: 'children',
       connector: (node) =>
         Atom.make((get) =>
           Option.match(get(node), {
             onNone: (): GraphBuilder.ModelNodeArg[] => [],
-            onSome: (source) => (source.id === GraphNode.RootId ? [{ id: 'w', nodes: [{ id: 'x' }] }] : []),
+            onSome: (source) =>
+              source.id === GraphNode.RootId
+                ? get(ids).map((id) => ({ id, nodes: [{ id: 'x' }] }))
+                : source.id === 'root/w/x'
+                  ? [{ id: 'y' }]
+                  : [],
           }),
         ),
     });
     await visit(harness, GraphNode.RootId);
-    expect(children('root/w')).to.deep.equal(['root/w/x']);
+    await visit(harness, 'root/w/x');
+    expect(children('root/w/x')).to.deep.equal(['root/w/x/y']);
 
-    const evictable = Atom.make<readonly string[]>(['root/w']).pipe(Atom.keepAlive);
-    GraphBuilder.setRetention(builder, { evictable });
+    GraphBuilder.setRetention(builder, { evictable: Atom.make(['root/w']) });
     await GraphBuilder.flush(builder);
-    expect(children('root/w')).to.deep.equal([]);
-
-    registry.set(evictable, []);
-    await visit(harness, GraphNode.RootId);
     expect(children('root/w')).to.deep.equal(['root/w/x']);
+    expect(children('root/w/x')).to.deep.equal([]);
+
+    // The graph root's connector was not torn down, so a new workspace still arrives.
+    registry.set(ids, ['w', 'v']);
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/w', 'root/v']);
   });
 });
