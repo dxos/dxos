@@ -5,9 +5,8 @@
 import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
-import { type Database, Entity, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, type Database, Entity, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { isNonNullable } from '@dxos/util';
 
 /**
@@ -86,7 +85,7 @@ export const useRelatedObjects = (
           if (!typeEntity) {
             return true;
           }
-          return !HiddenAnnotation.get(Type.getSchema(typeEntity)).pipe(Option.getOrElse(() => false));
+          return !Annotation.HiddenAnnotation.get(Type.getSchema(typeEntity)).pipe(Option.getOrElse(() => false));
         })
     );
   }, [subject, objects, options.references, options.relations]);

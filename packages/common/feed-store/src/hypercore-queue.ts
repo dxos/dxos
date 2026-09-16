@@ -11,35 +11,35 @@ import { type ReadStreamOptions } from '@dxos/hypercore';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type FeedWrapper } from './feed-wrapper.ts';
-import { type FeedBlock } from './types.ts';
+import { type HypercoreWrapper } from './hypercore-wrapper.ts';
+import { type HypercoreBlock } from './types.ts';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true, // Keep reading until closed.
   batch: 1024, // Read in batches.
 };
 
-export type FeedQueueOptions = {};
+export type HypercoreQueueOptions = {};
 
 /**
  * Async queue using an AsyncIterator created from a hypercore.
  */
-export class FeedQueue<T extends {}> {
-  public updated = new Event<FeedQueue<T>>();
+export class HypercoreQueue<T extends {}> {
+  public updated = new Event<HypercoreQueue<T>>();
 
-  private readonly _messageTrigger = new Trigger<FeedBlock<T>>({
+  private readonly _messageTrigger = new Trigger<HypercoreBlock<T>>({
     autoReset: true,
   });
 
   private _feedConsumer?: Writable = undefined;
   private _next?: () => void;
-  private _currentBlock?: FeedBlock<T> = undefined;
+  private _currentBlock?: HypercoreBlock<T> = undefined;
   private _index = -1;
 
   // prettier-ignore
   constructor(
-    private readonly _feed: FeedWrapper<T>,
-    private readonly _options: FeedQueueOptions = {},
+    private readonly _feed: HypercoreWrapper<T>,
+    private readonly _options: HypercoreQueueOptions = {},
   ) {}
 
   [inspect.custom](): string {
@@ -176,14 +176,14 @@ export class FeedQueue<T extends {}> {
   /**
    * Get the block at the head of the queue without removing it.
    */
-  peek(): FeedBlock<T> | undefined {
+  peek(): HypercoreBlock<T> | undefined {
     return this._currentBlock;
   }
 
   /**
    * Pop block at the head of the queue.
    */
-  async pop(): Promise<FeedBlock<T>> {
+  async pop(): Promise<HypercoreBlock<T>> {
     if (!this.isOpen) {
       throw new Error(`Queue closed: ${this.feed.key.truncate()}`);
     }

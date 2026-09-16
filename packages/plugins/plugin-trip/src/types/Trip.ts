@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import { TRIP_SKILL_KEY } from '../skills/keys.ts';
 import * as Segment from './Segment.ts';
@@ -26,7 +25,7 @@ export class Trip extends Type.makeObject<Trip>(DXN.make('org.dxos.type.trip', '
     end: Schema.optional(Format.DateTime),
     segments: Schema.Array(Ref.Ref(Segment.Segment)).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--airplane-takeoff--regular', hue: 'sky' }),
     Skill.SkillsAnnotation.set([TRIP_SKILL_KEY]),
   ),

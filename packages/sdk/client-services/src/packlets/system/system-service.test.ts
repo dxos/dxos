@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { EffectEx, Event } from '@dxos/effect';
+import { EffectEx, Hook } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 
@@ -30,20 +30,20 @@ describe('SystemService', () => {
     statusRequested = new Trigger<SystemStatus>();
     steps = [];
 
-    const bus = Event.makeBus();
+    const controller = Hook.makeController();
     const scope = Effect.runSync(Scope.make());
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
     Effect.runSync(
       Effect.gen(function* () {
-        yield* Event.on(Closing, () => Effect.sync(() => void steps.push('close')));
-        yield* Event.on(WipingStorage, () => Effect.sync(() => void steps.push('wipe')));
-        yield* Event.on(Reset, () => Effect.sync(() => void steps.push('reset')));
-      }).pipe(Effect.provideService(Event.Bus, bus), Scope.provide(scope)),
+        yield* Hook.on(Closing, () => Effect.sync(() => void steps.push('close')));
+        yield* Hook.on(WipingStorage, () => Effect.sync(() => void steps.push('wipe')));
+        yield* Hook.on(Reset, () => Effect.sync(() => void steps.push('reset')));
+      }).pipe(Effect.provideService(Hook.Controller, controller), Scope.provide(scope)),
     );
     systemService = new SystemServiceImpl({
       config: () => config,
       getDiagnostics: async () => ({}),
-      bus,
+      controller,
     });
     systemService.setStatus(SystemStatus.ACTIVE);
     systemService.statusRequested.on((status) => {

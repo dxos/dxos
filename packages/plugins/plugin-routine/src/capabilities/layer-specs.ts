@@ -19,6 +19,7 @@ import {
   ProcessManager,
   RemoteOperationInvoker,
   RemoteProcessManager,
+  RemoteTraceMonitor,
   RemoteTriggerManager,
   TriggerDispatcher,
   TriggerMonitor,
@@ -262,7 +263,7 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
 const RemoteProcessManagerSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [ClientService, AtomRegistry.AtomRegistry],
+    requires: [ClientService, AtomRegistry.AtomRegistry, RemoteTraceMonitor.Service],
     provides: [RemoteProcessManager.Service],
   },
   () =>
@@ -271,6 +272,28 @@ const RemoteProcessManagerSpec = LayerSpec.make(
         const client = yield* ClientService;
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         return edgeUrl ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop;
+      }),
+    ),
+);
+
+/**
+ * Application-scoped {@link RemoteTraceMonitor.Service}: the swarm-backed monitor contributed by
+ * plugin-client when a client is available, else {@link RemoteTraceMonitor.layerNoop}.
+ */
+const RemoteTraceMonitorSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Capability.Service],
+    provides: [RemoteTraceMonitor.Service],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const capabilities = yield* Capability.Service;
+        const monitors = capabilities.getAll(Capabilities.RemoteTraceMonitor);
+        return monitors.length > 0
+          ? Layer.succeed(RemoteTraceMonitor.Service, monitors[0])
+          : RemoteTraceMonitor.layerNoop;
       }),
     ),
 );
@@ -311,6 +334,7 @@ export default Capability.makeModule(() =>
       RemoteTriggerManagerSpec,
       TriggerMonitorSpec,
       RemoteOperationInvokerSpec,
+      RemoteTraceMonitorSpec,
       RemoteProcessManagerSpec,
     ]),
     Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),

@@ -22,7 +22,7 @@ import {
   makeBridgeServiceClientOverProtocol,
 } from '@dxos/client-protocol';
 import { type Config, ConfigService } from '@dxos/config';
-import { Event } from '@dxos/effect';
+import { Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
@@ -138,8 +138,8 @@ export const makeWorkerRuntime = ({
 }: WorkerRuntimeOptions): Effect.Effect<WorkerRuntimeService, never, Scope.Scope> =>
   Effect.gen(function* () {
     // Held so effects that outlive this construction — a session finalizer, which the framework runs
-    // when it closes a session scope — still reach the bus.
-    const bus = yield* Event.Bus;
+    // when it closes a session scope — still reach the controller.
+    const controller = yield* Hook.Controller;
     const transportFactory = new RtcTransportProxyFactory();
     const ready = new Trigger<Error | undefined>();
     const sessions = new Set<WorkerSession>();
@@ -183,11 +183,11 @@ export const makeWorkerRuntime = ({
     });
 
     // The runtime's own subscriptions: the reset chain and session bookkeeping.
-    yield* Event.on(HostEvents.Closing, () => closeStack);
+    yield* Hook.on(HostEvents.Closing, () => closeStack);
     /** Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a reset gets here. */
-    yield* Event.on(HostEvents.WipingStorage, () => wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie));
-    yield* Event.on(HostEvents.Reset, () => requestShutdown);
-    yield* Event.on(
+    yield* Hook.on(HostEvents.WipingStorage, () => wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie));
+    yield* Hook.on(HostEvents.Reset, () => requestShutdown);
+    yield* Hook.on(
       SessionClosed,
       Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {
         sessions.delete(session);
@@ -224,15 +224,15 @@ export const makeWorkerRuntime = ({
         }).pipe(
           Layer.provideMerge(sqlite),
           Layer.provide(Layer.succeed(ConfigService, config)),
-          Layer.provide(Layer.succeed(Event.Bus, bus)),
+          Layer.provide(Layer.succeed(Hook.Controller, controller)),
         ),
       ).pipe(Scope.provide(stackScope));
       stack = stackContext;
       log('worker-runtime: stack built, opening');
       // `StackOpened` resolves once every handler the cascade triggered has run.
       yield* Effect.gen(function* () {
-        yield* Event.emit(HostEvents.Opening, undefined);
-        yield* Event.emit(HostEvents.StackOpened, undefined);
+        yield* Hook.emit(HostEvents.Opening, undefined);
+        yield* Hook.emit(HostEvents.StackOpened, undefined);
       }).pipe(Effect.provide(stackContext));
       log('worker-runtime: stack opened, signalling ready');
       ready.wake(undefined);
@@ -320,8 +320,8 @@ export const makeWorkerRuntime = ({
         const session: WorkerSession = { bridgeService };
         sessions.add(session);
         yield* Effect.addFinalizer(() =>
-          Event.emit(SessionClosed, { session }).pipe(
-            Effect.provideService(Event.Bus, bus),
+          Hook.emit(SessionClosed, { session }).pipe(
+            Effect.provideService(Hook.Controller, controller),
             // A subscriber failing must not keep the transport open.
             Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
           ),
@@ -343,7 +343,7 @@ export const makeWorkerRuntime = ({
       createSession,
       connectWebrtcBridge: (session) => Effect.sync(() => connectBridge(session)),
     } satisfies WorkerRuntimeService;
-  }).pipe(Effect.provide(Event.busLayer));
+  }).pipe(Effect.provide(Hook.controllerLayer));
 
 /**
  * Layer providing the {@link WorkerRuntime} service; the runtime lives as long as the layer.

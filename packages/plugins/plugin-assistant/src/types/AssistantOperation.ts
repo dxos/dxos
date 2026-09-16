@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Chat from '@dxos/assistant/Chat';
-import { AgentService } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -141,7 +141,7 @@ export const RunPromptInChat = Operation.make({
     // An agent already runs inside a session; handing it one that starts another is a footgun.
     skipRegistry: true,
   },
-  services: [Capability.Service, Database.Service, AgentService],
+  services: [Capability.Service, Database.Service, AgentService.AgentService],
   input: Schema.Struct({
     chat: Schema.optional(Type.getSchema(Chat.Chat)),
     // The object whose companion chat should run the prompt — the way to name a companion chat that

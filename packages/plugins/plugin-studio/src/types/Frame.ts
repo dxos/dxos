@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as MediaArtifact from './MediaArtifact.ts';
 
@@ -22,9 +21,9 @@ export class Frame extends Type.makeObject<Frame>(DXN.make('org.dxos.type.frame'
   Schema.Struct({
     name: Schema.optional(Schema.String),
     notes: Schema.optional(Schema.String.annotate({ title: 'Notes' })),
-    artifact: Schema.optional(Ref.Ref(MediaArtifact.MediaArtifact).pipe(FormInputAnnotation.set(false))),
+    artifact: Schema.optional(Ref.Ref(MediaArtifact.MediaArtifact).pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--frame-corners--regular', hue: 'indigo' }),
     // Owned child of a Storyboard — hidden from the navtree type list and object picker.
     Annotation.HiddenAnnotation.set(true),

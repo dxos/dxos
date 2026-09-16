@@ -117,7 +117,7 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
           autoFocus
           schema={credentialForm.schema}
           defaultValues={credentialForm.defaultValues ?? {}}
-          onSave={(values: any) => submit(connector, values)}
+          onSave={(values) => submit(connector, values)}
         >
           <Form.Content>
             <Form.Fields />

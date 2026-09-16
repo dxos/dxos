@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MessageInitShape, create } from '@bufbuild/protobuf';
+import { create } from '@bufbuild/protobuf';
 import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -22,8 +22,6 @@ const payload = (value: number[]) => create(AnySchema, { typeUrl: 'dxos.test.Mes
 
 const randomPeer = (name: string): PeerInfo =>
   create(PeerSchema, { peerKey: PublicKey.random().toHex(), identityDid: `did:test:${name}` });
-
-const message = (init: MessageInitShape<typeof MessageSchema>): Message => create(MessageSchema, init);
 
 /**
  * A capture sink for a single subscription. Delivered messages are classified by shape: a
@@ -61,7 +59,7 @@ describe('MemorySignalManager', () => {
     await receiver.subscribeMessages({ peer: receiverPeer, onMessage: sink.onMessage });
     await sender.sendMessage(
       Context.default(),
-      message({
+      create(MessageSchema, {
         author: senderPeer,
         recipient: receiverPeer,
         payload: payload([1, 2, 3]),
@@ -89,7 +87,7 @@ describe('MemorySignalManager', () => {
 
     await sender.sendMessage(
       Context.default(),
-      message({
+      create(MessageSchema, {
         author: randomPeer('sender'),
         recipient: peerB,
         payload: payload([2]),
@@ -115,7 +113,7 @@ describe('MemorySignalManager', () => {
     await receiver.subscribeMessages({ peer: receiverPeer, onMessage: second.onMessage });
     await sender.sendMessage(
       Context.default(),
-      message({
+      create(MessageSchema, {
         author: randomPeer('sender'),
         recipient: receiverPeer,
         payload: payload([7]),
@@ -137,14 +135,14 @@ describe('MemorySignalManager', () => {
     const unsubscribe = await receiver.subscribeMessages({ peer: receiverPeer, onMessage: sink.onMessage });
     await sender.sendMessage(
       Context.default(),
-      message({ author: senderPeer, recipient: receiverPeer, payload: payload([1]) }),
+      create(MessageSchema, { author: senderPeer, recipient: receiverPeer, payload: payload([1]) }),
     );
     await expect.poll(() => sink.messages.length).toBe(1);
 
     await unsubscribe();
     await sender.sendMessage(
       Context.default(),
-      message({ author: senderPeer, recipient: receiverPeer, payload: payload([2]) }),
+      create(MessageSchema, { author: senderPeer, recipient: receiverPeer, payload: payload([2]) }),
     );
     await sleep(20);
     expect(sink.messages).toHaveLength(1);
@@ -165,7 +163,7 @@ describe('MemorySignalManager', () => {
     await unsubscribeFirst();
     await sender.sendMessage(
       Context.default(),
-      message({
+      create(MessageSchema, {
         author: randomPeer('sender'),
         recipient: receiverPeer,
         payload: payload([5]),
@@ -188,7 +186,7 @@ describe('MemorySignalManager', () => {
 
     await sender.sendMessage(
       Context.default(),
-      message({
+      create(MessageSchema, {
         author: randomPeer('sender'),
         tags: ['type:a'],
         payload: payload([4, 2]),
@@ -210,12 +208,14 @@ describe('MemorySignalManager', () => {
     const author = randomPeer('sender');
 
     // Neither recipient nor tags.
-    await expect(sender.sendMessage(Context.default(), message({ author, payload: payload([1]) }))).rejects.toThrow();
+    await expect(
+      sender.sendMessage(Context.default(), create(MessageSchema, { author, payload: payload([1]) })),
+    ).rejects.toThrow();
     // Both recipient and tags.
     await expect(
       sender.sendMessage(
         Context.default(),
-        message({
+        create(MessageSchema, {
           author,
           recipient: randomPeer('receiver'),
           tags: ['type:a'],
