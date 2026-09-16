@@ -19,15 +19,9 @@ const DEFAULT_MAX_RETRIES_COUNT = 3;
 const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 
 export type RetryConfig = {
-  /**
-   * Retries, not counting the initial request.
-   *
-   * `'unbounded'` keeps retrying until the call succeeds, EDGE answers with a failure it did not
-   * mark retryable, or `ctx` is disposed — for a caller that has no other way to make progress and
-   * must outlast a transient condition EDGE names a `Retry-After` for, however long it lasts.
-   */
-  count: number | 'unbounded';
-  /** Delay before retries in ms, when the response names no `Retry-After`. */
+  /** Number of retries, not counting the initial request. */
+  count: number;
+  /** Delay before retries in ms. */
   timeout?: number;
   /** Random additional delay to spread retries. */
   jitter?: number;
@@ -439,7 +433,7 @@ const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
 
 /** @deprecated */
 const createRetryHandler = ({ retry }: HttpRequestArgs) => {
-  if (!retry || (typeof retry.count === 'number' && retry.count < 1)) {
+  if (!retry || retry.count < 1) {
     return async () => false;
   }
   let retries = 0;
@@ -447,12 +441,15 @@ const createRetryHandler = ({ retry }: HttpRequestArgs) => {
   const baseTimeout = retry.timeout ?? DEFAULT_RETRY_TIMEOUT;
   const jitter = retry.jitter ?? DEFAULT_RETRY_JITTER;
   return async (ctx: Context, retryAfter?: number) => {
-    if (ctx.disposed || (maxRetries !== 'unbounded' && ++retries > maxRetries)) {
+    if (++retries > maxRetries || ctx.disposed) {
       return false;
     }
-    // Jittered even when EDGE names the delay: it hands every device holding the space the same
-    // `Retry-After`, which would otherwise have them all come back in lockstep.
-    await sleep((retryAfter ?? baseTimeout) + Math.random() * jitter);
+    if (retryAfter) {
+      await sleep(retryAfter);
+    } else {
+      const timeout = baseTimeout + Math.random() * jitter;
+      await sleep(timeout);
+    }
     return true;
   };
 };

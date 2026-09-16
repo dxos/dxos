@@ -35,7 +35,7 @@ const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
 
 const DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL = 3_000;
 
-const MAX_EDGE_RETRIES = 2;
+const MAX_EDGE_RETRIES = 5;
 
 const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
 
@@ -263,10 +263,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
           ctx,
           this._spaceId,
           { credentials: encodedCredentials },
-          // Unbounded because a device with no reachable peer has no other path to admission, and
-          // the condition EDGE reports as retryable — the space owner's agent not admitted yet —
-          // routinely outlasts a fixed budget. `notarize` is called with `timeout: 0` to match.
-          { retry: { count: 'unbounded', timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
+          { retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
         );
 
         log('edge notarization success');
