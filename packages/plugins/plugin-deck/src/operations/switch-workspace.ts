@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 
@@ -79,7 +80,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         // An unloaded workspace has no children until its connectors emit, which may take longer than a flush.
         seeding = yield* Effect.forkDetach(
           seedWhenLoaded(graph, input.subject, workspace).pipe(
-            Effect.catchCause((cause) => Effect.sync(() => log.warn('seeding the workspace failed', { cause }))),
+            Effect.catchCause((cause) =>
+              Cause.hasInterruptsOnly(cause)
+                ? Effect.void
+                : Effect.sync(() => log.warn('seeding the workspace failed', { cause })),
+            ),
           ),
         );
       }

@@ -315,6 +315,7 @@ export {
   release,
   removeExtension,
   setRetention,
+  wasReleased,
 } from '@dxos/graph/GraphBuilder';
 
 /**

@@ -386,6 +386,19 @@ describe('retention', () => {
     expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
   });
 
+  test('a released node reports as released until a connector produces it again', async () => {
+    const harness = await loaded();
+    const { builder, evict } = harness;
+    expect(GraphBuilder.wasReleased(builder, 'root/w0/c0')).to.be.false;
+
+    await evict(['root/w0']);
+    expect(GraphBuilder.wasReleased(builder, 'root/w0/c0')).to.be.true;
+    expect(GraphBuilder.wasReleased(builder, 'root/w1/c0')).to.be.false;
+
+    await visit(harness, 'root/w0');
+    expect(GraphBuilder.wasReleased(builder, 'root/w0/c0')).to.be.false;
+  });
+
   test('the graph root is never released, whatever the answer', async () => {
     const { children, evict } = await loaded();
     await evict([GraphNode.RootId]);

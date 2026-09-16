@@ -9,7 +9,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { DeckSchema } from '#types';
 
-import { evictableWorkspaces } from './workspace-retention.ts';
+import { evictableWorkspaces, sameWorkspaces } from './workspace-retention.ts';
 
 const SPACE_A = 'BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const SPACE_B = 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
@@ -48,5 +48,13 @@ describe('evictableWorkspaces', () => {
         active: [],
       }),
     ).to.deep.eq([a]);
+  });
+});
+
+describe('sameWorkspaces', () => {
+  test('ignores order, so reordering the rail is not a change in the answer', ({ expect }) => {
+    expect(sameWorkspaces([a, b], [b, a])).toBe(true);
+    expect(sameWorkspaces([a, b], [a, c])).toBe(false);
+    expect(sameWorkspaces([a], [a, b])).toBe(false);
   });
 });

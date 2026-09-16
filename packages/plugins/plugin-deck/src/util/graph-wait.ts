@@ -9,7 +9,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 
 import { openableChildren } from './openable-children.ts';
 
-/** Waits up to `timeoutMs` for any of `ids` the graph does not hold yet. */
+/** Waits up to `timeoutMs` for each of `ids` the graph does not hold yet. */
 export const awaitNodes = (
   graph: AppGraph.ReadableGraph,
   ids: readonly string[],

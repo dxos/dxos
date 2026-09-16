@@ -12,7 +12,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { DeckCapabilities } from '#types';
 
-import { evictableWorkspaces } from '../util/index.ts';
+import { evictableWorkspaces, pendingPlanks, sameWorkspaces } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -27,9 +27,9 @@ export default Capability.makeModule(
           rootChildren: get(graph.connections(GraphNode.RootId, 'child')).map(({ id }) => id),
           activeDeck,
           previousDeck,
-          active: get(layoutAtom).active,
+          active: [...get(layoutAtom).active, ...get(pendingPlanks)],
         });
-      }),
+      }).pipe(Atom.withEquality(sameWorkspaces)),
     };
 
     return Capability.contribute(AppCapabilities.AppGraphRetention, retention);

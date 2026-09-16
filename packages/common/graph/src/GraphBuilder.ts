@@ -265,6 +265,8 @@ export class GraphBuilder<
   _unsubscribeRetention?: CleanupFn;
   /** The roots the last collection released. */
   _evicted: ReadonlySet<string> = new Set();
+  /** Ids released and not yet materialized again; see {@link wasReleased}. */
+  readonly _released = new Set<string>();
   _collectScheduled = false;
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
@@ -367,6 +369,9 @@ export class GraphBuilder<
       true,
     );
     this._store.addNodes(nodes);
+    for (const nodeId of [...ids, ...currentInlineIds]) {
+      this._released.delete(nodeId);
+    }
     this._store.addEdges(nodes.map((node) => ({ source: id, target: node.id, relation })));
     if (ids.length > 0) {
       const sortedIds = [...nodes]
@@ -426,30 +431,16 @@ export class GraphBuilder<
 
     // A root's inline descendants arrive with the root, in its producer's output, so they stay with it;
     // releasing one would tear down that producer, which for a workspace is the graph root's connector.
-    const kept = new Set(roots);
-    let ids = this._store.subgraph(kept);
-    for (let changed = true; changed;) {
-      changed = false;
-      const released = new Set(ids);
-      for (const [key, inline] of this._connectorPreviousInlineIds) {
-        const producer = relationFromConnectorKey(key).id;
-        if (kept.has(producer) || released.has(producer)) {
-          continue;
-        }
-        for (const id of inline) {
-          if (released.has(id) && !kept.has(id)) {
-            kept.add(id);
-            changed = true;
-          }
-        }
-      }
-      if (changed) {
-        ids = this._store.subgraph(kept);
+    const released = new Set(this._store.subgraph(roots));
+    for (const [key, inline] of this._connectorPreviousInlineIds) {
+      const producer = relationFromConnectorKey(key).id;
+      if (!roots.has(producer) && !released.has(producer)) {
+        inline.forEach((id) => released.delete(id));
       }
     }
 
-    if (ids.length > 0) {
-      release(this, ids);
+    if (released.size > 0) {
+      release(this, [...released]);
     }
     this._evicted = roots;
   }
@@ -802,16 +793,17 @@ export const removeExtension: {
   return builder;
 });
 
-/** Waits until no flush or retention collection is pending, including ones scheduled while waiting. */
+/** Waits for the pending flush, then for the collection pending once it lands, which covers any it triggered. */
 export const flush = async (builder: Any): Promise<void> => {
-  for (;;) {
-    const pending = [builder._flushPromise, builder._collectPromise];
-    await Promise.all(pending);
-    if (pending[0] === builder._flushPromise && pending[1] === builder._collectPromise) {
-      return;
-    }
-  }
+  await builder._flushPromise;
+  await builder._collectPromise;
 };
+
+/**
+ * Whether the builder released `id` and no connector has produced it since, so a caller missing the node
+ * can tell one being rebuilt from one that may never arrive.
+ */
+export const wasReleased = (builder: Any, id: string): boolean => builder._released.has(id);
 
 /**
  * Unloads the nodes and everything the builder remembers about them: expansion subscriptions, the
@@ -854,6 +846,7 @@ export const release = (builder: Any, ids: readonly string[]): void => {
     }
   }
 
+  ids.forEach((id) => builder._released.add(id));
   builder._onRemoveNodes(ids);
   builder._store.release(ids);
 };
