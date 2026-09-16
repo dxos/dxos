@@ -65,11 +65,7 @@
           // parameter's default, the `any` in AnyTag, or Contributions<T> as MultiTag's
           // key value. Removing the MultiTag arm clears it, so the cause is in how a
           // multi capability's identifier reaches Requirements.
-          "missingEffectContext": "off",
-          // TODO(wittjosiah): Re-enable once cleared. Both findings are in
-          // `createToolkit`, where `OpaqueToolkit`'s `any` makes one handler layer's
-          // output look like another's requirement. Typing OpaqueToolkit clears it.
-          "layerMergeAllWithDependencies": "off"
+          "missingEffectContext": "off"
         }
       }
     ]

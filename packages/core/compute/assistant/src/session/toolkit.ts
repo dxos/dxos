@@ -2,6 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// `OpaqueToolkit.layer` is `Layer<unknown, E, R>` by design — the point of an opaque toolkit is
+// that the consumer cannot see which handlers it carries. To this rule an `unknown` output, and
+// the `Handler<any>` a resolved skill toolkit yields, look like they satisfy any other layer's
+// requirement, so it reads a dependency into three handler layers that are independent peers.
+// `mergeAll` is the right combinator here; the finding clears only by giving up the opacity.
+/** @effect-diagnostics layerMergeAllWithDependencies:skip-file */
+
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
