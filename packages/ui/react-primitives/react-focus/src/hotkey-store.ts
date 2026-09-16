@@ -20,7 +20,10 @@ export type { CommandDefinition, HotkeyCommand, HotkeyOptions, HotkeyStore, Pars
  * split the registry in two — bindings registered from an Effect capability would never see the
  * ones registered from a component. Everything here defaults to this instance instead.
  */
-export const hotkeyStore: HotkeyStore = createHotkeyStore();
+export const hotkeyStore: HotkeyStore = createHotkeyStore({
+  // Zag's conflict check ignores scopes, so N per-object bindings sharing a hotkey would warn N²/2 times.
+  conflictBehavior: 'allow',
+});
 
 /** Start listening. The React hooks do this themselves; a non-React caller has to say so. */
 export const initHotkeys = (target: Document | ShadowRoot = document): void => {
