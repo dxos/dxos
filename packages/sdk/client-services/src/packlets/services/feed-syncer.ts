@@ -334,7 +334,7 @@ export class FeedSyncer extends Resource {
       ),
       Effect.ignore,
     );
-    void Effect.runPromise(send);
+    void EffectEx.runPromise(send);
   }
 
   /**
