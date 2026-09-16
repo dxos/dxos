@@ -15,8 +15,12 @@ export type SyncCardProps = {
   onCopy?: () => void;
 };
 
-/** The chip keeps its own width and the automerge label absorbs the slack, so the figures line up across rows. */
-const ROW_TRACKS = ['auto', '1fr', '5rem', 'auto', '3.5rem'];
+/**
+ * The chip track is `max-content`, not `auto`: the button clips its overflow, which zeroes a grid
+ * item's automatic minimum, so an `auto` track could shrink under it and let it run into the next
+ * column. The automerge label absorbs the slack; fixed figure tracks line the figures up across rows.
+ */
+const ROW_TRACKS = ['max-content', '1fr', '5rem', 'auto', '3.5rem'];
 
 const Metric = ({ label, pending, total }: { label: string; pending: number; total: number }) => (
   <>
