@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import { type Domain } from '../sim/index.ts';
 
@@ -44,7 +43,7 @@ export class TerraObject extends Type.makeObject<TerraObject>(DXN.make('org.dxos
     /** Epoch used as this object's deterministic clock origin. */
     spawnedAt: Schema.Number,
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     // Kind-neutral: `IconAnnotation` is a static schema-level value, so one icon covers boats,
     // tanks, satellites and rockets alike — a plane icon would mislabel four kinds out of five.
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'green' }),

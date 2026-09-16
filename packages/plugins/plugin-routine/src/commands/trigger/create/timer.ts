@@ -45,7 +45,7 @@ export const timer = Command.make(
 
       const cron = yield* Option.match(options.cron, {
         onNone: () =>
-          Prompt.text({
+          Prompt.String({
             message: 'Enter cron expression:',
           }).pipe(Prompt.run),
         onSome: (value) => Effect.succeed(value),
@@ -60,7 +60,7 @@ export const timer = Command.make(
       // Always prompt for enabled if functionId is not provided.
       const enabled = yield* Option.match(options.functionId, {
         onNone: () =>
-          Prompt.confirm({
+          Prompt.Confirm({
             message: 'Enable the trigger?',
             initial: true,
           }).pipe(Prompt.run),

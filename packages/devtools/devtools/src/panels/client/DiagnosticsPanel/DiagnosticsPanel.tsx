@@ -8,7 +8,7 @@ import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Field, Icon, Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
 
-import { JsonView, Tree } from '../../../components/index.ts';
+import { JsonView } from '../../../components/index.ts';
 
 export const DiagnosticsPanel = () => {
   const client = useClient();
@@ -69,7 +69,9 @@ export const DiagnosticsPanel = () => {
           <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content>{(true && <JsonView data={data} />) || <Tree data={data} />}</Panel.Content>
+      <Panel.Content>
+        <JsonView data={data} />
+      </Panel.Content>
       {info && (
         <Panel.Statusbar asChild>
           <div className='flex p-2 items-center text-sm font-mono gap-2'>

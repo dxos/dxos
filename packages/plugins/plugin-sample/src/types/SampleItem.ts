@@ -9,7 +9,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
@@ -46,7 +45,7 @@ export class SampleItem extends Type.makeObject<SampleItem>(DXN.make('org.dxos.t
   }).pipe(
     // `LabelAnnotation` tells the framework which field(s) to use as the display label.
     // The navigation tree, search results, and breadcrumbs all use this.
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
 
     // `IconAnnotation` sets the default icon and color for objects of this type.
     // These appear in the navigation tree, breadcrumbs, and object headers.

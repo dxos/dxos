@@ -6,8 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import * as Graph from '@dxos/plugin-explorer/Graph';
 import { Text } from '@dxos/schema';
 
@@ -28,8 +26,11 @@ export type Cell = Schema.Schema.Type<typeof Cell>;
 export class Notebook extends Type.makeObject<Notebook>(DXN.make('org.dxos.type.notebook', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    cells: Cell.pipe(Schema.Array, FormInputAnnotation.set(false)),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'sky' })),
+    cells: Cell.pipe(Schema.Array, Annotation.FormInputAnnotation.set(false)),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'sky' }),
+  ),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Notebook> = { cells: [] }): Notebook => Obj.make(Notebook, props);

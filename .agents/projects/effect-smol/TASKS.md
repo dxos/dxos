@@ -350,13 +350,11 @@ Branch `claude/effect-4-migration-audit-pq2m8z` in `dxos/edge` (no PR — user a
       each tool's success schema.
 - [ ] **Decide whether MCP sessions need a Durable Object** — the session map is isolate-local, and
       Cloudflare does not guarantee an identity keeps landing on the same isolate.
-- [ ] **Consider simplifying `createDoSqlTransactionLayer`'s body** — v4's `@effect/sql-sqlite-do`
-      backs `SqlClient.withTransaction` with `ctx.storage.transaction()` when the client is built
-      with `storage`, which is the same thing this layer hand-rolls. The layer itself stays either
-      way: `SqlTransaction` is a DXOS service that exists so a platform runtime can supply its own
-      implementation, and only its body could delegate to `SqlTransaction.layer` instead. Left
-      alone here because it changes production transaction semantics. (3 call sites: `feed-space`,
-      `indexer`, `do-sedimentree-storage`.)
+- [x] **Simplify `createDoSqlTransactionLayer`'s body** — done, and it went further than this
+      contemplated: effect `4.0.0-rc.115` fixed `@effect/sql-sqlite-do`'s Durable Object
+      transactions, so a client built with `storage: ctx.storage` backs `SqlClient.withTransaction`
+      with `ctx.storage.transaction()` directly. Both the edge layer and the `SqlTransaction`
+      service in `@dxos/sql-sqlite` are deleted; every call site uses `sql.withTransaction`.
 
 ### Production defects the test run surfaced
 
@@ -576,8 +574,8 @@ true` for an object node that declares neither `properties` nor `additionalPrope
       deterministic fix needs a registration-ready signal on `queryLogs`.
 - [ ] `react-ui-canvas-compute` `TriggerShape as any` (existing TODO): derive the interface from
       the schema instead.
-- [ ] `db-service` `createDoSqlTransactionLayer` body could delegate to v4's storage-backed
-      `withTransaction`; left because it changes production transaction semantics.
+- [x] `db-service` `createDoSqlTransactionLayer` deleted; the DO client is built with
+      `storage: ctx.storage` and transacts natively (effect `4.0.0-rc.115`).
 - [ ] MCP sessions remain isolate-local; durable sessions need a Durable Object.
 
 ## PR review follow-ups (dmaretskyi, #12521)

@@ -13,7 +13,6 @@ import { Context, Resource } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
@@ -132,10 +131,7 @@ const loggingTransformer: Statement.Transformer = (stmt, _make, _, _span) =>
 export class TestPeer extends Resource {
   readonly #peerId: string;
   #feedStore: FeedStore;
-  #runtime: ManagedRuntime.ManagedRuntime<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
-    never
-  >;
+  #runtime: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   #client?: SyncClient;
   #server?: SyncServer;
 
@@ -158,7 +154,7 @@ export class TestPeer extends Resource {
     const baseLayer = layerMemory.pipe(
       Layer.provide(logSql ? Layer.succeed(Statement.CurrentTransformer, loggingTransformer) : Layer.empty),
     );
-    const transactionLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
+    const transactionLayer = baseLayer;
     this.#runtime = ManagedRuntime.make(Layer.merge(baseLayer, transactionLayer).pipe(Layer.orDie));
     if (isServer) {
       this.#server = new SyncServer({

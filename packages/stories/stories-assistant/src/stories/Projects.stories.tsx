@@ -7,12 +7,20 @@ import React from 'react';
 import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { log } from '@dxos/log';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 
 import { SpaceTemplateToolbar, StoryRole } from '../modules/index.ts';
 import { applyStagedProfileImport } from '../modules/profile-archive.ts';
-import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing/index.ts';
+import {
+  HelpdeskSpacePlugin,
+  ModuleContainer,
+  VoyageSpacePlugin,
+  config,
+  createDecorators,
+  storyParameters,
+} from '../testing/index.ts';
 import { isPersistent } from '../testing/persistence.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
@@ -42,6 +50,7 @@ const storyOptions = {
       { Collection, Feed },
       { Text, TagIndex },
       { Mailbox },
+      { Question, Task, TaskSet },
       { SpacePlugin },
       { InboxPlugin },
       ProjectsPlugin,
@@ -54,6 +63,7 @@ const storyOptions = {
       import('@dxos/echo'),
       import('@dxos/schema'),
       import('@dxos/plugin-inbox'),
+      import('@dxos/types'),
       import('@dxos/plugin-space/testing'),
       import('@dxos/plugin-inbox/testing'),
       import('@dxos/plugin-projects/ProjectsPlugin'),
@@ -79,6 +89,8 @@ const storyOptions = {
         // command-execution tool and answers every shell task as blocked.
         SandboxPlugin.make(),
         VoyageSpacePlugin,
+        // Contributes the Helpdesk template, whose first task forces the agent to ask a question.
+        HelpdeskSpacePlugin,
       ],
       types: [
         Project.Project,
@@ -90,6 +102,10 @@ const storyOptions = {
         Feed.Feed,
         TagIndex.TagIndex,
         Sandbox.Sandbox,
+        // The Helpdesk template's ledger, and the questions an agent files against it.
+        TaskSet.TaskSet,
+        Task.Task,
+        Question.Question,
       ],
     };
   },
@@ -106,9 +122,11 @@ const persistentDecorators = createDecorators(() => ({
   ...storyOptions,
   config: isPersistent() ? config.persistent : config.remote,
   // A profile imported from the toolbar lands here: plugins resolve before the client starts, which
-  // is the only moment no worker holds the database open.
+  // is the only moment this tab has yet to open the database. Never fatal — the harness renders
+  // nothing until `lazyPlugins` resolves, so a rejection here would leave a blank story rather than
+  // one booted on the profile the import did not replace.
   lazyPlugins: async () => {
-    await applyStagedProfileImport();
+    await applyStagedProfileImport().catch((error) => log.error('profile import failed', { error }));
     return storyOptions.lazyPlugins();
   },
 }));

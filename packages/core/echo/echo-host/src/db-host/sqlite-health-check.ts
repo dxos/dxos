@@ -8,7 +8,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { asyncTimeout } from '@dxos/async';
 import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
-import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 /**
  * Executes "PRAGMA quick_check;" on SQLite database on startup.
@@ -66,7 +65,7 @@ export const testSqlite = (): Effect.Effect<void, unknown, SqlClient.SqlClient> 
  * Timeout is outside the Effect runtime to catch the layer hanging on startup.
  */
 export const runSqliteHealthCheck = async (
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
   options?: { timeoutMs?: number },
 ): Promise<void> => {
   const timeoutMs = options?.timeoutMs ?? SQLITE_HEALTH_CHECK_TIMEOUT_MS;

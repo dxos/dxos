@@ -198,7 +198,7 @@ export const promptForSchemaInput = Effect.fn(function* (
       };
     });
 
-    const selected = yield* Prompt.multiSelect({
+    const selected = yield* Prompt.MultiSelect({
       message: 'Select optional properties to include:',
       choices,
     });
@@ -230,33 +230,33 @@ export const promptForSchemaInput = Effect.fn(function* (
     if (SchemaAST.isBooleanKeyword(propType)) {
       const initialValue =
         typeof defaultValue === 'boolean' ? defaultValue : typeof schemaDefault === 'boolean' ? schemaDefault : false;
-      const value = yield* Prompt.confirm({
+      const value = yield* Prompt.Confirm({
         message: `${info.key}${defaults?.[key] !== undefined ? ` (current: ${defaults[key]})` : ''}:`,
         initial: initialValue,
       });
       inputObj[key] = value;
     } else if (SchemaAST.isNumberKeyword(propType)) {
       const currentValue = typeof defaultValue === 'number' ? String(defaultValue) : '';
-      const valueStr = yield* Prompt.text({
+      const valueStr = yield* Prompt.String({
         message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
       }).pipe(Prompt.run);
       inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : parseFloat(valueStr) || 0;
     } else if (SchemaAST.isStringKeyword(propType)) {
       const currentValue = typeof defaultValue === 'string' ? defaultValue : '';
-      const valueStr = yield* Prompt.text({
+      const valueStr = yield* Prompt.String({
         message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
       }).pipe(Prompt.run);
       inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : valueStr;
     } else if (Ref.isRefType(propType)) {
       const isDefaultTemplate =
         typeof defaultValue === 'string' && defaultValue.startsWith('{{') && defaultValue.endsWith('}}');
-      const useTemplate = yield* Prompt.confirm({
+      const useTemplate = yield* Prompt.Confirm({
         message: `Use a template to specify ${info.key}?${isDefaultTemplate ? ' (current: template)' : ''}`,
         initial: isDefaultTemplate,
       });
       if (useTemplate) {
         const currentValue = typeof defaultValue === 'string' ? defaultValue : '';
-        const templateStr = yield* Prompt.text({
+        const templateStr = yield* Prompt.String({
           message: `${info.key} template${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
         }).pipe(Prompt.run);
         inputObj[key] = templateStr === '' && defaultValue !== undefined ? defaultValue : templateStr;
@@ -266,7 +266,7 @@ export const promptForSchemaInput = Effect.fn(function* (
         if (objects.length === 0) {
           inputObj[key] = undefined;
         } else {
-          const selected = yield* Prompt.select({
+          const selected = yield* Prompt.Select({
             message: `Select ${info.key}:`,
             choices: objects.map((obj: Entity.Any) => ({
               title: Entity.getLabel(obj) ?? obj.id,
@@ -280,7 +280,7 @@ export const promptForSchemaInput = Effect.fn(function* (
     } else {
       // For other types, prompt as string and let validation handle it
       const currentValue = defaultValue !== undefined ? String(defaultValue) : '';
-      const valueStr = yield* Prompt.text({
+      const valueStr = yield* Prompt.String({
         message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
       }).pipe(Prompt.run);
       inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : valueStr;
@@ -303,7 +303,7 @@ export const selectFunction = Effect.fn(function* () {
     return yield* Effect.fail(new Error('No functions available'));
   }
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: 'Select a function:',
     choices: functions.map((fn: Operation.PersistentOperation) => ({
       title: fn.name ?? fn.id,
@@ -350,7 +350,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
     ),
   );
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: kind ? `Select a ${kind} trigger:` : 'Select a trigger:',
     choices,
   });
@@ -410,7 +410,7 @@ export const selectFeed = Effect.fn(function* () {
     return yield* Effect.fail(new Error('No objects with feed properties found'));
   }
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: 'Select a feed:',
     choices: feedChoices,
   });

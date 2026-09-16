@@ -3,6 +3,7 @@
 //
 
 export * from './companion-anchor.ts';
+export * from './companion-mount.ts';
 export * from './layout.ts';
 export * from './layoutAppliesTopbar.ts';
 export * from './resolve-sidebar-state.ts';

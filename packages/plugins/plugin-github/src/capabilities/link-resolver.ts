@@ -16,7 +16,7 @@ import { Issue, PullRequest, Repo } from '@dxos/types';
 import { GitHubCapabilities } from '#types';
 
 import { GITHUB_PROVIDER_ID } from '../constants.ts';
-import { type GitHubLink, parseGitHubLink } from '../extensions/index.ts';
+import { type GitHubLink, githubLinkIcon, parseGitHubLink } from '../extensions/index.ts';
 import { GitHubApi } from '../services/index.ts';
 
 /**
@@ -35,6 +35,7 @@ export default Capability.makeModule(
           const link = parseGitHubLink(url);
           return link && (link.number !== undefined ? `#${link.number}` : `${link.owner}/${link.repo}`);
         },
+        icon: githubLinkIcon,
         resolve: ({ eid }, context) =>
           Effect.gen(function* () {
             const link = parseGitHubLink(eid);

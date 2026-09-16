@@ -10,7 +10,7 @@ import { type Duplex } from 'node:stream';
 import { DeferredTask, asyncTimeout, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { type FeedWrapper } from '@dxos/feed-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
@@ -66,7 +66,7 @@ export class ReplicatorExtension implements TeleportExtension {
     },
   });
 
-  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
+  private readonly _feeds = new ComplexMap<PublicKey, HypercoreWrapper<any>>(PublicKey.hash);
   private readonly _streams = new ComplexMap<PublicKey, ActiveStream>(PublicKey.hash);
 
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
@@ -116,9 +116,9 @@ export class ReplicatorExtension implements TeleportExtension {
     return this;
   }
 
-  addFeed(feed: FeedWrapper<any>): void {
+  addHypercore(feed: HypercoreWrapper<any>): void {
     this._feeds.set(feed.key, feed);
-    log('addFeed', { feedKey: feed.key });
+    log('addHypercore', { feedKey: feed.key });
     if (this._extensionContext) {
       this._updateTask.schedule();
     }

@@ -318,9 +318,14 @@ const getNextLink = (header: string | undefined): string | undefined => {
   return undefined;
 };
 
-const githubPaginated = <T>(
+/**
+ * Walks `rel="next"` to the end, decoding each page with `pageSchema` and taking its items through
+ * `select` — an endpoint that answers with an envelope rather than a bare array pages the same way.
+ */
+const githubPages = <TPage, T>(
   buildInitial: () => HttpClientRequest.HttpClientRequest,
-  itemSchema: Schema.Codec<T>,
+  pageSchema: Schema.Codec<TPage>,
+  select: (page: TPage) => readonly T[],
 ): GitHubEffect<readonly T[]> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
@@ -329,7 +334,6 @@ const githubPaginated = <T>(
       HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
-    const arraySchema = Schema.Array(itemSchema);
 
     let nextUrl: string | undefined;
     let request = withAuth(buildInitial(), creds).pipe(HttpClientRequest.appendUrlParam('per_page', '100'));
@@ -340,7 +344,7 @@ const githubPaginated = <T>(
         Effect.flatMap((res) =>
           Effect.gen(function* () {
             const body = yield* res.json;
-            const decoded = yield* Schema.decodeUnknownEffect(arraySchema)(body);
+            const decoded = yield* Schema.decodeUnknownEffect(pageSchema)(body);
             return { decoded, link: res.headers['link'] };
           }),
         ),
@@ -352,7 +356,7 @@ const githubPaginated = <T>(
         Effect.scoped,
       );
 
-      out.push(...result.decoded);
+      out.push(...select(result.decoded));
       nextUrl = getNextLink(result.link);
       if (!nextUrl) {
         break;
@@ -362,6 +366,11 @@ const githubPaginated = <T>(
 
     return out;
   });
+
+const githubPaginated = <T>(
+  buildInitial: () => HttpClientRequest.HttpClientRequest,
+  itemSchema: Schema.Codec<T>,
+): GitHubEffect<readonly T[]> => githubPages(buildInitial, Schema.Array(itemSchema), (page) => page);
 
 //
 // API surface
@@ -503,12 +512,15 @@ export const fetchIssueComments = (
 //
 
 /**
- * PATCH a GitHub object. The shape mirrors {@link githubRequest} except the
- * request method is PATCH and the body is `application/json`. Failures are
+ * Write to a GitHub object (PATCH or POST, as `build` chooses). The shape mirrors {@link githubRequest} except the
+ * body is `application/json`. Failures are
  * propagated unchanged; the caller is expected to surface them on the target
- * row's `lastError`. Retry rules are the same — 429 / 5xx retry, 4xx don't.
+ * row's `lastError`.
+ *
+ * Only PATCH retries (429 / 5xx retry, 4xx don't). A POST here creates a comment or a review, and
+ * GitHub can commit one before the response reaches us, so retrying a timeout would post it twice.
  */
-const githubPatch = <T>(
+const githubWrite = <T>(
   build: () => HttpClientRequest.HttpClientRequest,
   body: Record<string, unknown>,
   schema: Schema.Codec<T>,
@@ -521,15 +533,20 @@ const githubPatch = <T>(
       HttpClient.filterStatusOk,
     );
     const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyJsonUnsafe(body));
-    return yield* clientNoTracer.execute(request).pipe(
+    const attempt = clientNoTracer.execute(request).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
-      Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
-        while: shouldRetry,
-      }),
-      Effect.scoped,
     );
+    return yield* (
+      request.method === 'PATCH'
+        ? attempt.pipe(
+            Effect.retry({
+              schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
+              while: shouldRetry,
+            }),
+          )
+        : attempt
+    ).pipe(Effect.scoped);
   });
 
 export type IssueUpdateInput = {
@@ -552,7 +569,7 @@ export const updateIssue = (
   issueNumber: number,
   input: IssueUpdateInput,
 ): GitHubEffect<GitHubIssue> =>
-  githubPatch(
+  githubWrite(
     () =>
       HttpClientRequest.patch(
         `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`,
@@ -575,8 +592,101 @@ export type RepoUpdateInput = {
  * almost never what a user wants from a sync mirror.
  */
 export const updateRepo = (owner: string, repo: string, input: RepoUpdateInput): GitHubEffect<GitHubRepo> =>
-  githubPatch(
+  githubWrite(
     () => HttpClientRequest.patch(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
     input as unknown as Record<string, unknown>,
     GitHubRepoSchema,
+  );
+
+const GitHubReviewSchema = Schema.Struct({
+  id: Schema.Number,
+  state: Schema.String,
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubReview = Schema.Schema.Type<typeof GitHubReviewSchema>;
+
+/** POST /repos/{owner}/{repo}/pulls/{number}/reviews with `event: APPROVE`. */
+export const approvePullRequest = (
+  owner: string,
+  repo: string,
+  number: number,
+  body?: string,
+): GitHubEffect<GitHubReview> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}/reviews`,
+      ),
+    { event: 'APPROVE', ...(body ? { body } : {}) },
+    GitHubReviewSchema,
+  );
+
+/** POST /repos/{owner}/{repo}/issues/{number}/comments — a conversation comment, which a pull request shares with issues. */
+export const createIssueComment = (
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  body: string,
+): GitHubEffect<GitHubComment> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments`,
+      ),
+    { body },
+    GitHubCommentSchema,
+  );
+
+const GitHubCheckRunSchema = Schema.Struct({
+  name: Schema.String,
+  /** `queued`, `in_progress` or `completed`. */
+  status: Schema.String,
+  /** Set once `completed`: `success`, `failure`, `neutral`, `cancelled`, `skipped`, `timed_out`, `action_required`. */
+  conclusion: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubCheckRun = Schema.Schema.Type<typeof GitHubCheckRunSchema>;
+
+const GitHubCheckRunsSchema = Schema.Struct({
+  total_count: Schema.Number,
+  check_runs: Schema.Array(GitHubCheckRunSchema),
+});
+
+/**
+ * GET /repos/{owner}/{repo}/commits/{sha}/check-runs — every page, since a truncated list would
+ * report a failing commit as green.
+ */
+export const fetchCheckRuns = (owner: string, repo: string, sha: string): GitHubEffect<readonly GitHubCheckRun[]> =>
+  githubPages(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(sha)}/check-runs`,
+      ),
+    GitHubCheckRunsSchema,
+    ({ check_runs }) => check_runs,
+  );
+
+export type ReviewCommentInput = {
+  body: string;
+  /** Head SHA the line numbers refer to. */
+  commit_id: string;
+  path: string;
+  line: number;
+  /** `LEFT` is the base (removed) side, `RIGHT` the head (added or context) side. */
+  side: 'LEFT' | 'RIGHT';
+};
+
+/** POST /repos/{owner}/{repo}/pulls/{number}/comments — a review comment on one line of the diff. */
+export const createReviewComment = (
+  owner: string,
+  repo: string,
+  number: number,
+  input: ReviewCommentInput,
+): GitHubEffect<GitHubComment> =>
+  githubWrite(
+    () =>
+      HttpClientRequest.post(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}/comments`,
+      ),
+    input,
+    GitHubCommentSchema,
   );

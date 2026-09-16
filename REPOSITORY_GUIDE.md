@@ -330,7 +330,7 @@ check without touching local refs at all: `git ls-remote --tags origin 'composer
 
 | Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                                                                       |
 | -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
-| **dev**        | `composer-dev…`          | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
+| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
 | **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only                                                                 |
 | **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                                                                   |
 | **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
