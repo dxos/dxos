@@ -120,6 +120,7 @@ const ChatThreadRoot = ({
         streaming={streaming}
         showContext={viewType !== 'summary'}
         debug={debug}
+        userHue={userHue}
       >
         <MessageList.Root
           model={model}
