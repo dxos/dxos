@@ -73,6 +73,7 @@ describe('Spaces', () => {
 
   test('a space whose database failed to open initializes again when it returns to ready', async () => {
     const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
     onTestFinished(() => host.close(Context.default()));
