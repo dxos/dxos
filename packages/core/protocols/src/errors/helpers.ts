@@ -39,13 +39,39 @@ export const errorFromCode = (code?: string, message?: string, context?: any) =>
   }
 };
 
+/** The `name` a thrown value carries, which is the field `encodeError` puts on the wire. */
+const nameOf = (error: unknown): string | undefined => {
+  if (typeof error === 'object' && error !== null && 'name' in error) {
+    const { name } = error as { name?: unknown };
+    return typeof name === 'string' && name.length > 0 ? name : undefined;
+  }
+  return undefined;
+};
+
 /**
  * Narrows a thrown value for a service RPC's error channel.
  *
- * A DXOS error is returned as it is, so `encodeError`/`decodeError` reconstruct its class on
- * the far side; anything else becomes a `SystemError` carrying the original as `cause`, which
- * is the one case the old `error as Error` cast got wrong — a thrown string crossed the wire
- * claiming to be an `Error`. Services that grow a more specific error can return it directly.
+ * A DXOS error is returned as it is. Anything else is rebuilt as a `BaseError` under its own
+ * `name` and stack, because those are the fields `encodeError` puts on the wire and
+ * `decodeError` rebuilds from: collapsing a `TypeError` or an `InvariantViolation` into one
+ * tag would make every host-side bug look alike on the client and in any telemetry that
+ * groups by error name. `cause` is kept for the in-process case only, since the wire format
+ * has no field for it. Services that grow a more specific error return it directly.
  */
-export const toServiceError = (error: unknown): BaseError =>
-  error instanceof BaseError ? error : new SystemError({ message: messageOf(error), cause: error });
+export const toServiceError = (error: unknown): BaseError => {
+  if (error instanceof BaseError) {
+    return error;
+  }
+
+  const name = nameOf(error);
+  const message = messageOf(error) ?? String(error);
+  const wrapped =
+    name === undefined ? new SystemError({ message, cause: error }) : new BaseError(name, { message, cause: error });
+  const stack = typeof error === 'object' && error !== null ? (error as { stack?: unknown }).stack : undefined;
+  if (typeof stack === 'string') {
+    // The origin's frames are what makes a host-side failure diagnosable once it reaches the client.
+    wrapped.stack = stack;
+  }
+
+  return wrapped;
+};

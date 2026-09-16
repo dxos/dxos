@@ -101,10 +101,9 @@ export interface RoutingService {
 }
 
 /** Thrown by a `RoutingService` when its credentials are not configured. */
-export class MissingApiKeyError extends Error {
+export class MissingApiKeyError extends BaseError.extend('MissingApiKeyError') {
   constructor(public readonly serviceId: string) {
-    super(`Missing API key for routing service: ${serviceId}`);
-    this.name = 'MissingApiKeyError';
+    super({ message: `Missing API key for routing service: ${serviceId}` });
   }
 }
 
@@ -112,7 +111,6 @@ export class MissingApiKeyError extends Error {
 export class GeocodeError extends BaseError.extend('GeocodeError') {
   constructor(public readonly location: string) {
     super({ message: `Could not find location: ${location}` });
-    this.name = 'GeocodeError';
   }
 }
 
@@ -120,6 +118,12 @@ export class GeocodeError extends BaseError.extend('GeocodeError') {
 export class RouteError extends BaseError.extend('RouteError') {
   constructor(message: string) {
     super({ message });
-    this.name = 'RouteError';
   }
 }
+
+/** Any failure a `RoutingService` raises. */
+export type Failure = MissingApiKeyError | GeocodeError | RouteError;
+
+/** `instanceof` across every routing failure, for a boundary that passes them through. */
+export const isFailure = (error: unknown): error is Failure =>
+  error instanceof MissingApiKeyError || error instanceof GeocodeError || error instanceof RouteError;

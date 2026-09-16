@@ -22,6 +22,7 @@ import { raise } from '@dxos/debug';
 import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -84,7 +85,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
-  ['SpacesService.createSpace'](request: SpacesService.CreateSpaceRequest): Effect.Effect<Space, Error> {
+  ['SpacesService.createSpace'](request: SpacesService.CreateSpaceRequest): Effect.Effect<Space, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         this._requireIdentity();
@@ -105,7 +106,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     spaceKey,
     state,
     edgeReplication,
-  }: SpacesService.UpdateSpaceRequest): Effect.Effect<void, Error> {
+  }: SpacesService.UpdateSpaceRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -139,7 +140,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.updateMemberRole'](request: SpacesService.UpdateMemberRoleRequest): Effect.Effect<void, Error> {
+  ['SpacesService.updateMemberRole'](request: SpacesService.UpdateMemberRoleRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const identity = this._requireIdentity();
@@ -245,7 +246,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     spaceKey,
     channel,
     message,
-  }: SpacesService.PostMessageRequest): Effect.Effect<void, Error> {
+  }: SpacesService.PostMessageRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -307,7 +308,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   ['SpacesService.writeCredentials']({
     spaceKey,
     credentials,
-  }: SpacesService.WriteCredentialsRequest): Effect.Effect<void, Error> {
+  }: SpacesService.WriteCredentialsRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
@@ -338,7 +339,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     spaceKey,
     migration,
     automergeRootUrl,
-  }: SpacesService.CreateEpochRequest): Effect.Effect<CreateEpochResponse, Error> {
+  }: SpacesService.CreateEpochRequest): Effect.Effect<CreateEpochResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -353,7 +354,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.admitContact'](request: SpacesService.AdmitContactRequest): Effect.Effect<void, Error> {
+  ['SpacesService.admitContact'](request: SpacesService.AdmitContactRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -369,7 +370,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 
   ['SpacesService.joinBySpaceKey']({
     spaceKey,
-  }: SpacesService.JoinBySpaceKeyRequest): Effect.Effect<JoinSpaceResponse, Error> {
+  }: SpacesService.JoinBySpaceKeyRequest): Effect.Effect<JoinSpaceResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -383,7 +384,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 
   ['SpacesService.exportSpace'](
     request: SpacesService.ExportSpaceRequest,
-  ): Effect.Effect<SpacesService.ExportSpaceResponse, Error> {
+  ): Effect.Effect<SpacesService.ExportSpaceResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
@@ -430,7 +431,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 
   ['SpacesService.importSpace'](
     request: SpacesService.ImportSpaceRequest,
-  ): Effect.Effect<SpacesService.ImportSpaceResponse, Error> {
+  ): Effect.Effect<SpacesService.ImportSpaceResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();

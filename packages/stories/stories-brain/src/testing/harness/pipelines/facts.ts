@@ -109,9 +109,9 @@ export const extractFactsForVariant = (
       return { processed, facts } satisfies FactsRunResult;
     }).pipe(
       Effect.provide(
-        Layer.provideMerge(
-          Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory),
-          AiServiceTestingPreset(variant.preset),
+        Database.layer(db).pipe(
+          Layer.provideMerge(FactStoreLive.layerMemory),
+          Layer.provideMerge(AiServiceTestingPreset(variant.preset)),
         ),
       ),
     ),

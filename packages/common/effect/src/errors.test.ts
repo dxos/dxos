@@ -3,7 +3,11 @@
 //
 
 // The subject of these tests is a plain `Error`'s stack frames, so they construct and re-raise
-// one deliberately; a tagged error would carry the catch's stack instead of the thunk's.
+// one deliberately; a tagged error would carry the catch's stack instead of the thunk's. Both
+// rules fire, at three separate anchors: `globalErrorInEffectCatch` on the `Effect.try` call
+// itself rather than on its `catch` property, and `globalErrorInEffectFailure` on both the
+// thrown value and the one the catch returns. Every test added here will construct raw errors
+// for the same reason, so the directive covers the file rather than three moving line numbers.
 /** @effect-diagnostics globalErrorInEffectCatch:skip-file globalErrorInEffectFailure:skip-file */
 
 import * as Data from 'effect/Data';

@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
-import { messageOf } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation } from '#types';
@@ -21,7 +20,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.FetchArticleContent> =
       invariant(post.link, 'Post has no link.');
       return yield* Effect.tryPromise({
         try: () => fetchArticle(post.link!, { corsProxy: browserCorsProxy() }),
-        catch: (error) => new ArticleFetchError({ message: messageOf(error), cause: error }),
+        catch: ArticleFetchError.wrap(),
       });
     }),
   ),

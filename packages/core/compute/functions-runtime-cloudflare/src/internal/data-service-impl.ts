@@ -7,7 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { raise } from '@dxos/debug';
 import { EffectEx } from '@dxos/effect';
-import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
+import { BaseError, NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -49,7 +49,7 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
+  ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const sub =
@@ -98,7 +98,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   ['DataService.createDocument'](
     request: DataService.CreateDocumentRequest,
-  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
+  ): Effect.Effect<DataService.CreateDocumentResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         invariant(SpaceId.isValid(request.spaceId));
@@ -113,7 +113,7 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
+  ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const sub =
@@ -151,7 +151,7 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.flush'](_request: DataService.FlushRequest): Effect.Effect<void, Error> {
+  ['DataService.flush'](_request: DataService.FlushRequest): Effect.Effect<void, BaseError> {
     return Effect.void;
   }
 
@@ -167,7 +167,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   ['DataService.getDocumentHeads'](
     _request: DataService.GetDocumentHeadsRequest,
-  ): Effect.Effect<DataService.GetDocumentHeadsResponse, Error> {
+  ): Effect.Effect<DataService.GetDocumentHeadsResponse, BaseError> {
     return Effect.fail(
       new NotImplementedError({
         message: 'getDocumentHeads is not implemented.',
@@ -175,7 +175,7 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.reIndexHeads'](_request: DataService.ReIndexHeadsRequest): Effect.Effect<void, Error> {
+  ['DataService.reIndexHeads'](_request: DataService.ReIndexHeadsRequest): Effect.Effect<void, BaseError> {
     return Effect.fail(
       new NotImplementedError({
         message: 'reIndexHeads is not implemented.',
@@ -183,14 +183,14 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.updateIndexes'](): Effect.Effect<void, Error> {
+  ['DataService.updateIndexes'](): Effect.Effect<void, BaseError> {
     log.verbose('updateIndexes called, but it is a no-op in EDGE env.');
     return Effect.void;
   }
 
   ['DataService.waitUntilHeadsReplicated'](
     _request: DataService.WaitUntilHeadsReplicatedRequest,
-  ): Effect.Effect<void, Error> {
+  ): Effect.Effect<void, BaseError> {
     return Effect.fail(
       new NotImplementedError({
         message: 'waitUntilHeadsReplicated is not implemented.',
@@ -198,7 +198,9 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.stats'](_request: DataService.DatabaseStatsRequest): Effect.Effect<DataService.DatabaseStats, Error> {
+  ['DataService.stats'](
+    _request: DataService.DatabaseStatsRequest,
+  ): Effect.Effect<DataService.DatabaseStats, BaseError> {
     // TODO(dmaretskyi): Implement per the EDGE section of `echo-host/docs/GARBAGE_COLLECTION.md`.
     return Effect.fail(
       new NotImplementedError({
@@ -209,7 +211,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   ['DataService.runGarbageCollection'](
     _request: DataService.RunGarbageCollectionRequest,
-  ): Effect.Effect<DataService.GarbageCollectionReport, Error> {
+  ): Effect.Effect<DataService.GarbageCollectionReport, BaseError> {
     // TODO(dmaretskyi): Implement per the EDGE section of `echo-host/docs/GARBAGE_COLLECTION.md`.
     return Effect.fail(
       new NotImplementedError({

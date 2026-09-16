@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { BaseError, messageOf } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 
 import * as OpfsPool from '../OpfsPool.ts';
 import * as SqliteClient from '../SqliteClient.ts';
@@ -119,9 +119,7 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
         return yield* Effect.fail(new SqliteTestError({ message: `Unknown in-worker test case: ${testCase}` }));
     }
   }).pipe(
-    Effect.mapError((error) =>
-      error instanceof BaseError ? error : new SqliteTestError({ message: messageOf(error), cause: error }),
-    ),
+    Effect.mapError((error) => (error instanceof BaseError ? error : SqliteTestError.wrap()(error))),
     (effect) => runWithClient(effect),
   );
 

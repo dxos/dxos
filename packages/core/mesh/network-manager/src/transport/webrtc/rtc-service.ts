@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { EffectEx } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -111,7 +112,7 @@ export class RtcService implements RTCService.Handlers {
     });
   }
 
-  ['RTCService.sendSignal']({ proxyId, signal }: SignalRequest): Effect.Effect<void, Error> {
+  ['RTCService.sendSignal']({ proxyId, signal }: SignalRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const connection = this.#require(proxyId);
@@ -122,7 +123,7 @@ export class RtcService implements RTCService.Handlers {
     });
   }
 
-  ['RTCService.close']({ proxyId }: CloseRequest): Effect.Effect<void, Error> {
+  ['RTCService.close']({ proxyId }: CloseRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const connection = this.#connections.get(requirePublicKey(proxyId));
@@ -134,14 +135,14 @@ export class RtcService implements RTCService.Handlers {
     });
   }
 
-  ['RTCService.getDetails']({ proxyId }: DetailsRequest): Effect.Effect<DetailsResponse, Error> {
+  ['RTCService.getDetails']({ proxyId }: DetailsRequest): Effect.Effect<DetailsResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => create(DetailsResponseSchema, { details: await this.#require(proxyId).channel.getDetails() }),
       catch: toServiceError,
     });
   }
 
-  ['RTCService.getStats']({ proxyId }: StatsRequest): Effect.Effect<StatsResponse, Error> {
+  ['RTCService.getStats']({ proxyId }: StatsRequest): Effect.Effect<StatsResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => create(StatsResponseSchema, { stats: await this.#require(proxyId).channel.getStats() }),
       catch: toServiceError,

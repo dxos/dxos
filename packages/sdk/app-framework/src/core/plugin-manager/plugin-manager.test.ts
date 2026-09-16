@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-// These fixtures simulate third-party plugin code throwing an untagged `Error`, which is exactly
-// what the manager has to survive — tagging them would remove the thing under test.
+// Four fixtures still hand the manager an untagged `Error` the way misbehaving third-party
+// plugin code would: an `activate` that throws before returning an Effect, two lazy loaders
+// whose import rejects, and a resolver that throws for an unknown id. Surviving those is the
+// thing under test, so tagging them would remove it. The eleven `Effect.fail(new Error(...))`
+// fixtures this once also covered ARE tagged now.
 /** @effect-diagnostics globalErrorInEffectFailure:skip-file */
 
 import { afterEach, assert, describe, it } from '@effect/vitest';

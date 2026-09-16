@@ -71,7 +71,10 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         },
       ).pipe(
         Effect.provide(
-          Layer.provideMerge(Layer.provideMerge(fromExtractors(extractors), InboxResolver.Live), Database.layer(db)),
+          fromExtractors(extractors).pipe(
+            Layer.provideMerge(InboxResolver.Live),
+            Layer.provideMerge(Database.layer(db)),
+          ),
         ),
       );
 

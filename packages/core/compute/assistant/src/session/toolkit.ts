@@ -2,13 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-// `OpaqueToolkit.layer` is `Layer<unknown, E, R>` by design — the point of an opaque toolkit is
-// that the consumer cannot see which handlers it carries. To this rule an `unknown` output, and
-// the `Handler<any>` a resolved skill toolkit yields, look like they satisfy any other layer's
-// requirement, so it reads a dependency into three handler layers that are independent peers.
-// `mergeAll` is the right combinator here; the finding clears only by giving up the opacity.
-/** @effect-diagnostics layerMergeAllWithDependencies:skip-file */
-
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
@@ -53,9 +46,17 @@ export const createToolkit = ({
     const duplicates = toolNames.filter((name, index) => toolNames.indexOf(name) !== index);
     invariant(duplicates.length === 0, `Duplicate tool names in session toolkit: ${duplicates.join(', ')}`);
     const mergedToolkit = Toolkit.merge(...toolkitDefs);
+    // TODO(wittjosiah): Revisit if `OpaqueToolkit.layer` ever gains a typed output.
+    // `OpaqueToolkit.layer` is `Layer<unknown, E, R>` by design: the point of an opaque toolkit is
+    // that the consumer cannot see which handlers it carries. To this rule an `unknown` output, and
+    // the `Handler<any>` a resolved skill toolkit yields, look like they satisfy any other layer's
+    // requirement, so it reads a dependency into three handler layers that are independent peers.
+    // `mergeAll` is the right combinator here, and the finding clears only by giving up the opacity.
     const combinedHandlerLayer = Layer.mergeAll(
+      // @effect-diagnostics-next-line layerMergeAllWithDependencies:off
       Layer.succeedContext(skillToolHandler),
       toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
+      // @effect-diagnostics-next-line layerMergeAllWithDependencies:off
       opaqueToolkit.layer,
     );
     return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer as any) as OpaqueToolkit.OpaqueToolkit;
