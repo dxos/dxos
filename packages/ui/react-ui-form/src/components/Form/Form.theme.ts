@@ -68,10 +68,18 @@ const formStyles = tv({
       above: {},
       beside: {},
     },
+    // Whether a legend renders at all; an unlabelled field set has nothing to hang its top space on.
+    labelled: {
+      true: {},
+      false: {},
+    },
     // A top-level field set is a titled section; a nested one is an indented, bordered group.
     depth: {
+      // The section's top space sits on the legend: WebKit lays a rendered legend at the fieldset's
+      // border edge, ignoring its padding-block-start.
       root: {
-        fieldSet: 'py-form-section-gap first:pt-0',
+        fieldSet: 'pb-form-section-gap',
+        fieldSetLegend: 'pt-form-section-gap',
         fieldSetTitle: 'text-lg',
       },
       // The legend sits above the box, like a field's label above its control; the body is the box.
@@ -92,11 +100,25 @@ const formStyles = tv({
       },
     },
     {
+      labelled: false,
+      depth: 'root',
+      class: {
+        fieldSet: 'pt-form-section-gap',
+      },
+    },
+    {
+      variant: 'default',
+      depth: 'root',
+      class: {
+        fieldSet: '[&:first-child>legend]:pt-0 first:pt-0',
+      },
+    },
+    {
       variant: 'settings',
       depth: 'root',
       class: {
         // The gap spaces the section's direct children: its header and every field or group in it.
-        fieldSet: 'py-form-section-gap! gap-trim-md',
+        fieldSet: 'pb-form-section-gap! gap-trim-md',
         fieldSetHeader: 'pb-form-section-gap',
         fieldSetActions: 'px-trim-md',
         fieldSetTitle: 'px-trim-md text-xl',
@@ -116,6 +138,7 @@ const formStyles = tv({
   defaultVariants: {
     variant: 'default',
     labelPlacement: 'above',
+    labelled: true,
     depth: 'root',
   },
 });
