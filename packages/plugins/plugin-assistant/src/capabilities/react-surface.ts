@@ -14,6 +14,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import { Question } from '@dxos/types';
 import { Position } from '@dxos/util';
@@ -25,6 +26,7 @@ import {
   ChatCompanion,
   ChatDialog,
   IntegrationPrompt,
+  ObjectCardSurface,
   PluginPrompt,
   QuestionCard,
   QuestionSurface,
@@ -158,6 +160,16 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.CardContent, Question.Question),
         component: QuestionCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      // `<surface role='card' data='{"id":"echo://…"}'>`: the object as its card.
+      Surface.create({
+        id: 'objectCard',
+        filter: Surface.makeFilter(
+          ChatSurface.ChatSurface,
+          (data) => data.role === 'card' && EID.tryParse(nonBlank(data.data?.id) ?? '') !== undefined,
+        ),
+        component: ObjectCardSurface,
+        props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
       }),
       Surface.create({
         id: 'question',

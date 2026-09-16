@@ -27,7 +27,7 @@ const presetOptions = (provider: DXN.DXN, installed?: ReadonlySet<string>) =>
     .filter((preset) => !installed || installed.has(preset.backend))
     .map((preset) => ({ value: preset.model, label: preset.label }));
 
-export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
+export const AssistantSettings = ({ settings, onSettingsChange, scope }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   // The Ollama manager is the bundled sidecar (desktop only). Its presence selects the local
@@ -79,7 +79,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
             <Form.Fields fieldMap={fieldMap} />
           </Form.FieldSet>
           <OllamaModels />

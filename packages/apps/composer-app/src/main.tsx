@@ -59,6 +59,9 @@ import {
   initializeObservability,
   isFalse,
   isTrue,
+  readBootAssetFailure,
+  reportBootAssetFailure,
+  reportWebProcessTerminations,
   runStorageResetMigration,
   setSafeModeUrl,
   setupConfig,
@@ -436,6 +439,27 @@ const main = async () => {
     Match.exhaustive,
     EffectEx.runPromise,
   );
+
+  // The popover shares storage and the host's termination queue with the main window, which reports them.
+  if (!isPopover) {
+    window.addEventListener(
+      STARTUP_ACTIVATED_EVENT,
+      () => {
+        const failure = readBootAssetFailure();
+        void observability
+          .then(async (obs) => {
+            if (failure) {
+              reportBootAssetFailure(obs, failure);
+            }
+            if (isTauri) {
+              await reportWebProcessTerminations(obs);
+            }
+          })
+          .catch((error) => log.catch(error));
+      },
+      { once: true },
+    );
+  }
 
   // Detect mobile operating systems (phones only, not tablets).
   const isMobile = await Match.value(isTauri).pipe(

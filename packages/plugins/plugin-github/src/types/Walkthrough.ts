@@ -22,6 +22,9 @@ export class Walkthrough extends Type.makeObject<Walkthrough>(DXN.make('org.dxos
     /** The pull request this narrates. */
     pullRequest: Ref.Ref(PullRequest.PullRequest),
 
+    /** `owner/repo#123: title`, copied at generation so the label needs no ref load. */
+    title: Schema.String.pipe(Schema.annotate({ title: 'Title' }), Schema.optional),
+
     /**
      * The whole document, as a plain string rather than a text object.
      *
@@ -44,7 +47,7 @@ export class Walkthrough extends Type.makeObject<Walkthrough>(DXN.make('org.dxos
     total: Schema.Number.pipe(Schema.annotate({ title: 'Hunks total' }), Schema.optional),
   }).pipe(
     Schema.annotate({ title: 'Walkthrough', description: 'A narrated reading of a pull request.' }),
-    LabelAnnotation.set(['commit']),
+    LabelAnnotation.set(['title', 'commit']),
     Annotation.IconAnnotation.set({ icon: 'ph--path--regular', hue: 'indigo' }),
   ),
 ) {}
@@ -54,6 +57,10 @@ export const make = (props: Obj.MakeProps<typeof Walkthrough>): Walkthrough => O
 
 /** Returns true when value is a Walkthrough object. */
 export const instanceOf = (value: unknown): value is Walkthrough => Obj.instanceOf(Walkthrough, value);
+
+/** The label a walkthrough of this pull request carries. */
+export const makeTitle = (pullRequest: PullRequest.PullRequest, title = pullRequest.title): string =>
+  `${PullRequest.reference(pullRequest)}: ${title}`;
 
 /** Whether the walkthrough describes a commit other than the one given. */
 export const isStale = (walkthrough: Walkthrough, head: string): boolean => walkthrough.commit !== head;

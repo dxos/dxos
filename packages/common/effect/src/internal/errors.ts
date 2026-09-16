@@ -18,8 +18,10 @@ const userFrames = (lines: readonly string[]): string[] => {
     if (/Generator\.next|~effect\/(?!Effect\/args\b)/.test(line)) {
       break;
     }
+    // The receiver the thunk is invoked on is a runtime detail (`Object`, `PrimitiveImpl`, ...), so
+    // the frame is matched on the thunk's own name.
     out.push(
-      line.replace(/at Object\.~effect\/Effect\/args \((.*)\)$/, 'at $1').replace(' [as ~effect/Effect/args]', ''),
+      line.replace(/at (?:\S+\.)?~effect\/Effect\/args \((.*)\)$/, 'at $1').replace(' [as ~effect/Effect/args]', ''),
     );
   }
   return out;

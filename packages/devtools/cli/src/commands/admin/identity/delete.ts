@@ -16,8 +16,8 @@ import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 export const del = Command.make(
   'delete',
   {
-    identityKey: Args.string('identityKey'),
-    force: Options.boolean('force').pipe(
+    identityKey: Args.String('identityKey'),
+    force: Options.Boolean('force').pipe(
       Options.withDescription('Confirm irreversible deletion.'),
       Options.withDefault(false),
     ),

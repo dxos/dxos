@@ -6,3 +6,4 @@ export * from './context.ts';
 export * from './events.ts';
 
 export * from './Chat.tsx';
+export * from './ObjectCardWidget.tsx';

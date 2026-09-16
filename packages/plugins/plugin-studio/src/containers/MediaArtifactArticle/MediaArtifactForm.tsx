@@ -81,12 +81,15 @@ export const MediaArtifactForm = ({
   const artifactId = artifact.id;
   // In-memory draft variant (never added to the db): the editable compose surface, seeded from the
   // artifact's persisted request over the provider's defaults. Reset when the generator changes so
-  // it seeds from the new provider's default config.
-  const draft = useMemo(
-    () => Variant.make({ config: { ...(provider?.defaultRequest ?? {}), ...(artifact.request ?? {}) } }),
+  // it seeds from the new provider's default config. A request composed for another generator (the
+  // artifact's kind or generator changed since) is left out: its `model` names a job the new
+  // provider's API rejects.
+  const draft = useMemo(() => {
+    const generator = artifactSnapshot?.generator;
+    const request = !generator || generator === provider?.id ? artifact.request : undefined;
+    return Variant.make({ config: { ...(provider?.defaultRequest ?? {}), ...(request ?? {}) } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [artifactId, provider?.id],
-  );
+  }, [artifactId, provider?.id, artifactSnapshot?.generator]);
   // Observe the draft so edits (via the form) re-render for the Generate-enabled check.
   const [draftSnapshot] = useObject(draft);
   const [generating, setGenerating] = useState(false);
@@ -127,9 +130,10 @@ export const MediaArtifactForm = ({
       });
       Obj.update(artifact, (artifact) => {
         artifact.request = next;
+        artifact.generator = provider?.id;
       });
     },
-    [draft, artifact],
+    [draft, artifact, provider?.id],
   );
   const handleNameChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -294,7 +298,7 @@ export const MediaArtifactForm = ({
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Toolbar>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>

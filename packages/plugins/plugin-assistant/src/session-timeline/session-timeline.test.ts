@@ -250,7 +250,9 @@ describe('buildSessionTimeline', () => {
     Effect.fnUntraced(function* ({ expect }) {
       const mine = Task.make({ title: 'Mine', status: 'done' });
       const other = Task.make({ title: 'Elsewhere', status: 'started' });
-      const chat = makeChat('Scoped', [mine]);
+      // A second checklist task keeps the session a tree; a lone task folds into its session lane.
+      const later = Task.make({ title: 'Later', status: 'todo' });
+      const chat = makeChat('Scoped', [mine, later]);
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
@@ -270,7 +272,7 @@ describe('buildSessionTimeline', () => {
       );
 
       const messages = yield* TestTraceService.messages;
-      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [mine, other] });
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [mine, other, later] });
       const laneId = `task:${mine.id}`;
       expect(timeline.lanes.find((lane) => lane.id === laneId)).toMatchObject({ start: 2, end: 6 });
       const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
@@ -314,10 +316,69 @@ describe('buildSessionTimeline', () => {
   );
 
   it.effect(
+    'a session working a single task is one lane, carrying the task and its markers',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Only', status: 'started' });
+      const chat = makeChat('Only', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Only', status: 'started' }); // 2.
+          yield* toolCall('Read file'); // 3.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task] });
+      expect(timeline.lanes).toHaveLength(1);
+      expect(timeline.lanes[0]).toMatchObject({ id: `session:${chat.id}`, kind: 'session', taskId: task.id });
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Read file')).toBe(`session:${chat.id}`);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
+    'a run whose process ended without a request end closes at its last event, and the axis stops following now',
+    Effect.fnUntraced(function* ({ expect }) {
+      const task = Task.make({ title: 'Only', status: 'started' });
+      const chat = makeChat('Only', [task]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* toolCall('Read file'); // 2 — the run dies here: no AgentRequestEnd.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const now = 2 + 60 * 60_000;
+      const dead = buildSessionTimeline({
+        traceMessages: messages,
+        chats: [chat],
+        tasks: [task],
+        processes: [agentProcess('agent', chat, Process.State.FAILED)],
+        now,
+      });
+      expect(dead.lanes[0]).toMatchObject({ kind: 'session', status: 'failed', start: 1, end: 2 });
+      expect(dead.range).toEqual({ start: 1, end: 2 });
+
+      // Without a process record the begin is taken as still in flight — but an hour of silence
+      // keeps the axis on the events rather than on now.
+      const unknown = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task], now });
+      expect(unknown.lanes[0]).toMatchObject({ status: 'running', end: undefined });
+      expect(unknown.range).toEqual({ start: 1, end: 2 });
+      const fresh = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task], now: 5 });
+      expect(fresh.range).toEqual({ start: 1, end: 5 });
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
     'putting a task back to todo ends its stretch as surely as finishing it',
     Effect.fnUntraced(function* ({ expect }) {
       const task = Task.make({ title: 'Deferred', status: 'todo' });
-      const chat = makeChat('Deferred', [task]);
+      const later = Task.make({ title: 'Later', status: 'todo' });
+      const chat = makeChat('Deferred', [task, later]);
       yield* TestTraceService.withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
@@ -335,7 +396,7 @@ describe('buildSessionTimeline', () => {
       );
 
       const messages = yield* TestTraceService.messages;
-      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task] });
+      const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [task, later] });
       expect(timeline.lanes.find((lane) => lane.id === `task:${task.id}`)).toMatchObject({ start: 2, end: 4 });
       const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
       expect(lanesByLabel.get('Read file')).toBe(`task:${task.id}`);
