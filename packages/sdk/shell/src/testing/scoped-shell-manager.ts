@@ -69,33 +69,12 @@ export class ScopedShellManager {
   async authenticateInvitation(type: 'device' | 'space', authCode: string, scope?: Scope): Promise<void> {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
-    const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
-    // Every step stays mounted (`Viewport.View` marks inactive ones `invisible`), so the match has
-    // to be on `:visible` — DOM order resolves to a step the shell may never reach. `:visible` also
-    // tells the device rescuer from the space one: `Viewport.View` takes `id` as its view key and
-    // never renders it, so the two cannot be told apart by selector, and only one is ever active.
-    const settled = peer.locator(
-      `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:not([disabled]):visible, ` +
-        RESCUER_DEAD_ENDS,
-    );
-    await settled
-      .first()
-      .waitFor({ state: 'visible', timeout: AUTH_CODE_TIMEOUT })
-      .catch(async (err) => {
-        const showing = await peer
-          .locator('[data-testid]')
-          .evaluateAll((elements) => [...new Set(elements.map((element) => element.dataset.testid))].join(', '))
-          .catch(() => '(unavailable)');
-        throw new Error(`${type} invitation never reached the auth-code step; shell is showing: ${showing}`, {
-          cause: err,
-        });
-      });
-    const rescuer = peer.locator(RESCUER_DEAD_ENDS);
-    if (await rescuer.first().isVisible()) {
-      const state = await rescuer
-        .evaluateAll((elements) => elements.map((element) => element.dataset.testid).join(', '))
-        .catch(() => '(unavailable)');
-      throw new Error(`${type} invitation stopped at the rescuer screen rather than the auth-code step: ${state}`);
+    // Every step stays mounted and inactive ones are hidden, so only a visible input or rescuer counts.
+    const input = peer.locator(`[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:visible`);
+    const deadEnd = peer.locator(RESCUER_DEAD_ENDS);
+    await input.or(deadEnd).first().waitFor({ state: 'visible', timeout: AUTH_CODE_TIMEOUT });
+    if (await deadEnd.first().isVisible()) {
+      throw new Error(`${type} invitation stopped at the rescuer screen rather than the auth-code step`);
     }
     await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();

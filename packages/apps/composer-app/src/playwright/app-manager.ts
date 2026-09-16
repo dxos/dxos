@@ -106,28 +106,17 @@ export class AppManager {
     const authenticated = await this.isAuthenticated({ timeout: 30_000 });
     expect(authenticated, 'app did not boot: treeView.userAccount never appeared').toBe(true);
 
-    // Boot's last write is onboarding's Expose of the default space's Home, scheduled after the
-    // SwitchWorkspace and Set that land there; on a new identity only it persists that path as open.
-    await this.page
-      .waitForFunction(
-        ({ anchorKey, storagePrefix }) => {
-          const [anchor, workspaceId, ...rest] = window.location.pathname.split('/').filter(Boolean);
-          if (anchor !== anchorKey || rest.join('/') !== 'home') {
-            return false;
-          }
-          const home = `root/${workspaceId}/home`;
-          const plank = document.querySelector('[data-testid="deck.plank"]');
-          const exposed = window.localStorage.getItem(`${storagePrefix}root+root/${workspaceId}+${home}`);
-          return plank?.getAttribute('data-attendable-id') === home && exposed === '{"open":true}';
-        },
-        { anchorKey: WORKSPACE_KEY, storagePrefix: NAVTREE_OPEN_STORAGE_PREFIX },
-        { timeout: 30_000 },
-      )
-      .catch((err: Error) => {
-        throw new Error(`boot did not settle on an exposed default-space Home (at ${this.page.url()})`, {
-          cause: err,
-        });
-      });
+    // Boot ends with onboarding opening the default space's Home and persisting it as open in the navtree;
+    // acting before that last write lands races it.
+    await this.waitForDefaultWorkspace();
+    const home = `root/${this.workspaceId}/home`;
+    await expect(this.page.getByTestId('deck.plank').first()).toHaveAttribute('data-attendable-id', home, {
+      timeout: 30_000,
+    });
+    const homeOpenKey = `${NAVTREE_OPEN_STORAGE_PREFIX}root+root/${this.workspaceId}+${home}`;
+    await expect
+      .poll(() => this.page.evaluate((key) => window.localStorage.getItem(key), homeOpenKey), { timeout: 30_000 })
+      .toBe('{"open":true}');
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
@@ -284,27 +273,20 @@ export class AppManager {
   //
 
   async toastAction(nth = 0): Promise<void> {
-    const action = this.page.getByTestId('toast.action').nth(nth);
-    const root = action.locator('xpath=ancestor::*[@data-scope="toast" and @data-part="root"][1]');
-    const toastId = await root.getAttribute('data-testid');
+    const toast = this.page
+      .locator('[data-scope="toast"][data-part="root"]')
+      .filter({ has: this.page.getByTestId('toast.action') })
+      .nth(nth);
+    // Addressed by its own id afterwards, since `nth` moves to the next toast once this one closes.
+    const toastId = await toast.getAttribute('data-testid');
     if (!toastId) {
       throw new Error('toast root has no data-testid');
     }
-    // A toast mounts below the viewport and slides in; a press that lands mid-slide releases off the
-    // button and the click never fires. Hovering first also pauses the auto-dismiss timer.
-    await expect(root).toHaveAttribute('data-mounted');
+    const action = toast.getByTestId('toast.action');
+    // Hovering pauses the auto-dismiss timer; the click waits for the slide-in to stop moving the button.
     await action.hover();
-    await root.evaluate(async (element) => {
-      while (element.getAnimations().some((animation) => animation.playState === 'running')) {
-        await new Promise((resolve) => requestAnimationFrame(resolve));
-      }
-    });
     await action.click();
-    // A delivered click closes the toast at once, ahead of its exit animation, and may unmount it; its
-    // own timer is paused by the hover. Addressed by id: the action it was found through goes first.
-    await expect(this.page.locator(`[data-testid="${toastId}"]:not([data-state="closed"])`)).toHaveCount(0, {
-      timeout: 2_000,
-    });
+    await expect(this.page.getByTestId(toastId)).toBeHidden();
   }
 
   async closeToast(nth = 0): Promise<void> {
@@ -483,26 +465,15 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
-    // Waits for an outcome rather than timing out into one: a type either shows its form or closes
-    // the dialog, and a page stalled past a short bound would otherwise read as "no form" and leave
-    // the modal open over the next step. Closed content can stay mounted, so only open content counts.
-    const outcome = await this.page.waitForFunction(
-      () => {
-        if (document.querySelector('[data-testid="create-object-form"]')) {
-          return 'form';
-        }
-        return document.querySelector('[data-scope="dialog"][data-part="content"][data-state="open"]')
-          ? undefined
-          : 'closed';
-      },
-      undefined,
-      { timeout: 30_000 },
-    );
-    if ((await outcome.jsonValue()) === 'closed') {
+    // A type either shows its form or creates at once and closes the dialog; wait for whichever happens.
+    const objectForm = this.page.getByTestId('create-object-form');
+    const openDialog = this.page.locator('[data-scope="dialog"][data-part="content"][data-state="open"]');
+    await expect
+      .poll(async () => (await objectForm.isVisible()) || !(await openDialog.isVisible()), { timeout: 30_000 })
+      .toBe(true);
+    if (!(await objectForm.isVisible())) {
       return;
     }
-
-    const objectForm = this.page.getByTestId('create-object-form');
 
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
@@ -588,33 +559,16 @@ export class AppManager {
     const x = offset.x + box.x + box.width / 2;
     const y = offset.y + box.y + box.height / 2;
     await this.page.mouse.move(x, y, { steps: 4 });
-    try {
-      // Chromium drops a dragover sent while the previous one is still unacknowledged, so the last
-      // position can go unseen: keep hovering inside the zone until the target reports it.
-      let nudge = 0;
-      await expect
-        .poll(async () => {
-          nudge = nudge === 0 ? 1 : 0;
-          await this.page.mouse.move(x, y + nudge);
-          return over.getAttribute('data-instruction');
-        })
-        .toBe(instruction);
-    } catch (err) {
-      const rows = await this.page.evaluate(
-        ({ x, y }) => ({
-          underPointer: document.elementFromPoint(x, y)?.closest('[data-path]')?.getAttribute('data-path') ?? null,
-          rows: [...document.querySelectorAll('[data-testid="spacePlugin.object"]')].map((row) => ({
-            path: row.getAttribute('data-path'),
-            instruction: row.getAttribute('data-instruction'),
-            hidden: row.classList.contains('hidden'),
-            top: Math.round(row.getBoundingClientRect().top),
-            height: Math.round(row.getBoundingClientRect().height),
-          })),
-        }),
-        { x, y },
-      );
-      throw new Error(`no ${instruction} drop zone at (${x}, ${y}): ${JSON.stringify(rows)}`, { cause: err });
-    }
+    // Chromium drops a dragover sent while the previous one is still unacknowledged, so the last position can
+    // go unseen: keep moving within the zone until the target reports the expected drop.
+    let nudge = 0;
+    await expect
+      .poll(async () => {
+        nudge = 1 - nudge;
+        await this.page.mouse.move(x, y + nudge);
+        return over.getAttribute('data-instruction');
+      })
+      .toBe(instruction);
     await this.page.mouse.up();
   }
 
