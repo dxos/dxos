@@ -12,17 +12,21 @@ import { URI } from '@dxos/keys';
 import { Card, Icon } from '@dxos/react-ui';
 import { type ObjectLinkProps, type WidgetDef } from '@dxos/ui-editor';
 
-export type ObjectCardWidgetProps = ObjectLinkProps & {
-  /** The database the link is resolved against; the chat's, so space-relative URIs resolve. */
+export type ObjectCardProps = {
+  /** The object's URI. */
+  eid: string;
+  /** What the header reads while the object has no label of its own. */
+  label?: string;
+  /** The database the URI is resolved against; the chat's, so space-relative URIs resolve. */
   db?: Database.Database;
 };
 
 /**
- * An object embedded in a message (`![label](echo://…)`) as its card: the header names it, the body
- * is the object's `CardContent` surface. Resolved through the host's database, so a reference the
- * model wrote before the object loaded still lands once it does.
+ * An object, named by URI, as its card: the header names it, the body is the object's `CardContent`
+ * surface. Resolved through the host's database, so a reference the model wrote before the object
+ * loaded still lands once it does.
  */
-export const ObjectCardWidget = ({ db, eid, label }: ObjectCardWidgetProps) => {
+export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
   const uri = useMemo(() => (eid ? URI.make(eid) : undefined), [eid]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
@@ -31,7 +35,7 @@ export const ObjectCardWidget = ({ db, eid, label }: ObjectCardWidgetProps) => {
     return null;
   }
 
-  const title = Obj.getLabel(subject)?.trim() || label;
+  const title = Obj.getLabel(subject)?.trim() || label || '';
   return (
     <Card.Root fullWidth>
       <Card.Header>
@@ -46,6 +50,15 @@ export const ObjectCardWidget = ({ db, eid, label }: ObjectCardWidgetProps) => {
     </Card.Root>
   );
 };
+
+ObjectCard.displayName = 'ObjectCard';
+
+export type ObjectCardWidgetProps = ObjectLinkProps & Pick<ObjectCardProps, 'db'>;
+
+/** An object embedded in a message (`![label](echo://…)`) as its card. */
+export const ObjectCardWidget = ({ db, eid, label }: ObjectCardWidgetProps) => (
+  <ObjectCard db={db} eid={eid} label={label} />
+);
 
 ObjectCardWidget.displayName = 'ObjectCardWidget';
 
