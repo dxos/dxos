@@ -510,6 +510,12 @@ export type NodeOptions = {
 
 export type BrowserOptions = {
   browserName: string;
+  /**
+   * Overrides which suites run in the browser. Defaults to every test file, which suits packages
+   * whose whole suite is browser-safe; a package with node-only suites (native addons, `node:`
+   * APIs) narrows this to the files it actually wants a browser for.
+   */
+  include?: string[];
   nodeExternal?: boolean;
   injectGlobals?: boolean;
   plugins?: Plugin[];
@@ -622,6 +628,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
 
 const createBrowserProject = ({
   browserName,
+  include,
   nodeExternal = false,
   injectGlobals = true,
   plugins = [],
@@ -683,7 +690,7 @@ const createBrowserProject = ({
         LOG_CONFIG: 'log-config.yaml',
       },
 
-      include: [
+      include: include ?? [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
         '!**/src/**/__snapshots__/**',

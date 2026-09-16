@@ -12,5 +12,10 @@ export default defineConfig({
     'transport/tcp/tcp-transport': 'src/transport/tcp/tcp-transport.ts',
     'transport/tcp/tcp-transport.browser': 'src/transport/tcp/tcp-transport.browser.ts',
   },
-  test: { node: true },
+  test: {
+    node: true,
+    // Only the `*.browser.test.ts` suites: the rest of the package's tests need `node-datachannel`
+    // and other node-only APIs.
+    browser: { browsers: ['chromium'], include: ['**/src/**/*.browser.test.ts'] },
+  },
 });

@@ -84,7 +84,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
               if (isOwner) {
                 performance.mark('dedicated-worker:session-ready');
                 log('dedicated-worker: connecting webrtc bridge to owning client', { clientId });
-                yield* runtime.connectWebrtcBridge(session);
+                yield* runtime.connectWebrtc(session);
               }
             }),
         };
