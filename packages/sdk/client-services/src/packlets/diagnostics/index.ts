@@ -4,4 +4,3 @@
 
 export * from './diagnostics.ts';
 export * from './diagnostics-collector.ts';
-export * from '#diagnostics-broadcast';

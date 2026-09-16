@@ -104,7 +104,7 @@ const storyDeckState = Capability.makeModule(
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, any>()),
+      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, Error>()),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),

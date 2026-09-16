@@ -36,3 +36,9 @@ export const DESKTOP_ORIGINS: ReadonlySet<string> = new Set(
 
 /** Origin `tauri dev` serves the app from; any local page can claim it, so production must not trust it. */
 export const DEV_SERVER_ORIGIN = 'http://localhost:5173';
+
+/** localStorage key for a boot asset that failed to load; the inline script in `index.html` writes the same literal. */
+export const BOOT_ASSET_FAILURE_KEY = 'dxos.composer.boot-asset-failure';
+
+/** sessionStorage key for that script's once-per-session retry guard. */
+export const BOOT_ASSET_RETRY_KEY = 'dxos.composer.boot-asset-retry';

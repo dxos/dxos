@@ -21,7 +21,7 @@ export type McpSessionOptions = {
   timeout?: number;
 };
 
-type Message = { id?: number; result?: any; error?: { message?: string } };
+type Message = { id?: number; result?: unknown; error?: { message?: string } };
 
 const DEFAULT_TIMEOUT = 120_000;
 
@@ -94,7 +94,7 @@ export class McpSession {
    * space before the operation's own schema is applied, and an operation acting on a space fails
    * with "it needs one named" when the id is buried in the payload.
    */
-  async invoke(key: string, input: Record<string, unknown> = {}, spaceId?: string): Promise<any> {
+  async invoke<T = unknown>(key: string, input: Record<string, unknown> = {}, spaceId?: string): Promise<T> {
     const result: ToolResult = await this.#call('invokeOperation', {
       key,
       input,
@@ -104,7 +104,8 @@ export class McpSession {
       throw new Error(`operation ${key} failed: ${JSON.stringify(result.content)}`);
     }
     const text = result.content?.[0]?.text;
-    return text === undefined ? result.structuredContent : JSON.parse(text);
+    const value: unknown = text === undefined ? result.structuredContent : JSON.parse(text);
+    return value as T;
   }
 
   /**

@@ -52,7 +52,7 @@ declare global {
  * What `--watch` reloads on differs by build, so the description does too: from source the whole
  * imported graph is live, while the binary can only change through its dev-installed plugins.
  */
-const watchOption = Options.boolean('watch').pipe(
+const watchOption = Options.Boolean('watch').pipe(
   Options.withDescription(
     globalThis.DX_CLI_BUNDLED
       ? 'Restart the server when a dev-installed plugin changes.'

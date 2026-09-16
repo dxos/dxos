@@ -381,16 +381,18 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Union': {
       return new SchemaAST.Union(
         ast.types.map((type) => f(type, undefined)),
-        ast.mode,
+        ast.options,
         ast.annotations,
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Arrays': {
@@ -402,6 +404,7 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Suspend': {

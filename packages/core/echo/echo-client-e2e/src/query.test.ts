@@ -3981,6 +3981,89 @@ describe('Query', () => {
     });
   });
 
+  describe('Filter.mnemonic', () => {
+    test('selects the object whose mnemonic matches', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const mnemonic = Obj.getMnemonic(target);
+      expect(mnemonic).toEqual(target.id.slice(-6).toUpperCase());
+
+      const objects = await db.query(Query.select(Filter.mnemonic(mnemonic))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Target']);
+    });
+
+    test('matching is case-insensitive', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.mnemonic(Obj.getMnemonic(target).toLowerCase()))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Target']);
+    });
+
+    test('combines with a type filter', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Person' }));
+      await db.flush();
+
+      const mnemonic = Obj.getMnemonic(person);
+      const matching = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.mnemonic(mnemonic))))
+        .run();
+      expect(matching.map((obj) => obj.name)).toEqual(['Person']);
+
+      // The same mnemonic under a type the object does not have matches nothing.
+      const mismatched = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.mnemonic(mnemonic))))
+        .run();
+      expect(mismatched).toHaveLength(0);
+    });
+
+    test('negation excludes the named object', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.not(Filter.mnemonic(Obj.getMnemonic(target))))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Other']);
+    });
+
+    test('an unused mnemonic matches nothing', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.mnemonic('ZZZZZZ'))).run();
+      expect(objects).toHaveLength(0);
+    });
+
+    test('a malformed mnemonic is rejected', async ({ expect }) => {
+      expect(() => Filter.mnemonic('nope')).toThrow();
+      // I, L, O and U are not in the Crockford base32 alphabet ULIDs use.
+      expect(() => Filter.mnemonic('ABCDEI')).toThrow();
+    });
+
+    test('a newly added object appears in a live mnemonic query', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = Obj.make(TestSchema.Expando, { name: 'Target' });
+      const mnemonic = Obj.getMnemonic(target);
+
+      const query = db.query(Query.select(Filter.mnemonic(mnemonic)));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 0, timeout: 2000 });
+
+      db.add(target);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+      expect(query.results.map((obj) => obj.name)).toEqual(['Target']);
+    });
+  });
+
   describe('Result caching', () => {
     test('repeated query() with the same serialized query returns the same instance and atom', async () => {
       const { db } = await builder.createDatabase();

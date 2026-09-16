@@ -58,9 +58,6 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../sdk/config"
     },
     {
@@ -92,6 +89,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"

@@ -60,7 +60,7 @@ const json = (value: unknown): unknown => {
 
 const fromResponse = (
   model: DXN.DXN,
-  response: ReadonlyArray<Response.AllParts<any>>,
+  response: ReadonlyArray<Response.AnyPart>,
   span: Parameters<Telemetry.SpanTransformer>[0]['span'],
 ): Call | undefined => {
   const finish = response.find((part): part is Response.FinishPart => part.type === 'finish');
@@ -70,20 +70,19 @@ const fromResponse = (
   const now = Date.now();
   const started = span.status.startTime;
   const ended = span.status._tag === 'Ended' ? span.status.endTime : undefined;
-  const attribute = (key: string): unknown => span.attributes.get(key);
   const parameters = Object.fromEntries(
     ['temperature', 'max_tokens', 'top_p', 'top_k']
-      .map((key) => [key, attribute(`gen_ai.request.${key}`)] as const)
+      .map((key) => [key, span.attributes.get(`gen_ai.request.${key}`)] as const)
       .filter(([, value]) => value !== undefined),
   );
   return {
     model: backendName(model),
-    provider: string(attribute('gen_ai.system')),
+    provider: string(span.attributes.get('gen_ai.system')),
     spanName: span.name,
     parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
-    input: json(attribute('dxos.ai.input')),
-    output: json(attribute('dxos.ai.output')),
-    tools: json(attribute('dxos.ai.tools')),
+    input: json(span.attributes.get('dxos.ai.input')),
+    output: json(span.attributes.get('dxos.ai.output')),
+    tools: json(span.attributes.get('dxos.ai.tools')),
     inputTokens:
       finish.usage.inputTokens.uncached ??
       (finish.usage.inputTokens.total ?? 0) -

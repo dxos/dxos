@@ -85,14 +85,16 @@ export const ComboboxField = ({
   }, []);
 
   const value = getValue() ?? '';
+  // A value stored before this mount has no remembered label; the loaded catalogue supplies it.
+  const displayLabel = selectedLabel ?? (data ?? []).find((option) => option.value === value)?.label;
   if (presentationFor(presentation).isStatic) {
-    return <p className='truncate min-w-0'>{selectedLabel ?? value}</p>;
+    return <p className='truncate min-w-0'>{displayLabel ?? value}</p>;
   }
 
   return (
     <Combobox.Root
       value={value}
-      displayValue={selectedLabel}
+      displayValue={displayLabel}
       onValueChange={handleValueChange}
       onOpenChange={handleOpenChange}
       placeholder={placeholder}

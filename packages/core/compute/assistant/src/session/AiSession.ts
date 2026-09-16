@@ -311,12 +311,12 @@ const connectMcpServers = (
   skills: readonly Skill.Skill[],
   spaceMcpServers: readonly McpServer.McpServer[] = [],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
-  const skillServers: McpToolkit.McpToolkitOptions[] = pipe(
+  const skillServers: McpToolkit.Options[] = pipe(
     skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
-  const spaceServers: McpToolkit.McpToolkitOptions[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
+  const spaceServers: McpToolkit.Options[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
     url,
     protocol,
     apiKey,

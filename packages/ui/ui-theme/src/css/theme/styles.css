@@ -38,12 +38,12 @@
   --color-secondary-text: var(--color-green-text);
   --color-secondary-border: var(--color-green-border);
 
-  --color-info-bg: var(--color-cyan-bg);
-  --color-info-bg-hover: var(--color-cyan-bg-hover);
-  --color-info-fg: var(--color-cyan-fg);
-  --color-info-surface: var(--color-cyan-surface);
-  --color-info-text: var(--color-cyan-text);
-  --color-info-border: var(--color-cyan-border);
+  --color-info-bg: var(--color-sky-bg);
+  --color-info-bg-hover: var(--color-sky-bg-hover);
+  --color-info-fg: var(--color-sky-fg);
+  --color-info-surface: var(--color-sky-surface);
+  --color-info-text: var(--color-sky-text);
+  --color-info-border: var(--color-sky-border);
 
   --color-success-bg: var(--color-emerald-bg);
   --color-success-bg-hover: var(--color-emerald-bg-hover);

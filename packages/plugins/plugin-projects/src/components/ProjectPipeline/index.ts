@@ -3,3 +3,4 @@
 //
 
 export * from './ProjectPipeline.tsx';
+export * from './useProjectChats.ts';

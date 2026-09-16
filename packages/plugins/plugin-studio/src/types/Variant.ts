@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as Generation from './Generation.ts';
 
@@ -25,7 +24,7 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
     /** Mime type — selects the VariantRenderer surface (e.g. image/png, video/mp4). */
     contentType: Schema.optional(Schema.String),
     /** The asset object (File bytes, Text, …). Generic so any medium can be attached. */
-    content: Schema.optional(Ref.Ref(Obj.Unknown).pipe(FormInputAnnotation.set(false))),
+    content: Schema.optional(Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false))),
     /** Ephemeral provider URL until materialized into `content`. */
     url: Schema.optional(
       Schema.String.pipe(
@@ -41,9 +40,9 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
      * In-flight generation job id for an asynchronous provider (set at enqueue, cleared once the
      * result is filled in). A variant carries its own job so a long poll resumes across remount.
      */
-    jobId: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+    jobId: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--image--regular', hue: 'indigo' }),
     // Owned child of a MediaArtifact — hidden from the navtree and object picker (mirrors Instructions).
     Annotation.HiddenAnnotation.set(true),

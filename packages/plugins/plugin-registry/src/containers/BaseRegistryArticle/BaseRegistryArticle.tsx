@@ -47,6 +47,7 @@ export type BaseRegistryArticleProps = {
   | 'updateAvailableIds'
   | 'extraTagsById'
   | 'failuresById'
+  | 'deviceOnlyIds'
   | 'onInstall'
   | 'onUpdate'
 >;
@@ -64,6 +65,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       updateAvailableIds,
       extraTagsById,
       failuresById,
+      deviceOnlyIds,
       onInstall,
       onUpdate,
       ...props
@@ -160,6 +162,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
                   updateAvailableIds={updateAvailableIds}
                   extraTagsById={extraTagsById}
                   failuresById={failuresById}
+                  deviceOnlyIds={deviceOnlyIds}
                   onClick={handleClick}
                   onChange={handleChange}
                   onInstall={onInstall}

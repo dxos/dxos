@@ -42,6 +42,24 @@ export const UpdateSidebar = Operation.make({
   output: Schema.Void,
 });
 
+export const UpdateDrawer = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.appToolkit.updateDrawer'),
+    name: 'Update Drawer',
+    description: 'Open, close or resize the bottom drawer.',
+    icon: 'ph--rows--regular',
+  },
+  executionMode: 'sync',
+  services: [Capability.Service],
+  input: Schema.Struct({
+    state: Schema.optional(
+      Schema.Literals(['open', 'closed', 'toggle']).annotate({ description: 'Open, close, or toggle the drawer.' }),
+    ),
+    height: Schema.optional(Schema.Number.annotate({ description: 'Drawer height in rem.' })),
+  }),
+  output: Schema.Void,
+});
+
 export const UpdateComplementary = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.appToolkit.updateComplementary'),

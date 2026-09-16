@@ -162,6 +162,37 @@ export const fromBytes = (
   ).pipe(Effect.withSpan('Blob.fromBytes'));
 
 /**
+ * Adopts bytes already staged by a direct upload, returning an un-added Blob object. The caller is
+ * responsible for adding it to the database.
+ *
+ * The counterpart to {@link fromBytes} for content this process never holds: an agent uploaded the
+ * file straight to the store over a signed URL, because passing it through a tool call would mean
+ * a model emitting it byte by byte. Size and type are reported by the store, which is the only
+ * party that saw what arrived.
+ *
+ * @example
+ * ```ts
+ * const blob = yield* Blob.fromUpload(uploadId);
+ * yield* Database.add(blob);
+ * ```
+ */
+export const fromUpload = (
+  uploadId: string,
+  options?: { storage?: Storage | (string & {}) },
+): Effect.Effect<Blob, Error.BlobNotAvailableError | Error.BlobWriteError, Database.Service> =>
+  Database.Service.pipe(
+    Effect.flatMap(({ db }) =>
+      Effect.tryPromise({
+        try: () => db.createBlobFromUpload(uploadId, options),
+        catch: (error) =>
+          error instanceof Error.BlobNotAvailableError || error instanceof Error.BlobWriteError
+            ? error
+            : new Error.BlobWriteError({ backend: options?.storage ?? 'unknown' }, { cause: error }),
+      }),
+    ),
+  ).pipe(Effect.withSpan('Blob.fromUpload'));
+
+/**
  * Loads a blob's bytes. Inline: read directly off the object. External: dispatched to the
  * registered backend for the URI's scheme.
  *

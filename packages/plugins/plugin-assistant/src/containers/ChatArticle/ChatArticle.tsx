@@ -140,7 +140,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                       <ChatComponent.Activity />
                     </div>
                     <div className='flex justify-end'>
-                      <ChatComponent.Status classNames='p-2 bg-input-surface rounded-sm' />
+                      <ChatComponent.Status classNames='bg-input-surface rounded-sm' />
                     </div>
                   </div>
                 )}

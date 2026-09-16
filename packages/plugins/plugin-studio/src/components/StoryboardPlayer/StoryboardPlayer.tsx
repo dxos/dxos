@@ -20,7 +20,7 @@ export type StoryboardClip = {
 const DEFAULT_STILL_MS = 4_000;
 
 export type StoryboardPlayerProps = ThemedClassName<{
-  clips: StoryboardClip[];
+  clips: readonly StoryboardClip[];
   /** How long a still is shown before advancing. */
   stillMs?: number;
   /** The plank the toolbar is attended through. */

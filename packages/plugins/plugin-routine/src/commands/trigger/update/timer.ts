@@ -78,7 +78,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   const currentFunctionName = currentFn ? (currentFn.name ?? currentFn.id) : undefined;
   const shouldChangeFunction = yield* Option.match(functionIdOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: `Change the function${currentFunctionName ? ` (current: ${currentFunctionName})` : ''}?`,
         initial: false,
       }).pipe(Prompt.run),
@@ -116,7 +116,7 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
   const currentCron = trigger.spec?.kind === 'timer' ? trigger.spec.cron : undefined;
   const shouldChangeCron = yield* Option.match(cronOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: `Change the cron expression${currentCron ? ` (current: ${currentCron})` : ''}?`,
         initial: false,
       }).pipe(Prompt.run),
@@ -125,7 +125,7 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
   if (shouldChangeCron) {
     const cron = yield* Option.match(cronOption, {
       onNone: () =>
-        Prompt.text({
+        Prompt.String({
           message: `Enter cron expression${currentCron ? ` (current: ${currentCron})` : ''}:`,
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
@@ -153,7 +153,7 @@ const updateInput = Effect.fn(function* (
     onNone: () =>
       Effect.gen(function* () {
         yield* Console.log(`Current input: ${currentInputStr}`);
-        return yield* Prompt.confirm({
+        return yield* Prompt.Confirm({
           message: 'Change input?',
           initial: false,
         }).pipe(Prompt.run);
@@ -183,7 +183,7 @@ const updateEnabled = Effect.fn(function* (
 ) {
   const enabledValue = yield* Option.match(idOption, {
     onNone: () =>
-      Prompt.confirm({
+      Prompt.Confirm({
         message: 'Enable the trigger?',
         initial: trigger.enabled,
       }).pipe(Prompt.run),

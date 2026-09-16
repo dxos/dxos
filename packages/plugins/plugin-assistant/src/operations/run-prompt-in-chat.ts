@@ -9,11 +9,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Chat from '@dxos/assistant/Chat';
-import { getSession } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { ContentBlock } from '@dxos/types';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
@@ -23,7 +24,7 @@ import { defaultPreset, providerForModel } from '../processor/index.ts';
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt }) {
+      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt, disposition }) {
         // Activation first: the state and session providers this reads come from lazy modules that
         // otherwise activate only once the assistant UI has been opened, so a caller arriving through
         // an operation alone (an agent) would find them missing.
@@ -60,11 +61,15 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         // The model is the chat's, so the provider has to be the one that serves THAT model rather
         // than whichever the settings now name — a chat outlives a provider change.
         const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? preset?.model;
-        const session = yield* getSession(chat, {
+        const session = yield* AgentService.getSession(chat, {
           provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
           location: chat.remote ? 'edge' : 'local',
         });
-        yield* session.submitPrompt(prompt);
+        // A plain string is submitted as-is so the default path keeps its existing shape; a stated
+        // disposition needs the block form, which is the only place it can be carried.
+        yield* session.submitPrompt(
+          disposition === undefined ? prompt : [ContentBlock.Text.make({ text: prompt, disposition })],
+        );
       }),
     ),
   );
