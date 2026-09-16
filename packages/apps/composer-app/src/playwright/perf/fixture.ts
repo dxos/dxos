@@ -88,39 +88,21 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
       };
 
       /**
-       * Refs for a batch of object ids, read back from the database as LIVE objects.
+       * A hydrated ref to an object id.
        *
-       * Operations that CREATE an object return a JSON snapshot (`{ id, title, … }`) while those
-       * that CONSUME one take a `Ref`, so the fixture has to bridge them — and only a ref built
-       * from a live object carries the resolver the handler's `tryLoad()` needs. The two
-       * shortcuts both fail: a hand-assembled `{ '/': 'echo:///<id>' }` envelope is rejected by the
-       * input schema (`Expected <Declaration>`), and a `Ref.fromURI` ref is accepted but resolves
-       * to `Resolver is not set`.
-       *
-       * Batched because `Filter.id` is variadic: one query per level rather than one per task.
+       * `db.makeRef` rather than `Ref.fromURI`, which `Database.makeRef`'s own docs call out: the
+       * latter returns an UNHYDRATED reference whose `.load`/`.target` do not work, so a handler
+       * that resolves what it is handed fails with `Resolver is not set`. A reconstructed
+       * `{ '/': … }` envelope does not work either — the input schema wants an instance
+       * (`Expected <Declaration>`). This is the bridge between operations that CREATE an object
+       * (returning a JSON snapshot) and those that CONSUME one (taking a `Ref`).
        */
-      const refsForIds = async (ids: string[]): Promise<unknown[]> => {
-        if (ids.length === 0) {
-          return [];
-        }
-        const make = globalThis.dxos?.Ref?.make;
-        const filterById = globalThis.dxos?.Filter?.id;
-        const listSpaces = globalThis.dxos?.spaces;
-        if (!make || !filterById || !listSpaces) {
-          throw new Error('the dxos client debug hook is not mounted (Ref/Filter/spaces missing)');
-        }
-        const space = listSpaces().find((candidate) => candidate.id === spaceId);
+      const refFor = (id: string): unknown => {
+        const space = globalThis.dxos?.spaces?.().find((candidate) => candidate.id === spaceId);
         if (!space) {
           throw new Error(`space ${spaceId} is not in the client's space list`);
         }
-        const { objects } = await space.db.query(filterById(...ids)).run();
-        const byId = new Map(objects.filter(isRecord).map((object) => [String(object.id), object]));
-        // Ordered by the caller's ids so a parent assignment is deterministic, and silently short
-        // where an object did not come back — a missing parent must not shift the rest.
-        return ids.flatMap((id) => {
-          const object = byId.get(id);
-          return object ? [make(object)] : [];
-        });
+        return space.db.makeRef(`echo:///${id}`);
       };
 
       const started = Date.now();
@@ -167,7 +149,7 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
             createdIds.push(milestoneId);
           }
         }
-        milestonesPerSet.push(await refsForIds(createdIds));
+        milestonesPerSet.push(createdIds.map(refFor));
       }
 
       const perProject = Math.ceil(tasks / projects);
@@ -219,9 +201,7 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
 
           taskCount += levelIds.length;
           remaining -= levelCount;
-          // Resolved once per level rather than per task: the ids only become usable parents as
-          // live refs, and `Filter.id` takes the whole level in one query.
-          parents = level + 1 < depth ? await refsForIds(levelIds) : [];
+          parents = level + 1 < depth ? levelIds.map(refFor) : [];
         }
       }
 
