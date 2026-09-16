@@ -30,13 +30,16 @@ export type Fixture = {
   projectIds: string[];
   /** Tasks actually created, which is the figure to report rather than the one asked for. */
   taskCount: number;
-  /** A title substring matching roughly a tenth of the tasks, for the filter stage. */
-  filterTerm: string;
   elapsedMs: number;
 };
 
-/** Roughly a tenth of titles carry it, so the filter stage narrows the list rather than emptying it. */
-const FILTER_TERM = 'zephyr';
+/**
+ * Carried by roughly a tenth of titles, so the set is not uniform.
+ *
+ * Render realism rather than a filter target: rows whose titles are all the same length and shape
+ * let text measurement and memoization behave in a way a real set would not.
+ */
+const TITLE_VARIANT = 'zephyr';
 
 /** Concurrent `tasks.create` calls per batch, bounding how many writes are in flight at once. */
 const CONCURRENCY = 25;
@@ -54,7 +57,7 @@ const CONCURRENCY = 25;
  */
 export const createProjectsFixture = async (page: Page, scale: Scale, runId: string): Promise<Fixture> =>
   page.evaluate(
-    async ({ tasks, depth, projects, runId, filterTerm, concurrency }) => {
+    async ({ tasks, depth, projects, runId, titleVariant, concurrency }) => {
       const isRecord = (value: unknown): value is Record<string, unknown> =>
         typeof value === 'object' && value !== null;
 
@@ -178,7 +181,7 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
                 taskSet,
                 title:
                   ordinal % 10 === 0
-                    ? `Task ${ordinal} ${filterTerm} calibration`
+                    ? `Task ${ordinal} ${titleVariant} calibration`
                     : `Task ${ordinal} in project ${projectIndex + 1}`,
                 description: `Generated task ${ordinal} at level ${level}.`,
               };
@@ -205,7 +208,7 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
         }
       }
 
-      return { spaceId, projectIds, taskCount, filterTerm, elapsedMs: Date.now() - started };
+      return { spaceId, projectIds, taskCount, elapsedMs: Date.now() - started };
     },
-    { ...scale, runId, filterTerm: FILTER_TERM, concurrency: CONCURRENCY },
+    { ...scale, runId, titleVariant: TITLE_VARIANT, concurrency: CONCURRENCY },
   );

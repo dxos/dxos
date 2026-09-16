@@ -110,20 +110,20 @@ test QA-1: A project whose task set is large
         The stage this flow exists for. `domNodes` is the diagnostic to read beside `wallMs`: a list
         whose node count rises with the set rather than the viewport is not virtualized, and that is
         a different fix from a slow query.
-    - name: Filter the task list
-      id: filter-tasks
-      do: Type a substring matching about a tenth of the tasks into the filter field.
-      expect: the list narrows to the matching rows
-      note: |
-        Filtering re-reads the set and rebuilds the tree, so this is the O(set) read on the
-        interaction path rather than on the open path.
     - name: Toggle a task
       id: toggle-task
       do: Check the first visible task's checkbox.
       expect: the row shows as done and the change persists
       note: |
         One small write against a large set — the stage that would expose a write path that
-        re-resolves the whole `tasks` array to update one member.
+        re-resolves the whole `tasks` array to update one member, and the O(set) read on the
+        INTERACTION path rather than the open path.
+
+        There is deliberately no filter stage. `TaskSetArticle` renders its toolbar (and with it the
+        `tasks.filter` field) only as a standalone article; embedded as a Section, which is how
+        `ProjectArticle` hosts it, it renders the bare list because the host owns the chrome. A
+        filter stage would have to open the task set on its own surface, which is a different
+        journey from this one.
     - name: Scroll the task list
       id: scroll-tasks
       do: Scroll the list to the end and back.

@@ -182,22 +182,12 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await page.getByTestId('taskList.item').first().waitFor({ timeout: 60_000 });
     });
 
-    await runner.stage('filter-tasks', async () => {
-      const filter = page.getByTestId('tasks.filter');
-      await filter.fill(fixture.filterTerm);
-      // The field debounces, so the stage must outlast the debounce or it measures the keystroke.
-      await page.waitForTimeout(1_000);
-      await page.getByTestId('taskList.item').first().waitFor({ timeout: 60_000 });
-    });
-
     await runner.stage('toggle-task', async () => {
       await page.getByTestId('taskList.item.checkbox').first().click();
       await page.waitForTimeout(500);
     });
 
     await runner.stage('scroll-tasks', async () => {
-      await page.getByTestId('tasks.filter').fill('');
-      await page.waitForTimeout(1_000);
       const list = page.getByTestId('taskList.item').first();
       await list.waitFor({ timeout: 60_000 });
       for (let step = 0; step < 10; step++) {
