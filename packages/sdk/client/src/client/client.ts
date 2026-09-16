@@ -747,6 +747,11 @@ export class Client {
     invariant(this._services, 'Client not initialized.');
     await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
+    }).catch((err) => {
+      // A reset's last step shuts the host down, and a dedicated worker does so before its reply is sent.
+      if (!(err instanceof RpcClosedError)) {
+        throw err;
+      }
     });
     await this._close();
 

@@ -132,3 +132,21 @@ describe('Client.fatalError', () => {
     expect(client.fatalError.get()).toBeNull();
   });
 });
+
+describe('Client.reset', () => {
+  test('completes when the host shuts down before answering', async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    const services = testBuilder.createLocalClientServices();
+    await services.open();
+    // A dedicated worker ends its reset by shutting down, which closes the endpoint the reply would return on.
+    const system = EffectContext.get(services.stack, SystemService.Tag);
+    vi.spyOn(system, 'SystemService.reset').mockImplementation(() => Effect.fail(new RpcClosedError()));
+
+    const client = new Client({ services });
+    await client.initialize();
+
+    await expect(client.reset()).resolves.toBeUndefined();
+  });
+});
