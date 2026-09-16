@@ -128,41 +128,41 @@ export class LayerStack {
         }),
       );
 
-      const resolveAffinity = lowerAffinity(affinity);
-      yield* target
-        .initOnce(
-          Effect.gen({ self: this }, function* () {
-            if (resolveAffinity) {
-              yield* this.#materializeTags(resolveAffinity, context, target.requires);
-            }
-            return resolveAffinity
-              ? this.#resolveServices(resolveAffinity, context, target.requires)
-              : (Context.empty() as Context.Context<unknown>);
-          }),
-        )
-        .pipe(
-          Effect.tapCause((cause) =>
-            Effect.sync(() => {
-              const failure = Cause.findErrorOption(cause);
-              const missingKey =
-                Option.isSome(failure) && failure.value._tag === 'ServiceNotAvailable'
-                  ? (failure.value.context as { service?: string }).service
+      if (!target.initialized) {
+        const resolveAffinity = lowerAffinity(affinity);
+        if (resolveAffinity) {
+          yield* this.#materializeTags(resolveAffinity, context, target.requires);
+        }
+        const requirements = resolveAffinity
+          ? this.#resolveServices(resolveAffinity, context, target.requires)
+          : (Context.empty() as Context.Context<unknown>);
+        yield* target.initOnce(requirements).pipe(
+          // A resolution cancelled while waiting on the slice lock did not fail init.
+          Effect.tapCauseIf(
+            (cause) => !Cause.hasInterruptsOnly(cause),
+            (cause) =>
+              Effect.sync(() => {
+                const failure = Cause.findErrorOption(cause);
+                const missingKey =
+                  Option.isSome(failure) && failure.value._tag === 'ServiceNotAvailable'
+                    ? (failure.value.context as { service?: string }).service
+                    : undefined;
+                const offendingLayers = missingKey
+                  ? target.layers
+                      .filter((l) => l.requires.some((r) => r.key === missingKey))
+                      .map((l) => ({ provides: l.provides.map((p) => p.key), requires: l.requires.map((r) => r.key) }))
                   : undefined;
-              const offendingLayers = missingKey
-                ? target.layers
-                    .filter((l) => l.requires.some((r) => r.key === missingKey))
-                    .map((l) => ({ provides: l.provides.map((p) => p.key), requires: l.requires.map((r) => r.key) }))
-                : undefined;
-              log.error('LayerStack slice init failed', {
-                affinity,
-                context,
-                missingKey,
-                offendingLayers,
-                cause: Cause.pretty(cause),
-              });
-            }),
+                log.error('LayerStack slice init failed', {
+                  affinity,
+                  context,
+                  missingKey,
+                  offendingLayers,
+                  cause: Cause.pretty(cause),
+                });
+              }),
           ),
         );
+      }
       return target;
     });
   }
@@ -541,21 +541,19 @@ class Slice {
     return Effect.void;
   }
 
-  /**
-   * Runs {@link init} with the requirements `requirements` produces, once, under this slice's lock.
-   */
-  initOnce<E>(
-    requirements: Effect.Effect<Context.Context<unknown>, E, Scope.Scope>,
-  ): Effect.Effect<void, E | ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
-    if (this.#initialized) {
-      return Effect.void;
-    }
+  get initialized(): boolean {
+    return this.#initialized;
+  }
+
+  /** Runs {@link init} once, under this slice's lock; a caller that waited on the lock finds it done. */
+  initOnce(
+    requirements: Context.Context<unknown>,
+  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
     return this.#lock.withPermits(1)(
       Effect.suspend(() =>
         this.#initialized
           ? Effect.void
-          : requirements.pipe(
-              Effect.flatMap((resolved) => this.init(resolved)),
+          : this.init(requirements).pipe(
               Effect.tap(() =>
                 Effect.sync(() => {
                   this.#initialized = true;
@@ -574,7 +572,12 @@ class Slice {
   materialize(
     tags: Context.Key<any, any>[],
   ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
-    return this.#lock.withPermits(1)(Effect.suspend(() => this.#materializePending(tags)));
+    // Built services are read without the lock, so they never wait behind a layer still building.
+    return Effect.suspend(() =>
+      !this.#sortError && tags.every((tag) => Option.isSome(Context.getOption(this.#services, tag)))
+        ? Effect.void
+        : this.#lock.withPermits(1)(Effect.suspend(() => this.#materializePending(tags))),
+    );
   }
 
   #materializePending(
