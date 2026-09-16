@@ -38,3 +38,24 @@ export const yieldToEventLoop = (): Promise<void> => {
   }
   return new Promise((resolve) => setTimeout(resolve, 0));
 };
+
+/**
+ * How eagerly {@link yieldOrContinue} gives the event loop a turn, named after `main-thread-scheduling`'s strategies:
+ * the work keeps the page `interactive`, `smooth` or `idle`.
+ */
+export type YieldStrategy = 'interactive' | 'smooth' | 'idle';
+
+/** How long a slice of work may run under each strategy before it yields, as `main-thread-scheduling` budgets them. */
+const SLICE_BUDGET_MS: Record<YieldStrategy, number> = { interactive: 83, smooth: 13, idle: 5 };
+
+/** Shared by every caller: the budget is main-thread time since anything last yielded. */
+let sliceStart = performance.now();
+
+/** Yields to the event loop once the current slice has used its strategy's budget, and resolves at once otherwise. */
+export const yieldOrContinue = async (strategy: YieldStrategy): Promise<void> => {
+  if (performance.now() - sliceStart < SLICE_BUDGET_MS[strategy]) {
+    return;
+  }
+  await yieldToEventLoop();
+  sliceStart = performance.now();
+};

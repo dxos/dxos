@@ -7,14 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { yieldToEventLoop } from '@dxos/async';
+import { yieldOrContinue } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-
-/** Serialization runs at about a millisecond per operation, so a long batch is split to keep the page responsive. */
-const SLICE_MS = 8;
 
 /**
  * Syncs plugin capability contributions into `client.graph.registry`.
@@ -79,7 +76,6 @@ export default Capability.makeModule(
           ).flat();
           const seenKeys = new Set<string>();
           const batch: Operation.PersistentOperation[] = [];
-          let sliceStart = performance.now();
           for (const handler of handlers) {
             const key = handler.meta.key;
             if (!key) {
@@ -104,10 +100,8 @@ export default Capability.makeModule(
               log.verbose('skipping operation with unserializable schema', { key });
               prevOperationKeys.add(key);
             }
-            if (performance.now() - sliceStart > SLICE_MS) {
-              await yieldToEventLoop();
-              sliceStart = performance.now();
-            }
+            // Serialization runs at about a millisecond per operation, so a long batch is split to keep the page responsive.
+            await yieldOrContinue('smooth');
           }
           if (batch.length > 0) {
             // Marked only once added, so a failed add is retried on the next update. A run that overlaps this one
