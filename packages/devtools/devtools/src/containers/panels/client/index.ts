@@ -4,8 +4,8 @@
 
 import { lazy } from 'react';
 
-export const ConfigPanel = lazy(() => import('./ConfigPanel/index.ts'));
-export const DiagnosticsPanel = lazy(() => import('./DiagnosticsPanel/index.ts'));
-export const LoggingPanel = lazy(() => import('./LoggingPanel/index.ts'));
-export const StoragePanel = lazy(() => import('./StoragePanel/index.ts'));
-export const SqlitePanel = lazy(() => import('./SqlitePanel/index.ts'));
+export const ConfigArticle = lazy(() => import('./ConfigArticle/index.ts'));
+export const DiagnosticsArticle = lazy(() => import('./DiagnosticsArticle/index.ts'));
+export const LoggingArticle = lazy(() => import('./LoggingArticle/index.ts'));
+export const StorageArticle = lazy(() => import('./StorageArticle/index.ts'));
+export const SqliteArticle = lazy(() => import('./SqliteArticle/index.ts'));

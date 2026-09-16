@@ -4,9 +4,12 @@
 
 import { lazy } from 'react';
 
-export const EdgeDashboardPanel = lazy(() => import('./EdgeDashboardPanel/index.ts'));
-// TODO(wittjosiah): Refactor.
-export const InvocationTraceContainer = lazy(() => import('./InvocationTracePanel/index.ts'));
-export const InvocationTracePanel = lazy(() => import('./InvocationTracePanel/index.ts'));
-export const TestingPanel = lazy(() => import('./TestingPanel/index.ts'));
-export const WorkflowPanel = lazy(() => import('./WorkflowPanel/index.ts'));
+export const EdgeDashboardArticle = lazy(() => import('./EdgeDashboardArticle/index.ts'));
+export const InvocationTraceContainer = lazy(() =>
+  import('./InvocationTraceArticle/InvocationTraceContainer.tsx').then((module) => ({
+    default: module.InvocationTraceContainer,
+  })),
+);
+export const InvocationTraceArticle = lazy(() => import('./InvocationTraceArticle/index.ts'));
+export const TestingArticle = lazy(() => import('./TestingArticle/index.ts'));
+export const WorkflowArticle = lazy(() => import('./WorkflowArticle/index.ts'));

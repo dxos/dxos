@@ -4,14 +4,15 @@
 
 import { lazy } from 'react';
 
-export * from './SpaceInfoPanel/index.ts';
+export { DatabaseStatsInfo } from './SpaceInfoArticle/DatabaseStatsInfo.tsx';
+export { SyncStateInfo } from './SpaceInfoArticle/SyncStateInfo.tsx';
 
-export const AutomergePanel = lazy(() => import('./AutomergePanel/index.ts'));
-export const FeedsPanel = lazy(() => import('./FeedsPanel/index.ts'));
-export const MembersPanel = lazy(() => import('./MembersPanel/index.ts'));
-export const MetadataPanel = lazy(() => import('./MetadataPanel/index.ts'));
-export const ObjectsPanel = lazy(() => import('./ObjectsPanel/index.ts'));
-export const QueuesPanel = lazy(() => import('./QueuesPanel/index.ts'));
-export const SpaceInfoPanel = lazy(() => import('./SpaceInfoPanel/index.ts'));
-export const SpaceListPanel = lazy(() => import('./SpaceListPanel/index.ts'));
-export const SchemaPanel = lazy(() => import('./SchemaPanel/index.ts'));
+export const AutomergeArticle = lazy(() => import('./AutomergeArticle/index.ts'));
+export const FeedsArticle = lazy(() => import('./FeedsArticle/index.ts'));
+export const MembersArticle = lazy(() => import('./MembersArticle/index.ts'));
+export const MetadataArticle = lazy(() => import('./MetadataArticle/index.ts'));
+export const ObjectsArticle = lazy(() => import('./ObjectsArticle/index.ts'));
+export const QueuesArticle = lazy(() => import('./QueuesArticle/index.ts'));
+export const SpaceInfoArticle = lazy(() => import('./SpaceInfoArticle/index.ts'));
+export const SpaceListArticle = lazy(() => import('./SpaceListArticle/index.ts'));
+export const SchemaArticle = lazy(() => import('./SchemaArticle/index.ts'));

@@ -4,6 +4,6 @@
 
 import { lazy } from 'react';
 
-export const SignalPanel = lazy(() => import('./SignalPanel/index.ts'));
-export const SwarmPanel = lazy(() => import('./SwarmPanel/index.ts'));
-export const NetworkPanel = lazy(() => import('./NetworkPanel/index.ts'));
+export const SignalArticle = lazy(() => import('./SignalArticle/index.ts'));
+export const SwarmArticle = lazy(() => import('./SwarmArticle/index.ts'));
+export const NetworkArticle = lazy(() => import('./NetworkArticle/index.ts'));

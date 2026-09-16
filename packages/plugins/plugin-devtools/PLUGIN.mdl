@@ -65,17 +65,30 @@ component DebugStatus
 
 ```mdl
 component DevtoolsOverviewContainer
-  desc: Deck-companion panel that provides quick access to all devtools sections via a categorised link list.
+  desc: |
+    The "Stats" deck companion: polls the client's stats once (`useStats`) and renders `StatsPanel`
+    (`@dxos/devtools`) — a toolbar with refresh and live toggle over a scrolling stack of cards —
+    with one `AppSurface.DevtoolsOverview` surface as its children, passing
+    `DevtoolsCardData { stats, surfaceProfilerStats, onClearSurfaceProfiler }`. Every card is a
+    surface on that role ordered by `position`: memory, network, EDGE, performance, swarm
+    announcements, surfaces (profiler), database, replicator, messages, queries, query types, sync,
+    frame rate (0–12), then plugin-debug's compartment cards (20) and other contributors (e.g.
+    plugin-calls). A card is a `StatCard` (`@dxos/devtools`): a `Card.Header` with an icon,
+    title, figure and one control, over compact `Card.Row`s whose leading gutter carries a status
+    icon and whose trailing gutter carries a control.
   layout: |
-    ┌─────────────────────────────┐
-    │  Client  ▸ Config / Storage │
-    │            Logs / Diag      │
-    │  HALO    ▸ Identity / Keys  │
-    │  ECHO    ▸ Spaces / Feeds   │
-    │            Objects / Schema │
-    │  Mesh    ▸ Signal / Swarm   │
-    │  EDGE    ▸ Dashboard / …    │
-    └─────────────────────────────┘
+    ┌───────────────────────────────┐
+    │ Stats            ↻  ▶         │
+    ├───────────────────────────────┤
+    │ ┌ ▣ Memory ──────────────────┐│
+    │ │   Used heap        42.1 MB ││
+    │ │ ⚠ Used of available    46% ││
+    │ └────────────────────────────┘│
+    │ ┌ ☁ EDGE   healthy        ⋮ ┐│
+    │ │ ✓ Websocket      connected ││
+    │ └────────────────────────────┘│
+    │ …                             │
+    └───────────────────────────────┘
 ```
 
 ```mdl
@@ -138,30 +151,30 @@ The following components are thin wrappers around `@dxos/devtools` panel compone
 
 | Component              | Devtools node              | Displays                                |
 |------------------------|----------------------------|-----------------------------------------|
-| ConfigPanel            | Client.Config              | Vault config JSON viewer                |
-| StoragePanel           | Client.Storage             | Local storage browser                   |
-| LoggingPanel           | Client.Logs                | Live log stream; download via logStore  |
-| DiagnosticsPanel       | Client.Diagnostics         | Client health / metric charts           |
-| IdentityPanel          | Halo.Identity              | Local identity key + device list        |
-| DeviceListPanel        | Halo.Devices               | All devices paired with this identity   |
-| KeyringPanel           | Halo.Keyring               | Raw keyring entries                     |
-| CredentialsPanel       | Halo.Credentials           | Credentials held in the active space    |
-| SpaceListPanel         | Echo.Spaces                | All spaces with state + select action   |
-| SpaceInfoPanel         | Echo.Space                 | Selected space feeds / pipelines        |
-| FeedsPanel             | Echo.Feeds                 | Feed entries for the active space       |
-| ObjectsPanel           | Echo.Objects               | All objects in the active space         |
-| SchemaPanel            | Echo.Schema                | Schemas registered in the active space  |
-| AutomergePanel         | Echo.Automerge             | Automerge document internals            |
-| QueuesPanel            | Echo.Queues                | Pending queue items                     |
-| MembersPanel           | Echo.Members               | Space members with last-seen            |
-| MetadataPanel          | Echo.Metadata              | Space/feed metadata blobs               |
-| SignalPanel            | Mesh.Signal                | Signal-server connection state          |
-| SwarmPanel             | Mesh.Swarm                 | Active swarm peers                      |
-| NetworkPanel           | Mesh.Network               | Full network topology for active space  |
-| EdgeDashboardPanel     | Edge.Dashboard             | EDGE node health / worker stats         |
-| WorkflowPanel          | Edge.Workflows             | Workflow definitions in active space    |
+| ConfigArticle            | Client.Config              | Vault config JSON viewer                |
+| StorageArticle           | Client.Storage             | Local storage browser                   |
+| LoggingArticle           | Client.Logs                | Live log stream; download via logStore  |
+| DiagnosticsArticle       | Client.Diagnostics         | Client health / metric charts           |
+| IdentityArticle          | Halo.Identity              | Local identity key + device list        |
+| DeviceListArticle        | Halo.Devices               | All devices paired with this identity   |
+| KeyringArticle           | Halo.Keyring               | Raw keyring entries                     |
+| CredentialsArticle       | Halo.Credentials           | Credentials held in the active space    |
+| SpaceListArticle         | Echo.Spaces                | All spaces with state + select action   |
+| SpaceInfoArticle         | Echo.Space                 | Selected space feeds / pipelines        |
+| FeedsArticle             | Echo.Feeds                 | Feed entries for the active space       |
+| ObjectsArticle           | Echo.Objects               | All objects in the active space         |
+| SchemaArticle            | Echo.Schema                | Schemas registered in the active space  |
+| AutomergeArticle         | Echo.Automerge             | Automerge document internals            |
+| QueuesArticle            | Echo.Queues                | Pending queue items                     |
+| MembersArticle           | Echo.Members               | Space members with last-seen            |
+| MetadataArticle          | Echo.Metadata              | Space/feed metadata blobs               |
+| SignalArticle            | Mesh.Signal                | Signal-server connection state          |
+| SwarmArticle             | Mesh.Swarm                 | Active swarm peers                      |
+| NetworkArticle           | Mesh.Network               | Full network topology for active space  |
+| EdgeDashboardArticle     | Edge.Dashboard             | EDGE node health / worker stats         |
+| WorkflowArticle          | Edge.Workflows             | Workflow definitions in active space    |
 | InvocationTraceContainer | Edge.Traces              | Invocation trace timeline from feed     |
-| TestingPanel           | Edge.Testing               | Integration test harness for EDGE       |
+| TestingArticle           | Edge.Testing               | Integration test harness for EDGE       |
 | ToolsExplorer          | ToolsExplorer              | MCP-backed tools explorer               |
 
 ## Operations
@@ -208,8 +221,10 @@ feat F-3: Space Object Explorer
 feat F-4: Devtools Overview Companion
 
   req F-4.1:
-    when: user opens the "Devtools" deck companion
-    then: DevtoolsOverviewContainer renders a categorised link list to all devtools panels
+    when: user opens the "Stats" deck companion
+    then: DevtoolsOverviewContainer renders the card stack, one card per `AppSurface.DevtoolsOverview` contribution
+
+  req F-4.2: Every devtools page is an article — `Panel.Root role` with an optional toolbar over its content — registered on its `Devtools.*` id from `react-surface.ts`; `@dxos/devtools` exports them as `*Article` from `containers/panels`.
 ```
 
 ```mdl
@@ -243,7 +258,7 @@ feat F-7: Log Capture and Download
 
   req F-7.1:
     when: logStore is provided in DebugPluginOptions
-    then: LoggingPanel can stream and display captured log entries
+    then: LoggingArticle can stream and display captured log entries
 
   req F-7.2:
     when: user clicks download in DebugSettings

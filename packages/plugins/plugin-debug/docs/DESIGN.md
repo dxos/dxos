@@ -164,8 +164,9 @@ in `plugin-devtools/src/capabilities/react-surface.ts`.
 4. **Cards (B).** Each small panel becomes a `<Name>Card`: `Card.Root` → `Card.Header` (icon in the
    leading `Card.Block`, `Card.Title`, an optional control in the trailing block) → `Card.Row`s. A row's
    leading gutter holds a status icon, the centre a label and a value, the trailing gutter a control
-   button; rows are compact and never nest a table. A shared `StatRow` component
-   (`src/components/StatRow`) renders the label/value row so every card reads the same. Cards are
+   button; rows are compact and never nest a table. A shared `StatCard` composite
+   (`src/components/StatCard`: `Root` / `Header` / `Row` / `Content`) renders the header and the
+   label/value row so every card reads the same. Cards are
    prop-driven — no card calls a client hook — so each story mounts on fixtures from
    `src/containers/cards/testing/fixtures.ts`. Summary-only panels (Memory, Network) become cards with
    one row per figure; the former `main` row's live toggle moves to the stack's toolbar. The accordion
