@@ -9,7 +9,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
-import { Event as EffectEvent, EffectEx, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
@@ -208,16 +208,14 @@ export const IdentityServiceLayer = Layer.effect(
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const keyring = yield* KeyringApiService;
     const identityLifecycle = yield* IdentityLifecycleService;
-    const runtime = yield* RuntimeProvider.currentRuntime<EffectEvent.Bus>();
+    const runtime = yield* RuntimeProvider.currentRuntime<Hook.Controller>();
     const service = new IdentityServiceImpl(
       identityManager,
       recoveryManager,
       keyring,
       (params, ctx) => identityLifecycle.createIdentity(params, ctx),
       (profile) =>
-        profile
-          ? RuntimeProvider.runPromise(runtime)(EffectEvent.emit(ProfileUpdated, { profile }))
-          : Promise.resolve(),
+        profile ? RuntimeProvider.runPromise(runtime)(Hook.emit(ProfileUpdated, { profile })) : Promise.resolve(),
     );
     yield* Effect.acquireRelease(
       Effect.promise(() => service.open()),

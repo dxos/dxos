@@ -46,7 +46,7 @@ import {
   type EdgeHttpClient,
   EdgeHttpClientService,
 } from '@dxos/edge-client';
-import { Event as EffectEvent, EffectEx } from '@dxos/effect';
+import { EffectEx, Hook } from '@dxos/effect';
 import { type FeedStore, FeedStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -1180,7 +1180,7 @@ export const DataSpaceManagerLayer = (
 ): Layer.Layer<
   DataSpaceManagerService,
   never,
-  | EffectEvent.Bus
+  | Hook.Controller
   | SpaceManagerService
   | IMetadataStoreService
   | KeyringApiService
@@ -1221,14 +1221,14 @@ export const DataSpaceManagerLayer = (
 
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => dataSpaceManager.close(Context.default())));
-      yield* EffectEvent.on(
+      yield* Hook.on(
         IdentityAvailable,
         Effect.fn('DataSpaceManager.onIdentityAvailable')(function* ({ identity }) {
           yield* Effect.promise(() => dataSpaceManager.open(ctx));
-          yield* EffectEvent.emit(DataSpacesReady, { identity });
+          yield* Hook.emit(DataSpacesReady, { identity });
         }),
       );
-      yield* EffectEvent.on(
+      yield* Hook.on(
         ProfileUpdated,
         Effect.fn('DataSpaceManager.onProfileUpdated')(function* ({ profile }) {
           for (const space of dataSpaceManager.spaces.values()) {

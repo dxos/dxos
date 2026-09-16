@@ -8,31 +8,31 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Ref from 'effect/Ref';
 
-import * as Event from './Event.ts';
+import * as Hook from './Hook.ts';
 
-const Foo = Event.make<number>()('foo');
-const Serial = Event.make<number>()('serial', { strategy: 'serial' });
+const Foo = Hook.make<number>()('foo');
+const Serial = Hook.make<number>()('serial', { strategy: 'serial' });
 
-describe('Event bus', () => {
+describe('Hook controller', () => {
   it.effect(
     'dispatches an event to a subscribed handler',
     Effect.fn(function* ({ expect }) {
       const observed = yield* Ref.make<number[]>([]);
 
-      yield* Event.subscribe(Event.handler(Foo, (payload) => Ref.update(observed, (items) => [...items, payload])));
+      yield* Hook.subscribe(Hook.handler(Foo, (payload) => Ref.update(observed, (items) => [...items, payload])));
 
-      yield* Event.emit(Foo, 1);
-      yield* Event.emit(Foo, 2);
+      yield* Hook.emit(Foo, 1);
+      yield* Hook.emit(Foo, 2);
 
       expect(yield* Ref.get(observed)).to.deep.equal([1, 2]);
-    }, Effect.provide(Event.busLayer)),
+    }, Effect.provide(Hook.controllerLayer)),
   );
 
   it.effect(
     'is a no-op when the event has no subscribers',
     Effect.fn(function* () {
-      yield* Event.emit(Foo, 42);
-    }, Effect.provide(Event.busLayer)),
+      yield* Hook.emit(Foo, 42);
+    }, Effect.provide(Hook.controllerLayer)),
   );
 
   it.effect(
@@ -40,13 +40,13 @@ describe('Event bus', () => {
     Effect.fn(function* ({ expect }) {
       const seen = yield* Ref.make<number[]>([]);
 
-      yield* Event.subscribe(Event.handler(Foo, (payload) => Ref.update(seen, (items) => [...items, payload * 10])));
-      yield* Event.subscribe(Event.handler(Foo, (payload) => Ref.update(seen, (items) => [...items, payload * 100])));
+      yield* Hook.subscribe(Hook.handler(Foo, (payload) => Ref.update(seen, (items) => [...items, payload * 10])));
+      yield* Hook.subscribe(Hook.handler(Foo, (payload) => Ref.update(seen, (items) => [...items, payload * 100])));
 
-      yield* Event.emit(Foo, 3);
+      yield* Hook.emit(Foo, 3);
 
       expect((yield* Ref.get(seen)).sort((a, b) => a - b)).to.deep.equal([30, 300]);
-    }, Effect.provide(Event.busLayer)),
+    }, Effect.provide(Hook.controllerLayer)),
   );
 
   it.effect(
@@ -55,14 +55,14 @@ describe('Event bus', () => {
       const observed = yield* Ref.make<number[]>([]);
 
       yield* Effect.gen(function* () {
-        yield* Event.subscribe(Event.handler(Foo, (payload) => Ref.update(observed, (items) => [...items, payload])));
-        yield* Event.emit(Foo, 1);
+        yield* Hook.subscribe(Hook.handler(Foo, (payload) => Ref.update(observed, (items) => [...items, payload])));
+        yield* Hook.emit(Foo, 1);
       }).pipe(Effect.scoped);
 
-      yield* Event.emit(Foo, 2);
+      yield* Hook.emit(Foo, 2);
 
       expect(yield* Ref.get(observed)).to.deep.equal([1]);
-    }, Effect.provide(Event.busLayer)),
+    }, Effect.provide(Hook.controllerLayer)),
   );
 
   it.effect(
@@ -71,22 +71,22 @@ describe('Event bus', () => {
       const seen = yield* Ref.make<string[]>([]);
 
       yield* Foo.pipe(
-        Event.handler((payload) =>
-          Ref.update(seen, (items) => [...items, `foo:${payload}`]).pipe(Effect.andThen(Event.emit(Serial, payload))),
+        Hook.handler((payload) =>
+          Ref.update(seen, (items) => [...items, `foo:${payload}`]).pipe(Effect.andThen(Hook.emit(Serial, payload))),
         ),
-        Event.subscribe,
+        Hook.subscribe,
       );
-      yield* Event.on(
+      yield* Hook.on(
         Serial,
         Effect.fn('onSerial')(function* (payload) {
           yield* Ref.update(seen, (items) => [...items, `serial:${payload}`]);
         }),
       );
 
-      yield* Event.emit(Foo, 7);
+      yield* Hook.emit(Foo, 7);
 
       expect(yield* Ref.get(seen)).to.deep.equal(['foo:7', 'serial:7']);
-    }, Effect.provide(Event.busLayer)),
+    }, Effect.provide(Hook.controllerLayer)),
   );
 
   it.effect(
@@ -96,48 +96,48 @@ describe('Event bus', () => {
       const gate = yield* Deferred.make<void>();
       const order = yield* Ref.make<string[]>([]);
 
-      yield* Event.subscribe(
-        Event.handler(Foo, () =>
+      yield* Hook.subscribe(
+        Hook.handler(Foo, () =>
           Deferred.await(gate).pipe(Effect.andThen(Ref.update(order, (items) => [...items, 'a']))),
         ),
       );
-      yield* Event.subscribe(
-        Event.handler(Foo, () =>
+      yield* Hook.subscribe(
+        Hook.handler(Foo, () =>
           Ref.update(order, (items) => [...items, 'b']).pipe(Effect.andThen(Deferred.succeed(gate, undefined))),
         ),
       );
 
-      yield* Event.emit(Foo, 1);
+      yield* Hook.emit(Foo, 1);
 
       expect(yield* Ref.get(order)).to.deep.equal(['b', 'a']);
-    }, Effect.provide(Event.busLayer)),
+    }, Effect.provide(Hook.controllerLayer)),
   );
 
-  // The id is the contract, not the object: a module instantiated twice must not split the bus.
+  // The id is the contract, not the object: a module instantiated twice must not split the controller.
   it.effect(
     'delivers to a handler subscribed through a separate event object with the same id',
     Effect.fn(function* ({ expect }) {
-      const Twin = Event.make<number>()('foo');
+      const Twin = Hook.make<number>()('foo');
       const seen = yield* Ref.make<number[]>([]);
 
-      yield* Event.subscribe(Event.handler(Twin, (payload) => Ref.update(seen, (items) => [...items, payload])));
+      yield* Hook.subscribe(Hook.handler(Twin, (payload) => Ref.update(seen, (items) => [...items, payload])));
 
-      yield* Event.emit(Foo, 1);
+      yield* Hook.emit(Foo, 1);
 
       expect(yield* Ref.get(seen)).to.deep.equal([1]);
-    }, Effect.provide(Event.busLayer)),
+    }, Effect.provide(Hook.controllerLayer)),
   );
 
   it.effect(
     'fails when one id is declared with two dispatch strategies',
     Effect.fn(function* ({ expect }) {
-      const Twin = Event.make<number>()('foo', { strategy: 'serial' });
+      const Twin = Hook.make<number>()('foo', { strategy: 'serial' });
 
-      yield* Event.subscribe(Event.handler(Foo, () => Effect.void));
-      const result = yield* Effect.exit(Event.subscribe(Event.handler(Twin, () => Effect.void)));
+      yield* Hook.subscribe(Hook.handler(Foo, () => Effect.void));
+      const result = yield* Effect.exit(Hook.subscribe(Hook.handler(Twin, () => Effect.void)));
 
       expect(Exit.isFailure(result)).to.be.true;
-    }, Effect.provide(Event.busLayer)),
+    }, Effect.provide(Hook.controllerLayer)),
   );
 
   it.effect(
@@ -145,12 +145,12 @@ describe('Event bus', () => {
     Effect.fn(function* ({ expect }) {
       const order = yield* Ref.make<string[]>([]);
 
-      yield* Event.subscribe(Event.handler(Serial, () => Ref.update(order, (items) => [...items, 'a'])));
-      yield* Event.subscribe(Event.handler(Serial, () => Ref.update(order, (items) => [...items, 'b'])));
+      yield* Hook.subscribe(Hook.handler(Serial, () => Ref.update(order, (items) => [...items, 'a'])));
+      yield* Hook.subscribe(Hook.handler(Serial, () => Ref.update(order, (items) => [...items, 'b'])));
 
-      yield* Event.emit(Serial, 1);
+      yield* Hook.emit(Serial, 1);
 
       expect(yield* Ref.get(order)).to.deep.equal(['a', 'b']);
-    }, Effect.provide(Event.busLayer)),
+    }, Effect.provide(Hook.controllerLayer)),
   );
 });

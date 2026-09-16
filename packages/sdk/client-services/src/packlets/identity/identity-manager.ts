@@ -20,7 +20,7 @@ import {
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { Event as EffectEvent, EffectEx } from '@dxos/effect';
+import { EffectEx, Hook } from '@dxos/effect';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -588,7 +588,7 @@ export const IdentityManagerLayer = (
 ): Layer.Layer<
   IdentityManagerService,
   never,
-  EffectEvent.Bus | IMetadataStoreService | KeyringApiService | FeedStoreService | SpaceManagerService
+  Hook.Controller | IMetadataStoreService | KeyringApiService | FeedStoreService | SpaceManagerService
 > =>
   Layer.effect(
     IdentityManagerService,
@@ -609,11 +609,11 @@ export const IdentityManagerLayer = (
 
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => identityManager.close(Context.default())));
-      yield* EffectEvent.on(
+      yield* Hook.on(
         StorageReady,
         Effect.fn('IdentityManager.onStorageReady')(function* () {
           yield* Effect.promise(() => identityManager.open(ctx));
-          yield* EffectEvent.emit(IdentityLoaded, { identity: identityManager.identity });
+          yield* Hook.emit(IdentityLoaded, { identity: identityManager.identity });
         }),
       );
       return identityManager;
