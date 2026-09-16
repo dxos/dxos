@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
 import * as Client from './Client.ts';
@@ -356,8 +357,10 @@ describe('Connection multi-client', () => {
       const hub = createHub();
       const keys = uniqueKeys();
 
-      const startError = new Error('TEST: migration failed', { cause: new Error('TEST: wasm trap') });
-      startError.name = name;
+      const startError = new BaseError(name, {
+        message: 'TEST: migration failed',
+        cause: new Error('TEST: wasm trap'),
+      });
       let workersCreated = 0;
       let workersClosed = 0;
       const createWorker = createWorkerFactory(keys.storageLockKey, {
@@ -441,7 +444,7 @@ describe('Connection multi-client', () => {
     const hub = createHub();
     const keys = uniqueKeys();
 
-    const startError = new Error('TEST: migration failed');
+    const startError = new BaseError('StartError', { message: 'TEST: migration failed' });
     let shutdownFirstWorker: (() => void) | undefined;
     let workersCreated = 0;
     const createWorker = createWorkerFactory(keys.storageLockKey, {

@@ -43,43 +43,6 @@ class StubTransport implements Transport {
   }
 }
 
-const setup = ({ failToCreate = false }: { failToCreate?: boolean } = {}) => {
-  // What the bridge pushed towards the transport, which is where a delivered write lands.
-  const delivered: Uint8Array[] = [];
-  const wrote = new Trigger();
-  const factory = {
-    createTransport: (options: TransportOptions): Transport => {
-      if (failToCreate) {
-        throw new Error('cannot create transport');
-      }
-      options.stream.pipe(
-        new Duplex({
-          read: () => {},
-          write: (chunk, _encoding, callback) => {
-            delivered.push(new Uint8Array(chunk));
-            wrote.wake();
-            callback();
-          },
-        }),
-      );
-      return new StubTransport();
-    },
-  };
-  return { service: new RtcTransportService(undefined, undefined, factory), delivered, wrote };
-};
-
-const connectionRequest = (proxyId: PublicKey) =>
-  create(ConnectionRequestSchema, {
-    proxyId: fromPublicKey(proxyId),
-    ownPeerKey: PublicKey.random().toHex(),
-    remotePeerKey: PublicKey.random().toHex(),
-    topic: PublicKey.random().toHex(),
-    initiator: true,
-  });
-
-const dataRequest = (proxyId: PublicKey, payload: Uint8Array) =>
-  create(DataRequestSchema, { proxyId: fromPublicKey(proxyId), payload });
-
 describe('RtcTransportService', () => {
   // The proxy is told its stream is ready before this service's `open` is dispatched, so its first
   // writes arrive for a transport that does not exist yet. They carry the session handshake.
@@ -120,3 +83,40 @@ describe('RtcTransportService', () => {
     expect(delivered).toEqual([]);
   });
 });
+
+const setup = ({ failToCreate = false }: { failToCreate?: boolean } = {}) => {
+  // What the bridge pushed towards the transport, which is where a delivered write lands.
+  const delivered: Uint8Array[] = [];
+  const wrote = new Trigger();
+  const factory = {
+    createTransport: (options: TransportOptions): Transport => {
+      if (failToCreate) {
+        throw new Error('cannot create transport');
+      }
+      options.stream.pipe(
+        new Duplex({
+          read: () => {},
+          write: (chunk, _encoding, callback) => {
+            delivered.push(new Uint8Array(chunk));
+            wrote.wake();
+            callback();
+          },
+        }),
+      );
+      return new StubTransport();
+    },
+  };
+  return { service: new RtcTransportService(undefined, undefined, factory), delivered, wrote };
+};
+
+const connectionRequest = (proxyId: PublicKey) =>
+  create(ConnectionRequestSchema, {
+    proxyId: fromPublicKey(proxyId),
+    ownPeerKey: PublicKey.random().toHex(),
+    remotePeerKey: PublicKey.random().toHex(),
+    topic: PublicKey.random().toHex(),
+    initiator: true,
+  });
+
+const dataRequest = (proxyId: PublicKey, payload: Uint8Array) =>
+  create(DataRequestSchema, { proxyId: fromPublicKey(proxyId), payload });

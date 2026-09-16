@@ -410,6 +410,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }
     }
     this.#feeds.clear();
+    await Promise.allSettled([...this.#retiredFeeds]);
+    this.#retiredFeeds.clear();
     await this._entityManager.close();
   }
 

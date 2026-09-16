@@ -383,6 +383,7 @@ export class Connection extends Resource {
           // A connection whose open failed is never closed, so it stops its own connect task and listeners.
           await ctx.dispose();
           this.#initialConnection.throw(startFailure);
+          await this.#connectTask.close();
           return;
         }
         // The leader session itself failed (e.g. worker init/crash). The lock is released once this
