@@ -8,34 +8,34 @@ import { asyncTimeout, latch, sleep, untilError, untilPromise } from '@dxos/asyn
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { FeedQueue } from './feed-queue.ts';
+import { HypercoreQueue } from './hypercore-queue.ts';
 import { TestItemBuilder } from './testing/index.ts';
 
-describe('FeedQueue', () => {
+describe('HypercoreQueue', () => {
   const builder = new TestItemBuilder();
-  const factory = builder.createFeedFactory();
+  const factory = builder.createHypercoreFactory();
 
   test('opens and closes a queue multiple times', async () => {
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
 
-    const queue = new FeedQueue(feed);
+    const queue = new HypercoreQueue(feed);
     await queue.open();
     await queue.open();
 
     await queue.close();
     await queue.close();
 
-    // await feedStore.close();
+    // await hypercoreStore.close();
   });
 
   test('queue closed while reading', async () => {
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
 
-    const queue = new FeedQueue<any>(feed);
+    const queue = new HypercoreQueue<any>(feed);
     await queue.open();
 
     expect(queue.isOpen).to.be.true;
@@ -43,7 +43,7 @@ describe('FeedQueue', () => {
 
     // Write blocks.
     // TODO(burdon): Write slowly to test writing close feed.
-    await builder.generator.writeBlocks(feed.createFeedWriter(), { count: 10 });
+    await builder.generator.writeBlocks(feed.createHypercoreWriter(), { count: 10 });
 
     // Read until queue closed (pop throws exception).
     const errorPromise = untilError(async () => {
@@ -68,11 +68,11 @@ describe('FeedQueue', () => {
   });
 
   test('feed closed while reading', async () => {
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
 
-    const queue = new FeedQueue<any>(feed);
+    const queue = new HypercoreQueue<any>(feed);
     await queue.open();
 
     expect(queue.isOpen).to.be.true;
@@ -80,7 +80,7 @@ describe('FeedQueue', () => {
 
     // Write blocks.
     // TODO(burdon): Write slowly to test writing close feed.
-    await builder.generator.writeBlocks(feed.createFeedWriter(), { count: 10 });
+    await builder.generator.writeBlocks(feed.createHypercoreWriter(), { count: 10 });
 
     // Read until queue closed (pop throws exception).
     const errorPromise = untilError(async () => {
@@ -94,7 +94,7 @@ describe('FeedQueue', () => {
     // Close the feed.
     await untilPromise(async () => {
       await sleep(400);
-      await feedStore.close();
+      await hypercoreStore.close();
     });
 
     // Expect pop to throw error when queue is closed.
@@ -107,10 +107,10 @@ describe('FeedQueue', () => {
   // TODO(dmaretskyi): Fix.
   test.skip('responds immediately when feed is appended', async () => {
     const key = await builder.keyring.createKey();
-    const feed = await factory.createFeed(key, { writable: true });
+    const feed = await factory.createHypercore(key, { writable: true });
     await feed.open();
 
-    const queue = new FeedQueue<any>(feed);
+    const queue = new HypercoreQueue<any>(feed);
     await queue.open();
     expect(queue.isOpen).to.be.true;
 
@@ -142,7 +142,7 @@ describe('FeedQueue', () => {
 
       // Write blocks.
       setTimeout(async () => {
-        await builder.generator.writeBlocks(feed.createFeedWriter(), {
+        await builder.generator.writeBlocks(feed.createHypercoreWriter(), {
           count: numBlocks,
         });
         expect(feed.properties.length).to.eq(numBlocks);
@@ -158,10 +158,10 @@ describe('FeedQueue', () => {
 
   test('peeks ahead', async () => {
     const key = await builder.keyring.createKey();
-    const feed = await factory.createFeed(key, { writable: true });
+    const feed = await factory.createHypercore(key, { writable: true });
     await feed.open();
 
-    const queue = new FeedQueue<any>(feed);
+    const queue = new HypercoreQueue<any>(feed);
     await queue.open();
 
     const numBlocks = 10;
@@ -170,7 +170,7 @@ describe('FeedQueue', () => {
     {
       const updatedPromise = queue.updated.waitForCount(1);
       // Write blocks.
-      await builder.generator.writeBlocks(feed.createFeedWriter(), {
+      await builder.generator.writeBlocks(feed.createHypercoreWriter(), {
         count: numBlocks,
       });
       expect(feed.properties.length).to.eq(numBlocks);
@@ -203,16 +203,16 @@ describe('FeedQueue', () => {
     const start = 2;
 
     const key = await builder.keyring.createKey();
-    const feed = await factory.createFeed(key, { writable: true });
+    const feed = await factory.createHypercore(key, { writable: true });
     await feed.open();
 
     // Write blocks.
-    await builder.generator.writeBlocks(feed.createFeedWriter(), {
+    await builder.generator.writeBlocks(feed.createHypercoreWriter(), {
       count: numBlocks,
     });
     expect(feed.properties.length).to.eq(numBlocks);
 
-    const queue = new FeedQueue<any>(feed);
+    const queue = new HypercoreQueue<any>(feed);
     await queue.open({ start });
     expect(queue.isOpen).to.be.true;
 

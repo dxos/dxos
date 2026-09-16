@@ -4,4 +4,4 @@
 
 import { describe } from 'vitest';
 
-describe('FeedFactory', () => {});
+describe('HypercoreFactory', () => {});

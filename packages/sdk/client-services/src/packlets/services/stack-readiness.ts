@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Trigger } from '@dxos/async';
-import { Event } from '@dxos/effect';
+import { Hook } from '@dxos/effect';
 
 import { DataSpacesReady } from './events.ts';
 
@@ -23,11 +23,11 @@ export class StackReadinessService extends EffectContext.Service<StackReadinessS
   '@dxos/client-services/StackReadiness',
 ) {}
 
-export const StackReadinessLayer: Layer.Layer<StackReadinessService, never, Event.Bus> = Layer.effect(
+export const StackReadinessLayer: Layer.Layer<StackReadinessService, never, Hook.Controller> = Layer.effect(
   StackReadinessService,
   Effect.gen(function* () {
     const initialized = new Trigger();
-    yield* Event.on(
+    yield* Hook.on(
       DataSpacesReady,
       Effect.fn('StackReadiness.onDataSpacesReady')(function* () {
         initialized.wake();
