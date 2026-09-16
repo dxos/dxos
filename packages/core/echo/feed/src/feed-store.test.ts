@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Result from 'effect/Result';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -178,6 +179,72 @@ describe('Feed V2', () => {
 
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0].feedId).toBe(feedId);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('append notifies on committed blocks even when the cursor token write fails', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      // The cursor token is written after the blocks commit, so its failure must not silence them.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DROP TABLE cursor_tokens`;
+      const notified: string[] = [];
+      feed.onNewBlocks.on((event) => void notified.push(event.spaceId));
+
+      const exit = yield* Effect.exit(
+        feed.append({
+          spaceId,
+          feedNamespace: WellKnownNamespaces.data,
+          blocks: [
+            {
+              feedId,
+              actorId: ALICE,
+              sequence: 0,
+              prevActorId: null,
+              prevSequence: null,
+              position: null,
+              timestamp: 0,
+              data: new Uint8Array([1]),
+            },
+          ],
+        }),
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(notified).toEqual([spaceId]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('assigning a position announces a block change, not only a sync state change', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const [block] = yield* feed.appendLocal([
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+      ]);
+      const notified: string[] = [];
+      feed.onNewBlocks.on((event) => void notified.push(event.spaceId));
+
+      yield* feed.setPosition({
+        spaceId,
+        blocks: [
+          {
+            feedId,
+            actorId: block.actorId,
+            sequence: block.sequence,
+            position: 0,
+            feedNamespace: WellKnownNamespaces.data,
+          },
+        ],
+      });
+
+      // A feed subscription serves the position, so a push that assigns one has to wake it.
+      expect(notified).toEqual([spaceId]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -837,9 +904,20 @@ describe('FeedStore server token', () => {
         lastPulledPosition: 2,
         serverToken: 'old',
       });
+      feed.setRemoteBacklog({ spaceId, feedNamespace: WellKnownNamespaces.data, blocksToPull: 5 });
+
+      const changed: string[] = [];
+      const blocksChanged: string[] = [];
+      feed.onSyncStateChanged.on((event) => void changed.push(event.spaceId));
+      feed.onNewBlocks.on((event) => void blocksChanged.push(event.spaceId));
 
       yield* feed.resetSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, serverToken: 'new' });
 
+      expect(changed).toEqual([spaceId]);
+      // Stripping positions changes what a feed subscription serves, not just the sync state.
+      expect(blocksChanged).toEqual([spaceId]);
+      // The estimate belonged to the server whose positions were just discarded.
+      expect(feed.getRemoteBacklog({ spaceId, feedNamespace: WellKnownNamespaces.data })).toBe(0);
       expect(yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: 'new',
@@ -848,6 +926,56 @@ describe('FeedStore server token', () => {
       expect(blocks.map((block) => block.position)).toEqual([null, null, null]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('applyPulledBatch notifies once for the blocks and the backlog together', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      let notifications = 0;
+      feed.onSyncStateChanged.on(() => void notifications++);
+
+      yield* feed.applyPulledBatch(pulledBatch(spaceId, 7));
+
+      expect(notifications).toBe(1);
+      expect(feed.getRemoteBacklog({ spaceId, feedNamespace: WellKnownNamespaces.data })).toBe(7);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('applyPulledBatch keeps no blocks when advancing the pull position fails', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      feed.setSyncState = () => Effect.die(new Error('sync state write failed'));
+
+      const exit = yield* Effect.exit(feed.applyPulledBatch(pulledBatch(spaceId, 0)));
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      const { blocks } = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(blocks).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  const pulledBatch = (spaceId: SpaceId, blocksToPull: number) => ({
+    spaceId,
+    feedNamespace: WellKnownNamespaces.data,
+    blocks: [
+      {
+        feedId: EntityId.random(),
+        actorId: 'bob',
+        sequence: 0,
+        prevActorId: null,
+        prevSequence: null,
+        position: 1,
+        timestamp: 0,
+        data: new Uint8Array([1]),
+      },
+    ],
+    lastPulledPosition: 1,
+    serverToken: 'token',
+    blocksToPull,
+  });
 
   const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>
     feed.appendLocal(

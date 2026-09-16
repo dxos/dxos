@@ -29,6 +29,12 @@ type QueryResponse = FeedProtocol.QueryResponse;
 type SubscribeRequest = FeedProtocol.SubscribeRequest;
 type SubscribeResponse = FeedProtocol.SubscribeResponse;
 
+/** A block payload ready for insertion, encrypted when the cypher asked for it. */
+type SealedBlock = { data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null };
+
+/** Key for the per-space, per-namespace remote backlog estimate. */
+const backlogKey = (spaceId: string, feedNamespace: string) => `${spaceId}:${feedNamespace}`;
+
 export interface FeedStoreOptions {
   /**
    * The actor ID of the local user.
@@ -78,9 +84,18 @@ export class FeedStore {
   }
 
   /**
-   * Emits after successful block append operations.
+   * Emits after successful block append operations, with the space the blocks were written to.
    */
-  readonly onNewBlocks = new Event<void>();
+  readonly onNewBlocks = new Event<{ spaceId: string }>();
+
+  /**
+   * Emits when a space's sync backlog may have changed: blocks appended, positions assigned or
+   * reset, or a new remote backlog recorded.
+   */
+  readonly onSyncStateChanged = new Event<{ spaceId: string }>();
+
+  /** Blocks the sync server still holds past the last pull, keyed by `spaceId:feedNamespace`; not persisted. */
+  readonly #remoteBacklog = new Map<string, number>();
 
   /**
    * Applies any migrations this database has not recorded yet.
@@ -160,7 +175,7 @@ export class FeedStore {
     spaceId: string,
     feedNamespace: string,
     blocks: readonly Block[],
-  ): Effect.Effect<{ data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null }[], CypherError> => {
+  ): Effect.Effect<SealedBlock[], CypherError> => {
     const cypher = this.#options.cypher;
     return Effect.forEach(
       blocks,
@@ -447,6 +462,25 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.setSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
+   * Records an estimate of how many blocks the sync server holds beyond the last pull.
+   */
+  setRemoteBacklog(opts: { spaceId: SpaceId; feedNamespace: string; blocksToPull: number }): void {
+    const key = backlogKey(opts.spaceId, opts.feedNamespace);
+    if (this.#remoteBacklog.get(key) === opts.blocksToPull) {
+      return;
+    }
+    this.#remoteBacklog.set(key, opts.blocksToPull);
+    this.onSyncStateChanged.emit({ spaceId: opts.spaceId });
+  }
+
+  /**
+   * Remote backlog last recorded by {@link FeedStore.setRemoteBacklog}; 0 before the first pull.
+   */
+  getRemoteBacklog(opts: { spaceId: SpaceId; feedNamespace: string }): number {
+    return this.#remoteBacklog.get(backlogKey(opts.spaceId, opts.feedNamespace)) ?? 0;
+  }
+
+  /**
    * Discards everything derived from a server that no longer exists: strips the global position
    * from every block of the space/namespace and restarts pull progress under the new server's
    * token, so the next pull replays the namespace from the start.
@@ -480,6 +514,8 @@ export class FeedStore {
           `;
         }),
       );
+      this.#remoteBacklog.delete(backlogKey(opts.spaceId, opts.feedNamespace));
+      this.#emitBlocksChanged(opts.spaceId);
     }).pipe(Effect.withSpan('FeedStore.resetSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
@@ -589,6 +625,65 @@ export class FeedStore {
     request: AppendRequest,
   ): Effect.Effect<AppendResponse, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
+      const sealed = yield* this.#sealForInsert(request);
+      const sql = yield* SqlClient.SqlClient;
+      // Wrap in transaction to ensure atomicity when assigning positions.
+      const positions = yield* sql.withTransaction(this.#insertSealed(request, sealed));
+      // Notify on the committed blocks, before the cursor token, which is a separate write.
+      this.#emitBlocksChanged(request.spaceId!);
+
+      const serverToken = this.#options.assignPositions ? yield* this.#ensureCursorToken(request.spaceId!) : undefined;
+      return { requestId: request.requestId, positions, serverToken };
+    }).pipe(Effect.withSpan('FeedStore.append'));
+
+  /**
+   * Applies a pulled batch: the blocks, the position it advanced pull progress to, and the backlog
+   * the server still holds. Subscribers see one change rather than a partially applied batch.
+   */
+  applyPulledBatch = (request: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    blocks: AppendRequest['blocks'];
+    lastPulledPosition: number;
+    serverToken?: string;
+    blocksToPull: number;
+  }): Effect.Effect<void, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const insert = { spaceId: request.spaceId, feedNamespace: request.feedNamespace, blocks: request.blocks };
+      const sealed = yield* this.#sealForInsert(insert);
+      const sql = yield* SqlClient.SqlClient;
+      // One transaction, so a batch never lands without the position it advanced to, and the
+      // notification below always describes committed state.
+      yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          yield* this.#insertSealed(insert, sealed);
+          yield* this.setSyncState({
+            spaceId: request.spaceId,
+            feedNamespace: request.feedNamespace,
+            lastPulledPosition: request.lastPulledPosition,
+            serverToken: request.serverToken,
+          });
+        }),
+      );
+      this.#remoteBacklog.set(backlogKey(request.spaceId, request.feedNamespace), request.blocksToPull);
+      this.#emitBlocksChanged(request.spaceId);
+    }).pipe(Effect.withSpan('FeedStore.applyPulledBatch'), SpanAttributes.annotateSpace(request.spaceId));
+
+  /**
+   * Announces a change to a space's block rows. Positions are part of what `subscribeFeed` serves,
+   * so assigning or clearing them is a block change, not only a sync-state change.
+   */
+  #emitBlocksChanged(spaceId: string): void {
+    this.onNewBlocks.emit({ spaceId });
+    this.onSyncStateChanged.emit({ spaceId });
+  }
+
+  /**
+   * Validates a request and seals its payloads. Runs outside any transaction, so the WebCrypto
+   * round-trips never hold the store's connection open.
+   */
+  #sealForInsert = (request: AppendRequest): Effect.Effect<SealedBlock[], CypherError> =>
+    Effect.gen({ self: this }, function* () {
       if (!request.spaceId) {
         return yield* Effect.die(new Error('spaceId required for append'));
       }
@@ -604,80 +699,84 @@ export class FeedStore {
         assertArgument(block.feedId, 'block.feedId', 'feedId is required');
       }
 
-      // Seal payloads before the transaction so the WebCrypto round-trips do not hold it open.
       // Without a cypher, stay fully synchronous here so append adds no async turns when encryption
       // is off (an extra turn can reorder concurrent appends racing for the same position).
-      const sealed = this.#options.cypher
+      return this.#options.cypher
         ? yield* this.#sealBlocks(request.spaceId, request.feedNamespace, request.blocks)
         : request.blocks.map((block) => ({ data: block.data, encryptionKeyId: null, iv: null }));
+    });
 
-      // Wrap in transaction to ensure atomicity when assigning positions.
+  /** Writes sealed blocks and returns their positions. The caller owns the transaction. */
+  #insertSealed = (
+    request: AppendRequest,
+    sealed: SealedBlock[],
+  ): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
-      const positions = yield* sql.withTransaction(
-        Effect.gen({ self: this }, function* () {
-          // 1. Collect unique feed IDs and batch #ensureFeed calls.
-          const feedKeys = new Map<string, { feedId: string }>();
-          for (const block of request.blocks) {
-            const key = block.feedId!;
-            if (!feedKeys.has(key)) {
-              feedKeys.set(key, { feedId: block.feedId! });
-            }
-          }
 
-          const feedPrivateIds = new Map<string, number>();
-          yield* Effect.forEach(
-            [...feedKeys.entries()],
-            ([key, { feedId }]) =>
-              Effect.gen({ self: this }, function* () {
-                const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
-                feedPrivateIds.set(key, id);
-              }),
-            { concurrency: 'unbounded' },
-          );
+      // 1. Collect unique feed IDs and batch #ensureFeed calls.
+      const feedKeys = new Map<string, { feedId: string }>();
+      for (const block of request.blocks) {
+        const key = block.feedId!;
+        if (!feedKeys.has(key)) {
+          feedKeys.set(key, { feedId: block.feedId! });
+        }
+      }
 
-          // 2. Get max position per namespace ONCE (not per block).
-          const maxPositions = new Map<string, number>();
-          if (this.#options.assignPositions) {
-            const maxPosResult = yield* sql<{ maxPos: number | null }>`
+      const feedPrivateIds = new Map<string, number>();
+      yield* Effect.forEach(
+        [...feedKeys.entries()],
+        ([key, { feedId }]) =>
+          Effect.gen({ self: this }, function* () {
+            const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
+            feedPrivateIds.set(key, id);
+          }),
+        { concurrency: 'unbounded' },
+      );
+
+      // 2. Get max position per namespace ONCE (not per block).
+      const maxPositions = new Map<string, number>();
+      if (this.#options.assignPositions) {
+        const maxPosResult = yield* sql<{ maxPos: number | null }>`
               SELECT MAX(position) as maxPos 
               FROM blocks 
               JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
               WHERE feeds.spaceId = ${request.spaceId} AND feeds.feedNamespace = ${request.feedNamespace}
             `;
-            maxPositions.set(request.feedNamespace, maxPosResult[0]?.maxPos ?? -1);
-          }
+        maxPositions.set(request.feedNamespace, maxPosResult[0]?.maxPos ?? -1);
+      }
 
-          // 3. Insert all blocks and compute positions.
-          //
-          // Critical: when a block already exists (conflict on (feedPrivateId, sequence, actorId))
-          // we must (a) return the EXISTING position to the caller and (b) NOT advance the
-          // namespace position counter. Otherwise the response contains wasted slots that
-          // sync clients will try to UPDATE local rows to, tripping the
-          // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
-          // On a replica, a pulled block the store already holds is the same block by
-          // (actorId, sequence): adopt the server's position for it, which is what re-attaches
-          // locally authored history to the new ordering after a server swap wiped positions.
-          // A position authority must keep DO NOTHING -- the assignment path below distinguishes a
-          // fresh row from a duplicate by whether the insert wrote one.
-          const onConflict = this.#options.assignPositions
-            ? sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING`
-            : sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO UPDATE SET position = excluded.position
+      // 3. Insert all blocks and compute positions.
+      //
+      // Critical: when a block already exists (conflict on (feedPrivateId, sequence, actorId))
+      // we must (a) return the EXISTING position to the caller and (b) NOT advance the
+      // namespace position counter. Otherwise the response contains wasted slots that
+      // sync clients will try to UPDATE local rows to, tripping the
+      // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
+      // On a replica, a pulled block the store already holds is the same block by
+      // (actorId, sequence): adopt the server's position for it, which is what re-attaches
+      // locally authored history to the new ordering after a server swap wiped positions.
+      // A position authority must keep DO NOTHING -- the assignment path below distinguishes a
+      // fresh row from a duplicate by whether the insert wrote one.
+      const onConflict = this.#options.assignPositions
+        ? sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING`
+        : sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO UPDATE SET position = excluded.position
                   WHERE blocks.position IS NULL AND excluded.position IS NOT NULL`;
 
-          const positions: number[] = [];
-          for (const [blockIndex, block] of request.blocks.entries()) {
-            const key = block.feedId!;
-            const feedPrivateId = feedPrivateIds.get(key)!;
-            const { data, encryptionKeyId, iv } = sealed[blockIndex];
+      const positions: number[] = [];
+      for (const [blockIndex, block] of request.blocks.entries()) {
+        const key = block.feedId!;
+        const feedPrivateId = feedPrivateIds.get(key)!;
+        const { data, encryptionKeyId, iv } = sealed[blockIndex];
 
-            let positionToInsert: number | null = null;
-            if (this.#options.assignPositions) {
-              positionToInsert = maxPositions.get(request.feedNamespace)! + 1;
-            } else if (block.position != null) {
-              positionToInsert = block.position;
-            }
+        let positionToInsert: number | null = null;
+        if (this.#options.assignPositions) {
+          positionToInsert = maxPositions.get(request.feedNamespace)! + 1;
+        } else if (block.position != null) {
+          positionToInsert = block.position;
+        }
 
-            const inserted = yield* sql<{ position: number | null }>`
+        const inserted = yield* sql<{ position: number | null }>`
               INSERT INTO blocks (
                 feedPrivateId, position, sequence, actorId,
                 prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv
@@ -689,51 +788,44 @@ export class FeedStore {
               RETURNING position
             `;
 
-            if (!this.#options.assignPositions) {
-              continue;
-            }
+        if (!this.#options.assignPositions) {
+          continue;
+        }
 
-            if (inserted.length > 0) {
-              // New row written at the freshly allocated position.
-              positions.push(positionToInsert!);
-              maxPositions.set(request.feedNamespace, positionToInsert!);
-              continue;
-            }
+        if (inserted.length > 0) {
+          // New row written at the freshly allocated position.
+          positions.push(positionToInsert!);
+          maxPositions.set(request.feedNamespace, positionToInsert!);
+          continue;
+        }
 
-            // Duplicate Lamport tuple: return the stored position and leave maxPositions alone.
-            const existing = yield* sql<{ position: number | null }>`
+        // Duplicate Lamport tuple: return the stored position and leave maxPositions alone.
+        const existing = yield* sql<{ position: number | null }>`
               SELECT position FROM blocks
               WHERE feedPrivateId = ${feedPrivateId}
                 AND actorId = ${block.actorId}
                 AND sequence = ${block.sequence}
             `;
-            const existingPosition = existing[0]?.position;
-            if (existingPosition != null) {
-              positions.push(existingPosition);
-              continue;
-            }
+        const existingPosition = existing[0]?.position;
+        if (existingPosition != null) {
+          positions.push(existingPosition);
+          continue;
+        }
 
-            // Defensive: existing row carries no position (e.g. inserted via an earlier
-            // assignPositions=false path). Back-fill it so the caller can mark it positioned.
-            yield* sql`
+        // Defensive: existing row carries no position (e.g. inserted via an earlier
+        // assignPositions=false path). Back-fill it so the caller can mark it positioned.
+        yield* sql`
               UPDATE blocks SET position = ${positionToInsert}
               WHERE feedPrivateId = ${feedPrivateId}
                 AND actorId = ${block.actorId}
                 AND sequence = ${block.sequence}
             `;
-            positions.push(positionToInsert!);
-            maxPositions.set(request.feedNamespace, positionToInsert!);
-          }
+        positions.push(positionToInsert!);
+        maxPositions.set(request.feedNamespace, positionToInsert!);
+      }
 
-          return positions;
-        }),
-      );
-
-      this.onNewBlocks.emit();
-
-      const serverToken = this.#options.assignPositions ? yield* this.#ensureCursorToken(request.spaceId) : undefined;
-      return { requestId: request.requestId, positions, serverToken };
-    }).pipe(Effect.withSpan('FeedStore.append'));
+      return positions;
+    });
 
   /**
    * Creates local blocks with sequential predecessors and appends grouped batches.
@@ -909,6 +1001,9 @@ export class FeedStore {
             }),
           );
         }
+      }
+      if (request.blocks.length > 0) {
+        this.#emitBlocksChanged(request.spaceId);
       }
     }).pipe(Effect.withSpan('FeedStore.setPosition'));
 
