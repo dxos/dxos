@@ -10,7 +10,7 @@ import { failUndefined } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { RpcClosedError, TimeoutError } from '@dxos/protocols';
+import { CancelledError, RpcClosedError, TimeoutError } from '@dxos/protocols';
 
 import { ControlExtension } from './control-extension.ts';
 import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing/index.ts';
@@ -152,7 +152,7 @@ export class Teleport {
     this._setExtension('dxos.mesh.teleport.control', this._control);
     await this._openExtension('dxos.mesh.teleport.control');
     if (this._aborting || this._destroying) {
-      throw new Error('Teleport closed while opening.');
+      throw new CancelledError({ message: 'Teleport closed while opening.' });
     }
     this._open = true;
     this._muxer.setSessionId(sessionId);

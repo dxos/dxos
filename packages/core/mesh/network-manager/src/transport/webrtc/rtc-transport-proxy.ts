@@ -225,7 +225,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  async getStats(): Promise<TransportStats> {
+  async getStats(): Promise<TransportStats | undefined> {
     try {
       const response = await this._options.bridgeService.getStats(
         create(StatsRequestSchema, { proxyId: fromPublicKey(this._proxyId) }),
@@ -233,15 +233,10 @@ export class RtcTransportProxy extends Resource implements Transport {
           timeout: RPC_TIMEOUT,
         },
       );
-      return response.stats as TransportStats;
+      return response.stats as TransportStats | undefined;
     } catch (err) {
-      return {
-        bytesSent: 0,
-        bytesReceived: 0,
-        packetsSent: 0,
-        packetsReceived: 0,
-        rawStats: 'bridge-svc unreachable',
-      };
+      log('transport stats unavailable', { err });
+      return undefined;
     }
   }
 

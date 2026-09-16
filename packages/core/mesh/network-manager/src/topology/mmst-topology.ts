@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { type SwarmController, type Topology } from './topology.ts';
 
-const MIN_UPDATE_INTERVAL = 1000 * 10;
+export const MIN_UPDATE_INTERVAL = 1000 * 10;
 const MAX_CHANGES_PER_UPDATE = 1;
 
 export interface MMSTTopologyOptions {

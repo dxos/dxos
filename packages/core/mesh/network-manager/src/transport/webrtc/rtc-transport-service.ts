@@ -55,7 +55,7 @@ const OPEN_REGISTRATION_TIMEOUT = TRANSPORT_CONNECTION_TIMEOUT - 1_000;
 export class RtcTransportService implements BridgeService {
   private readonly _openTransports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
   /** Proxy ids this service has closed, newest last. */
-  private readonly _closedTransports: PublicKey[] = [];
+  private _closedTransports: PublicKey[] = [];
   /** Woken when a proxy id's transport is registered; created by whichever side gets there first. */
   private readonly _registrations = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
@@ -149,6 +149,7 @@ export class RtcTransportService implements BridgeService {
     });
 
     this._openTransports.set(proxyId, transportState);
+    this._closedTransports = this._closedTransports.filter((id) => !id.equals(proxyId));
     this._registration(proxyId).wake();
 
     transport.open().catch(async (err) => {
@@ -187,9 +188,8 @@ export class RtcTransportService implements BridgeService {
     // Sampled on an interval for the life of the connection, so it must never wait on one.
     const transport = await this._resolveTransport(requirePublicKey(proxyId), { wait: false });
     if (!transport) {
-      return create(StatsResponseSchema, {
-        stats: { bytesSent: 0, bytesReceived: 0, packetsSent: 0, packetsReceived: 0, rawStats: 'transport closed' },
-      });
+      // No stats rather than zeroes, so a closed transport is not recorded as an idle one.
+      return create(StatsResponseSchema, {});
     }
 
     return create(StatsResponseSchema, { stats: await transport.transport.getStats() });
@@ -216,7 +216,6 @@ export class RtcTransportService implements BridgeService {
     const key = requirePublicKey(proxyId);
     const transport = this._openTransports.get(key);
     if (transport) {
-      this._openTransports.delete(key);
       await this._safeCloseTransport(transport);
     }
     return create(EmptySchema, {});
@@ -284,10 +283,11 @@ export class RtcTransportService implements BridgeService {
   }
 
   private async _safeCloseTransport(transport: TransportState): Promise<void> {
+    // A transport that no longer holds its proxy id was replaced, and its close says nothing about the new one.
     if (this._openTransports.get(transport.proxyId) === transport) {
       this._openTransports.delete(transport.proxyId);
+      this._rememberClosed(transport.proxyId);
     }
-    this._rememberClosed(transport.proxyId);
 
     transport.writeProcessedCallbacks.forEach((cb) => cb());
 
