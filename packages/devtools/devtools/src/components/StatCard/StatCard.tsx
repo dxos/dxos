@@ -106,7 +106,8 @@ type StatCardRowProps = PropsWithChildren<
 
 /**
  * A label/value row: icon, disclosure toggle or control in the leading gutter, a unit or control in
- * the trailing one. With nothing trailing, the content runs through the trailing gutter. `children`
+ * the trailing one. With nothing trailing, the content runs through the trailing gutter — via an
+ * explicit `grid-column-end`, since `Card.Row` places its children by `col-start` only. `children`
  * replace the label/value pair for rows that need their own columns (a `Grid`).
  */
 const StatCardRow = ({
@@ -126,7 +127,7 @@ const StatCardRow = ({
   current,
   children,
 }: StatCardRowProps) => {
-  const trailing = action ?? (unit && <span className='text-xs text-subdued'>{unit}</span>);
+  const trailing = action ?? (unit && <span className='text-xs text-description'>{unit}</span>);
   return (
     <Card.Row
       classNames={[classNames, onClick && 'cursor-pointer hover:bg-hover-surface', current && 'bg-hover-surface']}
@@ -152,7 +153,7 @@ const StatCardRow = ({
         align='center'
         justify='between'
         gap='sm'
-        classNames={['min-w-0 text-xs', !trailing && '[--dx-col:2/span_2]']}
+        classNames={['min-w-0 text-xs', !trailing && '[grid-column-end:span_2]']}
       >
         {children ?? (
           <>
@@ -199,7 +200,7 @@ type StatCardContentProps = PropsWithChildren<ThemedClassName>;
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
   <Card.Row>
-    <Flex column grow={false} classNames={['min-w-0 overflow-x-auto text-xs [--dx-col:2/span_2]', classNames]}>
+    <Flex column grow={false} classNames={['min-w-0 overflow-x-auto text-xs [grid-column-end:span_2]', classNames]}>
       {children}
     </Flex>
   </Card.Row>
