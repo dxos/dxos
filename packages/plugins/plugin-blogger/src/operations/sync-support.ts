@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import { messageOf } from '@dxos/errors';
 
 import { Blog, Publisher } from '#types';
 
@@ -19,7 +18,7 @@ export const postText = (post: Blog.Post): string => post.content.target?.conten
 export const resolvePublisherService = (
   services: readonly Publisher.PublisherService[],
   publisherId: string | undefined,
-): Effect.Effect<Publisher.PublisherService, Publisher.PublisherError> => {
+): Effect.Effect<Publisher.PublisherService, Publisher.Failure> => {
   const service = publisherId ? services.find((candidate) => candidate.id === publisherId) : services[0];
   return service
     ? Effect.succeed(service)
@@ -27,11 +26,8 @@ export const resolvePublisherService = (
 };
 
 /** Bridges a `PublisherService` promise call into the operation's failure channel. */
-export const tryPublisher = <T>(fn: () => Promise<T>): Effect.Effect<T, Publisher.PublisherError> =>
+export const tryPublisher = <T>(fn: () => Promise<T>): Effect.Effect<T, Publisher.Failure> =>
   Effect.tryPromise({
     try: fn,
-    catch: (error) =>
-      error instanceof Publisher.PublisherError
-        ? error
-        : new Publisher.PublisherError({ message: messageOf(error), cause: error }),
+    catch: (error) => (Publisher.isFailure(error) ? error : Publisher.PublisherError.wrap()(error)),
   });
