@@ -197,7 +197,24 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
     const logFilter = 'network-manager:debug,mesh/teleport:debug,mesh/messaging:debug,packlets/invitations:debug,info';
     await page.addInitScript((filter) => localStorage.setItem('dxlog', JSON.stringify({ filter })), logFilter);
     page.on('worker', (worker) => {
-      void worker.evaluate((filter) => (globalThis as any).DX_LOG?.config({ filter }), logFilter).catch(() => {});
+      void worker
+        .evaluate(
+          (filter) =>
+            new Promise<void>((resolve) => {
+              const apply = () => {
+                const log = (globalThis as any).DX_LOG;
+                if (!log) {
+                  setTimeout(apply, 5);
+                  return;
+                }
+                log.config({ filter });
+                resolve();
+              };
+              apply();
+            }),
+          logFilter,
+        )
+        .catch(() => {});
     });
 
     if (url) {
