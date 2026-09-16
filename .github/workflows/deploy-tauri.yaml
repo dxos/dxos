@@ -267,8 +267,8 @@ jobs:
 
       # The ollama launcher and its sibling libraries ship under Contents/Resources/ via
       # `bundle.macOS.files`, which Tauri never signs (its nested-code walk only covers
-      # framework/xpc/app subfolders), so sign them here — deliberately without the app's
-      # entitlements, which a bare binary cannot claim without a provisioning profile. Skips
+      # framework/xpc/app subfolders), so sign them here, deliberately with no entitlements (see
+      # plugin-native's capabilities/ollama.ts for why it is not a Tauri sidecar). Skips
       # mlx.metallib — not Mach-O, so it can't survive Tauri's `xattr -crs`; that's handled
       # separately via sidecar/ollama-metal.framework (see fetch-ollama.mjs).
       - name: Sign Ollama runtime
@@ -303,10 +303,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-      # AMFI kills a bare binary that claims restricted entitlements (application-identifier,
-      # associated-domains) without a provisioning profile, which is what shipping ollama as an
-      # `externalBin` did: Tauri signs every sidecar with the app's entitlements. Assert the shipped
-      # launcher claims none, so that regression fails the release rather than the user's first chat.
+      # macOS kills the ollama launcher at exec if it claims the app's restricted entitlements (see
+      # plugin-native's capabilities/ollama.ts). Assert the shipped launcher claims none, so that
+      # regression fails the release rather than the user's first chat.
       - name: Verify Ollama launcher signature
         if: matrix.os == 'depot-macos-latest'
         run: |

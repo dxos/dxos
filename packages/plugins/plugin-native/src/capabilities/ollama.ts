@@ -290,11 +290,17 @@ class OllamaSidecar extends Context.Service<
 const OllamaSidecarLive = Layer.effect(
   OllamaSidecar,
   Effect.gen(function* () {
-    // The `ollama` launcher discovers `llama-server` + its libraries relative to its own
-    // executable (`<exe>/lib/ollama/`), ignoring OLLAMA_LIBRARY_PATH, so the runtime ships into
-    // `Contents/Resources/lib/ollama` beside it (see tauri.conf bundle.macOS.files). It is a
-    // bundled file rather than a Tauri sidecar because Tauri signs `externalBin` with the app's
-    // entitlements, and AMFI kills a bare binary that claims restricted ones with no profile.
+    // Ollama is spawned as a scoped shell command, not a Tauri sidecar. Tauri signs every
+    // `externalBin` with the app's single entitlements file, which claims restricted entitlements
+    // (application-identifier, associated-domains) for passkeys. macOS honours those only for a
+    // binary covered by the app's provisioning profile, and a separate executable is not, so it
+    // kills the sidecar at exec (AMFI error -413). Tauri has no per-binary entitlements, and the
+    // shell plugin spawns only sidecars listed in `externalBin`. So the launcher ships as a plain
+    // bundled file at `$RESOURCE/ollama` (bundle.macOS.files, which Tauri copies but never signs),
+    // and CI signs it with no entitlements. It needs none: it is a local HTTP server.
+    //
+    // The launcher finds `llama-server` and its libraries at `<exe>/lib/ollama/`, ignoring
+    // OLLAMA_LIBRARY_PATH, so the runtime ships at `Contents/Resources/lib/ollama` beside it.
     const command = Command.create('ollama', ['serve'], {
       env: {
         OLLAMA_HOST,

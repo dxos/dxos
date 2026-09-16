@@ -6,11 +6,9 @@
 //
 // Modern Ollama is not a single binary: the `ollama` launcher loads sibling `llama-server` and
 // `libggml*/libllama*/mlx_metal_*` libraries relative to its own executable path, ignoring
-// `OLLAMA_LIBRARY_PATH` (see capabilities/ollama.ts). Launcher and libraries both ship through
-// `bundle.macOS.files`, which Tauri copies into the bundle but never signs — CI signs them without
-// the app's entitlements, which is what keeps AMFI from killing the launcher at exec. The runtime
-// is large and version-specific, so it is downloaded at build time (gitignored) rather than
-// committed.
+// `OLLAMA_LIBRARY_PATH`. Launcher and libraries both ship through `bundle.macOS.files` rather than
+// as a Tauri sidecar; plugin-native's capabilities/ollama.ts explains why. The runtime is large and
+// version-specific, so it is downloaded at build time (gitignored) rather than committed.
 //
 // Pinned to an exact version + SHA-256 for reproducibility and supply-chain integrity. To bump:
 // update VERSION and SHA256 together (compute via `shasum -a 256 ollama-darwin.tgz`).
