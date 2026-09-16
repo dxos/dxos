@@ -486,7 +486,6 @@ describe('Graph', () => {
     const cancel = registry.subscribe(graph.json(), () => {});
     onTestFinished(() => cancel());
 
-    // The root's child edge still points at the emptied node.
     Graph.removeNode(graph, 'test1');
     expect(registry.get(graph.json())).to.deep.equal({ id: GraphNode.RootId, type: Node.RootType });
   });

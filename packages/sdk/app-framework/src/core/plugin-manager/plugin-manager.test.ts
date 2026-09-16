@@ -3427,7 +3427,6 @@ describe('atom idle TTL', () => {
     const atom = Atom.make(0);
 
     manager.registry.subscribe(atom, () => {})();
-    // Well past the scheduler task a registry without a TTL removes the node on.
     await new Promise((resolve) => setTimeout(resolve, 100));
     assert.strictEqual(manager.registry.getNodes().size, 1);
   });

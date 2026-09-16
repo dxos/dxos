@@ -14,7 +14,7 @@ import { isEntity } from '../Entity/index.ts';
 
 /**
  * Reactive atom for an annotation value on an entity instance. Emits a shallow snapshot (a fresh
- * reference for objects/arrays) so dependent atoms recompute on change. Mirrors `Obj.atomProperty`.
+ * reference for objects/arrays) so dependent atoms recompute on change.
  */
 export const makeAtom = <T>(
   target: Entity.Unknown,

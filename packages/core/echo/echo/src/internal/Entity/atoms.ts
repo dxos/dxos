@@ -18,62 +18,47 @@ import { canonicalOf, getProxyTarget, isProxy } from '../common/proxy/proxy-util
 import { subscribe } from '../common/proxy/reactive.ts';
 import { getSnapshot } from '../Obj/snapshot.ts';
 
-/**
- * Every atom derived from one entity. Each is built on first read and then kept for the entity's
- * lifetime; the registry, not this record, decides how long an unobserved atom's node stays resident.
- * The type parameters are asserted by the caller: one record serves every typed accessor.
- */
-export type EntityAtoms = {
-  /** Snapshot of the entity, emitted on every change. */
-  snapshot<S>(): Atom.Atom<S>;
-  /** The live entity, emitted on every change. */
-  live<E>(): Atom.Atom<E>;
-  /** Label, emitted only when the computed label changes. */
+export type EntityAtoms<E extends Entity.Unknown> = {
+  snapshot(): Atom.Atom<Entity.Snapshot>;
+  live(): Atom.Atom<E>;
   label(): Atom.Atom<string | undefined>;
-  /** Snapshot of one property, emitted only when its content changes. */
-  property<V>(key: PropertyKey): Atom.Atom<V>;
-  /** Snapshot of one annotation, emitted only when its content changes. */
+  property<K extends keyof E>(key: K): Atom.Atom<E[K]>;
   annotation<T>(annotation: Annotation.Annotation<T>): Atom.Atom<Option.Option<T>>;
-  /** Snapshot of one key of a record-valued annotation, emitted only when its content changes. */
   annotationProperty<V>(annotation: Annotation.Annotation<Record<string, V>>, key: string): Atom.Atom<V | undefined>;
 };
 
-// `Symbol.for`, like the other target keys in `proxy-utils.ts`: a second copy of this module must find the same record.
 const symbolEntityAtoms = Symbol.for('@dxos/echo/EntityAtoms');
 
-/**
- * The atoms for `entity`, stored on the object that owns its state (the proxy target, or the entity
- * itself when it is not a proxy) so they are collected with it. A mutable view resolves to its
- * read-only proxy, so both share one record and no atom captures the callback-scoped write capability.
- */
-export const getEntityAtoms = (entity: Entity.Unknown): EntityAtoms => {
-  const owner = isProxy(entity) ? getProxyTarget(entity) : entity;
-  const existing: EntityAtoms | undefined = Reflect.get(owner, symbolEntityAtoms);
+export const getEntityAtoms = <E extends Entity.Unknown>(entity: E): EntityAtoms<E> => {
+  const canonical: E = canonicalOf(entity);
+  const owner = isProxy(canonical) ? getProxyTarget(canonical) : canonical;
+  const existing: EntityAtoms<E> | undefined = Reflect.get(owner, symbolEntityAtoms);
   if (existing) {
     return existing;
   }
-  const created = makeEntityAtoms(canonicalOf(entity));
+  const created = makeEntityAtoms(canonical);
   defineHiddenProperty(owner, symbolEntityAtoms, created);
   return created;
 };
 
-const makeEntityAtoms = (entity: Entity.Unknown): EntityAtoms => {
-  let snapshot: Atom.Atom<unknown> | undefined;
-  let live: Atom.Atom<unknown> | undefined;
+const makeEntityAtoms = <E extends Entity.Unknown>(entity: E): EntityAtoms<E> => {
+  let snapshot: Atom.Atom<Entity.Snapshot> | undefined;
+  let live: Atom.Atom<E> | undefined;
   let label: Atom.Atom<string | undefined> | undefined;
-  let properties: Map<PropertyKey, Atom.Atom<unknown>> | undefined;
-  let annotations: Map<Annotation.Annotation<any>, Atom.Atom<Option.Option<unknown>>> | undefined;
-  let annotationProperties: Map<Annotation.Annotation<any>, Map<string, Atom.Atom<unknown>>> | undefined;
+  let properties: Map<keyof E, Atom.Atom<any>> | undefined;
+  let annotations: Map<Annotation.Annotation<any>, Atom.Atom<Option.Option<any>>> | undefined;
+  let annotationProperties: Map<Annotation.Annotation<any>, Map<string, Atom.Atom<any>>> | undefined;
 
-  // Each method narrows `unknown` to the caller's type: the record's one unchecked boundary.
+  const readSnapshot = () => getSnapshot(entity) as unknown as Entity.Snapshot;
+
   return {
-    snapshot: <S>() =>
+    snapshot: () =>
       (snapshot ??= Atom.make((get) => {
-        get.addFinalizer(subscribe(entity, () => get.setSelf(getSnapshot(entity))));
-        return getSnapshot(entity);
-      }).pipe(withLabel('echo:entity:snapshot'))) as Atom.Atom<S>,
+        get.addFinalizer(subscribe(entity, () => get.setSelf(readSnapshot())));
+        return readSnapshot();
+      }).pipe(withLabel('echo:entity:snapshot'))),
 
-    live: <E>() =>
+    live: () =>
       (live ??= Atom.make((get) => {
         get.addFinalizer(subscribe(entity, () => get.setSelf(entity)));
         return entity;
@@ -81,7 +66,7 @@ const makeEntityAtoms = (entity: Entity.Unknown): EntityAtoms => {
         // The value is always the same object, so identity equality would suppress every notification.
         Atom.withEquality(() => false),
         withLabel('echo:entity:live'),
-      )) as Atom.Atom<E>,
+      )),
 
     label: () =>
       (label ??= makeDistinctAtom(
@@ -91,47 +76,38 @@ const makeEntityAtoms = (entity: Entity.Unknown): EntityAtoms => {
         (value) => value,
       ).pipe(withLabel('echo:entity:label'))),
 
-    property: <V>(key: PropertyKey) =>
+    property: <K extends keyof E>(key: K): Atom.Atom<E[K]> =>
       defaultMap((properties ??= new Map()), key, () =>
-        // Content comparison: identity would be unequal for every array/object, firing on any mutation.
-        makeDistinctAtom(entity, () => (entity as any)[key], snapshotEquals, snapshotForComparison).pipe(
+        makeDistinctAtom(entity, () => entity[key], snapshotEquals, snapshotForComparison).pipe(
           withLabel('echo:entity:property'),
         ),
-      ) as Atom.Atom<V>,
+      ),
 
-    annotation: <T>(annotation: Annotation.Annotation<T>) =>
+    annotation: <T>(annotation: Annotation.Annotation<T>): Atom.Atom<Option.Option<T>> =>
       defaultMap((annotations ??= new Map()), annotation, () =>
-        makeDistinctAtom<Option.Option<unknown>>(
+        makeDistinctAtom(
           entity,
           () => getAnnotation(entity, annotation),
           sameOption,
           (value) => Option.map(value, snapshotForComparison),
         ).pipe(withLabel('echo:entity:annotation')),
-      ) as Atom.Atom<Option.Option<T>>,
+      ),
 
-    annotationProperty: <V>(annotation: Annotation.Annotation<Record<string, V>>, key: string) =>
+    annotationProperty: <V>(annotation: Annotation.Annotation<Record<string, V>>, key: string): Atom.Atom<V | undefined> =>
       defaultMap(
         defaultMap((annotationProperties ??= new Map()), annotation, () => new Map()),
         key,
         () =>
-          makeDistinctAtom<unknown>(
+          makeDistinctAtom(
             entity,
-            () =>
-              getAnnotation(entity, annotation).pipe(
-                Option.map((value) => value[key]),
-                Option.getOrUndefined,
-              ),
+            () => getAnnotation(entity, annotation).pipe(Option.map((value) => value[key]), Option.getOrUndefined),
             snapshotEquals,
             snapshotForComparison,
           ).pipe(withLabel('echo:entity:annotation-property')),
-      ) as Atom.Atom<V | undefined>,
+      ),
   };
 };
 
-/**
- * An atom over `read` that re-emits `emit(value)` only when `equals` reports a change against the last
- * emitted value, so `emit` (a snapshot copy) runs on change rather than on every notification.
- */
 const makeDistinctAtom = <T>(
   entity: Entity.Unknown,
   read: () => T,
@@ -152,6 +128,5 @@ const makeDistinctAtom = <T>(
     return previous;
   });
 
-/** Equal when both empty, or both present with shallow-equal content (see `snapshotEquals`). */
 const sameOption = <T>(a: Option.Option<T>, b: Option.Option<T>): boolean =>
   Option.isNone(a) || Option.isNone(b) ? Option.isNone(a) && Option.isNone(b) : snapshotEquals(a.value, b.value);

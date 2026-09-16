@@ -182,7 +182,7 @@ export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entit
  */
 export const makeRelation = <T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>> => {
   assertArgument(isEntity(relation), 'relation', 'Must be a reactive ECHO relation');
-  return getEntityAtoms(relation).snapshot();
+  return getEntityAtoms(relation).snapshot() as Atom.Atom<Relation.Snapshot<T>>;
 };
 
 /**

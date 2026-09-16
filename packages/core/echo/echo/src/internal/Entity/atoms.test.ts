@@ -44,7 +44,6 @@ describe('entity atoms', () => {
   });
 
   test('two live objects sharing an id get their own atoms', ({ expect }) => {
-    // Each object carries its own subscription, so neither is handed an atom watching an object it does not hold.
     const person = makePerson('Alice');
     const sameId = Obj.clone(person, { retainId: true });
     expect(sameId.id).toBe(person.id);
@@ -108,8 +107,6 @@ describe('entity atoms', () => {
   });
 
   test('an unobserved entity atom is released by the registry', async ({ expect }) => {
-    // The atom is memoized for the entity's lifetime, but its registry node — the cached snapshot
-    // and the live subscription — is bounded by observation. `keepAlive` would pin both forever.
     const registry = AtomRegistry.make();
     const person = makePerson('Alice');
     const atom = Obj.atom(person);
@@ -121,7 +118,6 @@ describe('entity atoms', () => {
     await settle();
     expect(registry.getNodes().size).toBe(0);
 
-    // Re-reading rebuilds cleanly from the entity, which is the source of truth.
     expect(registry.get(atom).name).toBe('Alice');
   });
 
@@ -130,8 +126,6 @@ describe('entity atoms', () => {
     const person = makePerson('Alice');
     const atom = Obj.atom(person);
 
-    // Read as a live consumer does: the node is built lazily, and building it is what wires the
-    // atom's subscription to the entity.
     registry.subscribe(atom, () => {}, { immediate: true })();
     await settle();
     expect(registry.getNodes().size).toBe(0);
@@ -155,10 +149,6 @@ describe('entity atoms', () => {
   });
 });
 
-/**
- * The regression `Atom.keepAlive` caused: a registry node pinned its atom, and the atom's closure pinned
- * the entity, so nothing an app ever rendered was collected.
- */
 describe('entity atoms are released with the entity', { tags: ['memory'] }, () => {
   test('an entity read through a registry is collectable once unobserved', async ({ expect }) => {
     const registry = AtomRegistry.make();
@@ -167,7 +157,6 @@ describe('entity atoms are released with the entity', { tags: ['memory'] }, () =
       collected = true;
     });
 
-    // Scoped so the only strong references left are the registry's.
     (() => {
       const person = makePerson('Alice');
       finalization.register(person, 'entity');

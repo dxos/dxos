@@ -319,9 +319,8 @@ jobs:
   # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
   # DX_DEBUG_LEAKS, the one variable that both un-skips the tag and supplies the flag.
   #
-  # Every suite gates: the feed one guards the fix that made feed objects collectable, the automerge
-  # one the fix that made ECHO objects and their documents collectable, the entity-atom one the fix
-  # that stopped registry atoms pinning the entities they read. Do NOT silence a failure here
+  # Both suites gate: the feed one guards the fix that made feed objects collectable, the automerge
+  # one the fix that made ECHO objects and their documents collectable. Do NOT silence a failure here
   # with `test.fails`, which would also swallow an unrelated crash (the WASM allocator abort these
   # suites can provoke looks identical to an assertion failure from the outside).
   memory:

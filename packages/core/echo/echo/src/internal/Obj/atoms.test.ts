@@ -17,7 +17,6 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 const listenerCount = (obj: Obj.Unknown): number => (getProxyTarget(obj) as any)[EventId].listenerCount();
 
-/** A ref whose target arrives only when the test resolves its load. */
 const makePendingRef = <T extends Obj.Unknown>() => {
   let resolve!: (target: T) => void;
   const load = new Promise<T>((resolveLoad) => {

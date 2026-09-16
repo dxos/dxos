@@ -30,7 +30,6 @@ describe('makeRegistry', () => {
 
     registry.subscribe(atom, () => {})();
     const node = registry.getNodes().get(atom);
-    // Past the scheduler task a registry without a TTL removes on, well inside the grace period.
     await wait(TTL / 4);
     const unsubscribe = registry.subscribe(atom, () => {});
     await wait(TTL * 3);

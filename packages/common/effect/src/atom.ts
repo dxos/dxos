@@ -10,11 +10,6 @@ import { assertArgument } from '@dxos/invariant';
 
 /**
  * Default grace period before an atom with no subscribers is removed from a registry.
- *
- * Sized for render churn (remounts, StrictMode's double render, deck tab switches) and for consumers that
- * read an atom before subscribing to it: React reads in render and subscribes at commit. Without it a
- * registry removes the node on the next scheduler task, which is what drove call sites to `Atom.keepAlive`.
- * It is not a residency policy; how long data stays resident belongs to whichever system owns the data.
  */
 export const DEFAULT_ATOM_IDLE_TTL = Duration.seconds(5);
 

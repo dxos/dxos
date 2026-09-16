@@ -364,7 +364,6 @@ export class GraphImpl implements WritableGraph {
       get(this._model.version);
       return this._model.toTree(
         id,
-        // A node removed without its edges stays reachable as an empty tombstone.
         (node, children: any[]) => {
           const data = node.data;
           if (!data) {
