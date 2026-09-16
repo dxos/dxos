@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Field, Flex, Grid, IconButton, Tooltip } from '@dxos/react-ui';
+import { Field, Flex, Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -188,6 +188,7 @@ export const SurfaceProfilerCard = ({
               and sibling surfaces routinely share their `data`. */}
           {detail.map((surface, index) => (
             <StatCard.Content key={surface.id ?? index}>
+              <SystemIconButton.Clipboard onCopy={() => navigator.clipboard.writeText(JSON.stringify(surface))} />
               <JsonHighlighter
                 classNames='text-sm'
                 data={surface}
