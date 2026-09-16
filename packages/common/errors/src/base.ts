@@ -83,3 +83,13 @@ export class BaseError<Name extends string = string> extends Error {
     return this.name;
   }
 }
+
+/**
+ * The message carried by a thrown value, for a wrapper that must not hide it.
+ *
+ * A tagged wrapper types the error channel, but its own default message says only what kind of
+ * failure it is. Passing this through as the wrapper's `message` keeps what actually went wrong
+ * readable at the top of the chain, where callers and tests look, instead of one `cause` down.
+ */
+export const messageOf = (error: unknown): string | undefined =>
+  error instanceof Error ? error.message : typeof error === 'string' ? error : undefined;

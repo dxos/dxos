@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
+import { BaseError, messageOf } from '@dxos/errors';
 import { type PluginView } from '@dxos/protocols';
 
 import type * as Plugin from './plugin.ts';
@@ -46,6 +47,9 @@ const toRegistryPlugin = (entry: PluginView): Plugin.Meta | null => {
  * `listVersions` is served directly from the `releases` array inlined on each
  * entry — no separate endpoint is needed.
  */
+/** The plugin registry behind EDGE did not answer, or answered with something unusable. */
+export class RegistryError extends BaseError.extend('RegistryError', 'Plugin registry request failed.') {}
+
 export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   // Cached on first load so getPlugin/listVersions can resolve without re-fetching.
   #cachedPlugins: readonly Plugin.Meta[] = [];
@@ -56,7 +60,7 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error> {
     return Effect.tryPromise({
       try: () => this._client.getRegistryPlugins(Context.default()),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+      catch: (error) => new RegistryError({ message: messageOf(error), cause: error }),
     }).pipe(
       Effect.map((body) => {
         this.#cachedEntries = body.plugins;

@@ -22,6 +22,7 @@ import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
+import { PublishError } from './errors.ts';
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
 
 /** Manifest emitted by the build (subset consumed here). Extends `Config2.Plugin` with build-time fields. */
@@ -87,11 +88,12 @@ export const publish = Command.make(
         // Load + validate the build/publish orchestration from dx.config.ts.
         const configFile = findDxConfigFile(dir);
         if (!configFile) {
-          return yield* Effect.fail(new Error(`No dx.config.ts found in ${dir}.`));
+          return yield* Effect.fail(new PublishError({ message: 'No dx.config.ts found.', context: { dir } }));
         }
         const config = yield* Effect.tryPromise({
           try: () => loadDxConfig(configFile),
-          catch: (error) => new Error(`Failed to load dx.config.ts in ${dir}: ${error}`),
+          catch: (error) =>
+            new PublishError({ message: 'Failed to load dx.config.ts.', context: { dir }, cause: error }),
         });
 
         // Build (unless skipped). Prepend the project's `node_modules/.bin` to PATH so
@@ -285,7 +287,10 @@ const uploadBundleDirect = ({
     const { moduleUrl } = yield* Effect.tryPromise({
       try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
       // Keep EdgeCallFailedError intact for the conflict recovery below; type everything else.
-      catch: (error) => (error instanceof EdgeCallFailedError ? error : new Error(`Bundle upload failed: ${error}`)),
+      catch: (error) =>
+        error instanceof EdgeCallFailedError
+          ? error
+          : new PublishError({ message: 'Bundle upload failed.', cause: error }),
     }).pipe(
       // Hosted versions are immutable, so a re-run of an already-uploaded version answers 409 —
       // the existing bundle is the publish's outcome, keeping registry publishes re-runnable.

@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 
 import * as Segment from './Segment.ts';
 
@@ -85,9 +86,9 @@ export interface BookingService {
 }
 
 /** Thrown by a `BookingService` when its credentials are not configured. */
-export class MissingApiKeyError extends Error {
+export class MissingApiKeyError extends BaseError.extend('MissingApiKeyError') {
   constructor(public readonly serviceId: string) {
-    super(`Missing API key for booking service: ${serviceId}`);
+    super({ message: `Missing API key for booking service: ${serviceId}` });
     this.name = 'MissingApiKeyError';
   }
 }

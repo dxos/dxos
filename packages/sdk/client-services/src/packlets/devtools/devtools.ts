@@ -16,6 +16,7 @@ import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
+import { toServiceError } from '@dxos/protocols';
 import {
   type GetSpaceSnapshotResponse,
   type SaveSpaceSnapshotResponse,
@@ -112,7 +113,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
           usageQuota: navigatorInfo?.quota ?? 0,
         };
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -229,7 +230,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
       try: async () => ({
         data: await this.exportSqliteDatabase(),
       }),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

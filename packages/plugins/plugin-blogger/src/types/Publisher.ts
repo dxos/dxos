@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Ref } from '@dxos/echo';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { Connection } from '@dxos/link';
 
 // Provider-neutral draft DTO exchanged across the publisher capability boundary.
@@ -45,17 +46,12 @@ export interface PublisherService {
 }
 
 /** Thrown by a `PublisherService` when publish/import/unpublish fails against the remote backend. */
-export class PublisherError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PublisherError';
-  }
-}
+export class PublisherError extends BaseError.extend<string>('PublisherError', 'Publishing failed.') {}
 
 /** Thrown by a `PublisherService` when its credentials (e.g. a Connection's access token) are missing. */
 export class MissingCredentialError extends PublisherError {
-  constructor(message: string) {
-    super(message);
+  constructor(options?: BaseErrorOptions) {
+    super({ message: 'Publisher credentials are missing.', ...options });
     this.name = 'MissingCredentialError';
   }
 }

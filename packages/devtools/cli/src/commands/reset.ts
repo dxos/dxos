@@ -19,6 +19,8 @@ import {
   getProfilePath,
 } from '@dxos/client-protocol';
 
+import { CliError } from '../util/errors.ts';
+
 /**
  * Remove a directory and return whether it existed.
  */
@@ -98,7 +100,7 @@ export const reset = Command.make(
         const isFile = p.endsWith('.yml');
         const existed = yield* Effect.tryPromise({
           try: () => (isFile ? removeFileIfExists(p) : removeIfExists(p)),
-          catch: (cause) => new Error(`Failed to delete ${p}: ${String(cause)}`),
+          catch: (cause) => new CliError({ message: 'Failed to delete path.', context: { path: p }, cause }),
         });
         if (existed) {
           deleted.push(p);

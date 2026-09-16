@@ -18,6 +18,7 @@ import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SystemError } from '@dxos/protocols';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
@@ -182,7 +183,7 @@ export class FeedSyncer extends Resource {
         const handleMessageEffect = Effect.gen({ self: this }, function* () {
           const decoded = yield* Effect.try({
             try: () => cborXdecode(msg.payload!.value),
-            catch: (error) => new Error(`Failed to decode feed sync message: ${error}`),
+            catch: (error) => new SystemError({ message: 'Failed to decode feed sync message.', cause: error }),
           });
           // v4 dropped `Schema.validate`; decoding through the type side is the equivalent.
           const payload = yield* Schema.decodeEffect(Schema.toType(FeedProtocol.ProtocolMessage))(decoded);

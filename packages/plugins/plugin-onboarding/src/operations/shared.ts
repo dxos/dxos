@@ -8,8 +8,11 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { type Client } from '@dxos/client';
 import { Context as DxContext } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { messageOf } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { type InitiateOAuthFlowRequest } from '@dxos/protocols';
+
+import { OAuthFlowError } from './errors.ts';
 
 // atproto OAuth scopes for the recovery flows — shared with the Atmosphere integration provider.
 
@@ -72,7 +75,7 @@ export type OAuthRecoveryPendingSnapshot = {
 export const beginOAuthFlow = (
   edgeClient: EdgeHttpClient,
   request: InitiateOAuthFlowRequest,
-): Effect.Effect<void, Error> =>
+): Effect.Effect<void, OAuthFlowError> =>
   NativeOAuth.supportsNativeOAuth()
     ? Effect.tryPromise({
         try: async () =>
@@ -87,18 +90,18 @@ export const beginOAuthFlow = (
             ...(request.registerRecovery ? { registerRecovery: request.registerRecovery } : {}),
             ...(request.loginHint ? { loginHint: request.loginHint } : {}),
           }),
-        catch: (error) =>
-          new Error(`Unable to start OAuth flow: ${error instanceof Error ? error.message : String(error)}`),
+        catch: (error) => new OAuthFlowError({ message: messageOf(error), cause: error }),
       })
     : Effect.gen(function* () {
         const { authUrl } = yield* Effect.tryPromise({
           try: () => edgeClient.initiateOAuthFlow(DxContext.default(), request),
-          catch: (error) =>
-            new Error(`OAuth initiate failed: ${error instanceof Error ? error.message : String(error)}`),
+          catch: (error) => new OAuthFlowError({ message: 'OAuth initiate failed.', cause: error }),
         });
         // A null return means the popup was blocked — fail rather than silently continue, since the
         // flow can never complete.
         if (!window.open(authUrl, '_blank')) {
-          return yield* Effect.fail(new Error('Unable to open OAuth recovery window (popup blocked?).'));
+          return yield* Effect.fail(
+            new OAuthFlowError({ message: 'Unable to open OAuth recovery window (popup blocked?).' }),
+          );
         }
       });

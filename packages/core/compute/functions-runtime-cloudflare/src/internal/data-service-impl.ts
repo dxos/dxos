@@ -11,7 +11,7 @@ import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EdgeFunctionEnv } from '@dxos/protocols';
+import { type EdgeFunctionEnv, toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { copyUint8Array } from './utils.ts';
@@ -75,7 +75,7 @@ export class DataServiceImpl implements DataService.Handlers {
           }
         }
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -109,7 +109,7 @@ export class DataServiceImpl implements DataService.Handlers {
         );
         return { documentId: response.documentId };
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -147,7 +147,7 @@ export class DataServiceImpl implements DataService.Handlers {
           })(error);
         }
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

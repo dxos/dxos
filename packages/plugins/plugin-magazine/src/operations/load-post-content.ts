@@ -6,11 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
+import { messageOf } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '#types';
 
 import { makeSnippet, stripHtml } from '../util/text.ts';
+import { ArticleFetchError } from './errors.ts';
 import { browserCorsProxy, fetchArticle } from './sources/index.ts';
 
 export default FeedOperation.LoadPostContent.pipe(
@@ -67,7 +69,7 @@ export default FeedOperation.LoadPostContent.pipe(
             });
           }
         },
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        catch: (error) => new ArticleFetchError({ message: messageOf(error), cause: error }),
       });
     }),
   ),

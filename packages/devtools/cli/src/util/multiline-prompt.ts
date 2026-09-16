@@ -5,6 +5,8 @@
 import * as Effect from 'effect/Effect';
 import readline from 'node:readline';
 
+import { CliError } from './errors.ts';
+
 export type MultilinePromptResult = { type: 'input'; value: string } | { type: 'exit' } | { type: 'empty' };
 
 export type MultilinePromptOptions = {
@@ -106,7 +108,7 @@ export const multilinePrompt = (
     while (true) {
       const line = yield* Effect.tryPromise({
         try: () => reader.nextLine(firstLine ? primaryPrompt : continuationPrompt),
-        catch: (error) => new Error(String(error)),
+        catch: (error) => new CliError({ message: 'Failed to read a prompt line.', cause: error }),
       });
 
       if (line === null) {

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
+import { messageOf } from '@dxos/errors';
 import { File } from '@dxos/types';
 import { safeFetchBytes, validateExternalUrl } from '@dxos/util';
 
@@ -56,7 +57,7 @@ const resolveSource = (source: typeof FileOperation.FileSource.Type) =>
 
         const bytes = yield* Effect.try({
           try: () => decodeBase64(source.data),
-          catch: (error) => new FileReadError(error),
+          catch: (error) => new FileReadError({ message: messageOf(error), cause: error }),
         });
         if (bytes.byteLength > MAX_INLINE_SOURCE_BYTES) {
           return yield* Effect.fail(new FileTooLargeError(bytes.byteLength, MAX_INLINE_SOURCE_BYTES));
@@ -70,11 +71,11 @@ const resolveSource = (source: typeof FileOperation.FileSource.Type) =>
         // work around and no reason to route the bytes through an extra hop.
         const url = yield* Effect.try({
           try: () => validateExternalUrl(source.url),
-          catch: (error) => new FileReadError(error),
+          catch: (error) => new FileReadError({ message: messageOf(error), cause: error }),
         });
         const downloaded = yield* Effect.tryPromise({
           try: () => safeFetchBytes(url, { maxBytes: MAX_FETCHED_BYTES, timeoutMs: FETCH_TIMEOUT_MS }),
-          catch: (error) => new FileReadError(error),
+          catch: (error) => new FileReadError({ message: messageOf(error), cause: error }),
         });
         if (!downloaded.contentType) {
           return yield* Effect.fail(new UnsupportedFileTypeError('(none declared)'));

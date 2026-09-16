@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Format } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 
 import { Place } from './Place.ts';
 
@@ -108,17 +109,17 @@ export class MissingApiKeyError extends Error {
 }
 
 /** Thrown when a waypoint name cannot be resolved to coordinates. */
-export class GeocodeError extends Error {
+export class GeocodeError extends BaseError.extend('GeocodeError') {
   constructor(public readonly location: string) {
-    super(`Could not find location: ${location}`);
+    super({ message: `Could not find location: ${location}` });
     this.name = 'GeocodeError';
   }
 }
 
 /** Thrown when route computation fails. */
-export class RouteError extends Error {
+export class RouteError extends BaseError.extend('RouteError') {
   constructor(message: string) {
-    super(message);
+    super({ message });
     this.name = 'RouteError';
   }
 }

@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
+import { messageOf } from '@dxos/errors';
 
 import { Blog, Publisher } from '#types';
 
@@ -22,12 +23,15 @@ export const resolvePublisherService = (
   const service = publisherId ? services.find((candidate) => candidate.id === publisherId) : services[0];
   return service
     ? Effect.succeed(service)
-    : Effect.fail(new Publisher.PublisherError('No publisher service configured.'));
+    : Effect.fail(new Publisher.PublisherError({ message: 'No publisher service configured.' }));
 };
 
 /** Bridges a `PublisherService` promise call into the operation's failure channel. */
 export const tryPublisher = <T>(fn: () => Promise<T>): Effect.Effect<T, Publisher.PublisherError> =>
   Effect.tryPromise({
     try: fn,
-    catch: (error) => (error instanceof Publisher.PublisherError ? error : new Publisher.PublisherError(String(error))),
+    catch: (error) =>
+      error instanceof Publisher.PublisherError
+        ? error
+        : new Publisher.PublisherError({ message: messageOf(error), cause: error }),
   });

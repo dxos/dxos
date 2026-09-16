@@ -40,12 +40,13 @@ describe('causeToError', () => {
       Effect.sync(() => {
         throw new Error('defect');
       }),
+      // The subject of this test is a plain `Error`'s stack, so the thrown error is returned as
+      // it is; a tagged wrapper would carry the catch's stack instead of the thunk's.
+      // @effect-diagnostics-next-line globalErrorInEffectCatch:off
       Effect.try({
         try: () => {
           throw new Error('failure');
         },
-        // Narrowed rather than passed through as `unknown`, so the failure channel stays typed;
-        // the thrown `Error` is returned as-is, preserving the stack the assertions read.
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       }),
       // `map` calls the thunk through an anonymous runtime callback, which carries no `~effect/` name and stays.
