@@ -479,6 +479,18 @@ describe('Graph', () => {
     });
   });
 
+  test('json skips a node removed without its edges', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: GraphNode.RootId, type: Node.RootType, nodes: [{ id: 'test1', type: 'test' }] });
+    const cancel = registry.subscribe(graph.json(), () => {});
+    onTestFinished(() => cancel());
+
+    // The root's child edge still points at the emptied node.
+    Graph.removeNode(graph, 'test1');
+    expect(registry.get(graph.json())).to.deep.equal({ id: GraphNode.RootId, type: Node.RootType });
+  });
+
   test('get path', () => {
     const graph = Graph.make();
     Graph.addNode(graph, {

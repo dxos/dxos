@@ -21,7 +21,8 @@ export const makeAtom = <T>(
   annotation: Annotation.Annotation<T>,
 ): Atom.Atom<Option.Option<T>> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
-  return getEntityAtoms(target).annotation(annotation);
+  // The record is shared across annotation types; `annotation` fixes this atom's value type.
+  return getEntityAtoms(target).annotation(annotation) as Atom.Atom<Option.Option<T>>;
 };
 
 /**
@@ -33,5 +34,5 @@ export const makeProperty = <V>(
   key: string,
 ): Atom.Atom<V | undefined> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
-  return getEntityAtoms(target).annotationProperty(annotation, key);
+  return getEntityAtoms(target).annotationProperty(annotation, key) as Atom.Atom<V | undefined>;
 };

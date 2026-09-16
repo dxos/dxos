@@ -13,7 +13,7 @@ import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, shallowEqual } from '@dxos/util';
 
@@ -92,10 +92,6 @@ export interface BaseGraph extends Pipeable.Pipeable {
    * Get the atom key for the node with the given id.
    */
   node(id: string): Atom.Atom<Option.Option<Node.Node>>;
-  /**
-   * Get the atom key for the node with the given id.
-   */
-  nodeOrThrow(id: string): Atom.Atom<Node.Node>;
   /**
    * Get the atom key for the connections of the node with the given id.
    */
@@ -320,18 +316,6 @@ export class GraphImpl implements WritableGraph {
     return edges;
   }
 
-  // Swept as soon as it loses subscribers, opting out of the registry's idle grace: this atom
-  // asserts rather than caches, and a node retained past its last read is rebuilt by the
-  // builder's dirty-flush batch (which rebuilds every stale node, lazy or not) after
-  // `removeNode` has emptied it — throwing where no caller can catch it.
-  readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
-    return Atom.make((get) => {
-      const node = get(this._node(id));
-      invariant(Option.isSome(node), `Node not available: ${id}`);
-      return node.value;
-    }).pipe(Atom.setIdleTTL(0));
-  });
-
   readonly _edges = Atom.family<string, Atom.Atom<Edges>>((id) => {
     return Atom.make((get) => {
       get(this._model.version);
@@ -379,8 +363,12 @@ export class GraphImpl implements WritableGraph {
       get(this._model.version);
       return this._model.toTree(
         id,
+        // A node removed without its edges stays reachable as an empty tombstone.
         (node, children: any[]) => {
-          const data = node.data ?? failedInvariant(`Node not available: ${node.id}`);
+          const data = node.data;
+          if (!data) {
+            return undefined;
+          }
           return {
             id: data.id,
             type: data.type,
@@ -390,9 +378,7 @@ export class GraphImpl implements WritableGraph {
         },
         relationKey('child'),
       );
-      // Same reasoning as `_nodeOrThrow`: the `failedInvariant` above fires on a node the
-      // dirty-flush batch rebuilds after `removeNode` has emptied it.
-    }).pipe(Atom.setIdleTTL(0), withLabel(`graph:json:${id}`));
+    }).pipe(withLabel(`graph:json:${id}`));
   });
 
   constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
@@ -418,10 +404,6 @@ export class GraphImpl implements WritableGraph {
 
   node(id: string): Atom.Atom<Option.Option<Node.Node>> {
     return this._node(id);
-  }
-
-  nodeOrThrow(id: string): Atom.Atom<Node.Node> {
-    return this._nodeOrThrow(id);
   }
 
   connections(id: string, relation: Node.RelationInput): Atom.Atom<Node.Node[]> {
@@ -522,7 +504,9 @@ export const getNode = (graph: BaseGraph, id: string): Option.Option<Node.Node> 
  */
 export const getNodeOrThrow = (graph: BaseGraph, id: string): Node.Node => {
   const internal = getInternal(graph);
-  return internal._registry.get(internal._nodeOrThrow(id));
+  const node = internal._registry.get(internal._node(id));
+  invariant(Option.isSome(node), `Node not available: ${id}`);
+  return node.value;
 };
 
 /**

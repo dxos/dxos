@@ -4,6 +4,7 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { withLabel } from '../common/atom-label.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
 import { ObjectDeletedId } from '../common/types/model-symbols.ts';
 import type { Ref } from './ref.ts';
@@ -36,5 +37,5 @@ export const refSimpleFamily = Atom.family(<T>(ref: Ref<T>): Atom.Atom<T | undef
     });
 
     return loadRefTarget(ref, get, setupSubscription);
-  });
+  }).pipe(withLabel('echo:ref:target'));
 });

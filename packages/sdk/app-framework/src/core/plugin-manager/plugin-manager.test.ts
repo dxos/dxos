@@ -3438,57 +3438,63 @@ describe('atom idle TTL', () => {
       ...options,
     });
 
-  it.effect('applies a default grace period to the registry it creates', () =>
-    Effect.promise(async () => {
-      const manager = makeManager();
-      const atom = Atom.make(0);
+  it('applies a default grace period to the registry it creates', async () => {
+    const manager = makeManager();
+    const atom = Atom.make(0);
 
-      manager.registry.subscribe(atom, () => {})();
-      await settle(AFTER_SHORT_TTL);
+    manager.registry.subscribe(atom, () => {})();
+    await settle(AFTER_SHORT_TTL);
 
-      // The default is seconds, so the node is still resident well after a bare registry would
-      // have swept it.
-      assert.strictEqual(manager.registry.getNodes().size, 1);
-    }),
-  );
+    // The default is seconds, so the node is still resident well after a bare registry would
+    // have swept it.
+    assert.strictEqual(manager.registry.getNodes().size, 1);
+  });
 
-  it.effect('sweeps the node once the grace period elapses', () =>
-    Effect.promise(async () => {
-      const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
-      const atom = Atom.make(0);
+  it('sweeps the node once the grace period elapses', async () => {
+    const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
+    const atom = Atom.make(0);
 
-      manager.registry.subscribe(atom, () => {})();
-      await settle(AFTER_SHORT_TTL);
+    manager.registry.subscribe(atom, () => {})();
+    await settle(AFTER_SHORT_TTL);
 
-      assert.strictEqual(manager.registry.getNodes().size, 0);
-    }),
-  );
+    assert.strictEqual(manager.registry.getNodes().size, 0);
+  });
 
-  it.effect('re-subscribing within the grace period cancels the sweep', () =>
-    Effect.promise(async () => {
-      const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
-      const atom = Atom.make(0);
+  it('re-subscribing within the grace period cancels the sweep', async () => {
+    const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
+    const atom = Atom.make(0);
 
-      manager.registry.subscribe(atom, () => {})();
-      const unsubscribe = manager.registry.subscribe(atom, () => {});
-      await settle(AFTER_SHORT_TTL);
-      assert.strictEqual(manager.registry.getNodes().size, 1);
+    manager.registry.subscribe(atom, () => {})();
+    const unsubscribe = manager.registry.subscribe(atom, () => {});
+    await settle(AFTER_SHORT_TTL);
+    assert.strictEqual(manager.registry.getNodes().size, 1);
 
-      unsubscribe();
-      await settle(AFTER_SHORT_TTL);
-      assert.strictEqual(manager.registry.getNodes().size, 0);
-    }),
-  );
+    unsubscribe();
+    await settle(AFTER_SHORT_TTL);
+    assert.strictEqual(manager.registry.getNodes().size, 0);
+  });
 
-  it.effect('a keepAlive atom is never swept', () =>
-    Effect.promise(async () => {
-      const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
-      const atom = Atom.make(0).pipe(Atom.keepAlive);
+  it('a zero grace period sweeps on the next task', async () => {
+    const manager = makeManager({ atomIdleTTL: Duration.zero });
+    const atom = Atom.make(0);
 
-      manager.registry.subscribe(atom, () => {})();
-      await settle(AFTER_SHORT_TTL);
+    manager.registry.subscribe(atom, () => {})();
+    await settle(AFTER_SHORT_TTL);
 
-      assert.strictEqual(manager.registry.getNodes().size, 1);
-    }),
-  );
+    assert.strictEqual(manager.registry.getNodes().size, 0);
+  });
+
+  it('rejects an infinite grace period', () => {
+    assert.throws(() => makeManager({ atomIdleTTL: Duration.infinity }));
+  });
+
+  it('a keepAlive atom is never swept', async () => {
+    const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
+    const atom = Atom.make(0).pipe(Atom.keepAlive);
+
+    manager.registry.subscribe(atom, () => {})();
+    await settle(AFTER_SHORT_TTL);
+
+    assert.strictEqual(manager.registry.getNodes().size, 1);
+  });
 });

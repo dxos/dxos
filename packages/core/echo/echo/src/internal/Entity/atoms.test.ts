@@ -2,17 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import * as Annotation from '../../Annotation.ts';
 import * as Entity from '../../Entity.ts';
 import * as Obj from '../../Obj.ts';
 import { TestSchema } from '../../testing/index.ts';
 
 const makePerson = (name: string) => Obj.make(TestSchema.Person, { name });
 
-/** Node removal is dispatched through the registry's async scheduler, so a sweep needs a real turn. */
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+const ColorAnnotation = Annotation.make({ id: 'org.dxos.test.entity-atoms.color', schema: Schema.String });
+const OrderAnnotation = Annotation.make({
+  id: 'org.dxos.test.entity-atoms.order',
+  schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
+});
+
+/** The registry removes nodes on `setImmediate`, which a zero-delay timer can run ahead of. */
+const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 describe('entity atoms', () => {
   test('every accessor for the same view of an entity returns the same atom', ({ expect }) => {
@@ -36,10 +44,7 @@ describe('entity atoms', () => {
   });
 
   test('two live objects sharing an id get their own atoms', ({ expect }) => {
-    // Keying by the proxy rather than by the entity id: each object carries its own subscription, so
-    // neither is handed an atom watching an object it does not hold. Under id keying the second
-    // object received the first's atom and its updates never arrived — the same failure
-    // `proxy-identity.test.ts` records for branch bindings.
+    // Each object carries its own subscription, so neither is handed an atom watching an object it does not hold.
     const person = makePerson('Alice');
     const sameId = Obj.clone(person, { retainId: true });
     expect(sameId.id).toBe(person.id);
@@ -61,6 +66,25 @@ describe('entity atoms', () => {
     expect(Obj.atomProperty(person, 'name')).toBe(Obj.atomProperty(person, 'name'));
     expect(Obj.atomProperty(person, 'name')).not.toBe(Obj.atomProperty(person, 'address'));
     expect(Obj.atomProperty(person, 'name')).not.toBe(Obj.atomProperty(makePerson('Alice'), 'name'));
+  });
+
+  test('annotation atoms are per object, per annotation and per key', ({ expect }) => {
+    const person = makePerson('Alice');
+    expect(Annotation.atom(person, ColorAnnotation)).toBe(Annotation.atom(person, ColorAnnotation));
+    expect(Annotation.atom(person, ColorAnnotation)).not.toBe(Annotation.atom(person, OrderAnnotation));
+    expect(Annotation.atom(person, ColorAnnotation)).not.toBe(Annotation.atom(makePerson('Alice'), ColorAnnotation));
+    expect(Annotation.atomProperty(person, OrderAnnotation, 'a')).toBe(
+      Annotation.atomProperty(person, OrderAnnotation, 'a'),
+    );
+    expect(Annotation.atomProperty(person, OrderAnnotation, 'a')).not.toBe(
+      Annotation.atomProperty(person, OrderAnnotation, 'b'),
+    );
+  });
+
+  test('a non-proxy entity keeps its atoms on itself', ({ expect }) => {
+    const entity = { [Entity.KindId]: Entity.Kind.Object, id: 'plain' } as unknown as Entity.Unknown;
+    expect(Entity.atom(entity)).toBe(Entity.atom(entity));
+    expect(Entity.atom(entity)).not.toBe(Entity.atom({ ...entity } as Entity.Unknown));
   });
 
   test('an unobserved entity atom is released by the registry', async ({ expect }) => {
@@ -111,22 +135,25 @@ describe('entity atoms', () => {
 });
 
 /**
- * The point of keying by the entity rather than through `Atom.family`: an entity the database
- * releases takes its atoms with it, so atom lifetime follows object residency instead of layering
- * a second cache policy underneath it.
+ * The regression `Atom.keepAlive` caused: a registry node pinned its atom, and the atom's closure pinned
+ * the entity, so nothing an app ever rendered was collected.
  */
-describe.skipIf(!globalThis.gc)('entity atoms are released with the entity', () => {
-  test('a collected entity collects its atom', async ({ expect }) => {
+describe('entity atoms are released with the entity', { tags: ['memory'] }, () => {
+  test('an entity read through a registry is collectable once unobserved', async ({ expect }) => {
+    const registry = AtomRegistry.make();
     let collected = false;
     const finalization = new FinalizationRegistry(() => {
       collected = true;
     });
 
-    // Scoped so the only strong reference to the entity and its atom drops at block exit.
+    // Scoped so the only strong references left are the registry's.
     (() => {
       const person = makePerson('Alice');
-      finalization.register(Obj.atom(person), 'atom');
+      finalization.register(person, 'entity');
+      registry.subscribe(Obj.atom(person), () => {}, { immediate: true })();
     })();
+    await settle();
+    expect(registry.getNodes().size).toBe(0);
 
     globalThis.gc!();
     // FinalizationRegistry callbacks are queued on a later turn than the collection itself.

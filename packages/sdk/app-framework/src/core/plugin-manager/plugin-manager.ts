@@ -49,6 +49,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { EffectEx } from '@dxos/effect';
+import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event.ts';
@@ -111,6 +112,10 @@ export type ManagerOptions = {
    * `plugins` are ignored.
    */
   core?: string[];
+  /**
+   * Registry to use instead of creating one. `atomIdleTTL` is not applied to it, so it should set its own
+   * `defaultIdleTTL`: ECHO atoms carry no `keepAlive`, and a registry without a TTL drops them between reads.
+   */
   registry?: Registry.AtomRegistry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
@@ -135,7 +140,8 @@ export type ManagerOptions = {
   /**
    * Grace period before an atom with no subscribers is swept from the registry, applied when this
    * manager creates its own. See {@link DEFAULT_ATOM_IDLE_TTL} for how it is sized; pass
-   * `Duration.zero` to sweep as soon as the last subscriber leaves.
+   * `Duration.zero` to sweep as soon as the last subscriber leaves. Must be finite: use `Atom.keepAlive`
+   * to retain an atom indefinitely.
    */
   atomIdleTTL?: Duration.Input;
   /**
@@ -301,6 +307,17 @@ export const isManager = (value: unknown): value is PluginManager => {
 /**
  * Internal implementation of PluginManager.
  */
+/** The registry's `defaultIdleTTL`, which must be finite; zero means no grace, which the registry spells `undefined`. */
+const toIdleTTLMillis = (ttl: Duration.Input): number | undefined => {
+  const millis = Duration.toMillis(ttl);
+  assertArgument(
+    Number.isFinite(millis),
+    'atomIdleTTL',
+    'Must be finite; use Atom.keepAlive to retain an atom indefinitely',
+  );
+  return millis > 0 ? millis : undefined;
+};
+
 class ManagerImpl implements PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId = ManagerTypeId;
   readonly capabilities: CapabilityManager.CapabilityManager;
@@ -336,7 +353,7 @@ class ManagerImpl implements PluginManager {
     const core: string[] = coreProp
       ? coreProp.filter((id) => registered.has(id))
       : plugins.filter(({ meta }) => meta.profile.tags?.includes('system')).map(({ meta }) => meta.profile.key);
-    this.registry = registry ?? Registry.make({ defaultIdleTTL: Duration.toMillis(atomIdleTTL) });
+    this.registry = registry ?? Registry.make({ defaultIdleTTL: toIdleTTLMillis(atomIdleTTL) });
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });

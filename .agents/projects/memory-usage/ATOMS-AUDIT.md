@@ -352,7 +352,9 @@ default context registry uses 400 ms).
   grace period: retained past its last reader, it is rebuilt by whatever
   batches stale nodes (app-graph's dirty flush rebuilds all of them, `lazy` or
   not) after its source is gone, throwing where no caller can catch it.
-  `Atom.setIdleTTL(0)` opts those out — `_nodeOrThrow` and `_json` needed it.
+  Make such atoms total instead of opting them out: app-graph's `nodeOrThrow`
+  atom was removed in favour of throwing at the one-shot call site, and `_json`
+  skips tombstoned nodes.
 - Two upstream sharp edges to encode in the helper/docs:
   `setIdleTTL(0)` means "remove immediately, no grace" (it disables even the
   registry default), and `setIdleTTL(Infinity)` _is_ `keepAlive`.

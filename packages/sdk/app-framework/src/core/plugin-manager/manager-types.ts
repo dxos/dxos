@@ -67,7 +67,8 @@ export const DEFAULT_ACTIVATION_TIMEOUT = Duration.seconds(30);
  * is correctness margin rather than cache warmth. Without it a registry sweeps on the scheduler task
  * following the last unsubscribe, which is what drives call sites to `Atom.keepAlive` and its
  * permanent retention. It is not a residency policy: how long data stays resident belongs to
- * whichever system owns that data.
+ * whichever system owns that data. Longer than the Solid provider's 400 ms because React reads an atom
+ * in render and subscribes only at commit, and deck switches remount whole subtrees.
  */
 export const DEFAULT_ATOM_IDLE_TTL = Duration.seconds(5);
 

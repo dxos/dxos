@@ -14,6 +14,7 @@ import type * as Entity from '../../Entity.ts';
 import type * as Obj from '../../Obj.ts';
 import type * as Ref from '../../Ref.ts';
 import type * as Relation from '../../Relation.ts';
+import { withLabel } from '../common/atom-label.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
 import { getEntityAtoms } from '../Entity/atoms.ts';
 import { getDatabase, isEntity } from '../Entity/index.ts';
@@ -61,7 +62,7 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     });
 
     return loadRefTarget(ref, get, setupTargetSubscription);
-  });
+  }).pipe(withLabel('echo:ref:snapshot'));
 });
 
 /**
@@ -81,6 +82,7 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
   return Function.pipe(
     Atom.make(effect),
     Atom.map((result) => AsyncResult.getOrElse(result, () => undefined)),
+    withLabel('echo:ref:live'),
   );
 });
 
@@ -93,8 +95,8 @@ const refPropertyFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>) =
   Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K] | undefined> => {
     return Atom.make<T[K] | undefined>((get) => {
       const target = get(refWithReactiveFamily(ref));
-      return target ? get(getEntityAtoms(target).property(key)) : undefined;
-    });
+      return target ? (get(getEntityAtoms(target).property(key)) as T[K]) : undefined;
+    }).pipe(withLabel('echo:ref:property'));
   }),
 );
 
@@ -113,6 +115,7 @@ export const makeAtom: {
 
   const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
+  // The overload signatures narrow the record's `unknown` to the caller's type.
   return getEntityAtoms(obj).snapshot;
 };
 
@@ -157,7 +160,7 @@ export const makeWithReactive: {
  */
 export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
-  return getEntityAtoms(entity).snapshot;
+  return getEntityAtoms(entity).snapshot as Atom.Atom<Entity.Snapshot>;
 };
 
 /**
@@ -166,7 +169,7 @@ export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entit
  */
 export const makeRelation = <T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>> => {
   assertArgument(isEntity(relation), 'relation', 'Must be a reactive ECHO relation');
-  return getEntityAtoms(relation).snapshot;
+  return getEntityAtoms(relation).snapshot as Atom.Atom<Relation.Snapshot<T>>;
 };
 
 /**

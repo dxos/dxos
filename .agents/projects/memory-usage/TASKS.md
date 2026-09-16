@@ -256,18 +256,17 @@ registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
       render-churn grace, explicitly not a residency policy. Other
       `Registry.make()` sites are per-instance fallbacks for tests and
       storybook and keep the bare constructor; the app always passes the
-      manager's registry. 4 lifecycle tests in `plugin-manager.test.ts` over
-      `AtomRegistry.getNodes()`. Sharp edges recorded in the option's doc:
-      `setIdleTTL(0)` removes immediately (disabling the default rather than
-      inheriting it), `setIdleTTL(Infinity)` is `keepAlive`.
-      Follow-on: `app-graph`'s `_nodeOrThrow` and `_json` take
-      `Atom.setIdleTTL(0)` — they assert rather than cache, and the builder's
-      dirty-flush batch rebuilds every stale node regardless of `lazy`, so a
-      node retained past its last reader throws after `removeNode` empties it,
-      where no caller can catch it. Caught by plugin-navtree's storybook run.
-      Both atoms moved to `AppGraph.ts` in #12594 and carry the same TTL there;
-      the per-node mounts that PR added pin `_node`, not these two derived
-      atoms, so the grace period still reaches them.
+      manager's registry. A registry passed in keeps its own TTL, which the
+      `registry` option's doc now says. `atomIdleTTL` must be finite
+      (`Duration.infinity` made the registry's bucket math `NaN` and swept at
+      once) and zero maps to no grace. 6 lifecycle tests in
+      `plugin-manager.test.ts` over `AtomRegistry.getNodes()`.
+      Follow-on: app-graph atoms must not throw during a rebuild, because a
+      batch rebuilds every stale node regardless of `lazy`. Caught by
+      plugin-navtree's storybook run. The throwing `nodeOrThrow` atom is gone
+      (from app-graph and from `@dxos/graph`'s `Store`); `getNodeOrThrow` and
+      `explore` read `node` once and throw at the call site. `_json` skips a
+      tombstoned node instead of asserting. No per-atom `setIdleTTL(0)`.
 - [x] **W2. ECHO families → proxy-bounded.** One `EntityAtoms` record per
       entity (`internal/Entity/atoms.ts`, `getEntityAtoms`) replaces the 8
       entity-keyed `Atom.family`s across `Obj/atoms.ts` and
