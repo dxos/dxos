@@ -23,7 +23,7 @@ import {
 } from '@dxos/echo-host';
 import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
-import { FeedFactoryLayer, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
+import { HypercoreFactoryLayer, HypercoreStoreLayer, HypercoreStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';
@@ -72,7 +72,7 @@ import {
 import { NetworkReady, Opening, StorageReady } from './events.ts';
 import { FeedSyncerLayer } from './feed-syncer.ts';
 import { NetworkLifecycleLayer, SwarmNetworkManagerLayer } from './network-lifecycle.ts';
-import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
+import { HypercoreStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
 import { StackReadinessLayer, StackReadinessService } from './stack-readiness.ts';
 
 export type ServiceContextRuntimeProps = Pick<
@@ -118,7 +118,7 @@ export type ServiceContextStackContext =
   | CrossDeviceSpaceSynchronizerService
   | SigningContextProviderService
   | IMetadataStoreService
-  | FeedStoreService
+  | HypercoreStoreService
   | StorageMigrationService
   | IdentityLifecycleService
   | StackReadinessService
@@ -300,9 +300,9 @@ const storageLifecycleLayer = Layer.effectDiscard(
  * Storage / feed layers composed from the individual store layers plus the combined migration.
  */
 const storageLayer = Layer.empty.pipe(
-  Layer.provideMerge(FeedStoreLayer()),
-  Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
-  Layer.provideMerge(FeedStorageDirectoryLayer()),
+  Layer.provideMerge(HypercoreStoreLayer()),
+  Layer.provideMerge(HypercoreFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
+  Layer.provideMerge(HypercoreStorageDirectoryLayer()),
   Layer.provideMerge(SqliteMetadataStoreLayer()),
   Layer.provideMerge(SqliteKeyringLayer()),
   Layer.provideMerge(SqliteStorageLayer()),

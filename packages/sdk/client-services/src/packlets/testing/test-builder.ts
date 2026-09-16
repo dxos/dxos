@@ -20,7 +20,7 @@ import { failUndefined } from '@dxos/debug';
 import { EchoHost, EchoHostService, MeshEchoReplicator } from '@dxos/echo-host';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
-import { FeedFactory, FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
 import {
   MemorySignalManager,
@@ -163,8 +163,8 @@ export class ServiceContext {
     return this.#get(KeyringApiService);
   }
 
-  get feedStore(): FeedStore<any> {
-    return this.#get(FeedStoreService);
+  get hypercoreStore(): HypercoreStore<any> {
+    return this.#get(HypercoreStoreService);
   }
 
   get echoHost(): EchoHost {
@@ -332,7 +332,7 @@ export type TestPeerOpts = {
 };
 
 export type TestPeerProps = {
-  feedStore?: FeedStore<any>;
+  hypercoreStore?: HypercoreStore<any>;
   metadataStore?: SqliteMetadataStore;
   keyring?: SqliteKeyring;
   networkManager?: SwarmNetworkManager;
@@ -364,9 +364,9 @@ export class TestPeer {
     return (this._props.keyring ??= new SqliteKeyring({ runtime: this._runtime.contextEffect }));
   }
 
-  get feedStore() {
-    return (this._props.feedStore ??= new FeedStore({
-      factory: new FeedFactory({
+  get hypercoreStore() {
+    return (this._props.hypercoreStore ??= new HypercoreStore({
+      factory: new HypercoreFactory({
         root: this._feedStorage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
@@ -389,7 +389,7 @@ export class TestPeer {
 
   get spaceManager() {
     return (this._props.spaceManager ??= new SpaceManager({
-      feedStore: this.feedStore,
+      hypercoreStore: this.hypercoreStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
     }));
@@ -415,7 +415,7 @@ export class TestPeer {
       metadataStore: this.metadataStore,
       keyring: this.keyring,
       signingContextProvider: () => this.identity,
-      feedStore: this.feedStore,
+      hypercoreStore: this.hypercoreStore,
       echoHost: this.echoHost,
       invitationsManager: this.invitationsManager,
       edgeConnection: undefined,
