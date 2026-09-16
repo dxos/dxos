@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Field, Grid, IconButton } from '@dxos/react-ui';
+import { Field, Grid, IconButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -164,9 +164,9 @@ export const SurfaceProfilerCard = ({
             gap='sm'
             classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIME && 'text-error-text')}
           >
-            <span className='truncate text-start' title={describe(group)}>
-              {group.role}
-            </span>
+            <Tooltip.Trigger asChild content={<span className='whitespace-pre-line'>{describe(group)}</span>}>
+              <span className='truncate text-start'>{group.role}</span>
+            </Tooltip.Trigger>
             <span className='text-subdued'>{group.ids.length}</span>
             <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
             <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
