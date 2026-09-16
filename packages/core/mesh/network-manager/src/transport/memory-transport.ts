@@ -51,7 +51,9 @@ export class MemoryTransport implements Transport {
   private _pipes: Promise<void>[] = [];
   // Detaches both pipe directions without ending either peer's wire-protocol stream, which is what
   // `unpipe` meant here: the streams outlive the transport and the peer's must survive our close.
-  private readonly _abort = new AbortController();
+  // Re-made on every connect: an AbortController is single-use, so reusing one across a reconnect
+  // aborts the new pipes the moment they attach.
+  private _abort = new AbortController();
 
   private _closed = false;
 
@@ -111,6 +113,7 @@ export class MemoryTransport implements Transport {
 
           log('connected');
           const remote = this._remoteConnection;
+          this._abort = new AbortController();
           const detach = { signal: this._abort.signal, preventCancel: true, preventClose: true, preventAbort: true };
           this._pipes = [
             this._options.stream.readable
