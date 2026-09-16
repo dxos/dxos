@@ -383,7 +383,7 @@ const SurfaceHighlight = ({ rect, selected }: { rect: DOMRect; selected: boolean
   <div
     className={mx(
       'z-40 fixed pointer-events-none border',
-      selected ? 'border-2 border-error-text bg-error-text/10' : 'border-info-text bg-info-text/10',
+      selected ? 'border-2 border-error-text bg-error-text/10' : 'border-info-text',
     )}
     style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
   />

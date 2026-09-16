@@ -24,7 +24,7 @@ import { Field, Panel, ScrollContainer, ThemedClassName, composable, composableP
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { ActionToolbar } from '@dxos/react-ui-menu';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
@@ -162,13 +162,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                 <ScrollContainer.Fade />
                 <ScrollContainer.Viewport>
                   {tracePanelDebug ? (
-                    <Syntax.Root data={spanTree}>
-                      <Syntax.Content>
-                        <Syntax.Viewport>
-                          <Syntax.Code classNames='text-xs' />
-                        </Syntax.Viewport>
-                      </Syntax.Content>
-                    </Syntax.Root>
+                    <JsonHighlighter data={spanTree} classNames='text-xs' />
                   ) : (
                     <Timeline
                       branches={branches}
@@ -185,13 +179,10 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 
           {!tracePanelDebug && selectedCommit && (
             <div className='p-2'>
-              <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
-                <Syntax.Content classNames='border border-subdued-separator rounded-sm'>
-                  <Syntax.Viewport>
-                    <Syntax.Code classNames='max-h-[20lh] text-xs' />
-                  </Syntax.Viewport>
-                </Syntax.Content>
-              </Syntax.Root>
+              <JsonHighlighter
+                data={details[selectedCommit.id] ?? selectedCommit}
+                classNames='max-h-[20lh] border border-subdued-separator rounded-sm text-xs'
+              />
             </div>
           )}
         </Panel.Content>

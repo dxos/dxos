@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Children } from 'react';
+import React, { Children, type ReactNode } from 'react';
 import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { Clipboard, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { Clipboard, ScrollArea, composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { type AllowedAxis } from '@dxos/ui-types';
 
 const zeroWidthSpace = '\u200b';
 
@@ -31,13 +32,16 @@ export type SyntaxHighlighterProps = Pick<
   themeStyle?: NaturalSyntaxHighlighterProps['style'];
   fallback?: string;
   copyButton?: boolean;
+  /**
+   * The axes the built-in `ScrollArea` scrolls on (default: all). `false` renders the bare,
+   * non-scrolling leaf for composition inside `Syntax.Viewport`.
+   */
+  scroll?: AllowedAxis | false;
 };
 
 /**
- * Inline, non-scrolling wrapper around `react-syntax-highlighter`.
- *
- * Use directly for small snippets (e.g. inside markdown code blocks).
- * For scrollable panels, compose with `Syntax.Viewport`.
+ * Highlighted source inside the family's themed `ScrollArea`, so a long line scrolls with the thin
+ * scrollbar rather than the platform's. Pass `scroll={false}` to get the bare leaf.
  *
  * NOTE: Using `light-async` version directly from dist to avoid any chance of the heavy one being loaded.
  * The lightweight version will load specific language parsers asynchronously.
@@ -46,6 +50,58 @@ export type SyntaxHighlighterProps = Pick<
  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
  */
 export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
+  ({ scroll = 'all', copyButton, classNames, className, role, style, ...props }, forwardedRef) => {
+    if (scroll === false) {
+      return (
+        <SyntaxHighlighterLeaf
+          {...props}
+          {...{ classNames, className, role, style }}
+          copyButton={copyButton}
+          ref={forwardedRef}
+        />
+      );
+    }
+
+    // The copy button sits on the scroll root so it stays put while the source scrolls under it.
+    const source = sourceOf(props.children, props.fallback);
+    return (
+      <ScrollArea.Root
+        role={role ?? 'none'}
+        style={style}
+        classNames={[className, classNames, copyButton && 'relative group']}
+        orientation={scroll}
+        thin
+        ref={forwardedRef}
+      >
+        <ScrollArea.Viewport>
+          <SyntaxHighlighterLeaf {...props} />
+        </ScrollArea.Viewport>
+        {copyButton && <CopyOverlay source={source} />}
+      </ScrollArea.Root>
+    );
+  },
+);
+
+SyntaxHighlighter.displayName = 'SyntaxHighlighter';
+
+const sourceOf = (children: ReactNode, fallback = zeroWidthSpace): string =>
+  Children.toArray(children).join('') || fallback;
+
+const CopyOverlay = ({ source }: { source: string }) => (
+  <div className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'>
+    <Clipboard.Provider>
+      <Clipboard.IconButton
+        value={source}
+        variant='ghost'
+        size={4}
+        classNames='pointer-events-auto aspect-square rounded-sm'
+      />
+    </Clipboard.Provider>
+  </div>
+);
+
+/** The non-scrolling leaf: all scrolling is deferred to an enclosing viewport. */
+const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterProps, 'scroll'>>(
   (
     {
       classNames,
@@ -62,7 +118,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
     forwardedRef,
   ) => {
     const { themeMode } = useThemeContext();
-    const source = Children.toArray(children).join('') || fallback;
+    const source = sourceOf(children, fallback);
 
     const hasCustomTheme = themeStyle && typeof themeStyle === 'object' && Object.keys(themeStyle).length > 0;
     const prismTheme = hasCustomTheme ? themeStyle : themeMode === 'dark' ? dark : light;
@@ -73,7 +129,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           { classNames, className, role, style },
           {
             role: 'none',
-            classNames: mx('dx-expand overflow-auto', copyButton && 'relative group'),
+            classNames: mx('dx-expand overflow-visible', copyButton && 'relative group'),
           },
         )}
         ref={forwardedRef}
@@ -111,21 +167,12 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           {source}
         </NativeSyntaxHighlighter>
 
-        {copyButton && (
-          <div className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'>
-            <Clipboard.Provider>
-              <Clipboard.IconButton
-                value={source}
-                variant='ghost'
-                size={4}
-                classNames='pointer-events-auto aspect-square rounded-sm'
-              />
-            </Clipboard.Provider>
-          </div>
-        )}
+        {copyButton && <CopyOverlay source={source} />}
       </div>
     );
   },
 );
+
+SyntaxHighlighterLeaf.displayName = 'SyntaxHighlighterLeaf';
 
 SyntaxHighlighter.displayName = 'SyntaxHighlighter';
