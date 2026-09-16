@@ -91,7 +91,9 @@ describe('generateReply', () => {
         yield* store.putFacts([ALICE_FACT]);
         return yield* generateReply({ mailbox, message: thread[0] });
       }).pipe(
-        Effect.provide(Layer.provideMerge(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory), ai.layer)),
+        Effect.provide(
+          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
+        ),
       ),
     );
 
@@ -117,7 +119,9 @@ describe('generateReply', () => {
     const ai = capturingAiService('Sure, ask away.');
     const result = await EffectEx.runPromise(
       generateReply({ mailbox, message }).pipe(
-        Effect.provide(Layer.provideMerge(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory), ai.layer)),
+        Effect.provide(
+          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
+        ),
       ),
     );
 
