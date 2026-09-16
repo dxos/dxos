@@ -57,8 +57,11 @@ export const handler = Effect.fn(function* ({ file, storage }: { file: string; s
 export const inspect = Command.make(
   'inspect',
   {
-    file: Options.string('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    storage: Options.boolean('storage').pipe(Options.withDescription('List storage entries.')),
+    file: Options.String('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    storage: Options.Boolean('storage').pipe(
+      Options.withDefault(false),
+      Options.withDescription('List storage entries.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('Inspect profile archive.'));

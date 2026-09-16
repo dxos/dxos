@@ -89,14 +89,11 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           text: [random.lorem.paragraph(), renderObjectLink(obj1), random.lorem.paragraph(), '\n'].join(' '),
         },
 
-        // Inline cards.
-        // ...[obj1, obj2, obj3, obj4].map(
-        //   (obj) =>
-        //     ({
-        //       _tag: 'text',
-        //       text: renderObjectLink(obj, true) + '\n',
-        //     }) satisfies ContentBlock.Text,
-        // ),
+        // An embedded card.
+        {
+          _tag: 'text',
+          text: renderObjectLink(obj1, true) + '\n',
+        },
       ]),
     ]);
   }),

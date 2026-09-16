@@ -6,13 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../testing';
-import { IconButton } from '../Button';
-import { Toolbar } from '../Toolbar';
-import { Main, type MainRootProps } from './Main.tsx';
-import { useSidebars } from './MainContext.ts';
+import { translations } from '#translations';
 
-type StoryMainArgs = Pick<MainRootProps, 'defaultNavigationSidebarState' | 'defaultComplementarySidebarState'>;
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Button, IconButton } from '../Button/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
+import { DRAWER_MAX_HEIGHT, Main, type MainRootProps } from './Main.tsx';
+import { useMainContext, useSidebars } from './MainContext.ts';
+
+type StoryMainArgs = Pick<
+  MainRootProps,
+  'defaultNavigationSidebarState' | 'defaultComplementarySidebarState' | 'defaultDrawerState'
+>;
 
 const NavigationSidebarToggle = ({ close }: { close?: boolean }) => {
   const { toggleNavigationSidebar } = useSidebars('StoryMain__SidebarToggle');
@@ -38,14 +43,21 @@ const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
   );
 };
 
+const DrawerClose = () => {
+  const { setDrawerState } = useMainContext('StoryMain__DrawerClose');
+  return <Button onClick={() => setDrawerState('closed')}>Close</Button>;
+};
+
 const DefaultStory = ({
   defaultNavigationSidebarState = 'closed',
   defaultComplementarySidebarState = 'closed',
+  defaultDrawerState = 'closed',
 }: StoryMainArgs) => {
   return (
     <Main.Root
       defaultNavigationSidebarState={defaultNavigationSidebarState}
       defaultComplementarySidebarState={defaultComplementarySidebarState}
+      defaultDrawerState={defaultDrawerState}
     >
       <Main.Overlay />
       <Main.NavigationSidebar label='Navigation'>
@@ -62,7 +74,14 @@ const DefaultStory = ({
           <div className='flex items-center grow justify-center'>Main</div>
           <ComplementarySidebarToggle />
         </Toolbar.Root>
+        <div className='h-[200dvh] p-4'>Tall content</div>
       </Main.Content>
+      <Main.Drawer label='Drawer'>
+        <div className='flex items-center gap-2 p-2'>
+          <span className='grow'>Drawer content</span>
+          <DrawerClose />
+        </div>
+      </Main.Drawer>
       <Main.ComplementarySidebar label='Complementary'>
         <Toolbar.Root>
           <ComplementarySidebarToggle close />
@@ -82,6 +101,7 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
+    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -111,6 +131,59 @@ export const TestToggle: Story = {
     await waitFor(async () =>
       expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.getAttribute('data-state')).toBe('closed'),
     );
+  },
+};
+
+/** Open, the drawer is a region the content pads block-end for; closed, it leaves the DOM and the padding. */
+export const Drawer: Story = {
+  args: { defaultDrawerState: 'open' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const content = canvasElement.querySelector<HTMLElement>('main');
+    await expect(content).not.toBeNull();
+    await expect(canvas.getByRole('region', { name: 'Drawer' })).toBeInTheDocument();
+    await expect(canvas.getByText('Drawer content')).toBeInTheDocument();
+    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('384px'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(canvas.queryByRole('region', { name: 'Drawer' })).toBeNull());
+    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('0px'));
+  },
+};
+
+/** Escape on the drawer's region closes it, as it does the floating window it stands in for. */
+export const DrawerEscape: Story = {
+  args: { defaultDrawerState: 'open' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const content = canvasElement.querySelector<HTMLElement>('main');
+    const region = canvas.getByRole('region', { name: 'Drawer' });
+    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('384px'));
+    region.focus();
+    await expect(region).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByRole('region', { name: 'Drawer' })).toBeNull());
+    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('0px'));
+  },
+};
+
+/** The resize handle is a separator: arrow keys step its value a rem at a time within its bounds. */
+export const DrawerResizeKeyboard: Story = {
+  args: { defaultDrawerState: 'open' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const content = canvasElement.querySelector<HTMLElement>('main');
+    const handle = canvas.getByRole('separator', { name: 'Resize drawer' });
+    await expect(handle).toHaveAttribute('aria-orientation', 'horizontal');
+    await expect(handle).toHaveAttribute('aria-valuenow', '24');
+    handle.focus();
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '25'));
+    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('400px'));
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '23'));
+    // Past the bound the value pins.
+    await userEvent.keyboard(`{ArrowUp>${DRAWER_MAX_HEIGHT}/}`);
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', String(DRAWER_MAX_HEIGHT)));
   },
 };
 

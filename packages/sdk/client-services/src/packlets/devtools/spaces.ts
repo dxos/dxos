@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
+import { type Trigger } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import {
@@ -17,18 +18,29 @@ import {
 import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
-import { type ServiceContext } from '../services/index.ts';
-import { type Space } from '../space/index.ts';
+import { type IMetadataStore } from '../metadata/index.ts';
+import { type Space, type SpaceManager } from '../space/index.ts';
+import { type DataSpaceManager } from '../spaces/index.ts';
 
 export const subscribeToSpaces = (
-  context: ServiceContext,
+  {
+    spaceManager,
+    metadataStore,
+    dataSpaceManager,
+    initialized,
+  }: {
+    spaceManager: SpaceManager;
+    metadataStore: IMetadataStore;
+    dataSpaceManager: DataSpaceManager;
+    initialized: Trigger;
+  },
   { spaceKeys = [] }: DevtoolsHost.SubscribeToSpacesRequest,
 ): EffectStream.Stream<SubscribeToSpacesResponse, Error> => {
   return EffectEx.streamFromEmitter<SubscribeToSpacesResponse, Error>((emit) => {
     let unsubscribe: () => void;
 
     const update = async () => {
-      const spaces: Space[] = [...context.spaceManager!.spaces.values()];
+      const spaces: Space[] = [...spaceManager.spaces.values()];
       const filteredSpaces = spaces.filter(
         (space) => !spaceKeys?.length || spaceKeys.some((spaceKey) => spaceKey.equals(space.key)),
       );
@@ -36,7 +48,7 @@ export const subscribeToSpaces = (
       emit.single(
         create(SubscribeToSpacesResponseSchema, {
           spaces: filteredSpaces.map((space): SubscribeToSpacesResponse_SpaceInfo => {
-            const spaceMetadata = context.metadataStore.spaces.find(
+            const spaceMetadata = metadataStore.spaces.find(
               (spaceMetadata: SpaceMetadata) =>
                 spaceMetadata.key && requirePublicKey(spaceMetadata.key).equals(space.key),
             );
@@ -57,8 +69,8 @@ export const subscribeToSpaces = (
     };
 
     const timeout = setTimeout(async () => {
-      await context.initialized.wait();
-      unsubscribe = context.dataSpaceManager!.updated.on(() => update());
+      await initialized.wait();
+      unsubscribe = dataSpaceManager.updated.on(() => update());
 
       // Send initial spaces.
       await update();

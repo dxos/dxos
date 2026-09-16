@@ -96,7 +96,7 @@ export const SwarmTracePanel = (props: CustomPanelProps<{}>) => {
         <Toolbar.Text>No announcements received.</Toolbar.Text>
       ) : (
         // Collapsed by default so a burst does not mount hundreds of costly payload renders.
-        <Accordion.Root items={messages}>
+        <Accordion.Root<ReceivedMessage> items={messages}>
           {({ items }) =>
             items.map((received) => (
               <Accordion.Item key={received.id} item={received}>

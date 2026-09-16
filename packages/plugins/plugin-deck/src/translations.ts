@@ -18,6 +18,7 @@ export const translations = [
         'close-complementary-sidebar.label': 'Close context sidebar',
         'sidebar.title': 'Navigation sidebar',
         'complementary-sidebar.title': 'Context sidebar',
+        'drawer.label': 'Drawer',
         'plugin-error.message': 'Content failed to render.',
         'content-fallback.message': 'Unsupported',
         'content-fallback.description':

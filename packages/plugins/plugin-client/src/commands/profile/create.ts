@@ -49,11 +49,11 @@ const TEMPLATES = {
 export const create = Command.make(
   'create',
   {
-    template: Options.choice('template', Record.keys(TEMPLATES)).pipe(
+    template: Options.Literals('template', Record.keys(TEMPLATES)).pipe(
       Options.withDescription('Template to use'),
       Options.withDefault('default'),
     ),
-    name: Options.string('name').pipe(Options.withDescription('Profile name'), Options.optional),
+    name: Options.String('name').pipe(Options.withDescription('Profile name'), Options.optional),
   },
   Effect.fnUntraced(function* ({ template, name }) {
     const { json } = yield* CommandConfig;

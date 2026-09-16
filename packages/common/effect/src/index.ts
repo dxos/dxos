@@ -5,6 +5,7 @@
 export * from './atom-kvs.ts';
 export * as DynamicRuntime from './dynamic-runtime.ts';
 export * as EffectEx from './EffectEx.ts';
+export * as Hook from './Hook.ts';
 export { type Configuration as OtelConfiguration, layerOtel, makeGlobalTracer, makeTracer } from './otel.ts';
 export * as Performance from './Performance.ts';
 export * as RuntimeProvider from './RuntimeProvider.ts';

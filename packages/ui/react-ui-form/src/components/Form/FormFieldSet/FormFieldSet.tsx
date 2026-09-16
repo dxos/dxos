@@ -18,7 +18,7 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks/index.ts';
-import { formTheme } from '../Form.theme';
+import { formTheme } from '../Form.theme.ts';
 import { FormFieldHeader } from '../FormField/index.ts';
 import { FormFieldSetDepthContext, useFormFieldSetDepth } from './FormFieldSetContext.ts';
 
@@ -33,6 +33,8 @@ export type FormFieldSetProps = ThemedClassName<
     descriptionPlacement?: 'below' | 'tooltip';
     /** The legend is a disclosure that folds the body; nested objects fold by default. */
     collapsible?: boolean;
+    /** Controls acting on the group as a whole, rendered at the end of its heading row. */
+    actions?: React.ReactNode;
   }>
 >;
 
@@ -43,12 +45,12 @@ export type FormFieldSetProps = ThemedClassName<
  * section, a nested one an indented, bordered group, so the same element serves both.
  */
 export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
-  ({ children, label, description, descriptionPlacement = 'below', collapsible, ...props }, forwardedRef) => {
+  ({ children, label, description, descriptionPlacement = 'below', collapsible, actions, ...props }, forwardedRef) => {
     const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
     const depth = useFormFieldSetDepth();
     const labelId = useId();
-    const styles = formTheme.styles({ variant, depth: depth === 0 ? 'root' : 'nested' });
     const showLabel = layout !== 'inline' && !!label;
+    const styles = formTheme.styles({ variant, depth: depth === 0 ? 'root' : 'nested', labelled: showLabel });
     // An empty group has nothing to fold, so a disclosure on its legend would be a control that does nothing.
     const canCollapse = !!collapsible && Children.toArray(children).length > 0;
 
@@ -65,10 +67,16 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
       </Tooltip.Trigger>
     );
 
+    // In the legend row, not positioned: WebKit starts a fieldset's containing block below its legend.
+    const trailing = actions && <div className={styles.fieldSetActions()}>{actions}</div>;
+
     const legend = showLabel && (
       <Fieldset.Legend
         classNames={styles.fieldSetLegend({
-          class: mx(description && !tooltip ? undefined : styles.fieldSetHeader(), hint && 'flex items-center gap-1'),
+          class: mx(
+            description && !tooltip ? undefined : styles.fieldSetHeader(),
+            (hint || trailing) && 'flex items-center gap-1',
+          ),
         })}
       >
         {canCollapse ? (
@@ -79,19 +87,22 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
             labelId={labelId}
             labelEnd={hint}
             actions={
-              <Field.Block>
-                {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
-                <Collapsible.Trigger
-                  aria-labelledby={labelId}
-                  classNames='group grid size-6 place-items-center rounded-xs hover:bg-hover-surface'
-                >
-                  <Icon
-                    icon='ph--caret-right--regular'
-                    size={3}
-                    classNames='transition-transform group-data-[state=open]:rotate-90'
-                  />
-                </Collapsible.Trigger>
-              </Field.Block>
+              <>
+                {trailing}
+                <Field.Block>
+                  {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
+                  <Collapsible.Trigger
+                    aria-labelledby={labelId}
+                    classNames='group grid size-6 place-items-center rounded-xs hover:bg-hover-surface'
+                  >
+                    <Icon
+                      icon='ph--caret-right--regular'
+                      size={3}
+                      classNames='transition-transform group-data-[state=open]:rotate-90'
+                    />
+                  </Collapsible.Trigger>
+                </Field.Block>
+              </>
             }
           />
         ) : depth === 0 ? (
@@ -101,9 +112,10 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
               {label}
             </h2>
             {hint}
+            {trailing}
           </>
         ) : (
-          <FormFieldHeader label={label} labelId={labelId} labelEnd={hint} />
+          <FormFieldHeader label={label} labelId={labelId} labelEnd={hint} actions={trailing || undefined} />
         )}
       </Fieldset.Legend>
     );
@@ -134,6 +146,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
         ref={forwardedRef}
       >
         {legend}
+        {!showLabel && trailing}
         {helper}
         {body}
       </Fieldset.Root>

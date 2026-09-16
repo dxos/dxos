@@ -225,9 +225,9 @@ export type ResolveSessionOptions = {
  */
 export const resolveSession = (options: ResolveSessionOptions) =>
   Effect.gen(function* () {
-    const handle = options.handle ?? Option.getOrUndefined(yield* Config.option(Config.string('ATPROTO_HANDLE')));
+    const handle = options.handle ?? Option.getOrUndefined(yield* Config.option(Config.String('ATPROTO_HANDLE')));
     const appPassword =
-      options.appPassword ?? Option.getOrUndefined(yield* Config.option(Config.string('ATPROTO_APP_PASSWORD')));
+      options.appPassword ?? Option.getOrUndefined(yield* Config.option(Config.String('ATPROTO_APP_PASSWORD')));
     if (handle && appPassword) {
       return yield* createSession(handle, appPassword);
     }

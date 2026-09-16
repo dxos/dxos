@@ -79,7 +79,7 @@ const STATUS_ICON = 'ph--info--regular';
 const REASONING_ICON = 'ph--brain--regular';
 
 /** The bordered box the disclosure opens onto — the list and a lone call's detail share it. */
-const PANEL_FRAME = 'border border-subdued-separator rounded-md min-w-0';
+const PANEL_FRAME = 'border border-separator rounded-md min-w-0';
 
 /**
  * The operation's human-readable name where the call is an operation invocation; the raw tool name
@@ -303,43 +303,35 @@ type ToolCallListProps = {
 const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
   const { t } = useTranslation(translationKey);
   const label = (entry: ToolEntry) => entryLabel(entry, t);
+
   return (
-    <Accordion.Root<ToolEntry>
-      items={entries}
-      // No `overflow-hidden`: it clips the top and bottom edges off the inset focus ring of the
-      // first and last triggers, whose bounds coincide with the frame's own.
-      classNames={mx(PANEL_FRAME, 'divide-y divide-subdued-separator')}
-      onValueChange={(value) => onOpen?.(value.length > 0)}
-    >
+    <Accordion.Root<ToolEntry> items={entries} onValueChange={(value) => onOpen?.(value.length > 0)}>
       {({ items }) =>
-        items.map((entry) =>
+        items.map((entry) => {
           // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
-          // no payload is a plain row rather than an accordion item.
-          hasDetail(entry) ? (
-            <Accordion.Item key={entry.id} item={entry}>
+          // no payload is a disabled item — same frame and rhythm, no caret, no toggle.
+          const detail = hasDetail(entry);
+          return (
+            <Accordion.Item key={entry.id} item={entry} disabled={!detail}>
               <Accordion.ItemHeader
-                hover
+                hover={detail}
                 icon={entry.icon}
                 data-testid={`assistant.tool-${entry.kind}`}
                 classNames={mx('text-sm', entry.error !== undefined && 'text-error')}
               >
-                <span className='truncate'>{label(entry)}</span>
+                {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
+                <span className='flex items-center h-(--dx-control-sm) min-w-0'>
+                  <span className='truncate'>{label(entry)}</span>
+                </span>
               </Accordion.ItemHeader>
-              <Accordion.ItemBody>
-                <ToolCallDetail entry={entry} />
-              </Accordion.ItemBody>
+              {detail && (
+                <Accordion.ItemBody>
+                  <ToolCallDetail entry={entry} />
+                </Accordion.ItemBody>
+              )}
             </Accordion.Item>
-          ) : (
-            <div
-              key={entry.id}
-              className='flex items-center gap-2 px-2 text-sm min-h-(--dx-control)'
-              data-testid={`assistant.tool-${entry.kind}`}
-            >
-              <Icon icon={entry.icon} size={4} classNames='shrink-0' />
-              <span className={mx('truncate', entry.error !== undefined && 'text-error')}>{label(entry)}</span>
-            </div>
-          ),
-        )
+          );
+        })
       }
     </Accordion.Root>
   );

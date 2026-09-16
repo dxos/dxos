@@ -71,6 +71,9 @@ export const text = (content: string): ScriptedPart => ({ _tag: 'text', text: co
 /**
  * Scripts a tool call. `name` must match a tool registered on the toolkit under test; `input` is
  * serialized as the tool arguments. Supply `id` to assert against a specific tool-call id.
+ *
+ * `input` may be a function, called when the turn is emitted: a script is fixed before the session
+ * starts, so an argument naming an object the session creates (a ref, an id) only exists by then.
  */
 export const toolCall = (name: string, input: unknown, id?: string): ScriptedPart => ({
   _tag: 'toolCall',
@@ -80,6 +83,10 @@ export const toolCall = (name: string, input: unknown, id?: string): ScriptedPar
 });
 
 const isFailure = (turn: ScriptedTurn): turn is { readonly fail: AiError.AiError } => 'fail' in turn;
+
+/** Tool arguments are JSON, so a function can only be a deferred input. */
+const resolveInput = (part: { readonly input: unknown }): unknown =>
+  typeof part.input === 'function' ? part.input() : part.input;
 
 /**
  * The request a routing predicate inspects: the flattened system prompt, the concatenated text
@@ -174,7 +181,7 @@ const encodeStreamTurn = (
     } else {
       const id = toolCallId(part, turnIndex, partIndex);
       out.push({ type: 'tool-params-start', id, name: part.name });
-      out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(part.input) });
+      out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(resolveInput(part)) });
       (deferToolEnds ? deferred : out).push({ type: 'tool-params-end', id });
     }
   });
@@ -201,7 +208,12 @@ const encodeTurn = (
     if (part._tag === 'text') {
       out.push({ type: 'text', text: part.text });
     } else {
-      out.push({ type: 'tool-call', id: toolCallId(part, turnIndex, partIndex), name: part.name, params: part.input });
+      out.push({
+        type: 'tool-call',
+        id: toolCallId(part, turnIndex, partIndex),
+        name: part.name,
+        params: resolveInput(part),
+      });
     }
   });
   out.push(finishPart(reason));
@@ -229,12 +241,12 @@ const unmatched = (request: ScriptedRequest): AiError.AiError =>
   });
 
 /**
- * Constructs a {@link LanguageModel.Service} that replays a script: a plain turn list is consumed
+ * Constructs a {@link LanguageModel.LanguageModel} that replays a script: a plain turn list is consumed
  * sequentially; a routed script dispatches each call to the first matching {@link ScriptedRoute},
  * each with its own cursor. Prefer the layer helpers ({@link scriptedLanguageModelLayer} /
  * {@link scriptedAiService}) at call sites.
  */
-export const makeScriptedLanguageModel = (script: Script): Effect.Effect<LanguageModel.Service> =>
+export const makeScriptedLanguageModel = (script: Script): Effect.Effect<LanguageModel.LanguageModel> =>
   Effect.gen(function* () {
     const routes = toRoutes(script);
     // Per-route script position. The Request semaphore serializes turns within a session, and

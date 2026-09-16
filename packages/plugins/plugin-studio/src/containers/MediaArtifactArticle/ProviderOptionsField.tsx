@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Redacted from 'effect/Redacted';
+import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
@@ -16,6 +17,8 @@ import { type OptionsLookup } from '@dxos/react-ui-form/annotations';
 import { type GenerationService } from '#types';
 
 import { loadProviderOptions } from '../../hooks/index.ts';
+import { ArtifactRefField, isArtifactRefField } from './ArtifactRefField.tsx';
+import { FileUrlField, fileUrlOptions } from './FileUrlField.tsx';
 
 export type ProviderOptionsFieldProps = FormFieldRendererProps & {
   provider: GenerationService.GenerationService;
@@ -64,11 +67,31 @@ export const ProviderOptionsField = ({ provider, field, ...props }: ProviderOpti
 
 ProviderOptionsField.displayName = 'ProviderOptionsField';
 
-/** Renderers for every field the provider lists options for; the provider's own `fieldMap` wins. */
+/**
+ * Renderers for the provider's request fields: comboboxes for every field it lists options for,
+ * artifact pickers for fields that reference a media artifact, upload controls for URL fields marked
+ * file-backed; the provider's own `fieldMap` wins.
+ */
 export const providerFieldMap = (provider: GenerationService.GenerationService): FormFieldMap => {
-  const entries = Object.keys(provider.fieldOptions ?? {}).map((field) => [
+  const options = Object.keys(provider.fieldOptions ?? {}).map((field) => [
     field,
     (props: FormFieldRendererProps) => <ProviderOptionsField {...props} provider={provider} field={field} />,
   ]);
-  return { ...Object.fromEntries(entries), ...provider.fieldMap };
+  const fields =
+    'fields' in provider.requestSchema ? (provider.requestSchema.fields as Record<string, Schema.Top>) : {};
+  const refs = Object.entries(fields)
+    .filter(([, field]) => isArtifactRefField(field))
+    .map(([field]) => [field, ArtifactRefField]);
+  const files = Object.entries(fields).flatMap(([field, schema]) => {
+    const upload = fileUrlOptions(schema);
+    return upload
+      ? [[field, (props: FormFieldRendererProps) => <FileUrlField {...props} accept={upload.accept} />]]
+      : [];
+  });
+  return {
+    ...Object.fromEntries(options),
+    ...Object.fromEntries(refs),
+    ...Object.fromEntries(files),
+    ...provider.fieldMap,
+  };
 };

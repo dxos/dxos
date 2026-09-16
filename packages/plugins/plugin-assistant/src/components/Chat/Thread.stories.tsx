@@ -34,6 +34,8 @@ import { Message, Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
+import { objectCardWidget } from './ObjectCardWidget.tsx';
+
 random.seed(1);
 
 /**
@@ -55,8 +57,15 @@ const recordedEvents: ChatThreadEvent[] = [];
 
 const Thread = ({ messages, viewType }: { messages: MessageType.Message[]; viewType?: ChatView }) => {
   const model = useFeedModel(messages, { stops: 'prompt' });
+  const [space] = useSpaces();
+  const objectImage = useMemo(() => objectCardWidget(space?.db), [space]);
   return (
-    <ChatThread.Root model={model} viewType={viewType} onEvent={(event) => recordedEvents.push(event)}>
+    <ChatThread.Root
+      model={model}
+      viewType={viewType}
+      objectImage={objectImage}
+      onEvent={(event) => recordedEvents.push(event)}
+    >
       <ChatThread.Viewport padding />
     </ChatThread.Root>
   );

@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
+import { Icon } from '@dxos/react-ui';
 import { MarkdownLink, type MarkdownViewProps } from '@dxos/react-ui-markdown';
 
 /**
@@ -19,17 +20,27 @@ export const useDescriptionComponents = (): MarkdownViewProps['components'] => {
   const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
   return useMemo(
     () => ({
-      a: ({ children, href, ...props }) =>
-        href && PreviewCapabilities.isPreviewLink(resolvers.flat(), href) ? (
+      a: ({ children, href, ...props }) => {
+        const all = resolvers.flat();
+        if (!href || !PreviewCapabilities.isPreviewLink(all, href)) {
+          return (
+            <MarkdownLink href={href} {...props}>
+              {children}
+            </MarkdownLink>
+          );
+        }
+        // The same leading icon the editor's chip carries, so a row and its edit pane agree.
+        const icon = PreviewCapabilities.linkIcon(all, href);
+        return (
           <DxAnchor eid={href} className='dx-tag--anchor'>
+            {icon && (
+              <Icon icon={icon.icon} size={4} classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
+            )}
             {/* A URL written bare autolinks with itself as its text; the resolver's short name reads better in a chip. */}
-            {children === href ? (PreviewCapabilities.linkLabel(resolvers.flat(), href) ?? children) : children}
+            {children === href ? (PreviewCapabilities.linkLabel(all, href) ?? children) : children}
           </DxAnchor>
-        ) : (
-          <MarkdownLink href={href} {...props}>
-            {children}
-          </MarkdownLink>
-        ),
+        );
+      },
     }),
     [resolvers],
   );

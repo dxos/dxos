@@ -424,11 +424,9 @@ export const DelegateCheckedTasks: Story = {
       { timeout: 10_000 },
     );
 
-    // The boxes clear with the work, so the toolbar is dead again. (The story has no agent
-    // runtime, so the operation's first turn fails and the pipeline does not open on its own; the
-    // toggle opens it under the ledger.)
+    // The boxes clear with the work, so the toolbar is dead again, and the session's chat filing
+    // itself under the project is what brings the pipeline into view under the ledger.
     await waitFor(() => expect(button).toBeDisabled(), { timeout: 10_000 });
-    await userEvent.click(await canvas.findByTestId('projectsPlugin.pipeline', undefined, { timeout: 10_000 }));
     await expect(
       canvas.findByTestId('projectsPlugin.pipeline.chart', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();

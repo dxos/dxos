@@ -143,6 +143,20 @@ export const getRemoteEntries = (options: Options = {}): readonly RemotePluginVi
 };
 
 /**
+ * Replaces the persisted remote plugin entries wholesale. Entries are read during {@link preload},
+ * so a replacement takes effect on the next reload.
+ */
+export const setRemoteEntries = (entries: readonly RemotePluginView[], options: Options = {}): void => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  try {
+    storage.set(key, JSON.stringify(entries));
+  } catch (error) {
+    log.warn('failed to replace remote plugin entries', { error });
+  }
+};
+
+/**
  * Updates the persisted installed version for an already-stored remote plugin entry.
  * Does nothing if the plugin has not been persisted yet.
  */

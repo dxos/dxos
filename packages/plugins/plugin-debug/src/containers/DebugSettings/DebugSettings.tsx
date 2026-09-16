@@ -39,7 +39,7 @@ export type DebugSettingsProps = AppSurface.SettingsProps<
   }
 >;
 
-export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }: DebugSettingsProps) => {
+export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onUpload }: DebugSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [toast, setToast] = useState<Toast>();
   const download = useFileDownload();
@@ -157,7 +157,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     <Form.Root schema={Settings.Settings} values={settings} variant='settings' readonly={!onSettingsChange}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
             <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
               <Field.Switch
                 disabled={!onSettingsChange}

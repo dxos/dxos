@@ -25,10 +25,10 @@ import { createContext, useControllableState } from '@dxos/react-hooks';
 import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
 import { type ElevationLevel } from '@dxos/ui-types';
 
-import { useElevationContext, usePositioning, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { ColumnContext } from '../Column';
-import { type PopoverPlacementOptions } from '../Popover';
+import { useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { ColumnContext } from '../Column/index.ts';
+import { type PopoverPlacementOptions } from '../Popover/index.ts';
 
 const HOVER_CARD_NAME = 'HoverCard';
 

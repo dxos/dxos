@@ -16,19 +16,18 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
-import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 /**
  * Writes feed data to a local FeedStore.
  */
 export class LocalFeedServiceImpl implements FeedService.Handlers {
-  #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   #feedStore: FeedStore;
   #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
   #getSyncState?: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 
   'constructor'(
-    runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
+    runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
     feedStore: FeedStore,
     options?: {
       syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;

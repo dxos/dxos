@@ -64,23 +64,21 @@ export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolki
       return OpaqueToolkit.empty;
     }
 
-    const effectTools = tools.map((mcpTool) => {
-      const parameters: any = {};
-      for (const [key, value] of Object.entries(mcpTool.inputSchema.properties ?? {})) {
-        if (mcpTool.inputSchema.required?.includes(key)) {
-          parameters[key] = Schema.Unknown.pipe(Schema.annotate({ jsonSchema: value }));
-        } else {
-          parameters[key] = Schema.Unknown.pipe(Schema.annotate({ jsonSchema: value })).pipe(Schema.optional);
-        }
-      }
-
-      return Tool.make(sanitizeToolName(mcpTool.name), {
+    // Dynamic tools carry the server's own JSON Schema to the provider verbatim, exactly as
+    // operation tools do (see `projectFunctionToTool`): `Tool.make` takes an Effect schema, and
+    // handing it a fields record instead leaves the tool with no parameter AST, which then throws
+    // inside `Response.StreamPart` on the first model turn that lists the tool.
+    const effectTools = tools.map((mcpTool) =>
+      Tool.dynamic(sanitizeToolName(mcpTool.name), {
         description: mcpTool.description ?? `MCP tool: ${mcpTool.name}`,
-        parameters,
+        parameters: mcpTool.inputSchema,
         success: Schema.String,
         failure: Schema.Never,
-      });
-    });
+      })
+        // A server's schema rarely meets a provider's strict mode (every key required, no extra
+        // properties), and one non-conforming tool rejects the whole request.
+        .annotate(Tool.Strict, false),
+    );
 
     const toolkit = Toolkit.make(...effectTools);
 
@@ -164,20 +162,19 @@ const connectClient = (url: string, protocol: Options['protocol'], apiKey?: stri
     return client.connect(transport).then(() => client);
   });
 
-/**
- * Renders a thrown value to a short string for inclusion in error messages.
- * `Effect.tryPromise` wraps thrown errors in `UnknownException`; unwrap when present.
- */
-const formatCause = (error: unknown): string => {
-  const inner = error != null && typeof error === 'object' && 'error' in error ? (error as any).error : error;
-  if (inner instanceof Error) {
-    return inner.message;
-  }
-  if (Cause.isCause(error)) {
-    return Cause.pretty(error);
-  }
+/** Longest message a connection error carries: a challenge page in the body would otherwise be it. */
+const MESSAGE_LIMIT = 200;
 
-  return String(inner);
+/**
+ * Renders a thrown value to a short string for inclusion in error messages. `Effect.tryPromise` wraps
+ * a throw in `UnknownError`, which in v4 carries the original on `cause`; the message is the
+ * transport's own (an HTTP status and the start of the body), cut so a server's error page cannot
+ * become the message.
+ */
+export const formatCause = (error: unknown): string => {
+  const inner = Cause.isUnknownError(error) ? error.cause : error;
+  const message = inner instanceof Error ? inner.message : Cause.isCause(error) ? Cause.pretty(error) : String(inner);
+  return message.length > MESSAGE_LIMIT ? `${message.slice(0, MESSAGE_LIMIT)}…` : message;
 };
 
 /**

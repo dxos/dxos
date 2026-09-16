@@ -18,7 +18,7 @@ import { Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
+import { normalizeHandlers, runServiceCall } from '@dxos/protocols';
 import {
   ContactsService,
   DataService,
@@ -33,7 +33,6 @@ import {
   QueryService,
   SpacesService,
   SystemService,
-  WorkerService,
 } from '@dxos/protocols/rpc';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
 import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
@@ -55,11 +54,6 @@ export type ClientServicesTransport = MessagePortLike | RpcPort;
 /**
  * All client service RPCs served over a single connection.
  * Rpc tags are prefixed with the {@link ClientServices} key (e.g. `DataService.subscribe`).
- *
- * {@link WorkerService} (the tab→worker control channel: `start`/`stop`) is merged in here rather
- * than served over a second port: it runs in the same tab→worker direction as the service RPCs, so
- * it multiplexes over the same app {@link MessagePort}. Only the reverse-direction `BridgeService`
- * (worker→tab) needs its own port.
  */
 export class ClientServicesRpcs extends RpcGroup.make().merge(
   SystemService.Rpcs,
@@ -75,7 +69,6 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   ContactsService.Rpcs,
   EdgeAgentService.Rpcs,
   DevtoolsHost.Rpcs,
-  WorkerService.Rpcs,
 ) {}
 
 type ClientServicesRpcUnion = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
@@ -99,8 +92,6 @@ export type ClientServicesHandlers = {
   ContactsService: ContactsService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
-  // Provided per-session by the worker session (drives readiness/origin/lock), not by the host.
-  WorkerService: WorkerService.Handlers;
 };
 
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
@@ -232,6 +223,25 @@ export const serveClientServicesOverIFrame = async ({
 };
 
 /**
+ * The handler layer for one service's rpcs, resolved from its tag and normalized so effect-rpc
+ * finds and correctly invokes a class-instance implementation (see {@link normalizeHandlers}).
+ */
+export const layerHandlersFromTag = <Rpcs extends EffectRpc.Any, Identifier, Shape extends object>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  tag: Context.Key<Identifier, Shape>,
+) => group.toLayer(Effect.map(tag, (service) => normalizeHandlers(group, service as RpcGroup.HandlersFrom<Rpcs>)));
+
+/**
+ * Serves every client service over the ambient {@link RpcServer.Protocol}, with the handler layers
+ * supplied by the caller (typically {@link layerHandlersFromTag} per service over a stack context).
+ */
+export const layerClientServicesServer = <R>(
+  handlers: Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>, never, R>,
+): Layer.Layer<never, never, RpcServer.Protocol | R> =>
+  // `timing` must match the tab client, whose middleware is `requiredForClient`.
+  Rpc.serverLayer(ClientServicesRpcs, handlers, { disableTracing: true, concurrency: 'unbounded', timing: true });
+
+/**
  * Builds handler layers for every client service RPC, dispatching to the service implementations
  * resolved from `services` on each call.
  */
@@ -311,8 +321,7 @@ export interface ClientServicesRpc
     FeedService.Client,
     ContactsService.Client,
     EdgeAgentService.Client,
-    DevtoolsHost.Client,
-    WorkerService.Client {}
+    DevtoolsHost.Client {}
 
 /**
  * Builds the effect-native {@link ClientServicesRpc} over a {@link MessagePort}.
