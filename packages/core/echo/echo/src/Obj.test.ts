@@ -593,9 +593,6 @@ describe('Obj', () => {
   });
 
   describe('atom', () => {
-    // The registry removes nodes on `setImmediate`.
-    const settle = () => new Promise((resolve) => setImmediate(resolve));
-
     test('an unobserved atom is released by its registry', async ({ expect }) => {
       const registry = AtomRegistry.make();
       const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
@@ -850,3 +847,6 @@ describe('Obj', () => {
     });
   });
 });
+
+// The registry removes nodes on `setImmediate`.
+const settle = () => new Promise((resolve) => setImmediate(resolve));
