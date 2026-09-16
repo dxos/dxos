@@ -450,9 +450,11 @@ const createSchemaActions = ({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
         Type.getDatabase(type) != null
-          ? Operation.invoke(SpaceOperation.RemoveObjects, {
-              objects: [type],
-            })
+          ? Operation.invoke(
+              SpaceOperation.RemoveObjects,
+              { objects: [type] },
+              { spaceId: Type.getDatabase(type)?.spaceId },
+            )
           : Effect.succeed(undefined),
       properties: {
         label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),

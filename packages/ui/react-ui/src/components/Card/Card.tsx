@@ -22,6 +22,7 @@ import { type Density, type ElevationLevel, type SlottableProps } from '@dxos/ui
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
+import { DensityProvider } from '../../providers/DensityProvider/index.ts';
 import { composable, composableProps, slottable } from '../../util/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 import { Button, IconButton } from '../Button/index.ts';
@@ -97,8 +98,16 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
         classNames={tx('card.root', { border, fullWidth, surface: elevationSurface(elevation) }, className)}
         role={role ?? 'group'}
       >
-        <div {...rest} {...(id && { 'data-object-id': id })} {...elevationAttrs(elevation)} ref={forwardedRef}>
-          {children}
+        <div
+          {...rest}
+          {...(id && { 'data-object-id': id })}
+          {...elevationAttrs(elevation)}
+          data-density={density}
+          ref={forwardedRef}
+        >
+          {/* As in Toolbar.Root: the attribute cascades `--dx-control`, but controls that stamp their
+              own `data-density` from context would shadow it, so the context is provided too. */}
+          {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
         </div>
       </Column.Root>
     );
@@ -381,7 +390,13 @@ CardSection.displayName = CARD_SECTION_NAME;
 
 const CARD_ROW_NAME = 'Card.Row';
 
-type CardRowProps = { fullWidth?: boolean };
+type CardRowProps = {
+  fullWidth?: boolean;
+  /** A selectable row (a stats table); the row itself is the target, its cells carry no controls. */
+  onClick?: MouseEventHandler<HTMLDivElement>;
+  /** The selected row, exposed as `aria-current`. */
+  current?: boolean;
+};
 
 /**
  * A row inside a Card.
@@ -391,7 +406,7 @@ type CardRowProps = { fullWidth?: boolean };
  *   `Card.Block` placement is inert in this mode.
  */
 const CardRow = slottable<HTMLDivElement, CardRowProps>(
-  ({ children, asChild, fullWidth, style, ...props }, forwardedRef) => {
+  ({ children, asChild, fullWidth, current, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
 
@@ -399,6 +414,7 @@ const CardRow = slottable<HTMLDivElement, CardRowProps>(
       <ark.div
         asChild={asChild}
         {...rest}
+        aria-current={current ? 'true' : undefined}
         style={{ ...iconSize(4), ...style }}
         className={tx('card.row', { fullWidth }, className)}
         ref={forwardedRef}

@@ -101,11 +101,6 @@ export default Capability.makeModule(
         component: DebugStatus,
       }),
       Surface.create({
-        id: 'logs',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('logs')),
-        component: LoggerPanel,
-      }),
-      Surface.create({
         id: 'debugPanelStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: DebugPanelStatus,
@@ -119,6 +114,14 @@ export default Capability.makeModule(
         id: 'statsPanel',
         filter: Surface.makeFilter(DebugSurface.Stats),
         component: StatsPanel,
+      }),
+      Surface.create({
+        id: 'statsCards',
+        filter: Surface.makeFilter(AppSurface.DevtoolsOverview),
+        // After the devtools cards (0–12) and before contributors that sit last.
+        position: 20,
+        component: StatsPanel,
+        props: () => ({ showEmpty: false }),
       }),
     ]);
   }),

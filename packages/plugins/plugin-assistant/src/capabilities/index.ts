@@ -68,6 +68,7 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
   {
+    environments: [],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,

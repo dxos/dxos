@@ -59,6 +59,7 @@ export const AutomationTemplates = Capability.lazyModule(
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
+    environments: [],
     requires: [ClientCapabilities.Client],
   },
 );

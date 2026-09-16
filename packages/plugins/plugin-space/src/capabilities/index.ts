@@ -58,6 +58,7 @@ export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
+    environments: [],
     requires: [ClientCapabilities.Client],
   },
 );
