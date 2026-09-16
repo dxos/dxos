@@ -13,7 +13,6 @@ import { join, relative } from 'node:path';
 import { writeHeapSnapshot } from 'node:v8';
 import { afterAll, afterEach, expect } from 'vitest';
 
-// One directory per test file, mirroring its path: leak mode runs each file in its own process.
 const testPath = expect.getState().testPath;
 const outDir = join(
   process.env.DX_DEBUG_LEAKS_DIR ?? './profiles',
@@ -35,9 +34,6 @@ const samplesFile = join(outDir, 'heap-samples.ndjson');
  */
 // Weak, and pruned on read: holding instances strongly would stop a discarded module's memory from
 // ever being freed, so the probe would create the growth it claims to measure.
-//
-// Registry and proxy live on `globalThis`, installed once per process, so a setup file evaluated a
-// second time in the same process keeps counting instances the first evaluation saw.
 const REGISTRY_KEY = '__DXOS_WASM_REGISTRY__';
 const globals = globalThis as Record<string, unknown>;
 const wasmInstances = (globals[REGISTRY_KEY] ??= []) as WeakRef<WebAssembly.Instance>[];
@@ -100,6 +96,11 @@ const snapshot = (name: string): void => {
 
 let completed = 0;
 
+const resetSamplesFile = (): void => {
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(samplesFile, '');
+};
+
 // Vitest's 10s hook default timed out on a suite whose heap is large enough to be worth snapshotting
 // — repeated collection plus `writeHeapSnapshot` of a multi-GB heap is minutes of work on a loaded
 // runner, and the timeout failed the file no matter what its assertions said.
@@ -112,10 +113,7 @@ const SNAPSHOT_TIMEOUT = 300_000;
 // compilation, string interning) is not mistaken for a leak.
 afterEach(async () => {
   if (completed === 0) {
-    // Created on the first test rather than at load, so a file whose tests are all filtered out writes
-    // nothing; truncated so a rerun's `test` indices do not continue a previous run's.
-    mkdirSync(outDir, { recursive: true });
-    writeFileSync(samplesFile, '');
+    resetSamplesFile();
   }
   await settle();
   const heapUsed = process.memoryUsage().heapUsed;

@@ -315,10 +315,6 @@ jobs:
               await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
             }
 
-  # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
-  # and a process per test file, neither of which the sharded matrix provides. `test-memory` runs
-  # them in every package tagged `ts-test-memory`, so a new suite needs no step here.
-  #
   # Do NOT silence a failure here with `test.fails`, which would also swallow an unrelated crash (the
   # WASM allocator abort these suites can provoke looks identical to an assertion failure from the
   # outside).

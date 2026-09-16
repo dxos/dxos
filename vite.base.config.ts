@@ -66,10 +66,6 @@ const DEBUG_TIMEOUT_MS = 3_600_000;
 // DESIGN: .agents/projects/test-profiling-leaks/DESIGN.md.
 //   DX_PROFILE_TESTS[=dir] — emit a V8 `.cpuprofile` via Node `--cpu-prof` (dir default ./profiles).
 //   DX_DEBUG_LEAKS         — before/after heap snapshots + per-test heapUsed samples of a single suite.
-// Both need the tests to run on a fork's main thread, so instrumentation forces `pool: 'forks'`:
-// `--cpu-prof`/`--expose-gc` (passed via `execArgv`) apply to the process main thread, which under the
-// default worker-per-file isolation is not where tests run. Profiling shares one process so the run
-// yields one profile; leak detection gives each file its own, since WASM memory is never returned.
 const CPU_PROFILE_DIR = process.env.DX_PROFILE_TESTS
   ? process.env.DX_PROFILE_TESTS === '1'
     ? './profiles'
@@ -77,8 +73,7 @@ const CPU_PROFILE_DIR = process.env.DX_PROFILE_TESTS
   : undefined;
 const DEBUG_LEAKS = !!process.env.DX_DEBUG_LEAKS;
 const TEST_INSTRUMENTED = Boolean(CPU_PROFILE_DIR) || DEBUG_LEAKS;
-// `execArgv` / `isolate` / `fileParallelism` / `maxWorkers` are top-level test options in vitest 4
-// (the v3 `poolOptions.forks.{singleFork,execArgv}` nesting was removed).
+const PROFILE_IN_ONE_PROCESS = Boolean(CPU_PROFILE_DIR);
 const TEST_INSTRUMENT_EXEC_ARGV = [
   ...(CPU_PROFILE_DIR ? ['--cpu-prof', `--cpu-prof-dir=${CPU_PROFILE_DIR}`] : []),
   ...(DEBUG_LEAKS ? ['--expose-gc'] : []),
@@ -808,7 +803,7 @@ const createNodeProject = ({
       ...(TEST_INSTRUMENTED
         ? {
             pool: 'forks',
-            isolate: !CPU_PROFILE_DIR,
+            isolate: !PROFILE_IN_ONE_PROCESS,
             fileParallelism: false,
             maxWorkers: 1,
             execArgv: TEST_INSTRUMENT_EXEC_ARGV,

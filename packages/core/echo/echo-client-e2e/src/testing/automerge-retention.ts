@@ -22,10 +22,6 @@ import { type Checkpoint, capture, makePayload } from './retention.ts';
  * for preferring `WeakRef` liveness to bytes: the absolute footprint of an automerge-backed suite is
  * dominated by WASM and by allocator state that no release returns, so a byte threshold measures the
  * host it runs on. Heap is still printed at every checkpoint.
- *
- * Each test is its own file, so each gets a fresh process and WASM instance:
- *
- *   moon run echo-client-e2e:test-memory
  */
 
 export const OBJECT_COUNT = 2000;

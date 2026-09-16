@@ -1,9 +1,6 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test-memory:
-    # Runs the `memory`-tagged retention suites under `DX_DEBUG_LEAKS`, which supplies `--expose-gc`
-    # and gives each test file its own process (see `vite.base.config.ts`). A package opts in with the
-    # `ts-test-memory` tag; CI runs `moon run :test-memory`.
     command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter=memory "$@"' --
     env:
       DX_DEBUG_LEAKS: '1'
