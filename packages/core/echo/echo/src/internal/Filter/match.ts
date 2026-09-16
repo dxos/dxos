@@ -5,7 +5,7 @@
 import * as semver from 'semver';
 
 import { EncodedReference, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
-import { DXN, EID } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import { getTypeURI } from '../Annotation/annotations.ts';
@@ -332,6 +332,10 @@ export const makeFilterMatcher = <T>(
 
       case 'has-parent': {
         return accessor.hasParent(record) === filter.value;
+      }
+
+      case 'mnemonic': {
+        return EntityId.getMnemonic(accessor.getId(record)) === filter.mnemonic;
       }
 
       case 'in-query': {
