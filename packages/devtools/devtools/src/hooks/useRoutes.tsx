@@ -30,7 +30,7 @@ import {
   SwarmPanel,
   TestingPanel,
   WorkflowPanel,
-} from '../panels/index.ts';
+} from '../containers/index.ts';
 
 export const namespace = 'devtools';
 

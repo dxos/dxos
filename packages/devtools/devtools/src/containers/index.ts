@@ -7,3 +7,5 @@ export * from './EdgeSelector.tsx';
 export * from './RootContainer.tsx';
 export * from './SpaceSelector.tsx';
 export * from './VaultSelector.tsx';
+
+export * from './panels/index.ts';
