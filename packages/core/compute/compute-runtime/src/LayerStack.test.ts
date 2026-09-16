@@ -263,7 +263,6 @@ describe('LayerStack', () => {
         const appLayer = LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
           Layer.succeed(ServiceA, { value: 'app' }),
         );
-        // Stands in for a space-scoped layer waiting on its space to become ready.
         const spaceLayer = LayerSpec.make({ affinity: 'space', requires: [], provides: [ServiceB] }, () =>
           Layer.effect(ServiceB, Deferred.succeed(building, undefined).pipe(Effect.andThen(Effect.never))),
         );
@@ -276,7 +275,6 @@ describe('LayerStack', () => {
         yield* Deferred.await(building);
 
         expect(yield* resolveWithScope(resolver.resolve(ServiceA, {}))).toEqual({ value: 'app' });
-        // A resolution that carries the same space still reaches application services.
         expect(yield* resolveWithScope(resolver.resolve(ServiceA, { space }))).toEqual({ value: 'app' });
         yield* Fiber.interrupt(spaceResolution);
       }),

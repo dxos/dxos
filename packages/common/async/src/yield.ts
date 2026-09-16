@@ -45,37 +45,32 @@ export const yieldToEventLoop = (): Promise<void> => {
  */
 export type YieldStrategy = 'interactive' | 'smooth' | 'idle';
 
-/** How long a slice of work may run under each strategy before it yields, as `main-thread-scheduling` budgets them. */
 const SLICE_BUDGET_MS: Record<YieldStrategy, number> = { interactive: 83, smooth: 13, idle: 5 };
 
-/**
- * The slice of main-thread work in progress, shared by every caller. It ends when the event loop gets a turn, so time the
- * thread spent idle never counts against the next slice's budget.
- */
-let slice: { start: number } | undefined;
+let sliceUntilNextTurn: { start: number } | undefined;
 
-const currentSlice = (): { start: number } => {
-  if (!slice) {
+const openSliceUntilNextTurn = (): { start: number } => {
+  if (!sliceUntilNextTurn) {
     const started = { start: performance.now() };
-    slice = started;
+    sliceUntilNextTurn = started;
     void yieldToEventLoop().then(() => {
-      if (slice === started) {
-        slice = undefined;
+      if (sliceUntilNextTurn === started) {
+        sliceUntilNextTurn = undefined;
       }
     });
   }
-  return slice;
+  return sliceUntilNextTurn;
 };
 
 /** Whether the current slice has used its strategy's budget, for callers that yield by other means. */
 export const shouldYield = (strategy: YieldStrategy): boolean =>
-  performance.now() - currentSlice().start >= SLICE_BUDGET_MS[strategy];
+  performance.now() - openSliceUntilNextTurn().start >= SLICE_BUDGET_MS[strategy];
 
 /** Yields to the event loop once the current slice has used its strategy's budget, and resolves at once otherwise. */
 export const yieldOrContinue = async (strategy: YieldStrategy): Promise<void> => {
   if (!shouldYield(strategy)) {
     return;
   }
-  slice = undefined;
+  sliceUntilNextTurn = undefined;
   await yieldToEventLoop();
 };
