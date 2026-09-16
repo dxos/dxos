@@ -59,7 +59,13 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
   activatesOn: ActivationEvents.Idle,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.formInput', 'org.dxos.role.section', 'org.dxos.role.slide'],
+  roles: [
+    'org.dxos.role.article',
+    'org.dxos.role.cardContent',
+    'org.dxos.role.formInput',
+    'org.dxos.role.section',
+    'org.dxos.role.slide',
+  ],
 });
 export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
