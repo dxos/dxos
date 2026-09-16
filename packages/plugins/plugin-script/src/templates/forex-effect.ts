@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// Shipped to users as a starting function; it has no access to DXOS-internal error classes.
-/** @effect-diagnostics globalErrorInEffectFailure:skip-file */
-
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
@@ -14,6 +12,9 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
+
+/** Tagged so a caller can `Effect.catchTag('NoRateError', ...)` instead of matching on text. */
+class NoRateError extends Data.TaggedError('NoRateError')<{ from: string; to: string }> {}
 
 const ForexEffect = Operation.make({
   meta: {
@@ -43,7 +44,7 @@ export default ForexEffect.pipe(
 
       const rate = json?.data?.rates?.[to];
       if (rate == null) {
-        return yield* Effect.fail(new Error(`No rate found for ${from} -> ${to}`));
+        return yield* Effect.fail(new NoRateError({ from, to }));
       }
 
       return rate.toString();
