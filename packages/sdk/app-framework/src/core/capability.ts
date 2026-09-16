@@ -658,6 +658,14 @@ export const moduleMaker =
     const Requires extends readonly AnyTag[] = readonly [],
     const Extra extends readonly AnyTag[] = readonly [],
   >(
+    // Fires on this generic signature, never on a call: with `Requires` uninstantiated the rule
+    // resolves `Requirements<Requires>` through the constraint and reports
+    // `CapabilityIdentifier<any, 'multi'>` missing. Every concrete instantiation binds `Requires`
+    // to a real tuple, so no call site leaves it unsatisfied. Not reproducible in isolation —
+    // a generic Effect parameter, the type parameter's default, the `any` in `AnyTag`,
+    // `Contributions<T>` as MultiTag's key value, the phantom `CapabilityIdentifier` brand and
+    // indexing the constraint were each ruled out on their own.
+    // @effect-diagnostics-next-line missingEffectContext:off
     loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
     options?: MakerOptions<Requires, Extra, Props, Options>,
   ): Module<Options> => {

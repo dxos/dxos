@@ -28,6 +28,9 @@ type Maker<C extends Capability$.AnyTag> = <
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
+  // See the note in `capability.ts#moduleMaker`: the rule reads the constraint of an
+  // uninstantiated `Requires`, and no call site leaves the context unsatisfied.
+  // @effect-diagnostics-next-line missingEffectContext:off
   loader: Capability$.LoadModule<Props, Requires, readonly [C, ...Extra]>,
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options>,
 ) => Capability$.Module<Options>;
@@ -182,6 +185,9 @@ export const surface = <
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
+  // See the note in `capability.ts#moduleMaker`: the rule reads the constraint of an
+  // uninstantiated `Requires`, and no call site leaves the context unsatisfied.
+  // @effect-diagnostics-next-line missingEffectContext:off
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
 ): Capability$.Module<Options> => {
