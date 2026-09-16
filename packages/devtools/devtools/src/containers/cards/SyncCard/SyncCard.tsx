@@ -18,17 +18,15 @@ export type SyncCardProps = {
 /**
  * The chip track is `max-content`, not `auto`: the button clips its overflow, which zeroes a grid
  * item's automatic minimum, so an `auto` track could shrink under it and let it run into the next
- * column. The automerge label absorbs the slack; fixed figure tracks line the figures up across rows.
+ * column. The two figure tracks share the rest, named by the header row rather than per cell so a
+ * narrow card still fits.
  */
-const ROW_TRACKS = ['max-content', '1fr', '5rem', 'auto', '3.5rem'];
+const ROW_TRACKS = ['max-content', '1fr', '1fr'];
 
-const Metric = ({ label, pending, total }: { label: string; pending: number; total: number }) => (
-  <>
-    <span className='text-subdued'>{label}</span>
-    <span className={mx('font-mono tabular-nums', pending > 0 ? 'text-warning-text' : 'text-success-text')}>
-      {pending > 0 ? `${pending}/${total}` : total}
-    </span>
-  </>
+const Metric = ({ pending, total }: { pending: number; total: number }) => (
+  <span className={mx('font-mono tabular-nums', pending > 0 ? 'text-warning-text' : 'text-success-text')}>
+    {pending > 0 ? `${pending}/${total}` : total}
+  </span>
 );
 
 export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
@@ -48,6 +46,15 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
         }
       />
       {spaces.length === 0 && <StatCard.Row label='No spaces.' />}
+      {spaces.length > 0 && (
+        <StatCard.Row>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-subdued'>
+            <span className='text-start'>space</span>
+            <span>automerge</span>
+            <span>feed</span>
+          </Grid>
+        </StatCard.Row>
+      )}
       {spaces.map((row) => {
         const unsynced = row.state.unsyncedDocumentCount ?? 0;
         const feedPending = row.feedState?.pending ?? 0;
@@ -70,8 +77,8 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
                   onCopy={() => row.spaceId}
                 />
               </Tooltip.Trigger>
-              <Metric label='automerge' pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
-              <Metric label='feed' pending={feedPending} total={row.feedState?.total ?? 0} />
+              <Metric pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
+              <Metric pending={feedPending} total={row.feedState?.total ?? 0} />
             </Grid>
           </StatCard.Row>
         );
