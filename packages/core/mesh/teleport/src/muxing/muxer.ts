@@ -3,7 +3,6 @@
 //
 
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
-import { Duplex } from 'node:stream';
 
 import { Event, Trigger, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -19,6 +18,7 @@ import {
 import { type Command, CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
 
 import { Balancer } from './balancer.ts';
+import { type DuplexStream } from './duplex-stream.ts';
 import { type RpcPort } from './rpc-port.ts';
 
 const DEFAULT_SEND_COMMAND_TIMEOUT = 60_000;
@@ -75,7 +75,7 @@ type Channel = {
   buffer: Uint8Array[];
 
   /**
-   * Set when we initialize a NodeJS stream or an RPC port consuming the channel.
+   * Set when we initialize a duplex stream or an RPC port consuming the channel.
    */
   push: null | ((data: Uint8Array) => void);
 
@@ -121,7 +121,12 @@ export class Muxer {
   public afterClosed = new Event<Error | undefined>();
   public statsUpdated = new Event<MuxerStats>();
 
-  public readonly stream = this._balancer.stream;
+  public readonly stream: DuplexStream = this._balancer.stream;
+
+  /**
+   * Emitted when the underlying byte pipe ends, carrying the error that ended it if there was one.
+   */
+  public readonly closed = this._balancer.closed;
 
   constructor() {
     // Add a channel for control messages.
@@ -140,42 +145,50 @@ export class Muxer {
   }
 
   /**
-   * Creates a duplex Node.js-style stream.
+   * Creates a duplex byte stream over a channel.
    * The remote peer is expected to call `createStream` with the same tag.
    * The stream is immediately readable and writable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
-  async createStream(tag: string, opts: CreateChannelOpts = {}): Promise<Duplex> {
+  async createStream(tag: string, opts: CreateChannelOpts = {}): Promise<DuplexStream> {
     const channel = this._getOrCreateStream({
       tag,
       contentType: opts.contentType,
     });
     invariant(!channel.push, `Channel already open: ${tag}`);
 
-    const stream = new Duplex({
-      write: (data, encoding, callback) => {
-        this._sendData(channel, data)
-          .then(() => callback())
-          .catch(callback);
-        // TODO(dmaretskyi): Should we error if sending data has errored?
+    let controller: ReadableStreamDefaultController<Uint8Array>;
+    let readableClosed = false;
+    const readable = new ReadableStream<Uint8Array>({
+      start: (ctrl) => {
+        controller = ctrl;
       },
-      read: () => {}, // No-op. We will push data when we receive it.
+      cancel: () => {
+        readableClosed = true;
+      },
+    });
+
+    const writable = new WritableStream<Uint8Array>({
+      write: async (data) => {
+        await this._sendData(channel, data);
+      },
     });
 
     channel.push = (data) => {
       channel.stats.bytesReceived += data.length;
-      stream.push(data);
+      if (!readableClosed) {
+        controller.enqueue(data);
+      }
     };
     channel.destroy = (err) => {
-      // TODO(dmaretskyi): Call stream.end() instead?
+      if (readableClosed) {
+        return;
+      }
+      readableClosed = true;
       if (err) {
-        if (stream.listeners('error').length > 0) {
-          stream.destroy(err);
-        } else {
-          stream.destroy();
-        }
+        controller.error(err);
       } else {
-        stream.destroy();
+        controller.close();
       }
     };
 
@@ -195,7 +208,7 @@ export class Muxer {
       throw err;
     }
 
-    return stream;
+    return { readable, writable };
   }
 
   /**
@@ -513,8 +526,8 @@ export class Muxer {
       bytesSent,
       bytesReceived,
       ...calculateThroughput({ bytesSent, bytesReceived }, this._lastStats),
-      readBufferSize: this._balancer.stream.readableLength,
-      writeBufferSize: this._balancer.stream.writableLength,
+      readBufferSize: this._balancer.readableLength,
+      writeBufferSize: this._balancer.writableLength,
     };
 
     this.statsUpdated.emit(this._lastStats);

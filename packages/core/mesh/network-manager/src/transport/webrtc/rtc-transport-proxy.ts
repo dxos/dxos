@@ -3,7 +3,6 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { Writable } from 'node:stream';
 
 import { Event, scheduleTask } from '@dxos/async';
 import { type Stream } from '@dxos/async';
@@ -30,7 +29,6 @@ import {
   StatsRequestSchema,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
-import { arrayToBuffer } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
 
@@ -52,6 +50,7 @@ export class RtcTransportProxy extends Resource implements Transport {
   readonly errors = new ErrorStream();
 
   private _serviceStream: Stream<BridgeEvent> | undefined;
+  private _streamWriter: WritableStreamDefaultWriter<Uint8Array> | undefined;
 
   constructor(private readonly _options: RtcTransportProxyOptions) {
     super();
@@ -92,7 +91,7 @@ export class RtcTransportProxy extends Resource implements Transport {
                 await this._handleConnection(event.type.value);
                 break;
               case 'data':
-                this._handleData(event.type.value);
+                await this._handleData(event.type.value);
                 break;
               case 'signal':
                 await this._handleSignal(event.type.value);
@@ -109,35 +108,30 @@ export class RtcTransportProxy extends Resource implements Transport {
           },
         );
 
-        const connectorStream = new Writable({
-          write: (chunk, _, callback) => {
+        const connectorStream = new WritableStream<Uint8Array>({
+          write: async (chunk) => {
             const sendStartMs = Date.now();
-            this._options.bridgeService
-              .sendData(create(DataRequestSchema, { proxyId: fromPublicKey(this._proxyId), payload: chunk }), {
-                timeout: RPC_TIMEOUT,
-              })
-              .then(
-                () => {
-                  if (Date.now() - sendStartMs > RESP_MIN_THRESHOLD) {
-                    log('slow response, delaying callback');
-                    scheduleTask(this._ctx, () => callback(), RESP_MIN_THRESHOLD);
-                  } else {
-                    callback();
-                  }
-                },
-                (err: any) => {
-                  callback();
-                  this._raiseIfOpen(err);
-                },
+            try {
+              await this._options.bridgeService.sendData(
+                create(DataRequestSchema, { proxyId: fromPublicKey(this._proxyId), payload: chunk }),
+                { timeout: RPC_TIMEOUT },
               );
+            } catch (err: any) {
+              this._raiseIfOpen(err);
+              return;
+            }
+
+            if (Date.now() - sendStartMs > RESP_MIN_THRESHOLD) {
+              // Throttle the producer after a slow bridge response, as the Writable callback used to.
+              log('slow response, delaying callback');
+              await new Promise<void>((resolve) => scheduleTask(this._ctx, () => resolve(), RESP_MIN_THRESHOLD));
+            }
           },
         });
 
-        connectorStream.on('error', (err) => {
-          this._raiseIfOpen(err);
+        void this._options.stream.readable.pipeTo(connectorStream).catch((err) => {
+          this._raiseIfOpen(err instanceof Error ? err : new Error(String(err)));
         });
-
-        this._options.stream.pipe(connectorStream);
       },
       (error) => {
         if (error) {
@@ -194,10 +188,10 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  private _handleData(dataEvent: BridgeEvent_DataEvent): void {
+  private async _handleData(dataEvent: BridgeEvent_DataEvent): Promise<void> {
     try {
-      // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
-      this._options.stream.write(arrayToBuffer(dataEvent.payload));
+      this._streamWriter ??= this._options.stream.writable.getWriter();
+      await this._streamWriter.write(dataEvent.payload);
     } catch (error: any) {
       this._raiseIfOpen(error);
     }

@@ -7,7 +7,9 @@ import varint from 'varint';
 import { Event, type Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { concatUint8Arrays } from '@dxos/util';
 
+import { type DuplexStream } from './duplex-stream.ts';
 import { Framer } from './framer.ts';
 
 const MAX_CHUNK_SIZE = 8192;
@@ -19,12 +21,12 @@ type Chunk = {
 };
 
 type ChunkEnvelope = {
-  msg: Buffer;
+  msg: Uint8Array;
   trigger?: Trigger;
 };
 
 type ChannelBuffer = {
-  buffer: Buffer;
+  buffer: Uint8Array;
   msgLength: number;
 };
 
@@ -45,7 +47,8 @@ export class Balancer {
 
   private _sending = false;
   public incomingData = new Event<Uint8Array>();
-  public readonly stream = this._framer.stream;
+  public readonly stream: DuplexStream = this._framer.stream;
+  public readonly closed = this._framer.closed;
 
   constructor(private readonly _sysChannelId: number) {
     this._channels.push(_sysChannelId);
@@ -64,6 +67,14 @@ export class Balancer {
 
   get buffersCount() {
     return this._sendBuffers.size;
+  }
+
+  get readableLength(): number {
+    return this._framer.readableLength;
+  }
+
+  get writableLength(): number {
+    return this._framer.writableLength;
   }
 
   addChannel(channel: number): void {
@@ -88,7 +99,7 @@ export class Balancer {
     if (!this._receiveBuffers.has(channelId)) {
       if (chunk.length < dataLength!) {
         this._receiveBuffers.set(channelId, {
-          buffer: Buffer.from(chunk),
+          buffer: chunk,
           msgLength: dataLength!,
         });
       } else {
@@ -96,7 +107,7 @@ export class Balancer {
       }
     } else {
       const channelBuffer = this._receiveBuffers.get(channelId)!;
-      channelBuffer.buffer = Buffer.concat([channelBuffer.buffer, chunk]);
+      channelBuffer.buffer = concatUint8Arrays(channelBuffer.buffer, chunk);
       if (channelBuffer.buffer.length < channelBuffer.msgLength) {
         return;
       }
@@ -194,10 +205,10 @@ export class Balancer {
   }
 }
 
-export const encodeChunk = ({ channelId, dataLength, chunk }: Chunk): Buffer => {
+export const encodeChunk = ({ channelId, dataLength, chunk }: Chunk): Uint8Array => {
   const channelTagLength = varint.encodingLength(channelId);
   const dataLengthLength = dataLength ? varint.encodingLength(dataLength) : 0;
-  const message = Buffer.allocUnsafe(channelTagLength + dataLengthLength + chunk.length);
+  const message = new Uint8Array(channelTagLength + dataLengthLength + chunk.length);
   varint.encode(channelId, message);
   if (dataLength) {
     varint.encode(dataLength, message, channelTagLength);

@@ -3,7 +3,6 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { Duplex } from 'stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event as AsyncEvent, Trigger, sleep } from '@dxos/async';
@@ -14,6 +13,7 @@ import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { type RpcPort, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { connectDuplexStreams } from '@dxos/teleport';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
 import { RtcTransportProxy } from './rtc-transport-proxy.ts';
@@ -193,21 +193,21 @@ describe.skip('RtcPeerTransportProxy', () => {
     const mockTransport = createMockTransport();
     const peer = await setupProxy({}, mockTransport.factory);
     await peer.proxy.open();
-    const messageParts = [Buffer.from('hello,'), Buffer.from('world!')];
+    const messageParts = ['hello,', 'world!'];
     await connectAndWaitProxy(peer, mockTransport);
-    mockTransport.stream.push(messageParts[0]);
-    mockTransport.stream.push(messageParts[1]);
-    await peer.stream.assertReceivedAsync(Buffer.concat(messageParts));
+    mockTransport.push(messageParts[0]);
+    mockTransport.push(messageParts[1]);
+    await peer.stream.assertReceivedAsync(messageParts.join(''));
     await peer.proxy.close();
     // Confirmed by testing: awaiting close() alone isn't enough — the underlying pipe teardown
     // needs real settling time before a post-close write is safe (else it throws write-after-end).
     await sleep(20);
-    mockTransport.stream.push(Buffer.from('!!!'));
+    mockTransport.push('!!!');
     // No event signals "no further data arrived": assertReceivedAsync's condition is already
     // satisfied by the earlier write, so it can't wait for a stray post-close write either.
     await sleep(20);
 
-    await peer.stream.assertReceivedAsync(Buffer.concat(messageParts));
+    await peer.stream.assertReceivedAsync(messageParts.join(''));
     peer.proxy.errors.assertNoUnhandledErrors();
   });
 
@@ -264,19 +264,16 @@ describe.skip('RtcPeerTransportProxy', () => {
     });
   });
 
-  const setupProxy = async (overrides?: Partial<TransportOptions>, transportFactory?: TransportFactory) => {
+  const setupProxy = async (overrides?: TransportOverrides, transportFactory?: TransportFactory) => {
     const [port1, port2] = createLinkedPorts();
     const service = await createService(port1, transportFactory);
     const rpcClient = await createClient(port2);
     return { service, ...(await createProxy(rpcClient, overrides)) };
   };
 
-  const createProxy = async (
-    client: { rpc: { BridgeService: BridgeService } },
-    overrides?: Partial<TransportOptions>,
-  ) => {
-    const stream = (overrides?.stream as TestStream) ?? new TestStream();
-    const options = createTransportOptions({ stream, ...overrides });
+  const createProxy = async (client: { rpc: { BridgeService: BridgeService } }, overrides?: TransportOverrides) => {
+    const stream = overrides?.stream ?? new TestStream();
+    const options = createTransportOptions({ ...overrides, stream });
     const proxy = new RtcTransportProxy({ ...options, bridgeService: client.rpc.BridgeService });
     onTestFinished(async () => {
       await proxy.close();
@@ -337,10 +334,16 @@ describe.skip('RtcPeerTransportProxy', () => {
   };
 });
 
+/**
+ * The tests need the concrete `TestStream` back (for `assertReceivedAsync`), which the structural
+ * `DuplexStream` on `TransportOptions` would erase.
+ */
+type TransportOverrides = Partial<Omit<TransportOptions, 'stream'>> & { stream?: TestStream };
+
 const createTransportOptions = (options: Partial<TransportOptions>): TransportOptions => {
   return {
     initiator: false,
-    stream: new Duplex(),
+    stream: new TestStream(),
     sendSignal: async () => {},
     remotePeerKey: PublicKey.random().toHex(),
     ownPeerKey: PublicKey.random().toHex(),
@@ -352,25 +355,36 @@ const createTransportOptions = (options: Partial<TransportOptions>): TransportOp
 const createMockTransport = (delegate?: Partial<Transport>) => {
   const transport = new MockTransport(delegate);
   const receivedMessages: string[] = [];
-  const stream = new Duplex({
-    read: () => {},
-    write: (chunk: any, _: BufferEncoding, callback: () => void) => {
-      receivedMessages.push(Buffer.from(chunk).toString());
-      callback();
-    },
-  });
+  const decoder = new TextDecoder();
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = {
+    readable: new ReadableStream<Uint8Array>({
+      start: (ctrl) => {
+        controller = ctrl;
+      },
+    }),
+    writable: new WritableStream<Uint8Array>({
+      write: (chunk) => {
+        receivedMessages.push(decoder.decode(chunk));
+      },
+    }),
+  };
+  const encoder = new TextEncoder();
+  const push = (data: Uint8Array | string) =>
+    controller.enqueue(typeof data === 'string' ? encoder.encode(data) : data);
   let sendSignal: any | undefined;
   return {
     receivedMessages,
     transport,
     stream,
+    push,
     sendSignalFromTransport: async (signal: any) => {
       sendSignal(signal);
     },
     factory: {
       createTransport: (options: TransportOptions): Transport => {
         sendSignal = options.sendSignal;
-        stream.pipe(options.stream).pipe(stream);
+        connectDuplexStreams(stream, options.stream);
         return transport;
       },
     },

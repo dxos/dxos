@@ -4,7 +4,6 @@
 
 import { create } from '@bufbuild/protobuf';
 import { randomBytes } from 'node:crypto';
-import { type Duplex } from 'node:stream';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -19,6 +18,7 @@ import {
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
+import { type DuplexStream, readAll } from '../muxing/index.ts';
 import { type ExtensionContext, type TeleportExtension } from '../teleport.ts';
 
 type TestServiceWithStreams = BufService<typeof TestServiceWithStreamsDesc>;
@@ -60,23 +60,22 @@ export class TestExtensionWithStreams implements TeleportExtension {
       startTimestamp: Date.now(),
     };
 
+    const writer = networkStream.writable.getWriter();
+    streamEntry.writer = writer;
+
     const pushChunk = () => {
       streamEntry.timer = setTimeout(() => {
         const chunk = randomBytes(chunkSize);
-
-        if (
-          !networkStream.write(chunk, 'binary', (err) => {
-            if (!err) {
-              streamEntry.bytesSent += chunk.length;
-            } else {
-              streamEntry.sendErrors += 1;
-            }
+        // `ready` is the web-stream drain: it settles once the sink wants more.
+        writer
+          .write(chunk)
+          .then(() => {
+            streamEntry.bytesSent += chunk.length;
           })
-        ) {
-          networkStream.once('drain', pushChunk);
-        } else {
-          process.nextTick(pushChunk);
-        }
+          .catch(() => {
+            streamEntry.sendErrors += 1;
+          });
+        void writer.ready.then(pushChunk).catch(() => {});
       }, interval);
     };
 
@@ -84,16 +83,10 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     this._streams.set(streamTag, streamEntry);
 
-    networkStream.on('data', (data) => {
+    void readAll(networkStream.readable, (data) => {
       streamEntry.bytesReceived += data.length;
-    });
-
-    networkStream.on('error', (err) => {
+    }).catch(() => {
       streamEntry.receiveErrors += 1;
-    });
-
-    networkStream.on('close', () => {
-      networkStream.removeAllListeners();
     });
 
     streamEntry.reportingTimer = setInterval(() => {
@@ -121,7 +114,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     const { bytesSent, bytesReceived, sendErrors, receiveErrors, startTimestamp } = stream;
 
-    stream.networkStream.destroy();
+    destroyTestStream(stream);
     this._streams.delete(streamTag);
 
     return {
@@ -189,7 +182,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     for (const [streamTag, stream] of Object.entries(this._streams)) {
       log('closing stream', { streamTag });
       clearTimeout(stream.interval);
-      stream.networkStream.destroy();
+      destroyTestStream(stream);
     }
     await this._rpc?.close();
   }
@@ -264,7 +257,8 @@ export type TestStreamStats = {
 };
 
 type TestStream = {
-  networkStream: Duplex;
+  networkStream: DuplexStream;
+  writer?: WritableStreamDefaultWriter<Uint8Array>;
   bytesSent: number;
   bytesReceived: number;
   sendErrors: number;
@@ -272,4 +266,9 @@ type TestStream = {
   timer?: NodeJS.Timeout;
   startTimestamp?: number;
   reportingTimer?: NodeJS.Timeout;
+};
+
+const destroyTestStream = (stream: TestStream): void => {
+  void stream.writer?.close().catch(() => {});
+  void stream.networkStream.readable.cancel().catch(() => {});
 };

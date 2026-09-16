@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
-
 import { Event as AsyncEvent } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
@@ -11,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { connectDuplexStreams } from '@dxos/teleport';
 
 import { type Transport, type TransportOptions, type TransportStats } from '../transport.ts';
 import { type RtcPeerConnection } from './rtc-peer-connection.ts';
@@ -18,7 +17,7 @@ import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
 const MAX_MESSAGE_SIZE = 64 * 1024;
-// The default Readable stream buffer size: https://nodejs.org/api/stream.html#implementing-a-readable-stream
+// Bytes the data channel may hold before we stop accepting writes; the real backpressure source.
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
 /**
@@ -31,7 +30,7 @@ export class RtcTransportChannel extends Resource implements Transport {
   public readonly errors = new ErrorStream();
 
   private _channel: RTCDataChannel | undefined;
-  private _stream: Duplex | undefined;
+  private _readableController: ReadableStreamDefaultController<Uint8Array> | undefined;
   private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
   private _isChannelCreationInProgress = false;
 
@@ -85,7 +84,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     if (this._channel) {
       this._safeCloseChannel(this._channel);
       this._channel = undefined;
-      this._stream = undefined;
+      this._readableController = undefined;
     }
     this.closed.emit();
 
@@ -102,14 +101,19 @@ export class RtcTransportChannel extends Resource implements Transport {
         }
 
         log('onopen');
-        const duplex = new Duplex({
-          read: () => {},
-          write: (chunk, encoding, callback) => {
-            return this._handleChannelWrite(chunk, callback);
+        const readable = new ReadableStream<Uint8Array>({
+          start: (controller) => {
+            this._readableController = controller;
           },
         });
-        duplex.pipe(this._options.stream).pipe(duplex);
-        this._stream = duplex;
+        const writable = new WritableStream<Uint8Array>({
+          write: (chunk) => this._handleChannelWrite(chunk),
+        });
+        connectDuplexStreams({ readable, writable }, this._options.stream, (err) => {
+          if (this.isOpen) {
+            this.errors.raise(err);
+          }
+        });
         this.connected.emit();
       },
 
@@ -119,18 +123,19 @@ export class RtcTransportChannel extends Resource implements Transport {
       },
 
       onmessage: async (event: MessageEvent) => {
-        if (!this._stream) {
+        if (!this._readableController) {
           log.warn('ignoring message on a closed channel');
           return;
         }
 
-        let data = event.data;
+        const data = event.data;
         if (data instanceof ArrayBuffer) {
-          data = Buffer.from(data);
+          this._readableController.enqueue(new Uint8Array(data));
         } else if (data instanceof Blob) {
-          data = Buffer.from(await data.arrayBuffer());
+          this._readableController.enqueue(new Uint8Array(await data.arrayBuffer()));
+        } else {
+          this._readableController.enqueue(data);
         }
-        this._stream.push(data);
       },
 
       onerror: (event: Event & any) => {
@@ -148,7 +153,11 @@ export class RtcTransportChannel extends Resource implements Transport {
     });
   }
 
-  private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback): Promise<void> {
+  /**
+   * Resolves once the channel has accepted the chunk, and — when its send buffer is over the
+   * threshold — not until `onbufferedamountlow` fires, which is what applies backpressure.
+   */
+  private async _handleChannelWrite(chunk: Uint8Array): Promise<void> {
     if (!this._channel) {
       log.warn('writing to a channel after a connection was closed');
       return;
@@ -157,15 +166,19 @@ export class RtcTransportChannel extends Resource implements Transport {
     if (chunk.length > MAX_MESSAGE_SIZE) {
       const error = new Error(`Message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}.`);
       this.errors.raise(error);
-      callback();
       return;
     }
 
     try {
-      this._channel.send(chunk);
+      // `send` demands an ArrayBuffer-backed view; re-wrapping is free unless the chunk is
+      // SharedArrayBuffer-backed, which this pipeline never produces.
+      this._channel.send(
+        chunk.buffer instanceof ArrayBuffer
+          ? new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+          : new Uint8Array(chunk),
+      );
     } catch (err: any) {
       this.errors.raise(err);
-      callback();
       return;
     }
 
@@ -173,9 +186,9 @@ export class RtcTransportChannel extends Resource implements Transport {
       if (this._streamDataFlushedCallback !== null) {
         log.error('consumer trying to write before we are ready for more data');
       }
-      this._streamDataFlushedCallback = callback;
-    } else {
-      callback();
+      await new Promise<void>((resolve) => {
+        this._streamDataFlushedCallback = resolve;
+      });
     }
   }
 

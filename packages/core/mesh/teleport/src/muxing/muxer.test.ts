@@ -4,7 +4,6 @@
 
 import { create } from '@bufbuild/protobuf';
 import { EmptySchema } from '@bufbuild/protobuf/wkt';
-import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
@@ -16,6 +15,7 @@ import {
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
+import { connectDuplexStreams, readAll } from './duplex-stream.ts';
 import { Muxer } from './muxer.ts';
 import { type RpcPort } from './rpc-port.ts';
 
@@ -25,11 +25,11 @@ const setupPeers = () => {
   const peer1 = new Muxer();
   const peer2 = new Muxer();
 
-  peer1.stream.pipe(peer2.stream).pipe(peer1.stream);
+  connectDuplexStreams(peer1.stream, peer2.stream);
 
   const unpipe = () => {
-    peer1.stream.unpipe(peer2.stream);
-    peer2.stream.unpipe(peer1.stream);
+    void peer1.stream.readable.cancel().catch(() => {});
+    void peer2.stream.readable.cancel().catch(() => {});
   };
   onTestFinished(async () => {
     unpipe();
@@ -140,37 +140,41 @@ describe('Muxer', () => {
     await wait();
   });
 
-  test('node.js streams', async () => {
+  test('duplex byte streams', async () => {
     const { peer1, peer2 } = setupPeers();
+
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
 
     const stream2 = await peer2.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
+    const writer2 = stream2.writable.getWriter();
 
     // Buffer data before remote peer opens.
-    stream2.write('hello');
+    void writer2.write(encoder.encode('hello'));
 
     const stream1 = await peer1.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
 
-    pipeline(
-      stream1,
-      new Transform({
-        transform: (chunk, encoding, callback) => {
-          callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
-        },
-      }),
-      stream1,
-      () => {},
-    );
+    // Echo back in upper case.
+    const upperCase = new TransformStream<Uint8Array, Uint8Array>({
+      transform: (chunk, controller) => {
+        controller.enqueue(encoder.encode(decoder.decode(chunk).toUpperCase()));
+      },
+    });
+    void stream1.readable
+      .pipeThrough(upperCase)
+      .pipeTo(stream1.writable)
+      .catch(() => {});
 
     let received = '';
-    stream2.on('data', (chunk) => {
-      received += Buffer.from(chunk).toString();
-    });
+    void readAll(stream2.readable, (chunk) => {
+      received += decoder.decode(chunk);
+    }).catch(() => {});
 
-    stream2.write(' world!');
+    void writer2.write(encoder.encode(' world!'));
 
     await expect.poll(() => received).toEqual('HELLO WORLD!');
   });
@@ -188,8 +192,10 @@ describe('Muxer', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 500 });
 
-    stream1.once('close', inc);
-    stream2.once('close', inc);
+    // A destroyed muxer ends both channel readables — cleanly when there is no error, with a
+    // rejection when there is — so either settlement counts as the stream having been closed.
+    void stream1.readable.getReader().closed.then(inc, inc);
+    void stream2.readable.getReader().closed.then(inc, inc);
 
     await peer1.destroy();
     // Peer2 should also be destroyed.

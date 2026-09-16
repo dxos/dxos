@@ -175,7 +175,7 @@ export class Connection {
     });
 
     // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
-    this._protocol.stream.on('close', () => {
+    this._protocol.closed.on(() => {
       log('protocol stream closed');
       this._protocolClosed.wake();
       this.close({ error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>

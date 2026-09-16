@@ -4,7 +4,6 @@
 
 import { create } from '@bufbuild/protobuf';
 import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
-import { Duplex } from 'node:stream';
 
 import { Stream } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -31,6 +30,7 @@ import {
   type StatsResponse,
   StatsResponseSchema,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { type DuplexStream } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { type IceProvider } from '../../signal/index.ts';
@@ -42,9 +42,11 @@ type BridgeService = BufService<typeof BridgeServiceDesc>;
 type TransportState = {
   proxyId: PublicKey;
   transport: Transport;
-  connectorStream: Duplex;
+  connectorController: ReadableStreamDefaultController<Uint8Array>;
   writeProcessedCallbacks: (() => void)[];
 };
+
+const CONNECTOR_HIGH_WATER_MARK = 64 * 1024;
 
 export class RtcTransportService implements BridgeService {
   private readonly _openTransports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
@@ -71,21 +73,32 @@ export class RtcTransportService implements BridgeService {
     return new Stream<BridgeEvent>(({ ready, next, close }) => {
       const pushNewState = createStateUpdater(next);
 
-      const transportStream: Duplex = new Duplex({
-        read: () => {
-          const callbacks = [...transportState.writeProcessedCallbacks];
-          transportState.writeProcessedCallbacks.length = 0;
-          callbacks.forEach((cb) => cb());
+      let connectorController!: ReadableStreamDefaultController<Uint8Array>;
+      const readable = new ReadableStream<Uint8Array>(
+        {
+          start: (controller) => {
+            connectorController = controller;
+          },
+          // The consumer is ready for more: release the senders parked in `sendData`.
+          pull: () => {
+            const callbacks = [...transportState.writeProcessedCallbacks];
+            transportState.writeProcessedCallbacks.length = 0;
+            callbacks.forEach((cb) => cb());
+          },
         },
-        write: function (chunk, _, callback) {
+        new ByteLengthQueuingStrategy({ highWaterMark: CONNECTOR_HIGH_WATER_MARK }),
+      );
+
+      const writable = new WritableStream<Uint8Array>({
+        write: (chunk) => {
           next(
             create(BridgeEventSchema, {
               type: { case: 'data', value: create(BridgeEvent_DataEventSchema, { payload: chunk }) },
             }),
           );
-          callback();
         },
       });
+      const transportStream: DuplexStream = { readable, writable };
 
       const transport = this._transportFactory.createTransport({
         initiator: request.initiator,
@@ -105,7 +118,7 @@ export class RtcTransportService implements BridgeService {
       const transportState: TransportState = {
         proxyId,
         transport,
-        connectorStream: transportStream,
+        connectorController,
         writeProcessedCallbacks: [],
       };
 
@@ -166,7 +179,8 @@ export class RtcTransportService implements BridgeService {
     const transport = this._openTransports.get(requirePublicKey(proxyId));
     invariant(transport);
 
-    const bufferHasSpace = transport.connectorStream.push(payload);
+    transport.connectorController.enqueue(payload);
+    const bufferHasSpace = (transport.connectorController.desiredSize ?? 0) > 0;
     if (!bufferHasSpace) {
       await new Promise<void>((resolve) => {
         transport.writeProcessedCallbacks.push(resolve);
@@ -198,7 +212,7 @@ export class RtcTransportService implements BridgeService {
       log.warn('transport close error', { message: error?.message });
     }
     try {
-      transport.connectorStream.end();
+      transport.connectorController.close();
     } catch (error: any) {
       log.warn('connectorStream close error', { message: error?.message });
     }

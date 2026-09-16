@@ -6,6 +6,7 @@ import { type Event } from '@dxos/async';
 import { type ErrorStream } from '@dxos/debug';
 import { type PublicKey } from '@dxos/keys';
 import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { type DuplexStream } from '@dxos/teleport';
 
 export enum TransportKind {
   WEB_RTC = 'WEB-RTC',
@@ -59,7 +60,7 @@ export type TransportOptions = {
   /**
    * Wire protocol for data stream.
    */
-  stream: NodeJS.ReadWriteStream;
+  stream: DuplexStream;
 
   /**
    * Sends signal message to remote peer.

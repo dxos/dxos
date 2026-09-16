@@ -10,6 +10,7 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { type DuplexStream, connectDuplexStreams } from '@dxos/teleport';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
 
@@ -131,6 +132,42 @@ export class TcpTransport implements Transport {
     });
 
     this.connected.emit();
-    this.options.stream.pipe(this._socket!).pipe(this.options.stream);
+    connectDuplexStreams(socketToDuplexStream(this._socket!), this.options.stream, (err) => this.errors.raise(err));
   }
 }
+
+/**
+ * Adapts a Node socket to the web-stream seam.
+ *
+ * Written out rather than using `Duplex.toWeb`, whose `node:stream/web` types are a different
+ * declaration of `ReadableStream` than the global one this codebase types the seam with.
+ */
+const socketToDuplexStream = (socket: Socket): DuplexStream => ({
+  readable: new ReadableStream<Uint8Array>({
+    start: (controller) => {
+      // Copied: socket chunks come from a shared pool, so holding the view would alias later reads.
+      socket.on('data', (data) => controller.enqueue(new Uint8Array(data)));
+      socket.on('end', () => {
+        try {
+          controller.close();
+        } catch {
+          // Already closed by a cancel racing the socket ending.
+        }
+      });
+    },
+    cancel: () => {
+      socket.destroy();
+    },
+  }),
+  writable: new WritableStream<Uint8Array>({
+    write: async (chunk) => {
+      if (!socket.write(chunk)) {
+        // `drain` is the socket's backpressure signal, mapped onto the write promise.
+        await new Promise<void>((resolve) => socket.once('drain', resolve));
+      }
+    },
+    close: () => {
+      socket.end();
+    },
+  }),
+});

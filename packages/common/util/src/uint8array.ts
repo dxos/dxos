@@ -79,3 +79,23 @@ export const isEncodedUint8Array = (value: unknown): value is EncodedUint8Array 
  */
 export const decodeUint8ArrayFromJson = (encoded: EncodedUint8Array): Uint8Array =>
   bufferToArray(Buffer.from(encoded['/'].bytes, 'base64'));
+
+/**
+ * Concatenate byte arrays into a single newly-allocated one.
+ * Replaces `Buffer.concat` in code that must not pull the `buffer` polyfill into a browser bundle.
+ */
+export const concatUint8Arrays = (...arrays: Uint8Array[]): Uint8Array => {
+  let total = 0;
+  for (const array of arrays) {
+    total += array.length;
+  }
+
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const array of arrays) {
+    result.set(array, offset);
+    offset += array.length;
+  }
+
+  return result;
+};

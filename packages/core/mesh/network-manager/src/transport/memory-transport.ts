@@ -3,7 +3,6 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { Transform } from 'node:stream';
 
 import { Event, Trigger } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
@@ -22,11 +21,11 @@ const MEMORY_TRANSPORT_DELAY = 1;
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
  */
-const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
-  return new Transform({
-    objectMode: true,
-    transform: (chunk, _, cb) => {
-      setTimeout(() => cb(null, chunk), delay); // TODO(burdon): Randomize.
+const createStreamDelay = (delay: number): TransformStream<Uint8Array, Uint8Array> => {
+  return new TransformStream({
+    transform: async (chunk, controller) => {
+      await new Promise((resolve) => setTimeout(resolve, delay)); // TODO(burdon): Randomize.
+      controller.enqueue(chunk);
     },
   });
 };
@@ -49,6 +48,7 @@ export class MemoryTransport implements Transport {
 
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
+  private _pipes: Promise<void>[] = [];
 
   private _closed = false;
 
@@ -107,11 +107,13 @@ export class MemoryTransport implements Transport {
           this._remoteConnection._remoteInstanceId = this._instanceId;
 
           log('connected');
-          this._options.stream
-            .pipe(this._outgoingDelay)
-            .pipe(this._remoteConnection._options.stream)
-            .pipe(this._incomingDelay)
-            .pipe(this._options.stream);
+          const remote = this._remoteConnection;
+          this._pipes = [
+            this._options.stream.readable.pipeThrough(this._outgoingDelay).pipeTo(remote._options.stream.writable),
+            remote._options.stream.readable.pipeThrough(this._incomingDelay).pipeTo(this._options.stream.writable),
+          ];
+          // A closed peer aborts these pipes; that is the normal end of the connection, not a fault.
+          this._pipes.forEach((pipe) => void pipe.catch((err) => log('memory transport pipe ended', { err })));
 
           this.connected.emit();
           this._remoteConnection.connected.emit();
@@ -136,19 +138,11 @@ export class MemoryTransport implements Transport {
       this._remoteConnection._closed = true;
       MemoryTransport._connections.delete(this._remoteInstanceId);
 
-      // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.
-      //  NOTE(burdon): Using readable-stream.wrap() might help (see feed-store).
-      // code this._stream
-      // code   .unpipe(this._outgoingDelay)
-      // code   .unpipe(this._remoteConnection._stream)
-      // code   .unpipe(this._incomingDelay)
-      // code   .unpipe(this._stream);
-
-      this._options.stream.unpipe(this._incomingDelay);
-      this._incomingDelay.unpipe(this._remoteConnection._options.stream);
-      this._remoteConnection._options.stream.unpipe(this._outgoingDelay);
-      this._outgoingDelay.unpipe(this._options.stream);
-      this._options.stream.unpipe(this._outgoingDelay);
+      // Cancelling the source ends each pipe; web streams have no `unpipe`, and the TODO about
+      // hypercore streams lacking it no longer applies now that the seam is a web stream.
+      void this._options.stream.readable.cancel().catch(() => {});
+      void this._remoteConnection._options.stream.readable.cancel().catch(() => {});
+      this._pipes = [];
 
       this._remoteConnection.closed.emit();
       this._remoteConnection._remoteConnection = undefined;

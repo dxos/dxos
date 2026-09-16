@@ -138,16 +138,16 @@ const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[]
   return sorted;
 };
 
-const distXor = (a: Buffer, b: Buffer) => {
+const distXor = (a: Uint8Array, b: Uint8Array) => {
   const maxLength = Math.max(a.length, b.length);
-  const result = Buffer.allocUnsafe(maxLength);
+  const result = new Uint8Array(maxLength);
   for (let i = 0; i < maxLength; i++) {
     result[i] = (a[i] || 0) ^ (b[i] || 0);
   }
   return result;
 };
 
-const compareXor = (a: Buffer, b: Buffer) => {
+const compareXor = (a: Uint8Array, b: Uint8Array) => {
   const maxLength = Math.max(a.length, b.length);
   for (let i = 0; i < maxLength; i++) {
     if ((a[i] || 0) === (b[i] || 0)) {
