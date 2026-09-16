@@ -5,6 +5,7 @@
 import { type Page, expect, test } from '@playwright/test';
 import path from 'node:path';
 
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { log } from '@dxos/log';
 import {
   type Comparability,
@@ -27,6 +28,23 @@ import { type Scale, SCALES, createProjectsFixture, scaleLabel } from './perf/fi
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
 const FLOW = 'projects-tasks';
+
+/**
+ * Restated rather than imported from `@dxos/compute`, the same way `app-manager.ts` restates the
+ * type-picker typenames: the module graph behind the schema does not load under playwright's
+ * loader, and this app does not depend on that package.
+ */
+const PROJECT_TYPENAME = 'org.dxos.type.project';
+
+/**
+ * A project's navtree path — the AI group's Projects section, NOT the space's `content` subtree.
+ *
+ * `plugin-projects` surfaces projects through `createTypeSectionExtension`, so the object path is
+ * `root/<space>/ai/<typename>/<id>`; the `content/collections/<id>` form the markdown and deck QA
+ * tests use addresses the plugin-space database subtree and does not open a Project at all.
+ */
+const projectPath = (spaceId: string, projectId: string): string =>
+  GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.ai, PROJECT_TYPENAME, projectId);
 
 /**
  * Idle allowed after ready before the first measured stage.
@@ -146,12 +164,15 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', {
         subject: `root/${fixture.spaceId}`,
       });
-      await page.waitForLoadState('networkidle', { timeout: 60_000 }).catch(() => undefined);
+      // The URL, not `networkidle`: this app holds a websocket open and syncs continuously, so the
+      // network never goes idle and that wait burns its whole timeout — which then reports as the
+      // stage's duration and would trend as a 60s regression forever.
+      await page.waitForURL(new RegExp(`/w/${fixture.spaceId}`), { timeout: 60_000 });
     });
 
     await runner.stage('open-project', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
-        subject: [`root/${fixture.spaceId}/content/${fixture.projectIds[0]}`],
+        subject: [projectPath(fixture.spaceId, fixture.projectIds[0])],
       });
       await page.getByTestId('projectsPlugin.tab.tasks').waitFor({ timeout: 60_000 });
     });
