@@ -3,6 +3,7 @@
 //
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import type * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/hooks';
@@ -21,6 +22,7 @@ export type DeckCompanion = AppGraphNode.Node<
     fixed?: boolean;
     position?: Position.Position;
     joyride?: string;
+    mount?: AppNode.DeckCompanionMount;
   }
 >;
 

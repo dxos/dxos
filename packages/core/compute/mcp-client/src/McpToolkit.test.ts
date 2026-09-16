@@ -58,7 +58,7 @@ describe('Browser Automation', () => {
 
         const chat = yield* Chat.empty;
         let prompt: Prompt.RawInput = 'Check that you are able to use the browser. Open https://example.com';
-        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools>;
+        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools, 'opaque'>;
 
         do {
           output = yield* chat
@@ -97,7 +97,7 @@ describe('Browser Automation', () => {
         const chat = yield* Chat.empty;
         let prompt: Prompt.RawInput =
           'Scrape effect blog at https://effect.website/blog and find the content of last 3 articles. Next prompt I will ask you generate structured representation.';
-        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools>;
+        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools, 'opaque'>;
 
         do {
           output = yield* chat

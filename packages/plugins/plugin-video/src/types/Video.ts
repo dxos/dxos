@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation, TypeFormat } from '@dxos/echo/Format';
 import { Text } from '@dxos/schema';
 
@@ -31,16 +30,16 @@ export class Video extends Type.makeObject<Video>(DXN.make('org.dxos.type.video'
     ),
     transcript: Ref.Ref(Text.Text).pipe(
       Schema.annotate({ description: 'Generated transcript.' }),
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
     summary: Ref.Ref(Text.Text).pipe(
       Schema.annotate({ description: 'Generated summary.' }),
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--video-camera--regular', hue: 'red' }),
   ),
 ) {}

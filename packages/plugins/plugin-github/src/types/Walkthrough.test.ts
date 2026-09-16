@@ -24,6 +24,20 @@ describe('Walkthrough', () => {
     expect(walkthrough.pullRequest.target).to.eq(pullRequest);
   });
 
+  test('is labelled by its title, falling back to the commit', () => {
+    const pullRequest = makePullRequest();
+    const titled = Walkthrough.make({
+      pullRequest: Ref.make(pullRequest),
+      title: Walkthrough.makeTitle(pullRequest),
+      body: 'text',
+      commit: 'abc',
+    });
+    const untitled = Walkthrough.make({ pullRequest: Ref.make(pullRequest), body: 'text', commit: 'abc' });
+
+    expect(Obj.getLabel(titled)).to.eq(`${PullRequest.reference(pullRequest)}: ${pullRequest.title}`);
+    expect(Obj.getLabel(untitled)).to.eq('abc');
+  });
+
   test('the body is a plain string, not a text object', () => {
     const walkthrough = Walkthrough.make({
       pullRequest: Ref.make(makePullRequest()),

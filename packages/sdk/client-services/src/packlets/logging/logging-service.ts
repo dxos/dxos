@@ -5,6 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Event } from '@dxos/async';
@@ -19,7 +20,7 @@ import {
   type QueryLogsRequest_Filter,
   QueryLogsRequest_MatchingOptions,
 } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { type LoggingService } from '@dxos/protocols/rpc';
+import { LoggingService } from '@dxos/protocols/rpc';
 import { numericalValues, tracer } from '@dxos/util';
 
 /**
@@ -197,3 +198,19 @@ const shouldLog = (entry: NaturalLogEntry, request: QueryLogsRequest): boolean =
  * Counter that is used to track whether we are processing a log entry.
  */
 let LOG_PROCESSING = 0;
+
+/**
+ * The impl installs a log processor on open and removes it on close, so its lifecycle is bound to
+ * the layer scope.
+ */
+export const LoggingServiceLayer: Layer.Layer<LoggingService.Tag> = Layer.effect(
+  LoggingService.Tag,
+  Effect.gen(function* () {
+    const service = new LoggingServiceImpl();
+    yield* Effect.acquireRelease(
+      Effect.promise(() => service.open()),
+      () => Effect.promise(() => service.close()),
+    );
+    return service;
+  }),
+);

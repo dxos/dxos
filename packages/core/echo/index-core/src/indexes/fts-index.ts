@@ -11,7 +11,6 @@ import type * as Statement from 'effect/unstable/sql/Statement';
 import type { Obj } from '@dxos/echo';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import type { SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
 import { chunkArray } from '../utils.ts';
@@ -104,13 +103,9 @@ const escapeFts5Query = (text: string): string => {
 export class FtsIndex implements Index {
   /**
    * Applies any migrations this database has not recorded yet.
-   *
-   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
-   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
    */
   migrate = Effect.fn('FtsIndex.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      Effect.provide(SqlTransaction.clientLayer),
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,

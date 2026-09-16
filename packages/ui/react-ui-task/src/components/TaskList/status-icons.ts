@@ -22,7 +22,7 @@ export const STATUS_ORDER: Task.Status[] = Task.StatusOptions.map(({ id }) => id
  * occupy its column and read as a control. One glyph across priority, estimate and anything added
  * later is what keeps a column of unset rows reading as one column.
  */
-export const UNSET_ICON = 'ph--dots-three--regular';
+export const UNSET_ICON = 'ph--asterisk--regular';
 
 export const priorityIcon = (priority: Task.Priority | undefined): string =>
   priority != null ? (PRIORITY_ICONS.get(priority) ?? UNSET_ICON) : UNSET_ICON;

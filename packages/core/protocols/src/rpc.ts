@@ -7,7 +7,7 @@
 // which must not leak into edge/workerd bundles that only need the proto types or error classes.
 
 export * from './service-rpc.ts';
-export * as BridgeService from './BridgeService.ts';
+export * as RTCService from './RTCService.ts';
 export * as ContactsService from './ContactsService.ts';
 export * as DataService from './DataService.ts';
 export * as DevicesService from './DevicesService.ts';
@@ -21,4 +21,3 @@ export * as NetworkService from './NetworkService.ts';
 export * as QueryService from './QueryService.ts';
 export * as SpacesService from './SpacesService.ts';
 export * as SystemService from './SystemService.ts';
-export * as WorkerService from './WorkerService.ts';

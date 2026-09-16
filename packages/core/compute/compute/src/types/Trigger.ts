@@ -11,7 +11,6 @@ import * as Schema from 'effect/Schema';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 import { SchemaAST } from '@dxos/effect';
 
@@ -226,7 +225,10 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * Passed as the input data to the runnable.
      */
     input: InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }), HiddenAnnotation.set(true)),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
+    Annotation.HiddenAnnotation.set(true),
+  ),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

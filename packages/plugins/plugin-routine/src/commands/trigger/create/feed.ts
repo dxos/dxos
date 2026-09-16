@@ -57,7 +57,7 @@ export const feed = Command.make(
       // Always prompt for enabled if functionId is not provided.
       const enabled = yield* Option.match(options.functionId, {
         onNone: () =>
-          Prompt.confirm({
+          Prompt.Confirm({
             message: 'Enable the trigger?',
             initial: true,
           }).pipe(Prompt.run),

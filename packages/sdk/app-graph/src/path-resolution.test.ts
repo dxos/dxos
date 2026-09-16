@@ -518,7 +518,7 @@ describe('path-resolution', () => {
   });
 
   describe('representNode', () => {
-    const representAfterResolve = async (pairs: any[], nodeId: string) => {
+    const representAfterResolve = async (pairs: ReadonlyArray<PathResolution.UrlPair>, nodeId: string) => {
       const builder = buildTestBuilder();
       await EffectEx.runPromise(PathResolution.resolveUrl(builder, { workspace: WORKSPACE_A, pairs }));
       return { builder, represented: PathResolution.representNode(builder, nodeId) };

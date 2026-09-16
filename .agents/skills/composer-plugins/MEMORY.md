@@ -4,6 +4,21 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-09-16 — plugin-devtools + plugin-debug + @dxos/devtools (articles and cards)
+
+- `Surface.makeFilter(token, guard)` types its data by the TOKEN, not the guard, so a type-guard on a `Role<Record<string, unknown>>` role does not narrow `props`. Build the binding directly — `const filter: Surface.Filter<T> = { bindings: [{ role: token.role, guard }] }` — as `AppSurface.subject` does (`plugin-devtools/src/capabilities/DevtoolsCards.tsx`).
+- A story `args` fixture must not be an ECHO object (`Obj.make`): Storybook's args pipeline writes to it and trips `MutationOutsideChangeContextError`. Type the prop by the wire shape (`Pick<Trace.MessageData, …>`) and pass a plain literal.
+- The `devtools` package's `test` task runs the storybook vitest project too (`test: { storybook: true }` in vite.config); `moon run devtools:test-storybook`/`typetest` do not exist — the type-test task is `test-types`.
+- `moon run <pkg>:test` reports a cached pass with no vitest summary; grep the earlier run or `pnpm exec vitest run --project=storybook` for the per-story lines.
+- Bare `npx tsc --noEmit` in a plugin resolves `@dxos/*` via `dist`, so new exports from a sibling package show as "no exported member" until `moon run <sibling>:build`; typecheck through moon, not tsc, after changing a dependency's exports.
+
+## 2026-09-15 — plugin-github + plugin-deck (card menu contributions)
+
+- Add items to a card header's ⋮ menu by contributing a `AppSurface.CardMenu` surface filtered to the type; the component calls `useMenuContribution(menu, { id, mode: 'additive', items })` and returns `null`. Hosts render `CardMenuSlot` and pass `useMenuItems(menu, undefined, baseItems)` to decide `disabled` (`plugin-deck/src/containers/Overlays/Popover.tsx`).
+- A preview-popover subject (link resolver) is minted in memory — `Obj.getDatabase` is undefined; resolve the stored copy by natural key via `useQuery(db, Filter.type(T, { … }))` in the active space (`useActiveSpace`) before operating on it.
+- `LayoutOperation.Open` on an object created moments ago fails with `node has no URL binding` (`plugin-deck/src/url/navigate.ts`): `NotFound.expandPath` is fire-and-forget. `expandPath` then `AppGraph.waitFor(graph, path).pipe(Effect.timeout(...))` before invoking Open.
+- `Effect.runPromise` is lint-banned (`@dxos/rules(no-effect-run-promise)`); use `EffectEx.runPromise` from `@dxos/effect` (a runtime dep, not devDep).
+
 ## 2026-08-27 — plugin-registry (boot-graph hygiene)
 
 - `src/meta.ts` holds ONLY `export const meta = Plugin.getMetaFromConfig(config)` (see `plugin-inbox/src/meta.ts`). It is the one plugin file loaded EAGERLY at boot — `plugin-defs.core.tsx` statically imports every `XPlugin.ts`, which imports `#meta`, while everything else sits behind `Plugin.lazy(() => import('#plugin'))` — so any import added there lands in composer's static boot graph. `GraphPath` in `plugin-registry/src/meta.ts` put ~26 KB of `@dxos/app-graph` + `@dxos/graph/GraphBuilder` in the eager bundle for one string helper.

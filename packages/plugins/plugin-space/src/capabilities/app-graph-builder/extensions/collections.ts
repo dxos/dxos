@@ -394,10 +394,11 @@ const constructObjectActions = ({
     AppGraphNode.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
-        Operation.invoke(SpaceOperation.RemoveObjects, {
-          objects: [object],
-          target: parentCollection,
-        }),
+        Operation.invoke(
+          SpaceOperation.RemoveObjects,
+          { objects: [object], target: parentCollection },
+          { spaceId: Obj.getDatabase(object)?.spaceId },
+        ),
       properties: {
         label: AppNode.getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
         icon: 'ph--trash--regular',

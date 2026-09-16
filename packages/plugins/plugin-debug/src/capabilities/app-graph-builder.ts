@@ -129,22 +129,7 @@ export default Capability.makeModule(
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,
               position: Position.last,
-            }),
-          ]),
-      }),
-
-      // Log panel deck companion.
-      AppGraphBuilder.createExtension({
-        id: 'logs',
-        match: GraphNodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeDeckCompanion({
-              id: 'logs',
-              label: ['logs.label', { ns: meta.profile.key }],
-              icon: 'ph--list-magnifying-glass--regular',
-              data: 'logs' as const,
-              position: Position.last,
+              mount: 'open',
             }),
           ]),
       }),

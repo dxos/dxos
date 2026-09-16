@@ -12,7 +12,6 @@ import * as Schema from 'effect/Schema';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';
 import { Task } from '@dxos/types';
 
@@ -32,13 +31,13 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
 
     /** Message feed, owned by the chat so `SetParent` cascades it. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Instructions steering this conversation, rendered into the system prompt at request time.
      * Held by reference (never copied), so a project's chats follow edits to its instructions.
      */
-    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
      * The model this conversation runs on, selected in the chat rather than globally so it survives a
@@ -47,7 +46,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * means the agent's default.
      */
     // TODO(dmaretskyi): Register `Model` in the registry so this ref resolves to a catalog object.
-    model: Schema.optional(Ref.Ref(Obj.Unknown).pipe(FormInputAnnotation.set(false))),
+    model: Schema.optional(Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
      * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
@@ -56,9 +55,9 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * would silently move that task out of the set that owns it. Tasks the chat itself creates are
      * parented to it explicitly; see {@link addTask}.
      */
-    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(FormInputAnnotation.set(false)),
+    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
       icon: 'ph--sparkle--regular',
       hue: 'amber',
@@ -282,7 +281,8 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
 /**
  * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order, each followed by an indented
  * note line carrying the task's ref and any status/dependency notes — appended to the title, models
- * paste the notes back into it.
+ * paste the notes back into it. The ref renders as `[MNEMONIC](uri)` so the mnemonic the user reads
+ * and the handle the tools take travel together and get pasted back verbatim.
  */
 const formatTasks = (tasks: readonly Task.Task[]): string => {
   const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
@@ -290,7 +290,7 @@ const formatTasks = (tasks: readonly Task.Task[]): string => {
     .map((task, index) => {
       const line = `${index + 1}. [${task.status === 'done' ? 'x' : ' '}] ${task.title}`;
       // The ref is the handle update-tasks takes, so every line carries one the model can pass back.
-      const notes: string[] = [`ref: ${Obj.getURI(task)}`];
+      const notes: string[] = [`ref: [${Obj.getMnemonic(task)}](${Obj.getURI(task)})`];
       if (task.status && task.status !== 'todo' && task.status !== 'done') {
         notes.push(task.status);
       }

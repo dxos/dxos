@@ -6,8 +6,8 @@ import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
 import { type Database, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import * as Annotation from '@dxos/echo/Annotation';
+import * as Entity from '@dxos/echo/Entity';
 
 const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
   Array.from(
@@ -15,8 +15,10 @@ const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
       db.graph.registry
         .list()
         .filter(Type.isType)
-        .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
-        .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false))),
+        .filter((schema) => Annotation.getTypeAnnotation(Type.getSchema(schema))?.kind !== Entity.Kind.Relation)
+        .filter(
+          (schema) => !Annotation.HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)),
+        ),
     ),
   );
 

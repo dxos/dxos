@@ -15,8 +15,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateComplementary>
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        const panelChanged = state.complementarySidebarPanel !== input.subject;
-        const next = input.state ?? (input.subject ? 'expanded' : state.complementarySidebarState);
+        const selectsPanel = input.subject !== undefined;
+        const panelChanged = selectsPanel && state.complementarySidebarPanel !== input.subject;
+        const next = input.state ?? (selectsPanel ? 'expanded' : state.complementarySidebarState);
         const stateChanged = next !== state.complementarySidebarState;
 
         if (panelChanged || stateChanged) {

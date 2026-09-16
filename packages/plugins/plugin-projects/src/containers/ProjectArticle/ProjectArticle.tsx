@@ -24,7 +24,7 @@ import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
 import { Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
-import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -33,7 +33,7 @@ import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation } from '#types';
+import { ProjectOperation, ProjectView } from '#types';
 
 import { getProjectChatPath } from '../../paths.ts';
 
@@ -52,9 +52,6 @@ const CONTEXT_FIELDS: readonly string[] = ['objects'];
 /** The pipeline pane's initial height in rem: a handful of lanes and the axis. */
 const PIPELINE_SIZE = 14;
 
-/** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
-type Tab = 'overview' | 'tasks';
-
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
@@ -64,7 +61,11 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const [tab, setTab] = useState<Tab>('overview');
+  // The selected tab and the chart toggle are view state under the project's id, so they outlive
+  // the plank and the reload.
+  const { tab, pipeline: showPipeline } = useViewState(ProjectView.aspect, subject.id);
+  const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
+  const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
   const invoker = useOperationInvoker();
   const { invokePromise } = invoker;
   const [project, updateProject] = useObject(subject);
@@ -104,11 +105,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   );
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
-  const [showPipeline, setShowPipeline] = useState(false);
-  const togglePipeline = useCallback(() => {
-    setTab('tasks');
-    setShowPipeline((show) => !show);
-  }, []);
+  const togglePipeline = useCallback(
+    () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
+    [updateView],
+  );
 
   const handleDelegated = useCallback(() => clearChecked(), [clearChecked]);
 
@@ -126,8 +126,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
           Effect.sync(() => {
             const chat: unknown = event.output?.chat;
             if (Obj.instanceOf(Chat.Chat, chat) && Chat.peekProject(chat)?.id === subject.id) {
-              setTab('tasks');
-              setShowPipeline(true);
+              updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: true }));
             }
           }),
         ),
@@ -136,7 +135,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     return () => {
       Effect.runFork(Fiber.interrupt(fiber));
     };
-  }, [invoker, subject.id]);
+  }, [invoker, subject.id, updateView]);
 
   const menuActions = useToolbarActions({
     project: subject,
@@ -189,9 +188,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       updateProject((project) => {
         project.artifacts = project.artifacts.filter((artifactRef) => artifactRef.target?.id !== object.id);
       });
-      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] });
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] }, { spaceId: db?.spaceId });
     },
-    [invokePromise, updateProject],
+    [invokePromise, updateProject, db],
   );
 
   // The create dialog places the object in the space; the ref array is what makes it this project's,
@@ -230,7 +229,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   }
 
   return (
-    <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
+    <Tabs.Root
+      asChild
+      orientation='horizontal'
+      value={tab}
+      onValueChange={(value) => setTab(Schema.decodeUnknownSync(ProjectView.Tab)(value))}
+    >
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
@@ -308,7 +312,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Splitter.Panel>
               <Splitter.Handle />
               <Splitter.Panel position='end'>
-                {space && (
+                {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
+                    trace feed on every trace message, which is pure cost behind a collapsed panel. */}
+                {showPipeline && space && (
                   <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
                 )}
               </Splitter.Panel>

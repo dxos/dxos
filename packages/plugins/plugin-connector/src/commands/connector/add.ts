@@ -22,16 +22,16 @@ export const add = Command.make(
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    preset: Options.string('preset').pipe(
+    preset: Options.String('preset').pipe(
       Options.withDescription('OAuth preset name (e.g., google)'),
       Options.optional,
     ),
-    source: Options.string('source').pipe(Options.withDescription('Token source'), Options.optional),
-    account: Options.string('account').pipe(
+    source: Options.String('source').pipe(Options.withDescription('Token source'), Options.optional),
+    account: Options.String('account').pipe(
       Options.withDescription('Account associated with the token'),
       Options.optional,
     ),
-    token: Options.string('token').pipe(Options.withDescription('Token value'), Options.optional),
+    token: Options.String('token').pipe(Options.withDescription('Token value'), Options.optional),
   },
   ({ preset, source, account, token }) =>
     Effect.gen(function* () {
@@ -42,7 +42,7 @@ export const add = Command.make(
 
       if (!hasPreset && !hasSource) {
         // Interactive mode
-        const mode = yield* Prompt.select({
+        const mode = yield* Prompt.Select({
           message: 'Choose connection type:',
           choices: [
             { title: 'Preset (OAuth)', value: 'preset' },
@@ -93,7 +93,7 @@ export const add = Command.make(
 
 const selectPresetInteractively = Effect.fn(function* () {
   const presetChoices = OAUTH_PRESETS.map(({ label }) => ({ title: label, value: label }));
-  const selectedLabel = yield* Prompt.select({
+  const selectedLabel = yield* Prompt.Select({
     message: 'Select OAuth preset:',
     choices: presetChoices,
   }).pipe(Prompt.run);
@@ -106,15 +106,15 @@ const selectPresetInteractively = Effect.fn(function* () {
 });
 
 const promptForCustomToken = Effect.fn(function* () {
-  const source = yield* Prompt.text({
+  const source = yield* Prompt.String({
     message: 'Source:',
   }).pipe(Prompt.run);
 
-  const account = yield* Prompt.text({
+  const account = yield* Prompt.String({
     message: 'Account (optional):',
   }).pipe(Prompt.run);
 
-  const token = yield* Prompt.text({
+  const token = yield* Prompt.String({
     message: 'Token:',
   }).pipe(Prompt.run);
 

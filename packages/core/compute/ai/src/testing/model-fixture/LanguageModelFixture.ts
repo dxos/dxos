@@ -134,6 +134,16 @@ export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
 export const RESULT_PID_PATTERN = /<result pid=\d+>/;
 
 /**
+ * Matches the label of a markdown link whose text is an object mnemonic (the last 6 Crockford
+ * base-32 chars of an EntityId, uppercased) — the form task refs take in a rendered checklist.
+ * The mnemonic is a projection of an id that {@link ENTITY_ID_PATTERN} already canonicalizes, so
+ * it would otherwise drift with the id while its URI stayed normalized. The `](` lookahead keeps
+ * six ordinary uppercase letters in prose from matching.
+ * @example [KCNT8N](
+ */
+export const MNEMONIC_LINK_LABEL_PATTERN = /\[[0-9A-HJKMNP-TV-Z]{6}\](?=\()/;
+
+/**
  * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
  * deterministic id generation only holds the id sequence stable while the surrounding allocation
  * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids —
@@ -143,6 +153,7 @@ export const RESULT_PID_PATTERN = /<result pid=\d+>/;
  */
 export const DEFAULT_DYNAMIC_VALUE_PATTERNS: readonly RegExp[] = [
   RESULT_PID_PATTERN,
+  MNEMONIC_LINK_LABEL_PATTERN,
   SPACE_ID_PATTERN,
   ENTITY_ID_PATTERN,
   UUID_PATTERN,
@@ -419,7 +430,7 @@ export const layer = (
   );
 
 type MakeProps = {
-  upstreamModel: LanguageModel.Service;
+  upstreamModel: LanguageModel.LanguageModel;
   modelName: string;
   testFilePath: string;
   allowGeneration: boolean;
@@ -427,11 +438,11 @@ type MakeProps = {
 };
 
 /**
- * Builds the replaying {@link LanguageModel.Service}: each turn is looked up in the store by request
+ * Builds the replaying {@link LanguageModel.LanguageModel}: each turn is looked up in the store by request
  * hash and replayed; on a miss it errors, unless `allowGeneration` is set, when it calls the upstream
  * model and records the turn.
  */
-export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
+export const make = (options: MakeProps): Effect.Effect<LanguageModel.LanguageModel> => {
   const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? DEFAULT_DYNAMIC_VALUE_PATTERNS);
   const store = new FixtureStore(options.testFilePath, dynamicMatcher);
 

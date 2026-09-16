@@ -63,7 +63,7 @@ export const matchPattern =
   };
 
 /** Props of a widget standing in for `[label](url)` or `![label](url)`. */
-export type LinkWidgetProps<TContext = any> = WidgetProps<
+export type LinkWidgetProps<TContext = unknown> = WidgetProps<
   {
     id: string;
     label: string;

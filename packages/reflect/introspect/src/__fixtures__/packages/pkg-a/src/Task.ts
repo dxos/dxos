@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 /**
  * Task item — fixture ECHO type used to verify symbol extraction against
@@ -26,7 +25,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.Task'
     done: Schema.Boolean.annotate({
       description: 'Whether the task has been completed.',
     }),
-  }).pipe(LabelAnnotation.set(['title'])),
+  }).pipe(Annotation.LabelAnnotation.set(['title'])),
 ) {}
 
 /**
