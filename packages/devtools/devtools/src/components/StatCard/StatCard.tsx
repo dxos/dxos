@@ -156,10 +156,12 @@ StatCardRow.displayName = 'StatCard.Row';
 
 type StatCardContentProps = PropsWithChildren<ThemedClassName>;
 
-/** A full-width row for content that lays itself out (a chart, a JSON block). */
+/** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
-  <Card.Row fullWidth classNames={classNames}>
-    {children}
+  <Card.Row>
+    <Flex column grow={false} classNames={['min-w-0 text-xs [--dx-col:2/span_2]', classNames]}>
+      {children}
+    </Flex>
   </Card.Row>
 );
 
