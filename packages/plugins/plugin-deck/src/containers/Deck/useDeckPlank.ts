@@ -53,9 +53,7 @@ export type DeckPlank = {
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
   sigilActions: AttentionSigilAction[][] | undefined;
   popoverAnchorId?: string;
-  scrollIntoView?: string;
-  /** Whether the plank scrolled into view takes focus; unset means it does. */
-  scrollIntoViewFocus?: boolean;
+  scrollIntoView?: DeckSchema.ScrollIntoView;
   /** Whether this plank is the one currently expanded to fill the deck. */
   expanded: boolean;
   onAction: (action: AttentionSigilAction) => void;
@@ -189,7 +187,6 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
     sigilActions,
     popoverAnchorId: state.popoverAnchorId,
     scrollIntoView: state.scrollIntoView,
-    scrollIntoViewFocus: state.scrollIntoViewFocus,
     expanded: state.expanded === id,
     onAction,
     onAdjust,

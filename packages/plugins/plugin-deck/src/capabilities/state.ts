@@ -44,7 +44,6 @@ const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
   toasts: [],
   currentUndoId: undefined,
   scrollIntoView: undefined,
-  scrollIntoViewFocus: undefined,
   open: {},
 };
 
@@ -81,7 +80,7 @@ export default Capability.makeModule(
         workspace: state.activeDeck,
         active: open.active,
         inactive: open.inactive,
-        scrollIntoView: ephemeral.scrollIntoView,
+        scrollIntoView: ephemeral.scrollIntoView?.id,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
