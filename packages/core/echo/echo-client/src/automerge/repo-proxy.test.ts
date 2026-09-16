@@ -298,6 +298,23 @@ describe('RepoProxy', () => {
     expect(hostHandle.doc()?.text).toEqual('retried');
   });
 
+  test('a document deleted before the host created it is not requested again', { timeout: 5_000 }, async () => {
+    let refusing: RefusingDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
+    invariant(refusing);
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'deleted' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+    const requests = refusing.requests;
+
+    handle.delete();
+    refusing.refuse = false;
+    await clientRepo.flush();
+    expect(refusing.requests).toEqual(requests);
+  });
+
   test('document mutation persists with `flush`', async () => {
     const dbPath = createTmpPath();
     let url: AutomergeUrl;
@@ -592,10 +609,12 @@ const setupWithDroppableSubscription = async () => {
 /** Fails every document creation, as a host that is gone or refuses the call does. */
 class RefusingDataService extends DataServiceImpl {
   'refuse' = true;
+  'requests' = 0;
 
   override ['DataService.createDocument'](
     request: DataService.CreateDocumentRequest,
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
+    this.requests++;
     return this.refuse
       ? Effect.fail(new Error('document creation refused'))
       : super['DataService.createDocument'](request);
