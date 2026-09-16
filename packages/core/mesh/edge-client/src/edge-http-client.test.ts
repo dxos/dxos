@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { SpaceId } from '@dxos/keys';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createEphemeralEdgeIdentity } from './auth.ts';
@@ -509,6 +510,98 @@ describe('EdgeHttpClient api key', () => {
     expect(authCall).toBeUndefined();
     const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/blob/file/abc123'));
     expect((putCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
+  });
+});
+
+describe('EdgeHttpClient unbounded retry', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  /** A retryable EDGE failure: `Retry-After` set from `shouldRetryAfter`, no `data`. */
+  const transientFailure = () =>
+    new Response(JSON.stringify({ success: false, message: 'No active agents in the space.' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': '0' },
+    });
+
+  test('keeps retrying a retryable failure past any fixed budget, then succeeds', async ({ expect }) => {
+    const failuresBeforeSuccess = 8;
+    let attempts = 0;
+    const fetchMock = vi.fn(async () => {
+      if (++attempts <= failuresBeforeSuccess) {
+        return transientFailure();
+      }
+      return new Response(JSON.stringify({ success: true, data: {} }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    await client.notarizeCredentials(
+      Context.default(),
+      SpaceId.random(),
+      { credentials: [] },
+      {
+        retry: { count: 'unbounded', timeout: 1, jitter: 0 },
+      },
+    );
+
+    expect(attempts).toEqual(failuresBeforeSuccess + 1);
+  });
+
+  test('stops at the first failure EDGE does not mark retryable', async ({ expect }) => {
+    let attempts = 0;
+    const fetchMock = vi.fn(async () => {
+      attempts++;
+      return new Response(JSON.stringify({ success: false, message: 'Credentials were not issued by a member.' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    await expect(
+      client.notarizeCredentials(
+        Context.default(),
+        SpaceId.random(),
+        { credentials: [] },
+        {
+          retry: { count: 'unbounded', timeout: 1, jitter: 0 },
+        },
+      ),
+    ).rejects.toMatchObject({ isRetryable: false });
+
+    expect(attempts).toEqual(1);
+  });
+
+  test('stops once the context is disposed', async ({ expect }) => {
+    const ctx = Context.default();
+    let attempts = 0;
+    const fetchMock = vi.fn(async () => {
+      if (++attempts === 3) {
+        void ctx.dispose();
+      }
+      return transientFailure();
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    await expect(
+      client.notarizeCredentials(
+        ctx,
+        SpaceId.random(),
+        { credentials: [] },
+        {
+          retry: { count: 'unbounded', timeout: 1, jitter: 0 },
+        },
+      ),
+    ).rejects.toBeInstanceOf(Error);
+
+    expect(attempts).toEqual(3);
   });
 });
 
