@@ -27,9 +27,14 @@ export class Lightbox extends Type.makeObject<Lightbox>(DXN.make('org.dxos.type.
   ),
 ) {}
 
+export type MakeProps = {
+  [Obj.Parent]?: Obj.Unknown;
+  name?: string;
+};
+
 /** Creates an empty {@link Lightbox} with the default board layout. */
-export const make = ({ [Obj.Parent]: parent, name }: { [Obj.Parent]?: Obj.Unknown; name?: string } = {}): Lightbox =>
-  Obj.make(Lightbox, { [Obj.Parent]: parent, name, items: [], layout: defaultLayout });
+export const make = (props: MakeProps = {}): Lightbox =>
+  Obj.make(Lightbox, { [Obj.Parent]: props[Obj.Parent], name: props.name, items: [], layout: defaultLayout });
 
 /** A cell as the first lightbox writer persisted it: spans under `width`/`height`, not `w`/`h`. */
 const LegacyCellLayout = Schema.Struct({
