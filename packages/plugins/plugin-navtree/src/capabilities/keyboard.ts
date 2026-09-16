@@ -45,9 +45,9 @@ export default Capability.makeModule(
       }
 
       if (shortcut && AppGraphNode.isAction(node)) {
-        // Node ids are already qualified by their ancestors, so the parent's id is the scope path.
-        const scope = path.at(-2) ?? GraphNode.RootId;
-        const id = `${scope}:${node.id}`;
+        // The parent's id is already the full scope path.
+        const parentId = path.at(-2) ?? GraphNode.RootId;
+        const id = `${parentId}:${node.id}`;
         seen.add(id);
         // This re-runs on every graph change, and each store mutation notifies every subscriber.
         const existing = hotkeyStore.getState().commands.get(id);
@@ -59,7 +59,7 @@ export default Capability.makeModule(
         hotkeyStore.register({
           id,
           hotkey: shortcut,
-          scopes: [scope],
+          scopes: [parentId],
           label: node.properties.label,
           // Resolved when fired, since an unchanged binding keeps the closure it was registered with.
           action: () => {
