@@ -10,7 +10,7 @@ import {
   type QueryEdgeStatusResponse,
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { Flex, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import { SystemIconButton, Tooltip } from '@dxos/react-ui';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
@@ -100,20 +100,18 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
         icon={row.ok ? OK : FAIL}
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
       >
-        <Flex align='center' justify='between' gap='sm'>
-          <Tooltip.Trigger asChild content={row.spaceId}>
-            <SystemIconButton.Clipboard
-              density='sm'
-              variant='ghost'
-              compact
-              iconEnd
-              classNames='font-mono'
-              label={row.spaceId.slice(0, 8)}
-              onCopy={() => row.spaceId}
-            />
-          </Tooltip.Trigger>
-          {row.flags > 0 && <span className='shrink-0 font-mono tabular-nums text-error-text'>{row.flags} flags</span>}
-        </Flex>
+        <Tooltip.Trigger asChild content={row.spaceId}>
+          <SystemIconButton.Clipboard
+            density='sm'
+            variant='ghost'
+            compact
+            iconEnd
+            classNames='font-mono'
+            label={row.spaceId.slice(0, 8)}
+            onCopy={() => row.spaceId}
+          />
+        </Tooltip.Trigger>
+        {row.flags > 0 && <span className='shrink-0 font-mono tabular-nums text-error-text'>{row.flags} flags</span>}
       </StatCard.Row>
     ))}
   </>
