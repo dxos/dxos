@@ -44,7 +44,9 @@ describe('causeToError', () => {
         try: () => {
           throw new Error('failure');
         },
-        catch: (error) => error,
+        // Narrowed rather than passed through as `unknown`, so the failure channel stays typed;
+        // the thrown `Error` is returned as-is, preserving the stack the assertions read.
+        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       }),
       // `map` calls the thunk through an anonymous runtime callback, which carries no `~effect/` name and stays.
       Effect.succeed(1).pipe(
