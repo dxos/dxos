@@ -108,3 +108,11 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
       server serves each source file, but the page ingests `/icons.svg` once, so a card module first
       served after boot (opening the Stats companion) shows blank header icons until a reload. Have
       the plugin push a reload (or the registry re-fetch) when new symbols land after the first flush.
+- [ ] Group matching surfaces from the caller: `Surface.Surface` renders a role's candidates as a flat
+      fragment (`SurfaceComponent.tsx` ~290), so the stats stack cannot section its cards. Add a render
+      callback, `children?: (surfaces: Array<{ id; position; node }>) => ReactNode`, that receives the
+      matched, position-sorted candidates (each `node` the existing `SurfaceContextProvider`, keyed by
+      id) in place of the fragment — Suspense, error boundaries, dev wrappers and metrics unchanged.
+      Then group the `DevtoolsOverview` cards in `StatsPanel` by `STAT_CARD_HUES` category. Rejected:
+      a `group` field on definitions (puts layout into contributions) and a `useCandidates` hook plus
+      per-definition surfaces (duplicates matching in the container).

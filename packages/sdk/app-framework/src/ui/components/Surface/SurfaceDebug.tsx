@@ -338,9 +338,9 @@ const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }
       ) : (
         <span
           className={mx(
-            concern ? 'text-error-text' : 'text-info-text',
+            concern ? 'border-error-text' : 'border-info-text',
             // 'absolute right-1 bottom-1 flex items-center p-1 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto',
-            'dx-fullscreen border border-rose-500',
+            'dx-fullscreen border _cursor-pointer _pointer-events-auto',
           )}
           title={metricSummary(info.id ?? '', metric)}
           onPointerDown={(ev) => ev.stopPropagation()}
@@ -348,9 +348,7 @@ const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }
             ev.stopPropagation();
             setExpand(true);
           }}
-        >
-          {/* {concern ? '⚠' : 'ⓘ'} */}
-        </span>
+        />
       )}
     </div>
   );
