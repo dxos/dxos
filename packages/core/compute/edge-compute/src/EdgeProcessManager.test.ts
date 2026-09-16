@@ -31,12 +31,9 @@ describe('EdgeProcessManager', () => {
     await EffectEx.runPromise(
       program.pipe(
         Effect.provide(
-          Layer.provideMerge(
-            Layer.provideMerge(
-              EdgeProcessManager.fromEdgeClient(edgeClient),
-              Layer.succeed(Registry.AtomRegistry, Registry.make()),
-            ),
-            RemoteTraceMonitor.layerNoop,
+          EdgeProcessManager.fromEdgeClient(edgeClient).pipe(
+            Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+            Layer.provideMerge(RemoteTraceMonitor.layerNoop),
           ),
         ),
       ),
@@ -56,9 +53,9 @@ describe('EdgeProcessManager', () => {
     const result = await EffectEx.runPromise(
       program.pipe(
         Effect.provide(
-          Layer.provideMerge(
-            Layer.provideMerge(EdgeProcessManager.layer, Layer.succeed(Registry.AtomRegistry, Registry.make())),
-            RemoteTraceMonitor.layerNoop,
+          EdgeProcessManager.layer.pipe(
+            Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+            Layer.provideMerge(RemoteTraceMonitor.layerNoop),
           ),
         ),
       ),
