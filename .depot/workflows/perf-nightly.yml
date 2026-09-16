@@ -16,8 +16,8 @@ on:
     inputs:
       scales:
         type: string
-        description: 'DX_PERF_SCALE tiers to sweep, comma-separated (smoke, working; heavy is unsupported)'
-        default: 'smoke,working'
+        description: 'DX_PERF_SCALE tiers to sweep, comma-separated (only smoke is supported; working and heavy need the archive fixture path)'
+        default: 'smoke'
       modes:
         type: string
         description: 'DX_PERF_MODES per tier (measure, diagnose)'
