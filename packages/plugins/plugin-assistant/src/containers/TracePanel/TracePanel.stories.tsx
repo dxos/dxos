@@ -23,19 +23,23 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
-import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { type Commit, Timeline, buildExecutionGraph } from '@dxos/react-ui-trace';
+import {
+  PLAYBACK_INTERVAL_MS,
+  STEP_STORAGE_KEY,
+  runScenario,
+  subAgentDelegationFixture,
+  useLocalStorageNumber,
+} from '@dxos/react-ui-trace/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { buildExecutionGraph } from '#execution-graph';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
 // TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
 import { initClientFromSpaceSnapshot } from '../../testing/snapshot.ts';
-import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, runScenario, useLocalStorageNumber } from './testing/index.ts';
 import { TracePanel } from './TracePanel.tsx';
 
 type BaseStoryArgs = PropsWithChildren<{
@@ -154,7 +158,7 @@ const SnapshotStory = () => {
 // Raw Trace.Message[] captured from a live sub-agent delegation via `dxosDumpTrace()` (see
 // TracePanel). External JSON → typed at this boundary; `buildExecutionGraph` only reads
 // `meta`/`events`, so the plain data shape is sufficient.
-const subAgentMessages = subAgentFixture as unknown as Trace.Message[];
+const subAgentMessages = subAgentDelegationFixture as unknown as Trace.Message[];
 
 const FixtureStory = () => {
   const sortedMessages = useMemo(

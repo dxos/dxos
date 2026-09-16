@@ -173,6 +173,7 @@
       "@dxos/react-ui-task",
       "@dxos/react-ui-terminal",
       "@dxos/react-ui-thread",
+      "@dxos/react-ui-trace",
       "@dxos/react-ui-transcription",
       "@dxos/react-ui-virtual",
       "@dxos/rpc",

@@ -67,18 +67,18 @@ FlatEvent = Event & { meta: Meta; isEphemeral }                    // Trace.flat
 stamped on an agent process's messages, `trigger` on a triggered process's; neither is inherited by
 children (§2.2). Events that the views consume:
 
-| Event type                                                 | Defined in                      | Persisted | Meaning / payload                                                              |
-| ---------------------------------------------------------- | ------------------------------- | --------- | ------------------------------------------------------------------------------ |
-| `process.spawned` / `.exited`                              | `Process.ts`                    | yes       | Process lifecycle — **defined but never written** by any runtime (§4).         |
-| `operation.start` / `.end`                                 | `Trace.ts`                      | yes       | Span begin/end: `{ key, name, icon }` / `+ outcome, error, errorCode`.         |
-| `operation.input` / `.output`                              | `Trace.ts`                      | no        | Raw payloads for live subscribers (undo, devtools).                            |
-| `status.update`                                            | `Trace.ts`                      | no        | Human-readable progress `{ message, progress{key,current,total,phase…} }`.     |
-| `task.statusChanged`                                       | `Trace.ts`                      | yes       | `{ taskId, title, status, previousStatus }` — the only pid ↔ task attribution. |
-| `question.asked` / `.answered`                             | `Trace.ts`                      | yes       | The stretch a task was blocked on a person.                                    |
-| `assistant.agentRequestBegin/End`                          | `assistant/src/util/tracing.ts` | yes       | One agent turn; `End` carries `status` of success, error or interrupted.       |
-| `assistant.completeBlock`                                  | `tracing.ts`                    | yes       | A content block; the `stats` block carries token usage and tool-call counts.   |
-| `assistant.delegationSpawned`                              | `tracing.ts`                    | yes       | `{ taskId, pid }` — the only durable pairing of a sub-agent pid with its task. |
-| `assistant.partialBlock`, `mcpServerError`, request stages | `tracing.ts`                    | no        | Streaming/progress detail.                                                     |
+| Event type                                                 | Defined in   | Persisted | Meaning / payload                                                              |
+| ---------------------------------------------------------- | ------------ | --------- | ------------------------------------------------------------------------------ |
+| `process.spawned` / `.exited`                              | `Process.ts` | yes       | Process lifecycle — **defined but never written** by any runtime (§4).         |
+| `operation.start` / `.end`                                 | `Trace.ts`   | yes       | Span begin/end: `{ key, name, icon }` / `+ outcome, error, errorCode`.         |
+| `operation.input` / `.output`                              | `Trace.ts`   | no        | Raw payloads for live subscribers (undo, devtools).                            |
+| `status.update`                                            | `Trace.ts`   | no        | Human-readable progress `{ message, progress{key,current,total,phase…} }`.     |
+| `task.statusChanged`                                       | `Trace.ts`   | yes       | `{ taskId, title, status, previousStatus }` — the only pid ↔ task attribution. |
+| `question.asked` / `.answered`                             | `Trace.ts`   | yes       | The stretch a task was blocked on a person.                                    |
+| `assistant.agentRequestBegin/End`                          | `Trace.ts`   | yes       | One agent turn; `End` carries `status` of success, error or interrupted.       |
+| `assistant.completeBlock`                                  | `Trace.ts`   | yes       | A content block; the `stats` block carries token usage and tool-call counts.   |
+| `assistant.delegationSpawned`                              | `Trace.ts`   | yes       | `{ taskId, pid }` — the only durable pairing of a sub-agent pid with its task. |
+| `assistant.partialBlock`, `mcpServerError`, request stages | `Trace.ts`   | no        | Streaming/progress detail.                                                     |
 
 Two derived structures sit on top of the flat events:
 
@@ -446,7 +446,7 @@ Items 1–3 and 10 are runtime changes outside `plugin-assistant`; 1–3 are pre
 chart to be trustworthy after a restart. Item 5 is a `@dxos/types` change. The rest are absorbed
 by the builder.
 
-## 5. `TracePanel` — `containers/TracePanel/TracePanel.tsx`
+## 5. `TracePanel` — `@dxos/react-ui-trace`
 
 The developer's view of one space's runtime, mounted as a deck companion (`trace`) and driven by
 `useActiveSpace`.
@@ -506,7 +506,7 @@ flowchart LR
   GR --> |onLaneSelect → lane.chatId| OPEN[LayoutOperation.Open getProjectChatPath]
 ```
 
-`buildSessionTimeline` (`session-timeline/session-timeline.ts`) is the join described in §1.4,
+`buildSessionTimeline` (`react-ui-trace/src/session-timeline/session-timeline.ts`) is the join described in §1.4,
 producing:
 
 - **Session lanes** (`kind: 'session'`) — one per chat **with a non-empty checklist**; chats with
@@ -525,7 +525,7 @@ producing:
 - **Range** — min/max over lanes and markers, extended to `now` while a lane is open and was
   active within the last 10 minutes.
 
-`Gantt` (`react-ui-components/src/components/Gantt/Gantt.tsx`) then orders rows so each session's
+`Gantt` (`react-ui-trace/src/components/Gantt/Gantt.tsx`) then orders rows so each session's
 own rows are contiguous (one enclosing rectangle per session; spawned sessions follow the block),
 draws bars per status, nodes per marker, a thread through them, dependency and delegation
 connectors, and exposes `onLaneSelect` / `onMarkerSelect`.
@@ -611,7 +611,7 @@ Reuse, do not fork. `buildSessionTimeline` already does the hard join; it gains 
 composed, per project, by a new builder:
 
 ```ts
-// session-timeline/activity-timeline.ts
+// react-ui-trace/src/session-timeline/activity-timeline.ts
 interface BuildActivityTimelineInput {
   traceMessages: readonly Trace.Message[];
   processes?: readonly Process.Info[];
@@ -663,8 +663,10 @@ The component is presentation-only and gets exactly what the group rows need:
 
 ### 8.4 The devtools page
 
-Owner: **`plugin-assistant`** — it already owns the trace hooks, `session-timeline`, and the
-`TracePanel`, so the page adds no cross-plugin dependency beyond the `@dxos/compute/Project` type.
+Owner: the data layer, chart and panel live in **`@dxos/react-ui-trace`** (presentation only);
+the devtools page and its capability wiring in **`plugin-assistant`**, which already hosts the
+`TracePanel` container, so the page adds no cross-plugin dependency beyond the
+`@dxos/compute/Project` type.
 
 - `containers/ActivityPanel/ActivityPanel.tsx` — `Panel.Root` with a toolbar (time window select,
   group filter, "show processes" toggle, a link to the trace companion) and `Gantt` in a
@@ -694,7 +696,7 @@ ACTIVITY)` rendering `ActivityPanel` with `useActiveSpace()`.
 
 Taken 2026-09-16:
 
-1. Owner: `plugin-assistant`.
+1. Owner: `@dxos/react-ui-trace` for the components and builders, `plugin-assistant` for the page.
 2. Scope is the whole runtime: agent sessions, triggered runs (grouped per trigger) and other
    operations all ship in the first cut; operations are toggled off by default.
 3. Live view over a historical window, default 24 h.
