@@ -11,7 +11,10 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Issue, PullRequest, Repo } from '@dxos/types';
 import { Position } from '@dxos/util';
 
+import { Walkthrough } from '#types';
+
 import { GitHubCard } from '../cards/index.ts';
+import { PullRequestCardMenu, WalkthroughArticle } from '../containers/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -36,6 +39,18 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.CardContent, PullRequest.PullRequest),
         component: GitHubCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
+        id: 'pullRequestCardMenu',
+        filter: AppSurface.object(AppSurface.CardMenu, PullRequest.PullRequest),
+        component: PullRequestCardMenu,
+        props: ({ data: { subject, menu } }) => ({ subject, menu }),
+      }),
+      Surface.create({
+        id: 'walkthroughArticle',
+        filter: AppSurface.object(AppSurface.Article, Walkthrough.Walkthrough),
+        component: WalkthroughArticle,
+        props: ({ role, data }) => ({ role, ...data }),
       }),
     ]),
   ),

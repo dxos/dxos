@@ -24,8 +24,8 @@ projects:
     summary: 'Extend plugin-studio with more generation providers; first plugin-higgsfield (Connector + image/video GenerationService against api.higgsfield.ai), modelled on plugin-heygen.'
     tasks: .agents/projects/plugin-studio/TASKS.md
     design: .agents/projects/plugin-studio/DESIGN.md
-    prs: []
-    resume: 'PR #13078 open (Check via Depot). Landed on the branch: plugin-higgsfield (image + Soul→DoP video), Studio on Projects (template, no Studio section), Storyboard/Frame + accordion article + player, studio skill + ops, stories-assistant Studio story (scripted passes; live produced real Higgsfield stills/clips twice, then edge disconnects). NEXT: address review, land; follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake).'
+    prs: [13078, 13087, 13095, 13110, 13111, 13112]
+    resume: 'All PRs merged through #13112 (2026-09-15): higgsfield video requires an image artifact ref + duration for Kling/Hailuo/Wan; options cache keyed by kind; Play graph action; media card/lightbox; credential forms + TypeFormat.Key; project view state, timeline lane fold + dead-run close; chat embedded object cards + scroll-to-bottom; task editor 8 lines + filter + PR chip icon; Repo create entry; picker Escape. NEXT: open follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake, toolbar create-menu capability, bare echo:// decoration, Repo create form name→slug).'
   - name: task-visualization
     status: active
     user: burdon

@@ -21,7 +21,7 @@ import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { Event as EffectEvent, EffectEx } from '@dxos/effect';
-import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -105,7 +105,7 @@ export type CreateIdentityOptions = {
 export type IdentityManagerProps = {
   metadataStore: IMetadataStore;
   keyring: KeyringApi;
-  feedStore: FeedStore<FeedMessage>;
+  hypercoreStore: HypercoreStore<FeedMessage>;
   spaceManager: SpaceManager;
   edgeConnection?: EdgeConnection;
   edgeFeatures?: Runtime_Client_EdgeFeatures;
@@ -148,7 +148,7 @@ export class IdentityManager {
 
   private readonly _metadataStore: IMetadataStore;
   private readonly _keyring: KeyringApi;
-  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _hypercoreStore: HypercoreStore<FeedMessage>;
   private readonly _spaceManager: SpaceManager;
   /**
    * Set late by the service stack: `EchoHostLayer` already depends on this manager for its peer id,
@@ -172,7 +172,7 @@ export class IdentityManager {
   constructor(params: IdentityManagerProps) {
     this._metadataStore = params.metadataStore;
     this._keyring = params.keyring;
-    this._feedStore = params.feedStore;
+    this._hypercoreStore = params.hypercoreStore;
     this._spaceManager = params.spaceManager;
     this._edgeConnection = params.edgeConnection;
     this._edgeFeatures = params.edgeFeatures;
@@ -444,10 +444,10 @@ export class IdentityManager {
     });
 
     // Must be created before the space so the feeds are writable.
-    const controlFeed = await this._feedStore.openFeed(requirePublicKey(haloSpace.controlFeedKey), {
+    const controlFeed = await this._hypercoreStore.openHypercore(requirePublicKey(haloSpace.controlFeedKey), {
       writable: true,
     });
-    const dataFeed = await this._feedStore.openFeed(requirePublicKey(haloSpace.dataFeedKey), {
+    const dataFeed = await this._hypercoreStore.openHypercore(requirePublicKey(haloSpace.dataFeedKey), {
       writable: true,
       sparse: true,
     });
@@ -588,20 +588,20 @@ export const IdentityManagerLayer = (
 ): Layer.Layer<
   IdentityManagerService,
   never,
-  EffectEvent.Bus | IMetadataStoreService | KeyringApiService | FeedStoreService | SpaceManagerService
+  EffectEvent.Bus | IMetadataStoreService | KeyringApiService | HypercoreStoreService | SpaceManagerService
 > =>
   Layer.effect(
     IdentityManagerService,
     Effect.gen(function* () {
       const metadataStore = yield* IMetadataStoreService;
       const keyring = yield* KeyringApiService;
-      const feedStore = yield* FeedStoreService;
+      const hypercoreStore = yield* HypercoreStoreService;
       const spaceManager = yield* SpaceManagerService;
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
       const identityManager = new IdentityManager({
         metadataStore,
         keyring,
-        feedStore,
+        hypercoreStore,
         spaceManager,
         edgeConnection: Option.getOrUndefined(edgeConnection),
         ...options,

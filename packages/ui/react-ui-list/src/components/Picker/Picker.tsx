@@ -207,10 +207,23 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
         if (event.defaultPrevented) {
           return;
         }
+        // Escape is claimed only while there is a query to clear, so an empty picker passes it to the
+        // dialog or popover it sits in, which dismisses. (The highlight is not cleared: the root
+        // re-selects the first item at once, which would make Escape a no-op that still ate the key.)
+        const clearOnEscape = () => {
+          if (event.currentTarget.value) {
+            event.preventDefault();
+            if (value === undefined) {
+              event.currentTarget.value = '';
+            }
+            onValueChange?.('');
+          }
+        };
+
         const values = getItemValues();
         if (values.length === 0) {
           if (event.key === 'Escape') {
-            onValueChange?.('');
+            clearOnEscape();
           }
           return;
         }
@@ -260,17 +273,12 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
             break;
           }
           case 'Escape': {
-            event.preventDefault();
-            if (selectedValue !== undefined) {
-              onSelectedValueChange(undefined);
-            } else {
-              onValueChange?.('');
-            }
+            clearOnEscape();
             break;
           }
         }
       },
-      [selectedValue, onSelectedValueChange, getItemValues, triggerSelect, onValueChange, onKeyDown],
+      [selectedValue, onSelectedValueChange, getItemValues, triggerSelect, onValueChange, onKeyDown, value],
     );
 
     // Only force-control when `value` is provided; otherwise leave the

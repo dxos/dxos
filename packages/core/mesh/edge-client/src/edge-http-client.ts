@@ -121,6 +121,35 @@ export type GetSpaceTriggersResponse = {
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
+/** What `finalize` reports back: the content-addressed key the bytes landed under, and their size. */
+export type FinalizedUpload = { key: string; size: number; contentType?: string };
+
+/**
+ * Validates the finalize response rather than asserting its shape.
+ *
+ * The body is untrusted network input, and both fields are load-bearing downstream: `key` is fed
+ * to `fromDigestHex`, whose parser does not reject malformed hex and would silently mint a bogus
+ * `ni:` URI, and `size` is recorded on the Blob object as the authoritative byte count. A cast
+ * would let either through.
+ */
+const parseFinalizeResponse = (body: unknown): FinalizedUpload => {
+  if (typeof body !== 'object' || body === null) {
+    throw new Error('Blob upload finalize returned a non-object body.');
+  }
+  const { key, size, contentType } = body as Record<string, unknown>;
+  // 64 lowercase hex characters: the SHA-256 digest this store is keyed by, and nothing else.
+  if (typeof key !== 'string' || !/^[0-9a-f]{64}$/.test(key)) {
+    throw new Error('Blob upload finalize returned no valid content key.');
+  }
+  if (typeof size !== 'number' || !Number.isInteger(size) || size < 0) {
+    throw new Error('Blob upload finalize returned no valid size.');
+  }
+  if (contentType !== undefined && typeof contentType !== 'string') {
+    throw new Error('Blob upload finalize returned a non-string content type.');
+  }
+  return { key, size, ...(contentType === undefined ? {} : { contentType }) };
+};
+
 export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientService, EdgeHttpClient>()(
   '@dxos/edge-client/EdgeHttpClient',
 ) {}
@@ -382,6 +411,20 @@ export class EdgeHttpClient extends BaseHttpClient {
       body: data as BodyInit,
       headers,
     });
+  }
+
+  /**
+   * Admits a completed direct upload into the content-addressed store, returning the key it landed
+   * under along with what the service actually received.
+   *
+   * The bytes were PUT straight to a signed URL by a third party — typically an agent's `curl` —
+   * so they never pass through this client; this call only tells the service to promote them. The
+   * size and content type come from the service for the same reason.
+   */
+  public async finalizeBlobUpload(ctx: Context, uploadId: string, args?: EdgeHttpCallArgs): Promise<FinalizedUpload> {
+    const url = new URL(`/blob/upload/${encodeURIComponent(uploadId)}/finalize`, this.baseUrl);
+    const response = await this._callRaw(ctx, url, { ...args, method: 'POST', auth: args?.auth ?? true });
+    return parseFinalizeResponse(await response.json());
   }
 
   /**

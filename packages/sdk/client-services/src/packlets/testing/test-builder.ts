@@ -20,7 +20,7 @@ import { failUndefined } from '@dxos/debug';
 import { EchoHost, EchoHostService, MeshEchoReplicator } from '@dxos/echo-host';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
-import { FeedFactory, FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
 import {
   MemorySignalManager,
@@ -40,7 +40,6 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
 import {
@@ -104,11 +103,7 @@ export type ServiceContextOptions = {
 export class ServiceContext {
   readonly #options: ServiceContextOptions;
   readonly #config: Config;
-  readonly #sql = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
-  );
+  readonly #sql = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
   readonly #bus = Event.makeBus();
   /** Holds the reset handlers; closed by `destroy`. */
   readonly #busScope = Effect.runSync(Scope.make());
@@ -168,8 +163,8 @@ export class ServiceContext {
     return this.#get(KeyringApiService);
   }
 
-  get feedStore(): FeedStore<any> {
-    return this.#get(FeedStoreService);
+  get hypercoreStore(): HypercoreStore<any> {
+    return this.#get(HypercoreStoreService);
   }
 
   get echoHost(): EchoHost {
@@ -337,7 +332,7 @@ export type TestPeerOpts = {
 };
 
 export type TestPeerProps = {
-  feedStore?: FeedStore<any>;
+  hypercoreStore?: HypercoreStore<any>;
   metadataStore?: SqliteMetadataStore;
   keyring?: SqliteKeyring;
   networkManager?: SwarmNetworkManager;
@@ -352,9 +347,7 @@ export type TestPeerProps = {
 export class TestPeer {
   private _props: TestPeerProps = {};
   private readonly _runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
+    sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie),
   );
   private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.contextEffect });
 
@@ -371,9 +364,9 @@ export class TestPeer {
     return (this._props.keyring ??= new SqliteKeyring({ runtime: this._runtime.contextEffect }));
   }
 
-  get feedStore() {
-    return (this._props.feedStore ??= new FeedStore({
-      factory: new FeedFactory({
+  get hypercoreStore() {
+    return (this._props.hypercoreStore ??= new HypercoreStore({
+      factory: new HypercoreFactory({
         root: this._feedStorage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
@@ -396,7 +389,7 @@ export class TestPeer {
 
   get spaceManager() {
     return (this._props.spaceManager ??= new SpaceManager({
-      feedStore: this.feedStore,
+      hypercoreStore: this.hypercoreStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
     }));
@@ -422,7 +415,7 @@ export class TestPeer {
       metadataStore: this.metadataStore,
       keyring: this.keyring,
       signingContextProvider: () => this.identity,
-      feedStore: this.feedStore,
+      hypercoreStore: this.hypercoreStore,
       echoHost: this.echoHost,
       invitationsManager: this.invitationsManager,
       edgeConnection: undefined,

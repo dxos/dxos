@@ -85,6 +85,7 @@
   ],
   "dependencies": {
     "assert": "catalog:",
+    "deep-equal": "catalog:",
     "events": "catalog:",
     "path-browserify": "catalog:",
     "readable-stream": "catalog:",

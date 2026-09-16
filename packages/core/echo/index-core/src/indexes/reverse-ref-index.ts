@@ -11,7 +11,6 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, URI } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref/index.ts';
 import { type EntityPropPath, EscapedPropPath, chunkArray } from '../utils.ts';
@@ -98,13 +97,9 @@ export type Referrer = {
 export class ReverseRefIndex implements Index {
   /**
    * Applies any migrations this database has not recorded yet.
-   *
-   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
-   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
    */
   migrate = Effect.fn('ReverseRefIndex.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      Effect.provide(SqlTransaction.clientLayer),
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,

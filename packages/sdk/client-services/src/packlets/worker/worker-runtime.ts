@@ -45,7 +45,6 @@ import {
 } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import {
   ClientServicesLayer,
@@ -159,11 +158,7 @@ export const makeWorkerRuntime = ({
       log.warn('Using testing SQLite layer');
     }
 
-    const sqlite = SqlTransaction.layer.pipe(
-      Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer),
-      Layer.provideMerge(Reactivity.layer),
-      Layer.orDie,
-    );
+    const sqlite = (sqliteLayer ?? LocalSqliteOpfsLayer).pipe(Layer.provideMerge(Reactivity.layer), Layer.orDie);
 
     const closeStack = Effect.gen(function* () {
       stack = undefined;

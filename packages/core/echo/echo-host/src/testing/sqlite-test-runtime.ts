@@ -8,15 +8,11 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { SqliteStorageAdapter } from '../automerge/sqlite-storage-adapter.ts';
 
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
-
 export type TestSqliteRuntime = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   dispose: () => Promise<void>;
 };
 
@@ -27,7 +23,7 @@ export type TestSqliteRuntime = {
  */
 export const createTestSqliteRuntime = (filename = ':memory:'): TestSqliteRuntime => {
   const baseLayer = SqliteClient.layer({ filename });
-  const txLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
+  const txLayer = baseLayer;
   const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
   return {
     runtime: rt.contextEffect,

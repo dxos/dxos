@@ -23,7 +23,7 @@ import {
 } from '@dxos/echo-host';
 import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
 import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
-import { FeedFactoryLayer, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
+import { HypercoreFactoryLayer, HypercoreStoreLayer, HypercoreStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';
@@ -31,7 +31,6 @@ import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents/index.ts';
 import {
@@ -73,11 +72,8 @@ import {
 import { NetworkReady, Opening, StorageReady } from './events.ts';
 import { FeedSyncerLayer } from './feed-syncer.ts';
 import { NetworkLifecycleLayer, SwarmNetworkManagerLayer } from './network-lifecycle.ts';
-import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
+import { HypercoreStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage.ts';
 import { StackReadinessLayer, StackReadinessService } from './stack-readiness.ts';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,
@@ -95,7 +91,7 @@ export type ServiceContextRuntimeProps = Pick<
  */
 export class StorageMigrationService extends EffectContext.Service<
   StorageMigrationService,
-  Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>
+  Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>
 >()('@dxos/client-services/StorageMigration') {}
 
 export type ServiceStackServices = ServiceContextRuntimeProps & {
@@ -122,7 +118,7 @@ export type ServiceContextStackContext =
   | CrossDeviceSpaceSynchronizerService
   | SigningContextProviderService
   | IMetadataStoreService
-  | FeedStoreService
+  | HypercoreStoreService
   | StorageMigrationService
   | IdentityLifecycleService
   | StackReadinessService
@@ -138,7 +134,7 @@ export const ServiceStack = (
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  Event.Bus | ConfigService | SignalManagerService | TransportFactoryService | SqlClient.SqlClient | SqlTransactionTag
+  Event.Bus | ConfigService | SignalManagerService | TransportFactoryService | SqlClient.SqlClient
 > => {
   // Core stack, flattened into a single pipe. Optional replicators expose their service via
   // `provideMerge` and are read with `serviceOption` down the stack; their absence is modelled by
@@ -259,7 +255,7 @@ const identityProviderLayer = Layer.effect(
 const storageMigrationLayer = Layer.effect(
   StorageMigrationService,
   Effect.gen(function* () {
-    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
     return Effect.all(
       [
         new SqliteMetadataStore({ runtime }).migrate,
@@ -278,7 +274,7 @@ const storageMigrationLayer = Layer.effect(
  */
 const storageLifecycleLayer = Layer.effectDiscard(
   Effect.gen(function* () {
-    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
     const migrate = yield* StorageMigrationService;
     const metadataStore = yield* IMetadataStoreService;
     yield* Event.on(
@@ -304,9 +300,9 @@ const storageLifecycleLayer = Layer.effectDiscard(
  * Storage / feed layers composed from the individual store layers plus the combined migration.
  */
 const storageLayer = Layer.empty.pipe(
-  Layer.provideMerge(FeedStoreLayer()),
-  Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
-  Layer.provideMerge(FeedStorageDirectoryLayer()),
+  Layer.provideMerge(HypercoreStoreLayer()),
+  Layer.provideMerge(HypercoreFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
+  Layer.provideMerge(HypercoreStorageDirectoryLayer()),
   Layer.provideMerge(SqliteMetadataStoreLayer()),
   Layer.provideMerge(SqliteKeyringLayer()),
   Layer.provideMerge(SqliteStorageLayer()),

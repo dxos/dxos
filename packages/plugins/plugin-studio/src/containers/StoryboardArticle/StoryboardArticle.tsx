@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
@@ -12,16 +12,15 @@ import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
-import { Attention, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useSelection, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { FrameStack, type StoryboardClip, StoryboardPlayer } from '#components';
+import { FrameStack, StoryboardPlayer } from '#components';
 import { meta } from '#meta';
-import { Frame, MediaArtifact, Storyboard, type Variant } from '#types';
+import { Frame, MediaArtifact, Storyboard, StoryboardView } from '#types';
 
 import { FRAME_COMPANION } from '../../constants.ts';
-import { type PlayControl } from '../MediaArtifactArticle/MediaArtifactVariants.tsx';
 import { EmptyPanel } from './EmptyPanel.tsx';
 import { FrameThumbnail } from './FrameThumbnail.tsx';
 import { FrameVariants } from './FrameVariants.tsx';
@@ -62,34 +61,13 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   );
   const frames = useAtomValue(framesAtom);
 
-  // The frames' cover variants, in order, as a playlist — the view-time splice of the storyboard.
-  const clipsAtom = useMemo(
-    () =>
-      Atom.make((get) => {
-        const clips: StoryboardClip[] = [];
-        for (const frame of get(framesAtom)) {
-          // A live object's atom yields the same reference on every change, which dedupes away
-          // downstream; the snapshot atoms are what re-fire when a cover is set or a variant lands.
-          const artifact = frame.artifact ? get(Obj.atomReactive(frame.artifact)) : undefined;
-          const artifactSnapshot = artifact && isArtifact(artifact) ? get(Obj.atom(artifact)) : undefined;
-          const cover: Variant.Variant | undefined =
-            artifactSnapshot?.cover && artifact ? get(Obj.atomReactive(artifactSnapshot.cover)) : undefined;
-          const coverSnapshot = cover ? get(Obj.atom(cover)) : undefined;
-          if (coverSnapshot?.url) {
-            clips.push({
-              id: frame.id,
-              name: frame.name,
-              src: coverSnapshot.url,
-              contentType: coverSnapshot.contentType,
-            });
-          }
-        }
-        return clips;
-      }),
-    [framesAtom],
-  );
+  // The playlist and the playing flag are shared with the storyboard's Play graph action, which
+  // is what the main panel's toolbar renders; closing the player flips the flag back here.
+  const clipsAtom = useMemo(() => StoryboardView.clipsAtom(storyboard), [storyboard]);
   const clips = useAtomValue(clipsAtom);
-  const [playing, setPlaying] = useState(false);
+  const { playing } = useViewState(StoryboardView.aspect, storyboard.id);
+  const { update: updateView } = useViewStateActions(StoryboardView.aspect, storyboard.id);
+  const handleStop = useCallback(() => updateView((prev) => ({ ...prev, playing: false })), [updateView]);
 
   // The selection is the plank's (attention view state), so the frame companion follows it; it
   // falls back to the first frame so a deleted or not-yet-loaded selection shows the opening frame.
@@ -172,12 +150,6 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
     [handleAppend, handleDelete, selectedFrame],
   );
 
-  // Play sits at the end of the main panel's toolbar, whichever content that panel shows.
-  const play = useMemo<PlayControl>(
-    () => ({ disabled: clips.length === 0, onPlay: () => setPlaying(true) }),
-    [clips.length],
-  );
-
   return (
     // The splitter is the article: the stack (with the storyboard's toolbar) opens at a navtree
     // sidebar's width so previews read at that scale, and the handle lets the reader trade it
@@ -211,11 +183,11 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
       <Splitter.Handle />
       <Splitter.Panel position='end'>
         {playing ? (
-          <StoryboardPlayer clips={clips} attendableId={attendableId} onClose={() => setPlaying(false)} />
+          <StoryboardPlayer clips={clips} attendableId={attendableId} onClose={handleStop} />
         ) : selectedFrame ? (
-          <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId} play={play} />
+          <FrameVariants key={selectedFrame.id} frame={selectedFrame} attendableId={attendableId} />
         ) : (
-          <EmptyPanel label={t('storyboard-empty.message')} attendableId={attendableId} play={play} />
+          <EmptyPanel label={t('storyboard-empty.message')} attendableId={attendableId} />
         )}
       </Splitter.Panel>
     </Splitter.Root>

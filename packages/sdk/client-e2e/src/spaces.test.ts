@@ -27,7 +27,7 @@ import { Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-import { FeedStoreService } from '@dxos/feed-store';
+import { HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -177,7 +177,7 @@ describe('Spaces', () => {
 
     const dataSpace1 = EffectContext.get(services1.stack, DataSpaceManagerService).spaces.get(space1.key);
     const feedKey = dataSpace1!.inner.dataFeedKey;
-    const feed1 = EffectContext.get(services1.stack, FeedStoreService).getFeed(feedKey!)!;
+    const feed1 = EffectContext.get(services1.stack, HypercoreStoreService).getHypercore(feedKey!)!;
 
     const amount = 10;
     {
@@ -200,7 +200,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const feed2 = EffectContext.get(services2.stack, FeedStoreService).getFeed(feedKey!)!;
+    const feed2 = EffectContext.get(services2.stack, HypercoreStoreService).getHypercore(feedKey!)!;
 
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
 
@@ -652,6 +652,23 @@ describe('Spaces', () => {
     const importedSpace = await client2.spaces.import(archive);
     expect(importedSpace.id).not.toEqual(space.id);
     expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
+  });
+
+  test('imported space archive is queryable by type', { timeout: 5_000 }, async ({ expect }) => {
+    const [client1, client2] = await createInitializedClients(2, {
+      storage: true,
+    });
+    await Promise.all([client1, client2].map(registerTypes));
+
+    const space = await client1.spaces.create();
+    const doc1 = space.db.add(createDocument());
+    await space.db.flush();
+    const archive = await space.internal.export();
+
+    const importedSpace = await client2.spaces.import(archive);
+    await expect
+      .poll(async () => (await importedSpace.db.query(Filter.type(TestSchema.DocumentType)).run()).map((doc) => doc.id))
+      .toEqual([doc1.id]);
   });
 
   test('export space archive (JSON)', { timeout: 3_000 }, async () => {

@@ -73,6 +73,7 @@
     "allow-set-xattr",
     "allow-remove-xattr",
     "allow-hide-spotlight",
+    "allow-take-web-process-terminations",
     {
       "identifier": "http:default",
       "allow": [
