@@ -180,23 +180,23 @@ The union of A and B, by section, as phase 4 lays it out. _Article_ = `Panel.Roo
 
 ### ECHO
 
-| Module              | Kind    | Id                        | Notes                             |
-| ------------------- | ------- | ------------------------- | --------------------------------- |
-| Spaces              | Article | `Devtools.Echo.Spaces`    |                                   |
-| Space               | Article | `Devtools.Echo.Space`     |                                   |
-| Feeds               | Article | `Devtools.Echo.Feeds`     |                                   |
-| Objects             | Article | `Devtools.Echo.Objects`   |                                   |
-| Schema              | Article | `Devtools.Echo.Schema`    |                                   |
-| Registry            | Article | `Devtools.Echo.Registry`  | plugin-devtools container.        |
-| Automerge           | Article | `Devtools.Echo.Automerge` |                                   |
-| Queues              | Article | `Devtools.Echo.Queues`    | Stub — no data source.            |
-| Members             | Article | `Devtools.Echo.Members`   |                                   |
-| Metadata            | Article | `Devtools.Echo.Metadata`  |                                   |
-| Database            | Card    | `database`                | storage census + read/write rates |
-| Replicator          | Card    | `replicator`              |                                   |
-| Replicator messages | Card    | `replicatorMessages`      |                                   |
+| Module              | Kind    | Id                        | Notes                                                                         |
+| ------------------- | ------- | ------------------------- | ----------------------------------------------------------------------------- |
+| Spaces              | Article | `Devtools.Echo.Spaces`    |                                                                               |
+| Space               | Article | `Devtools.Echo.Space`     |                                                                               |
+| Feeds               | Article | `Devtools.Echo.Feeds`     |                                                                               |
+| Objects             | Article | `Devtools.Echo.Objects`   |                                                                               |
+| Schema              | Article | `Devtools.Echo.Schema`    |                                                                               |
+| Registry            | Article | `Devtools.Echo.Registry`  | plugin-devtools container.                                                    |
+| Automerge           | Article | `Devtools.Echo.Automerge` |                                                                               |
+| Queues              | Article | `Devtools.Echo.Queues`    | Stub — no data source.                                                        |
+| Members             | Article | `Devtools.Echo.Members`   |                                                                               |
+| Metadata            | Article | `Devtools.Echo.Metadata`  |                                                                               |
+| Database            | Card    | `database`                | storage census + read/write rates                                             |
+| Replicator          | Card    | `replicator`              |                                                                               |
+| Replicator messages | Card    | `replicatorMessages`      |                                                                               |
 | Queries             | Card    | `queries`                 | one row per filter shape, disclosing its queries; source never populated (§4) |
-| Sync                | Card    | `sync`                    |                                   |
+| Sync                | Card    | `sync`                    |                                                                               |
 
 ### MESH
 
