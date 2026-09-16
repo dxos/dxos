@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { AnchorWidget, type WidgetDef, createMarkdownExtensions, decorationSetToArray } from '@dxos/ui-editor';
 
-import { type GitHubLinkProps, githubLinks, parseGitHubLink } from './links.ts';
+import { type GitHubLinkProps, githubLinks, parseGitHubLink, parsePullRequestReference } from './links.ts';
 
 /** Widget whose props are inspectable so tests can assert what the factory was handed. */
 class TestWidget extends WidgetType {
@@ -94,5 +94,25 @@ describe('githubLinks', () => {
       number: 7,
       block: false,
     });
+  });
+
+  test('a pull request reference is read from a URL or from owner/repo#number', ({ expect }) => {
+    expect(parsePullRequestReference('dxos/dxos#13031')).toEqual({ owner: 'dxos', repo: 'dxos', number: 13031 });
+    expect(parsePullRequestReference('  dxos/dxos#13031  ')).toEqual({ owner: 'dxos', repo: 'dxos', number: 13031 });
+    expect(parsePullRequestReference('https://github.com/dxos/dxos/pull/13031')).toEqual({
+      owner: 'dxos',
+      repo: 'dxos',
+      number: 13031,
+    });
+    // GitHub serves a pull request under its issue URL too, so the reader who copied that one still
+    // named the same change.
+    expect(parsePullRequestReference('https://github.com/dxos/dxos/issues/7')).toEqual({
+      owner: 'dxos',
+      repo: 'dxos',
+      number: 7,
+    });
+    expect(parsePullRequestReference('https://github.com/dxos/dxos')).toBeUndefined();
+    expect(parsePullRequestReference('dxos/dxos')).toBeUndefined();
+    expect(parsePullRequestReference('#13031')).toBeUndefined();
   });
 });

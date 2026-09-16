@@ -10800,6 +10800,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -10818,6 +10821,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -10827,6 +10833,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu

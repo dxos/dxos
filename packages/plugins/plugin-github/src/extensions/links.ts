@@ -101,3 +101,37 @@ const withGitHubLink = (def: WidgetDef<GitHubLinkProps>): WidgetDef<LinkWidgetPr
     }),
   };
 };
+
+/**
+ * `owner/repo#123` — how a pull request is written where a URL would be noise, and the one form a
+ * reviewer can type from memory.
+ */
+const PULL_REQUEST_SHORTHAND = /^([\w.-]+)\/([\w.-]+)#(\d+)$/;
+
+/** A pull request named by its coordinates, however the user wrote it. */
+export type PullRequestReference = {
+  owner: string;
+  repo: string;
+  number: number;
+};
+
+/**
+ * The pull request a user's text names: a github.com URL or `owner/repo#123`.
+ *
+ * An `/issues/123` URL is accepted alongside `/pull/123` because GitHub itself serves a pull
+ * request under both, and a reader who copied the wrong one still means the same change.
+ */
+export const parsePullRequestReference = (value: string): PullRequestReference | undefined => {
+  const text = value.trim();
+  const shorthand = PULL_REQUEST_SHORTHAND.exec(text);
+  if (shorthand) {
+    const [, owner, repo, number] = shorthand;
+    return { owner, repo, number: Number(number) };
+  }
+
+  const link = parseGitHubLink(text);
+  if (!link || link.number === undefined) {
+    return undefined;
+  }
+  return { owner: link.owner, repo: link.repo, number: link.number };
+};
