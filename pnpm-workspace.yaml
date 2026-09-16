@@ -32,7 +32,7 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
   '@atproto/lexicon': ^0.7.7
-  '@automerge/automerge': 3.4.1
+  '@automerge/automerge': 3.5.0
   '@automerge/automerge-repo': 2.6.0-subduction.48
   '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.48
   '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.48
