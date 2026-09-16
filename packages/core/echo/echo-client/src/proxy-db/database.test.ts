@@ -6,12 +6,13 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
 import * as Scope from 'effect/Scope';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -752,20 +753,31 @@ describe('Database', () => {
   });
 
   describe('flush over a lost connection', () => {
-    test('writes made before the service disconnects make flush throw', async () => {
+    test('an object added before the service disconnects makes flush throw', async () => {
+      await using peer = await builder.createPeer();
+      const db = await peer.createDatabase();
+      await db.flush();
+
+      const connection = await connectServices(peer);
+      db.add(Obj.make(TestSchema.Expando, { name: 'added' }));
+      connection.disconnect();
+
+      await expect(db.flush({ indexes: false })).rejects.toThrow(RpcClosedError);
+    });
+
+    test('an update made before the service disconnects makes flush throw', async () => {
       await using peer = await builder.createPeer();
       const db = await peer.createDatabase();
       const existing = db.add(Obj.make(TestSchema.Expando, { name: 'before' }));
       await db.flush();
 
       const connection = await connectServices(peer);
-      connection.disconnect();
       Obj.update(existing, (existing) => {
         existing.name = 'after';
       });
-      db.add(Obj.make(TestSchema.Expando, { name: 'added' }));
+      connection.disconnect();
 
-      await expect(db.flush({ indexes: false })).rejects.toThrow();
+      await expect(db.flush({ indexes: false })).rejects.toThrow(RpcClosedError);
     });
 
     test('an object added while the service is disconnected reaches the host after it reconnects', async () => {
@@ -796,43 +808,69 @@ const mapEchoToPlainJsObject = <T>(array: readonly T[]): unknown[] => {
   return array.map((entry) => (Array.isArray(entry) ? mapEchoToPlainJsObject(entry) : { ...entry }));
 };
 
-/** Calls a closed connection fails; the subscription stream is left to the reconnect that replaces it. */
-const CLOSED_CALLS = new Set([
-  'DataService.createDocument',
-  'DataService.flush',
-  'DataService.update',
-  'DataService.updateSubscription',
-]);
+/**
+ * Whether a data service call carries a write. `DataService.flush` and a subscription update with nothing to add or remove
+ * carry none, so a flush through a lost connection can only fail for the writes it drops.
+ */
+const carriesWrite = (key: string | symbol, request: unknown): boolean => {
+  switch (key) {
+    case 'DataService.createDocument':
+    case 'DataService.update':
+      return true;
+    case 'DataService.updateSubscription':
+      return (['addIds', 'removeIds'] as const).some(
+        (field) => Predicate.hasProperty(request, field) && Array.isArray(request[field]) && request[field].length > 0,
+      );
+    default:
+      return false;
+  }
+};
 
 /**
- * Swaps the peer's client onto its own service connection, which `disconnect` closes and `reconnect` replaces the way a
- * dedicated worker leader change does.
+ * Connects the peer's client through a connection whose calls carrying writes fail once `disconnect` is called. A call in flight
+ * when it drops still reaches the host but loses its response. `reconnect` replaces it the way a dedicated worker leader
+ * change does.
  */
 const connectServices = async (peer: EchoTestPeer) => {
   const scope = Effect.runSync(Scope.make());
   onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  const connect = (dataHandlers: DataService.Handlers) =>
-    EffectEx.runPromise(
+  const connect = async (dataHandlers: DataService.Handlers) => {
+    const [dataService, queryService] = await EffectEx.runPromise(
       Effect.all([
         makeInProcessClient(DataService.Rpcs, dataHandlers),
         makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
       ]).pipe(Effect.provideService(Scope.Scope, scope)),
     );
-  const closedHandlers = new Proxy(peer.host.dataService, {
-    get: (target, key) => {
-      if (typeof key === 'string' && CLOSED_CALLS.has(key)) {
-        return () => Effect.fail(new RpcClosedError());
-      }
-      const value = Reflect.get(target, key);
-      return typeof value === 'function' ? value.bind(target) : value;
-    },
-  });
-  const [closedData, closedQuery] = await connect(closedHandlers);
+    peer.client._updateServices({ dataService, queryService });
+  };
+  let connected = true;
+  const whileConnected = <A, E>(effect: Effect.Effect<A, E>) =>
+    Effect.suspend((): Effect.Effect<A, E | RpcClosedError> =>
+      connected ? effect : Effect.fail(new RpcClosedError()),
+    );
+  await connect(
+    new Proxy(peer.host.dataService, {
+      get: (target, key) => {
+        const value = Reflect.get(target, key);
+        if (typeof value !== 'function') {
+          return value;
+        }
+        const call = value.bind(target);
+        return (...args: unknown[]) =>
+          carriesWrite(key, args[0])
+            ? whileConnected(call(...args)).pipe(
+                Effect.tap(() => Effect.promise(() => sleep(0)).pipe(Effect.andThen(whileConnected(Effect.void)))),
+              )
+            : call(...args);
+      },
+    }),
+  );
   return {
-    disconnect: () => peer.client._updateServices({ dataService: closedData, queryService: closedQuery }),
+    disconnect: () => {
+      connected = false;
+    },
     reconnect: async () => {
-      const [dataService, queryService] = await connect(peer.host.dataService);
-      peer.client._updateServices({ dataService, queryService });
+      await connect(peer.host.dataService);
       await peer.client._notifyReconnect();
     },
   };
