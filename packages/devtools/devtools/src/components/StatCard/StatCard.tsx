@@ -71,7 +71,17 @@ type StatCardRowProps = ThemedClassName<{
 }>;
 
 /** A label/value row: icon in the leading gutter, a control in the trailing one. */
-const StatCardRow = ({ classNames, icon, iconClassNames, label, value, unit, title, action, warning }: StatCardRowProps) => (
+const StatCardRow = ({
+  classNames,
+  icon,
+  iconClassNames,
+  label,
+  value,
+  unit,
+  title,
+  action,
+  warning,
+}: StatCardRowProps) => (
   <Card.Row classNames={classNames}>
     <Card.Block compact>{icon && <Icon icon={icon} classNames={iconClassNames} />}</Card.Block>
     <Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>

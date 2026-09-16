@@ -14,7 +14,11 @@ export type PerformanceCardProps = {
 
 export const PerformanceCard = ({ entries = [] }: PerformanceCardProps) => (
   <StatCard.Root>
-    <StatCard.Header icon='ph--hourglass-simple-low--regular' title='Performance' info={entries.length.toLocaleString()} />
+    <StatCard.Header
+      icon='ph--hourglass-simple-low--regular'
+      title='Performance'
+      info={entries.length.toLocaleString()}
+    />
     {entries.length === 0 && <StatCard.Row label='No entries.' />}
     {entries.map((entry, index) => {
       const label = [entry.entryType, entry.name].filter(Boolean).join('/');

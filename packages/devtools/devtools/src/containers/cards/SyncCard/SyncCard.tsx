@@ -46,7 +46,9 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
         icon='ph--git-diff--regular'
         title='Sync'
         info={pending > 0 ? `${pending} syncing` : `${spaces.length} spaces`}
-        action={onCopy && <IconButton iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />}
+        action={
+          onCopy && <IconButton iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
+        }
       />
       {spaces.length === 0 && <StatCard.Row label='No spaces.' />}
       {spaces.map((row) => {

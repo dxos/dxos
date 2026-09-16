@@ -28,7 +28,8 @@ export const QueriesCard = ({ queries = [] }: QueriesCardProps) => (
           title={JSON.stringify(removeEmpty(query.filter), undefined, 2)}
           value={
             <>
-              {(query.metrics.objectsReturned ?? 0).toLocaleString()} · <Duration duration={query.metrics.executionTime ?? 0} />
+              {(query.metrics.objectsReturned ?? 0).toLocaleString()} ·{' '}
+              <Duration duration={query.metrics.executionTime ?? 0} />
             </>
           }
         />
