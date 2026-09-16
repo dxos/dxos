@@ -49,8 +49,8 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
     const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
     const depth = useFormFieldSetDepth();
     const labelId = useId();
-    const styles = formTheme.styles({ variant, depth: depth === 0 ? 'root' : 'nested' });
     const showLabel = layout !== 'inline' && !!label;
+    const styles = formTheme.styles({ variant, depth: depth === 0 ? 'root' : 'nested', labelled: showLabel });
     // An empty group has nothing to fold, so a disclosure on its legend would be a control that does nothing.
     const canCollapse = !!collapsible && Children.toArray(children).length > 0;
 

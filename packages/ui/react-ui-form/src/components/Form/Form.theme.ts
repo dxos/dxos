@@ -68,6 +68,11 @@ const formStyles = tv({
       above: {},
       beside: {},
     },
+    // Whether a legend renders at all; an unlabelled field set has nothing to hang its top space on.
+    labelled: {
+      true: {},
+      false: {},
+    },
     // A top-level field set is a titled section; a nested one is an indented, bordered group.
     depth: {
       // The section's top space sits on the legend: WebKit lays a rendered legend at the fieldset's
@@ -95,10 +100,17 @@ const formStyles = tv({
       },
     },
     {
+      labelled: false,
+      depth: 'root',
+      class: {
+        fieldSet: 'pt-form-section-gap',
+      },
+    },
+    {
       variant: 'default',
       depth: 'root',
       class: {
-        fieldSet: '[&:first-child>legend]:pt-0',
+        fieldSet: '[&:first-child>legend]:pt-0 first:pt-0',
       },
     },
     {
@@ -126,6 +138,7 @@ const formStyles = tv({
   defaultVariants: {
     variant: 'default',
     labelPlacement: 'above',
+    labelled: true,
     depth: 'root',
   },
 });
