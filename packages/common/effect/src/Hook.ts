@@ -51,11 +51,27 @@ export interface Handler<E extends Any> {
   readonly handler: HandlerFn<E>;
 }
 
+/**
+ * Pairs a hook with the function that runs on it, ready to pass to `subscribe`. Dual: called with
+ * one argument it returns the pipeable form, so `handler(fn)` composes onto the hook.
+ *
+ * @param hook The hook to bind to.
+ * @param handler Runs per emit, receiving the hook's payload.
+ * @returns The pairing `subscribe` registers.
+ */
 export const handler: {
   <E extends Any>(hook: E, handler: HandlerFn<E>): Handler<E>;
   <E extends Any>(handler: HandlerFn<E>): (hook: E) => Handler<E>;
 } = Function.dual(2, <E extends Any>(hook: E, handler: HandlerFn<E>): Handler<E> => ({ hook, handler }));
 
+/**
+ * Declares a hook. Curried so the payload type is given explicitly while the id stays inferred:
+ * `make<Payload>()('my/id')`.
+ *
+ * @param id Identifies the hook across package and bundle boundaries, so it must be unique.
+ * @param options.strategy How subscribers are dispatched; `parallel` by default.
+ * @returns The hook to emit and subscribe to.
+ */
 export const make =
   <const T>() =>
   <const Id extends string>(id: Id, options?: { strategy?: Strategy }): Hook<Id, T> => ({
