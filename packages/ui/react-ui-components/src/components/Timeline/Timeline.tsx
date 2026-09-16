@@ -313,7 +313,14 @@ export const Timeline = memo(
               }
 
               const hasLink = !!commit.link && !!onSelect;
+              // Clicking the selected commit clears the selection, as Enter does.
               const handleClick = () => {
+                if (selectedRef.current === index) {
+                  selectedRef.current = undefined;
+                  setCurrent(undefined);
+                  onSelect?.(undefined);
+                  return;
+                }
                 setCurrent(index);
                 selectedRef.current = index;
                 onSelect?.(commit);
