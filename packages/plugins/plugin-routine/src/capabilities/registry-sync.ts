@@ -7,10 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { yieldToEventLoop } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+
+/** Serialization runs at about a millisecond per operation, so a long batch is split to keep the page responsive. */
+const SLICE_MS = 8;
 
 /**
  * Syncs plugin capability contributions into `client.graph.registry`.
@@ -75,6 +79,7 @@ export default Capability.makeModule(
           ).flat();
           const seenKeys = new Set<string>();
           const batch: Operation.PersistentOperation[] = [];
+          let sliceStart = performance.now();
           for (const handler of handlers) {
             const key = handler.meta.key;
             if (!key) {
@@ -89,25 +94,23 @@ export default Capability.makeModule(
             if (prevOperationKeys.has(key)) {
               continue;
             }
+            // Claimed before any yield, so a run the atom starts meanwhile skips it.
+            prevOperationKeys.add(key);
             if (handler.meta.skipRegistry) {
-              prevOperationKeys.add(key);
               continue;
             }
             try {
               batch.push(Operation.serialize(handler));
             } catch {
               log.verbose('skipping operation with unserializable schema', { key });
-              prevOperationKeys.add(key);
+            }
+            if (performance.now() - sliceStart > SLICE_MS) {
+              await yieldToEventLoop();
+              sliceStart = performance.now();
             }
           }
           if (batch.length > 0) {
             client.graph.registry.add(batch);
-            for (const operation of batch) {
-              const operationKey = Operation.getKey(operation);
-              if (operationKey) {
-                prevOperationKeys.add(operationKey);
-              }
-            }
           }
         } catch (error) {
           log.catch(error);
