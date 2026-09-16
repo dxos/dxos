@@ -239,10 +239,9 @@ subscription and the family key **per distinct key ever read**. Full mechanism,
 cost model, and the complete site catalog: ATOMS-AUDIT.md.
 
 Bounding plan (work items W1–W7, full detail incl. prior-art survey in
-ATOMS-AUDIT.md): ECHO atoms become **proxy-bounded** — memoized on the entity's
-proxy target, atom lifetime = entity lifetime, no atom-level TTL, so ECHO's
-future object-residency policy is the single lifetime knob (decided
-2026-08-14). Everything else becomes subscriber-bounded plus a short idle TTL,
+ATOMS-AUDIT.md): ECHO atoms lose `keepAlive` and stay in `WeakRef` families, so
+they are released with the entity once unobserved, with no atom-level TTL (the
+proxy-bounded record decided 2026-08-14 was dropped 2026-09-16; see W2). Everything else becomes subscriber-bounded plus a short idle TTL,
 with per-key state in owner-controlled containers. **App-graph's `_node`/`_edges`
 are excluded — handled independently, and that work has since landed on `main`
 as #12594**, which rebuilt the package (`graph.ts` → `AppGraph.ts` +
@@ -253,7 +252,7 @@ registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
       `AtomEx.makeRegistry` live in `@dxos/effect`'s `AtomEx` namespace. A render-churn grace,
       explicitly not a residency policy. `idleTTL` must be finite
       (`Duration.infinity` made the registry's bucket math `NaN` and removed
-      nodes at once) and zero maps to no grace; tests in `atom.test.ts`.
+      nodes at once) and zero maps to no grace; tests in `AtomEx.test.ts`.
       `PluginManager` builds its registry with it (`atomIdleTTL` option), and so
       do the fallbacks that host ECHO atoms: `withRegistry` (storybook),
       `apps/tasks`, `apps/todomvc`, `AppGraph`, `ProjectionModel`, `AiContext`.
@@ -266,29 +265,20 @@ registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
       (from app-graph and from `@dxos/graph`'s `Store`); `getNodeOrThrow` and
       `explore` read `node` once and throw at the call site. `_json` skips a
       tombstoned node instead of asserting. No per-atom `setIdleTTL(0)`.
-- [x] **W2. ECHO families → proxy-bounded.** One `EntityAtoms` record per
-      entity (`internal/Entity/atoms.ts`, `getEntityAtoms`) replaces the 8
-      entity-keyed `Atom.family`s across `Obj/atoms.ts` and
-      `Annotation/atoms.ts`. It is stored under a `Symbol.for` key on the proxy
-      target (or on a non-proxy entity itself), the way `createProxy` memoizes
-      the proxy, and builds each atom on first read: `snapshot` (serves
-      `Obj.atom`, `Entity.atom` and `Relation.atom`, previously three identical
-      families), `live`, `label`, and per-key `property`, `annotation`,
-      `annotationProperty`. The public `make*` functions are thin wrappers
-      over it. The entity owns its atoms and no module-level table exists. A
-      mutable view resolves to its read-only proxy, so both share one record
-      and no atom captures the callback-scoped write capability. `live` now
-      notifies on change (identity equality had suppressed every update).
-      Ref-keyed families (`refFamily`, `refSimpleFamily`, `refPropertyFamily`)
-      keep `Atom.family` since `RefImpl` mints a fresh wrapper per read;
-      `refPropertyFamily` is flat, keyed by `(ref, key)`, because a nested
-      family holds its inner family only weakly. Their target subscriptions
-      are registered as finalizers, so a node removed while its target loads
-      does not leak one. `keepAlive` dropped from all 11. No `setIdleTTL` on
-      any of them. Atoms carry dev-only `echo:*` labels (`withLabel` from
-      `@dxos/effect`'s `AtomEx`, shared with app-graph and graph). Tests:
-      `Entity/atoms.test.ts` and `Obj/atoms.test.ts`, plus a `memory`-tagged
-      retention test run by the CI `memory` job.
+- [x] **W2. ECHO families lose `keepAlive`.** All 11 ECHO atom families
+      (`Obj/atoms.ts`, `Annotation/atoms.ts`, `Ref/atoms.ts`) keep
+      `Atom.family` and drop `keepAlive`. A family holds atoms through `WeakRef`,
+      so once the registry node expires and no consumer holds the atom, the
+      entry, the atom and the entity key are all collectable. No `setIdleTTL` on
+      any of them. The three nested families (`propertyFamily`,
+      `refPropertyFamily`, `annotationFamily`) are flattened to tuple keys: a
+      nested family holds its inner family only weakly, so after a GC a mounted
+      consumer got a fresh atom. Ref target subscriptions are registered as
+      finalizers, so a node removed while its target loads does not leak one.
+      A per-entity atom record stored on the proxy target was tried and dropped
+      (2026-09-16): objects are unique per id in practice, so it bought no
+      behaviour over the families for a much larger diff. Tests in
+      `Obj.test.ts` and `Annotation.test.ts`.
 - [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
       is the store); `MemoryBackend`/`AttentionManager` hold values in their
       existing `Map`s, one pinned notify atom per owner; prune ids on

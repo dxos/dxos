@@ -374,6 +374,13 @@ Direction (decided 2026-08-14): tie atom lifetime to the **entity proxy's**
 lifetime, not to subscribers-plus-TTL, so that when ECHO grows its own object
 residency policy there is exactly one lifetime knob and the atoms inherit it.
 
+**Superseded 2026-09-16.** The record below was built on PR #12601 and then
+dropped. Once `keepAlive` is gone, a `WeakRef` family already releases an
+entity's atoms with the entity, and the record's other gains (separate atoms
+for two live objects sharing an id, one shared snapshot atom across accessors)
+did not justify the larger diff. W2 landed as: keep the families, drop
+`keepAlive`, flatten nested families to tuple keys.
+
 - **Entity-keyed families** (`objectFamily`, `objectWithReactiveFamily`,
   `entityFamily`, `relationFamily`, `labelAtomFamily`, `annotationFamily`
   outer, `propertyFamily` outer): replace every `Atom.family` with one

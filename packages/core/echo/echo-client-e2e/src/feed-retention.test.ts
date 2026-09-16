@@ -14,6 +14,8 @@ import { type Checkpoint, aliveCount, capture, makePayload, report } from './tes
 /**
  * Does a feed release its objects when the caller lets go of them? Harness and rationale:
  * `./testing/retention.ts`.
+ *
+ *   DX_DEBUG_LEAKS=1 moon run echo-client-e2e:test -- src/feed-retention.test.ts
  */
 
 const OBJECT_COUNT = 1000;

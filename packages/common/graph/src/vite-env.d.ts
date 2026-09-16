@@ -9,6 +9,8 @@
  */
 interface ImportMetaEnv {
   readonly DEV: boolean;
+  readonly PROD: boolean;
+  readonly MODE: string;
   /** Opt in to `Atom.withLabel` diagnostic labels, which cost a stack-trace capture per labelled atom. */
   readonly VITE_ATOM_LABELS?: string;
 }

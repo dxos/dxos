@@ -3411,9 +3411,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../debug
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../errors

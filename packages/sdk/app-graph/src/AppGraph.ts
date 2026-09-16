@@ -21,7 +21,7 @@ import { type MakeOptional, shallowEqual } from '@dxos/util';
 import { scheduleTask } from '#scheduler';
 
 import * as Node from './AppGraphNode.ts';
-import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts } from './util.ts';
+import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util.ts';
 
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module
@@ -251,7 +251,7 @@ export class GraphImpl implements WritableGraph {
         (a: Option.Option<Node.Node>, b: Option.Option<Node.Node>) =>
           Option.getOrUndefined(a) === Option.getOrUndefined(b),
       ),
-      AtomEx.withLabel(`graph:node:${id}`),
+      withLabel(`graph:node:${id}`),
     );
   });
 
@@ -321,7 +321,7 @@ export class GraphImpl implements WritableGraph {
     return Atom.make((get) => {
       get(this._model.version);
       return this._computeEdges(id);
-    }).pipe(Atom.withEquality(edgesEqual), AtomEx.withLabel(`graph:edges:${id}`));
+    }).pipe(Atom.withEquality(edgesEqual), withLabel(`graph:edges:${id}`));
   });
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
@@ -346,7 +346,7 @@ export class GraphImpl implements WritableGraph {
       Atom.withEquality(
         (a: Node.Node[], b: Node.Node[]) => a.length === b.length && a.every((node, index) => node === b[index]),
       ),
-      AtomEx.withLabel(`graph:connections:${key}`),
+      withLabel(`graph:connections:${key}`),
     );
   });
 
@@ -356,7 +356,7 @@ export class GraphImpl implements WritableGraph {
         return [];
       }
       return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
-    }).pipe(AtomEx.withLabel(`graph:actions:${id}`));
+    }).pipe(withLabel(`graph:actions:${id}`));
   });
 
   readonly _json = Atom.family<string, Atom.Atom<any>>((id) => {
@@ -378,7 +378,7 @@ export class GraphImpl implements WritableGraph {
         },
         relationKey('child'),
       );
-    }).pipe(AtomEx.withLabel(`graph:json:${id}`));
+    }).pipe(withLabel(`graph:json:${id}`));
   });
 
   constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {

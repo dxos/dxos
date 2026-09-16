@@ -3,7 +3,6 @@
 //
 
 import * as Duration from 'effect/Duration';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { assertArgument } from '@dxos/invariant';
@@ -30,13 +29,3 @@ export const makeRegistry = ({ idleTTL = DEFAULT_IDLE_TTL, ...options }: Registr
   assertArgument(Number.isFinite(millis), 'idleTTL', 'Must be finite; use Atom.keepAlive to retain an atom');
   return Registry.make({ ...options, defaultIdleTTL: millis > 0 ? millis : undefined });
 };
-
-/**
- * `Atom.withLabel` captures a stack trace per call, so labels are opt-in and dev-only.
- */
-const ATOM_LABELS = Boolean(import.meta.env?.DEV) && import.meta.env?.VITE_ATOM_LABELS === 'true';
-
-/** {@link Atom.withLabel}, reduced to a pass-through wherever labels are not collected. */
-export const withLabel: (name: string) => <A extends Atom.Atom<any>>(self: A) => A = ATOM_LABELS
-  ? Atom.withLabel
-  : () => (self) => self;

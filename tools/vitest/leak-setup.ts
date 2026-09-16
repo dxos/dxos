@@ -9,16 +9,18 @@
 // DESIGN: .agents/projects/test-profiling-leaks/DESIGN.md.
 
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import { writeHeapSnapshot } from 'node:v8';
-import { afterAll, afterEach, expect } from 'vitest';
+import { afterAll, afterEach } from 'vitest';
 
-const testPath = expect.getState().testPath;
-const outDir = join(
-  process.env.DX_DEBUG_LEAKS_DIR ?? './profiles',
-  testPath ? relative(process.cwd(), testPath) : 'suite',
-);
+const outDir = process.env.DX_DEBUG_LEAKS_DIR ?? './profiles';
 const samplesFile = join(outDir, 'heap-samples.ndjson');
+
+// Truncate any samples file left by a prior run in this dir (appendFileSync would otherwise
+// concatenate runs and repeat `test` indices, so a slope could span unrelated captures). This
+// setup file is evaluated once per test file in the fork, matching the one-suite-per-run assumption.
+mkdirSync(outDir, { recursive: true });
+writeFileSync(samplesFile, '');
 
 /**
  * WASM linear memory is invisible to `heapUsed` and is never returned to the OS, so a suite whose
@@ -34,6 +36,11 @@ const samplesFile = join(outDir, 'heap-samples.ndjson');
  */
 // Weak, and pruned on read: holding instances strongly would stop a discarded module's memory from
 // ever being freed, so the probe would create the growth it claims to measure.
+//
+// Registry and proxy live on `globalThis`, installed once. This setup file is evaluated per test
+// FILE, but `DX_DEBUG_LEAKS` runs the fork non-isolated, so a second file shares a process in which
+// the wasm-bindgen glue has already instantiated — a fresh per-file registry would see none of it
+// and report zero.
 const REGISTRY_KEY = '__DXOS_WASM_REGISTRY__';
 const globals = globalThis as Record<string, unknown>;
 const wasmInstances = (globals[REGISTRY_KEY] ??= []) as WeakRef<WebAssembly.Instance>[];
@@ -96,11 +103,6 @@ const snapshot = (name: string): void => {
 
 let completed = 0;
 
-const resetSamplesFile = (): void => {
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(samplesFile, '');
-};
-
 // Vitest's 10s hook default timed out on a suite whose heap is large enough to be worth snapshotting
 // — repeated collection plus `writeHeapSnapshot` of a multi-GB heap is minutes of work on a loaded
 // runner, and the timeout failed the file no matter what its assertions said.
@@ -112,9 +114,6 @@ const SNAPSHOT_TIMEOUT = 300_000;
 // AFTER the first test, not at process start, so first-run lazy init (module singletons, V8 code
 // compilation, string interning) is not mistaken for a leak.
 afterEach(async () => {
-  if (completed === 0) {
-    resetSamplesFile();
-  }
   await settle();
   const heapUsed = process.memoryUsage().heapUsed;
   appendFileSync(samplesFile, JSON.stringify({ test: ++completed, heapUsed, wasmBytes: wasmBytes() }) + '\n');

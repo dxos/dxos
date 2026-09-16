@@ -6,7 +6,7 @@
 '@dxos/graph': minor
 ---
 
-Bound reactive object atoms to the lifetime of the entity they derive from, so they and their cached snapshots are released with the object rather than retained for the lifetime of the page.
+ECHO atom families no longer use `Atom.keepAlive`, so an entity's atoms, snapshots and subscriptions are released once nothing observes them instead of being retained for the lifetime of the page. Multi-key families (`Obj.atomProperty`, `Annotation.atom`, ref properties) are keyed by a tuple rather than nested families.
 
 `@dxos/effect` adds the `AtomEx` namespace with `AtomEx.makeRegistry`, an atom registry with a 5 second idle grace period (`AtomEx.DEFAULT_IDLE_TTL`). Use it for any registry that hosts ECHO atoms, which no longer carry `keepAlive`. The plugin manager's registry uses it (`atomIdleTTL`).
 

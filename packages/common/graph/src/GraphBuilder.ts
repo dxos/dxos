@@ -13,7 +13,6 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn } from '@dxos/async';
-import { AtomEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -28,6 +27,19 @@ const PRIMARY = '\u0001';
 const primaryKey = (...parts: string[]): string => parts.join(PRIMARY);
 
 const primaryParts = (key: string): string[] => key.split(PRIMARY);
+
+/**
+ * `Atom.withLabel` captures and formats a stack trace on every call, and the builder labels an atom per
+ * connector key and per extension, so one expansion costs hundreds of captures on the main thread —
+ * hence opt-in, and only under the dev server. Mirrors `@dxos/app-graph`'s helper, which this package
+ * cannot import back across the dependency edge.
+ */
+const ATOM_LABELS = Boolean(import.meta.env?.DEV) && import.meta.env?.VITE_ATOM_LABELS === 'true';
+
+/** {@link Atom.withLabel}, reduced to a pass-through wherever labels are not collected. */
+const withLabel: (name: string) => <A extends Atom.Atom<any>>(self: A) => A = ATOM_LABELS
+  ? Atom.withLabel
+  : () => (self) => self;
 
 //
 // Contract
@@ -245,7 +257,7 @@ export class GraphBuilder<
   /** Registered extensions keyed by extension ID. */
   readonly _extensions = Atom.make(Record.empty<string, Extension<Node, Arg, Rel, Meta>>()).pipe(
     Atom.keepAlive,
-    AtomEx.withLabel('graph-builder:extensions'),
+    withLabel('graph-builder:extensions'),
   );
   /**
    * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly as
@@ -411,7 +423,7 @@ export class GraphBuilder<
       }
 
       return entries;
-    }).pipe(AtomEx.withLabel(`graph-builder:connectors:${key}`));
+    }).pipe(withLabel(`graph-builder:connectors:${key}`));
   });
 
   /**
