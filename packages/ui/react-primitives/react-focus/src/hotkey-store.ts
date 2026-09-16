@@ -7,7 +7,7 @@
 // the active scope), and `check-module-structure` fails the build if those transitively import
 // React. The React layer lives in `./hotkeys`.
 
-import { type HotkeyStore, createHotkeyStore } from '@zag-js/hotkeys';
+import { type CommandDefinition, type HotkeyStore, createHotkeyStore } from '@zag-js/hotkeys';
 
 export { createHotkeyStore, formatHotkey, normalizeHotkey, parseHotkey } from '@zag-js/hotkeys';
 
@@ -36,6 +36,57 @@ export const initHotkeys = (target: Document | ShadowRoot = document): void => {
  */
 export const destroyHotkeys = (): void => {
   hotkeyStore.destroy();
+};
+
+/**
+ * Apply only the difference between two registration sets, keyed by command id.
+ *
+ * Every `register` scans the whole store for hotkey conflicts, so re-registering an unchanged set is
+ * quadratic. Actions are not compared: an unchanged command keeps the action it was registered with.
+ */
+export const reconcileHotkeys = (
+  store: HotkeyStore,
+  previous: ReadonlyMap<string, CommandDefinition>,
+  next: ReadonlyMap<string, CommandDefinition>,
+): void => {
+  for (const id of previous.keys()) {
+    if (!next.has(id)) {
+      store.unregister(id);
+    }
+  }
+  for (const [id, command] of next) {
+    const current = previous.get(id);
+    if (current && isSameRegistration(current, command)) {
+      continue;
+    }
+    if (current) {
+      store.unregister(id);
+    }
+    store.register(command);
+  }
+};
+
+const isSameRegistration = (a: CommandDefinition, b: CommandDefinition): boolean =>
+  a.id === b.id &&
+  a.hotkey === b.hotkey &&
+  a.enabled === b.enabled &&
+  a.description === b.description &&
+  a.category === b.category &&
+  JSON.stringify([a.scopes, a.label, a.keywords]) === JSON.stringify([b.scopes, b.label, b.keywords]) &&
+  shallowEqual(a.options, b.options);
+
+const shallowEqual = (a: object | undefined, b: object | undefined): boolean => {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  const aEntries = Object.entries(a);
+  return (
+    aEntries.length === Object.keys(b).length &&
+    aEntries.every(([key, value]) => (b as Record<string, unknown>)[key] === value)
+  );
 };
 
 // Scopes are shared: two groups can hold overlapping chains (`root/a` and `root/a/b` both hold
