@@ -24,6 +24,64 @@ import { NavTreePlugin } from '#plugin';
 const OBJECT_SEGMENT = 'object';
 const OBJECT_TYPE = 'example.com.type.object';
 
+describe('NavTreePlugin', () => {
+  test('graph actions register hotkeys scoped to their parent node', async ({ expect }) => {
+    const fired: string[] = [];
+    const version = Atom.make(1);
+    await using harness = await createComposerTestApp({
+      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin()],
+    });
+
+    const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
+    const { graph } = builder;
+    const objectId = GraphNode.qualifyId(GraphNode.RootId, OBJECT_SEGMENT);
+    AppGraph.expandSync(graph, GraphNode.RootId, 'child');
+    await AppGraphBuilder.flush(builder);
+    AppGraph.expandSync(graph, objectId, 'action');
+    await AppGraphBuilder.flush(builder);
+
+    await expect.poll(() => findBinding('Present')?.scopes, { timeout: 2_000 }).toEqual([objectId]);
+
+    setHotkeyScope(objectId);
+    press('P');
+    await expect.poll(() => fired).toEqual(['present 1']);
+  });
+
+  test('a graph update re-registers only changed bindings, and a kept binding runs the current action', async ({
+    expect,
+  }) => {
+    const fired: string[] = [];
+    const version = Atom.make(1);
+    await using harness = await createComposerTestApp({
+      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin()],
+    });
+
+    const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
+    const { graph } = builder;
+    const objectId = GraphNode.qualifyId(GraphNode.RootId, OBJECT_SEGMENT);
+    AppGraph.expandSync(graph, GraphNode.RootId, 'child');
+    await AppGraphBuilder.flush(builder);
+    AppGraph.expandSync(graph, objectId, 'action');
+    await AppGraphBuilder.flush(builder);
+    await expect.poll(() => findBinding('Present'), { timeout: 2_000 }).toBeDefined();
+
+    const register = vi.spyOn(hotkeyStore, 'register');
+    try {
+      harness.registry.set(version, 2);
+      await AppGraphBuilder.flush(builder);
+      // The new binding shows the sync ran; the unchanged one must not have been re-registered.
+      await expect.poll(() => findBinding('Rename'), { timeout: 2_000 }).toBeDefined();
+      expect(register.mock.calls.map(([command]) => [command].flat()[0]?.label)).toEqual(['Rename']);
+    } finally {
+      register.mockRestore();
+    }
+
+    setHotkeyScope(objectId);
+    press('P');
+    await expect.poll(() => fired).toEqual(['present 2']);
+  });
+});
+
 /**
  * A layout, and a root child with a key-bound action as an object node in a space would have.
  * Moving `version` past 1 rebuilds that action and adds a second binding.
@@ -99,61 +157,3 @@ const press = (key: string) =>
 // Bindings sync on a 500 ms debounce after the graph changes.
 const findBinding = (label: string) =>
   [...hotkeyStore.getState().commands.values()].find((command) => command.label === label);
-
-describe('NavTreePlugin', () => {
-  test('graph actions register hotkeys scoped to their parent node', async ({ expect }) => {
-    const fired: string[] = [];
-    const version = Atom.make(1);
-    await using harness = await createComposerTestApp({
-      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin()],
-    });
-
-    const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
-    const { graph } = builder;
-    const objectId = GraphNode.qualifyId(GraphNode.RootId, OBJECT_SEGMENT);
-    AppGraph.expandSync(graph, GraphNode.RootId, 'child');
-    await AppGraphBuilder.flush(builder);
-    AppGraph.expandSync(graph, objectId, 'action');
-    await AppGraphBuilder.flush(builder);
-
-    await expect.poll(() => findBinding('Present')?.scopes, { timeout: 2_000 }).toEqual([objectId]);
-
-    setHotkeyScope(objectId);
-    press('P');
-    await expect.poll(() => fired).toEqual(['present 1']);
-  });
-
-  test('a graph update re-registers only changed bindings, and a kept binding runs the current action', async ({
-    expect,
-  }) => {
-    const fired: string[] = [];
-    const version = Atom.make(1);
-    await using harness = await createComposerTestApp({
-      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin()],
-    });
-
-    const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
-    const { graph } = builder;
-    const objectId = GraphNode.qualifyId(GraphNode.RootId, OBJECT_SEGMENT);
-    AppGraph.expandSync(graph, GraphNode.RootId, 'child');
-    await AppGraphBuilder.flush(builder);
-    AppGraph.expandSync(graph, objectId, 'action');
-    await AppGraphBuilder.flush(builder);
-    await expect.poll(() => findBinding('Present'), { timeout: 2_000 }).toBeDefined();
-
-    const register = vi.spyOn(hotkeyStore, 'register');
-    try {
-      harness.registry.set(version, 2);
-      await AppGraphBuilder.flush(builder);
-      // The new binding shows the sync ran; the unchanged one must not have been re-registered.
-      await expect.poll(() => findBinding('Rename'), { timeout: 2_000 }).toBeDefined();
-      expect(register.mock.calls.map(([command]) => [command].flat()[0]?.label)).toEqual(['Rename']);
-    } finally {
-      register.mockRestore();
-    }
-
-    setHotkeyScope(objectId);
-    press('P');
-    await expect.poll(() => fired).toEqual(['present 2']);
-  });
-});
