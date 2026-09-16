@@ -7,10 +7,11 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { getSpace } from '@dxos/client/echo';
+import { SpaceProperties } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Entity, Filter, Obj, Query } from '@dxos/echo';
+import { Annotation, Collection, type Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceOperation } from '#types';
@@ -30,21 +31,21 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       const entities =
         input.objects ?? (yield* Effect.forEach(input.refs ?? [], (ref) => Effect.promise(() => ref.load())));
 
-      const space = getSpace(entities[0] as Obj.Unknown);
+      // Resolved through the database rather than the client `Space`, which a headless host lacks.
+      const db = Entity.isEntity(entities[0]) ? Entity.getDatabase(entities[0]) : undefined;
       invariant(
-        space && entities.every((entity) => Entity.isEntity(entity) && getSpace(entity as Obj.Unknown) === space),
+        db && entities.every((entity) => Entity.isEntity(entity) && Entity.getDatabase(entity)?.spaceId === db.spaceId),
+        'Every object must be loaded and belong to one space.',
       );
 
-      const parentCollection =
-        input.target ??
-        Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
+      const parentCollection = input.target ?? (yield* loadRootCollection(db));
       invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
 
       // Type entities (persisted schemas) live outside collections — `findIndex` will
       // return -1 for them and the splice/active-tracking branches are skipped.
       const indices = entities.map((entity) =>
         Obj.instanceOf(Collection.Collection, parentCollection)
-          ? parentCollection.objects.findIndex((ref) => ref.target === entity)
+          ? parentCollection.objects.findIndex((ref) => refersTo(ref, entity))
           : -1,
       );
 
@@ -62,7 +63,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
 
       for (const entity of entities) {
         if (Obj.instanceOf(Collection.Collection, parentCollection)) {
-          const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
+          const index = parentCollection.objects.findIndex((ref) => refersTo(ref, entity));
           if (index !== -1) {
             Obj.update(parentCollection, (parentCollection) => {
               parentCollection.objects.splice(index, 1);
@@ -70,9 +71,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
           }
         }
 
-        const db = Entity.getDatabase(entity);
-        db?.remove(entity);
+        db.remove(entity);
       }
+      // A headless host flushes only for operations that declare `Database.Service`.
+      yield* Effect.promise(() => db.flush());
 
       if (wasActive.length > 0) {
         yield* Operation.invoke(LayoutOperation.Close, { subject: wasActive });
@@ -88,6 +90,18 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
   ),
 );
 export default handler;
+
+/** Compared by entity id: a ref a headless host has not loaded has no `target`. */
+const refersTo = (ref: Ref.Ref<Obj.Unknown>, entity: Entity.Unknown): boolean =>
+  EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) === entity.id : ref.target === entity;
+
+const loadRootCollection = Effect.fnUntraced(function* (db: Database.Database) {
+  const [properties] = yield* Effect.promise(() => db.query(Filter.type(SpaceProperties)).run());
+  const ref = properties
+    ? Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+    : undefined;
+  return ref ? yield* Effect.promise(() => ref.load()) : undefined;
+});
 
 /**
  * Ids of every object owned (transitively, by the ECHO parent edge) by one of `entities` — i.e. what
