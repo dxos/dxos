@@ -22,7 +22,7 @@ import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Field, Panel, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { type Commit, Timeline } from '@dxos/react-ui-components';
+import { type Commit, Timeline, TogglePanel } from '@dxos/react-ui-components';
 import { ActionToolbar } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -90,6 +90,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     }, [traceMessages]);
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+    // Remembered across selections, so collapsing the details once keeps them collapsed.
+    const [detailsOpen, setDetailsOpen] = useState(true);
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
@@ -178,12 +180,19 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           </div>
 
           {!tracePanelDebug && selectedCommit && (
-            <div className='p-2'>
-              <JsonHighlighter
-                data={details[selectedCommit.id] ?? selectedCommit}
-                classNames='max-h-[20lh] border border-subdued-separator rounded-sm text-xs'
-              />
-            </div>
+            <TogglePanel.Root classNames='p-2' open={detailsOpen} onChangeOpen={setDetailsOpen}>
+              <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
+                <TogglePanel.Header classNames='text-sm'>
+                  <span className='truncate text-description'>{selectedCommit.message}</span>
+                </TogglePanel.Header>
+                <TogglePanel.Body>
+                  <JsonHighlighter
+                    data={details[selectedCommit.id] ?? selectedCommit}
+                    classNames='max-h-[20lh] text-xs'
+                  />
+                </TogglePanel.Body>
+              </TogglePanel.Content>
+            </TogglePanel.Root>
           )}
         </Panel.Content>
       </Panel.Root>
