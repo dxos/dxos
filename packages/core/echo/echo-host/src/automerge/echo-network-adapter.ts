@@ -49,6 +49,11 @@ export type EchoNetworkAdapterProps = {
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   /** Invoked when a replicator connection opens (including after reconnect). */
   onConnectionOpen?: () => void;
+  /**
+   * Invoked when a connected peer gains access to more spaces. Defaults to re-announcing the peer,
+   * which is how a classical sync network re-evaluates its share policy.
+   */
+  onConnectionAuthScopeChanged?: (peerId: PeerId) => void;
   monitor?: NetworkDataMonitor;
 };
 
@@ -316,6 +321,10 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     log('Connection auth scope changed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
+    if (this._params.onConnectionAuthScopeChanged) {
+      this._params.onConnectionAuthScopeChanged(connection.peerId as PeerId);
+      return;
+    }
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
     this._emitPeerCandidate(connection);
   }
