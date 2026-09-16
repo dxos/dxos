@@ -45,7 +45,8 @@ export default Capability.makeModule(
       }
 
       if (shortcut && AppGraphNode.isAction(node)) {
-        const scope = path.slice(0, -1).join('/');
+        // Node ids are already qualified by their ancestors, so the parent's id is the scope path.
+        const scope = path.at(-2) ?? GraphNode.RootId;
         const id = `${scope}:${node.id}`;
         seen.add(id);
         // This re-runs on every graph change, and each store mutation notifies every subscriber.
