@@ -35,8 +35,8 @@ subgraph common [common]
   style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
-  dxos/feed-store("@dxos/feed-store"):::def
-  click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
+  dxos/hypercore-store("@dxos/hypercore-store"):::def
+  click dxos/hypercore-store "dxos/dxos/tree/main/packages/common/hypercore-store/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
@@ -65,8 +65,8 @@ end
 
 %% Links
 dxos/async --> dxos/context
-dxos/teleport-plugin-replicator --> dxos/feed-store
-dxos/feed-store --> dxos/hypercore
+dxos/teleport-plugin-replicator --> dxos/hypercore-store
+dxos/hypercore-store --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf
 dxos/hypercore --> dxos/crypto
 dxos/hypercore --> dxos/random-access-storage
@@ -86,7 +86,7 @@ dxos/teleport --> dxos/rpc
 | [`@dxos/context`](../../../../common/context/docs/README.md)                             | &check; |
 | [`@dxos/crypto`](../../../../common/crypto/docs/README.md)                               |         |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md)                                 | &check; |
-| [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md)                       | &check; |
+| [`@dxos/hypercore-store`](../../../../common/hypercore-store/docs/README.md)                       | &check; |
 | [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md)                         |         |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md)                                   | &check; |
 | [`@dxos/log`](../../../../common/log/docs/README.md)                                     | &check; |

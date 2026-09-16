@@ -17,7 +17,7 @@ import {
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
+import { type HypercoreWrapper, writeMessages } from '@dxos/hypercore-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -261,7 +261,7 @@ export class Identity {
     return deviceCredential;
   }
 
-  private _onFeedAdded = async (feed: FeedWrapper<any>) => {
-    await this._edgeFeedReplicator!.addFeed(feed);
+  private _onFeedAdded = async (feed: HypercoreWrapper<any>) => {
+    await this._edgeFeedReplicator!.addHypercore(feed);
   };
 }

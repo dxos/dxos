@@ -10,7 +10,7 @@ import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/hypercore-store';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
@@ -230,7 +230,7 @@ describe('EdgeFeedReplicator', () => {
     const spaceId = SpaceId.random();
     const feed = await createNewFeed();
     const replicator = new EdgeFeedReplicator({ messenger, spaceId });
-    await replicator.addFeed(feed);
+    await replicator.addHypercore(feed);
     if (!options?.skipOpen) {
       await openAndClose(replicator);
     }
@@ -240,15 +240,15 @@ describe('EdgeFeedReplicator', () => {
   const createNewFeed = async () => {
     const storage = createStorage();
     const keyring = new Keyring();
-    const feedStore = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
         root: storage.createDirectory(),
         signer: keyring,
         hypercore: { valueEncoding },
       }),
     });
-    onTestFinished(() => feedStore.close());
-    return feedStore.openFeed(await keyring.createKey(), { writable: true });
+    onTestFinished(() => hypercoreStore.close());
+    return hypercoreStore.openHypercore(await keyring.createKey(), { writable: true });
   };
 
   const updateIdentity = async (messenger: EdgeClient) => {

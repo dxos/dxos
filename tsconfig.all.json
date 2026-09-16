@@ -211,9 +211,6 @@
       "path": "packages/core/echo/feed/tsconfig.json"
     },
     {
-      "path": "packages/common/feed-store/tsconfig.json"
-    },
-    {
       "path": "tools/fixtures/tsconfig.json"
     },
     {
@@ -242,6 +239,9 @@
     },
     {
       "path": "packages/common/hypercore/tsconfig.json"
+    },
+    {
+      "path": "packages/common/hypercore-store/tsconfig.json"
     },
     {
       "path": "packages/common/i18n/tsconfig.json"

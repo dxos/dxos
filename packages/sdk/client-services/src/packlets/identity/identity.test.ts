@@ -10,8 +10,8 @@ import { Context } from '@dxos/context';
 import { CredentialGenerator, createDidFromIdentityKey, credentialPayload, verifyCredential } from '@dxos/credentials';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { type FeedWrapper } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/hypercore-store';
+import { type HypercoreWrapper } from '@dxos/hypercore-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -155,8 +155,8 @@ describe('identity/identity', () => {
     const identityKey = args?.identityKey ?? (await keyring.createKey());
     const spaceKey = args?.spaceKey ?? (await keyring.createKey());
 
-    const feedStore = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
         root: storage.createDirectory(),
         signer: keyring,
         hypercore: {
@@ -165,13 +165,13 @@ describe('identity/identity', () => {
       }),
     });
 
-    const createFeed = async () => {
+    const createHypercore = async () => {
       const feedKey = await keyring.createKey();
-      return feedStore.openFeed(feedKey, { writable: true });
+      return hypercoreStore.openHypercore(feedKey, { writable: true });
     };
 
-    const controlFeed = await createFeed();
-    const dataFeed = await createFeed();
+    const controlFeed = await createHypercore();
+    const dataFeed = await createHypercore();
 
     const protocol = new SpaceProtocol({
       topic: spaceKey,
@@ -199,8 +199,8 @@ describe('identity/identity', () => {
       id: await createIdFromSpaceKey(spaceKey),
       spaceKey,
       protocol,
-      genesisFeed: args?.genesisFeedKey ? await feedStore.openFeed(args.genesisFeedKey) : controlFeed,
-      feedProvider: (feedKey) => feedStore.openFeed(feedKey),
+      genesisFeed: args?.genesisFeedKey ? await hypercoreStore.openHypercore(args.genesisFeedKey) : controlFeed,
+      feedProvider: (feedKey) => hypercoreStore.openHypercore(feedKey),
       memberKey: identityKey,
       metadataStore,
       snapshotId: undefined,
@@ -246,6 +246,6 @@ type TestIdentitySetup = {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   spaceKey: PublicKey;
-  controlFeed: FeedWrapper<FeedMessage>;
-  dataFeed: FeedWrapper<FeedMessage>;
+  controlFeed: HypercoreWrapper<FeedMessage>;
+  dataFeed: HypercoreWrapper<FeedMessage>;
 };

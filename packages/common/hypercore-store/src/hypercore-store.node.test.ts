@@ -9,7 +9,7 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { type TestItem, TestItemBuilder } from './testing/index.ts';
 
-describe('FeedStore', () => {
+describe('HypercoreStore', () => {
   test('reopens a feed and reads data from storage', async () => {
     const builder = new TestItemBuilder();
     const feedKey = await builder.keyring!.createKey();
@@ -21,8 +21,8 @@ describe('FeedStore', () => {
 
     // Write.
     {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey, { writable: true });
+      const hypercoreStore = builder.clone().setStorage(storage).createFeedStore();
+      const feed = await hypercoreStore.openHypercore(feedKey, { writable: true });
 
       for (const i of Array.from(Array(numBlocks)).keys()) {
         await feed.append({
@@ -36,8 +36,8 @@ describe('FeedStore', () => {
 
     // Read.
     {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey);
+      const hypercoreStore = builder.clone().setStorage(storage).createFeedStore();
+      const feed = await hypercoreStore.openHypercore(feedKey);
       expect(feed.properties.length).to.eq(numBlocks);
     }
 
@@ -48,8 +48,8 @@ describe('FeedStore', () => {
 
     // Read (should be empty).
     {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey);
+      const hypercoreStore = builder.clone().setStorage(storage).createFeedStore();
+      const feed = await hypercoreStore.openHypercore(feedKey);
       expect(feed.properties.length).to.eq(0);
     }
   });

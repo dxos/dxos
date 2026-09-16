@@ -14,7 +14,7 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type DatabaseRoot, type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
-import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
+import { type HypercoreStore, type HypercoreWrapper } from '@dxos/hypercore-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -77,7 +77,7 @@ export type DataSpaceProps = {
   gossip: Gossip;
   presence: Presence;
   keyring: KeyringApi;
-  feedStore: FeedStore<FeedMessage>;
+  hypercoreStore: HypercoreStore<FeedMessage>;
   echoHost: EchoHost;
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
@@ -106,7 +106,7 @@ export class DataSpace {
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
   private readonly _keyring: KeyringApi;
-  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _hypercoreStore: HypercoreStore<FeedMessage>;
   private readonly _metadataStore: IMetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPlugin: NotarizationPlugin;
@@ -146,7 +146,7 @@ export class DataSpace {
     this._gossip = params.gossip;
     this._presence = params.presence;
     this._keyring = params.keyring;
-    this._feedStore = params.feedStore;
+    this._hypercoreStore = params.hypercoreStore;
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
     this._callbacks = params.callbacks ?? {};
@@ -430,7 +430,7 @@ export class DataSpace {
   private async _createWritableFeeds(): Promise<void> {
     const credentials: Credential[] = [];
     if (!this.inner.controlFeedKey) {
-      const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
+      const controlFeed = await this._hypercoreStore.openHypercore(await this._keyring.createKey(), { writable: true });
       await this.inner.setControlFeed(controlFeed);
 
       credentials.push(
@@ -446,7 +446,7 @@ export class DataSpace {
       );
     }
     if (!this.inner.dataFeedKey) {
-      const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), {
+      const dataFeed = await this._hypercoreStore.openHypercore(await this._keyring.createKey(), {
         writable: true,
         sparse: true,
       });
@@ -686,8 +686,8 @@ export class DataSpace {
     return this._metadataStore.getSpaceEdgeReplicationSetting(this.key);
   }
 
-  private _onFeedAdded = async (feed: FeedWrapper<any>) => {
-    await this._edgeFeedReplicator!.addFeed(feed);
+  private _onFeedAdded = async (feed: HypercoreWrapper<any>) => {
+    await this._edgeFeedReplicator!.addHypercore(feed);
   };
 }
 

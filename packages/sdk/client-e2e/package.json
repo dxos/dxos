@@ -34,7 +34,7 @@
     "fast-deep-equal": "catalog:"
   },
   "devDependencies": {
-    "@dxos/feed-store": "workspace:*",
+    "@dxos/hypercore-store": "workspace:*",
     "@dxos/network-manager": "workspace:*"
   }
 }

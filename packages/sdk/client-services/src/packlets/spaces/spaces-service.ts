@@ -22,7 +22,7 @@ import { raise } from '@dxos/debug';
 import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
-import { writeMessages } from '@dxos/feed-store';
+import { writeMessages } from '@dxos/hypercore-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

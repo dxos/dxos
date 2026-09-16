@@ -11,7 +11,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { FeedStorageDirectoryService } from '@dxos/feed-store';
+import { HypercoreStorageDirectoryService } from '@dxos/hypercore-store';
 import { log } from '@dxos/log';
 import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos/random-access-storage';
 
@@ -483,11 +483,11 @@ export type FeedStorageDirectoryLayerOptions = {
 /**
  * Effect Layer providing the hypercore feeds root directory from {@link SqliteStorage}.
  */
-export const FeedStorageDirectoryLayer = (
+export const HypercoreStorageDirectoryLayer = (
   options: FeedStorageDirectoryLayerOptions = {},
-): Layer.Layer<FeedStorageDirectoryService, never, SqliteStorageService> =>
+): Layer.Layer<HypercoreStorageDirectoryService, never, SqliteStorageService> =>
   Layer.effect(
-    FeedStorageDirectoryService,
+    HypercoreStorageDirectoryService,
     Effect.gen(function* () {
       const storage = yield* SqliteStorageService;
       return storage.createDirectory(options.sub ?? 'feeds');

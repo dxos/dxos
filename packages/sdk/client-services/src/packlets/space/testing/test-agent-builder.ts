@@ -6,7 +6,7 @@ import { create } from '@bufbuild/protobuf';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator, credentialPayload } from '@dxos/credentials';
-import { type FeedStore } from '@dxos/feed-store';
+import { type HypercoreStore } from '@dxos/hypercore-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -87,7 +87,7 @@ export class TestAgent {
 
   public readonly storage: Storage;
   public readonly keyring: Keyring;
-  public readonly feedStore: FeedStore<FeedMessage>;
+  public readonly hypercoreStore: HypercoreStore<FeedMessage>;
 
   private _metadataStore?: MetadataStore;
   get metadataStore() {
@@ -102,7 +102,7 @@ export class TestAgent {
   ) {
     this.storage = this._feedBuilder.storage;
     this.keyring = this._feedBuilder.keyring;
-    this.feedStore = this._feedBuilder.createFeedStore();
+    this.hypercoreStore = this._feedBuilder.createFeedStore();
   }
 
   async close() {
@@ -134,7 +134,7 @@ export class TestAgent {
   private _spaceManager?: SpaceManager;
   get spaceManager() {
     return (this._spaceManager ??= new SpaceManager({
-      feedStore: this.feedStore,
+      hypercoreStore: this.hypercoreStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
     }));
@@ -155,8 +155,8 @@ export class TestAgent {
       genesisKey = await this.keyring.createKey();
     }
 
-    const controlFeed = await this.feedStore.openFeed(genesisKey, { writable: true });
-    const dataFeed = await this.feedStore.openFeed(dataKey ?? (await this.keyring.createKey()), {
+    const controlFeed = await this.hypercoreStore.openHypercore(genesisKey, { writable: true });
+    const dataFeed = await this.hypercoreStore.openHypercore(dataKey ?? (await this.keyring.createKey()), {
       writable: true,
       sparse: true,
     });

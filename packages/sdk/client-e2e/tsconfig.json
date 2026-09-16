@@ -19,7 +19,7 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/feed-store"
+      "path": "../../common/hypercore-store"
     },
     {
       "path": "../../common/invariant"

@@ -13,7 +13,7 @@ import {
   type SpaceState,
   SpaceStateMachine,
 } from '@dxos/credentials';
-import { type FeedWrapper } from '@dxos/feed-store';
+import { type HypercoreWrapper } from '@dxos/hypercore-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -35,8 +35,8 @@ import { Pipeline, type PipelineAccessor } from '../pipeline/index.ts';
 
 export type ControlPipelineProps = {
   spaceKey: PublicKey;
-  genesisFeed: FeedWrapper<FeedMessage>;
-  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
+  genesisFeed: HypercoreWrapper<FeedMessage>;
+  feedProvider: (feedKey: PublicKey) => Promise<HypercoreWrapper<FeedMessage>>;
   metadataStore: IMetadataStore;
 };
 
@@ -75,7 +75,7 @@ export class ControlPipeline {
     this._spaceKey = spaceKey;
     this._metadata = metadataStore;
     this._pipeline = new Pipeline();
-    void this._pipeline.addFeed(genesisFeed); // TODO(burdon): Require async open/close?
+    void this._pipeline.addHypercore(genesisFeed); // TODO(burdon): Require async open/close?
 
     this._spaceStateMachine = new SpaceStateMachine(spaceKey);
     this._spaceStateMachine.onFeedAdmitted.set(async (info) => {
@@ -90,8 +90,8 @@ export class ControlPipeline {
             if (this._ctx.disposed) {
               return;
             }
-            if (!this._pipeline.hasFeed(feed.key)) {
-              await this._pipeline.addFeed(feed);
+            if (!this._pipeline.hasHypercore(feed.key)) {
+              await this._pipeline.addHypercore(feed);
             }
           } catch (err: any) {
             log.catch(err);
@@ -125,8 +125,8 @@ export class ControlPipeline {
     return this._pipeline;
   }
 
-  async setWriteFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
-    await this._pipeline.addFeed(feed);
+  async setWriteFeed(feed: HypercoreWrapper<FeedMessage>): Promise<void> {
+    await this._pipeline.addHypercore(feed);
     this._pipeline.setWriteFeed(feed);
   }
 

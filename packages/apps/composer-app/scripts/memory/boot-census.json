@@ -9120,7 +9120,7 @@
       }
     ],
     [
-      "@dxos/feed-store",
+      "@dxos/hypercore-store",
       {
         "loaded": 15014.880726907986,
         "executed": 15014.880726907986,

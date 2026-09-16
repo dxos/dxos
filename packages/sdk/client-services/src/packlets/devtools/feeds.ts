@@ -7,7 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
-import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
+import { HypercoreIterator, type HypercoreStore, type HypercoreWrapper } from '@dxos/hypercore-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
@@ -37,12 +37,12 @@ const toBufResponse = (blocks: FeedMessageBlock[]): SubscribeToFeedBlocksRespons
   });
 
 type FeedInfo = {
-  feed: FeedWrapper<FeedMessage>;
+  feed: HypercoreWrapper<FeedMessage>;
   owner?: DevtoolsHost.SubscribeToFeedsResponse.FeedOwner;
 };
 
 export const subscribeToFeeds = (
-  { feedStore, spaceManager }: { feedStore: FeedStore<FeedMessage>; spaceManager: SpaceManager },
+  { hypercoreStore, spaceManager }: { hypercoreStore: HypercoreStore<FeedMessage>; spaceManager: SpaceManager },
   { feedKeys }: DevtoolsHost.SubscribeToFeedsRequest,
 ): EffectStream.Stream<DevtoolsHost.SubscribeToFeedsResponse, Error> => {
   return EffectEx.streamFromEmitter<DevtoolsHost.SubscribeToFeedsResponse, Error>((emit) => {
@@ -50,7 +50,7 @@ export const subscribeToFeeds = (
     const feedMap = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
 
     const update = () => {
-      const { feeds } = feedStore;
+      const { feeds } = hypercoreStore;
       feeds
         .filter((feed) => !feedKeys?.length || feedKeys.some((feedKey) => feedKey.equals(feed.key)))
         .forEach((feed) => {
@@ -75,7 +75,7 @@ export const subscribeToFeeds = (
       });
     };
 
-    subscriptions.add(feedStore.feedOpened.on(update));
+    subscriptions.add(hypercoreStore.feedOpened.on(update));
     update();
 
     return Effect.sync(() => {
@@ -102,7 +102,7 @@ const findFeedOwner = (
 };
 
 export const subscribeToFeedBlocks = (
-  { feedStore }: { feedStore: FeedStore<FeedMessage> },
+  { hypercoreStore }: { hypercoreStore: HypercoreStore<FeedMessage> },
   { feedKey, maxBlocks = 10 }: DevtoolsHost.SubscribeToFeedBlocksRequest,
 ): EffectStream.Stream<SubscribeToFeedBlocksResponse, Error> => {
   return EffectEx.streamFromEmitter<SubscribeToFeedBlocksResponse, Error>((emit) => {
@@ -113,7 +113,7 @@ export const subscribeToFeedBlocks = (
     const subscriptions = new SubscriptionList();
 
     const timeout = setTimeout(async () => {
-      const feed = feedStore.getFeed(feedKey);
+      const feed = hypercoreStore.getHypercore(feedKey);
       if (!feed) {
         return;
       }
@@ -124,7 +124,7 @@ export const subscribeToFeedBlocks = (
           return;
         }
 
-        const iterator = new FeedIterator(feed);
+        const iterator = new HypercoreIterator(feed);
         await iterator.open();
         const blocks = [];
         for await (const block of iterator) {

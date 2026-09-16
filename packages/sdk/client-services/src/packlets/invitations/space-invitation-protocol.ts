@@ -12,7 +12,7 @@ import {
   credentialOfPayload,
   getCredentialAssertion,
 } from '@dxos/credentials';
-import { writeMessages } from '@dxos/feed-store';
+import { writeMessages } from '@dxos/hypercore-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';

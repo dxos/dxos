@@ -8,7 +8,7 @@ import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
+import { type HypercoreStore, type HypercoreWrapper } from '@dxos/hypercore-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
@@ -44,16 +44,16 @@ describe('pipeline/stress test', () => {
     );
 
     const model = fc.asyncProperty(commands, async (commands) => {
-      const feedStore = builder.createFeedStore();
+      const hypercoreStore = builder.createFeedStore();
 
-      const agents = new Map(agentIds.map((id) => [id, new Agent(builder, feedStore, id)]));
+      const agents = new Map(agentIds.map((id) => [id, new Agent(builder, hypercoreStore, id)]));
       await Promise.all(Array.from(agents.values()).map((agent) => agent.open()));
       await Promise.all(Array.from(agents.values()).map((agent) => agent.start()));
 
       const setup: fc.ModelRunSetup<Model, Real> = () => ({
         model: {},
         real: {
-          feedStore,
+          hypercoreStore,
           agents,
         },
       });
@@ -78,19 +78,19 @@ describe('pipeline/stress test', () => {
 class Agent {
   public startingTimeframe = new Timeframe();
   public pipeline!: Pipeline;
-  public feed!: FeedWrapper<FeedMessage>;
+  public feed!: HypercoreWrapper<FeedMessage>;
   public messages: FeedMessageBlock[] = [];
   public writePromise: Promise<any> = Promise.resolve();
 
   constructor(
     private readonly builder: TestFeedBuilder,
-    public feedStore: FeedStore<FeedMessage>,
+    public hypercoreStore: HypercoreStore<FeedMessage>,
     public id: string,
   ) {}
 
   async open(): Promise<void> {
     const key = await this.builder.keyring.createKey();
-    this.feed = await this.feedStore.openFeed(key, { writable: true });
+    this.feed = await this.hypercoreStore.openHypercore(key, { writable: true });
   }
 
   async start(): Promise<void> {
@@ -99,7 +99,7 @@ class Agent {
     await this.pipeline.start();
 
     // NOTE: not awaiting here breaks the test.
-    await Promise.all(this.feedStore.feeds.map((feed) => this.pipeline.addFeed(feed)));
+    await Promise.all(this.hypercoreStore.feeds.map((feed) => this.pipeline.addHypercore(feed)));
     this.pipeline.setWriteFeed(this.feed);
 
     // consume in async task.
@@ -132,7 +132,7 @@ class Agent {
 
 type Model = {};
 type Real = {
-  feedStore: FeedStore<FeedMessage>;
+  hypercoreStore: HypercoreStore<FeedMessage>;
   agents: Map<string, Agent>;
 };
 
@@ -187,7 +187,7 @@ class SyncCommand implements fc.AsyncCommand<Model, Real> {
         expect(agent.pipeline.state.timeframe.equals(tf)).toEqual(true);
       }
 
-      const totalMessages = real.feedStore.feeds.reduce((acc, feed) => acc + feed.length, 0);
+      const totalMessages = real.hypercoreStore.feeds.reduce((acc, feed) => acc + feed.length, 0);
       for (const agent of real.agents.values()) {
         expect(agent.messages.length).toEqual(totalMessages);
       }
@@ -202,7 +202,7 @@ class SyncCommand implements fc.AsyncCommand<Model, Real> {
               timeframe: agent.pipeline.state.timeframe,
               endTimeframe: agent.pipeline.state.endTimeframe,
             })),
-            feeds: real.feedStore.feeds.map((feed) => [feed.key, feed.length]),
+            feeds: real.hypercoreStore.feeds.map((feed) => [feed.key, feed.length]),
             targets,
           },
           false,

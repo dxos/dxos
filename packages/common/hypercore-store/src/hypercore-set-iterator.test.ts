@@ -8,21 +8,21 @@ import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
-import { type FeedBlockSelector, FeedSetIterator } from './feed-set-iterator.ts';
+import { type HypercoreBlockSelector, HypercoreSetIterator } from './hypercore-set-iterator.ts';
 import { TestItemBuilder } from './testing/index.ts';
-import { type FeedBlock } from './types.ts';
+import { type HypercoreBlock } from './types.ts';
 
 // Random selector.
-const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
+const randomFeedBlockSelector: HypercoreBlockSelector<any> = (blocks: HypercoreBlock<any>[]) =>
   random.number.int({ min: 0, max: blocks.length - 1 });
 
 // TODO(burdon): Create randomized setTimeout to test race conditions.
 
-describe('FeedSetIterator', () => {
+describe('HypercoreSetIterator', () => {
   // TODO(burdon): Test when feed is added on-the-fly.
 
   test('opens and closes multiple times', async () => {
-    const iterator = new FeedSetIterator(randomFeedBlockSelector);
+    const iterator = new HypercoreSetIterator(randomFeedBlockSelector);
     await iterator.open();
     await iterator.open();
     expect(iterator.isOpen).to.be.true;
@@ -51,8 +51,8 @@ describe('FeedSetIterator', () => {
 
   test('responds immediately when a feed is appended', async () => {
     const builder = new TestItemBuilder();
-    const feedStore = builder.createFeedStore();
-    const iterator = new FeedSetIterator(randomFeedBlockSelector);
+    const hypercoreStore = builder.createFeedStore();
+    const iterator = new HypercoreSetIterator(randomFeedBlockSelector);
     await iterator.open();
 
     const numFeeds = 3;
@@ -60,8 +60,8 @@ describe('FeedSetIterator', () => {
     const feeds = await Promise.all(
       Array.from(Array(numFeeds)).map(async () => {
         const key = await builder.keyring.createKey();
-        const feed = await feedStore.openFeed(key, { writable: true });
-        await iterator.addFeed(feed);
+        const feed = await hypercoreStore.openHypercore(key, { writable: true });
+        await iterator.addHypercore(feed);
         return feed;
       }),
     );
@@ -80,7 +80,7 @@ describe('FeedSetIterator', () => {
       // Write block.
       setTimeout(async () => {
         const feed = random.helpers.arrayElement(feeds);
-        await builder.generator.writeBlocks(feed.createFeedWriter(), {
+        await builder.generator.writeBlocks(feed.createHypercoreWriter(), {
           count: numBlocks,
         });
       }, 100);
@@ -93,14 +93,14 @@ describe('FeedSetIterator', () => {
 
   test('reads blocks in order', { timeout: 3000 }, async () => {
     const builder = new TestItemBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createFeedStore();
 
     // TODO(burdon): Randomize?
     const numFeeds = 3;
     const numBlocks = 30;
 
     // TODO(burdon): Test with starting index.
-    const iterator = new FeedSetIterator(randomFeedBlockSelector);
+    const iterator = new HypercoreSetIterator(randomFeedBlockSelector);
 
     // Write blocks.
     setTimeout(
@@ -110,9 +110,9 @@ describe('FeedSetIterator', () => {
         const writers = await Promise.all(
           Array.from(Array(numFeeds)).map(async () => {
             const key = await builder.keyring.createKey();
-            const feed = await feedStore.openFeed(key, { writable: true });
-            await iterator.addFeed(feed);
-            return feed.createFeedWriter();
+            const feed = await hypercoreStore.openHypercore(key, { writable: true });
+            await iterator.addHypercore(feed);
+            return feed.createHypercoreWriter();
           }),
         );
 
@@ -155,8 +155,8 @@ describe('FeedSetIterator', () => {
     expect(count).to.eq(numBlocks);
 
     // Written blocks.
-    const written = feedStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
-    const feeds = feedStore.feeds.map((feed) => ({
+    const written = hypercoreStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
+    const feeds = hypercoreStore.feeds.map((feed) => ({
       feedKey: feed.key,
       length: feed.properties.length,
     }));
@@ -166,17 +166,17 @@ describe('FeedSetIterator', () => {
 
     expect(iterator.isRunning).to.be.false;
     await iterator.close();
-    await feedStore.close();
+    await hypercoreStore.close();
   });
 
   test('start from non-zero index', async () => {
     const builder = new TestItemBuilder();
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createFeedStore();
 
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
 
-    const iterator = new FeedSetIterator(randomFeedBlockSelector, {
+    const iterator = new HypercoreSetIterator(randomFeedBlockSelector, {
       start: [
         {
           feedKey: feed.key,
@@ -185,9 +185,9 @@ describe('FeedSetIterator', () => {
       ],
     });
     await iterator.open();
-    await iterator.addFeed(feed);
+    await iterator.addHypercore(feed);
 
-    await builder.generator.writeBlocks(feed.createFeedWriter(), {
+    await builder.generator.writeBlocks(feed.createHypercoreWriter(), {
       count: 10,
     });
 

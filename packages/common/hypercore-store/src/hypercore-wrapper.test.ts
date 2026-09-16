@@ -14,12 +14,12 @@ import { range } from '@dxos/util';
 
 import { TestBuilder, TestItemBuilder, defaultValueEncoding } from './testing/index.ts';
 
-describe('FeedWrapper', () => {
+describe('HypercoreWrapper', () => {
   const factory = new TestBuilder().createFeedFactory();
 
   test('creates a readable feed', async () => {
     const key = PublicKey.random();
-    const feed = await factory.createFeed(key);
+    const feed = await factory.createHypercore(key);
     await feed.open();
     expect(feed.properties.readable).to.be.true;
     expect(feed.properties.writable).to.be.false;
@@ -28,7 +28,7 @@ describe('FeedWrapper', () => {
 
   test('creates a writable feed', async () => {
     const key = PublicKey.random();
-    const feed = await factory.createFeed(key, { writable: true });
+    const feed = await factory.createHypercore(key, { writable: true });
     await feed.open();
     expect(feed.properties.readable).to.be.true;
     expect(feed.properties.writable).to.be.true;
@@ -37,7 +37,7 @@ describe('FeedWrapper', () => {
 
   test('creates, opens, and closes a feed multiple times', async () => {
     const key = PublicKey.random();
-    const feed = await factory.createFeed(key);
+    const feed = await factory.createHypercore(key);
 
     await feed.open();
     expect(feed.properties.opened).to.be.true;
@@ -53,9 +53,9 @@ describe('FeedWrapper', () => {
   test('appends blocks', async () => {
     const numBlocks = 10;
     const builder = new TestBuilder();
-    const feedFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = await feedFactory.createFeed(key, { writable: true });
+    const feed = await hypercoreFactory.createHypercore(key, { writable: true });
 
     for (const _ of Array.from(Array(numBlocks)).keys()) {
       await feed.append(random.lorem.sentence());
@@ -67,9 +67,9 @@ describe('FeedWrapper', () => {
   test('append emits event', async () => {
     const numBlocks = 10;
     const builder = new TestBuilder();
-    const feedFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = await feedFactory.createFeed(key, { writable: true });
+    const feed = await hypercoreFactory.createHypercore(key, { writable: true });
 
     let emittedAppend = 0;
     feed.on('append', () => {
@@ -85,9 +85,9 @@ describe('FeedWrapper', () => {
   test('appends blocks with encoding', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
-    const feedFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = await feedFactory.createFeed(key, {
+    const feed = await hypercoreFactory.createHypercore(key, {
       writable: true,
       valueEncoding: defaultValueEncoding,
     });
@@ -110,7 +110,7 @@ describe('FeedWrapper', () => {
     const builder = new TestBuilder();
     const factory = builder.createFeedFactory();
     const key = await builder.keyring.createKey();
-    const feed = await factory.createFeed(key, {
+    const feed = await factory.createHypercore(key, {
       writable: true,
       valueEncoding: defaultValueEncoding,
     });
@@ -139,11 +139,11 @@ describe('FeedWrapper', () => {
   test('replicates with streams', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
-    const feedFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const feed1 = await feedFactory.createFeed(key1, { writable: true });
-    const feed2 = await feedFactory.createFeed(key1);
+    const feed1 = await hypercoreFactory.createHypercore(key1, { writable: true });
+    const feed2 = await hypercoreFactory.createHypercore(key1);
 
     await feed1.open();
     await feed2.open();
@@ -167,7 +167,7 @@ describe('FeedWrapper', () => {
 
     // Writer.
     {
-      const writer = feed1.createFeedWriter();
+      const writer = feed1.createHypercoreWriter();
       for (const i of Array.from(Array(numBlocks).keys())) {
         const block = {
           id: String(i + 1),
@@ -193,11 +193,11 @@ describe('FeedWrapper', () => {
   test('cancel download while replicating', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
-    const feedFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const feed1 = await feedFactory.createFeed(key1, { writable: true });
-    const feed2 = await feedFactory.createFeed(key1, { sparse: true });
+    const feed1 = await hypercoreFactory.createHypercore(key1, { writable: true });
+    const feed2 = await hypercoreFactory.createHypercore(key1, { sparse: true });
 
     await feed1.open();
     await feed2.open();
@@ -215,7 +215,7 @@ describe('FeedWrapper', () => {
 
     // Writer.
     {
-      const writer = feed1.createFeedWriter();
+      const writer = feed1.createHypercoreWriter();
       const write = async (index: number) => {
         const block = {
           id: String(index + 1),
@@ -253,8 +253,8 @@ describe('FeedWrapper', () => {
     const feedFactory2 = builder2.createFeedFactory();
 
     const key1 = await builder1.keyring!.createKey();
-    const feed1 = await feedFactory1.createFeed(key1, { writable: true });
-    const feed2 = await feedFactory2.createFeed(key1);
+    const feed1 = await feedFactory1.createHypercore(key1, { writable: true });
+    const feed2 = await feedFactory2.createHypercore(key1);
 
     await feed1.open();
     await feed2.open();
@@ -287,11 +287,11 @@ describe('FeedWrapper', () => {
   test('integrates blocks via putBuffer', async () => {
     const numBlocks = 5;
     const builder = new TestBuilder();
-    const feedFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createFeedFactory();
 
     const key = await builder.keyring.createKey();
-    const source = await feedFactory.createFeed(key, { writable: true });
-    const target = await feedFactory.createFeed(key);
+    const source = await hypercoreFactory.createHypercore(key, { writable: true });
+    const target = await hypercoreFactory.createHypercore(key);
 
     await source.open();
     await target.open();

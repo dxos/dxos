@@ -7,7 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { FeedSetIterator, type FeedWrapper, type FeedWriter } from '@dxos/feed-store';
+import { HypercoreSetIterator, type HypercoreWrapper, type HypercoreWriter } from '@dxos/hypercore-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -71,7 +71,7 @@ export class PipelineState {
   _reachedTarget: boolean = false;
 
   constructor(
-    private _feeds: ComplexMap<PublicKey, FeedWrapper<FeedMessage>>,
+    private _feeds: ComplexMap<PublicKey, HypercoreWrapper<FeedMessage>>,
     private _timeframeClock: TimeframeClock,
   ) {}
 
@@ -180,7 +180,7 @@ export class PipelineState {
 // TODO(mykola): Extract to `@dxos/echo-protocol`
 export interface PipelineAccessor {
   state: PipelineState;
-  writer: FeedWriter<FeedMessage_Payload>;
+  writer: HypercoreWriter<FeedMessage_Payload>;
 }
 
 /**
@@ -217,7 +217,7 @@ export interface PipelineAccessor {
  */
 export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(new Timeframe());
-  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
+  private readonly _feeds = new ComplexMap<PublicKey, HypercoreWrapper<FeedMessage>>(PublicKey.hash);
 
   // External state accessor.
   private readonly _state: PipelineState = new PipelineState(this._feeds, this._timeframeClock);
@@ -227,17 +227,19 @@ export class Pipeline implements PipelineAccessor {
   private readonly _pauseTrigger = new Trigger().wake();
 
   // Pending downloads.
-  private readonly _downloads = new ComplexMap<FeedWrapper<FeedMessage>, any>((value) => PublicKey.hash(value.key));
+  private readonly _downloads = new ComplexMap<HypercoreWrapper<FeedMessage>, any>((value) =>
+    PublicKey.hash(value.key),
+  );
 
   // Inbound feed stream.
-  private _feedSetIterator?: FeedSetIterator<FeedMessage>;
+  private _feedSetIterator?: HypercoreSetIterator<FeedMessage>;
 
   // Woken (and re-armed) each time `_initIterator` swaps the iterator, so a consumer parked on a
   // finished generator of the previous instance can move to the new one.
   private _iteratorChanged = new Trigger();
 
   // Outbound feed writer.
-  private _writer: FeedWriter<FeedMessage_Payload> | undefined;
+  private _writer: HypercoreWriter<FeedMessage_Payload> | undefined;
 
   private _isStopping = false;
   private _isStarted = false;
@@ -248,26 +250,26 @@ export class Pipeline implements PipelineAccessor {
     return this._state;
   }
 
-  get writer(): FeedWriter<FeedMessage_Payload> {
+  get writer(): HypercoreWriter<FeedMessage_Payload> {
     invariant(this._writer, 'Writer not set.');
     return this._writer;
   }
 
-  hasFeed(feedKey: PublicKey): boolean {
+  hasHypercore(feedKey: PublicKey): boolean {
     return this._feeds.has(feedKey);
   }
 
-  getFeeds(): FeedWrapper<FeedMessage>[] {
+  getFeeds(): HypercoreWrapper<FeedMessage>[] {
     return this._feedSetIterator!.feeds;
   }
 
   // NOTE: This cannot be synchronized with `stop` because stop waits for the mutation processing to complete,
   // which might be opening feeds during the mutation processing, which w
-  async addFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
+  async addHypercore(feed: HypercoreWrapper<FeedMessage>): Promise<void> {
     this._feeds.set(feed.key, feed);
 
-    if (this._feedSetIterator && !this._feedSetIterator.hasFeed(feed.key)) {
-      await this._feedSetIterator.addFeed(feed);
+    if (this._feedSetIterator && !this._feedSetIterator.hasHypercore(feed.key)) {
+      await this._feedSetIterator.addHypercore(feed);
     }
 
     if (this._isStarted && !this._isPaused) {
@@ -275,14 +277,14 @@ export class Pipeline implements PipelineAccessor {
     }
   }
 
-  setWriteFeed(feed: FeedWrapper<FeedMessage>): void {
+  setWriteFeed(feed: HypercoreWrapper<FeedMessage>): void {
     invariant(!this._writer, 'Writer already set.');
     invariant(feed.properties.writable, 'Feed must be writable.');
 
     this._writer = createMappedFeedWriter<FeedMessage_Payload, FeedMessage>(
       (payload: FeedMessage_Payload) =>
         create(FeedMessageSchema, { timeframe: fromTimeframe(this._timeframeClock.timeframe), payload }),
-      feed.createFeedWriter(),
+      feed.createHypercoreWriter(),
     );
   }
 
@@ -423,7 +425,7 @@ export class Pipeline implements PipelineAccessor {
     this._isBeingConsumed = false;
   }
 
-  private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>): void {
+  private _setFeedDownloadState(feed: HypercoreWrapper<FeedMessage>): void {
     let handle = this._downloads.get(feed); // TODO(burdon): Always undefined?
     if (handle) {
       feed.undownload(handle);
@@ -444,7 +446,7 @@ export class Pipeline implements PipelineAccessor {
   }
 
   private async _initIterator(): Promise<void> {
-    this._feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
+    this._feedSetIterator = new HypercoreSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
       start: startAfter(this._timeframeClock.timeframe),
       stallTimeout: 1000,
     });
@@ -465,10 +467,10 @@ export class Pipeline implements PipelineAccessor {
     });
 
     for (const feed of this._feeds.values()) {
-      // A concurrent `addFeed` (e.g. a feed admission processed during startup) may have already
-      // registered this feed on the new iterator, whose `addFeed` throws on duplicates.
-      if (!this._feedSetIterator.hasFeed(feed.key)) {
-        await this._feedSetIterator.addFeed(feed);
+      // A concurrent `addHypercore` (e.g. a feed admission processed during startup) may have already
+      // registered this feed on the new iterator, whose `addHypercore` throws on duplicates.
+      if (!this._feedSetIterator.hasHypercore(feed.key)) {
+        await this._feedSetIterator.addHypercore(feed);
       }
     }
   }

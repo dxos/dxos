@@ -13,33 +13,33 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defaultMap } from '@dxos/util';
 
-import { type FeedFactory, FeedFactoryService, type FeedOptions } from './feed-factory.ts';
-import { type FeedWrapper } from './feed-wrapper.ts';
+import { type HypercoreFactory, HypercoreFactoryService, type HypercoreCreateOptions } from './hypercore-factory.ts';
+import { type HypercoreWrapper } from './hypercore-wrapper.ts';
 
-export interface FeedStoreOptions<T extends {}> {
-  factory: FeedFactory<T>;
+export interface HypercoreStoreOptions<T extends {}> {
+  factory: HypercoreFactory<T>;
 }
 
 /**
- * Effect service tag for {@link FeedStore}.
+ * Effect service tag for {@link HypercoreStore}.
  */
-export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore<any>>()(
-  '@dxos/feed-store/FeedStore',
+export class HypercoreStoreService extends EffectContext.Service<HypercoreStoreService, HypercoreStore<any>>()(
+  '@dxos/hypercore-store/HypercoreStore',
 ) {}
 
 /**
  * Persistent hypercore store.
  */
-export class FeedStore<T extends {}> {
-  private readonly _feeds: ComplexMap<PublicKey, FeedWrapper<T>> = new ComplexMap(PublicKey.hash);
+export class HypercoreStore<T extends {}> {
+  private readonly _feeds: ComplexMap<PublicKey, HypercoreWrapper<T>> = new ComplexMap(PublicKey.hash);
   private readonly _mutexes = new ComplexMap<PublicKey, Mutex>(PublicKey.hash);
-  private readonly _factory: FeedFactory<T>;
+  private readonly _factory: HypercoreFactory<T>;
 
   private _closed = false;
 
-  readonly feedOpened = new Event<FeedWrapper<T>>();
+  readonly feedOpened = new Event<HypercoreWrapper<T>>();
 
-  constructor({ factory }: FeedStoreOptions<T>) {
+  constructor({ factory }: HypercoreStoreOptions<T>) {
     this._factory = factory ?? failUndefined();
   }
 
@@ -54,7 +54,7 @@ export class FeedStore<T extends {}> {
   /**
    * Get the open feed if it exists.
    */
-  getFeed(publicKey: PublicKey): FeedWrapper<T> | undefined {
+  getHypercore(publicKey: PublicKey): HypercoreWrapper<T> | undefined {
     return this._feeds.get(publicKey);
   }
 
@@ -62,7 +62,10 @@ export class FeedStore<T extends {}> {
    * Gets or opens a feed.
    * The feed is readonly unless a secret key is provided.
    */
-  async openFeed(feedKey: PublicKey, { writable, sparse }: FeedOptions = {}): Promise<FeedWrapper<T>> {
+  async openHypercore(
+    feedKey: PublicKey,
+    { writable, sparse }: HypercoreCreateOptions = {},
+  ): Promise<HypercoreWrapper<T>> {
     log('opening feed', { feedKey });
     invariant(feedKey);
     invariant(!this._closed, 'Feed store is closed');
@@ -70,7 +73,7 @@ export class FeedStore<T extends {}> {
     const mutex = defaultMap(this._mutexes, feedKey, () => new Mutex());
 
     return mutex.executeSynchronized(async () => {
-      let feed = this.getFeed(feedKey);
+      let feed = this.getHypercore(feedKey);
       if (feed) {
         // TODO(burdon): Need to check that there's another instance being used (create test and break this).
         // TODO(burdon): Remove from store if feed is closed externally? (remove wrapped open/close methods?)
@@ -88,7 +91,7 @@ export class FeedStore<T extends {}> {
         }
       }
 
-      feed = await this._factory.createFeed(feedKey, { writable, sparse });
+      feed = await this._factory.createHypercore(feedKey, { writable, sparse });
       this._feeds.set(feed.key, feed);
 
       await feed.open();
@@ -109,7 +112,7 @@ export class FeedStore<T extends {}> {
         await feed.close();
         invariant(feed.closed);
         // TODO(burdon): SpaceProxy still being initialized.
-        //  SpaceProxy.initialize => Database.createItem => ... => FeedWrapper.append
+        //  SpaceProxy.initialize => Database.createItem => ... => HypercoreWrapper.append
         //  Uncaught Error: Closed [random-access-storage/index.js:181:38]
         // await sleep(100);
       }),
@@ -121,14 +124,14 @@ export class FeedStore<T extends {}> {
 }
 
 /**
- * Effect Layer constructing a {@link FeedStore} from a {@link FeedFactory} service.
+ * Effect Layer constructing a {@link HypercoreStore} from a {@link HypercoreFactory} service.
  */
-export const FeedStoreLayer = (): Layer.Layer<FeedStoreService, never, FeedFactoryService> =>
+export const HypercoreStoreLayer = (): Layer.Layer<HypercoreStoreService, never, HypercoreFactoryService> =>
   Layer.effect(
-    FeedStoreService,
+    HypercoreStoreService,
     Effect.gen(function* () {
-      const factory = yield* FeedFactoryService;
-      const store = new FeedStore({ factory });
+      const factory = yield* HypercoreFactoryService;
+      const store = new HypercoreStore({ factory });
       yield* Effect.addFinalizer(() => Effect.promise(() => store.close()));
       return store;
     }),

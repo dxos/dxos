@@ -3335,68 +3335,6 @@ importers:
         specifier: 'catalog:'
         version: 8.66.0(eslint@10.8.0(jiti@2.7.0))
 
-  packages/common/feed-store:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../async
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../crypto
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../debug
-      '@dxos/hypercore':
-        specifier: workspace:*
-        version: link:../hypercore
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../invariant
-      '@dxos/keyring':
-        specifier: workspace:*
-        version: link:../../core/halo/keyring
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../node-std
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../random-access-storage
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../util
-      '@dxos/vendor-hypercore':
-        specifier: workspace:*
-        version: link:../../../vendor/hypercore
-      effect:
-        specifier: 4.0.0-rc.115
-        version: 4.0.0-rc.115
-      lodash.defaultsdeep:
-        specifier: 'catalog:'
-        version: 4.6.1
-      race-as-promised:
-        specifier: 'catalog:'
-        version: 0.0.3
-      streamx:
-        specifier: 'catalog:'
-        version: 2.15.6
-    devDependencies:
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../context
-      '@types/lodash.defaultsdeep':
-        specifier: 'catalog:'
-        version: 4.6.7
-    optionalDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../random
-
   packages/common/graph:
     dependencies:
       '@dxos/async':
@@ -3470,6 +3408,68 @@ importers:
       hypercore-protocol:
         specifier: 'catalog:'
         version: 8.0.7
+
+  packages/common/hypercore-store:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../crypto
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../debug
+      '@dxos/hypercore':
+        specifier: workspace:*
+        version: link:../hypercore
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+      '@dxos/keyring':
+        specifier: workspace:*
+        version: link:../../core/halo/keyring
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+      '@dxos/random-access-storage':
+        specifier: workspace:*
+        version: link:../random-access-storage
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
+      '@dxos/vendor-hypercore':
+        specifier: workspace:*
+        version: link:../../../vendor/hypercore
+      effect:
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
+      lodash.defaultsdeep:
+        specifier: 'catalog:'
+        version: 4.6.1
+      race-as-promised:
+        specifier: 'catalog:'
+        version: 0.0.3
+      streamx:
+        specifier: 'catalog:'
+        version: 2.15.6
+    devDependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../context
+      '@types/lodash.defaultsdeep':
+        specifier: 'catalog:'
+        version: 4.6.7
+    optionalDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../random
 
   packages/common/i18n:
     dependencies:
@@ -6420,9 +6420,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/feed-store':
+      '@dxos/hypercore-store':
         specifier: workspace:*
-        version: link:../../../common/feed-store
+        version: link:../../../common/hypercore-store
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -18387,9 +18387,9 @@ importers:
         specifier: 'catalog:'
         version: 3.1.3
     devDependencies:
-      '@dxos/feed-store':
+      '@dxos/hypercore-store':
         specifier: workspace:*
-        version: link:../../common/feed-store
+        version: link:../../common/hypercore-store
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager
@@ -18504,12 +18504,12 @@ importers:
       '@dxos/feed':
         specifier: workspace:*
         version: link:../../core/echo/feed
-      '@dxos/feed-store':
-        specifier: workspace:*
-        version: link:../../common/feed-store
       '@dxos/hypercore':
         specifier: workspace:*
         version: link:../../common/hypercore
+      '@dxos/hypercore-store':
+        specifier: workspace:*
+        version: link:../../common/hypercore-store
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

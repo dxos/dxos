@@ -192,8 +192,8 @@ subgraph common [common]
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
-  dxos/feed-store("@dxos/feed-store"):::def
-  click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
+  dxos/hypercore-store("@dxos/hypercore-store"):::def
+  click dxos/hypercore-store "dxos/dxos/tree/main/packages/common/hypercore-store/docs"
   dxos/hypercore("@dxos/hypercore"):::def
   click dxos/hypercore "dxos/dxos/tree/main/packages/common/hypercore/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
@@ -219,8 +219,8 @@ end
 %% Links
 dxos/async --> dxos/context
 dxos/network-manager --> dxos/credentials
-dxos/credentials --> dxos/feed-store
-dxos/feed-store --> dxos/hypercore
+dxos/credentials --> dxos/hypercore-store
+dxos/hypercore-store --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf
 dxos/hypercore --> dxos/crypto
 dxos/hypercore --> dxos/random-access-storage
@@ -250,7 +250,7 @@ dxos/protocol-plugin-presence --> dxos/mesh-protocol
 | [`@dxos/credentials`](../../../halo/credentials/docs/README.md)                          | &check; |
 | [`@dxos/crypto`](../../../../common/crypto/docs/README.md)                               | &check; |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md)                                 | &check; |
-| [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md)                       |         |
+| [`@dxos/hypercore-store`](../../../../common/hypercore-store/docs/README.md)                       |         |
 | [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md)                         |         |
 | [`@dxos/keyring`](../../../halo/keyring/docs/README.md)                                  |         |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md)                                   | &check; |
