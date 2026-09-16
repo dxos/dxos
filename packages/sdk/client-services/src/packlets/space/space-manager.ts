@@ -12,8 +12,8 @@ import { Trigger, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { Event } from '@dxos/effect';
-import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { Hook } from '@dxos/effect';
+import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
@@ -32,7 +32,7 @@ import { SpaceProtocol, type SwarmIdentity } from './space-protocol.ts';
 import { Space } from './space.ts';
 
 export type SpaceManagerProps = {
-  feedStore: FeedStore<FeedMessage>;
+  hypercoreStore: HypercoreStore<FeedMessage>;
   networkManager: SwarmNetworkManager;
   metadataStore: IMetadataStore;
 
@@ -72,14 +72,14 @@ export class SpaceManagerService extends EffectContext.Service<SpaceManagerServi
 @trackLeaks('open', 'close')
 export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
-  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _hypercoreStore: HypercoreStore<FeedMessage>;
   private readonly _networkManager: SwarmNetworkManager;
   private readonly _metadataStore: IMetadataStore;
   private readonly _disableP2pReplication: boolean;
 
-  constructor({ feedStore, networkManager, metadataStore, disableP2pReplication }: SpaceManagerProps) {
+  constructor({ hypercoreStore, networkManager, metadataStore, disableP2pReplication }: SpaceManagerProps) {
     // TODO(burdon): Assert.
-    this._feedStore = feedStore;
+    this._hypercoreStore = hypercoreStore;
     this._networkManager = networkManager;
     this._metadataStore = metadataStore;
     this._disableP2pReplication = disableP2pReplication ?? false;
@@ -110,7 +110,7 @@ export class SpaceManager {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     // The genesis feed will be the same as the control feed if the space was created by the local agent.
-    const genesisFeed = await this._feedStore.openFeed(requirePublicKey(metadata.genesisFeedKey));
+    const genesisFeed = await this._hypercoreStore.openHypercore(requirePublicKey(metadata.genesisFeedKey));
 
     const spaceKey = requirePublicKey(metadata.key);
     // The carried id is primary; derive only for a space recorded before the field existed.
@@ -129,7 +129,7 @@ export class SpaceManager {
       spaceKey,
       protocol,
       genesisFeed,
-      feedProvider: (feedKey, opts) => this._feedStore.openFeed(feedKey, opts),
+      feedProvider: (feedKey, opts) => this._hypercoreStore.openHypercore(feedKey, opts),
       metadataStore: this._metadataStore,
       memberKey,
       onDelegatedInvitationStatusChange,
@@ -201,16 +201,16 @@ export const SpaceManagerLayer = (
 ): Layer.Layer<
   SpaceManagerService,
   never,
-  Event.Bus | FeedStoreService | SwarmNetworkManagerService | IMetadataStoreService
+  Hook.Controller | HypercoreStoreService | SwarmNetworkManagerService | IMetadataStoreService
 > =>
   Layer.effect(
     SpaceManagerService,
     Effect.gen(function* () {
-      const feedStore = yield* FeedStoreService;
+      const hypercoreStore = yield* HypercoreStoreService;
       const networkManager = yield* SwarmNetworkManagerService;
       const metadataStore = yield* IMetadataStoreService;
       const spaceManager = new SpaceManager({
-        feedStore,
+        hypercoreStore,
         networkManager,
         metadataStore,
         disableP2pReplication: options.disableP2pReplication,
@@ -218,8 +218,8 @@ export const SpaceManagerLayer = (
 
       yield* Effect.addFinalizer(() => Effect.promise(() => spaceManager.close()));
       yield* NetworkReady.pipe(
-        Event.handler(() => Effect.promise(() => spaceManager.open())),
-        Event.subscribe,
+        Hook.handler(() => Effect.promise(() => spaceManager.open())),
+        Hook.subscribe,
       );
       return spaceManager;
     }),

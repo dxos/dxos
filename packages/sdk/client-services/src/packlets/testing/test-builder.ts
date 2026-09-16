@@ -19,8 +19,8 @@ import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/cred
 import { failUndefined } from '@dxos/debug';
 import { EchoHost, EchoHostService, MeshEchoReplicator } from '@dxos/echo-host';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
-import { FeedFactory, FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import { HypercoreFactory, HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
 import {
   MemorySignalManager,
@@ -81,8 +81,8 @@ import {
 
 /** The open event chain; `StackOpened` resolves once every handler the cascade triggered has run. */
 const openChain = Effect.gen(function* () {
-  yield* Event.emit(Opening, undefined);
-  yield* Event.emit(StackOpened, undefined);
+  yield* Hook.emit(Opening, undefined);
+  yield* Hook.emit(StackOpened, undefined);
 });
 
 /**
@@ -104,7 +104,7 @@ export class ServiceContext {
   readonly #options: ServiceContextOptions;
   readonly #config: Config;
   readonly #sql = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
-  readonly #bus = Event.makeBus();
+  readonly #controller = Hook.makeController();
   /** Holds the reset handlers; closed by `destroy`. */
   readonly #busScope = Effect.runSync(Scope.make());
   #runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
@@ -116,9 +116,9 @@ export class ServiceContext {
     this.#config = options.config ?? new Config();
     Effect.runSync(
       Effect.gen({ self: this }, function* () {
-        yield* Event.on(Closing, () => Effect.promise(() => this.#closeStack()));
-        yield* Event.on(WipingStorage, () => Effect.promise(() => this.#sql.runPromise(wipeSqliteStorage)));
-      }).pipe(Effect.provideService(Event.Bus, this.#bus), Scope.provide(this.#busScope)),
+        yield* Hook.on(Closing, () => Effect.promise(() => this.#closeStack()));
+        yield* Hook.on(WipingStorage, () => Effect.promise(() => this.#sql.runPromise(wipeSqliteStorage)));
+      }).pipe(Effect.provideService(Hook.Controller, this.#controller), Scope.provide(this.#busScope)),
     );
   }
 
@@ -163,8 +163,8 @@ export class ServiceContext {
     return this.#get(KeyringApiService);
   }
 
-  get feedStore(): FeedStore<any> {
-    return this.#get(FeedStoreService);
+  get hypercoreStore(): HypercoreStore<any> {
+    return this.#get(HypercoreStoreService);
   }
 
   get echoHost(): EchoHost {
@@ -211,7 +211,7 @@ export class ServiceContext {
       }).pipe(
         Layer.provideMerge(RuntimeProvider.toLayer(this.#sql.contextEffect)),
         Layer.provide(Layer.succeed(ConfigService, this.#config)),
-        Layer.provide(Layer.succeed(Event.Bus, this.#bus)),
+        Layer.provide(Layer.succeed(Hook.Controller, this.#controller)),
       ),
     );
     try {
@@ -332,7 +332,7 @@ export type TestPeerOpts = {
 };
 
 export type TestPeerProps = {
-  feedStore?: FeedStore<any>;
+  hypercoreStore?: HypercoreStore<any>;
   metadataStore?: SqliteMetadataStore;
   keyring?: SqliteKeyring;
   networkManager?: SwarmNetworkManager;
@@ -364,9 +364,9 @@ export class TestPeer {
     return (this._props.keyring ??= new SqliteKeyring({ runtime: this._runtime.contextEffect }));
   }
 
-  get feedStore() {
-    return (this._props.feedStore ??= new FeedStore({
-      factory: new FeedFactory({
+  get hypercoreStore() {
+    return (this._props.hypercoreStore ??= new HypercoreStore({
+      factory: new HypercoreFactory({
         root: this._feedStorage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
@@ -389,7 +389,7 @@ export class TestPeer {
 
   get spaceManager() {
     return (this._props.spaceManager ??= new SpaceManager({
-      feedStore: this.feedStore,
+      hypercoreStore: this.hypercoreStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
     }));
@@ -415,7 +415,7 @@ export class TestPeer {
       metadataStore: this.metadataStore,
       keyring: this.keyring,
       signingContextProvider: () => this.identity,
-      feedStore: this.feedStore,
+      hypercoreStore: this.hypercoreStore,
       echoHost: this.echoHost,
       invitationsManager: this.invitationsManager,
       edgeConnection: undefined,

@@ -12,7 +12,7 @@ import { Event as AsyncEvent, type Trigger } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
-import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
@@ -45,7 +45,7 @@ export type DevtoolsServiceProps = {
   events: DevtoolsHostEvents;
   config: Config;
   keyring: KeyringApi;
-  feedStore: FeedStore<any>;
+  hypercoreStore: HypercoreStore<any>;
   spaceManager: SpaceManager;
   metadataStore: IMetadataStore;
   dataSpaceManager: DataSpaceManager;
@@ -171,7 +171,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   ['DevtoolsHost.subscribeToFeedBlocks'](
     request: DevtoolsHost.SubscribeToFeedBlocksRequest,
   ): EffectStream.Stream<SubscribeToFeedBlocksResponse, Error> {
-    return subscribeToFeedBlocks({ feedStore: this.params.feedStore }, request);
+    return subscribeToFeedBlocks({ hypercoreStore: this.params.hypercoreStore }, request);
   }
 
   ['DevtoolsHost.subscribeToMetadata'](): EffectStream.Stream<SubscribeToMetadataResponse, Error> {
@@ -264,7 +264,7 @@ const devtoolsImplLayer: Layer.Layer<
   never,
   | ConfigService
   | KeyringApiService
-  | FeedStoreService
+  | HypercoreStoreService
   | SpaceManagerService
   | IMetadataStoreService
   | DataSpaceManagerService
@@ -278,7 +278,7 @@ const devtoolsImplLayer: Layer.Layer<
   Effect.gen(function* () {
     const config = yield* ConfigService;
     const keyring = yield* KeyringApiService;
-    const feedStore = yield* FeedStoreService;
+    const hypercoreStore = yield* HypercoreStoreService;
     const spaceManager = yield* SpaceManagerService;
     const metadataStore = yield* IMetadataStoreService;
     const dataSpaceManager = yield* DataSpaceManagerService;
@@ -290,7 +290,7 @@ const devtoolsImplLayer: Layer.Layer<
       events: new DevtoolsHostEvents(),
       config,
       keyring,
-      feedStore,
+      hypercoreStore,
       spaceManager,
       metadataStore,
       dataSpaceManager,

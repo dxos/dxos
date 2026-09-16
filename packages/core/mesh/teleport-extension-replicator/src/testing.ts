@@ -5,7 +5,7 @@
 import { pipeline } from 'stream';
 import { onTestFinished } from 'vitest';
 
-import { FeedFactory, type FeedOptions, FeedStore } from '@dxos/feed-store';
+import { type HypercoreCreateOptions, HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,12 +25,12 @@ export class TestBuilder {
 export class TestAgent {
   public storage = createStorage({ type: StorageType.RAM });
   public keyring = new Keyring(this.storage.createDirectory('keyring'));
-  public feedStore = new FeedStore({
-    factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
+  public hypercoreStore = new HypercoreStore({
+    factory: new HypercoreFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
   });
 
   async createWriteFeed(numBlocks = 0) {
-    const feed = await this.feedStore.openFeed(await this.keyring.createKey(), { writable: true });
+    const feed = await this.hypercoreStore.openHypercore(await this.keyring.createKey(), { writable: true });
 
     for (const i of range(numBlocks)) {
       await feed.append(Buffer.from(`data-${i}`));
@@ -39,8 +39,8 @@ export class TestAgent {
     return feed;
   }
 
-  createReadFeed(key: PublicKey, opts?: FeedOptions) {
-    return this.feedStore.openFeed(key, opts);
+  createReadFeed(key: PublicKey, opts?: HypercoreCreateOptions) {
+    return this.hypercoreStore.openHypercore(key, opts);
   }
 }
 

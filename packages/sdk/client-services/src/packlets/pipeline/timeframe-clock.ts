@@ -4,18 +4,18 @@
 
 import { Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
-import { type FeedIndex } from '@dxos/feed-store';
+import { type HypercoreIndex } from '@dxos/feed-store';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/timeframe';
 
-export const mapTimeframeToFeedIndexes = (timeframe: Timeframe): FeedIndex[] =>
+export const mapTimeframeToFeedIndexes = (timeframe: Timeframe): HypercoreIndex[] =>
   timeframe.frames().map(([feedKey, index]) => ({ feedKey, index }));
 
-export const mapFeedIndexesToTimeframe = (indexes: FeedIndex[]): Timeframe =>
+export const mapFeedIndexesToTimeframe = (indexes: HypercoreIndex[]): Timeframe =>
   new Timeframe(indexes.map(({ feedKey, index }) => [feedKey, index]));
 
-export const startAfter = (timeframe: Timeframe): FeedIndex[] =>
+export const startAfter = (timeframe: Timeframe): HypercoreIndex[] =>
   timeframe.frames().map(([feedKey, index]) => ({ feedKey, index: index + 1 }));
 
 /**

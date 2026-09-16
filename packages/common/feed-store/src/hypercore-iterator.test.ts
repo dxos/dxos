@@ -6,22 +6,22 @@ import { describe, expect, test } from 'vitest';
 
 import { latch } from '@dxos/async';
 
-import { FeedIterator } from './feed-iterator.ts';
+import { HypercoreIterator } from './hypercore-iterator.ts';
 import { TestItemBuilder } from './testing/index.ts';
 
-describe('FeedIterator', () => {
+describe('HypercoreIterator', () => {
   test('reads blocks in order', async () => {
     const builder = new TestItemBuilder();
 
     const numBlocks = 20;
 
     // Create feeds and write data.
-    const feedStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
-    const feed = await feedStore.openFeed(key, { writable: true });
-    const writer = feed.createFeedWriter();
+    const feed = await hypercoreStore.openHypercore(key, { writable: true });
+    const writer = feed.createHypercoreWriter();
 
-    const iterator = new FeedIterator(feed);
+    const iterator = new HypercoreIterator(feed);
     await iterator.open();
     expect(iterator.isRunning).to.be.true;
 

@@ -4,7 +4,7 @@
 
 import { type PublicKey } from '@dxos/keys';
 
-export type FeedBlock<T> = {
+export type HypercoreBlock<T> = {
   feedKey: PublicKey;
   seq: number;
   data: T;

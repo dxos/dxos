@@ -8,14 +8,14 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { FeedQueue } from './feed-queue.ts';
-import { type FeedWrapper } from './feed-wrapper.ts';
-import { type FeedBlock } from './types.ts';
+import { HypercoreQueue } from './hypercore-queue.ts';
+import { type HypercoreWrapper } from './hypercore-wrapper.ts';
+import { type HypercoreBlock } from './types.ts';
 
 /**
  * Base class for an async iterable feed.
  */
-export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
+export abstract class AbstractHypercoreIterator<T> implements AsyncIterable<HypercoreBlock<T>> {
   private _stopTrigger = new Trigger();
   private _runningTrigger = new Trigger();
 
@@ -119,18 +119,18 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
 
   abstract _onOpen(): Promise<void>;
   abstract _onClose(): Promise<void>;
-  abstract _nextBlock(): Promise<FeedBlock<T> | undefined>;
+  abstract _nextBlock(): Promise<HypercoreBlock<T> | undefined>;
 }
 
 /**
  * Iterator that reads blocks from a single feed.
  */
-export class FeedIterator<T extends {}> extends AbstractFeedIterator<T> {
-  private readonly _queue: FeedQueue<T>;
+export class HypercoreIterator<T extends {}> extends AbstractHypercoreIterator<T> {
+  private readonly _queue: HypercoreQueue<T>;
 
-  constructor(private readonly _feed: FeedWrapper<T>) {
+  constructor(private readonly _feed: HypercoreWrapper<T>) {
     super();
-    this._queue = new FeedQueue<T>(this._feed);
+    this._queue = new HypercoreQueue<T>(this._feed);
   }
 
   override async _onOpen(): Promise<void> {
@@ -141,7 +141,7 @@ export class FeedIterator<T extends {}> extends AbstractFeedIterator<T> {
     await this._queue.close();
   }
 
-  override async _nextBlock(): Promise<FeedBlock<T> | undefined> {
+  override async _nextBlock(): Promise<HypercoreBlock<T> | undefined> {
     return this._queue.pop();
   }
 }

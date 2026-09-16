@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Ref, Type } from '@dxos/echo';
-import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * @deprecated Use (@dxos/echo/testing)
@@ -28,17 +27,17 @@ export namespace TestSchema {
   //
 
   export const OrganizationSchema = Schema.Struct({
-    name: Schema.String.pipe(GeneratorAnnotation.set('company.name')),
+    name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('company.name')),
     description: Schema.optional(Schema.String),
     image: Schema.optional(
-      Format.URL.pipe(Schema.annotate({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
+      Format.URL.pipe(Schema.annotate({ title: 'Preview image' }), Annotation.GeneratorAnnotation.set('image.url')),
     ),
     website: Schema.optional(
-      Format.URL.pipe(Schema.annotate({ title: 'Website' }), GeneratorAnnotation.set('internet.url')),
+      Format.URL.pipe(Schema.annotate({ title: 'Website' }), Annotation.GeneratorAnnotation.set('internet.url')),
     ),
   }).pipe(
     Schema.annotate({ title: 'Organization' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--building--regular', hue: 'blue' }),
   );
 
@@ -54,19 +53,19 @@ export namespace TestSchema {
   });
 
   export const PersonSchema = Schema.Struct({
-    name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
+    name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('person.fullName')),
     image: Schema.optional(
-      Format.URL.pipe(Schema.annotate({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
+      Format.URL.pipe(Schema.annotate({ title: 'Preview image' }), Annotation.GeneratorAnnotation.set('image.url')),
     ),
-    email: Schema.optional(Format.Email.pipe(GeneratorAnnotation.set('internet.email'))),
+    email: Schema.optional(Format.Email.pipe(Annotation.GeneratorAnnotation.set('internet.email'))),
     organization: Schema.optional(
       Ref.Ref(Organization).annotate({
-        [FieldLookupAnnotationId]: 'name',
+        [Annotation.FieldLookupAnnotationId]: 'name',
       }),
     ),
   }).pipe(
     Schema.annotate({ title: 'Person' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'green' }),
   );
 
@@ -79,12 +78,12 @@ export namespace TestSchema {
   //
 
   export const ProjectSchema = Schema.Struct({
-    name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName')),
+    name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('commerce.productName')),
     description: Schema.optional(Schema.String),
-    image: Schema.optional(Format.URL.pipe(GeneratorAnnotation.set('image.url'))),
+    image: Schema.optional(Format.URL.pipe(Annotation.GeneratorAnnotation.set('image.url'))),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'purple' }),
   );
 
@@ -101,7 +100,7 @@ export namespace TestSchema {
     created: Schema.String,
     title: Schema.String,
     content: Schema.String,
-  }).pipe(Schema.annotate({ title: 'Message' }), LabelAnnotation.set(['name']));
+  }).pipe(Schema.annotate({ title: 'Message' }), Annotation.LabelAnnotation.set(['name']));
 
   export const Message = Type.makeObject(DXN.make('com.example.type.message', '0.1.0'))(MessageSchema);
 
