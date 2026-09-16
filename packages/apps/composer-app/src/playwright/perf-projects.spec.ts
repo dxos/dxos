@@ -89,6 +89,16 @@ const STAGE_BUDGET_MS = 600_000;
 
 const testBudget = (scale: Scale): number => scale.tasks * FIXTURE_MS_PER_TASK + STAGE_BUDGET_MS;
 
+/**
+ * Tiers this fixture path cannot build.
+ *
+ * `heavy` would need ~70 minutes of `tasks.create` calls before a single stage, which exceeds even
+ * the config's outer bound — so it would expire at the CONFIG level, reporting no stage and no
+ * reason. Refused up front instead, in seconds, naming what is missing: the archive path
+ * (`buildArchive` -> `client.spaces.import`). See `spec/PERF.mdl`.
+ */
+const UNSUPPORTED_SCALES = new Set(['heavy']);
+
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
 };
@@ -276,6 +286,11 @@ test.describe.serial('Projects + Tasks performance', () => {
     test(`${mode} @ ${scaleName}`, async () => {
       const scale = SCALES[scaleName];
       expect(scale, `unknown scale ${scaleName}`).toBeDefined();
+      expect(
+        UNSUPPORTED_SCALES.has(scaleName),
+        `the '${scaleName}' tier needs the archive fixture path (buildArchive -> client.spaces.import); ` +
+          'the operation layer cannot build it in a usable time — see spec/PERF.mdl',
+      ).toBe(false);
       await runFlow(mode, scale, 0);
     });
   }

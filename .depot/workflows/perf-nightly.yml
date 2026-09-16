@@ -16,8 +16,8 @@ on:
     inputs:
       scales:
         type: string
-        description: 'DX_PERF_SCALE tiers to sweep, comma-separated (smoke, working, heavy)'
-        default: 'smoke,working,heavy'
+        description: 'DX_PERF_SCALE tiers to sweep, comma-separated (smoke, working; heavy is unsupported)'
+        default: 'smoke,working'
       modes:
         type: string
         description: 'DX_PERF_MODES per tier (measure, diagnose)'
@@ -82,7 +82,12 @@ jobs:
         id: flows
         continue-on-error: true
         env:
-          SCALES: ${{ inputs.scales || 'smoke,working,heavy' }}
+          # `heavy` is NOT in the default sweep: its fixture is unsupported through the operation
+          # layer (see `spec/PERF.mdl`), so including it would fail the flow step every night —
+          # and because the trending gate below requires a successful flow, one unsupported tier
+          # would suppress the rows the OTHER tiers produced. Available via `inputs.scales` for
+          # whoever builds the archive path.
+          SCALES: ${{ inputs.scales || 'smoke,working' }}
           MODES: ${{ inputs.modes || 'measure,diagnose' }}
           DX_PWA: 'false'
         run: |
