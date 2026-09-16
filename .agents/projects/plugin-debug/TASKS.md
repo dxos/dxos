@@ -58,3 +58,20 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 - [ ] Decide the overlap between DevTools → Client → Logs (client-services log stream via
       `LoggingService.queryLogs`, level/filter, download) and Debug → Logs (react-ui-debug
       `Logger` over the in-page log buffer with per-file levels, recording, persistence).
+
+## Phase 4: devtools surfaces — audit, articles, cards (design §6)
+
+- [ ] `packages/plugins/plugin-debug/docs/AUDIT.md`: the three deck companions, the twenty-six large
+      panels and the thirteen small panels, by section (Client / HALO / ECHO / MESH / EDGE / performance),
+      with the superset module list.
+- [ ] Remove `deckCompanion.logs` (graph extension, surface, role list, translation, `PLUGIN.mdl`, test).
+- [ ] `@dxos/devtools`: move `src/panels` → `src/containers/panels`; standalone app, extension and
+      testbench imports follow.
+- [ ] Articles: every panel in the `Panel.Root role` + toolbar + `ScrollArea` shape, renamed `*Article`.
+- [ ] `StatRow` component; `containers/cards/<Name>Card` for the thirteen small panels + fixtures + stories;
+      delete `components/performance`.
+- [ ] `StatsPanel` as the card stack (toolbar with live toggle); `DevtoolsOverviewContainer` renders the
+      `AppSurface.DevtoolsOverview` surface inside it with `DevtoolsCardData`.
+- [ ] plugin-devtools `react-surface.ts`: articles (renamed) + one surface per card with `position`.
+- [ ] plugin-debug compartment `StatsPanel` as cards, contributed to `AppSurface.DevtoolsOverview`.
+- [ ] Builds, graph-builder tests, card stories, Composer check; `PLUGIN.mdl` (debug, devtools) updated.

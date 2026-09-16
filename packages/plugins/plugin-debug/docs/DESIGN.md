@@ -123,3 +123,76 @@ already own that axis — a second splitter competes with them).
 - plugin-devtools: graph-builder test rewritten for the `debug` attachment (no URL binding).
 - Composer dev server: open the panel, navigate Client → Config, Generate objects; main navtree shows
   no DevTools/Debug section; reload keeps the selection.
+
+## 6. Devtools surfaces: articles and cards (phase 4)
+
+Status: approved 2026-09-16 (chat). Audit: [`AUDIT.md`](./AUDIT.md). Ledger: phase 4 in
+[`TASKS.md`](../../../../.agents/projects/plugin-debug/TASKS.md).
+
+### Problem
+
+Three deck companions (`logs`, `spaceObjects`, `devtoolsOverview`) sit beside the debug panel as R0
+buttons. `logs` renders the same `LoggerPanel` as the panel's Debug → Logs node. `devtoolsOverview`
+renders `@dxos/devtools`' `StatsPanel`: a hand-built accordion (`components/performance/Panel.tsx`) over
+thirteen small panels, with open state persisted per panel in localStorage, that only plugin-calls can
+extend (through `AppSurface.DevtoolsOverview`). The twenty-six large panels under
+`packages/devtools/devtools/src/panels` predate the article container shape and are wrapped one by one
+in `plugin-devtools/src/capabilities/react-surface.ts`.
+
+### Design
+
+1. **`deckCompanion.logs` is removed.** The graph extension, the surface, the role in
+   `capabilities/index.ts`, its translation key and its `PLUGIN.mdl` mention go. Debug → Logs in the
+   panel is the log viewer. `spaceObjects` and `devtoolsOverview` stay.
+
+2. **`@dxos/devtools` layout.** `src/panels/**` moves to `src/containers/panels/**` (subfolders
+   `client/echo/halo/mesh/edge` unchanged); `src/components/performance/**` is replaced by
+   `src/containers/cards/<Name>Card/` (one folder per card, each with `index.ts`, the component and a
+   story) and `src/containers/StatsPanel/`. `components/performance/Panel.tsx` (the accordion item) is
+   deleted. The standalone devtools app (`hooks/useRoutes.tsx`, `useSections.tsx`), `devtools-extension`
+   and `testbench-app` follow the moved exports; nothing is left behind as a re-export.
+
+3. **Articles (A).** Every large panel is a container in the article shape: `Panel.Root role={role}` →
+   optional `Panel.Toolbar` (one `Toolbar.Root` holding the panel's selectors and actions) →
+   `Panel.Content asChild` → `ScrollArea.Root/Viewport` (or the table/tree that owns its own scroll).
+   Components are renamed `<Name>Article` (`ConfigPanel` → `ConfigArticle`), the suffix the role
+   convention prescribes. Space-scoped articles keep `space` as a prop: `@dxos/devtools` stays free of
+   the active-workspace hook so the standalone app keeps working, and plugin-devtools' `ActiveSpacePanel`
+   adapter resolves the space. `plugin-devtools/src/capabilities/react-surface.ts` registers each one
+   under its `Devtools.*` id, threading `role`.
+
+4. **Cards (B).** Each small panel becomes a `<Name>Card`: `Card.Root` → `Card.Header` (icon in the
+   leading `Card.Block`, `Card.Title`, an optional control in the trailing block) → `Card.Row`s. A row's
+   leading gutter holds a status icon, the centre a label and a value, the trailing gutter a control
+   button; rows are compact and never nest a table. A shared `StatRow` component
+   (`src/components/StatRow`) renders the label/value row so every card reads the same. Cards are
+   prop-driven — no card calls a client hook — so each story mounts on fixtures from
+   `src/containers/cards/testing/fixtures.ts`. Summary-only panels (Memory, Network) become cards with
+   one row per figure; the former `main` row's live toggle moves to the stack's toolbar. The accordion
+   and its localStorage state are dropped: the first pass is a plain stack of always-open cards.
+
+5. **The card role.** `AppSurface.DevtoolsOverview` (`org.dxos.role.devtoolsOverview`) is the card
+   role. Its data stays `Record<string, unknown>` in app-toolkit; plugin-devtools defines
+   `DevtoolsCardData = { stats?: Stats; surfaceProfilerStats?: SurfaceProfilerStats[]; onClearSurfaceProfiler?: () => void }`
+   with a type guard, and each card surface filters on the guard and maps its slice in `props`. A
+   contributor that ignores the data (plugin-calls) keeps matching. Order is the surface `position`.
+
+6. **The stack.** `StatsPanel` (`@dxos/devtools`, `containers/StatsPanel`) is `Panel.Root` →
+   `Panel.Toolbar` (live toggle, refresh) → `Panel.Content asChild` → `ScrollArea` → `Flex column gap`
+   of `children`. `DevtoolsOverviewContainer` (plugin-devtools) polls `useStats` once and renders
+   `<StatsPanel …><Surface type={AppSurface.DevtoolsOverview} data={cardData} /></StatsPanel>`; the
+   standalone app lists the cards as children directly. plugin-debug's compartment `StatsPanel`
+   (`AppCapabilities.StatsPanel`) becomes one card per compartment and is contributed to the same role;
+   its own `DebugSurface.Stats` role stays for stories-inbox.
+
+7. **Out of scope.** Stories for the article panels (existing ones are kept and renamed); translations
+   for the devtools panels; `Devtools.Agent` ids (documented as unimplemented in the audit); a Debug →
+   Stats tree node.
+
+### Testing
+
+- `moon run devtools:build`, `plugin-devtools:build`, `plugin-debug:build`, `composer-app:build`, and
+  the `app-graph-builder` tests of both plugins (the `logs` companion assertion removed).
+- Card stories render on fixtures (`moon run devtools:test-storybook`).
+- In Composer: the `devtoolsOverview` companion shows the card stack; the `logs` R0 button is gone; every
+  DevTools tree page renders in the panel.
