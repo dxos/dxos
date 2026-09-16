@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Grid, IconButton } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { StatCard } from '../../../components/index.ts';
 import { type SyncRow } from '../../../hooks/index.ts';
@@ -26,13 +27,13 @@ const describe = ({ spaceId, name, state, feedState }: SyncRow): string =>
     `Remote documents: ${state.remoteDocumentCount} (missing: ${state.missingOnRemote})`,
   ].join('\n');
 
-/** Fixed tracks, so the automerge and feed figures line up in columns across rows. */
-const METRIC_TRACKS = ['auto', '5rem', 'auto', '3.5rem'];
+/** The name takes the slack; fixed figure tracks line the automerge and feed columns up across rows. */
+const ROW_TRACKS = ['1fr', 'auto', '5rem', 'auto', '3.5rem'];
 
 const Metric = ({ label, pending, total }: { label: string; pending: number; total: number }) => (
   <>
     <span className='text-subdued'>{label}</span>
-    <span className={pending > 0 ? 'text-warning-text' : 'text-success-text'}>
+    <span className={mx('font-mono tabular-nums', pending > 0 ? 'text-warning-text' : 'text-success-text')}>
       {pending > 0 ? `${pending}/${total}` : total}
     </span>
   </>
@@ -63,14 +64,6 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             key={row.spaceId}
             icon={syncing ? 'ph--arrows-down-up--regular' : 'ph--check-circle--regular'}
             iconClassNames={syncing ? 'text-warning-text' : 'text-success-text'}
-            title={describe(row)}
-            value={
-              <Grid cols={METRIC_TRACKS} gap='sm' grow={false} classNames='text-end'>
-                <span>{row.name}</span>
-                <Metric label='automerge' pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
-                <Metric label='feed' pending={feedPending} total={row.feedState?.total ?? 0} />
-              </Grid>
-            }
             // TODO(burdon): Use system.
             action={
               <IconButton
@@ -82,7 +75,15 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
                 onClick={() => void navigator.clipboard.writeText(row.spaceId)}
               />
             }
-          />
+          >
+            <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
+              <span className='truncate text-start' title={describe(row)}>
+                {row.name}
+              </span>
+              <Metric label='automerge' pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
+              <Metric label='feed' pending={feedPending} total={row.feedState?.total ?? 0} />
+            </Grid>
+          </StatCard.Row>
         );
       })}
     </StatCard.Root>

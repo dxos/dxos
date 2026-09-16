@@ -64,27 +64,31 @@ StatCardHeader.displayName = 'StatCard.Header';
 // Row
 //
 
-type StatCardRowProps = ThemedClassName<{
-  /** Leading gutter icon; the gutter is kept even when empty so labels align across rows. */
-  icon?: string;
-  iconClassNames?: string;
-  /** A disclosure row: the leading gutter holds the toggle instead of an icon. */
-  open?: boolean;
-  onToggle?: (open: boolean) => void;
-  label?: ReactNode;
-  value?: ReactNode;
-  /** Shown in the trailing gutter, so values end on one edge whether or not they carry a unit. */
-  unit?: string;
-  /** Tooltip on the label, for the full text of a truncated row. */
-  title?: string;
-  /** Trailing gutter control; takes the gutter over `unit`. */
-  action?: ReactNode;
-  warning?: boolean;
-}>;
+type StatCardRowProps = PropsWithChildren<
+  ThemedClassName<{
+    /** Leading gutter icon; the gutter is kept even when empty so labels align across rows. */
+    icon?: string;
+    iconClassNames?: string;
+    /** A disclosure row: the leading gutter holds the toggle instead of an icon. */
+    open?: boolean;
+    onToggle?: (open: boolean) => void;
+    /** The row's text; omitted when `children` lay the content out themselves. */
+    label?: ReactNode;
+    value?: ReactNode;
+    /** Shown in the trailing gutter, so values end on one edge whether or not they carry a unit. */
+    unit?: string;
+    /** Tooltip on the label, for the full text of a truncated row. */
+    title?: string;
+    /** Trailing gutter control; takes the gutter over `unit`. */
+    action?: ReactNode;
+    warning?: boolean;
+  }>
+>;
 
 /**
  * A label/value row: icon or disclosure toggle in the leading gutter, a unit or control in the
- * trailing one. With nothing trailing, the content runs through the trailing gutter.
+ * trailing one. With nothing trailing, the content runs through the trailing gutter. `children`
+ * replace the label/value pair for rows that need their own columns (a `Grid`).
  */
 const StatCardRow = ({
   classNames,
@@ -98,6 +102,7 @@ const StatCardRow = ({
   title,
   action,
   warning,
+  children,
 }: StatCardRowProps) => {
   const trailing = action ?? (unit && <span className='text-xs text-subdued'>{unit}</span>);
   return (
@@ -122,13 +127,15 @@ const StatCardRow = ({
         gap='sm'
         classNames={['min-w-0 text-xs', !trailing && '[--dx-col:2/span_2]']}
       >
-        {label !== undefined && (
-          <span className='truncate' title={title}>
-            {label}
-          </span>
-        )}
-        {value !== undefined && (
-          <span className={mx('shrink-0 font-mono tabular-nums', warning && 'text-error-text')}>{value}</span>
+        {children ?? (
+          <>
+            <span className='truncate' title={title}>
+              {label}
+            </span>
+            {value !== undefined && (
+              <span className={mx('shrink-0 font-mono tabular-nums', warning && 'text-error-text')}>{value}</span>
+            )}
+          </>
         )}
       </Flex>
       {trailing && (
