@@ -869,9 +869,9 @@ describe('Agent Service (control plane)', () => {
         });
 
         // The model is read off the chat, not passed in: a chat without one runs the default.
-        const sessionA = yield* getSession(chat);
+        const sessionA = yield* ComputeAgentService.getSession(chat);
         const [pidA] = yield* activePids;
-        expect(yield* getSession(chat)).toBe(sessionA);
+        expect(yield* ComputeAgentService.getSession(chat)).toBe(sessionA);
         expect(yield* activePids).toEqual([pidA]);
 
         // Selecting a model on the chat tears the process down and respawns it bound to the selection.
@@ -879,14 +879,14 @@ describe('Agent Service (control plane)', () => {
           chat.model = Ref.fromURI(DXN.make('com.anthropic.model.claude-haiku-4-5.default'));
         });
         yield* Database.flush();
-        const sessionB = yield* getSession(chat);
+        const sessionB = yield* ComputeAgentService.getSession(chat);
         const [pidB] = yield* activePids;
         expect(sessionB).not.toBe(sessionA);
         expect(pidB).not.toBe(pidA);
         expect(yield* activePids).toEqual([pidB]);
 
         // The same selection again is a cache hit.
-        expect(yield* getSession(chat)).toBe(sessionB);
+        expect(yield* ComputeAgentService.getSession(chat)).toBe(sessionB);
 
         yield* sessionB.terminate();
       },
