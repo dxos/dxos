@@ -367,6 +367,7 @@ const TaskTreeHeading = ({
         <SystemIconButton.Clipboard
           density='sm'
           variant='tag'
+          hue='emerald'
           label={Obj.getMnemonic(current)}
           iconEnd
           onCopy={() => Obj.getMnemonic(current)}

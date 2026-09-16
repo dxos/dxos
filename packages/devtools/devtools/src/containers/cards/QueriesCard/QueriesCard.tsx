@@ -2,51 +2,56 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { StatCard } from '../../../components/index.ts';
-import { type QueryInfo, removeEmpty } from '../../../hooks/index.ts';
-import { SLOW_TIME, Unit } from '../util.tsx';
+import { type QueryInfo } from '../../../hooks/index.ts';
+import { SLOW_TIME, Unit, groupQueriesByFilter } from '../util.tsx';
 
 export type QueriesCardProps = {
   /** Most recent first. */
   queries?: QueryInfo[];
 };
 
+/** One row per filter shape: how many queries share it and the slowest of them, disclosing each query. */
 export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
-  const [expanded, setExpanded] = useState<number>();
+  const [expanded, setExpanded] = useState<string>();
+  const shapes = [...groupQueriesByFilter(queries).entries()].sort(([a], [b]) => a.localeCompare(b));
   return (
     <StatCard.Root>
       <StatCard.Header icon='ph--tree-view--regular' title='Queries' info={queries.length.toLocaleString()} />
-      {queries.length === 0 && <StatCard.Row label='No queries.' />}
-      {queries.map((query, index) => {
-        const filter = removeEmpty(query.filter);
-        const objects = (query.metrics.objectsReturned ?? 0).toLocaleString();
-        const duration = query.metrics.executionTime ?? 0;
-        const open = expanded === index;
+      {shapes.length === 0 && <StatCard.Row label='No queries.' />}
+      {shapes.map(([shape, group]) => {
+        const slowest = Math.max(...group.map((query) => query.metrics.executionTime ?? 0));
+        const open = expanded === shape;
         return (
-          <React.Fragment key={index}>
+          <Fragment key={shape}>
             <StatCard.Row
               open={open}
-              onToggle={(open) => setExpanded(open ? index : undefined)}
+              onToggle={(open) => setExpanded(open ? shape : undefined)}
               label={
-                <span className={query.active ? 'font-mono' : 'font-mono text-subdued'}>
-                  {objects} · {JSON.stringify(filter)}
+                <span className='font-mono'>
+                  {group.length} · {shape}
                 </span>
               }
-              title={query.active ? `${objects} objects` : `${objects} objects (inactive)`}
-              value={Unit.ms(duration)}
+              title={`${group.length} queries`}
+              value={Unit.ms(slowest)}
               unit='ms'
-              warning={duration > SLOW_TIME}
+              warning={slowest > SLOW_TIME}
             />
             {open && (
               <StatCard.Content>
-                <JsonHighlighter data={{ active: query.active, filter, metrics: query.metrics }} />
+                <JsonHighlighter
+                  data={{
+                    filter: JSON.parse(shape),
+                    queries: group.map((query) => ({ active: query.active, ...query.metrics })),
+                  }}
+                />
               </StatCard.Content>
             )}
-          </React.Fragment>
+          </Fragment>
         );
       })}
     </StatCard.Root>

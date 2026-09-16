@@ -195,8 +195,7 @@ The union of A and B, by section, as phase 4 lays it out. _Article_ = `Panel.Roo
 | Database            | Card    | `database`                | storage census + read/write rates |
 | Replicator          | Card    | `replicator`              |                                   |
 | Replicator messages | Card    | `replicatorMessages`      |                                   |
-| Queries             | Card    | `queries`                 | source never populated (§4)       |
-| Query types         | Card    | `rawQueries`              | source never populated (§4)       |
+| Queries             | Card    | `queries`                 | one row per filter shape, disclosing its queries; source never populated (§4) |
 | Sync                | Card    | `sync`                    |                                   |
 
 ### MESH

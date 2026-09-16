@@ -18,13 +18,13 @@ export const Unit = {
 /** Suffix naming the averaging window of a rate, e.g. ` (10s)`. */
 export const rateInterval = (seconds?: number): string => (seconds ? ` (${seconds}s)` : '');
 
-/** Groups queries by their filter shape (options and type identity stripped) and counts each shape. */
-export const groupQueriesByFilter = (queries: QueryInfo[] = []): Map<string, number> =>
+/** Groups queries by their filter shape (options and type identity stripped), keyed by the shape's JSON. */
+export const groupQueriesByFilter = (queries: QueryInfo[] = []): Map<string, QueryInfo[]> =>
   queries.reduce((acc, query) => {
     const raw = removeEmpty(query.filter);
     delete raw.options;
     raw.type = raw.type?.itemId;
     const key = JSON.stringify(raw);
-    acc.set(key, (acc.get(key) ?? 0) + 1);
+    acc.set(key, [...(acc.get(key) ?? []), query]);
     return acc;
-  }, new Map<string, number>());
+  }, new Map<string, QueryInfo[]>());

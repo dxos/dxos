@@ -71,8 +71,8 @@ component DevtoolsOverviewContainer
     with one `AppSurface.DevtoolsOverview` surface as its children, passing
     `DevtoolsCardData { stats, surfaceProfilerStats, onClearSurfaceProfiler }`. Every card is a
     surface on that role ordered by `position`: memory, network, EDGE, performance, swarm
-    announcements, surfaces (profiler), database, replicator, messages, queries, query types, sync,
-    frame rate (0–12), then plugin-debug's compartment cards (20) and other contributors (e.g.
+    announcements, surfaces (profiler), database, replicator, messages, queries, sync, frame rate
+    (0–12), then plugin-debug's compartment cards (20) and other contributors (e.g.
     plugin-calls). A card is a `StatCard` (`@dxos/devtools`): a `Card.Header` with an icon,
     title, figure and one control, over compact `Card.Row`s whose leading gutter carries a status
     icon and whose trailing gutter carries a control.

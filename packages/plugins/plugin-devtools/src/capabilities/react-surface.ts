@@ -30,7 +30,6 @@ import {
   PerformanceCard,
   QueriesCard,
   QueuesArticle,
-  RawQueriesCard,
   ReplicatorCard,
   ReplicatorMessagesCard,
   SchemaArticle,
@@ -41,7 +40,6 @@ import {
   SwarmArticle,
   TimeSeriesCard,
   WorkflowArticle,
-  groupQueriesByFilter,
 } from '@dxos/devtools';
 
 import {
@@ -190,13 +188,6 @@ export default Capability.makeModule(
         position: 9,
         component: QueriesCard,
         props: ({ data: { stats } }) => ({ queries: [...(stats.queries ?? [])].reverse() }),
-      }),
-      Surface.create({
-        id: 'card.rawQueries',
-        filter: devtoolsCard,
-        position: 10,
-        component: RawQueriesCard,
-        props: ({ data: { stats } }) => ({ queries: groupQueriesByFilter(stats.queries) }),
       }),
       Surface.create({
         id: 'card.sync',

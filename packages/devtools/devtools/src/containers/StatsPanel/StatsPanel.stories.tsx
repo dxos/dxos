@@ -14,13 +14,11 @@ import {
   NetworkCard,
   PerformanceCard,
   QueriesCard,
-  RawQueriesCard,
   ReplicatorCard,
   ReplicatorMessagesCard,
   SurfaceProfilerCard,
   SwarmTraceCard,
   SyncCard,
-  groupQueriesByFilter,
 } from '../cards/index.ts';
 import * as fixtures from '../cards/testing/fixtures.ts';
 import { StatsPanel } from './StatsPanel.tsx';
@@ -37,7 +35,6 @@ const DefaultStory = () => (
     <ReplicatorCard database={fixtures.database} />
     <ReplicatorMessagesCard database={fixtures.database} />
     <QueriesCard queries={fixtures.queries} />
-    <RawQueriesCard queries={groupQueriesByFilter(fixtures.queries)} />
     <SyncCard spaces={fixtures.syncRows} onCopy={() => {}} />
   </StatsPanel>
 );
