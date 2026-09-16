@@ -124,7 +124,6 @@ export class RepoProxy extends Resource {
   /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
   private _resubscribeDelay = 0;
 
-  /** Host updates not yet integrated, in arrival order. */
   #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
@@ -573,8 +572,6 @@ export class RepoProxy extends Resource {
       while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
         const { update, bulk } = this.#inbox[this.#inboxHead++];
         this.#integrate(update, bulk);
-        // A first sync hands the client hundreds of full documents per batch, and loading each one is Automerge work
-        // that would otherwise block input for the whole batch.
         if (this.#inboxHead < this.#inbox.length) {
           await yieldOrContinue('smooth');
         }
