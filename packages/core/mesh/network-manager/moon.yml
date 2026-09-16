@@ -4,6 +4,7 @@ tags:
   - dist-runtime
   - ts-vite-build
   - ts-test
+  - ts-test-browser
   - pack
 tasks:
   # network-manager's `package.json` `imports` field maps `#tcp-transport`
@@ -13,5 +14,8 @@ tasks:
   # before tests run. The inherited `:test` task only depends on the upstream
   # build (`^:build`), not on the package's own build.
   test:
+    deps:
+      - ~:build
+  test-browser:
     deps:
       - ~:build

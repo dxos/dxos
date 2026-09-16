@@ -208,7 +208,8 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
     return (
       <IconButton
         {...props}
-        classNames={[copied && 'text-green-500', classNames]}
+        classNames={classNames}
+        iconClassNames={copied && 'text-green-500'}
         icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'}
         label={label ?? t('system-button.clipboard.label')}
         onClick={handleCopy}

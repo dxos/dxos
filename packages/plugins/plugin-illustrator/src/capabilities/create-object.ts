@@ -65,7 +65,11 @@ export default Capability.makeModule(
             { spaceId: options.db.spaceId },
           ).pipe(
             Effect.tapError(() =>
-              Operation.invoke(SpaceOperation.RemoveObjects, { objects: [canvas] }).pipe(Effect.ignore),
+              Operation.invoke(
+                SpaceOperation.RemoveObjects,
+                { objects: [canvas] },
+                { spaceId: options.db.spaceId },
+              ).pipe(Effect.ignore),
             ),
           );
         }),

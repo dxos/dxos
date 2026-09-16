@@ -1,0 +1,50 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/keys.proto";
+import "dxos/mesh/swarm.proto";
+import "google/protobuf/struct.proto";
+
+package dxos.mesh.rtc;
+
+//
+// Payloads for the WebRTC proxy service, whose RPC surface is declared with effect-rpc
+// (`@dxos/protocols/rpc` -> `RTCService`). The established `RTCDataChannel` is transferred to the
+// consumer, so connection data never crosses this boundary and there is no data message here.
+//
+
+message ConnectionRequest {
+  dxos.keys.PublicKey proxy_id = 1;
+  bool initiator = 2;
+  string remote_peer_key = 3;
+  string own_peer_key = 4;
+  string topic = 5;
+}
+
+message SignalRequest {
+  dxos.keys.PublicKey proxy_id = 1;
+  dxos.mesh.swarm.Signal signal = 2;
+}
+
+message CloseRequest {
+  dxos.keys.PublicKey proxy_id = 1;
+}
+
+message DetailsRequest {
+  dxos.keys.PublicKey proxy_id = 1;
+}
+
+message DetailsResponse {
+  string details = 1;
+}
+
+message StatsRequest {
+  dxos.keys.PublicKey proxy_id = 1;
+}
+
+message StatsResponse {
+  google.protobuf.Struct stats = 1;
+}

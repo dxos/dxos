@@ -212,8 +212,7 @@ export const RemoveObjects = Operation.make({
       'when the entities themselves are not held.',
     icon: 'ph--trash--regular',
   },
-  // The space comes from the input itself — live entities, or refs that are always space-qualified.
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),
     // References are what a caller outside this process can supply; resolved to the same entities
