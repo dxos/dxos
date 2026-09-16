@@ -194,6 +194,12 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
       });
     }
 
+    const logFilter = 'network-manager:debug,mesh/teleport:debug,mesh/messaging:debug,packlets/invitations:debug,info';
+    await page.addInitScript((filter) => localStorage.setItem('dxlog', JSON.stringify({ filter })), logFilter);
+    page.on('worker', (worker) => {
+      void worker.evaluate((filter) => (globalThis as any).DX_LOG?.config({ filter }), logFilter).catch(() => {});
+    });
+
     if (url) {
       await page.goto(url);
     }
