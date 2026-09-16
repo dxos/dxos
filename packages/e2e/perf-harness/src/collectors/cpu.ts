@@ -71,13 +71,22 @@ const EMPTY_THREAD: ThreadMetrics = {
  * This is what separates "the database is slow" from "the list re-renders every row": `taskMs` is
  * the envelope, and `scriptMs`/`layoutMs`/`recalcStyleMs` say which part of it moved.
  */
+/**
+ * `thread` per realm, for the realms that HAVE the domain.
+ *
+ * Filtered rather than read everywhere: a worker target has no `Performance` domain, so reading it
+ * there would record zeros indistinguishable from an idle worker. Worker CPU comes from
+ * `collectors/profiler.ts` instead.
+ */
 export const readRealmThreadMetrics = async (targets: Attached[]): Promise<RealmThreadMetrics[]> =>
   Promise.all(
-    targets.map(async (target) => ({
-      kind: target.kind,
-      name: target.name,
-      ...(await readThreadMetrics(target)),
-    })),
+    targets
+      .filter((target) => target.hasPerformanceDomain)
+      .map(async (target) => ({
+        kind: target.kind,
+        name: target.name,
+        ...(await readThreadMetrics(target)),
+      })),
   );
 
 /**

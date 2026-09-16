@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { type Attached } from '../cdp.ts';
+import { type RealmCpu } from '../types.ts';
 
 /**
  * V8 sampling interval.
@@ -26,8 +27,44 @@ export type ProfileSession = {
    * worker that started during one stage must be profiled for the next.
    */
   beginStage: (label: string, targets: Attached[]) => Promise<void>;
-  /** Stops the stage's profile and writes one file per realm, named for the stage. */
-  endStage: () => Promise<string[]>;
+  /**
+   * Stops the stage's profile, writes one file per realm, and returns both the paths and the CPU
+   * each realm actually spent.
+   */
+  endStage: () => Promise<{ files: string[]; cpu: RealmCpu[] }>;
+};
+
+/**
+ * Frames V8 attributes to no script — an idle or GC tick rather than the realm doing work.
+ *
+ * Counted out because a profiler samples on a wall clock: a realm that slept through a stage still
+ * produces a sample per interval, so raw sample count measures the stage's duration, not its cost.
+ */
+const IDLE_FRAMES = new Set(['(idle)', '(program)']);
+
+type CpuProfile = {
+  nodes: Array<{ id: number; callFrame: { functionName: string } }>;
+  samples?: number[];
+};
+
+/**
+ * CPU milliseconds a realm spent, from its profile.
+ *
+ * `(non-idle samples) x (sampling interval)`. This is the ONLY way to attribute CPU to a worker:
+ * `SystemInfo.getProcessInfo` folds a dedicated worker into its renderer process, and the
+ * `Performance` domain does not exist on a worker target at all.
+ */
+const sampledCpuMs = (profile: CpuProfile): { cpuMs: number; samples: number; idleSamples: number } => {
+  const idleIds = new Set(
+    profile.nodes.filter((node) => IDLE_FRAMES.has(node.callFrame.functionName)).map((node) => node.id),
+  );
+  const samples = profile.samples ?? [];
+  const idleSamples = samples.filter((id) => idleIds.has(id)).length;
+  return {
+    cpuMs: Math.round(((samples.length - idleSamples) * SAMPLING_INTERVAL_US) / 1000),
+    samples: samples.length,
+    idleSamples,
+  };
 };
 
 /**
@@ -59,18 +96,20 @@ export const startProfiling = (outputDir: string): ProfileSession => {
     }
   };
 
-  const end = async (): Promise<string[]> => {
+  const end = async (): Promise<{ files: string[]; cpu: RealmCpu[] }> => {
     const files: string[] = [];
+    const cpu: RealmCpu[] = [];
     for (const target of started) {
-      const result = await target.cdp.trySend<{ profile: unknown }>('Profiler.stop');
+      const result = await target.cdp.trySend<{ profile: CpuProfile }>('Profiler.stop');
       if (!result?.profile) {
         continue;
       }
       const file = path.join(outputDir, `${label}-${target.name.replace(/[^a-z0-9]+/gi, '_')}.cpuprofile`);
       writeFileSync(file, JSON.stringify(result.profile));
       files.push(file);
+      cpu.push({ kind: target.kind, name: target.name, ...sampledCpuMs(result.profile) });
     }
-    return files;
+    return { files, cpu };
   };
 
   return {

@@ -148,14 +148,29 @@ export type Attached = {
   name: string;
   kind: TargetKind;
   cdp: Cdp;
+  /**
+   * Whether this realm has the `Performance` domain, which only a page does.
+   *
+   * Verified, not assumed: `Performance.enable` answers `'Performance.enable' wasn't found` on
+   * every worker target, so `Performance.getMetrics` cannot attribute worker CPU and a caller that
+   * reads it per realm would record zeros that look like an idle worker. Worker CPU comes from the
+   * sampling profiler instead (`collectors/profiler.ts`).
+   */
+  hasPerformanceDomain: boolean;
 };
 
 const attach = async (info: TargetInfo): Promise<Attached | undefined> => {
   try {
     const cdp = await Cdp.connect(info.webSocketDebuggerUrl!);
     await cdp.trySend('HeapProfiler.enable');
-    await cdp.trySend('Performance.enable');
-    return { info, name: targetName(info), kind: info.type as TargetKind, cdp };
+    const performance = await cdp.trySend('Performance.enable');
+    return {
+      info,
+      name: targetName(info),
+      kind: info.type as TargetKind,
+      cdp,
+      hasPerformanceDomain: performance !== undefined,
+    };
   } catch {
     // A target that went away between enumeration and connect is not a measurement failure.
     return undefined;

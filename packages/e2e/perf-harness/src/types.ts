@@ -73,6 +73,23 @@ export type ThreadMetrics = {
   recalcStyleCount: number;
 };
 
+/**
+ * CPU a realm spent, measured by the sampling profiler.
+ *
+ * `diagnose` only, since it needs the profiler running. The instrument of last resort and the only
+ * one that reaches a worker: process CPU folds a dedicated worker in with its renderer, and the
+ * `Performance` domain is absent on worker targets.
+ */
+export type RealmCpu = {
+  kind: TargetKind;
+  name: string;
+  /** Non-idle samples x sampling interval. */
+  cpuMs: number;
+  samples: number;
+  /** Idle/GC ticks. `samples - idleSamples` is the realm's actual work. */
+  idleSamples: number;
+};
+
 /** One realm's `thread` reading, labelled the way `heap[]` labels its own. */
 export type RealmThreadMetrics = ThreadMetrics & {
   kind: TargetKind;
@@ -162,6 +179,8 @@ export type StageRow = {
    * invisible there — this is the only field that attributes it.
    */
   threadByRealm: RealmThreadMetrics[];
+  /** Present in `diagnose` only: the profiler-measured CPU per realm, page and workers alike. */
+  cpuMsByRealm?: RealmCpu[];
 
   heap: HeapReading[];
   heapUsedTotalBytes: number;

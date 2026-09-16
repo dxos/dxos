@@ -175,7 +175,8 @@ export class StageRunner {
     const domCounters = await readDomCounters(this.#targets.find((target) => target.kind === 'page'));
 
     const stills = this.#instruments.screencast?.endStage();
-    const profiles = (await this.#instruments.profiler?.endStage()) ?? [];
+    const profiled = await this.#instruments.profiler?.endStage();
+    const profiles = profiled?.files ?? [];
 
     // Heap last, because it forces a GC: read earlier it would charge the collection's CPU to this
     // stage, and read before the DOM counters it would drop nodes the stage had just created.
@@ -197,6 +198,7 @@ export class StageRunner {
       cpuMsByProcess: cpu.byProcess,
       thread,
       threadByRealm,
+      ...(profiled ? { cpuMsByRealm: profiled.cpu } : {}),
       heap,
       heapUsedTotalBytes: sumHeapUsed(heap),
       peakRssBytes,
