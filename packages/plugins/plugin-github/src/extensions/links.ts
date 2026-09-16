@@ -7,37 +7,19 @@ import { createElement } from 'react';
 
 import { AnchorWidget, type LinkWidgetProps, type WidgetDef, linkWidgets, matchPattern } from '@dxos/ui-editor';
 
-/**
- * `https://github.com/owner/repo`, `/pull/123` or `/issues/123`, with an optional trailing slash,
- * fragment or query. A path below the repository (`/blob/…`, `/actions`) is a page, not an object.
- */
-const GITHUB_LINK =
-  /^https:\/\/github\.com\/([^/\s?#]+)\/([^/\s?#]+)(?:\/(pull|issues)\/(\d+)(?:[/?#]\S*)?|\/?(?:[?#]\S*)?)$/;
+import { GITHUB_LINK, type GitHubLink, parseGitHubLink } from '../github-link.ts';
 
-export type GitHubLink = {
-  owner: string;
-  repo: string;
-  kind: 'repo' | 'pull' | 'issue';
-  /** Absent for a repository. */
-  number?: number;
-  url: string;
-};
+export * from '../github-link.ts';
 
 /** A link widget's props, with the URL's parts alongside it. */
 export type GitHubLinkProps<TContext = any> = LinkWidgetProps<TContext> & GitHubLink;
 
-/** The parts of a pull request or issue URL, or undefined for any other URL. */
-export const parseGitHubLink = (url: string): GitHubLink | undefined => {
-  const match = GITHUB_LINK.exec(url);
-  if (!match) {
-    return undefined;
-  }
-  const [, owner, repo, kind, number] = match;
-  if (!kind) {
-    return { owner, repo, kind: 'repo', url };
-  }
-  return { owner, repo, kind: kind === 'pull' ? 'pull' : 'issue', number: Number(number), url };
-};
+/** The chip's leading icon for a pull request, in GitHub's open-state green. */
+export const PULL_REQUEST_ICON = { icon: 'ph--git-pull-request--regular', classNames: 'text-green-500' };
+
+/** The chip icon for a GitHub URL: a pull request's; none for an issue or a repository. */
+export const githubLinkIcon = (url: string): typeof PULL_REQUEST_ICON | undefined =>
+  parseGitHubLink(url)?.kind === 'pull' ? PULL_REQUEST_ICON : undefined;
 
 export type GitHubLinksOptions = {
   /** Overrides the default chip's preview trigger. */
@@ -55,7 +37,8 @@ export type GitHubLinksOptions = {
 export const githubLinks = ({
   trigger,
   link = {
-    factory: ({ label, url }) => new AnchorWidget(label, url, trigger),
+    factory: ({ label, url, kind }) =>
+      new AnchorWidget(label, url, trigger, undefined, kind === 'pull' ? PULL_REQUEST_ICON : undefined),
   },
 }: GitHubLinksOptions = {}): Extension =>
   linkWidgets({

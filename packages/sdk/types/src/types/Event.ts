@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor.ts';
@@ -39,8 +38,8 @@ export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.event'
 
     // TODO(burdon): Video link(s).
   }).pipe(
-    LabelAnnotation.set(['title']),
-    DescriptionAnnotation.set('description'),
+    Annotation.LabelAnnotation.set(['title']),
+    Annotation.DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar-dot--regular', hue: 'rose' }),
   ),
 ) {}

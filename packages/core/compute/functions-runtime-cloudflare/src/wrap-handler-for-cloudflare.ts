@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 
-import type { JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
+import type * as JsonSchema from '@dxos/echo/JsonSchema';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -100,8 +100,8 @@ const handleFunctionMetaCall = (functionDefinition: FunctionProtocol.Func, reque
     key: functionDefinition.meta.key,
     name: functionDefinition.meta.name,
     description: functionDefinition.meta.description,
-    inputSchema: functionDefinition.meta.inputSchema as JsonSchemaType | undefined,
-    outputSchema: functionDefinition.meta.outputSchema as JsonSchemaType | undefined,
+    inputSchema: functionDefinition.meta.inputSchema as JsonSchema.JsonSchema | undefined,
+    outputSchema: functionDefinition.meta.outputSchema as JsonSchema.JsonSchema | undefined,
   };
 
   return new Response(JSON.stringify(response), {

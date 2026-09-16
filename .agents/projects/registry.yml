@@ -24,8 +24,8 @@ projects:
     summary: 'Extend plugin-studio with more generation providers; first plugin-higgsfield (Connector + image/video GenerationService against api.higgsfield.ai), modelled on plugin-heygen.'
     tasks: .agents/projects/plugin-studio/TASKS.md
     design: .agents/projects/plugin-studio/DESIGN.md
-    prs: []
-    resume: 'PR #13078 open (Check via Depot). Landed on the branch: plugin-higgsfield (image + Soul→DoP video), Studio on Projects (template, no Studio section), Storyboard/Frame + accordion article + player, studio skill + ops, stories-assistant Studio story (scripted passes; live produced real Higgsfield stills/clips twice, then edge disconnects). NEXT: address review, land; follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake).'
+    prs: [13078, 13087, 13095, 13110, 13111, 13112]
+    resume: 'All PRs merged through #13112 (2026-09-15): higgsfield video requires an image artifact ref + duration for Kling/Hailuo/Wan; options cache keyed by kind; Play graph action; media card/lightbox; credential forms + TypeFormat.Key; project view state, timeline lane fold + dead-run close; chat embedded object cards + scroll-to-bottom; task editor 8 lines + filter + PR chip icon; Repo create entry; picker Escape. NEXT: open follow-ups in TASKS.md (presenter retrofit, ffmpeg.wasm splice, live-story flake, toolbar create-menu capability, bare echo:// decoration, Repo create form name→slug).'
   - name: task-visualization
     status: active
     user: burdon
@@ -264,6 +264,16 @@ projects:
     design: .agents/projects/client-startup-timeout/DESIGN.md
     prs: [12564]
     resume: 'PR #12564 OPEN (CI green) — the boot write amplification is FIXED and the Phase 0 blocker is CLOSED: the "existing subduction patch" never existed (every historical automerge-repo patch back to #10752 leaves the save path untouched; PR #12064 was a false lead — it builds a plain Repo with no initSubduction so it never exercises SubductionSource). The real fix is upstream automerge/automerge-repo#712, ported into our pinned .40 dist patch: mirror the attach-time hash scan into knownHashes. Verified across 3 classified boots — subduction-commits/fragments inserts on boot are now ZERO. Also landed: indexer per-pass reads halved (heads scan captured once per IndexEngine.update and shared across fts5+reverseRef, cursor rows batched per source; indexCursor 4->2 and automerge_heads 2->1 per run, batched query returning 2024 rows = 1012 docs x 2 indexes) and index-run instrumentation (reasons/durationMs/invalidates). KEY NEW FINDINGS: (1) remaining boot writes are ALL subduction-remote-heads — 515 writes against 0 reads of that key family, ~93% for documents that never attach, so the per-attach replay cannot cover them; same cold-start-blind cache defect one layer over (#lastRemoteHeads). (2) Idle index churn was 79% of boot SQL: 68 passes, ALL reporting zero work, flat ~4/s even with zero replication; instrumentation attributes them to rpc-update-indexes (the TAB drives indexing over RPC) with invalidates:false, so it is NOT a host-side invalidation loop. Main''s idle-poll-backoff (TriggerDispatcher reactive + poll backoff) may already fix the driver — re-measure before spending more. (3) app.log interleaves tab/shared-worker/dedicated-worker and survives reloads; filter on the new `i` instance field or counts merge multiple boots and look like regressions. NEXT: networking deferral (Phase 3) in a follow-up PR — diff preserved at .agents/projects/client-startup-timeout/defer-networking.patch; only the edge dial needs an explicit gate since subduction defers while the socket is not CONNECTED and feed sync restarts from onReconnected.'
+  - name: client-services-dissolve-host
+    status: paused
+    user: dmaretskyi
+    host: Dmytros-MacBook-Pro-M4
+    created: 2026-09-14
+    summary: 'Dissolve ClientServicesHost into ClientServicesLayer + event-driven layer lifecycle; every embedder composes the stack; worker runtime and worker-framework session/runtime lifetimes become scopes owned by the framework; WorkerService replaced by a framework-level tab session lock.'
+    tasks: .agents/projects/client-services-dissolve-host/TASKS.md
+    design: .agents/projects/client-services-dissolve-host/DESIGN.md
+    prs: [13094]
+    resume: 'PAUSED 2026-09-15 with uncommitted Phase 4 work (framework-owned session scope, tab session lock, WorkerService removal; worker-framework tests 13/13 green) — see TASKS.md resume line for the two typecheck fixes needed before commit. No suites beyond worker-framework run since e6b1bcdbf4; CI not re-checked. NEXT: finish Phase 4, run suites (Phase 5), cleanup (Phase 6), rewrite changeset, land.'
   - name: client-services-effect-rpc
     status: active
     user: root

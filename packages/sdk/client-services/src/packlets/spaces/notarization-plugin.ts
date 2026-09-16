@@ -9,7 +9,7 @@ import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, schedule
 import { type Context, Resource, rejectOnDispose } from '@dxos/context';
 import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { type FeedWriter } from '@dxos/feed-store';
+import { type HypercoreWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
@@ -35,7 +35,7 @@ const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
 
 const DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL = 3_000;
 
-const MAX_EDGE_RETRIES = 2;
+const MAX_EDGE_RETRIES = 5;
 
 const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
 
@@ -91,7 +91,7 @@ export type NotarizeProps = {
 export class NotarizationPlugin extends Resource implements CredentialProcessor {
   private readonly _extensionOpened = new Event();
 
-  private _writer: FeedWriter<Credential> | undefined;
+  private _writer: HypercoreWriter<Credential> | undefined;
   private readonly _extensions = new Set<NotarizationTeleportExtension>();
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
@@ -286,7 +286,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     this._processCredentialsTriggers.delete(id);
   }
 
-  setWriter(writer: FeedWriter<Credential>): void {
+  setWriter(writer: HypercoreWriter<Credential>): void {
     invariant(!this._writer, 'Writer already set.');
     this._writer = writer;
     if (this._edgeClient && this.isOpen) {
@@ -315,7 +315,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
    * this method will fix it on the next space open.
    * Given how rarely this happens there's no need to poll the endpoint.
    */
-  private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>): void {
+  private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: HypercoreWriter<Credential>): void {
     scheduleMicroTask(this._ctx, async () => {
       try {
         const response = await client.getCredentialsForNotarization(this._ctx, this._spaceId, {
@@ -361,7 +361,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     await this._notarizeCredentials(this._writer, request.credentials ?? []);
   }
 
-  private async _notarizeCredentials(writer: FeedWriter<Credential>, credentials: Credential[]): Promise<void> {
+  private async _notarizeCredentials(writer: HypercoreWriter<Credential>, credentials: Credential[]): Promise<void> {
     for (const credential of credentials) {
       const credentialId = requirePublicKey(credential.id);
       if (this._processedCredentials.has(credentialId)) {

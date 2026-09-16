@@ -43,7 +43,7 @@ export const DirectAiServiceLayer: AiServiceLayer = TestRouter.pipe(
     AnthropicClient.layerConfig({
       // `DX_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`, which breaks Claude Code) — see the
       // `regenerate-model-fixture` skill.
-      apiKey: Config.redacted('DX_ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
+      apiKey: Config.Redacted('DX_ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
       // A provider 5xx or a 429 twenty minutes into a long scenario is the provider's, not the
       // scenario's; the app's own client retries these too.
       transformClient: (client) =>
@@ -101,7 +101,7 @@ export const DeepSeekAiServiceLayer: AiServiceLayer = AiModelResolver.buildAiSer
   Layer.provide(
     Layer.unwrap(
       Effect.map(
-        Config.redacted('DEEPSEEK_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
+        Config.Redacted('DEEPSEEK_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
         (apiKey) =>
           ChatCompletionsAdapter.clientLayer({
             baseUrl: 'https://api.deepseek.com',

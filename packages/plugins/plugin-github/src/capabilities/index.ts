@@ -34,12 +34,17 @@ export const LinkResolver = Capability.lazyModule(
   { provides: [PreviewCapabilities.LinkResolver], activatesOn: PreviewEvents.Start, environments: [] },
   () => import('./link-resolver.ts'),
 );
+// Narrower than the `appGraphBuilder` family default: the action opens a dialog, which means
+// nothing without an app shell.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
+  environments: [],
+});
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.cardContent'],
+  roles: ['org.dxos.role.cardContent', 'org.dxos.role.cardMenu', 'org.dxos.role.article', 'org.dxos.role.dialog'],
 });
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

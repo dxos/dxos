@@ -81,7 +81,7 @@ interface TestLayerOptions {
    * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
    * The model defaults to the resolved test-layer model when not set here.
    */
-  agent?: AgentServiceRuntime.AgentServiceOptions;
+  agent?: AgentServiceRuntime.Options;
 
   /**
    * Extra services to make available in the service resolver.
@@ -125,7 +125,7 @@ export const AssistantTestLayer = (
   const resolvedProvider: DXN.DXN =
     options.provider ?? (options.aiServicePreset === 'ollama' ? Provider.ollama.id : Provider.edge.id);
 
-  const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
+  const agentOptions: AgentServiceRuntime.Options = { ...options.agent };
   agentOptions.defaultModel ??= resolvedModel;
   agentOptions.provider ??= resolvedProvider;
 

@@ -3,6 +3,7 @@
 //
 
 import type * as Schema from 'effect/Schema';
+import { type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
@@ -10,6 +11,7 @@ import { Entity, Obj, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
+import { type MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { AppCapabilities } from '../../app-framework/index.ts';
@@ -337,6 +339,8 @@ export type SettingsData<Props extends {} = {}> = {
 export type SettingsProps<T extends {}, Props extends {} = {}> = {
   settings: T;
   onSettingsChange?: (cb: (current: T) => T) => void;
+  /** Controls for the panel's heading row, such as the settings-scope toggle. */
+  scope?: ReactNode;
 } & Props;
 
 export const settings: {
@@ -460,6 +464,18 @@ export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardI
 
 /** Role token for the card slot. */
 export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
+
+/**
+ * Card header menu items a type contributes. The surface renders nothing: it registers items with the
+ * host's `menu` via `useMenuContribution`, so hosts render it through `CardMenuSlot`.
+ */
+export const CardMenu: Role.Role<CardMenuData<any>> = Role.make('org.dxos.role.cardMenu');
+
+/** Surface data for the card menu role. */
+export type CardMenuData<Subject = unknown> = {
+  subject: Subject;
+  menu: MenuActions;
+};
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {

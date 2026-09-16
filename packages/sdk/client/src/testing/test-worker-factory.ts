@@ -9,7 +9,6 @@ import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as Worker from '@dxos/worker-framework/Worker';
@@ -46,35 +45,25 @@ export class TestWorkerFactory extends Resource {
       },
       storageLockKey: STORAGE_LOCK_KEY,
       createRuntime: ({ config: configValues, requestShutdown }) =>
-        Effect.promise(async () => {
-          const runtime = makeWorkerRuntime({
-            configProvider: async () => this._config ?? new Config(configValues ?? {}),
-            onStop: async () => {
-              messageChannel.port1.close();
-              requestShutdown();
-            },
-            acquireLock: async () => {},
-            releaseLock: () => {},
+        Effect.gen({ self: this }, function* () {
+          const runtime = yield* makeWorkerRuntime({
+            configProvider: Effect.sync(() => this._config ?? new Config(configValues ?? {})),
+            requestShutdown: Effect.sync(requestShutdown),
             automaticallyConnectWebrtc: false,
             sqliteLayer: sqliteLayerMemory,
           });
-          await EffectEx.runPromise(runtime.start());
-          this._ctx.onDispose(() => EffectEx.runPromise(runtime.stop()));
+          this._ctx.onDispose(() => requestShutdown());
 
           return {
-            stop: async () => EffectEx.runPromise(runtime.stop()),
-            // The framework hands the session its protocol layers via effect context. The WorkerRuntime
-            // session manages its own lifecycle, so the effect opens the session then blocks — the
-            // framework runs it for the session's lifetime.
+            // The framework hands the session its protocol layers via effect context and owns its lifetime.
             createSession: ({ isOwner }) =>
               Effect.gen(function* () {
                 const appProtocol = yield* RpcServer.Protocol;
                 const systemProtocol = yield* RpcClient.Protocol;
                 const session = yield* runtime.createSession({ appProtocol, systemProtocol });
                 if (isOwner) {
-                  yield* runtime.connectWebrtcBridge(session);
+                  yield* runtime.connectWebrtc(session);
                 }
-                return yield* Effect.never;
               }),
           };
         }),

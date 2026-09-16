@@ -11,9 +11,8 @@ import { ConnectivityError } from '@dxos/protocols';
 import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import type { IceProvider } from '../../signal/index.ts';
-import { type TransportOptions } from '../transport.ts';
 import { type RtcConnectionFactory } from './rtc-connection-factory.ts';
-import { RtcTransportChannel } from './rtc-transport-channel.ts';
+import { RtcTransportChannel, type RtcTransportChannelOptions } from './rtc-transport-channel.ts';
 import { areSdpEqual, chooseInitiatorPeer } from './utils.ts';
 
 export type RtcPeerChannelFactoryOptions = {
@@ -99,7 +98,7 @@ export class RtcPeerConnection {
     }
   }
 
-  public createTransportChannel(options: TransportOptions): RtcTransportChannel {
+  public createTransportChannel(options: RtcTransportChannelOptions): RtcTransportChannel {
     const channel = new RtcTransportChannel(this, options);
     this._transportChannels.set(options.topic, channel);
     channel.closed.on(() => {

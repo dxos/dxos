@@ -23,7 +23,7 @@ export class IMetadataStoreService extends EffectContext.Tag('...')<
 export const SqliteMetadataStoreLayer = (): Layer.Layer<
   IMetadataStoreService,
   never,
-  SqlClient.SqlClient | SqlTransactionTag
+  SqlClient.SqlClient
 > => Layer.effect(IMetadataStoreService, Effect.gen(function* () { ... }));
 ```
 
@@ -33,53 +33,53 @@ Status: `done` | `todo`
 
 ### Storage / persistence
 
-| Component                                | Tag                     | Layer                           | Options | Requirements                  | Status |
-| ---------------------------------------- | ----------------------- | ------------------------------- | ------- | ----------------------------- | ------ |
-| `IMetadataStore` / `SqliteMetadataStore` | `IMetadataStoreService` | `SqliteMetadataStoreLayer()`    | —       | `SqlClient \| SqlTransaction` | done   |
-| `KeyringApi` / `SqliteKeyring`           | `KeyringApiService`     | `SqliteKeyringLayer()`          | —       | `SqlClient \| SqlTransaction` | done   |
-| `SqliteStorage`                          | `SqliteStorageService`  | `SqliteStorageLayer({ path? })` | `path?` | `SqlClient \| SqlTransaction` | done   |
+| Component                                | Tag                     | Layer                           | Options | Requirements | Status |
+| ---------------------------------------- | ----------------------- | ------------------------------- | ------- | ------------ | ------ |
+| `IMetadataStore` / `SqliteMetadataStore` | `IMetadataStoreService` | `SqliteMetadataStoreLayer()`    | —       | `SqlClient`  | done   |
+| `KeyringApi` / `SqliteKeyring`           | `KeyringApiService`     | `SqliteKeyringLayer()`          | —       | `SqlClient`  | done   |
+| `SqliteStorage`                          | `SqliteStorageService`  | `SqliteStorageLayer({ path? })` | `path?` | `SqlClient`  | done   |
 
 ### Feeds
 
-| Component                      | Tag                           | Layer                                 | Options      | Requirements                                       | Status |
-| ------------------------------ | ----------------------------- | ------------------------------------- | ------------ | -------------------------------------------------- | ------ |
-| `FeedFactory`                  | `FeedFactoryService`          | `FeedFactoryLayer({ hypercore? })`    | `hypercore?` | `KeyringApiService`, `FeedStorageDirectoryService` | done   |
-| `FeedStore` (@dxos/feed-store) | `FeedStoreService`            | `FeedStoreLayer()`                    | —            | `FeedFactoryService`                               | done   |
-| `FeedStorageDirectory`         | `FeedStorageDirectoryService` | `FeedStorageDirectoryLayer({ sub? })` | `sub?`       | `SqliteStorageService`                             | done   |
+| Component                           | Tag                                | Layer                                      | Options      | Requirements                                            | Status |
+| ----------------------------------- | ---------------------------------- | ------------------------------------------ | ------------ | ------------------------------------------------------- | ------ |
+| `HypercoreFactory`                  | `HypercoreFactoryService`          | `HypercoreFactoryLayer({ hypercore? })`    | `hypercore?` | `KeyringApiService`, `HypercoreStorageDirectoryService` | done   |
+| `HypercoreStore` (@dxos/feed-store) | `HypercoreStoreService`            | `HypercoreStoreLayer()`                    | —            | `HypercoreFactoryService`                               | done   |
+| `HypercoreStorageDirectory`         | `HypercoreStorageDirectoryService` | `HypercoreStorageDirectoryLayer({ sub? })` | `sub?`       | `SqliteStorageService`                                  | done   |
 
 ### Spaces / echo
 
-| Component                      | Tag                              | Layer                                                                    | Options                  | Requirements                                                              | Status |
-| ------------------------------ | -------------------------------- | ------------------------------------------------------------------------ | ------------------------ | ------------------------------------------------------------------------- | ------ |
-| `SpaceManager`                 | `SpaceManagerService`            | `SpaceManagerLayer({ disableP2pReplication? })`                          | `disableP2pReplication?` | `FeedStoreService`, `SwarmNetworkManagerService`, `IMetadataStoreService` | done   |
-| `EchoHost`                     | `EchoHostService`                | `EchoHostLayer({ ...callbacks, useSubduction?, assignQueuePositions? })` | callbacks, flags         | `SqlClient \| SqlTransaction`                                             | done   |
-| `MeshEchoReplicator`           | `AutomergeReplicatorService`     | `MeshEchoReplicatorLayer()`                                              | —                        | —                                                                         | done   |
-| `EchoEdgeSubductionReplicator` | `EdgeAutomergeReplicatorService` | `EchoEdgeSubductionReplicatorLayer({ disableSharePolicy? })`             | `disableSharePolicy?`    | `EdgeConnectionService`, `EdgeHttpClientService`                          | done   |
+| Component                      | Tag                              | Layer                                                                    | Options                  | Requirements                                                                   | Status |
+| ------------------------------ | -------------------------------- | ------------------------------------------------------------------------ | ------------------------ | ------------------------------------------------------------------------------ | ------ |
+| `SpaceManager`                 | `SpaceManagerService`            | `SpaceManagerLayer({ disableP2pReplication? })`                          | `disableP2pReplication?` | `HypercoreStoreService`, `SwarmNetworkManagerService`, `IMetadataStoreService` | done   |
+| `EchoHost`                     | `EchoHostService`                | `EchoHostLayer({ ...callbacks, useSubduction?, assignQueuePositions? })` | callbacks, flags         | `SqlClient`                                                                    | done   |
+| `MeshEchoReplicator`           | `AutomergeReplicatorService`     | `MeshEchoReplicatorLayer()`                                              | —                        | —                                                                              | done   |
+| `EchoEdgeSubductionReplicator` | `EdgeAutomergeReplicatorService` | `EchoEdgeSubductionReplicatorLayer({ disableSharePolicy? })`             | `disableSharePolicy?`    | `EdgeConnectionService`, `EdgeHttpClientService`                               | done   |
 
 ### Identity / invitations / spaces (client-services)
 
-| Component                      | Tag                                   | Layer                                                                 | Options                                                   | Requirements                                                                                                                                                                                              | Status |
-| ------------------------------ | ------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `IdentityManager`              | `IdentityManagerService`              | `IdentityManagerLayer({ devicePresence*, edgeFeatures? })`            | presence intervals, edge features                         | `IMetadataStoreService`, `KeyringApiService`, `FeedStoreService`, `SpaceManagerService`, `EdgeConnectionService?`                                                                                         | done   |
-| `EdgeIdentityRecoveryManager`  | `EdgeIdentityRecoveryManagerService`  | `EdgeIdentityRecoveryManagerLayer()`                                  | — (wire `setAcceptRecoveredIdentity` after stack compose) | `KeyringApiService`, `EdgeHttpClientService?`, `IdentityManagerService`                                                                                                                                   | done   |
-| `InvitationsHandler`           | `InvitationsHandlerService`           | `InvitationsHandlerLayer({ connectionProps? })`                       | `connectionProps?`                                        | `SwarmNetworkManagerService`, `EdgeHttpClientService?`                                                                                                                                                    | done   |
-| `InvitationsManager`           | `InvitationsManagerService`           | `InvitationsManagerLayer({ getHandler })`                             | `getHandler` callback                                     | `InvitationsHandlerService`, `IMetadataStoreService`                                                                                                                                                      | done   |
-| `DataSpaceManager`             | `DataSpaceManagerService`             | `DataSpaceManagerLayer({ runtimeProps?, edgeFeatures? })`             | runtime props, edge features                              | `SpaceManagerService`, `IMetadataStoreService`, `KeyringApiService`, `SigningContextProviderService`, `FeedStoreService`, `EchoHostService`, `InvitationsManagerService`, edge/replicator deps (optional) | done   |
-| `SigningContextProvider`       | `SigningContextProviderService`       | `SigningContextProviderLayer`                                         | —                                                         | `IdentityProviderService`                                                                                                                                                                                 | done   |
-| `EdgeAgentManager`             | `EdgeAgentManagerService`             | `EdgeAgentManagerLayer({ edgeFeatures? })`                            | edge features                                             | `DataSpaceManagerService`, `IdentityProviderService`, `EdgeHttpClientService?`                                                                                                                            | done   |
-| `CrossDeviceSpaceSynchronizer` | `CrossDeviceSpaceSynchronizerService` | `CrossDeviceSpaceSynchronizerLayer`                                   | —                                                         | `DataSpaceManagerService`                                                                                                                                                                                 | done   |
-| `IdentityProvider`             | `IdentityProviderService`             | supplied at runtime (e.g. `identityProviderFromManager`)              | —                                                         | —                                                                                                                                                                                                         | done   |
-| `FeedSyncer`                   | `FeedSyncerService`                   | `FeedSyncerLayer({ peerId, syncNamespaces, getSpaceIds, ...tuning })` | peer/sync config                                          | `SqlClient \| SqlTransaction`, `FeedStoreService` (@dxos/feed), `EdgeConnectionService`                                                                                                                   | done   |
+| Component                      | Tag                                   | Layer                                                                 | Options                                                   | Requirements                                                                                                                                                                                                   | Status |
+| ------------------------------ | ------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `IdentityManager`              | `IdentityManagerService`              | `IdentityManagerLayer({ devicePresence*, edgeFeatures? })`            | presence intervals, edge features                         | `IMetadataStoreService`, `KeyringApiService`, `HypercoreStoreService`, `SpaceManagerService`, `EdgeConnectionService?`                                                                                         | done   |
+| `EdgeIdentityRecoveryManager`  | `EdgeIdentityRecoveryManagerService`  | `EdgeIdentityRecoveryManagerLayer()`                                  | — (wire `setAcceptRecoveredIdentity` after stack compose) | `KeyringApiService`, `EdgeHttpClientService?`, `IdentityManagerService`                                                                                                                                        | done   |
+| `InvitationsHandler`           | `InvitationsHandlerService`           | `InvitationsHandlerLayer({ connectionProps? })`                       | `connectionProps?`                                        | `SwarmNetworkManagerService`, `EdgeHttpClientService?`                                                                                                                                                         | done   |
+| `InvitationsManager`           | `InvitationsManagerService`           | `InvitationsManagerLayer({ getHandler })`                             | `getHandler` callback                                     | `InvitationsHandlerService`, `IMetadataStoreService`                                                                                                                                                           | done   |
+| `DataSpaceManager`             | `DataSpaceManagerService`             | `DataSpaceManagerLayer({ runtimeProps?, edgeFeatures? })`             | runtime props, edge features                              | `SpaceManagerService`, `IMetadataStoreService`, `KeyringApiService`, `SigningContextProviderService`, `HypercoreStoreService`, `EchoHostService`, `InvitationsManagerService`, edge/replicator deps (optional) | done   |
+| `SigningContextProvider`       | `SigningContextProviderService`       | `SigningContextProviderLayer`                                         | —                                                         | `IdentityProviderService`                                                                                                                                                                                      | done   |
+| `EdgeAgentManager`             | `EdgeAgentManagerService`             | `EdgeAgentManagerLayer({ edgeFeatures? })`                            | edge features                                             | `DataSpaceManagerService`, `IdentityProviderService`, `EdgeHttpClientService?`                                                                                                                                 | done   |
+| `CrossDeviceSpaceSynchronizer` | `CrossDeviceSpaceSynchronizerService` | `CrossDeviceSpaceSynchronizerLayer`                                   | —                                                         | `DataSpaceManagerService`                                                                                                                                                                                      | done   |
+| `IdentityProvider`             | `IdentityProviderService`             | supplied at runtime (e.g. `identityProviderFromManager`)              | —                                                         | —                                                                                                                                                                                                              | done   |
+| `FeedSyncer`                   | `FeedSyncerService`                   | `FeedSyncerLayer({ peerId, syncNamespaces, getSpaceIds, ...tuning })` | peer/sync config                                          | `SqlClient`, `FeedStoreService` (@dxos/feed), `EdgeConnectionService`                                                                                                                                          | done   |
 
 ### External inputs (provided by host, not constructed inside ServiceContext)
 
-| Component             | Tag                                               | Notes                      |
-| --------------------- | ------------------------------------------------- | -------------------------- |
-| `SwarmNetworkManager` | `SwarmNetworkManagerService`                      | host-provided              |
-| `SignalManager`       | `SignalManagerService`                            | todo                       |
-| `EdgeConnection`      | `EdgeConnectionService`                           | host-provided              |
-| `EdgeHttpClient`      | `EdgeHttpClientService`                           | host-provided              |
-| `RuntimeProvider`     | ambient via `SqlClient` + `SqlTransaction` layers | not a ServiceContext field |
+| Component             | Tag                               | Notes                      |
+| --------------------- | --------------------------------- | -------------------------- |
+| `SwarmNetworkManager` | `SwarmNetworkManagerService`      | host-provided              |
+| `SignalManager`       | `SignalManagerService`            | todo                       |
+| `EdgeConnection`      | `EdgeConnectionService`           | host-provided              |
+| `EdgeHttpClient`      | `EdgeHttpClientService`           | host-provided              |
+| `RuntimeProvider`     | ambient via the `SqlClient` layer | not a ServiceContext field |
 
 ## Target layer stack (sketch)
 
@@ -88,12 +88,12 @@ const ServiceContextLive = Layer.mergeAll(
   SqliteMetadataStoreLayer(),
   SqliteKeyringLayer(),
   SqliteStorageLayer(),
-  FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } }),
-  FeedStoreLayer(),
+  HypercoreFactoryLayer({ hypercore: { valueEncoding, stats: true } }),
+  HypercoreStoreLayer(),
   SpaceManagerLayer({ disableP2pReplication }),
   EchoHostLayer({ peerIdProvider, getSpaceKeyByRootDocumentId, syncFeed, getSyncState, useSubduction }),
   // ...identity, invitations, data-space layers
-).pipe(Layer.provideMerge(SqlTransaction.layer), Layer.provideMerge(sqliteLayer));
+).pipe(Layer.provideMerge(sqliteLayer));
 ```
 
 ## Open questions

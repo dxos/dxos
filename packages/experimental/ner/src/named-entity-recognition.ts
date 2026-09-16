@@ -83,13 +83,18 @@ export const createTokenGroups = (tokens: TokenClassificationSingle[]): TokenCla
 };
 
 export const combineNerTokens = (group: TokenClassificationSingle[]): TokenClassificationSingle => {
+  if (group.length === 0) {
+    throw new Error('cannot combine an empty token group');
+  }
+  const firstToken = group[0];
+  const lastToken = group[group.length - 1];
   const combinedToken: TokenClassificationSingle = {
-    entity: group.at(0)!.entity.split('-')[1],
+    entity: firstToken.entity.split('-')[1],
     score: group.reduce((acc, token) => acc + token.score, 0) / group.length,
-    index: group.at(0)!.index,
-    word: group.at(0)!.word,
-    start: group.at(0)!.start,
-    end: group.at(-1)!.end,
+    index: firstToken.index,
+    word: firstToken.word,
+    start: firstToken.start,
+    end: lastToken.end,
   };
 
   for (const token of group.slice(1)) {

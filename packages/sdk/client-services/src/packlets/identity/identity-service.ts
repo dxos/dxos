@@ -4,13 +4,14 @@
 
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type KeyringApi } from '@dxos/keyring';
+import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
   type Identity as IdentityProto,
@@ -23,10 +24,12 @@ import {
   type Presentation,
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type IdentityService } from '@dxos/protocols/rpc';
+import { IdentityService } from '@dxos/protocols/rpc';
 
-import { type CreateIdentityOptions, type IdentityManager } from './identity-manager.ts';
-import { type EdgeIdentityRecoveryManager } from './identity-recovery-manager.ts';
+import { ProfileUpdated } from '../services/events.ts';
+import { IdentityLifecycleService } from './identity-lifecycle.ts';
+import { type CreateIdentityOptions, type IdentityManager, IdentityManagerService } from './identity-manager.ts';
+import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 import { type Identity } from './identity.ts';
 
 export class IdentityServiceImpl extends Resource implements IdentityService.Handlers {
@@ -196,3 +199,28 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 }
+
+// The impl is a {@link Resource}; its open/close lifecycle is bound to the layer scope.
+export const IdentityServiceLayer = Layer.effect(
+  IdentityService.Tag,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
+    const keyring = yield* KeyringApiService;
+    const identityLifecycle = yield* IdentityLifecycleService;
+    const runtime = yield* RuntimeProvider.currentRuntime<Hook.Controller>();
+    const service = new IdentityServiceImpl(
+      identityManager,
+      recoveryManager,
+      keyring,
+      (params, ctx) => identityLifecycle.createIdentity(params, ctx),
+      (profile) =>
+        profile ? RuntimeProvider.runPromise(runtime)(Hook.emit(ProfileUpdated, { profile })) : Promise.resolve(),
+    );
+    yield* Effect.acquireRelease(
+      Effect.promise(() => service.open()),
+      () => Effect.promise(() => service.close()),
+    );
+    return service;
+  }),
+);

@@ -34,12 +34,7 @@ export const Dashboard = Capability.lazyModule(
   'Dashboard',
   {
     environments: [],
-    requires: [
-      Capabilities.AtomRegistry,
-      Capabilities.PluginManager,
-      ClientCapabilities.Client,
-      AppCapabilities.Layout,
-    ],
+    requires: [Capabilities.PluginManager, ClientCapabilities.Client, AppCapabilities.Layout],
     provides: [SpaceCapabilities.Dashboard],
     activatesOn: ClientEvents.SpacesReady,
   },
@@ -63,6 +58,7 @@ export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
+    environments: [],
     requires: [ClientCapabilities.Client],
   },
 );

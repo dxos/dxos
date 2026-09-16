@@ -40,6 +40,8 @@ export const translations = [
         'plugin.name': 'Tasks',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
+        'filter.label': 'Filter tasks',
+        'filter.placeholder': 'Filter',
         'backlog.label': 'Backlog',
         'milestone-progress.label': '{{done}}/{{total}}',
         'delete-object.label': 'Delete object',

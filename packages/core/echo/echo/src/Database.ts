@@ -299,6 +299,20 @@ export interface Database extends Queryable {
   createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
 
   /**
+   * Adopts bytes already staged by a direct upload, returning an un-added Blob object.
+   *
+   * Unlike {@link createBlob} the bytes never enter this process: they were written straight to the
+   * store by whoever held the upload URL, which is the point — the uploader is typically an agent's
+   * shell moving a file far too large to pass through a model. Size and content type therefore come
+   * back from the store rather than from the caller.
+   *
+   * Rejects with `Error.BlobNotAvailableError` (`reason: 'backend-not-registered'` when the storage
+   * name has no backend, `'not-found'` when the backend cannot adopt uploads or the upload is gone)
+   * or `Error.BlobWriteError` if adoption fails.
+   */
+  createBlobFromUpload(uploadId: string, options?: { storage?: string }): Promise<Blob.Blob>;
+
+  /**
    * Loads a blob's bytes. Rejects with `Error.BlobNotAvailableError` if the backend for the blob's
    * storage scheme is not registered, offline, or cannot find the bytes.
    */
