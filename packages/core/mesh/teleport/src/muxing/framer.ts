@@ -96,11 +96,14 @@ export class Framer {
           return;
         }
 
+        const controller = this.#controller;
+        invariant(controller, 'Framer readable not started.');
+
         const frame = encodeFrame(message);
         this.#bytesSent += frame.length;
-        this.#controller!.enqueue(frame);
+        controller.enqueue(frame);
         // `desiredSize` is the web-stream spelling of the `push()` return value this used to check.
-        this.#writable = (this.#controller!.desiredSize ?? 0) > 0;
+        this.#writable = (controller.desiredSize ?? 0) > 0;
         if (!this.#writable) {
           this.#sendCallbacks.push(resolve);
         } else {
