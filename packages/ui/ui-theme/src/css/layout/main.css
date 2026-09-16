@@ -76,7 +76,7 @@
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
     transition-duration: 200ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
-    @apply border-sidebar-separator rounded-md;
+    @apply rounded-md;
     @apply backdrop-blur-md;
     .dark & {
       @apply backdrop-blur-lg;
@@ -91,6 +91,7 @@
 
     &[data-side='is'] {
       --surface-bg: var(--color-l1-surface);
+      border-color: var(--color-l1-separator);
 
       /* Collapsed, the sidebar is exactly the rail's width and the rail overlays it, so the only
          pixels that show are the rail's own. Wearing the rail's tone keeps the edges and the rail's
@@ -102,6 +103,7 @@
 
     &[data-side='ie'] {
       --surface-bg: var(--color-r1-surface);
+      border-color: var(--color-r1-separator);
 
       &[data-state='collapsed'] {
         --surface-bg: var(--color-r0-surface);
