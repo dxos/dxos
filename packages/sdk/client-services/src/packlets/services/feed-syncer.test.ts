@@ -426,37 +426,41 @@ describe('FeedSyncer', () => {
       await createFeedSyncHarness({ spaceId, pollingInterval: 60_000 });
     const serverFeedId = EntityId.random();
 
-    await syncer.open(new Context());
-
-    // Written after the initial round, so only a hint can bring it across inside the test's lifetime.
-    await serverFeedStore
-      .appendLocal([{ spaceId, feedId: serverFeedId, feedNamespace: syncNamespace, data: new Uint8Array([7, 8, 9]) }])
-      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
-
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    {
-      const { blocks } = await clientFeedStore
+    const queryClient = () =>
+      clientFeedStore
         .query({ spaceId, feedNamespace: syncNamespace, position: -1, query: { feedIds: [serverFeedId] } })
         .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
-      expect(blocks).toHaveLength(0);
-    }
+
+    const appendToServer = (data: Uint8Array) =>
+      serverFeedStore
+        .appendLocal([{ spaceId, feedId: serverFeedId, feedNamespace: syncNamespace, data }])
+        .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
+
+    await appendToServer(new Uint8Array([1, 2, 3]));
+    await syncer.open(new Context());
+
+    // Waiting for the first block lands the initial round, so the next append cannot ride it.
+    await vi.waitFor(async () => {
+      expect((await queryClient()).blocks).toHaveLength(1);
+    });
+
+    await appendToServer(new Uint8Array([7, 8, 9]));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect((await queryClient()).blocks).toHaveLength(1);
 
     pushToClient({
       _tag: 'FeedAdvanced',
       spaceId,
       feedNamespace: syncNamespace,
-      position: 1,
+      position: 2,
       senderPeerId: 'server',
       recipientPeerId: 'client',
     });
 
     await vi.waitFor(async () => {
-      const { blocks } = await clientFeedStore
-        .query({ spaceId, feedNamespace: syncNamespace, position: -1, query: { feedIds: [serverFeedId] } })
-        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
-
-      expect(blocks).toHaveLength(1);
-      expect(blocks[0].data).toEqual(new Uint8Array([7, 8, 9]));
+      const { blocks } = await queryClient();
+      expect(blocks).toHaveLength(2);
+      expect(blocks[1].data).toEqual(new Uint8Array([7, 8, 9]));
     });
   });
 
