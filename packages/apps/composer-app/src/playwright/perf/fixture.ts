@@ -88,45 +88,39 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
       };
 
       /**
-       * The URI of a ref, whether it arrives encoded or as a live `Ref`.
+       * Refs for a batch of object ids, read back from the database as LIVE objects.
        *
-       * `projects.create` returns a live `Ref` instance whose data is all on the prototype — so
-       * `Object.keys` is empty and a `'/'` lookup finds nothing, while `encode()` yields
-       * `{ '/': 'echo:///<objectId>' }`. Both forms are read so the fixture does not depend on
-       * which one an operation happens to hand back.
+       * Operations that CREATE an object return a JSON snapshot (`{ id, title, … }`) while those
+       * that CONSUME one take a `Ref`, so the fixture has to bridge them — and only a ref built
+       * from a live object carries the resolver the handler's `tryLoad()` needs. The two
+       * shortcuts both fail: a hand-assembled `{ '/': 'echo:///<id>' }` envelope is rejected by the
+       * input schema (`Expected <Declaration>`), and a `Ref.fromURI` ref is accepted but resolves
+       * to `Resolver is not set`.
+       *
+       * Batched because `Filter.id` is variadic: one query per level rather than one per task.
        */
-      const refUri = (value: unknown): string | undefined => {
-        const direct = field(value, '/');
-        if (typeof direct === 'string') {
-          return direct;
+      const refsForIds = async (ids: string[]): Promise<unknown[]> => {
+        if (ids.length === 0) {
+          return [];
         }
-        const encode = field(value, 'encode');
-        if (typeof encode === 'function') {
-          const encoded: unknown = Reflect.apply(encode, value, []);
-          const uri = field(encoded, '/');
-          return typeof uri === 'string' ? uri : undefined;
+        const make = globalThis.dxos?.Ref?.make;
+        const filterById = globalThis.dxos?.Filter?.id;
+        const listSpaces = globalThis.dxos?.spaces;
+        if (!make || !filterById || !listSpaces) {
+          throw new Error('the dxos client debug hook is not mounted (Ref/Filter/spaces missing)');
         }
-        return undefined;
-      };
-
-      /**
-       * Builds a LIVE ref for an object id, using the app's own `Ref.fromURI`.
-       *
-       * Operations that CREATE an object return a JSON snapshot (`{ id, title, … }`), while
-       * operations that CONSUME one take a `Ref` — so the fixture has to bridge them. A
-       * hand-assembled `{ '/': 'echo:///<id>' }` envelope does NOT work: the input schema rejects
-       * it (`Expected <Declaration>`), because what it wants is a reference instance and not its
-       * serialized form. `dxos.Ref.fromURI` is the only constructor reachable from inside the page.
-       *
-       * The URI form is taken from a ref the app itself produced, so only the trailing object id is
-       * substituted and the encoding is never restated here.
-       */
-      const makeRef = (template: string, id: string): unknown => {
-        const fromURI = globalThis.dxos?.Ref?.fromURI;
-        if (!fromURI) {
-          throw new Error('dxos.Ref.fromURI is unavailable — the client debug hook is not mounted');
+        const space = listSpaces().find((candidate) => candidate.id === spaceId);
+        if (!space) {
+          throw new Error(`space ${spaceId} is not in the client's space list`);
         }
-        return fromURI(template.replace(/[^/:]+$/, id));
+        const { objects } = await space.db.query(filterById(...ids)).run();
+        const byId = new Map(objects.filter(isRecord).map((object) => [String(object.id), object]));
+        // Ordered by the caller's ids so a parent assignment is deterministic, and silently short
+        // where an object did not come back — a missing parent must not shift the rest.
+        return ids.flatMap((id) => {
+          const object = byId.get(id);
+          return object ? [make(object)] : [];
+        });
       };
 
       const started = Date.now();
@@ -145,7 +139,6 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
 
       const projectIds: string[] = [];
       const taskSets: unknown[] = [];
-      let refTemplate: string | undefined;
       for (let index = 0; index < projects; index++) {
         const result = await invoke(
           'org.dxos.operation.projects.create',
@@ -159,30 +152,22 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
           throw new Error(`projects.create returned no taskSet: ${JSON.stringify(result)?.slice(0, 400)}`);
         }
         projectIds.push(projectId);
-        // Passed back exactly as the operation returned it: the ref travels as its encoded
-        // envelope, and rebuilding one from an id would guess at a form the schema may reject.
+        // Passed back exactly as the operation returned it — a live `Ref`, which is what the next
+        // operation's input schema wants.
         taskSets.push(taskSet);
-        const uri = refUri(taskSet);
-        if (uri) {
-          refTemplate ??= uri;
-        }
-      }
-
-      if (!refTemplate) {
-        throw new Error('no encoded ref was returned, so sub-tasks and milestones cannot be linked');
       }
 
       const milestonesPerSet: unknown[][] = [];
       for (const taskSet of taskSets) {
-        const created: unknown[] = [];
+        const createdIds: string[] = [];
         for (const name of ['Alpha', 'Beta', 'Gamma']) {
           const result = await invoke('org.dxos.operation.tasks.createMilestone', { taskSet, name }, spaceId);
           const milestoneId = readId(field(result, 'milestone'));
           if (milestoneId) {
-            created.push(makeRef(refTemplate, milestoneId));
+            createdIds.push(milestoneId);
           }
         }
-        milestonesPerSet.push(created);
+        milestonesPerSet.push(await refsForIds(createdIds));
       }
 
       const perProject = Math.ceil(tasks / projects);
@@ -200,7 +185,7 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
           // Half the remaining budget per level, so a depth-3 set is a tree rather than a chain;
           // the last level absorbs whatever is left.
           const levelCount = level === depth - 1 ? remaining : Math.max(1, Math.ceil(remaining / 2));
-          const levelTasks: unknown[] = [];
+          const levelIds: string[] = [];
 
           for (let start = 0; start < levelCount; start += concurrency) {
             const batch: Array<Promise<unknown>> = [];
@@ -227,14 +212,16 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
             for (const result of await Promise.all(batch)) {
               const taskId = readId(field(result, 'task'));
               if (taskId) {
-                levelTasks.push(makeRef(refTemplate, taskId));
+                levelIds.push(taskId);
               }
             }
           }
 
-          taskCount += levelTasks.length;
+          taskCount += levelIds.length;
           remaining -= levelCount;
-          parents = levelTasks;
+          // Resolved once per level rather than per task: the ids only become usable parents as
+          // live refs, and `Filter.id` takes the whole level in one query.
+          parents = level + 1 < depth ? await refsForIds(levelIds) : [];
         }
       }
 
