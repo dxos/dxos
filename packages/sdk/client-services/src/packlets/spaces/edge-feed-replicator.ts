@@ -8,7 +8,7 @@ import { Event, Mutex, scheduleMicroTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from '@dxos/edge-client';
-import { type HypercoreWrapper } from '@dxos/hypercore-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';

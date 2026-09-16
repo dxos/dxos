@@ -39,7 +39,7 @@ export type HypercoreCreateOptions = HypercoreOptions & {
  * Effect service tag for {@link HypercoreFactory}.
  */
 export class HypercoreFactoryService extends EffectContext.Service<HypercoreFactoryService, HypercoreFactory<any>>()(
-  '@dxos/hypercore-store/HypercoreFactory',
+  '@dxos/feed-store/HypercoreFactory',
 ) {}
 
 /**
@@ -48,7 +48,7 @@ export class HypercoreFactoryService extends EffectContext.Service<HypercoreFact
 export class HypercoreStorageDirectoryService extends EffectContext.Service<
   HypercoreStorageDirectoryService,
   Directory
->()('@dxos/hypercore-store/HypercoreStorageDirectory') {}
+>()('@dxos/feed-store/HypercoreStorageDirectory') {}
 
 /**
  * Hypercore factory.

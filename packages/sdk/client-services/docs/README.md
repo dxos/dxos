@@ -280,8 +280,8 @@ subgraph common [common]
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
   dxos/timeframe("@dxos/timeframe"):::def
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
-  dxos/hypercore-store("@dxos/hypercore-store"):::def
-  click dxos/hypercore-store "dxos/dxos/tree/main/packages/common/hypercore-store/docs"
+  dxos/feed-store("@dxos/feed-store"):::def
+  click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
 
   subgraph _ [ ]
     style _ fill:transparent
@@ -360,15 +360,15 @@ dxos/hypercore --> dxos/codec-protobuf
 dxos/hypercore --> dxos/crypto
 dxos/hypercore --> dxos/random-access-storage
 dxos/protocols --> dxos/timeframe
-dxos/credentials --> dxos/hypercore-store
-dxos/hypercore-store --> dxos/hypercore
+dxos/credentials --> dxos/feed-store
+dxos/feed-store --> dxos/hypercore
 dxos/credentials --> dxos/keyring
 dxos/keyring --> dxos/protocols
 dxos/credentials --> dxos/mesh-protocol
 dxos/mesh-protocol --> dxos/codec-protobuf
 dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
-dxos/model-factory --> dxos/hypercore-store
+dxos/model-factory --> dxos/feed-store
 dxos/model-factory --> dxos/protocols
 dxos/echo-db --> dxos/network-manager
 dxos/network-manager --> dxos/credentials
@@ -388,7 +388,7 @@ dxos/protocol-plugin-rpc --> dxos/mesh-protocol
 dxos/protocol-plugin-rpc --> dxos/messaging
 dxos/teleport --> dxos/rpc
 dxos/echo-db --> dxos/teleport-plugin-replicator
-dxos/teleport-plugin-replicator --> dxos/hypercore-store
+dxos/teleport-plugin-replicator --> dxos/feed-store
 dxos/teleport-plugin-replicator --> dxos/teleport
 dxos/client-services --> dxos/text-model
 dxos/text-model --> dxos/echo-db
@@ -408,7 +408,7 @@ dxos/text-model --> dxos/echo-db
 | [`@dxos/debug`](../../../common/debug/docs/README.md)                                              | &check; |
 | [`@dxos/echo-db`](../../../core/echo/echo-db/docs/README.md)                                       | &check; |
 | [`@dxos/errors`](../../errors/docs/README.md)                                                      | &check; |
-| [`@dxos/hypercore-store`](../../../common/hypercore-store/docs/README.md)                                    | &check; |
+| [`@dxos/feed-store`](../../../common/feed-store/docs/README.md)                                    | &check; |
 | [`@dxos/hypercore`](../../../common/hypercore/docs/README.md)                                      |         |
 | [`@dxos/keyring`](../../../core/halo/keyring/docs/README.md)                                       | &check; |
 | [`@dxos/keys`](../../../common/keys/docs/README.md)                                                | &check; |

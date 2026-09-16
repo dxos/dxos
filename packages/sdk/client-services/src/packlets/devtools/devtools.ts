@@ -12,7 +12,7 @@ import { Event as AsyncEvent, type Trigger } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
-import { type HypercoreStore, HypercoreStoreService } from '@dxos/hypercore-store';
+import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';

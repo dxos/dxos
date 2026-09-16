@@ -14,7 +14,7 @@ import {
 } from '@dxos/credentials';
 import { type DatabaseDirectory, type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { writeMessages } from '@dxos/hypercore-store';
+import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';

@@ -6,7 +6,7 @@ import { create } from '@bufbuild/protobuf';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator, credentialPayload } from '@dxos/credentials';
-import { type HypercoreStore } from '@dxos/hypercore-store';
+import { type HypercoreStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';

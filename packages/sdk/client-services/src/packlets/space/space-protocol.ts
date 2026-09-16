@@ -5,7 +5,7 @@
 import { type Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { type HypercoreWrapper } from '@dxos/hypercore-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import {

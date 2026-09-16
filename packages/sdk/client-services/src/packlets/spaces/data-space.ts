@@ -14,7 +14,7 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type DatabaseRoot, type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
-import { type HypercoreStore, type HypercoreWrapper } from '@dxos/hypercore-store';
+import { type HypercoreStore, type HypercoreWrapper } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';

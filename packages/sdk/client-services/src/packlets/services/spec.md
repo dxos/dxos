@@ -41,11 +41,11 @@ Status: `done` | `todo`
 
 ### Feeds
 
-| Component                                | Tag                                | Layer                                      | Options      | Requirements                                            | Status |
-| ---------------------------------------- | ---------------------------------- | ------------------------------------------ | ------------ | ------------------------------------------------------- | ------ |
-| `HypercoreFactory`                       | `HypercoreFactoryService`          | `HypercoreFactoryLayer({ hypercore? })`    | `hypercore?` | `KeyringApiService`, `HypercoreStorageDirectoryService` | done   |
-| `HypercoreStore` (@dxos/hypercore-store) | `HypercoreStoreService`            | `HypercoreStoreLayer()`                    | —            | `HypercoreFactoryService`                               | done   |
-| `FeedStorageDirectory`                   | `HypercoreStorageDirectoryService` | `HypercoreStorageDirectoryLayer({ sub? })` | `sub?`       | `SqliteStorageService`                                  | done   |
+| Component                           | Tag                                | Layer                                      | Options      | Requirements                                            | Status |
+| ----------------------------------- | ---------------------------------- | ------------------------------------------ | ------------ | ------------------------------------------------------- | ------ |
+| `HypercoreFactory`                  | `HypercoreFactoryService`          | `HypercoreFactoryLayer({ hypercore? })`    | `hypercore?` | `KeyringApiService`, `HypercoreStorageDirectoryService` | done   |
+| `HypercoreStore` (@dxos/feed-store) | `HypercoreStoreService`            | `HypercoreStoreLayer()`                    | —            | `HypercoreFactoryService`                               | done   |
+| `FeedStorageDirectory`              | `HypercoreStorageDirectoryService` | `HypercoreStorageDirectoryLayer({ sub? })` | `sub?`       | `SqliteStorageService`                                  | done   |
 
 ### Spaces / echo
 

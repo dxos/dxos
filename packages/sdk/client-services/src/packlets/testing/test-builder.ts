@@ -20,7 +20,7 @@ import { failUndefined } from '@dxos/debug';
 import { EchoHost, EchoHostService, MeshEchoReplicator } from '@dxos/echo-host';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
-import { HypercoreFactory, HypercoreStore, HypercoreStoreService } from '@dxos/hypercore-store';
+import { HypercoreFactory, HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
 import {
   MemorySignalManager,

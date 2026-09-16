@@ -13,7 +13,7 @@ import {
   type SpaceState,
   SpaceStateMachine,
 } from '@dxos/credentials';
-import { type HypercoreWrapper } from '@dxos/hypercore-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

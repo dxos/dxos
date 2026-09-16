@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
-import { MockHypercoreWriter } from '@dxos/hypercore-store/testing';
+import { MockHypercoreWriter } from '@dxos/feed-store/testing';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

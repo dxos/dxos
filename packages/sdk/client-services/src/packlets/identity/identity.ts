@@ -17,7 +17,7 @@ import {
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { type HypercoreWrapper, writeMessages } from '@dxos/hypercore-store';
+import { type HypercoreWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

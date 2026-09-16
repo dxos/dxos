@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
-import { type HypercoreIndex } from '@dxos/hypercore-store';
+import { type HypercoreIndex } from '@dxos/feed-store';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/timeframe';

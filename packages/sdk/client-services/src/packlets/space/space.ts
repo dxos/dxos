@@ -5,7 +5,7 @@
 import { Event, scheduleMicroTask, synchronized, trackLeaks } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
-import { type HypercoreCreateOptions, type HypercoreWrapper } from '@dxos/hypercore-store';
+import { type HypercoreCreateOptions, type HypercoreWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';

@@ -1,11 +1,11 @@
-# @dxos/hypercore-store
+# @dxos/feed-store
 
 A consistent store for hypercore feeds.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/hypercore-store
+pnpm i @dxos/feed-store
 ```
 
 ## DXOS Resources

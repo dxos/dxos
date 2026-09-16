@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/hypercore-store",
+  "name": "@dxos/feed-store",
   "version": "0.11.1",
   "description": "A consistent store for hypercore feeds.",
   "homepage": "https://dxos.org",

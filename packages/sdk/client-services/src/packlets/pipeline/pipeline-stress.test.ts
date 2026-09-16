@@ -8,7 +8,7 @@ import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { type HypercoreStore, type HypercoreWrapper } from '@dxos/hypercore-store';
+import { type HypercoreStore, type HypercoreWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';

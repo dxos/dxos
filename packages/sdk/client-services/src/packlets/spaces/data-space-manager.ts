@@ -47,7 +47,7 @@ import {
   EdgeHttpClientService,
 } from '@dxos/edge-client';
 import { Event as EffectEvent, EffectEx } from '@dxos/effect';
-import { type HypercoreStore, HypercoreStoreService, writeMessages } from '@dxos/hypercore-store';
+import { type HypercoreStore, HypercoreStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';

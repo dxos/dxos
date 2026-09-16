@@ -10,7 +10,7 @@ import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
-import { HypercoreFactory, HypercoreStore } from '@dxos/hypercore-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { createBuf, fromTimeframe } from '@dxos/protocols/buf';

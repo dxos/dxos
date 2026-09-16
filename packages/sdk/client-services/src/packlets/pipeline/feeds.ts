@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type HypercoreWriter } from '@dxos/hypercore-store';
+import { type HypercoreWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 

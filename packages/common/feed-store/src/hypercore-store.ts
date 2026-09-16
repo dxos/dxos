@@ -24,7 +24,7 @@ export interface HypercoreStoreOptions<T extends {}> {
  * Effect service tag for {@link HypercoreStore}.
  */
 export class HypercoreStoreService extends EffectContext.Service<HypercoreStoreService, HypercoreStore<any>>()(
-  '@dxos/hypercore-store/HypercoreStore',
+  '@dxos/feed-store/HypercoreStore',
 ) {}
 
 /**

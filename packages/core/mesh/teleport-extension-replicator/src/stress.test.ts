@@ -6,7 +6,7 @@ import * as fc from 'fast-check';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Event, asyncTimeout } from '@dxos/async';
-import { HypercoreFactory, HypercoreStore } from '@dxos/hypercore-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

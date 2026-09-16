@@ -24,7 +24,7 @@
       "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/hypercore-store"
+      "path": "../../../common/feed-store"
     },
     {
       "path": "../../../common/invariant"

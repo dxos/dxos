@@ -7,7 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
-import { HypercoreIterator, type HypercoreStore, type HypercoreWrapper } from '@dxos/hypercore-store';
+import { HypercoreIterator, type HypercoreStore, type HypercoreWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';

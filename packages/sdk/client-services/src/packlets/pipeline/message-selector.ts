@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type HypercoreBlock, type HypercoreBlockSelector } from '@dxos/hypercore-store';
+import { type HypercoreBlock, type HypercoreBlockSelector } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { toTimeframe } from '@dxos/protocols/buf';

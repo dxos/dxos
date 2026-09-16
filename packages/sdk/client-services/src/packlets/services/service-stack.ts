@@ -23,7 +23,7 @@ import {
 } from '@dxos/echo-host';
 import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
 import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
-import { HypercoreFactoryLayer, HypercoreStoreLayer, HypercoreStoreService } from '@dxos/hypercore-store';
+import { HypercoreFactoryLayer, HypercoreStoreLayer, HypercoreStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';

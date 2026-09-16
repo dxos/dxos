@@ -10,7 +10,7 @@ import { type Duplex } from 'node:stream';
 import { DeferredTask, asyncTimeout, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { type HypercoreWrapper } from '@dxos/hypercore-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';

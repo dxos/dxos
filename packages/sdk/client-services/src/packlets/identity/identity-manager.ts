@@ -21,7 +21,7 @@ import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { Event as EffectEvent, EffectEx } from '@dxos/effect';
-import { type HypercoreStore, HypercoreStoreService } from '@dxos/hypercore-store';
+import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';

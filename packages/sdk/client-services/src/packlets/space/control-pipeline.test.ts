@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredential, credentialPayload } from '@dxos/credentials';
-import { HypercoreFactory, HypercoreStore } from '@dxos/hypercore-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

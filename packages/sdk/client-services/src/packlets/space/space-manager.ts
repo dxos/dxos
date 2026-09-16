@@ -13,7 +13,7 @@ import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Event } from '@dxos/effect';
-import { type HypercoreStore, HypercoreStoreService } from '@dxos/hypercore-store';
+import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';

@@ -7,7 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { HypercoreSetIterator, type HypercoreWrapper, type HypercoreWriter } from '@dxos/hypercore-store';
+import { HypercoreSetIterator, type HypercoreWrapper, type HypercoreWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

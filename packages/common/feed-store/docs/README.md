@@ -1,4 +1,4 @@
-# @dxos/hypercore-store
+# @dxos/feed-store
 
 A consistent store for hypercore feeds.
 
@@ -99,8 +99,8 @@ flowchart LR
 
 subgraph common [common]
   style common fill:transparent
-  dxos/hypercore-store("@dxos/hypercore-store"):::root
-  click dxos/hypercore-store "dxos/dxos/tree/main/packages/common/hypercore-store/docs"
+  dxos/feed-store("@dxos/feed-store"):::root
+  click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -129,7 +129,7 @@ end
 
 %% Links
 dxos/async --> dxos/context
-dxos/hypercore-store --> dxos/hypercore
+dxos/feed-store --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf
 dxos/hypercore --> dxos/crypto
 dxos/hypercore --> dxos/random-access-storage

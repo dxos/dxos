@@ -137,7 +137,7 @@ export class MemoryTransport implements Transport {
       MemoryTransport._connections.delete(this._remoteInstanceId);
 
       // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.
-      //  NOTE(burdon): Using readable-stream.wrap() might help (see hypercore-store).
+      //  NOTE(burdon): Using readable-stream.wrap() might help (see feed-store).
       // code this._stream
       // code   .unpipe(this._outgoingDelay)
       // code   .unpipe(this._remoteConnection._stream)

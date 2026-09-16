@@ -9,7 +9,7 @@ import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, schedule
 import { type Context, Resource, rejectOnDispose } from '@dxos/context';
 import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { type HypercoreWriter } from '@dxos/hypercore-store';
+import { type HypercoreWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';

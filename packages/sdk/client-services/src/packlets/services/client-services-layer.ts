@@ -9,7 +9,7 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { ConfigService } from '@dxos/config';
 import { EchoHostService } from '@dxos/echo-host';
 import { type Event } from '@dxos/effect';
-import { HypercoreStoreService } from '@dxos/hypercore-store';
+import { HypercoreStoreService } from '@dxos/feed-store';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';

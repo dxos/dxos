@@ -9,7 +9,7 @@ import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { credentialPayload, getCredentialAssertion } from '@dxos/credentials';
 import { type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
-import { HypercoreFactory, HypercoreStore } from '@dxos/hypercore-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
