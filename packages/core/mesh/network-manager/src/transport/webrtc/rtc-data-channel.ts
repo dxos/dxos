@@ -127,8 +127,10 @@ export const bindDataChannel = (
             : data instanceof Blob
               ? Buffer.from(await data.arrayBuffer())
               : data;
+        // Re-read after the await: disposal in the meantime leaves nothing to push to.
         duplex?.push(frame);
       });
+      return receiving;
     },
 
     onerror: (event: Event & any) => {

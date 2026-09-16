@@ -97,6 +97,24 @@ describe('bindDataChannel', () => {
     dispose();
   });
 
+  test('drops a blob still being read when the channel is disposed', async () => {
+    const { channel, stream } = setup({ readyState: 'open' });
+    const dispose = bindDataChannel(channel as any, stream, handlers());
+
+    // `Blob.arrayBuffer` is the one await on the inbound path; disposal during it leaves nothing
+    // to push to, and pushing anyway threw.
+    let release: ((value: ArrayBuffer) => void) | undefined;
+    const blob = { arrayBuffer: () => new Promise<ArrayBuffer>((resolve) => (release = resolve)) };
+    Object.setPrototypeOf(blob, Blob.prototype);
+    const delivered = channel.onmessage!({ data: blob } as any) as unknown as Promise<void>;
+    // Frames are read in arrival order, so the read starts a turn after delivery.
+    await expect.poll(() => release).toBeDefined();
+
+    dispose();
+    release!(new Uint8Array([1, 2, 3]).buffer);
+    await expect(delivered).resolves.toBeUndefined();
+  });
+
   test('sends what the wire-protocol stream writes', async () => {
     const sent: string[] = [];
     const { channel, stream } = setup({ readyState: 'open', onSend: (chunk) => sent.push(chunk.toString()) });
