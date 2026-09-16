@@ -388,9 +388,6 @@ export class ModuleLoader {
       return expanded;
     }).pipe(
       Effect.tapCause(() => Scope.close(scope, Exit.void)),
-      // The module id is the whole diagnostic value of this span: a cold start activates ~20
-      // modules, so without it a trace carries that many identically-named spans and cannot say
-      // which module was slow or which one failed.
       Effect.withSpan('ModuleLoader.load', { attributes: { 'dx.module.id': module.id } }),
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
