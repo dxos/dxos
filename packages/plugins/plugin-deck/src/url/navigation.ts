@@ -62,19 +62,6 @@ export const fromSegment = (segment: string, workspace: string): UrlPath.Pair =>
     : { key: segment.slice(0, separator), id: segment.slice(separator + 1), workspace };
 };
 
-/**
- * A plank's pair: from its node while the graph holds it, otherwise from the segment it was opened
- * under, so a plank the graph unloaded goes back through resolution instead of out of the URL.
- */
-export const plankPair = (
-  represented: Option.Option<UrlPath.Pair>,
-  recorded: string | undefined,
-  workspace: string,
-): Option.Option<UrlPath.Pair> =>
-  Option.orElse(represented, () =>
-    recorded === undefined ? Option.none() : Option.some(fromSegment(recorded, workspace)),
-  );
-
 /** Serialize to a pathname. */
 export const format = ({ workspace, pairs }: Navigation): string =>
   UrlPath.format({ workspace, workspaceKey: UrlPath.WORKSPACE_KEY, pairs: [...pairs] });
@@ -106,6 +93,22 @@ export const push = (next: Navigation, method: 'push' | 'replace' = 'push'): boo
 /** The URL segment a node occupies, or `undefined` when it has none and so cannot be a plank. */
 export const segmentForNode = (builder: AppGraphBuilder.GraphBuilder, nodeId: string): PlankSegment | undefined =>
   Option.match(PathResolution.representNode(builder, nodeId), { onNone: () => undefined, onSome: toSegment });
+
+/**
+ * A plank's segment: the one it was opened under, else the one its node occupies. The record comes
+ * first because it survives the graph unloading the node.
+ */
+export const plankSegment = (
+  builder: AppGraphBuilder.GraphBuilder,
+  segments: PlankSegments | undefined,
+  id: string,
+): PlankSegment | undefined => (segments?.[id] === undefined ? segmentForNode(builder, id) : segmentOf(segments, id));
+
+/** The pair a plank's segment stands for, in the workspace its own id names rather than the deck's. */
+export const plankPair = (segment: PlankSegment, id: string): UrlPath.Pair | undefined => {
+  const workspace = GraphPath.getWorkspaceToken(id);
+  return workspace === undefined ? undefined : fromSegment(segment, workspace);
+};
 
 /**
  * Every ECHO object id a URL pair's `id` field could be referring to, in the order they appear.

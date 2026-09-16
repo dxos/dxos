@@ -13,6 +13,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -38,6 +39,18 @@ export const RESOLVE_TIMEOUT_MS = 10_000;
 const RESOLVE_TIMEOUT = `${RESOLVE_TIMEOUT_MS} millis`;
 
 const LOADER_TIMEOUT = '5 seconds';
+
+/** Waits up to {@link RESOLVE_TIMEOUT_MS} for any of `ids` the graph does not hold yet, such as nodes it unloaded. */
+export const awaitNodes = (graph: AppGraph.ReadableGraph, ids: readonly string[]): Effect.Effect<void> =>
+  Effect.all(
+    ids.map((id) =>
+      AppGraph.waitFor(graph, id).pipe(
+        Effect.asVoid,
+        Effect.timeoutOrElse({ duration: RESOLVE_TIMEOUT, orElse: () => Effect.void }),
+      ),
+    ),
+    { concurrency: 'unbounded' },
+  ).pipe(Effect.asVoid);
 
 /** Dispatch navigation handlers for a URL arriving from outside the app, then project it. */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {

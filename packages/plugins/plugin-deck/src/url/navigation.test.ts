@@ -145,17 +145,18 @@ describe('initialPlanks', () => {
 });
 
 describe('plankPair', () => {
-  const represented = { key: 'object', id: '01JXYZ', workspace: WORKSPACE };
+  const OTHER = 'BB25QRC2FEWCSAMRP4RZL65LWJ7352CKE';
 
-  test('prefers the pair the graph represents', ({ expect }) => {
-    expect(plankPair(Option.some(represented), 'object/OTHER', WORKSPACE)).toEqual(Option.some(represented));
+  test('takes the workspace from the plank id, not the deck the plank is open in', ({ expect }) => {
+    const segment = toSegment({ key: 'object', id: '01JXYZ', workspace: OTHER });
+    expect(plankPair(segment, `root/${OTHER}/types/doc/01JXYZ`)).toEqual({
+      key: 'object',
+      id: '01JXYZ',
+      workspace: OTHER,
+    });
   });
 
-  test('falls back to the recorded segment for a node the graph has unloaded', ({ expect }) => {
-    expect(plankPair(Option.none(), 'object/01JXYZ', WORKSPACE)).toEqual(Option.some(represented));
-  });
-
-  test('gives up only when neither exists', ({ expect }) => {
-    expect(Option.isNone(plankPair(Option.none(), undefined, WORKSPACE))).toBe(true);
+  test('gives up on an id that names no workspace', ({ expect }) => {
+    expect(plankPair(toSegment({ key: 'home', workspace: WORKSPACE }), 'root')).toBeUndefined();
   });
 });

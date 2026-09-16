@@ -128,30 +128,31 @@ export default Capability.makeModule(
       queueMicrotask(handleUpdate);
     });
 
-    // Expand the nodes marked open in state: all of them once the graph is ready, then a workspace's
-    // again whenever it becomes current, since the graph may have unloaded it in between.
+    // Expand the current workspace and the items open in it whenever it becomes current, since the
+    // graph may have unloaded it since it was last shown.
     yield* Effect.gen(function* () {
       const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
-      const expandOpen = (workspace: string | undefined, include: (nodeId: string) => boolean) => {
-        if (workspace) {
-          AppGraph.expandSync(graph, workspace, 'child');
+      const expandOpen = (workspace: string | undefined) => {
+        if (!workspace) {
+          return;
         }
 
+        AppGraph.expandSync(graph, workspace, 'child');
         for (const [pathString, state] of backingState.entries()) {
           const path = Path.parts(pathString);
           const nodeId = path[path.length - 1];
-          if (state.open && !isTopLevelPath(path) && nodeId && include(nodeId)) {
+          if (state.open && !isTopLevelPath(path) && nodeId && GraphPath.getWorkspaceFromPath(nodeId) === workspace) {
             AppGraph.expandSync(graph, nodeId, 'child');
           }
         }
       };
 
       let workspace = registry.get(layoutAtom).workspace;
-      expandOpen(workspace, () => true);
+      expandOpen(workspace);
       const unsubscribeWorkspace = registry.subscribe(layoutAtom, (layout) => {
         if (layout.workspace !== workspace) {
           workspace = layout.workspace;
-          expandOpen(workspace, (nodeId) => GraphPath.getWorkspaceFromPath(nodeId) === workspace);
+          expandOpen(workspace);
         }
       });
       yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribeWorkspace()));

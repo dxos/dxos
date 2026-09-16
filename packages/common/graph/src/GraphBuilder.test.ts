@@ -407,6 +407,45 @@ describe('retention', () => {
     expect(children('root/w1')).to.deep.equal([]);
   });
 
+  test('flush waits for a collection the flush itself triggers', async () => {
+    const harness = setup();
+    const { builder, registry, children } = harness;
+    // On macrotasks, as the app builder schedules; on microtasks the collection would outrun the await.
+    builder._schedule = (callback) =>
+      new Promise((resolve) =>
+        setTimeout(() => {
+          callback();
+          resolve();
+        }),
+      );
+    const ids = Atom.make(['w0', 'w1']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: (): GraphBuilder.ModelNodeArg[] => [],
+            onSome: (source) => (source.id === GraphNode.RootId ? get(ids).map((id) => ({ id })) : [{ id: 'c0' }]),
+          }),
+        ),
+    });
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, 'root/w0');
+
+    // The answer only changes once a flush has added w2 under the root.
+    GraphBuilder.setRetention(builder, {
+      evictable: Atom.make((get) =>
+        get(builder.children(GraphNode.RootId)).some(({ id }) => id === 'root/w2') ? ['root/w0'] : [],
+      ),
+    });
+    await GraphBuilder.flush(builder);
+    expect(children('root/w0')).to.deep.equal(['root/w0/c0']);
+
+    registry.set(ids, ['w0', 'w1', 'w2']);
+    await GraphBuilder.flush(builder);
+    expect(children('root/w0')).to.deep.equal([]);
+  });
+
   test('releasing an inline descendant tears down the connector that produced it', async () => {
     const harness = setup();
     const { builder, registry, children } = harness;

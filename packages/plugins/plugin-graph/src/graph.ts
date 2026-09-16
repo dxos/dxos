@@ -74,6 +74,7 @@ export default Capability.makeModule(
         // clearInterval(interval);
         unsubscribe();
         unsubscribeRetention();
+        AppGraphBuilder.setRetention(builder, undefined);
       }),
     );
     return Capability.contribute(AppCapabilities.AppGraph, builder);

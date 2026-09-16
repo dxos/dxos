@@ -63,9 +63,7 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
   const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
   const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
-  const { activeDeck } = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-  const { open } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
-  const recorded = open[activeDeck]?.segments;
+  const { segments } = yield* DeckCapabilities.getDeck();
 
   const rendered = getRenderedPlanks(active, flatten);
   const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
@@ -76,20 +74,17 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   const pairs: UrlPath.Pair[] = [];
   const navigatedIds = new Map<Navigation.PlankSegment, string>();
   for (const nodeId of active) {
-    const represented = Navigation.plankPair(
-      PathResolution.representNode(builder, nodeId),
-      recorded?.[nodeId],
-      workspace,
-    );
-    if (Option.isNone(represented)) {
+    const segment = Navigation.plankSegment(builder, segments, nodeId);
+    const pair = segment && Navigation.plankPair(segment, nodeId);
+    if (!segment || !pair) {
       log.error('node has no URL binding, so it cannot be opened', {
         nodeId,
         extension: builder.getNodeExtensionId(nodeId),
       });
       continue;
     }
-    pairs.push(represented.value);
-    navigatedIds.set(Navigation.toSegment(represented.value), nodeId);
+    pairs.push(pair);
+    navigatedIds.set(segment, nodeId);
     if (nodeId === companionAnchor) {
       pairs.push({ key: UrlPath.COMPANION_KEY, id: variant, workspace });
     }

@@ -126,13 +126,13 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
    */
   batch?(fn: () => void): void;
   /**
-   * Drops the nodes outright, reclaiming whatever the store holds for them, if it can. Unlike
+   * Drops the nodes outright, reclaiming whatever the store holds for them. Unlike
    * {@link Store.removeNodes} this is not a deletion the graph should remember — the caller is
    * unloading a subgraph it expects to rebuild from source.
    */
-  release?(ids: readonly string[]): void;
-  /** Ids below `roots` that nothing outside them holds; retention needs this alongside {@link Store.release}. */
-  subgraph?(roots: Iterable<string>): readonly string[];
+  release(ids: readonly string[]): void;
+  /** Ids below `roots` that nothing outside them holds, which {@link Store.release} can drop without emptying another view. */
+  subgraph(roots: Iterable<string>): readonly string[];
 }
 
 /** Names the subgraphs the builder may unload; the implementor derives it from state it already keeps. */
@@ -413,8 +413,7 @@ export class GraphBuilder<
    * expanded again under the same answer stays loaded.
    */
   _collect(): void {
-    const store = this._store;
-    if (!this._retention || !store.subgraph || !store.release) {
+    if (!this._retention) {
       return;
     }
 
@@ -426,7 +425,7 @@ export class GraphBuilder<
     }
 
     this._evicted = roots;
-    const ids = store.subgraph(roots);
+    const ids = this._store.subgraph(roots);
     if (ids.length > 0) {
       release(this, ids);
     }
@@ -772,11 +771,15 @@ export const removeExtension: {
   return builder;
 });
 
-/**
- * Wait for all pending connector updates to be flushed, and for any retention collection they trail.
- */
+/** Waits until no flush or retention collection is pending, including ones scheduled while waiting. */
 export const flush = async (builder: Any): Promise<void> => {
-  await Promise.all([builder._flushPromise, builder._collectPromise]);
+  for (;;) {
+    const pending = [builder._flushPromise, builder._collectPromise];
+    await Promise.all(pending);
+    if (pending[0] === builder._flushPromise && pending[1] === builder._collectPromise) {
+      return;
+    }
+  }
 };
 
 /**
@@ -821,7 +824,7 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   }
 
   ids.forEach((id) => builder._onRemoveNode(id));
-  builder._store.release?.(ids);
+  builder._store.release(ids);
 };
 
 /** Installs the retention port, or removes it with `undefined`; the builder usually predates the policy. */

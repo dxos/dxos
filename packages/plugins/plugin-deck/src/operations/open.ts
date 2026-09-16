@@ -20,7 +20,14 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { DeckCapabilities } from '#types';
 
-import { Navigation, applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
+import {
+  Navigation,
+  applyWorkspace,
+  awaitNodes,
+  computeActiveUpdates,
+  currentNavigation,
+  navigateDeck,
+} from '../url/index.ts';
 import {
   addSubjectsToActiveDeck,
   plankIdForName,
@@ -51,6 +58,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       for (const subjectId of input.subject) {
         NotFound.expandPath(graph, subjectId);
       }
+      // A subject in a workspace the graph unloaded only gains the provenance its URL needs once rebuilt.
+      yield* awaitNodes(graph, input.subject);
 
       {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -175,7 +184,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
         const boundName = levelOpen?.name ?? input.name;
         const segmentOfId = (id: string) =>
-          segments?.[id] ?? Navigation.segmentForNode(builder, id) ?? Navigation.segmentOf(undefined, id);
+          Navigation.plankSegment(builder, segments, id) ?? Navigation.segmentOf(undefined, id);
         const nextSegments = next.map(segmentOfId);
         const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
         const plankNames = updatePlankNames(
