@@ -106,20 +106,7 @@ export class LayerStack {
     context: LayerSpec.LayerContext,
   ): Effect.Effect<Slice, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen({ self: this }, function* () {
-      let slice = this.#slices.find((s) => s.affinity === affinity && layerContextEquals(s.context, context));
-      if (!slice) {
-        // Registered before anything suspends, so a concurrent resolution for the same slice waits on this one's
-        // initialisation instead of building a second slice.
-        slice = new Slice({
-          affinity,
-          context,
-          keepAlive: affinity === 'application' || affinity === 'space',
-          layers: this.#layers.filter((l) => l.affinity === affinity),
-        });
-        this.#slices.push(slice);
-      }
-
-      const target = slice;
+      const target = this.#findOrRegisterSlice(affinity, context);
       target.incrementRefCount();
       yield* Effect.addFinalizer(() =>
         Effect.gen({ self: this }, function* () {
@@ -137,34 +124,46 @@ export class LayerStack {
           ? this.#resolveServices(resolveAffinity, context, target.requires)
           : (Context.empty() as Context.Context<unknown>);
         yield* target.initOnce(requirements).pipe(
-          // A resolution cancelled while waiting on the slice lock did not fail init.
-          Effect.tapCauseIf(
-            (cause) => !Cause.hasInterruptsOnly(cause),
-            (cause) =>
-              Effect.sync(() => {
-                const failure = Cause.findErrorOption(cause);
-                const missingKey =
-                  Option.isSome(failure) && failure.value._tag === 'ServiceNotAvailable'
-                    ? (failure.value.context as { service?: string }).service
-                    : undefined;
-                const offendingLayers = missingKey
-                  ? target.layers
-                      .filter((l) => l.requires.some((r) => r.key === missingKey))
-                      .map((l) => ({ provides: l.provides.map((p) => p.key), requires: l.requires.map((r) => r.key) }))
+          Effect.tapCauseIf(isInitFailure, (cause) =>
+            Effect.sync(() => {
+              const failure = Cause.findErrorOption(cause);
+              const missingKey =
+                Option.isSome(failure) && failure.value._tag === 'ServiceNotAvailable'
+                  ? (failure.value.context as { service?: string }).service
                   : undefined;
-                log.error('LayerStack slice init failed', {
-                  affinity,
-                  context,
-                  missingKey,
-                  offendingLayers,
-                  cause: Cause.pretty(cause),
-                });
-              }),
+              const offendingLayers = missingKey
+                ? target.layers
+                    .filter((l) => l.requires.some((r) => r.key === missingKey))
+                    .map((l) => ({ provides: l.provides.map((p) => p.key), requires: l.requires.map((r) => r.key) }))
+                : undefined;
+              log.error('LayerStack slice init failed', {
+                affinity,
+                context,
+                missingKey,
+                offendingLayers,
+                cause: Cause.pretty(cause),
+              });
+            }),
           ),
         );
       }
       return target;
     });
+  }
+
+  #findOrRegisterSlice(affinity: LayerSpec.Affinity, context: LayerSpec.LayerContext): Slice {
+    const existing = this.#slices.find((s) => s.affinity === affinity && layerContextEquals(s.context, context));
+    if (existing) {
+      return existing;
+    }
+    const slice = new Slice({
+      affinity,
+      context,
+      keepAlive: affinity === 'application' || affinity === 'space',
+      layers: this.#layers.filter((l) => l.affinity === affinity),
+    });
+    this.#slices.push(slice);
+    return slice;
   }
 
   #resolveServices(
@@ -324,6 +323,8 @@ interface SliceOpts {
   readonly layers: LayerSpec.LayerSpec[];
 }
 
+const isInitFailure = <E>(cause: Cause.Cause<E>): boolean => !Cause.hasInterruptsOnly(cause);
+
 /**
  * Collection of layers of a specific affinity.
  */
@@ -369,11 +370,7 @@ class Slice {
 
   #sortError: LayerDependencyCycleError | undefined;
 
-  /**
-   * Serialises this slice's initialisation and materialisation. Per slice rather than per stack: a layer that waits
-   * on something slow (a space becoming ready) must not hold up resolutions for unrelated slices.
-   */
-  readonly #lock = Effect.runSync(Semaphore.make(1));
+  readonly #buildLock = Effect.runSync(Semaphore.make(1));
   #initialized = false;
 
   constructor(opts: SliceOpts) {
@@ -545,11 +542,10 @@ class Slice {
     return this.#initialized;
   }
 
-  /** Runs {@link init} once, under this slice's lock; a caller that waited on the lock finds it done. */
   initOnce(
     requirements: Context.Context<unknown>,
   ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
-    return this.#lock.withPermits(1)(
+    return this.#buildLock.withPermits(1)(
       Effect.suspend(() =>
         this.#initialized
           ? Effect.void
@@ -572,12 +568,15 @@ class Slice {
   materialize(
     tags: Context.Key<any, any>[],
   ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
-    // Built services are read without the lock, so they never wait behind a layer still building.
     return Effect.suspend(() =>
-      !this.#sortError && tags.every((tag) => Option.isSome(Context.getOption(this.#services, tag)))
+      this.#hasBuilt(tags)
         ? Effect.void
-        : this.#lock.withPermits(1)(Effect.suspend(() => this.#materializePending(tags))),
+        : this.#buildLock.withPermits(1)(Effect.suspend(() => this.#materializePending(tags))),
     );
+  }
+
+  #hasBuilt(tags: Context.Key<any, any>[]): boolean {
+    return !this.#sortError && tags.every((tag) => Option.isSome(Context.getOption(this.#services, tag)));
   }
 
   #materializePending(

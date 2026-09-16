@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { type YieldStrategy, yieldOrContinue } from './yield.ts';
 
-/** Whether a timer queued before the call ran before the call resolved, i.e. whether the call yielded. */
 const yielded = async (strategy: YieldStrategy): Promise<boolean> => {
   let ran = false;
   setTimeout(() => {
@@ -22,7 +21,6 @@ describe('yieldOrContinue', () => {
   beforeEach(async () => {
     now = 1_000_000;
     vi.spyOn(performance, 'now').mockImplementation(() => now);
-    // Ends any slice an earlier test left open.
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
