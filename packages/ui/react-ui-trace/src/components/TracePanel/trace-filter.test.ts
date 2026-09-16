@@ -15,6 +15,7 @@ import {
   DEFAULT_PROCESS_ENVIRONMENTS,
   ProcessEnvironment,
   filterProcesses,
+  filterProcessesBySelection,
   filterTraceMessages,
   parseProcessEnvironments,
   processEnvironment,
@@ -132,5 +133,34 @@ describe('filterTraceMessages', () => {
   test('a cyclic parent chain terminates', ({ expect }) => {
     const messages = [message('a', 'b'), message('b', 'a')];
     expect(filterTraceMessages(messages, ['z'])).toEqual([]);
+  });
+});
+
+describe('filterProcessesBySelection', () => {
+  const process = (pid: string, parentPid?: string): Process.Info =>
+    makeProcess({
+      pid: Process.ID.make(pid),
+      parentPid: parentPid === undefined ? null : Process.ID.make(parentPid),
+      name: pid,
+      state: Process.State.RUNNING,
+    });
+
+  test('an empty selection is no filter', ({ expect }) => {
+    const processes = [process('a'), process('b')];
+    expect(filterProcessesBySelection(processes, [])).toBe(processes);
+  });
+
+  test('a selected process keeps its descendants and drops the rest', ({ expect }) => {
+    const processes = [process('agent'), process('tool', 'agent'), process('nested', 'tool'), process('other')];
+    expect(filterProcessesBySelection(processes, ['agent']).map((info) => info.pid)).toEqual([
+      'agent',
+      'tool',
+      'nested',
+    ]);
+  });
+
+  test('a cyclic parent chain terminates', ({ expect }) => {
+    const processes = [process('a', 'b'), process('b', 'a')];
+    expect(filterProcessesBySelection(processes, ['z'])).toEqual([]);
   });
 });

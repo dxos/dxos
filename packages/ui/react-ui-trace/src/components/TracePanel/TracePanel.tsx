@@ -77,7 +77,12 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     // See the comment in `ProcessTreeContainer` for more details.
     const { branches, commits, spanTree, details } = useDeferredValue(graph);
 
-    const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+    // A commit the graph no longer holds (the process selection moved) is no longer picked.
+    const [pickedCommit, setSelectedCommit] = useState<Commit | undefined>();
+    const selectedCommit = useMemo(
+      () => (pickedCommit && commits.some((commit) => commit.id === pickedCommit.id) ? pickedCommit : undefined),
+      [pickedCommit, commits],
+    );
     // Remembered across selections, so collapsing a section once keeps it collapsed.
     const [openSections, setOpenSections] = useState<string[]>(SECTIONS.map((section) => section.id));
     const handleCommitSelect = useCallback(

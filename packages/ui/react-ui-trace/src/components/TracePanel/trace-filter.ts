@@ -89,6 +89,30 @@ export const parseProcessEnvironments = (selected: readonly string[] | undefined
  * runs as a child of the process it serves, so its events are that process's work. An empty
  * selection is no filter.
  */
+/**
+ * Narrows the process tree to the selected processes and their descendants, the process-side twin of
+ * {@link filterTraceMessages}: a running child of a picked process is that process's live work.
+ */
+export const filterProcessesBySelection = (
+  processes: readonly Process.Info[],
+  selected: readonly string[],
+): readonly Process.Info[] => {
+  if (selected.length === 0) {
+    return processes;
+  }
+  const parentByPid = new Map<string, string | null>(processes.map((process) => [process.pid, process.parentPid]));
+  const selection = new Set(selected);
+  const isSelected = (pid: string, depth = 0): boolean => {
+    if (selection.has(pid)) {
+      return true;
+    }
+    const parent = parentByPid.get(pid);
+    // Bounded so a cyclic parent chain (a corrupt tree) terminates.
+    return parent !== null && parent !== undefined && depth < processes.length && isSelected(parent, depth + 1);
+  };
+  return processes.filter((process) => isSelected(process.pid));
+};
+
 export const filterTraceMessages = (
   messages: readonly Trace.Message[],
   selected: readonly string[],

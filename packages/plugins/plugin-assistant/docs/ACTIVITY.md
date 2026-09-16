@@ -627,7 +627,12 @@ buildActivityTimeline(input): SessionTimeline   // same output type; lanes gain 
 
 Steps:
 
-1. Filter `traceMessages` to the window (by the message's last event timestamp).
+1. Window the trace **per event**, not per message: flatten, keep every event with
+   `timestamp >= window.start`, and keep as well the begin-type events (`operation.start`,
+   `agentRequestBegin`, `task.statusChanged` → `started`) of spans and segments that are still open
+   at `window.start`, so a run crossing the boundary keeps its bar and its task attribution. A
+   message's events are batched, so filtering by one timestamp per message would drop events inside
+   the window.
 2. Partition chats by `Chat.peekProject(chat)?.id` → project groups + unfiled.
 3. For each partition call `buildSessionTimeline({ traceMessages, processes, chats, tasks, now,
 includeEmptySessions: true })` and re-parent its root lanes under a **group lane**
@@ -637,11 +642,18 @@ includeEmptySessions: true })` and re-parent its root lanes under a **group lane
    trigger, labelled from the `Trigger` object (`useQuery` on `Trigger.Trigger`); status from the
    span's `outcome` or the process `State`; the `ProgressRegistry` entry for a running pid supplies
    `current/total` for the lane's meta column.
-5. Add the operations group: top-level `Process.Info` and spans whose pid is neither a session pid
-   (`laneByPid`, exposed by the builder rather than recomputed) nor a triggered run, one
-   session-kind lane each labelled `params.name ?? key`; their children become task-kind lanes.
-6. Merge lanes and markers, prefixing lane ids by group so ids stay unique across partitions;
-   compute the range over the union.
+5. Add the operations group as **process lanes**: the candidates are the top-level `Process.Info`s
+   and the traced top-level spans whose pid is neither a session pid (`laneByPid`, exposed by the
+   builder rather than recomputed) nor a triggered run. A live process and the span with its pid
+   are one candidate (merged by pid — the process supplies state and `startedAt`, the span the
+   events); two traced spans with the same pid stay two candidates, since a resumed process is a
+   second run. Each becomes a session-kind lane `process:<pid>` labelled `params.name ?? key`,
+   status from `State` (`RUNNING | HYBERNATING` → running, `SUCCEEDED` → done, `FAILED` → failed,
+   otherwise pending), start/end from `startedAt`/`completedAt` or the span; its children are
+   process lanes too, `parentId` from `parentPid`, and are selected like any lane.
+6. Merge lanes and markers, namespacing every id by partition and rewriting every reference to one
+   — `parentId`, `blockedOn`, `delegatedFrom.laneId` / `markerId`, `marker.laneId` — so nothing
+   dangles; compute the range over the union.
 
 One change to `buildSessionTimeline`: an `includeEmptySessions` option that stops skipping chats
 with an empty checklist (default `false`, so the project chart is unchanged). One addition: the
@@ -670,8 +682,11 @@ the devtools page and its capability wiring in **`plugin-assistant`**, which alr
 
 - `containers/ActivityPanel/ActivityPanel.tsx` — `Panel.Root` with a toolbar (time window select,
   group filter, "show processes" toggle, a link to the trace companion) and `Gantt` in a
-  `ScrollArea`. `onLaneSelect` opens the chat (`LayoutOperation.Open` on the chat's graph path);
-  `onMarkerSelect` shows the marker's `detail` (the `FlatEvent`) in a `JsonHighlighter` below the
+  `ScrollArea`. `onLaneSelect` hands back the chart's own lane shape, which carries no session, so
+  the panel resolves it through the timeline's lane of the same id (`lane.sessionId`, as
+  `ProjectPipeline` does) and opens that chat (`LayoutOperation.Open` on the chat's graph path);
+  `onMarkerSelect` likewise resolves the timeline's `Marker` by id, whose `detail` the builder sets to
+  the `FlatEvent`, and shows it in a `JsonHighlighter` below the
   chart — the `TracePanel`'s details pane, reused.
 - `capabilities/app-graph-builder.ts` — a `whenDebugGroup` extension contributing an `Agents`
   branch with one `Activity` page (`data: 'org.dxos.plugin.assistant.activity'`), positioned after

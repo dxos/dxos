@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import * as Process from '@dxos/compute/Process';
 import { type Space } from '@dxos/react-client/echo';
 
-import { filterTraceMessages } from '../components/TracePanel/trace-filter.ts';
+import { filterProcessesBySelection, filterTraceMessages } from '../components/TracePanel/trace-filter.ts';
 import { type ExecutionGraph, buildExecutionGraph } from '../execution-graph/index.ts';
 import { getTraceMessagesAtom } from './useTraceMessages.ts';
 
@@ -83,10 +83,8 @@ const getExecutionGraph = (
     processesAtom,
     Atom.debounce(Duration.millis(500)),
     Atom.map((processes) =>
-      processes.filter(
-        (process) =>
-          (process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING) &&
-          (selectedPids.length === 0 || selectedPids.includes(process.pid)),
+      filterProcessesBySelection(processes, selectedPids).filter(
+        (process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING,
       ),
     ),
     // The monitor rebuilds the process list on every poll, so without a structural comparison the
