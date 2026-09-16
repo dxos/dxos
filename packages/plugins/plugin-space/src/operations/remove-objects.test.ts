@@ -53,9 +53,11 @@ describe('SpaceOperation.RemoveObjects', () => {
         });
         yield* Database.flush();
 
-        const { indices } = yield* Operation.invoke(SpaceOperation.RemoveObjects, {
-          refs: [db.makeRef<TestObject>(Obj.getURI(removed))],
-        });
+        const { indices } = yield* Operation.invoke(
+          SpaceOperation.RemoveObjects,
+          { refs: [db.makeRef<TestObject>(Obj.getURI(removed))] },
+          { spaceId: db.spaceId },
+        );
 
         expect(indices).toEqual([1]);
         expect(rootCollection.objects.map((ref) => ref.uri)).toEqual([Ref.make(kept).uri]);

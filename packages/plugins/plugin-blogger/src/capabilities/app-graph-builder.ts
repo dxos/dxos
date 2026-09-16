@@ -158,7 +158,8 @@ export default Capability.makeModule(
             }),
             AppGraphNode.makeAction({
               id: SpaceOperation.RemoveObjects.meta.key,
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }),
+              data: () =>
+                Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }, { spaceId: db?.spaceId }),
               properties: {
                 label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Blog.Publication)),
                 icon: 'ph--trash--regular',
