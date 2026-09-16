@@ -21,7 +21,7 @@ The split is not caution, it is a measured effect, and a much larger one than "a
 - An attached CDP client makes Blink retain response bodies, which reads as linear memory growth
   over a run — the finding `composer-app/scripts/memory/plain-soak.mjs` exists to control for.
 - The screencast writes a PNG per frame, and the sampling profiler runs in every realm. On the
-  smoke tier's `open-tasks` (a 200-task render) that took the stage from **6.8s in `measure` to
+  `normal` tier's `open-tasks` (a 200-task render) that took the stage from **6.8s in `measure` to
   past a 60s timeout in `diagnose`** — an order of magnitude, not a constant bias.
 
 So `diagnose` numbers are not comparable to `measure` numbers, and are not comparable to each
@@ -73,4 +73,4 @@ Written under `test-results/perf/`:
 - `<flow>-<mode>-<scale>.events.ndjson` — `measure` rows as PostHog events, for
   `node scripts/ci-event.mjs --batch`.
 - `artifacts/<mode>-<scale>-<runId>/` — `.cpuprofile` per stage per realm, and each stage's first
-  and last frame. Never committed: a heavy tier's profiles run to hundreds of MB.
+  and last frame. Never committed: a large tier's profiles run to hundreds of MB.

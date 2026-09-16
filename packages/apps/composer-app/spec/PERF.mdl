@@ -66,21 +66,21 @@ test QA-1: A project whose task set is large
     - an identity exists
     - space: a space created by the fixture, named "PERF: Projects $runId"
     - >-
-      scale: a tier selected by `DX_PERF_SCALE` — `tasks=200,depth=2,projects=1` (smoke, shaped
-      like a real project), `tasks=2000,depth=3,projects=5` (working), or
-      `tasks=10000,depth=3,projects=5` (heavy). The label is the join key for a trend, so it never
-      varies within a tier
+      scale: a tier selected by `DX_PERF_SCALE`, defaulting to `normal` —
+      `tasks=200,depth=2,projects=1` (normal, shaped like a real project someone actually has),
+      `tasks=2000,depth=3,projects=5` (heavy), or `tasks=10000,depth=3,projects=5` (extra-heavy).
+      The label is the join key for a trend, so it never varies within a tier
     - >-
-      THE FIXTURE PATH BOUNDS THE TIERS, AND SMOKE IS THE ONLY ONE IT REACHES. Generation runs at
-      ~420ms per task at 200 tasks (five samples: 80.8-84.6s), because each task is one
-      `tasks.create` whose write appends to a growing `tasks` array — so the rate gets WORSE as the
-      array grows, not better. Two working-tier attempts establish that: a flat 15-minute budget
-      expired mid-fixture, and so did a 24-minute budget derived from the smoke rate, neither
-      reaching a single stage. 2,000 tasks therefore cost over 1,380s, above 690ms each. The heavy
-      tier is five times further out again. Both are NOT reachable this way: they need the archive
-      path (`buildArchive` -> `client.spaces.import`, building the graph headlessly in node and
-      importing it), which is unbuilt. `working` and `heavy` are refused up front until it exists
-      rather than treated as tiers that merely need patience
+      ONLY `normal` IS MEASURED AND TRENDED; the larger two are exploration tools, run by hand.
+      The reason is the fixture path: generation costs ~420ms per task at 200 tasks (five samples:
+      80.8-84.6s), because each task is one `tasks.create` whose write appends to a growing `tasks`
+      array — so the rate gets WORSE as the array grows, not better. Two `heavy` attempts establish
+      that: a flat 15-minute budget expired mid-fixture, and so did a 24-minute budget derived from
+      the `normal` rate, neither reaching a single stage. 2,000 tasks therefore cost over 1,380s,
+      above 690ms each, and `extra-heavy` is five times further out again. They are still runnable —
+      the budget is derived per tier rather than refused — but expect to leave a run going, and
+      expect `extra-heavy` to want the archive path (`buildArchive` -> `client.spaces.import`,
+      building the graph headlessly in node and importing it), which is unbuilt
     - the fixture has created `projects` Projects via `org.dxos.operation.projects.create`, each with
       `tasks / projects` tasks filed into its own task set via `org.dxos.operation.tasks.create`,
       nested to `depth` and spread across three milestones
@@ -159,9 +159,10 @@ test QA-1: A project whose task set is large
 ```mdl
 suite perf-nightly: The measured flows, from main
   desc: |
-    Runs both modes at the `smoke` tier, the only one this fixture path can build. `measure` rows
-    are trended in PostHog; `diagnose` artifacts are uploaded for whoever reads a regression and
-    never trended.
+    Runs both modes at the `normal` tier, the only tier trended. `measure` rows go to PostHog;
+    `diagnose` artifacts are uploaded for whoever reads a regression and never trended. The `heavy`
+    and `extra-heavy` tiers are deliberately out of the nightly: their fixture cost is measured in
+    tens of minutes, so they are explored by hand rather than scheduled.
   tags: [perf, nightly]
   tests: [QA-1]
 ```

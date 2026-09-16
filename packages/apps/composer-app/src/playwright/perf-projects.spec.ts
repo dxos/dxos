@@ -23,7 +23,7 @@ import {
 } from '@dxos/perf-harness';
 
 import { INITIAL_URL } from './app-manager.ts';
-import { type Scale, SCALES, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
+import { DEFAULT_SCALE, type Scale, SCALES, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
@@ -56,8 +56,8 @@ const projectPath = (spaceId: string, projectId: string): string =>
  */
 const SETTLE_MS = 20_000;
 
-/** Which tier to run; the nightly runs each in turn. */
-const scaleName = process.env.DX_PERF_SCALE ?? 'smoke';
+/** Which tier to run. The nightly runs `normal` only; the larger tiers are for exploration. */
+const scaleName = process.env.DX_PERF_SCALE ?? DEFAULT_SCALE;
 
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
@@ -65,7 +65,7 @@ const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter
  * Locator budget per mode.
  *
  * `diagnose` gets far more than `measure` because its instrumentation is not a small tax: the
- * per-frame screencast and the per-realm profiler took the smoke tier's `open-tasks` from 6.8s to
+ * per-frame screencast and the per-realm profiler took the `normal` tier's `open-tasks` from 6.8s to
  * past 60s. A budget sized for `measure` turns every instrumented run into a timeout — the one
  * failure mode that yields no artifacts, exactly when they are wanted.
  */
@@ -74,35 +74,23 @@ const locatorTimeout = (mode: Mode): number => (mode === 'diagnose' ? 300_000 : 
 /**
  * Whole-test budget, sized from the MEASURED fixture cost rather than guessed.
  *
- * Generation runs at roughly 420ms per task through the operation layer (five samples at the smoke
- * tier: 80.8-84.6s for 200 tasks), and every task is one `tasks.create` whose write appends to a
- * growing `tasks` array — so the rate gets WORSE with scale, not better: at 2,000 tasks the fixture
- * had not finished after 1,380s, i.e. above 690ms each.
+ * Generation runs at ~420ms per task at the `normal` tier (five samples: 80.8-84.6s for 200 tasks),
+ * and every task is one `tasks.create` whose write appends to a growing `tasks` array — so the rate
+ * gets WORSE with scale, not better: at 2,000 tasks the fixture had not finished after 1,380s, i.e.
+ * above 690ms each. The figure below is that upper observation, so the `normal` tier is
+ * over-budgeted rather than the larger tiers under-budgeted.
  *
  * The per-task term dominates, which is the finding: the operation layer is the wrong fixture path
- * above a few hundred objects, and no budget fixes that — see `spec/PERF.mdl`. The figure below is
- * therefore a smoke-tier rate and a lower bound, used only to size the one supported tier.
+ * above a few hundred objects. An `extra-heavy` run is budgeted here at nearly two hours and may
+ * still not finish — that tier wants the archive path (`buildArchive` -> `client.spaces.import`,
+ * building the graph headlessly in node and importing it), which is unbuilt. See `spec/PERF.mdl`.
  */
-const FIXTURE_MS_PER_TASK = 420;
+const FIXTURE_MS_PER_TASK = 700;
 
 /** Boot, settle and the seven stages, generously — `diagnose` stages run an order slower. */
 const STAGE_BUDGET_MS = 600_000;
 
 const testBudget = (scale: Scale): number => scale.tasks * FIXTURE_MS_PER_TASK + STAGE_BUDGET_MS;
-
-/**
- * Tiers this fixture path cannot build.
- *
- * MEASURED, not predicted: a `working` run given a 24-minute budget derived from the smoke tier's
- * rate expired mid-fixture, having produced no `fixture built` line and no stage — so 2,000 tasks
- * cost more than 1,380s, above 690ms each, and the rate DEGRADES with set size rather than holding
- * at the smoke tier's 420ms. `heavy` is five times further out again.
- *
- * Refused up front, in seconds, naming what is missing — the archive path (`buildArchive` ->
- * `client.spaces.import`) — rather than expiring at the config level with no stage and no reason.
- * See `spec/PERF.mdl`.
- */
-const UNSUPPORTED_SCALES = new Set(['working', 'heavy']);
 
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
@@ -285,17 +273,20 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 test.describe.serial('Projects + Tasks performance', () => {
   // Derived, not flat: the config's `timeout` is only the outer bound, and a `setTimeout` here
   // silently overrides it — a flat value below the fixture's cost expires before any stage runs.
-  test.setTimeout(testBudget(SCALES[scaleName] ?? SCALES.smoke));
+  test.setTimeout(testBudget(SCALES[scaleName] ?? SCALES[DEFAULT_SCALE]));
 
   for (const mode of modes) {
     test(`${mode} @ ${scaleName}`, async () => {
       const scale = SCALES[scaleName];
       expect(scale, `unknown scale ${scaleName}`).toBeDefined();
-      expect(
-        UNSUPPORTED_SCALES.has(scaleName),
-        `the '${scaleName}' tier needs the archive fixture path (buildArchive -> client.spaces.import); ` +
-          'the operation layer cannot build it in a usable time — see spec/PERF.mdl',
-      ).toBe(false);
+      if (scaleName !== DEFAULT_SCALE) {
+        // Said out loud because the cost is the surprising part, not the result: the fixture alone
+        // runs for most of the budget, and an exploratory run that looks hung usually is not.
+        console.log(
+          `[perf] exploratory tier '${scaleName}' (${scale.tasks} tasks): fixture generation alone is budgeted at ` +
+            `${Math.round((scale.tasks * FIXTURE_MS_PER_TASK) / 60_000)} minutes and is not trended.`,
+        );
+      }
       await runFlow(mode, scale, 0);
     });
   }

@@ -15,11 +15,21 @@ export type Scale = {
   projects: number;
 };
 
+/**
+ * `normal` is the trended tier — the CI default and the only one the nightly measures.
+ *
+ * The larger two are exploration tools: reachable by hand when someone wants to know how the flat
+ * `tasks` array behaves at size, not part of any trend. Their fixture cost is punishing (see
+ * `FIXTURE_MS_PER_TASK` in `perf-projects.spec.ts`), so expect to leave a run going.
+ */
 export const SCALES: Record<string, Scale> = {
-  smoke: { tasks: 200, depth: 2, projects: 1 },
-  working: { tasks: 2000, depth: 3, projects: 5 },
-  heavy: { tasks: 10_000, depth: 3, projects: 5 },
+  'normal': { tasks: 200, depth: 2, projects: 1 },
+  'heavy': { tasks: 2000, depth: 3, projects: 5 },
+  'extra-heavy': { tasks: 10_000, depth: 3, projects: 5 },
 };
+
+/** The tier run without a `DX_PERF_SCALE` override, and the only one trended. */
+export const DEFAULT_SCALE = 'normal';
 
 /** The label that groups rows by tier; stable across runs so a trend is joinable. */
 export const scaleLabel = ({ tasks, depth, projects }: Scale): string =>

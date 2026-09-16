@@ -16,8 +16,8 @@ on:
     inputs:
       scales:
         type: string
-        description: 'DX_PERF_SCALE tiers to sweep, comma-separated (only smoke is supported; working and heavy need the archive fixture path)'
-        default: 'smoke'
+        description: 'DX_PERF_SCALE tiers to sweep, comma-separated (normal is the trended tier; heavy and extra-heavy cost tens of minutes of fixture each)'
+        default: 'normal'
       modes:
         type: string
         description: 'DX_PERF_MODES per tier (measure, diagnose)'
@@ -82,12 +82,12 @@ jobs:
         id: flows
         continue-on-error: true
         env:
-          # `smoke` is the only tier in the default sweep: `working` and `heavy` cannot be built
-          # through the operation layer (measured — see `spec/PERF.mdl`), so including either would
-          # fail the flow step every night, and because the trending gate below requires a
-          # successful flow, one unsupported tier would suppress the rows the OTHER tiers produced.
-          # Both stay available via `inputs.scales` for whoever builds the archive path.
-          SCALES: ${{ inputs.scales || 'smoke' }}
+          # `normal` is the only tier in the default sweep. The larger tiers spend tens of minutes
+          # in fixture generation before a single stage (measured — see `spec/PERF.mdl`), which is
+          # exploration rather than a trend, and a tier that expired would suppress the rows the
+          # OTHER tiers produced, since the trending gate below requires a successful flow. Both
+          # stay available via `inputs.scales` for a deliberate run.
+          SCALES: ${{ inputs.scales || 'normal' }}
           MODES: ${{ inputs.modes || 'measure,diagnose' }}
           DX_PWA: 'false'
         run: |
@@ -158,7 +158,7 @@ jobs:
           done
 
       # The diagnose artifacts — per-stage `.cpuprofile` per realm, and the first/last frame of
-      # each stage — are what a regression is read with. Not committed anywhere: a heavy tier's
+      # each stage — are what a regression is read with. Not committed anywhere: a large tier's
       # profiles run to hundreds of MB.
       - name: Upload artifacts
         if: always()
