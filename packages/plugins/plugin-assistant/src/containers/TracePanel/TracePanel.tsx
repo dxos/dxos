@@ -70,7 +70,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     // The picked processes live in view state keyed by the panel, so they survive a remount; the
     // trace below narrows to them and their children.
     const selectedPids = useSelection(attendableId, 'multi');
-    const { toggle: toggleSelected, clear: clearSelected } = useSelectionActions(attendableId);
+    const { multi: setSelected, clear: clearSelected } = useSelectionActions(attendableId);
 
     const menu = useTraceMenu({
       selected: environments,
@@ -140,10 +140,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       const last = selectedPids.at(-1);
       return last !== undefined && branches.includes(last) ? last : null;
     }, [selectedPids, branches]);
-    const handleProcessSelect = useCallback(
-      (process: Process.Info) => toggleSelected(process.pid.toString()),
-      [toggleSelected],
-    );
+    const handleSelectedChange = useCallback((pids: string[]) => setSelected(pids), [setSelected]);
 
     return (
       <Panel.Root {...composableProps(props, { ...attentionAttrs, classNames: 'h-full' })} ref={forwardedRef}>
@@ -174,7 +171,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                             space={space}
                             environments={environments}
                             selected={selectedPids}
-                            onProcessSelect={handleProcessSelect}
+                            onSelectedChange={handleSelectedChange}
                             onProcessTerminate={onProcessTerminate}
                           />
                         </Accordion.ItemBody>
@@ -346,7 +343,7 @@ const feedKey = (uri: string): string => {
 };
 
 type ProcessTreeContainerProps = ThemedClassName<
-  Pick<ProcessTreeProps, 'selected' | 'onProcessSelect' | 'onProcessTerminate'> & {
+  Pick<ProcessTreeProps, 'selected' | 'onSelectedChange' | 'onProcessTerminate'> & {
     space: Space;
     environments: readonly ProcessEnvironment[];
   }
@@ -359,7 +356,7 @@ const ProcessTreeContainer = ({
   space,
   environments,
   selected,
-  onProcessSelect,
+  onSelectedChange,
   onProcessTerminate,
 }: ProcessTreeContainerProps) => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
@@ -413,7 +410,7 @@ const ProcessTreeContainer = ({
       processes={visibleProcesses}
       resolveLabel={resolveLabel}
       selected={selected}
-      onProcessSelect={onProcessSelect}
+      onSelectedChange={onSelectedChange}
       onProcessTerminate={onProcessTerminate}
     />
   );

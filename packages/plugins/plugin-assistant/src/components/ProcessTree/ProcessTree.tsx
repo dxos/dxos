@@ -37,9 +37,10 @@ export type ProcessTreeProps = {
    * Must be referentially stable — `ProcessTree` is memoized on its props.
    */
   resolveLabel?: (process: Process.Info) => string | undefined;
-  /** Pids drawn as selected; the tree is controlled, so a click reports through `onProcessSelect`. */
+  /** Pids drawn as selected; the tree is controlled, so a click reports through `onSelectedChange`. */
   selected?: readonly string[];
-  onProcessSelect?: (process: Process.Info) => void;
+  /** The selection after a click: the clicked pid alone, or toggled among the others on a meta-click. */
+  onSelectedChange?: (selected: string[]) => void;
   onProcessTerminate?: (process: Process.Info) => void;
 };
 
@@ -54,6 +55,8 @@ type ProcessNode = {
 /** Synthetic root; the tree renders its children, never the root itself. */
 const ROOT_ID = 'processes';
 
+const NO_SELECTION: readonly string[] = [];
+
 /**
  * The agent's running processes as a tree, one row per process with its status glyph and metrics
  * in trailing columns. The forest is rebuilt on every metrics tick, so open state lives outside the
@@ -62,7 +65,15 @@ const ROOT_ID = 'processes';
 export const ProcessTree = React.memo(
   composable<HTMLDivElement, ProcessTreeProps>(
     (
-      { processes, depth = DEFAULT_DEPTH, resolveLabel, selected, onProcessSelect, onProcessTerminate, ...props },
+      {
+        processes,
+        depth = DEFAULT_DEPTH,
+        resolveLabel,
+        selected = NO_SELECTION,
+        onSelectedChange,
+        onProcessTerminate,
+        ...props
+      },
       forwardedRef,
     ) => {
       // Open state lives outside the model: `processes` carries live metrics, so the forest (and with
@@ -81,7 +92,7 @@ export const ProcessTree = React.memo(
             }),
             // Expanded by default, matching the flattened view this replaced.
             isOpen: (_node, path) => openRef.current.get(path.join('/')) ?? true,
-            isCurrent: (node) => node.process !== undefined && (selected?.includes(node.process.pid) ?? false),
+            isCurrent: (node) => node.process !== undefined && selected.includes(node.process.pid),
           }),
         [root, resolveLabel, selected],
       );
@@ -98,8 +109,16 @@ export const ProcessTree = React.memo(
       );
 
       const handleSelect = useCallback(
-        ({ item }: { item: ProcessNode }) => item.process && onProcessSelect?.(item.process),
-        [onProcessSelect],
+        ({ item, current, meta }: { item: ProcessNode; current: boolean; meta: boolean }) => {
+          if (!item.process) {
+            return;
+          }
+          const pid = item.process.pid.toString();
+          onSelectedChange?.(
+            !meta ? [pid] : current ? [...selected, pid] : selected.filter((candidate) => candidate !== pid),
+          );
+        },
+        [selected, onSelectedChange],
       );
 
       const renderIcon = useMemo(() => makeIconRenderer(), []);
@@ -113,7 +132,7 @@ export const ProcessTree = React.memo(
               model={model}
               density='sm'
               selectionMode='multiple'
-              classNames='text-sm tabular-nums gap-0'
+              classNames='text-sm tabular-nums font-thin'
               gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
               renderIcon={renderIcon}
               renderColumns={renderColumns}

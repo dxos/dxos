@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Option from 'effect/Option';
+import React, { useState } from 'react';
 
 import * as Process from '@dxos/compute/Process';
 import { log } from '@dxos/log';
@@ -11,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { makeProcess } from '#testing';
 
-import { ProcessTree } from './ProcessTree.tsx';
+import { ProcessTree, type ProcessTreeProps } from './ProcessTree.tsx';
 
 const processes: Process.Info[] = [
   makeProcess({
@@ -60,9 +61,16 @@ const processes: Process.Info[] = [
   }),
 ];
 
+/** The story holds the selection, as the trace panel does, so a click can be seen to take. */
+const DefaultStory = (props: ProcessTreeProps) => {
+  const [selected, setSelected] = useState<readonly string[]>([]);
+  return <ProcessTree {...props} selected={selected} onSelectedChange={setSelected} />;
+};
+
 const meta: Meta<typeof ProcessTree> = {
   title: 'plugins/plugin-assistant/components/ProcessTree',
   component: ProcessTree,
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' })],
 } satisfies Meta<typeof ProcessTree>;
 
@@ -73,9 +81,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     processes: processes,
-    onProcessSelect: (process) => {
-      log.info('select', process);
-    },
     onProcessTerminate: (process) => {
       log.info('terminate', process);
     },

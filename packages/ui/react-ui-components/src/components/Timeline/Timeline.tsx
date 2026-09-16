@@ -337,7 +337,7 @@ export const Timeline = memo(
                   data-index={index}
                   aria-current={current === index}
                   className={mx(
-                    'group/row col-span-full grid grid-cols-subgrid gap-1 px-[2px] overflow-hidden items-center cursor-pointer',
+                    'group/row col-span-full grid grid-cols-subgrid gap-1 px-[2px] overflow-hidden items-center cursor-pointer pe-2',
                     'aria-current:bg-current-surface! hover:bg-hover-surface-subtle',
                   )}
                   style={{ height: `${options.lineHeight}px` }}
