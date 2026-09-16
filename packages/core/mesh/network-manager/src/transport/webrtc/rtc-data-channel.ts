@@ -36,6 +36,8 @@ export const bindDataChannel = (
   { onOpen, onClose, onError }: DataChannelHandlers,
 ): (() => void) => {
   let duplex: Duplex | undefined;
+  /** Whether the wire protocol has been piped into the channel, which only happens once it opens. */
+  let writable = false;
   // Held while the channel's send buffer is above the watermark, released by `onbufferedamountlow`.
   let flushed: (() => void) | null = null;
   let disposed = false;
@@ -66,33 +68,48 @@ export const bindDataChannel = (
   };
 
   /**
-   * Idempotent: a transferred channel may already be open when it arrives here, and its first
-   * message can be dispatched before the `open` event, so this runs from whichever comes first
-   * rather than from `onopen` alone. Dropping that first frame stalls the wire protocol's handshake
-   * for good.
+   * The two directions become available at different moments on a transferred channel, so they are
+   * attached separately.
+   *
+   * Inbound: a message can be dispatched before this context sees the `open` event, and dropping
+   * that first frame stalls the wire protocol's handshake for good — so reading starts on whichever
+   * of the two arrives first.
    */
-  const attach = () => {
+  const attachInbound = () => {
     if (duplex || disposed) {
       return;
     }
 
-    log('channel open');
     duplex = new Duplex({
       read: () => {},
       write: (chunk, _encoding, callback) => write(chunk, callback),
     });
-    duplex.pipe(stream).pipe(duplex);
+    duplex.pipe(stream);
+  };
+
+  /**
+   * Outbound: `send` throws while the channel is still `connecting`, so the wire protocol is not
+   * piped into it — and the transport does not report itself connected — until it is really open.
+   */
+  const attachOutbound = () => {
+    if (writable || disposed) {
+      return;
+    }
+
+    attachInbound();
+    writable = true;
+    log('channel open');
+    stream.pipe(duplex!);
     onOpen();
   };
 
   Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
-    onopen: () => attach(),
+    onopen: () => attachOutbound(),
 
     onclose: () => (disposed ? undefined : onClose()),
 
     onmessage: async (event: MessageEvent) => {
-      // A message can only arrive on an open channel, whether or not the event said so yet.
-      attach();
+      attachInbound();
       if (!duplex) {
         log.warn('ignoring message on a closed channel');
         return;
@@ -123,7 +140,7 @@ export const bindDataChannel = (
   // A channel transferred after it opened has already dispatched its `open` event elsewhere, so
   // waiting for one here would wait forever.
   if (channel.readyState === 'open') {
-    attach();
+    attachOutbound();
   }
 
   return () => {
@@ -138,6 +155,7 @@ export const bindDataChannel = (
       stream.unpipe(duplex);
       duplex.destroy();
       duplex = undefined;
+      writable = false;
     }
     try {
       channel.close();

@@ -19,6 +19,7 @@ describe('bindDataChannel', () => {
     const dispose = bindDataChannel(channel as any, stream, handlers());
 
     channel.onmessage!({ data: Buffer.from('first frame') } as any);
+    channel.readyState = 'open';
     channel.onopen!({} as any);
 
     expect(await received).toBe('first frame');
@@ -36,12 +37,41 @@ describe('bindDataChannel', () => {
     dispose();
   });
 
+  test('does not send before the channel opens', async () => {
+    // `send` throws while the channel is `connecting`. The non-initiator hits this: its channel is
+    // transferred straight out of `ondatachannel`, and the peer's first frame can arrive before the
+    // open event — piping the wire protocol in at that point tore the whole connection down.
+    const sent: string[] = [];
+    const { channel, stream, received } = setup({
+      readyState: 'connecting',
+      onSend: (chunk) => {
+        expect(channel.readyState, 'sent while the channel was not open').toBe('open');
+        sent.push(chunk.toString());
+      },
+    });
+    const dispose = bindDataChannel(channel as any, stream, handlers());
+
+    channel.onmessage!({ data: Buffer.from('inbound first') } as any);
+    stream.push(Buffer.from('outbound while connecting'));
+
+    // The inbound frame still lands; nothing goes out yet.
+    expect(await received).toBe('inbound first');
+    expect(sent).toEqual([]);
+
+    channel.readyState = 'open';
+    channel.onopen!({} as any);
+    await expect.poll(() => sent).toEqual(['outbound while connecting']);
+    dispose();
+  });
+
   test('reports the channel as open only once', async () => {
     const { channel, stream } = setup({ readyState: 'connecting' });
     let opened = 0;
     const dispose = bindDataChannel(channel as any, stream, { ...handlers(), onOpen: () => void opened++ });
 
     channel.onmessage!({ data: Buffer.from('x') } as any);
+    channel.readyState = 'open';
+    channel.onopen!({} as any);
     channel.onopen!({} as any);
 
     expect(opened).toBe(1);
