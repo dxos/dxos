@@ -63,7 +63,7 @@ export type FeedSyncerOptions = {
 
   /**
    * Interval between full polls.
-   * @default 10 seconds
+   * @default 5 seconds
    */
   pollingInterval?: number;
 
