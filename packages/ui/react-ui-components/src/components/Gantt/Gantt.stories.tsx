@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Gantt, type GanttData, type GanttLane, type GanttMarker } from './Gantt.tsx';
@@ -156,13 +156,7 @@ const markers: GanttMarker[] = [
 const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
   <div className='flex flex-col dx-fill overflow-hidden'>
     {chart}
-    <Syntax.Root data={data}>
-      <Syntax.Content classNames='dx-grow border-t border-separator'>
-        <Syntax.Viewport>
-          <Syntax.Code classNames='text-xs' />
-        </Syntax.Viewport>
-      </Syntax.Content>
-    </Syntax.Root>
+    <JsonHighlighter data={data} classNames='dx-grow border-t border-separator text-xs' />
   </div>
 );
 
