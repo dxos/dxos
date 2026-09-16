@@ -22,7 +22,7 @@ export const NetworkCard = ({ network }: NetworkCardProps) => {
 
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--wifi-high--regular' title='Network' />
+      <StatCard.Header icon='ph--wifi-high--regular' hue='sky' title='Network' />
       <StatCard.Row label='Connections' value={connections.toLocaleString()} />
       <StatCard.Row label='Swarms' value={swarms.length.toLocaleString()} />
     </StatCard.Root>

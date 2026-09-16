@@ -52,6 +52,7 @@ export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCard
   <StatCard.Root>
     <StatCard.Header
       icon='ph--timer--regular'
+      hue='violet'
       title='Surfaces'
       info={stats.length.toLocaleString()}
       action={

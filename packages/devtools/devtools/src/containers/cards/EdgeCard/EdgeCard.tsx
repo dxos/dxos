@@ -69,6 +69,7 @@ export const EdgeCard = ({ edge, status, onRefresh, onCopy }: EdgeCardProps) => 
     <StatCard.Root>
       <StatCard.Header
         icon='ph--cloud--regular'
+        hue='blue'
         title='EDGE'
         info={status ? (problems.length === 0 ? 'healthy' : `${problems.length} issues`) : undefined}
         menu={menu.length > 0 ? menu : undefined}

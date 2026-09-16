@@ -26,6 +26,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
     <StatCard.Root>
       <StatCard.Header
         icon='ph--broadcast--regular'
+        hue='purple'
         title='Swarm announcements'
         info={`${messages.length} · ${spaceCount} spaces`}
         action={

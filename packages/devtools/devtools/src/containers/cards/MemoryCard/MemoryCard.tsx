@@ -18,7 +18,7 @@ export const MemoryCard = ({ memory }: MemoryCardProps) => {
   const warning = (memory?.used ?? 0) > MEM_WARNING;
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--cpu--regular' title='Memory' />
+      <StatCard.Header icon='ph--cpu--regular' hue='amber' title='Memory' />
       <StatCard.Row label='Used heap' value={Unit.MB(memory?.usedJSHeapSize)} unit='MB' />
       <StatCard.Row label='Allocated heap' value={Unit.MB(memory?.totalJSHeapSize)} unit='MB' />
       <StatCard.Row

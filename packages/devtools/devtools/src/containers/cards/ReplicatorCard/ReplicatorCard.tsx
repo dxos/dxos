@@ -20,6 +20,7 @@ export const ReplicatorCard = ({ database }: ReplicatorCardProps) => {
     <StatCard.Root>
       <StatCard.Header
         icon='ph--arrows-left-right--regular'
+        hue='teal'
         title='Replicator'
         info={`${replicator?.connections ?? 0} connections`}
       />

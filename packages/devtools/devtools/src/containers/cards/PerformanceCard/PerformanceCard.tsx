@@ -16,6 +16,7 @@ export const PerformanceCard = ({ entries = [] }: PerformanceCardProps) => (
   <StatCard.Root>
     <StatCard.Header
       icon='ph--hourglass-simple-low--regular'
+      hue='orange'
       title='Performance'
       info={entries.length.toLocaleString()}
     />

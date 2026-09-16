@@ -18,7 +18,12 @@ export const DatabaseCard = ({ database }: DatabaseCardProps) => {
 
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--database--regular' title='Database' info={`${database?.spaces ?? 0} spaces`} />
+      <StatCard.Header
+        icon='ph--database--regular'
+        hue='emerald'
+        title='Database'
+        info={`${database?.spaces ?? 0} spaces`}
+      />
       <StatCard.Row label='Objects' value={(database?.objects?.alive ?? 0).toLocaleString()} />
       <StatCard.Row label='Objects (deleted)' value={(database?.objects?.deleted ?? 0).toLocaleString()} />
       <StatCard.Row label='Documents' value={(database?.storedDocuments ?? 0).toLocaleString()} />

@@ -53,7 +53,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
   if (compartments.length === 0) {
     return showEmpty ? (
       <StatCard.Root>
-        <StatCard.Header icon='ph--chart-bar--regular' title='Plugin stats' />
+        <StatCard.Header icon='ph--chart-bar--regular' hue='indigo' title='Plugin stats' />
         <StatCard.Row label='No stats yet.' />
       </StatCard.Root>
     ) : null;
@@ -63,7 +63,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
     <Flex column gap='sm'>
       {compartments.map(([pluginKey, value]) => (
         <StatCard.Root key={pluginKey}>
-          <StatCard.Header icon='ph--chart-bar--regular' title={pluginKey} />
+          <StatCard.Header icon='ph--chart-bar--regular' hue='indigo' title={pluginKey} />
           {flatten(value).map(([key, cell]) => (
             <StatCard.Row key={key} label={key} title={key} value={formatValue(cell)} />
           ))}

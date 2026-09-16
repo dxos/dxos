@@ -26,7 +26,12 @@ export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
   const shapes = [...groupQueriesByFilter(queries).entries()].sort(([a], [b]) => a.localeCompare(b));
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--tree-view--regular' title='Queries' info={queries.length.toLocaleString()} />
+      <StatCard.Header
+        icon='ph--tree-view--regular'
+        hue='lime'
+        title='Queries'
+        info={queries.length.toLocaleString()}
+      />
       {shapes.length === 0 && <StatCard.Row label='No queries.' />}
       {shapes.map(([shape, group]) => {
         const slowest = Math.max(...group.map((query) => query.metrics.executionTime ?? 0));

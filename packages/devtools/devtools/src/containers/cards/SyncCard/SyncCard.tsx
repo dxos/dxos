@@ -36,6 +36,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
     <StatCard.Root>
       <StatCard.Header
         icon='ph--git-diff--regular'
+        hue='green'
         title='Sync'
         info={pending > 0 ? `${pending} syncing` : `${spaces.length} spaces`}
         action={

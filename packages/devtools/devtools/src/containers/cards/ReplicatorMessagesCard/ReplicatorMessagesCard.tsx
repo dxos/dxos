@@ -29,7 +29,7 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
 
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--envelope--regular' title='Messages' info={`${received}↓ ${sent}↑`} />
+      <StatCard.Header icon='ph--envelope--regular' hue='cyan' title='Messages' info={`${received}↓ ${sent}↑`} />
       {rows.length === 0 && <StatCard.Row label='No messages.' />}
       {rows.length > 0 && (
         <StatCard.Row>

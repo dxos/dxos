@@ -13,7 +13,7 @@ import {
   IconButton,
   type ThemedClassName,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
 //
 // Root
@@ -36,6 +36,8 @@ StatCardRoot.displayName = 'StatCard.Root';
 
 type StatCardHeaderProps = {
   icon: string;
+  /** Tints the icon, so a stack of cards reads by colour before it reads by title. */
+  hue?: Hue;
   title: string;
   /** Short figure shown after the title (a count, a status). */
   info?: ReactNode;
@@ -44,10 +46,10 @@ type StatCardHeaderProps = {
   menu?: CardMenuProps['items'];
 };
 
-const StatCardHeader = ({ icon, title, info, action, menu }: StatCardHeaderProps) => (
+const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
   <Card.Header>
     <Card.Block>
-      <Icon icon={icon} />
+      <Icon icon={icon} classNames={hue && getStyles(hue).text} />
     </Card.Block>
     <Flex align='center' gap='sm' classNames='min-w-0'>
       <Card.Title>{title}</Card.Title>

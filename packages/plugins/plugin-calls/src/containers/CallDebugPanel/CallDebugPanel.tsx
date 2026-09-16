@@ -73,6 +73,7 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
     <StatCard.Root>
       <StatCard.Header
         icon='ph--video-conference--regular'
+        hue='pink'
         title={t('meeting-status.title')}
         info={state?.call.joined ? 'active' : 'inactive'}
         menu={[{ label: 'Copy raw', icon: 'ph--copy--regular', onClick: () => void handleCopyRaw() }]}
