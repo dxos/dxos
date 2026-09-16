@@ -3414,6 +3414,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant

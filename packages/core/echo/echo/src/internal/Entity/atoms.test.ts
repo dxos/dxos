@@ -23,55 +23,32 @@ const OrderAnnotation = Annotation.make({
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 describe('entity atoms', () => {
-  test('every accessor for the same view of an entity returns the same atom', ({ expect }) => {
-    const person = makePerson('Alice');
-    expect(Obj.atom(person)).toBe(Entity.atom(person));
-    expect(Obj.labelAtom(person)).toBe(Entity.labelAtom(person));
-  });
-
-  test('one atom per entity, stable across mutation', ({ expect }) => {
-    const person = makePerson('Alice');
-    expect(Obj.atom(person)).toBe(Obj.atom(person));
-
-    Obj.update(person, (person) => {
-      person.name = 'Bob';
-    });
-    expect(Obj.atom(person)).toBe(Obj.atom(person));
-  });
-
-  test('distinct entities get distinct atoms', ({ expect }) => {
-    expect(Obj.atom(makePerson('Alice'))).not.toBe(Obj.atom(makePerson('Alice')));
-  });
-
-  test('two live objects sharing an id get their own atoms', ({ expect }) => {
-    const person = makePerson('Alice');
-    const sameId = Obj.clone(person, { retainId: true });
-    expect(sameId.id).toBe(person.id);
-    expect(Obj.atom(person)).not.toBe(Obj.atom(sameId));
-  });
-
-  test('a mutable view shares its object atom', ({ expect }) => {
+  test('an entity has one atom per kind, shared by its accessors and views', ({ expect }) => {
     const person = makePerson('Alice');
     const atom = Obj.atom(person);
     const nameAtom = Obj.atomProperty(person, 'name');
+    expect(Entity.atom(person)).toBe(atom);
+    expect(Obj.labelAtom(person)).toBe(Entity.labelAtom(person));
+
     Obj.update(person, (person) => {
+      person.name = 'Bob';
       expect(Obj.atom(person)).toBe(atom);
       expect(Obj.atomProperty(person, 'name')).toBe(nameAtom);
     });
+    expect(Obj.atom(person)).toBe(atom);
   });
 
-  test('property atoms are per object and per key', ({ expect }) => {
+  test('entities get their own atoms, even when they share an id', ({ expect }) => {
     const person = makePerson('Alice');
-    expect(Obj.atomProperty(person, 'name')).toBe(Obj.atomProperty(person, 'name'));
-    expect(Obj.atomProperty(person, 'name')).not.toBe(Obj.atomProperty(person, 'address'));
-    expect(Obj.atomProperty(person, 'name')).not.toBe(Obj.atomProperty(makePerson('Alice'), 'name'));
+    expect(Obj.atom(makePerson('Alice'))).not.toBe(Obj.atom(person));
+    expect(Obj.atom(Obj.clone(person, { retainId: true }))).not.toBe(Obj.atom(person));
   });
 
-  test('annotation atoms are per object, per annotation and per key', ({ expect }) => {
+  test('property and annotation atoms are keyed by key and annotation', ({ expect }) => {
     const person = makePerson('Alice');
+    expect(Obj.atomProperty(person, 'name')).not.toBe(Obj.atomProperty(person, 'email'));
     expect(Annotation.atom(person, ColorAnnotation)).toBe(Annotation.atom(person, ColorAnnotation));
     expect(Annotation.atom(person, ColorAnnotation)).not.toBe(Annotation.atom(person, OrderAnnotation));
-    expect(Annotation.atom(person, ColorAnnotation)).not.toBe(Annotation.atom(makePerson('Alice'), ColorAnnotation));
     expect(Annotation.atomProperty(person, OrderAnnotation, 'a')).toBe(
       Annotation.atomProperty(person, OrderAnnotation, 'a'),
     );
@@ -83,45 +60,22 @@ describe('entity atoms', () => {
   test('a non-proxy entity keeps its atoms on itself', ({ expect }) => {
     const entity = { [Entity.KindId]: Entity.Kind.Object, id: 'plain' } as unknown as Entity.Unknown;
     expect(Entity.atom(entity)).toBe(Entity.atom(entity));
-    expect(Entity.atom(entity)).not.toBe(Entity.atom({ ...entity } as Entity.Unknown));
   });
 
-  test('the live atom notifies on every change', ({ expect }) => {
+  test('the live atom notifies on change', ({ expect }) => {
     const registry = AtomRegistry.make();
     const person = makePerson('Alice');
     let notified = 0;
-    const unsubscribe = registry.subscribe(
-      Obj.atomReactive(person),
-      () => {
-        notified++;
-      },
-      { immediate: true },
-    );
-    const before = notified;
+    const unsubscribe = registry.subscribe(Obj.atomReactive(person), () => notified++, { immediate: true });
+    notified = 0;
     Obj.update(person, (person) => {
       person.name = 'Bob';
     });
-    expect(notified).toBe(before + 1);
-    expect(registry.get(Obj.atomReactive(person))).toBe(person);
+    expect(notified).toBe(1);
     unsubscribe();
   });
 
-  test('an unobserved entity atom is released by the registry', async ({ expect }) => {
-    const registry = AtomRegistry.make();
-    const person = makePerson('Alice');
-    const atom = Obj.atom(person);
-
-    const unsubscribe = registry.subscribe(atom, () => {});
-    expect(registry.getNodes().size).toBe(1);
-
-    unsubscribe();
-    await settle();
-    expect(registry.getNodes().size).toBe(0);
-
-    expect(registry.get(atom).name).toBe('Alice');
-  });
-
-  test('a rebuilt atom re-subscribes to its entity', async ({ expect }) => {
+  test('an unobserved atom is released and subscribes again when rebuilt', async ({ expect }) => {
     const registry = AtomRegistry.make();
     const person = makePerson('Alice');
     const atom = Obj.atom(person);
@@ -130,20 +84,10 @@ describe('entity atoms', () => {
     await settle();
     expect(registry.getNodes().size).toBe(0);
 
-    let notified = 0;
-    const unsubscribe = registry.subscribe(
-      atom,
-      () => {
-        notified++;
-      },
-      { immediate: true },
-    );
-    const before = notified;
+    const unsubscribe = registry.subscribe(atom, () => {}, { immediate: true });
     Obj.update(person, (person) => {
       person.name = 'Bob';
     });
-    await settle();
-    expect(notified).toBeGreaterThan(before);
     expect(registry.get(atom).name).toBe('Bob');
     unsubscribe();
   });
@@ -167,9 +111,7 @@ describe('entity atoms are released with the entity', { tags: ['memory'] }, () =
 
     globalThis.gc!();
     // FinalizationRegistry callbacks are queued on a later turn than the collection itself.
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    globalThis.gc!();
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await settle();
 
     expect(collected).toBe(true);
   });

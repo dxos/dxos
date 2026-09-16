@@ -28,6 +28,9 @@
       "path": "../effect"
     },
     {
+      "path": "../errors"
+    },
+    {
       "path": "../invariant"
     },
     {

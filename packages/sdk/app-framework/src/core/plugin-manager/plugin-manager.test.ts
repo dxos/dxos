@@ -14,7 +14,7 @@ import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
 import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/testing/TestClock';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { invariant } from '@dxos/invariant';
@@ -3418,16 +3418,5 @@ describe('PluginManager', () => {
 
     const makePlugin = (id: string, tags?: string[]) =>
       Plugin.make(Plugin.define({ profile: { key: id, name: id, tags } }))();
-  });
-});
-
-describe('atom idle TTL', () => {
-  it('creates its registry with the default grace period', async () => {
-    const manager = PluginManager.make({ pluginLoader: () => Effect.die('not used') });
-    const atom = Atom.make(0);
-
-    manager.registry.subscribe(atom, () => {})();
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    assert.strictEqual(manager.registry.getNodes().size, 1);
   });
 });

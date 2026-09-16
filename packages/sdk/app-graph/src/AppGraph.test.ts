@@ -88,6 +88,11 @@ describe('Graph', () => {
     expect(count).toEqual(2);
   });
 
+  test('getNodeOrThrow throws NotFoundError for a missing node', () => {
+    const graph = Graph.make({ registry: Registry.make() });
+    expect(() => Graph.getNodeOrThrow(graph, EXAMPLE_ID)).toThrow(GraphNode.NotFoundError);
+  });
+
   test('remove node', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });

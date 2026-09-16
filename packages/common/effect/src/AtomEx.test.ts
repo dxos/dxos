@@ -12,29 +12,20 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const TTL = 100;
 
 describe('AtomEx.makeRegistry', () => {
-  test('keeps an unobserved node for the grace period', async ({ expect }) => {
-    const registry = AtomEx.makeRegistry({ idleTTL: Duration.millis(TTL) });
-    const atom = Atom.make(0);
-
-    registry.subscribe(atom, () => {})();
-    await wait(TTL / 4);
-    expect(registry.getNodes().size).toBe(1);
-
-    await wait(TTL * 3);
-    expect(registry.getNodes().size).toBe(0);
-  });
-
-  test('re-subscribing within the grace period keeps the same node', async ({ expect }) => {
+  test('keeps an unobserved node through the grace period', async ({ expect }) => {
     const registry = AtomEx.makeRegistry({ idleTTL: Duration.millis(TTL) });
     const atom = Atom.make(0);
 
     registry.subscribe(atom, () => {})();
     const node = registry.getNodes().get(atom);
+    // Past the task on which a registry without a TTL removes the node.
     await wait(TTL / 4);
     const unsubscribe = registry.subscribe(atom, () => {});
-    await wait(TTL * 3);
     expect(registry.getNodes().get(atom)).toBe(node);
+
     unsubscribe();
+    await wait(TTL * 3);
+    expect(registry.getNodes().size).toBe(0);
   });
 
   test('a zero grace period removes on the next task', async ({ expect }) => {

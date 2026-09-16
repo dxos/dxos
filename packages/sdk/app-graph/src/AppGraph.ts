@@ -500,13 +500,11 @@ export const getNode = (graph: BaseGraph, id: string): Option.Option<Node.Node> 
 /**
  * Get the node with the given id from the graph's registry.
  *
- * @throws If the node is Option.none().
+ * @throws {GraphNode.NotFoundError} If the graph has no node with the id.
  */
 export const getNodeOrThrow = (graph: BaseGraph, id: string): Node.Node => {
   const internal = getInternal(graph);
-  const node = internal._registry.get(internal._node(id));
-  invariant(Option.isSome(node), `Node not available: ${id}`);
-  return node.value;
+  return Option.getOrThrowWith(internal._registry.get(internal._node(id)), () => new GraphNode.NotFoundError(id));
 };
 
 /**

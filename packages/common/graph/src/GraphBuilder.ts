@@ -776,7 +776,10 @@ export const explore = async <B extends Any>(
 
   await builder._yield();
 
-  const node = Option.getOrThrowWith(registry.get(builder._store.node(source)), () => new Error(`No node: ${source}`));
+  const node = Option.getOrThrowWith(
+    registry.get(builder._store.node(source)),
+    () => new GraphNode.NotFoundError(source),
+  );
   const shouldContinue = await visitor(node, [...path, node.id]);
   if (shouldContinue === false) {
     return;
