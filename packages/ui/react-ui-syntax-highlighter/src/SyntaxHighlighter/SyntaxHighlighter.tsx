@@ -129,7 +129,7 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
           { classNames, className, role, style },
           {
             role: 'none',
-            classNames: mx('dx-expand overflow-visible', copyButton && 'relative group'),
+            classNames: mx('dx-expand overflow-visible p-1', copyButton && 'relative group'),
           },
         )}
         ref={forwardedRef}
