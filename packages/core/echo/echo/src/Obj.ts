@@ -537,6 +537,19 @@ export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOpti
 };
 
 /**
+ * Get the object's mnemonic: the last 6 characters of its id, uppercased.
+ * Short enough to read out or type, and stable for the life of the object, so it is how a
+ * person names a particular object — in a log line, a UI chip, or `Filter.mnemonic(...)`.
+ * Accepts both reactive objects and snapshots.
+ *
+ * @example
+ * ```ts
+ * Obj.getMnemonic(task); // '7QK2ZB'
+ * ```
+ */
+export const getMnemonic = (entity: Unknown | Snapshot): string => EntityId.getMnemonic(entity.id);
+
+/**
  * @returns The DXN of the object's type.
  * @example dxn:com.example.type.person:1.0.0
  * @throws If the object is missing its type (corrupted object).
