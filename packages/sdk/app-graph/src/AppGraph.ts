@@ -11,7 +11,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
-import { makeRegistry, withLabel } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
@@ -251,7 +251,7 @@ export class GraphImpl implements WritableGraph {
         (a: Option.Option<Node.Node>, b: Option.Option<Node.Node>) =>
           Option.getOrUndefined(a) === Option.getOrUndefined(b),
       ),
-      withLabel(`graph:node:${id}`),
+      AtomEx.withLabel(`graph:node:${id}`),
     );
   });
 
@@ -321,7 +321,7 @@ export class GraphImpl implements WritableGraph {
     return Atom.make((get) => {
       get(this._model.version);
       return this._computeEdges(id);
-    }).pipe(Atom.withEquality(edgesEqual), withLabel(`graph:edges:${id}`));
+    }).pipe(Atom.withEquality(edgesEqual), AtomEx.withLabel(`graph:edges:${id}`));
   });
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
@@ -346,7 +346,7 @@ export class GraphImpl implements WritableGraph {
       Atom.withEquality(
         (a: Node.Node[], b: Node.Node[]) => a.length === b.length && a.every((node, index) => node === b[index]),
       ),
-      withLabel(`graph:connections:${key}`),
+      AtomEx.withLabel(`graph:connections:${key}`),
     );
   });
 
@@ -356,7 +356,7 @@ export class GraphImpl implements WritableGraph {
         return [];
       }
       return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
-    }).pipe(withLabel(`graph:actions:${id}`));
+    }).pipe(AtomEx.withLabel(`graph:actions:${id}`));
   });
 
   readonly _json = Atom.family<string, Atom.Atom<any>>((id) => {
@@ -378,11 +378,11 @@ export class GraphImpl implements WritableGraph {
         },
         relationKey('child'),
       );
-    }).pipe(withLabel(`graph:json:${id}`));
+    }).pipe(AtomEx.withLabel(`graph:json:${id}`));
   });
 
   constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
-    this._registry = registry ?? makeRegistry();
+    this._registry = registry ?? AtomEx.makeRegistry();
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
     this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });

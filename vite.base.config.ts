@@ -66,9 +66,10 @@ const DEBUG_TIMEOUT_MS = 3_600_000;
 // DESIGN: .agents/projects/test-profiling-leaks/DESIGN.md.
 //   DX_PROFILE_TESTS[=dir] — emit a V8 `.cpuprofile` via Node `--cpu-prof` (dir default ./profiles).
 //   DX_DEBUG_LEAKS         — before/after heap snapshots + per-test heapUsed samples of a single suite.
-// Both need the tests to run on a fork's main thread, so instrumentation forces `pool: 'forks'` with
-// a single non-isolated process: `--cpu-prof`/`--expose-gc` (passed via `execArgv`) apply to the
-// process main thread, which under the default worker-per-file isolation is not where tests run.
+// Both need the tests to run on a fork's main thread, so instrumentation forces `pool: 'forks'`:
+// `--cpu-prof`/`--expose-gc` (passed via `execArgv`) apply to the process main thread, which under the
+// default worker-per-file isolation is not where tests run. Profiling shares one process so the run
+// yields one profile; leak detection gives each file its own, since WASM memory is never returned.
 const CPU_PROFILE_DIR = process.env.DX_PROFILE_TESTS
   ? process.env.DX_PROFILE_TESTS === '1'
     ? './profiles'
@@ -77,8 +78,7 @@ const CPU_PROFILE_DIR = process.env.DX_PROFILE_TESTS
 const DEBUG_LEAKS = !!process.env.DX_DEBUG_LEAKS;
 const TEST_INSTRUMENTED = Boolean(CPU_PROFILE_DIR) || DEBUG_LEAKS;
 // `execArgv` / `isolate` / `fileParallelism` / `maxWorkers` are top-level test options in vitest 4
-// (the v3 `poolOptions.forks.{singleFork,execArgv}` nesting was removed). A single, non-isolated,
-// non-parallel fork runs the whole suite in one persistent process — one coherent profile / snapshot pair.
+// (the v3 `poolOptions.forks.{singleFork,execArgv}` nesting was removed).
 const TEST_INSTRUMENT_EXEC_ARGV = [
   ...(CPU_PROFILE_DIR ? ['--cpu-prof', `--cpu-prof-dir=${CPU_PROFILE_DIR}`] : []),
   ...(DEBUG_LEAKS ? ['--expose-gc'] : []),
@@ -808,7 +808,7 @@ const createNodeProject = ({
       ...(TEST_INSTRUMENTED
         ? {
             pool: 'forks',
-            isolate: false,
+            isolate: !CPU_PROFILE_DIR,
             fileParallelism: false,
             maxWorkers: 1,
             execArgv: TEST_INSTRUMENT_EXEC_ARGV,

@@ -249,8 +249,8 @@ as #12594**, which rebuilt the package (`graph.ts` → `AppGraph.ts` +
 `AppGraphBuilder.ts`) and replaced their `keepAlive` with revocable per-node
 registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
 
-- [x] **W1. TTL groundwork.** `DEFAULT_ATOM_IDLE_TTL` (5 s) and
-      `makeRegistry` live in `@dxos/effect/atom`. A render-churn grace,
+- [x] **W1. TTL groundwork.** `AtomEx.DEFAULT_IDLE_TTL` (5 s) and
+      `AtomEx.makeRegistry` live in `@dxos/effect/AtomEx`. A render-churn grace,
       explicitly not a residency policy. `idleTTL` must be finite
       (`Duration.infinity` made the registry's bucket math `NaN` and removed
       nodes at once) and zero maps to no grace; tests in `atom.test.ts`.
@@ -286,7 +286,7 @@ registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
       are registered as finalizers, so a node removed while its target loads
       does not leak one. `keepAlive` dropped from all 11. No `setIdleTTL` on
       any of them. Atoms carry dev-only `echo:*` labels (`withLabel` from
-      `@dxos/effect/atom`, shared with app-graph and graph). Tests:
+      `@dxos/effect/AtomEx`, shared with app-graph and graph). Tests:
       `Entity/atoms.test.ts` and `Obj/atoms.test.ts`, plus a `memory`-tagged
       retention test run by the CI `memory` job.
 - [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage

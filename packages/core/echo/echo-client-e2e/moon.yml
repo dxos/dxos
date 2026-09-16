@@ -2,4 +2,5 @@ layer: automation
 language: typescript
 tags:
   - ts-test
+  - ts-test-memory
   - typecheck

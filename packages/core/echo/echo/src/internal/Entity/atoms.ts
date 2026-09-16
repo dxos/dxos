@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { withLabel } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { defaultMap } from '@dxos/util';
 
 import type * as Annotation from '../../Annotation.ts';
@@ -56,7 +56,7 @@ const makeEntityAtoms = <E extends Entity.Unknown>(entity: E): EntityAtoms<E> =>
       (snapshot ??= Atom.make((get) => {
         get.addFinalizer(subscribe(entity, () => get.setSelf(readSnapshot())));
         return readSnapshot();
-      }).pipe(withLabel('echo:entity:snapshot'))),
+      }).pipe(AtomEx.withLabel('echo:entity:snapshot'))),
 
     live: () =>
       (live ??= Atom.make((get) => {
@@ -65,7 +65,7 @@ const makeEntityAtoms = <E extends Entity.Unknown>(entity: E): EntityAtoms<E> =>
       }).pipe(
         // The value is always the same object, so identity equality would suppress every notification.
         Atom.withEquality(() => false),
-        withLabel('echo:entity:live'),
+        AtomEx.withLabel('echo:entity:live'),
       )),
 
     label: () =>
@@ -74,12 +74,12 @@ const makeEntityAtoms = <E extends Entity.Unknown>(entity: E): EntityAtoms<E> =>
         () => getLabel(entity),
         (a, b) => a === b,
         (value) => value,
-      ).pipe(withLabel('echo:entity:label'))),
+      ).pipe(AtomEx.withLabel('echo:entity:label'))),
 
     property: <K extends keyof E>(key: K): Atom.Atom<E[K]> =>
       defaultMap((properties ??= new Map()), key, () =>
         makeDistinctAtom(entity, () => entity[key], snapshotEquals, snapshotForComparison).pipe(
-          withLabel('echo:entity:property'),
+          AtomEx.withLabel('echo:entity:property'),
         ),
       ),
 
@@ -90,20 +90,27 @@ const makeEntityAtoms = <E extends Entity.Unknown>(entity: E): EntityAtoms<E> =>
           () => getAnnotation(entity, annotation),
           sameOption,
           (value) => Option.map(value, snapshotForComparison),
-        ).pipe(withLabel('echo:entity:annotation')),
+        ).pipe(AtomEx.withLabel('echo:entity:annotation')),
       ),
 
-    annotationProperty: <V>(annotation: Annotation.Annotation<Record<string, V>>, key: string): Atom.Atom<V | undefined> =>
+    annotationProperty: <V>(
+      annotation: Annotation.Annotation<Record<string, V>>,
+      key: string,
+    ): Atom.Atom<V | undefined> =>
       defaultMap(
         defaultMap((annotationProperties ??= new Map()), annotation, () => new Map()),
         key,
         () =>
           makeDistinctAtom(
             entity,
-            () => getAnnotation(entity, annotation).pipe(Option.map((value) => value[key]), Option.getOrUndefined),
+            () =>
+              getAnnotation(entity, annotation).pipe(
+                Option.map((value) => value[key]),
+                Option.getOrUndefined,
+              ),
             snapshotEquals,
             snapshotForComparison,
-          ).pipe(withLabel('echo:entity:annotation-property')),
+          ).pipe(AtomEx.withLabel('echo:entity:annotation-property')),
       ),
   };
 };

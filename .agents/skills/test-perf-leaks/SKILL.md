@@ -14,9 +14,11 @@ in the test file changes.
 - `DX_DEBUG_LEAKS` — inject `tools/vitest/leak-setup.ts`: `before`/`after` heap snapshots (warmed baseline, forced GC) + a per-test `heapUsed` sample in `heap-samples.ndjson`.
 - `DX_DEBUG_LEAKS_DIR` — override the leak output dir (default `./profiles`).
 
-Both force a single non-isolated fork (`pool: 'forks'`, `isolate:false`,
-`fileParallelism:false`, `maxWorkers:1`) so `--cpu-prof` / `--expose-gc` apply to the
-thread the tests run on — under the default worker-per-file isolation they would not.
+Both force a serial fork (`pool: 'forks'`, `fileParallelism:false`, `maxWorkers:1`) so
+`--cpu-prof` / `--expose-gc` apply to the thread the tests run on — under the default
+worker-per-file isolation they would not. Profiling shares one process across files
+(`isolate:false`) so a run yields one profile; leak detection gives each file its own
+process, since WASM memory is never returned to the OS.
 
 This works because vitest evaluates a `setupFiles` entry in the **same isolate/heap** as
 the test file it precedes: the `afterEach`/`afterAll` that `leak-setup.ts` registers wrap
@@ -34,14 +36,19 @@ result and skip vitest, producing no fresh profile. `--force` re-executes uncond
 # CPU profile one suite → packages/<…>/<pkg>/profiles/CPU.*.cpuprofile
 DX_PROFILE_TESTS=1 moon run <pkg>:test --force -- src/foo.test.ts
 
-# Leak-check one suite → profiles/{before,after}.heapsnapshot + heap-samples.ndjson
+# Leak-check one suite → profiles/foo.test.ts/{before,after}.heapsnapshot + heap-samples.ndjson
 DX_DEBUG_LEAKS=1 moon run <pkg>:test --force -- src/foo.test.ts
+
+# Run every `memory`-tagged retention suite in a package tagged `ts-test-memory` (what CI runs)
+moon run <pkg>:test-memory --force
 ```
 
-- **Point at ONE `.test.ts` file.** The leak model assumes a single suite in one
-  process — one clean before/after, no "which file ran last?" ambiguity. The
-  `-- <file>` filter works because the node test task forwards passthrough args to
-  vitest (`bash -c '… "$@"' --`).
+- **Point at ONE `.test.ts` file** when investigating. Each file gets its own process and
+  output directory, but a single file keeps the run short. The `-- <file>` filter works
+  because the node test task forwards passthrough args to vitest (`bash -c '… "$@"' --`).
+- **Retention suites** carry the `memory` tag. Opt a package in by adding `ts-test-memory`
+  to its `moon.yml` tags; the CI `memory` job runs `moon run :test-memory`. A test that
+  needs a fresh WASM instance must be in its own file.
 - `<pkg>` is the package **directory name** (moon project id), e.g. `echo`, `credentials`,
   `messaging`, `app-graph`, `plugin-markdown`, `compute-runtime`, `assistant`, `agent-runtime`.
 - Artifacts land relative to the **fork cwd = the package dir**, i.e.

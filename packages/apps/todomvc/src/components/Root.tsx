@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
 import { Config, defs } from '@dxos/config';
-import { makeRegistry } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { ClientProvider, createClientServices } from '@dxos/react-client';
 
 import { getConfig } from '../config.ts';
@@ -38,7 +38,7 @@ const createServices = (config?: Config) =>
 
 export const Root = () => {
   const navigate = useNavigate();
-  const registry = useMemo(() => makeRegistry(), []);
+  const registry = useMemo(() => AtomEx.makeRegistry(), []);
 
   return (
     <ClientProvider

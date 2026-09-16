@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { withLabel } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { assertArgument } from '@dxos/invariant';
 
 import type * as Entity from '../../Entity.ts';
@@ -62,7 +62,7 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     };
 
     return loadRefTarget(ref, get, setupTargetSubscription);
-  }).pipe(withLabel('echo:ref:snapshot'));
+  }).pipe(AtomEx.withLabel('echo:ref:snapshot'));
 });
 
 /**
@@ -82,7 +82,7 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
   return Function.pipe(
     Atom.make(effect),
     Atom.map((result) => AsyncResult.getOrElse(result, () => undefined)),
-    withLabel('echo:ref:live'),
+    AtomEx.withLabel('echo:ref:live'),
   );
 });
 
@@ -111,7 +111,7 @@ const refPropertyFamily = Atom.family(({ ref, key }: RefPropertyKey): Atom.Atom<
   Atom.make((get) => {
     const target = get(refWithReactiveFamily(ref));
     return target ? get(getEntityAtoms(target).property(key)) : undefined;
-  }).pipe(withLabel('echo:ref:property')),
+  }).pipe(AtomEx.withLabel('echo:ref:property')),
 );
 
 /**

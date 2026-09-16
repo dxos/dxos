@@ -6,13 +6,13 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Decorator } from '@storybook/react-vite';
 import React, { memo, useMemo } from 'react';
 
-import { makeRegistry } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 
 /**
  * Adds Effect Atom registry context for storybook.
  */
 export const withRegistry: Decorator = (Story) => {
-  const registry = useMemo(() => makeRegistry(), []);
+  const registry = useMemo(() => AtomEx.makeRegistry(), []);
 
   // Prevent re-rendering of the story.
   const MemoizedStory = memo(Story);

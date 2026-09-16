@@ -13,7 +13,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn } from '@dxos/async';
-import { withLabel } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -245,7 +245,7 @@ export class GraphBuilder<
   /** Registered extensions keyed by extension ID. */
   readonly _extensions = Atom.make(Record.empty<string, Extension<Node, Arg, Rel, Meta>>()).pipe(
     Atom.keepAlive,
-    withLabel('graph-builder:extensions'),
+    AtomEx.withLabel('graph-builder:extensions'),
   );
   /**
    * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly as
@@ -411,7 +411,7 @@ export class GraphBuilder<
       }
 
       return entries;
-    }).pipe(withLabel(`graph-builder:connectors:${key}`));
+    }).pipe(AtomEx.withLabel(`graph-builder:connectors:${key}`));
   });
 
   /**

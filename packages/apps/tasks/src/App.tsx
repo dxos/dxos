@@ -15,7 +15,7 @@ import {
 
 import { Config, defs } from '@dxos/config';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { makeRegistry } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { parseId } from '@dxos/keys';
 import { ClientProvider, createClientServices, useShell } from '@dxos/react-client';
 import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
@@ -122,7 +122,7 @@ const createServices = (config?: Config) =>
 
 export const App = () => {
   // Create a registry instance for atom reactivity
-  const registry = useMemo(() => makeRegistry(), []);
+  const registry = useMemo(() => AtomEx.makeRegistry(), []);
 
   return (
     <ClientProvider

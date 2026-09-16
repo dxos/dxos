@@ -17,7 +17,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
 import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
-import { makeRegistry } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -87,7 +87,7 @@ export class Binder extends Resource {
     assertArgument(options.runtime, 'options.runtime', 'Feed runtime is required');
     this._feed = options.feed;
     this._runtime = options.runtime;
-    this._registry = options.registry ?? makeRegistry();
+    this._registry = options.registry ?? AtomEx.makeRegistry();
   }
 
   /**

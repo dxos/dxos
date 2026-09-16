@@ -6,14 +6,14 @@ import * as Duration from 'effect/Duration';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { describe, test } from 'vitest';
 
-import { makeRegistry } from './atom.ts';
+import * as AtomEx from './AtomEx.ts';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const TTL = 100;
 
-describe('makeRegistry', () => {
+describe('AtomEx.makeRegistry', () => {
   test('keeps an unobserved node for the grace period', async ({ expect }) => {
-    const registry = makeRegistry({ idleTTL: Duration.millis(TTL) });
+    const registry = AtomEx.makeRegistry({ idleTTL: Duration.millis(TTL) });
     const atom = Atom.make(0);
 
     registry.subscribe(atom, () => {})();
@@ -25,7 +25,7 @@ describe('makeRegistry', () => {
   });
 
   test('re-subscribing within the grace period keeps the same node', async ({ expect }) => {
-    const registry = makeRegistry({ idleTTL: Duration.millis(TTL) });
+    const registry = AtomEx.makeRegistry({ idleTTL: Duration.millis(TTL) });
     const atom = Atom.make(0);
 
     registry.subscribe(atom, () => {})();
@@ -38,7 +38,7 @@ describe('makeRegistry', () => {
   });
 
   test('a zero grace period removes on the next task', async ({ expect }) => {
-    const registry = makeRegistry({ idleTTL: Duration.zero });
+    const registry = AtomEx.makeRegistry({ idleTTL: Duration.zero });
     const atom = Atom.make(0);
 
     registry.subscribe(atom, () => {})();
@@ -47,6 +47,6 @@ describe('makeRegistry', () => {
   });
 
   test('rejects an infinite grace period', ({ expect }) => {
-    expect(() => makeRegistry({ idleTTL: Duration.infinity })).toThrow();
+    expect(() => AtomEx.makeRegistry({ idleTTL: Duration.infinity })).toThrow();
   });
 });

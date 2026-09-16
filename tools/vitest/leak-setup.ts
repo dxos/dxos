@@ -9,18 +9,17 @@
 // DESIGN: .agents/projects/test-profiling-leaks/DESIGN.md.
 
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { writeHeapSnapshot } from 'node:v8';
-import { afterAll, afterEach } from 'vitest';
+import { afterAll, afterEach, expect } from 'vitest';
 
-const outDir = process.env.DX_DEBUG_LEAKS_DIR ?? './profiles';
+// One directory per test file, mirroring its path: leak mode runs each file in its own process.
+const testPath = expect.getState().testPath;
+const outDir = join(
+  process.env.DX_DEBUG_LEAKS_DIR ?? './profiles',
+  testPath ? relative(process.cwd(), testPath) : 'suite',
+);
 const samplesFile = join(outDir, 'heap-samples.ndjson');
-
-// Truncate any samples file left by a prior run in this dir (appendFileSync would otherwise
-// concatenate runs and repeat `test` indices, so a slope could span unrelated captures). This
-// setup file is evaluated once per test file in the fork, matching the one-suite-per-run assumption.
-mkdirSync(outDir, { recursive: true });
-writeFileSync(samplesFile, '');
 
 /**
  * WASM linear memory is invisible to `heapUsed` and is never returned to the OS, so a suite whose
@@ -37,10 +36,8 @@ writeFileSync(samplesFile, '');
 // Weak, and pruned on read: holding instances strongly would stop a discarded module's memory from
 // ever being freed, so the probe would create the growth it claims to measure.
 //
-// Registry and proxy live on `globalThis`, installed once. This setup file is evaluated per test
-// FILE, but `DX_DEBUG_LEAKS` runs the fork non-isolated, so a second file shares a process in which
-// the wasm-bindgen glue has already instantiated — a fresh per-file registry would see none of it
-// and report zero.
+// Registry and proxy live on `globalThis`, installed once per process, so a setup file evaluated a
+// second time in the same process keeps counting instances the first evaluation saw.
 const REGISTRY_KEY = '__DXOS_WASM_REGISTRY__';
 const globals = globalThis as Record<string, unknown>;
 const wasmInstances = (globals[REGISTRY_KEY] ??= []) as WeakRef<WebAssembly.Instance>[];
@@ -114,6 +111,12 @@ const SNAPSHOT_TIMEOUT = 300_000;
 // AFTER the first test, not at process start, so first-run lazy init (module singletons, V8 code
 // compilation, string interning) is not mistaken for a leak.
 afterEach(async () => {
+  if (completed === 0) {
+    // Created on the first test rather than at load, so a file whose tests are all filtered out writes
+    // nothing; truncated so a rerun's `test` indices do not continue a previous run's.
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(samplesFile, '');
+  }
   await settle();
   const heapUsed = process.memoryUsage().heapUsed;
   appendFileSync(samplesFile, JSON.stringify({ test: ++completed, heapUsed, wasmBytes: wasmBytes() }) + '\n');

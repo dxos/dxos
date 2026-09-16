@@ -49,7 +49,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { EffectEx } from '@dxos/effect';
-import { DEFAULT_ATOM_IDLE_TTL, makeRegistry } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event.ts';
@@ -135,7 +135,7 @@ export type ManagerOptions = {
   loadTimeout?: Duration.Input;
   /**
    * Grace period before an atom with no subscribers is removed from the registry this manager creates.
-   * Defaults to {@link DEFAULT_ATOM_IDLE_TTL}; see `makeRegistry`.
+   * Defaults to {@link AtomEx.DEFAULT_IDLE_TTL}; see `AtomEx.makeRegistry`.
    */
   atomIdleTTL?: Duration.Input;
   /**
@@ -325,7 +325,7 @@ class ManagerImpl implements PluginManager {
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
-    atomIdleTTL = DEFAULT_ATOM_IDLE_TTL,
+    atomIdleTTL = AtomEx.DEFAULT_IDLE_TTL,
     whenIdle,
   }: ManagerOptions) {
     // Core plugins default to `meta.tags.includes('system')`, overridden by the host's
@@ -336,7 +336,7 @@ class ManagerImpl implements PluginManager {
     const core: string[] = coreProp
       ? coreProp.filter((id) => registered.has(id))
       : plugins.filter(({ meta }) => meta.profile.tags?.includes('system')).map(({ meta }) => meta.profile.key);
-    this.registry = registry ?? makeRegistry({ idleTTL: atomIdleTTL });
+    this.registry = registry ?? AtomEx.makeRegistry({ idleTTL: atomIdleTTL });
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });

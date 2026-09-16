@@ -10,7 +10,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Entity, type Type } from '@dxos/echo';
-import { withLabel } from '@dxos/effect/atom';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { DXN } from '@dxos/keys';
@@ -371,19 +371,19 @@ export const createExtensionRaw = <const Id extends string = string>(
   const connector =
     _connector &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _connector(node).pipe(withLabel(`graph-builder:_connector:${id}`)),
+      _connector(node).pipe(AtomEx.withLabel(`graph-builder:_connector:${id}`)),
     );
 
   const actionGroups =
     _actionGroups &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actionGroups(node).pipe(withLabel(`graph-builder:_actionGroups:${id}`)),
+      _actionGroups(node).pipe(AtomEx.withLabel(`graph-builder:_actionGroups:${id}`)),
     );
 
   const actions =
     _actions &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actions(node).pipe(withLabel(`graph-builder:_actions:${id}`)),
+      _actions(node).pipe(AtomEx.withLabel(`graph-builder:_actions:${id}`)),
     );
 
   const extensions = [
@@ -401,7 +401,7 @@ export const createExtensionRaw = <const Id extends string = string>(
                 log.warn('Error in connector', { id: getId('connector'), node, error });
                 return [];
               }
-            }).pipe(withLabel(`graph-builder:connector:${id}`)),
+            }).pipe(AtomEx.withLabel(`graph-builder:connector:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -422,7 +422,7 @@ export const createExtensionRaw = <const Id extends string = string>(
                 log.warn('Error in actionGroups', { id: getId('actionGroups'), node, error });
                 return [];
               }
-            }).pipe(withLabel(`graph-builder:connector:actionGroups:${id}`)),
+            }).pipe(AtomEx.withLabel(`graph-builder:connector:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -439,7 +439,7 @@ export const createExtensionRaw = <const Id extends string = string>(
                 log.warn('Error in actions', { id: getId('actions'), node, error });
                 return [];
               }
-            }).pipe(withLabel(`graph-builder:connector:actions:${id}`)),
+            }).pipe(AtomEx.withLabel(`graph-builder:connector:actions:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
