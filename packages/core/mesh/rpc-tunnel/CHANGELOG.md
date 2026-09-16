@@ -1,5 +1,13 @@
 # @dxos/rpc-tunnel
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [fd23a8b]
+  - @dxos/rpc@0.12.0
+  - @dxos/log@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

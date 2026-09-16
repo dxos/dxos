@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-rdf",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Presentational viewer for extracted semantic facts.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
