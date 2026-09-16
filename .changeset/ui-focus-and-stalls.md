@@ -3,4 +3,4 @@
 '@dxos/plugin-deck': patch
 ---
 
-Stop plank reveals and editor autofocus from stealing focus or dismissing open menus (`ScrollIntoView` accepts `focus: false`), remove main-thread stalls in routine registry sync and layer initialization, and keep error messages and context errors in logs.
+Stop plank reveals and editor autofocus from stealing focus or dismissing open menus (`ScrollIntoView` accepts `focus: false`), and keep error messages and context errors in logs.

@@ -164,7 +164,6 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
-    "@dxos/async": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
