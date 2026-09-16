@@ -89,8 +89,8 @@ export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCard
             <span className='truncate text-start' title={describe(stat)}>
               {roleName(stat.id)}
             </span>
-            <span>{stat.avgActualDuration.toFixed(1)}</span>
-            <span>{stat.maxActualDuration.toFixed(1)}</span>
+            <span>{stat.totalRenders > 0 ? stat.avgActualDuration.toFixed(1) : '–'}</span>
+            <span>{stat.totalRenders > 0 ? stat.maxActualDuration.toFixed(1) : '–'}</span>
           </Grid>
         </StatCard.Row>
       );

@@ -23,26 +23,42 @@ export const DevtoolsOverviewContainer = () => {
   const clearSurfaceProfiler = Surface.useProfilerClear();
   const [surfaceProfilerStats, setSurfaceProfilerStats] = useState<SurfaceProfilerStats[]>([]);
 
-  // Join dispatch metrics onto the render-timing stats (both keyed by `surface/<id>/<role>`), leaving
-  // out the stack's own surfaces — the companion and every card on its role — so the panel does not
-  // measure itself.
+  // One row per surface mounted right now (the profiler's entries are a window of recent renders,
+  // not a registry), with its render timings and dispatch metrics joined on `surface/<id>/<role>`
+  // where they exist. The stack's own surfaces — the companion and every card on its role — are
+  // left out so the panel does not measure itself.
   const sampleProfiler = useCallback(() => {
-    const byId = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
+    const timings = new Map(Surface.aggregateProfilerStats(getProfilerEntries()).map((stat) => [stat.id, stat]));
+    const metrics = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
     setSurfaceProfilerStats(
-      Surface.aggregateProfilerStats(getProfilerEntries())
-        .filter((stat) => !stat.id.endsWith('.devtoolsOverview'))
-        .map((stat) => {
-          const metric = byId.get(stat.id);
+      Surface.getMounted()
+        .filter(({ role }) => !role.endsWith('.devtoolsOverview'))
+        .map(({ id, role }) => {
+          // Mirrors the profiler's own id, which prints an anonymous surface as `undefined`.
+          const profilerId = `surface/${id}/${role}`;
+          const timing = timings.get(profilerId) ?? {
+            id: profilerId,
+            mountCount: 0,
+            updateCount: 0,
+            totalRenders: 0,
+            avgActualDuration: 0,
+            maxActualDuration: 0,
+            avgBaseDuration: 0,
+            lastActualDuration: 0,
+            lastCommitTime: 0,
+          };
+          const metric = metrics.get(profilerId);
           return metric
             ? {
-                ...stat,
+                ...timing,
                 candidates: metric.candidates,
                 truncated: metric.truncated,
                 errors: metric.errors,
                 dataUnstable: metric.dataUnstable,
               }
-            : stat;
-        }),
+            : timing;
+        })
+        .sort((a, b) => b.maxActualDuration - a.maxActualDuration || a.id.localeCompare(b.id)),
     );
   }, [getProfilerEntries]);
   useEffect(sampleProfiler, [sampleProfiler]);

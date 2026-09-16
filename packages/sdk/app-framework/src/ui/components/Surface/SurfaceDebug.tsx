@@ -171,6 +171,16 @@ class SurfaceDebugManager {
 
 const manager = new SurfaceDebugManager();
 
+/** A surface currently mounted in the document, as registered by its `<dx-surface>` wrapper. */
+export type MountedSurface = { id?: string; role: string };
+
+/**
+ * The surfaces mounted right now, without subscribing. Populated only while the wrapper is enabled
+ * (dev builds), which is also the only time the profiler runs.
+ */
+export const getMountedSurfaces = (): MountedSurface[] =>
+  manager.getSnapshot().map(({ infoRef }) => ({ id: infoRef.current.id, role: infoRef.current.role }));
+
 let overlayMounted = false;
 
 const ensureOverlay = (): void => {
