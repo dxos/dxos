@@ -106,9 +106,9 @@ const RoleDetail = ({ group }: { group: RoleGroup }) => (
       {group.ids.length} mounted · {group.totalRenders} renders · {group.errors} errors
     </span>
     {group.trouble && <span className='text-error-text'>unstable data or errors</span>}
-    <Flex column classNames='font-mono text-description'>
+    <Flex column>
       {group.ids.map((id) => (
-        <span key={id} className='truncate'>
+        <span key={id} className='font-mono text-info-text truncate'>
           {surfaceId(id)}
         </span>
       ))}

@@ -10,6 +10,7 @@ import {
   type QueryEdgeStatusResponse,
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Flex, SystemIconButton, Tooltip } from '@dxos/react-ui';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
@@ -26,9 +27,20 @@ export type EdgeCardProps = {
 const OK = 'ph--check-circle--regular';
 const FAIL = 'ph--x-circle--regular';
 
-type HealthRow = { ok: boolean; label: string; value?: string; unit?: string };
+type HealthRow = {
+  ok: boolean;
+  label: string;
+  value?: string;
+  unit?: string;
+};
 
-type HealthReport = { connection: HealthRow[]; services: HealthRow[]; spaces: HealthRow[] };
+type SpaceRow = { ok: boolean; spaceId: string; flags: number };
+
+type HealthReport = {
+  connection: HealthRow[];
+  services: HealthRow[];
+  spaces: SpaceRow[];
+};
 
 const healthReport = (status?: EdgeStatus, socket?: SocketStatus): HealthReport => {
   const connected = socket?.state === EdgeStatus_ConnectionState.CONNECTED;
@@ -56,10 +68,10 @@ const healthReport = (status?: EdgeStatus, socket?: SocketStatus): HealthReport 
       { ok: status.agent.agentStatus === 'active', label: 'Agent', value: status.agent.agentStatus ?? 'unknown' },
       { ok: !status.spaces.fetchError, label: 'Spaces', value: spaces.length.toLocaleString() },
     ],
-    spaces: spaces.map(([spaceId, space]) => ({
-      ok: !((space.diagnostics?.redFlags?.length ?? 0) > 0 || space.fetchError),
-      label: spaceId,
-    })),
+    spaces: spaces.map(([spaceId, space]) => {
+      const flags = space.diagnostics?.redFlags?.length ?? 0;
+      return { ok: !(flags > 0 || space.fetchError), spaceId, flags };
+    }),
   };
 };
 
@@ -75,6 +87,34 @@ const HealthRows = ({ rows }: { rows: HealthRow[] }) => (
         value={row.value}
         unit={row.unit}
       />
+    ))}
+  </>
+);
+
+/** One row per space: a copyable id chip (as the Sync card) and the red-flag count. */
+const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
+  <>
+    {rows.map((row) => (
+      <StatCard.Row
+        key={row.spaceId}
+        icon={row.ok ? OK : FAIL}
+        iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
+      >
+        <Flex align='center' justify='between' gap='sm'>
+          <Tooltip.Trigger asChild content={row.spaceId}>
+            <SystemIconButton.Clipboard
+              density='sm'
+              variant='ghost'
+              compact
+              iconEnd
+              classNames='font-mono'
+              label={row.spaceId.slice(0, 8)}
+              onCopy={() => row.spaceId}
+            />
+          </Tooltip.Trigger>
+          {row.flags > 0 && <span className='shrink-0 font-mono tabular-nums text-error-text'>{row.flags} flags</span>}
+        </Flex>
+      </StatCard.Row>
     ))}
   </>
 );
@@ -106,7 +146,7 @@ export const EdgeCard = ({ edge, status, onRefresh, onCopy }: EdgeCardProps) => 
       )}
       {report.spaces.length > 0 && (
         <StatCard.Section title='Spaces'>
-          <HealthRows rows={report.spaces} />
+          <SpaceRows rows={report.spaces} />
         </StatCard.Section>
       )}
       {problems.length > 0 && (

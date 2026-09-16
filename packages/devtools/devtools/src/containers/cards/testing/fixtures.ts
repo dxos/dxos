@@ -5,6 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 
 import { type EchoDataStats } from '@dxos/echo-host';
+import { SpaceId } from '@dxos/keys';
 import { ConnectionState } from '@dxos/network-manager';
 import { type EdgeStatus } from '@dxos/protocols';
 import {
@@ -83,14 +84,25 @@ export const edgeStatus: EdgeStatus = {
   problems: [],
   agent: { agentStatus: 'active' },
   router: { connectedDevices: [{ peerKey: 'a', topics: ['t1'] }] },
-  spaces: { data: {} },
+  spaces: {
+    data: {
+      [SpaceId.make('BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N')]: { diagnostics: { redFlags: [] } },
+      [SpaceId.make('B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF')]: { diagnostics: { redFlags: [] } },
+    },
+  },
 };
 
 export const edgeStatusDegraded: EdgeStatus = {
   problems: ['Agent is not reachable.', 'Router fetch timed out.'],
   agent: { agentStatus: 'inactive' },
   router: { fetchError: 'timeout' },
-  spaces: { data: {} },
+  spaces: {
+    data: {
+      [SpaceId.make('BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N')]: { diagnostics: { redFlags: [] } },
+      [SpaceId.make('B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF')]: { diagnostics: { redFlags: ['feed lag', 'missing epoch'] } },
+      [SpaceId.make('BUM5S2UIPZQQLMY3YNTT7UXBTN2MHM7DN')]: { fetchError: 'timeout' },
+    },
+  },
 };
 
 export const performanceEntries: PerformanceEntryLike[] = [
