@@ -1,6 +1,0 @@
----
-'@dxos/react-ui-virtual': patch
-'@dxos/plugin-assistant': patch
----
-
-Assistant chat UI fixes. The outline rail lists one tick per prompt again — tool results travel back as user-role messages carrying a synthetic text block, so filtering on the role alone added a tick per tool call, titled from raw `<result>` markup, and cut each turn's range short at its first tool call. The thread gains a floating scroll-to-bottom button, which `useFollow` supports by publishing `atEnd` as state and `MessageList.Viewport` by taking an `overlay` slot. Suggestion chips are capped by the column they render in rather than the viewport, and are spaced by their own padding rather than a separator character that wrapped onto the next row. The chat options Skills and Objects lists sit flush to the popover edge, via ScrollArea knobs `SearchList.Viewport` now forwards. XML-tag widgets force a bounded parse on their first decoration build, so a remounted feed row does not show raw markup while the background parser catches up. A multi-step turn now renders as one tool panel rather than a card per call: the thread's projection folds each run of tool-only messages into one message (the runtime delivers one block per message), and the panel shows a row per call — naming the call in flight while the turn is live, then counting the run once it settles.

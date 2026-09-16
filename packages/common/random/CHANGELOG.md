@@ -1,5 +1,14 @@
 # @dxos/random
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [e8088ea]
+- Updated dependencies [4da1052]
+  - @dxos/util@0.12.0
+  - @dxos/node-std@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

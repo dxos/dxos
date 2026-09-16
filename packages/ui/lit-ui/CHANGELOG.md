@@ -1,5 +1,21 @@
 # @dxos/lit-ui
 
+## 0.12.0
+
+### Minor Changes
+
+- d4b4919: `dx-anchor` preview cards now open on hover by default (`trigger='click'` opts out) with a
+  shadcn-style fade+zoom animation; hosts close on `state: false`. Editor block widgets survive
+  replacement (root-keyed unmount) and suspending portals; `#`/`@` link chips resolve the linked
+  object's label.
+
+### Patch Changes
+
+- Updated dependencies [d4b4919]
+- Updated dependencies [77d0026]
+  - @dxos/ui-types@0.12.0
+  - @dxos/react-hooks@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
