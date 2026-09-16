@@ -15,7 +15,7 @@ const Serial = Hook.make<number>()('serial', { strategy: 'serial' });
 
 describe('Hook controller', () => {
   it.effect(
-    'dispatches an event to a subscribed handler',
+    'dispatches a hook to a subscribed handler',
     Effect.fn(function* ({ expect }) {
       const observed = yield* Ref.make<number[]>([]);
 
@@ -29,7 +29,7 @@ describe('Hook controller', () => {
   );
 
   it.effect(
-    'is a no-op when the event has no subscribers',
+    'is a no-op when the hook has no subscribers',
     Effect.fn(function* () {
       yield* Hook.emit(Foo, 42);
     }, Effect.provide(Hook.controllerLayer)),
@@ -66,7 +66,7 @@ describe('Hook controller', () => {
   );
 
   it.effect(
-    'lets a handler emit a follow-up event through the pipe form',
+    'lets a handler emit a follow-up hook through the pipe form',
     Effect.fn(function* ({ expect }) {
       const seen = yield* Ref.make<string[]>([]);
 
@@ -90,7 +90,7 @@ describe('Hook controller', () => {
   );
 
   it.effect(
-    'runs handlers concurrently for "parallel" events',
+    'runs handlers concurrently for "parallel" hooks',
     Effect.fn(function* ({ expect }) {
       // The first handler only completes once the second has run, which deadlocks under serial dispatch.
       const gate = yield* Deferred.make<void>();
@@ -115,7 +115,7 @@ describe('Hook controller', () => {
 
   // The id is the contract, not the object: a module instantiated twice must not split the controller.
   it.effect(
-    'delivers to a handler subscribed through a separate event object with the same id',
+    'delivers to a handler subscribed through a separate hook object with the same id',
     Effect.fn(function* ({ expect }) {
       const Twin = Hook.make<number>()('foo');
       const seen = yield* Ref.make<number[]>([]);
@@ -141,7 +141,7 @@ describe('Hook controller', () => {
   );
 
   it.effect(
-    'runs handlers sequentially for "serial" events',
+    'runs handlers sequentially for "serial" hooks',
     Effect.fn(function* ({ expect }) {
       const order = yield* Ref.make<string[]>([]);
 

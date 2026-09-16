@@ -47,14 +47,14 @@ export type Payload<E extends Any> = E[TypeId]['_Data'];
 export type HandlerFn<E extends Any> = (payload: Payload<E>) => Effect.Effect<void, never, Controller>;
 
 export interface Handler<E extends Any> {
-  readonly event: E;
+  readonly hook: E;
   readonly handler: HandlerFn<E>;
 }
 
 export const handler: {
-  <E extends Any>(event: E, handler: HandlerFn<E>): Handler<E>;
-  <E extends Any>(handler: HandlerFn<E>): (event: E) => Handler<E>;
-} = Function.dual(2, <E extends Any>(event: E, handler: HandlerFn<E>): Handler<E> => ({ event, handler }));
+  <E extends Any>(hook: E, handler: HandlerFn<E>): Handler<E>;
+  <E extends Any>(handler: HandlerFn<E>): (hook: E) => Handler<E>;
+} = Function.dual(2, <E extends Any>(hook: E, handler: HandlerFn<E>): Handler<E> => ({ hook, handler }));
 
 export const make =
   <const T>() =>
@@ -67,7 +67,7 @@ export const make =
 
 export interface ControllerService {
   subscribe<E extends Any>(handler: Handler<E>): Effect.Effect<void, never, Scope.Scope>;
-  emit<E extends Any>(event: E, payload: Payload<E>): Effect.Effect<void>;
+  emit<E extends Any>(hook: E, payload: Payload<E>): Effect.Effect<void>;
 }
 
 export class Controller extends Context.Service<Controller, ControllerService>()('@dxos/effect/Hook.Controller') {}
@@ -79,64 +79,64 @@ export const subscribe = <E extends Any>(handler: Handler<E>): Effect.Effect<voi
   Controller.pipe(Effect.flatMap((controller) => controller.subscribe(handler)));
 
 /**
- * Subscribes `fn` to `event` for the current scope: `handler` and `subscribe` in one call.
+ * Subscribes `fn` to `hook` for the current scope: `handler` and `subscribe` in one call.
  */
-export const on = <E extends Any>(event: E, fn: HandlerFn<E>): Effect.Effect<void, never, Controller | Scope.Scope> =>
-  subscribe(handler(event, fn));
+export const on = <E extends Any>(hook: E, fn: HandlerFn<E>): Effect.Effect<void, never, Controller | Scope.Scope> =>
+  subscribe(handler(hook, fn));
 
 /**
- * Dispatches to every subscriber and completes once all of them have — including the events those
- * handlers emit in turn — so an emit doubles as a barrier for the work the event triggers. A
+ * Dispatches to every subscriber and completes once all of them have — including the hooks those
+ * handlers emit in turn — so an emit doubles as a barrier for the work the hook triggers. A
  * handler that fails fails the emitter as a defect, so this is not a fire-and-forget notification.
  */
-export const emit = <E extends Any>(event: E, payload: Payload<E>): Effect.Effect<void, never, Controller> =>
-  Controller.pipe(Effect.flatMap((controller) => controller.emit(event, payload)));
+export const emit = <E extends Any>(hook: E, payload: Payload<E>): Effect.Effect<void, never, Controller> =>
+  Controller.pipe(Effect.flatMap((controller) => controller.emit(hook, payload)));
 
-// Erases the payload type so handlers for different events can share one registry.
+// Erases the payload type so handlers for different hooks can share one registry.
 type AnyHandler = {
-  readonly event: Any;
+  readonly hook: Any;
   readonly handler: (payload: any) => Effect.Effect<void, never, Controller>;
 };
 
 export const makeController = (): ControllerService => {
-  // Keyed by id, not by the event object: these events cross package and bundle boundaries, and a
+  // Keyed by id, not by the hook object: these hooks cross package and bundle boundaries, and a
   // module instantiated twice (dual resolution, a dep-optimizer re-bundle, HMR) would otherwise give
-  // publisher and subscriber different objects for the same event and turn the cascade into a silent
-  // no-op. The registry holds the event it first saw, so a genuine id collision is loud instead.
-  const subscribers = new Map<string, { readonly event: Any; readonly handlers: Set<AnyHandler> }>();
+  // publisher and subscriber different objects for the same hook and turn the cascade into a silent
+  // no-op. The registry holds the hook it first saw, so a genuine id collision is loud instead.
+  const subscribers = new Map<string, { readonly hook: Any; readonly handlers: Set<AnyHandler> }>();
 
   const controller: ControllerService = {
     subscribe: (handler) =>
       Effect.gen(function* () {
         const scope = yield* Effect.scope;
-        const entry = subscribers.get(handler.event.id) ?? { event: handler.event, handlers: new Set<AnyHandler>() };
+        const entry = subscribers.get(handler.hook.id) ?? { hook: handler.hook, handlers: new Set<AnyHandler>() };
         // A duplicated module and a genuine id collision both present as two objects with one id, so
         // identity cannot separate them; a differing strategy is the one inconsistency that can only
         // be a collision, and it is worth failing on rather than dispatching two contracts as one.
         invariant(
-          entry.event.strategy === handler.event.strategy,
-          `Hook id collision: ${handler.event.id} is declared with two dispatch strategies`,
+          entry.hook.strategy === handler.hook.strategy,
+          `Hook id collision: ${handler.hook.id} is declared with two dispatch strategies`,
         );
-        subscribers.set(handler.event.id, entry);
+        subscribers.set(handler.hook.id, entry);
         entry.handlers.add(handler);
         yield* Scope.addFinalizer(
           scope,
           Effect.sync(() => {
             entry.handlers.delete(handler);
             if (entry.handlers.size === 0) {
-              subscribers.delete(handler.event.id);
+              subscribers.delete(handler.hook.id);
             }
           }),
         );
       }),
-    emit: (event, payload) =>
+    emit: (hook, payload) =>
       Effect.gen(function* () {
-        const handlers = subscribers.get(event.id)?.handlers;
+        const handlers = subscribers.get(hook.id)?.handlers;
         if (handlers === undefined) {
           return;
         }
         const dispatch = Array.from(handlers, (entry) => entry.handler(payload));
-        if (event.strategy === 'serial') {
+        if (hook.strategy === 'serial') {
           yield* Effect.forEach(dispatch, (effect) => effect, { discard: true });
         } else {
           yield* Effect.all(dispatch, { concurrency: 'unbounded', discard: true });
