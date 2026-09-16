@@ -16,6 +16,11 @@ export default defineConfig({
     node: true,
     // Only the `*.browser.test.ts` suites: the rest of the package's tests need `node-datachannel`
     // and other node-only APIs.
-    browser: { browsers: ['chromium'], include: ['**/src/**/*.browser.test.ts'] },
+    browser: {
+      browsers: ['chromium'],
+      include: ['**/src/**/*.browser.test.ts'],
+      // Pulled in by `rtc-proxy-worker.ts`, so vite only discovers them once the worker boots.
+      optimizeDeps: ['@effect/platform-browser/BrowserWorker', 'effect/unstable/rpc/RpcClient'],
+    },
   },
 });

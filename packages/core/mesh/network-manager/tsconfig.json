@@ -41,9 +41,6 @@
       "path": "../messaging"
     },
     {
-      "path": "../rpc"
-    },
-    {
       "path": "../teleport"
     }
   ]

@@ -516,6 +516,12 @@ export type BrowserOptions = {
    * APIs) narrows this to the files it actually wants a browser for.
    */
   include?: string[];
+  /**
+   * Extra deps to pre-bundle, on top of the shared list below. A dep only a worker bundle or a
+   * dynamic import pulls in is discovered mid-run, and the re-optimize reloads the page under the
+   * running suite — naming it here keeps the run stable.
+   */
+  optimizeDeps?: string[];
   nodeExternal?: boolean;
   injectGlobals?: boolean;
   plugins?: Plugin[];
@@ -629,6 +635,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
 const createBrowserProject = ({
   browserName,
   include,
+  optimizeDeps = [],
   nodeExternal = false,
   injectGlobals = true,
   plugins = [],
@@ -667,6 +674,7 @@ const createBrowserProject = ({
         '@dxos/log > @dxos/util > @hazae41/symbol-dispose-polyfill',
         '@dxos/log > @dxos/keys > ulidx',
         '@dxos/log > lodash.defaultsdeep',
+        ...optimizeDeps,
       ],
       esbuildOptions: {
         plugins: [

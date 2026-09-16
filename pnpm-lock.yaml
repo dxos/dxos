@@ -6209,9 +6209,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
-      '@dxos/rpc':
-        specifier: workspace:*
-        version: link:../rpc
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../teleport
@@ -18402,9 +18399,6 @@ importers:
 
   packages/sdk/client-protocol:
     dependencies:
-      '@bufbuild/protobuf':
-        specifier: 'catalog:'
-        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

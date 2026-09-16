@@ -42,7 +42,7 @@ describe('RTCDataChannel handover to a worker', () => {
     );
     await server.runPromise(Effect.void);
 
-    const worker = new Worker(new URL('./testing/rtc-proxy.worker.ts', import.meta.url), { type: 'module' });
+    const worker = new Worker(new URL('./testing/rtc-proxy-worker.ts', import.meta.url), { type: 'module' });
     const received: ProxyWorkerResponse[] = [];
     const connected = new Trigger();
     const failed = new Trigger<string>();

@@ -24,12 +24,15 @@ import { type ProxyWorkerRequest, type ProxyWorkerResponse } from './rtc-proxy-w
 
 const post = (message: ProxyWorkerResponse): void => self.postMessage(message);
 
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
 /** Reports what the remote peer wrote, and lets the test push outbound payloads. */
 const createStream = (peer: 'a' | 'b') =>
   new Duplex({
     read: () => {},
     write: (chunk, _encoding, callback) => {
-      post({ type: 'received', peer, data: Buffer.from(chunk).toString() });
+      post({ type: 'received', peer, data: decoder.decode(new Uint8Array(chunk)) });
       callback();
     },
   });
@@ -93,7 +96,7 @@ const start = async (port: MessagePort): Promise<void> => {
 
   self.addEventListener('message', ({ data }: MessageEvent<ProxyWorkerRequest>) => {
     if (data.type === 'send') {
-      (data.peer === 'a' ? streamA : streamB).push(Buffer.from(data.data));
+      (data.peer === 'a' ? streamA : streamB).push(encoder.encode(data.data));
     }
   });
 
