@@ -64,7 +64,10 @@ describe.skipIf(!fixtureExists())('runFactPipeline over a mailbox feed fixture (
         return { run, facts };
       }).pipe(
         Effect.provide(
-          Layer.provideMerge(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory), OllamaAiServiceLayer),
+          Database.layer(db).pipe(
+            Layer.provideMerge(FactStoreLive.layerMemory),
+            Layer.provideMerge(OllamaAiServiceLayer),
+          ),
         ),
         EffectEx.runAndForwardErrors,
       );

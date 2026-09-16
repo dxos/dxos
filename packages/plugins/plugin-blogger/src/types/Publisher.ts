@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Ref } from '@dxos/echo';
-import { BaseError, type BaseErrorOptions } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 import { Connection } from '@dxos/link';
 
 // Provider-neutral draft DTO exchanged across the publisher capability boundary.
@@ -46,12 +46,21 @@ export interface PublisherService {
 }
 
 /** Thrown by a `PublisherService` when publish/import/unpublish fails against the remote backend. */
-export class PublisherError extends BaseError.extend<string>('PublisherError', 'Publishing failed.') {}
+export class PublisherError extends BaseError.extend('PublisherError', 'Publishing failed.') {}
 
 /** Thrown by a `PublisherService` when its credentials (e.g. a Connection's access token) are missing. */
-export class MissingCredentialError extends PublisherError {
-  constructor(options?: BaseErrorOptions) {
-    super({ message: 'Publisher credentials are missing.', ...options });
-    this.name = 'MissingCredentialError';
-  }
-}
+export class MissingCredentialError extends BaseError.extend(
+  'MissingCredentialError',
+  'Publisher credentials are missing.',
+) {}
+
+/** Any failure a `PublisherService` raises. */
+export type Failure = PublisherError | MissingCredentialError;
+
+/**
+ * Siblings rather than a hierarchy: `BaseError` derives `_tag` from `name`, so a subclass that
+ * renames itself is no longer its parent's tag and `catchTag` stops narrowing either one. This is
+ * the `instanceof` across both that the discarded subclassing used to give.
+ */
+export const isFailure = (error: unknown): error is Failure =>
+  error instanceof PublisherError || error instanceof MissingCredentialError;

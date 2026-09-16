@@ -8,7 +8,6 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { Context as DxContext } from '@dxos/context';
 import { type Key } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { messageOf } from '@dxos/errors';
 
 import { ConnectorSpec } from '#types';
 
@@ -81,7 +80,7 @@ export const beginOAuthFlow = (
             authHeader: await edge.getAuthHeader(),
             ...(loginHint ? { loginHint } : {}),
           }),
-        catch: (error) => new OAuthFlowError({ message: messageOf(error), cause: error }),
+        catch: OAuthFlowError.wrap(),
       })
     : Effect.gen(function* () {
         const { authUrl } = yield* Effect.tryPromise({
@@ -93,7 +92,7 @@ export const beginOAuthFlow = (
               accessTokenId,
               ...(loginHint ? { loginHint } : {}),
             }),
-          catch: (error) => new OAuthFlowError({ message: messageOf(error), cause: error }),
+          catch: OAuthFlowError.wrap(),
         });
 
         // `useRedirectFlow` connectors (e.g. atproto) get a top-level tab: their auth server

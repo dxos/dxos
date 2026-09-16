@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { messageOf } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '#types';
@@ -69,7 +68,7 @@ export default FeedOperation.LoadPostContent.pipe(
             });
           }
         },
-        catch: (error) => new ArticleFetchError({ message: messageOf(error), cause: error }),
+        catch: ArticleFetchError.wrap(),
       });
     }),
   ),

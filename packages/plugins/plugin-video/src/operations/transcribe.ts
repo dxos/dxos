@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { BaseError, messageOf } from '@dxos/errors';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
@@ -80,5 +80,5 @@ const fetchTranscript = (url: string, lang: string) =>
         text: raw.replace(/(\[[^\]]*\]\([^)]*\))\s*\n\s*/g, '$1 ').replace(/\n{2,}/g, '\n'),
       };
     },
-    catch: (error) => new TranscriptionError({ message: messageOf(error), cause: error }),
+    catch: TranscriptionError.wrap(),
   });

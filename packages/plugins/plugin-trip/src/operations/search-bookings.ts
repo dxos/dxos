@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { messageOf } from '@dxos/errors';
 
 import { BookingOperation, BookingSearch, TripCapabilities } from '#types';
 
@@ -22,14 +21,11 @@ const handler: Operation.WithHandler<typeof BookingOperation.SearchBookings> = B
       if (!service) {
         return { offers: [] };
       }
-      // `tryPromise` routes a `search` rejection (e.g. MissingApiKeyError) to the operation's
-      // failure channel; the `catch` preserves the original Error so callers can match by name.
+      // `tryPromise` routes a `search` rejection to the operation's failure channel, passing a
+      // booking error through untouched so callers can still match it by tag.
       const offers = yield* Effect.tryPromise({
         try: async () => [...(await service.search(query))],
-        catch: (error) =>
-          error instanceof BookingSearch.MissingApiKeyError
-            ? error
-            : new BookingSearchError({ message: messageOf(error), cause: error }),
+        catch: (error) => (BookingSearch.isFailure(error) ? error : BookingSearchError.wrap()(error)),
       });
       return { offers };
     }),
