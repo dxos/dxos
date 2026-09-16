@@ -9,7 +9,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'reac
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import { SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 
@@ -363,14 +363,19 @@ const TaskTreeHeading = ({
           <span className='col-[gutter]' />
         ))}
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
-      <span className='col-[title] self-center min-w-0 truncate'>
-        {/* The mnemonic names the row in conversation ("look at 7QK2ZB"); monospace so the
-            fixed-width code reads apart from the prose title and aligns down the column. */}
-        <span data-testid='taskList.item.mnemonic' className='font-mono text-xs text-subdued mr-2'>
-          {Obj.getMnemonic(current)}
+      <div className='inline-flex min-w-0 items-center gap-2 col-[title] self-center'>
+        <SystemIconButton.Clipboard
+          density='sm'
+          variant='tag'
+          label={Obj.getMnemonic(current)}
+          iconEnd
+          onCopy={() => Obj.getMnemonic(current)}
+          data-testid='taskList.item.mnemonic'
+        />
+        <span data-testid='taskList.item.title' className='truncate'>
+          {current.title}
         </span>
-        <span data-testid='taskList.item.title'>{current.title}</span>
-      </span>
+      </div>
       {/* The row's second line, running under the title and its chips only: it has to clear the
           ordinal and the status control, or it reads as belonging to the row above, and it must stop
           short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
