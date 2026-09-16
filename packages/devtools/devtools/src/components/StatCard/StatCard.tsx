@@ -200,7 +200,7 @@ type StatCardContentProps = PropsWithChildren<ThemedClassName>;
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
   <Card.Row>
-    <Flex column grow={false} classNames={['min-w-0 overflow-x-auto text-xs [grid-column-end:span_2]', classNames]}>
+    <Flex column grow={false} classNames={['overflow-x-auto text-xs [grid-column-end:span_2]', classNames]}>
       {children}
     </Flex>
   </Card.Row>
