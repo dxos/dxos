@@ -118,6 +118,8 @@ export const translations: Resource[] = [
 
         'invocations.label': 'Invocations',
         'trace.label': 'Trace',
+        'trace-processes.label': 'Processes',
+        'trace-details.label': 'Details',
 
         'trace-filter.menu': 'Filter processes',
         'trace-filter-all.label': 'Show all',

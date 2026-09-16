@@ -71,8 +71,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
   }, [invokePromise, connection, db]);
 
   const handleRemoveBinding = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
-  }, [invokePromise, subject]);
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] }, { spaceId: db?.spaceId });
+  }, [invokePromise, subject, db]);
 
   // Seed the options form from the cursor's current options.
   const optionsDefaultValues = useMemo(() => ({ ...(externalSpec?.options ?? {}) }), [externalSpec]);

@@ -678,8 +678,8 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   return (
     <IconBlock>
       {/* The button is the trigger, not the block: the button stops the click so the row is not selected
-            too, and a trigger above it would never receive it. The block still gives every control in
-            the row one rail-item square. */}
+          too, and a trigger above it would never receive it. The block still gives every control in
+          the row one rail-item square. */}
       <ActionMenu actions={actions}>
         <IconButton
           variant='ghost'
@@ -825,7 +825,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
   ) => {
     const { t } = useTranslation(translationKey);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns } =
+    const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns, showEstimates } =
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
 
@@ -1015,8 +1015,9 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             rather than a place to type. */}
         {(current || draft.trim().length > 0) && (
           <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] p-0 bg-transparent'>
-            {/* Only when editing an existing task: the create row has nothing to set a priority on
-                until it is saved. */}
+            {/* Only when editing an existing task: the create row has nothing to set an estimate or
+                priority on until it is saved. */}
+            {task && showEstimates && <TaskEstimateControl task={task} />}
             {task && <TaskPriorityIcon task={task} />}
             <Toolbar.IconButton
               variant='ghost'

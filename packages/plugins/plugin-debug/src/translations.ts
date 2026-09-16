@@ -19,7 +19,6 @@ export const translations = [
         'create-sample-space.label': 'Create sample space: {{label}}',
         'space-objects.label': 'Database',
         'open-debug-panel.label': 'Show debug panel',
-        'logs.label': 'Logs',
         'console.tab.label': 'Console',
         'logs.tab.label': 'Logs',
         'debug-panel.title': 'Debug',
