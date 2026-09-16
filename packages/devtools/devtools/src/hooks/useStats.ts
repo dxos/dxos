@@ -39,9 +39,6 @@ export type QueryInfo = {
   active: boolean;
 };
 
-/**
- *
- */
 export type DatabaseInfo = {
   spaces: number;
   /** Objects across every open space, from `db.stats()`. Summed: the panel reports the profile. */
@@ -56,11 +53,11 @@ export type DatabaseInfo = {
   dataStats?: EchoDataStats;
 };
 
-/**
- *
- */
+/** The slice of a `PerformanceEntry` the stats panels read; a plain object satisfies it in fixtures. */
+export type PerformanceEntryLike = Pick<PerformanceEntry, 'entryType' | 'name' | 'duration'>;
+
 export type Stats = {
-  performanceEntries?: PerformanceEntry[];
+  performanceEntries?: PerformanceEntryLike[];
   database?: DatabaseInfo;
   queries?: QueryInfo[];
   memory?: MemoryInfo;

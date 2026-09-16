@@ -24,8 +24,8 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: [
     'org.dxos.plugin.debug.surface.stats',
     'org.dxos.role.article',
-    'org.dxos.role.deckCompanion.logs',
     'org.dxos.role.deckCompanion.spaceObjects',
+    'org.dxos.role.devtoolsOverview',
     'org.dxos.role.drawer',
     'org.dxos.role.section',
     'org.dxos.role.statusIndicator',
