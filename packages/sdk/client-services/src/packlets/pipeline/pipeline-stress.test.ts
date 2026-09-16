@@ -44,7 +44,7 @@ describe('pipeline/stress test', () => {
     );
 
     const model = fc.asyncProperty(commands, async (commands) => {
-      const hypercoreStore = builder.createFeedStore();
+      const hypercoreStore = builder.createHypercoreStore();
 
       const agents = new Map(agentIds.map((id) => [id, new Agent(builder, hypercoreStore, id)]));
       await Promise.all(Array.from(agents.values()).map((agent) => agent.open()));

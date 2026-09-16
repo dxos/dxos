@@ -21,7 +21,7 @@ describe('HypercoreStore', () => {
 
     // Write.
     {
-      const hypercoreStore = builder.clone().setStorage(storage).createFeedStore();
+      const hypercoreStore = builder.clone().setStorage(storage).createHypercoreStore();
       const feed = await hypercoreStore.openHypercore(feedKey, { writable: true });
 
       for (const i of Array.from(Array(numBlocks)).keys()) {
@@ -36,7 +36,7 @@ describe('HypercoreStore', () => {
 
     // Read.
     {
-      const hypercoreStore = builder.clone().setStorage(storage).createFeedStore();
+      const hypercoreStore = builder.clone().setStorage(storage).createHypercoreStore();
       const feed = await hypercoreStore.openHypercore(feedKey);
       expect(feed.properties.length).to.eq(numBlocks);
     }
@@ -48,7 +48,7 @@ describe('HypercoreStore', () => {
 
     // Read (should be empty).
     {
-      const hypercoreStore = builder.clone().setStorage(storage).createFeedStore();
+      const hypercoreStore = builder.clone().setStorage(storage).createHypercoreStore();
       const feed = await hypercoreStore.openHypercore(feedKey);
       expect(feed.properties.length).to.eq(0);
     }

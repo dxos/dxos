@@ -16,7 +16,7 @@ describe('HypercoreQueue', () => {
 
   test('works with webfs', async () => {
     const localBuilder = builder.clone().setStorage(createStorage({ type: StorageType.WEBFS }));
-    const hypercoreStore = localBuilder.createFeedStore();
+    const hypercoreStore = localBuilder.createHypercoreStore();
     const key = await localBuilder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });
 

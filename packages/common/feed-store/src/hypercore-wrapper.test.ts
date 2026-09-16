@@ -15,7 +15,7 @@ import { range } from '@dxos/util';
 import { TestBuilder, TestItemBuilder, defaultValueEncoding } from './testing/index.ts';
 
 describe('HypercoreWrapper', () => {
-  const factory = new TestBuilder().createFeedFactory();
+  const factory = new TestBuilder().createHypercoreFactory();
 
   test('creates a readable feed', async () => {
     const key = PublicKey.random();
@@ -53,7 +53,7 @@ describe('HypercoreWrapper', () => {
   test('appends blocks', async () => {
     const numBlocks = 10;
     const builder = new TestBuilder();
-    const hypercoreFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createHypercoreFactory();
     const key = await builder.keyring!.createKey();
     const feed = await hypercoreFactory.createHypercore(key, { writable: true });
 
@@ -67,7 +67,7 @@ describe('HypercoreWrapper', () => {
   test('append emits event', async () => {
     const numBlocks = 10;
     const builder = new TestBuilder();
-    const hypercoreFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createHypercoreFactory();
     const key = await builder.keyring!.createKey();
     const feed = await hypercoreFactory.createHypercore(key, { writable: true });
 
@@ -85,7 +85,7 @@ describe('HypercoreWrapper', () => {
   test('appends blocks with encoding', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
-    const hypercoreFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createHypercoreFactory();
     const key = await builder.keyring!.createKey();
     const feed = await hypercoreFactory.createHypercore(key, {
       writable: true,
@@ -108,7 +108,7 @@ describe('HypercoreWrapper', () => {
   test.skip('reads blocks from a feed stream', async () => {
     const numBlocks = 10;
     const builder = new TestBuilder();
-    const factory = builder.createFeedFactory();
+    const factory = builder.createHypercoreFactory();
     const key = await builder.keyring.createKey();
     const feed = await factory.createHypercore(key, {
       writable: true,
@@ -139,7 +139,7 @@ describe('HypercoreWrapper', () => {
   test('replicates with streams', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
-    const hypercoreFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createHypercoreFactory();
 
     const key1 = await builder.keyring!.createKey();
     const feed1 = await hypercoreFactory.createHypercore(key1, { writable: true });
@@ -193,7 +193,7 @@ describe('HypercoreWrapper', () => {
   test('cancel download while replicating', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
-    const hypercoreFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createHypercoreFactory();
 
     const key1 = await builder.keyring!.createKey();
     const feed1 = await hypercoreFactory.createHypercore(key1, { writable: true });
@@ -249,12 +249,12 @@ describe('HypercoreWrapper', () => {
     const numBlocks = 10;
     const builder1 = new TestItemBuilder();
     const builder2 = new TestItemBuilder();
-    const feedFactory1 = builder1.createFeedFactory();
-    const feedFactory2 = builder2.createFeedFactory();
+    const hypercoreFactory1 = builder1.createHypercoreFactory();
+    const hypercoreFactory2 = builder2.createHypercoreFactory();
 
     const key1 = await builder1.keyring!.createKey();
-    const feed1 = await feedFactory1.createHypercore(key1, { writable: true });
-    const feed2 = await feedFactory2.createHypercore(key1);
+    const feed1 = await hypercoreFactory1.createHypercore(key1, { writable: true });
+    const feed2 = await hypercoreFactory2.createHypercore(key1);
 
     await feed1.open();
     await feed2.open();
@@ -287,7 +287,7 @@ describe('HypercoreWrapper', () => {
   test('integrates blocks via putBuffer', async () => {
     const numBlocks = 5;
     const builder = new TestBuilder();
-    const hypercoreFactory = builder.createFeedFactory();
+    const hypercoreFactory = builder.createHypercoreFactory();
 
     const key = await builder.keyring.createKey();
     const source = await hypercoreFactory.createHypercore(key, { writable: true });

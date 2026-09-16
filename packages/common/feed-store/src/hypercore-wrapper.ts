@@ -93,6 +93,9 @@ export class HypercoreWrapper<T extends {}> {
     return transform;
   }
 
+  /**
+   * Creates a writer that appends to this hypercore.
+   */
   createHypercoreWriter(): HypercoreWriter<T> {
     return {
       write: async (data: T, { afterWrite } = {}) => {

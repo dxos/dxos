@@ -255,6 +255,9 @@ export class Pipeline implements PipelineAccessor {
     return this._writer;
   }
 
+  /**
+   * Whether the hypercore is part of this pipeline.
+   */
   hasHypercore(feedKey: PublicKey): boolean {
     return this._feeds.has(feedKey);
   }

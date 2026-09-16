@@ -45,7 +45,7 @@ Status: `done` | `todo`
 | ----------------------------------- | ---------------------------------- | ------------------------------------------ | ------------ | ------------------------------------------------------- | ------ |
 | `HypercoreFactory`                  | `HypercoreFactoryService`          | `HypercoreFactoryLayer({ hypercore? })`    | `hypercore?` | `KeyringApiService`, `HypercoreStorageDirectoryService` | done   |
 | `HypercoreStore` (@dxos/feed-store) | `HypercoreStoreService`            | `HypercoreStoreLayer()`                    | —            | `HypercoreFactoryService`                               | done   |
-| `FeedStorageDirectory`              | `HypercoreStorageDirectoryService` | `HypercoreStorageDirectoryLayer({ sub? })` | `sub?`       | `SqliteStorageService`                                  | done   |
+| `HypercoreStorageDirectory`         | `HypercoreStorageDirectoryService` | `HypercoreStorageDirectoryLayer({ sub? })` | `sub?`       | `SqliteStorageService`                                  | done   |
 
 ### Spaces / echo
 

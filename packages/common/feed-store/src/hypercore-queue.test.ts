@@ -13,10 +13,10 @@ import { TestItemBuilder } from './testing/index.ts';
 
 describe('HypercoreQueue', () => {
   const builder = new TestItemBuilder();
-  const factory = builder.createFeedFactory();
+  const factory = builder.createHypercoreFactory();
 
   test('opens and closes a queue multiple times', async () => {
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });
 
@@ -31,7 +31,7 @@ describe('HypercoreQueue', () => {
   });
 
   test('queue closed while reading', async () => {
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });
 
@@ -68,7 +68,7 @@ describe('HypercoreQueue', () => {
   });
 
   test('feed closed while reading', async () => {
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });
 

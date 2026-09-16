@@ -476,7 +476,7 @@ export const SqliteStorageLayer = (
     }),
   );
 
-export type FeedStorageDirectoryLayerOptions = {
+export type HypercoreStorageDirectoryLayerOptions = {
   sub?: string;
 };
 
@@ -484,7 +484,7 @@ export type FeedStorageDirectoryLayerOptions = {
  * Effect Layer providing the hypercore feeds root directory from {@link SqliteStorage}.
  */
 export const HypercoreStorageDirectoryLayer = (
-  options: FeedStorageDirectoryLayerOptions = {},
+  options: HypercoreStorageDirectoryLayerOptions = {},
 ): Layer.Layer<HypercoreStorageDirectoryService, never, SqliteStorageService> =>
   Layer.effect(
     HypercoreStorageDirectoryService,

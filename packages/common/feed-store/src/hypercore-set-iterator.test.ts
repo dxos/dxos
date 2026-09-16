@@ -51,7 +51,7 @@ describe('HypercoreSetIterator', () => {
 
   test('responds immediately when a feed is appended', async () => {
     const builder = new TestItemBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const iterator = new HypercoreSetIterator(randomFeedBlockSelector);
     await iterator.open();
 
@@ -93,7 +93,7 @@ describe('HypercoreSetIterator', () => {
 
   test('reads blocks in order', { timeout: 3000 }, async () => {
     const builder = new TestItemBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
 
     // TODO(burdon): Randomize?
     const numFeeds = 3;
@@ -171,7 +171,7 @@ describe('HypercoreSetIterator', () => {
 
   test('start from non-zero index', async () => {
     const builder = new TestItemBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
 
     const key = await builder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });

@@ -16,7 +16,7 @@ describe('HypercoreIterator', () => {
     const numBlocks = 20;
 
     // Create feeds and write data.
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });
     const writer = feed.createHypercoreWriter();

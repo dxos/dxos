@@ -10,7 +10,7 @@ import type { Hypercore, HypercoreOptions } from '@dxos/vendor-hypercore/hyperco
 import { py } from './util.ts';
 
 /**
- * Creates feeds with default properties.
+ * Creates hypercores with default properties.
  */
 export class RawHypercoreFactory<T> {
   constructor(
@@ -21,7 +21,7 @@ export class RawHypercoreFactory<T> {
   }
 
   /**
-   * Creates a feed using a storage factory prefixed with the feed's key.
+   * Creates a hypercore using a storage factory prefixed with the hypercore's key.
    * NOTE: We have to use our `random-access-storage` implementation since the native ones
    * do not behave uniformly across platforms.
    */
@@ -32,7 +32,7 @@ export class RawHypercoreFactory<T> {
   }
 
   /**
-   * Creates and opens a feed.
+   * Creates and opens a hypercore.
    */
   async openHypercore(publicKey: Buffer, options?: HypercoreOptions): Promise<Hypercore<T>> {
     const feed = this.createHypercore(publicKey, options);

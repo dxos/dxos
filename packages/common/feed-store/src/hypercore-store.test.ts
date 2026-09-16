@@ -11,7 +11,7 @@ import { TestItemBuilder } from './testing/index.ts';
 describe('HypercoreStore', () => {
   test('creates feeds', async () => {
     const builder = new TestItemBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
 
     const numFeeds = 5;
     const feedKeys = await Promise.all(
@@ -42,7 +42,7 @@ describe('HypercoreStore', () => {
 
   test('gets an opened feed', async () => {
     const builder = new TestItemBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const feedKey = PublicKey.random();
 
     {
@@ -62,7 +62,7 @@ describe('HypercoreStore', () => {
 
   test('tries to open an existing readable feed as writable', async () => {
     const builder = new TestItemBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const feedKey = PublicKey.random();
 
     {

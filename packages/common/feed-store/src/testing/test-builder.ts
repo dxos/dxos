@@ -71,7 +71,7 @@ export class TestBuilder<T extends {}> {
     return this;
   }
 
-  createFeedFactory(): HypercoreFactory<T> {
+  createHypercoreFactory(): HypercoreFactory<T> {
     return new HypercoreFactory<T>({
       root: this.root,
       signer: this.keyring,
@@ -81,9 +81,9 @@ export class TestBuilder<T extends {}> {
     });
   }
 
-  createFeedStore(): HypercoreStore<T> {
+  createHypercoreStore(): HypercoreStore<T> {
     return new HypercoreStore<T>({
-      factory: this.createFeedFactory(),
+      factory: this.createHypercoreFactory(),
     });
   }
 }

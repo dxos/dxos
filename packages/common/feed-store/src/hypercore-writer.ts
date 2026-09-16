@@ -25,12 +25,18 @@ export interface HypercoreWriter<T extends {}> {
   write(data: T, options?: WriteOptions): Promise<WriteReceipt>;
 }
 
+/**
+ * Adapts a write callback to the {@link HypercoreWriter} interface.
+ */
 export const createHypercoreWriter = <T extends {}>(cb: (data: T) => Promise<WriteReceipt>): HypercoreWriter<T> => ({
   write: async (data: T) => {
     return cb(data);
   },
 });
 
+/**
+ * Writes messages sequentially, since a hypercore append is not safe to interleave.
+ */
 export const writeMessages = async <T extends {}>(
   writer: HypercoreWriter<T>,
   messages: T[],

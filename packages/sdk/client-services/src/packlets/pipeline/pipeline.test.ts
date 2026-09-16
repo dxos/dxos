@@ -24,7 +24,7 @@ describe('pipeline/Pipeline', () => {
     const pipeline = new Pipeline();
 
     const builder = new TestFeedBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
 
     // Remote feeds from other peers.
     const numFeeds = 5;
@@ -66,7 +66,7 @@ describe('pipeline/Pipeline', () => {
     onTestFinished(() => pipeline.stop());
 
     const builder = new TestFeedBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });
     await pipeline.addHypercore(feed);
@@ -109,7 +109,7 @@ describe('pipeline/Pipeline', () => {
     onTestFinished(() => pipeline.stop());
 
     const builder = new TestFeedBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });
     await pipeline.addHypercore(feed);
@@ -148,7 +148,7 @@ describe('pipeline/Pipeline', () => {
     const pipeline = new Pipeline();
 
     const builder = new TestFeedBuilder();
-    const hypercoreStore = builder.createFeedStore();
+    const hypercoreStore = builder.createHypercoreStore();
     const key = await builder.keyring.createKey();
     const feed = await hypercoreStore.openHypercore(key, { writable: true });
     await pipeline.addHypercore(feed);

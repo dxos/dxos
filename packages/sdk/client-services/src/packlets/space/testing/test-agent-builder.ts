@@ -102,7 +102,7 @@ export class TestAgent {
   ) {
     this.storage = this._feedBuilder.storage;
     this.keyring = this._feedBuilder.keyring;
-    this.hypercoreStore = this._feedBuilder.createFeedStore();
+    this.hypercoreStore = this._feedBuilder.createHypercoreStore();
   }
 
   async close() {
