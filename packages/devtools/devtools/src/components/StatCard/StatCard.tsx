@@ -15,6 +15,18 @@ import {
 } from '@dxos/react-ui';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
+/** One hue per category of card, so a stack reads by colour before it reads by title. */
+export const STAT_CARD_HUES = {
+  /** Rendering: surfaces, frame rate. */
+  ui: 'violet',
+  /** ECHO: database, replication, queries, sync. */
+  database: 'emerald',
+  /** EDGE services and the swarm. */
+  edge: 'blue',
+  /** The host: memory, network, performance, plugin stats. */
+  system: 'amber',
+} as const satisfies Record<string, Hue>;
+
 //
 // Root
 //

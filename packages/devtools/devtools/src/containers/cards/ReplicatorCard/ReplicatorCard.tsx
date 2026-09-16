@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type DatabaseInfo } from '../../../hooks/index.ts';
 import { Unit, rateInterval } from '../util.tsx';
 
@@ -20,7 +20,7 @@ export const ReplicatorCard = ({ database }: ReplicatorCardProps) => {
     <StatCard.Root>
       <StatCard.Header
         icon='ph--arrows-left-right--regular'
-        hue='teal'
+        hue={STAT_CARD_HUES.database}
         title='Replicator'
         info={`${replicator?.connections ?? 0} connections`}
       />

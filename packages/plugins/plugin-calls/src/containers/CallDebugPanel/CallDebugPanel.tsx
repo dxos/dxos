@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { truncateKey } from '@dxos/debug';
-import { JsonView, StatCard } from '@dxos/devtools';
+import { JsonView, STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { Field, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
@@ -73,7 +73,7 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
     <StatCard.Root>
       <StatCard.Header
         icon='ph--video-conference--regular'
-        hue='pink'
+        hue={STAT_CARD_HUES.edge}
         title={t('meeting-status.title')}
         info={state?.call.joined ? 'active' : 'inactive'}
         menu={[{ label: 'Copy raw', icon: 'ph--copy--regular', onClick: () => void handleCopyRaw() }]}

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type DatabaseInfo } from '../../../hooks/index.ts';
 import { Unit, rateInterval } from '../util.tsx';
 
@@ -20,7 +20,7 @@ export const DatabaseCard = ({ database }: DatabaseCardProps) => {
     <StatCard.Root>
       <StatCard.Header
         icon='ph--database--regular'
-        hue='emerald'
+        hue={STAT_CARD_HUES.database}
         title='Database'
         info={`${database?.spaces ?? 0} spaces`}
       />

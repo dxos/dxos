@@ -7,7 +7,7 @@ import React from 'react';
 import type { NetworkStatus } from '@dxos/client/mesh';
 import { ConnectionState } from '@dxos/network-manager';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 
 export type NetworkCardProps = {
   network?: NetworkStatus;
@@ -22,7 +22,7 @@ export const NetworkCard = ({ network }: NetworkCardProps) => {
 
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--wifi-high--regular' hue='sky' title='Network' />
+      <StatCard.Header icon='ph--wifi-high--regular' hue={STAT_CARD_HUES.system} title='Network' />
       <StatCard.Row label='Connections' value={connections.toLocaleString()} />
       <StatCard.Row label='Swarms' value={swarms.length.toLocaleString()} />
     </StatCard.Root>

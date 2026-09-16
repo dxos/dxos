@@ -8,7 +8,7 @@ import React from 'react';
 
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { StatCard } from '@dxos/devtools';
+import { STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { Flex } from '@dxos/react-ui';
 
 // Fallback so the atom hook is called unconditionally when no store is contributed (host plugin not
@@ -53,7 +53,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
   if (compartments.length === 0) {
     return showEmpty ? (
       <StatCard.Root>
-        <StatCard.Header icon='ph--chart-bar--regular' hue='indigo' title='Plugin stats' />
+        <StatCard.Header icon='ph--chart-bar--regular' hue={STAT_CARD_HUES.system} title='Plugin stats' />
         <StatCard.Row label='No stats yet.' />
       </StatCard.Root>
     ) : null;
@@ -63,7 +63,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
     <Flex column gap='sm'>
       {compartments.map(([pluginKey, value]) => (
         <StatCard.Root key={pluginKey}>
-          <StatCard.Header icon='ph--chart-bar--regular' hue='indigo' title={pluginKey} />
+          <StatCard.Header icon='ph--chart-bar--regular' hue={STAT_CARD_HUES.system} title={pluginKey} />
           {flatten(value).map(([key, cell]) => (
             <StatCard.Row key={key} label={key} title={key} value={formatValue(cell)} />
           ))}

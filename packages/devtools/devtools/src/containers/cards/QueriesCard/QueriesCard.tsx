@@ -8,7 +8,7 @@ import { Grid } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type QueryInfo } from '../../../hooks/index.ts';
 import { SLOW_TIME, Unit, groupQueriesByFilter } from '../util.tsx';
 
@@ -28,7 +28,7 @@ export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
     <StatCard.Root>
       <StatCard.Header
         icon='ph--tree-view--regular'
-        hue='lime'
+        hue={STAT_CARD_HUES.database}
         title='Queries'
         info={queries.length.toLocaleString()}
       />

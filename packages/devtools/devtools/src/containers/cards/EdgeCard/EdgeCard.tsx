@@ -11,7 +11,7 @@ import {
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
 
 export type EdgeCardProps = {
@@ -91,7 +91,7 @@ export const EdgeCard = ({ edge, status, onRefresh, onCopy }: EdgeCardProps) => 
     <StatCard.Root>
       <StatCard.Header
         icon='ph--cloud--regular'
-        hue='blue'
+        hue={STAT_CARD_HUES.edge}
         title='EDGE'
         info={status ? (problems.length === 0 ? 'healthy' : `${problems.length} issues`) : undefined}
         menu={menu.length > 0 ? menu : undefined}

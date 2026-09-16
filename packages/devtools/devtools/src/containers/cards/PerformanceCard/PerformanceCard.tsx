@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type PerformanceEntryLike } from '../../../hooks/index.ts';
 import { SLOW_TIME, Unit } from '../util.tsx';
 
@@ -16,7 +16,7 @@ export const PerformanceCard = ({ entries = [] }: PerformanceCardProps) => (
   <StatCard.Root>
     <StatCard.Header
       icon='ph--hourglass-simple-low--regular'
-      hue='orange'
+      hue={STAT_CARD_HUES.system}
       title='Performance'
       info={entries.length.toLocaleString()}
     />

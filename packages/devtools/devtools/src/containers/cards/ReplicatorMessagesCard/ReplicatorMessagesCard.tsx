@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Grid } from '@dxos/react-ui';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type DatabaseInfo } from '../../../hooks/index.ts';
 import { Unit } from '../util.tsx';
 
@@ -29,7 +29,12 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
 
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--envelope--regular' hue='cyan' title='Messages' info={`${received}↓ ${sent}↑`} />
+      <StatCard.Header
+        icon='ph--envelope--regular'
+        hue={STAT_CARD_HUES.database}
+        title='Messages'
+        info={`${received}↓ ${sent}↑`}
+      />
       {rows.length === 0 && <StatCard.Row label='No messages.' />}
       {rows.length > 0 && (
         <StatCard.Row>

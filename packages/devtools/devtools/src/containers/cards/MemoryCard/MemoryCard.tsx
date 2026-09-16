@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type MemoryInfo } from '../../../hooks/index.ts';
 import { Unit } from '../util.tsx';
 
@@ -18,7 +18,7 @@ export const MemoryCard = ({ memory }: MemoryCardProps) => {
   const warning = (memory?.used ?? 0) > MEM_WARNING;
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--cpu--regular' hue='amber' title='Memory' />
+      <StatCard.Header icon='ph--cpu--regular' hue={STAT_CARD_HUES.system} title='Memory' />
       <StatCard.Row label='Used heap' value={Unit.MB(memory?.usedJSHeapSize)} unit='MB' />
       <StatCard.Row label='Allocated heap' value={Unit.MB(memory?.totalJSHeapSize)} unit='MB' />
       <StatCard.Row

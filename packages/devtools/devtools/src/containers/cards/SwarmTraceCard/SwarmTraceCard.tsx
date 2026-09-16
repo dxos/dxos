@@ -8,7 +8,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { IconButton } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type ReceivedMessage } from '../../../hooks/index.ts';
 
 export type SwarmTraceCardProps = {
@@ -26,7 +26,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
     <StatCard.Root>
       <StatCard.Header
         icon='ph--broadcast--regular'
-        hue='purple'
+        hue={STAT_CARD_HUES.edge}
         title='Swarm announcements'
         info={`${messages.length} · ${spaceCount} spaces`}
         action={

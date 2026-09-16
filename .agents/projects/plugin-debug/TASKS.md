@@ -104,3 +104,7 @@ Design: [`packages/plugins/plugin-debug/docs/DESIGN.md`](../../../packages/plugi
 - [ ] `GithubPanel` (plugin-devtools) is built and exported but never registered; `Devtools.Agent.*`
       ids and the standalone `AGENT` / `/client/tracing` sidebar rows have no page.
 - [ ] Stories for the article panels (five of twenty-six have one).
+- [ ] Dev-mode icon sprite lags lazily loaded modules: `@dxos/vite-plugin-icons` adds symbols as the dev
+      server serves each source file, but the page ingests `/icons.svg` once, so a card module first
+      served after boot (opening the Stats companion) shows blank header icons until a reload. Have
+      the plugin push a reload (or the registry re-fetch) when new symbols land after the first flush.

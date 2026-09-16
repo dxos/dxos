@@ -8,7 +8,7 @@ import ChartStreaming from '@robloche/chartjs-plugin-streaming';
 import { Chart, registerables } from 'chart.js';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 
 Chart.register(...registerables);
 Chart.register(ChartStreaming);
@@ -99,7 +99,7 @@ export const TimeSeriesCard = () => {
 
   return (
     <StatCard.Root>
-      <StatCard.Header icon='ph--clock-countdown--regular' hue='rose' title='Frame rate' />
+      <StatCard.Header icon='ph--clock-countdown--regular' hue={STAT_CARD_HUES.ui} title='Frame rate' />
       <StatCard.Content classNames='relative h-[160px]'>
         <canvas ref={canvasRef} />
       </StatCard.Content>

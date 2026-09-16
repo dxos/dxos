@@ -8,7 +8,7 @@ import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app
 import { Grid, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 
 /** One frame at 60fps. */
 const SLOW_TIME = 16;
@@ -95,7 +95,7 @@ export const SurfaceProfilerCard = ({ stats = [], onClear }: SurfaceProfilerCard
     <StatCard.Root>
       <StatCard.Header
         icon='ph--frame-corners--regular'
-        hue='violet'
+        hue={STAT_CARD_HUES.ui}
         title='Surfaces'
         info={stats.length.toLocaleString()}
         action={

@@ -7,7 +7,7 @@ import React from 'react';
 import { Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { StatCard } from '../../../components/index.ts';
+import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type SyncRow } from '../../../hooks/index.ts';
 
 export type SyncCardProps = {
@@ -38,7 +38,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
     <StatCard.Root>
       <StatCard.Header
         icon='ph--git-diff--regular'
-        hue='green'
+        hue={STAT_CARD_HUES.database}
         title='Sync'
         info={pending > 0 ? `${pending} syncing` : `${spaces.length} spaces`}
         action={
