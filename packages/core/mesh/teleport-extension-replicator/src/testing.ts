@@ -5,7 +5,7 @@
 import { pipeline } from 'stream';
 import { onTestFinished } from 'vitest';
 
-import { HypercoreFactory, type HypercoreCreateOptions, HypercoreStore } from '@dxos/feed-store';
+import { type HypercoreCreateOptions, HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

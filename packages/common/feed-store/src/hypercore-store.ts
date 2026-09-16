@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defaultMap } from '@dxos/util';
 
-import { type HypercoreFactory, HypercoreFactoryService, type HypercoreCreateOptions } from './hypercore-factory.ts';
+import { type HypercoreCreateOptions, type HypercoreFactory, HypercoreFactoryService } from './hypercore-factory.ts';
 import { type HypercoreWrapper } from './hypercore-wrapper.ts';
 
 export interface HypercoreStoreOptions<T extends {}> {
