@@ -20,7 +20,15 @@ import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Field, Panel, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import {
+  Accordion,
+  Panel,
+  ScrollContainer,
+  ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { ActionToolbar } from '@dxos/react-ui-menu';
@@ -30,6 +38,7 @@ import { mx } from '@dxos/ui-theme';
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
+import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
 import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter.ts';
@@ -54,6 +63,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     );
 
     const menu = useTraceMenu({ selected: environments, onSelectedChange: handleEnvironmentsChange });
+    const { t } = useTranslation(meta.profile.key);
 
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
     // See the comment in `ProcessTreeContainer` for more details.
@@ -90,6 +100,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     }, [traceMessages]);
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+    // Remembered across selections, so collapsing a section once keeps it collapsed.
+    const [openSections, setOpenSections] = useState<string[]>(SECTIONS.map((section) => section.id));
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
@@ -126,70 +138,104 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           <ActionToolbar {...menu} alwaysActive classNames='justify-end' />
         </Panel.Toolbar>
 
-        <Panel.Content
-          classNames={mx(
-            'grid grid-cols-[minmax(0,1fr)]',
-            // The process tree takes only the height its rows need (capped by its own max-height),
-            // so a short tree does not reserve empty space above the timeline.
-            !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[min-content_1fr_min-content]'
-              : 'grid-rows-[min-content_1fr]',
-          )}
-        >
-          {/* TODO(burdon): Select process to show details. */}
-          <div className='min-w-0'>
-            <Field.Root>
-              <Field.Label classNames='px-1'>Processes</Field.Label>
-            </Field.Root>
-            <ProcessTreeContainer
-              classNames='max-h-[8lh]'
-              space={space}
-              environments={environments}
-              onProcessSelect={handleProcessSelect}
-              onProcessTerminate={onProcessTerminate}
-            />
-          </div>
-
-          {/* Rows, not a block: `ScrollContainer.Root` fills its parent (`dx-expand` resolves `h-full`
-              against it), so in a block box it would take the whole track and hang its own height
-              below the label rather than scrolling — the overflow is then clipped by the panel. */}
-          <div className='grid grid-rows-[min-content_1fr] min-w-0 min-h-0'>
-            <Field.Root>
-              <Field.Label classNames='px-1'>Trace</Field.Label>
-            </Field.Root>
-            <ScrollContainer.Root pin>
-              <ScrollContainer.Content thin>
-                <ScrollContainer.Fade />
-                <ScrollContainer.Viewport>
-                  {tracePanelDebug ? (
-                    <JsonHighlighter data={spanTree} classNames='text-xs' />
-                  ) : (
-                    <Timeline
-                      branches={branches}
-                      branch={currentBranch}
-                      commits={commits}
-                      onSelect={handleCommitSelect}
-                    />
-                  )}
-                </ScrollContainer.Viewport>
-                <ScrollContainer.ScrollDownButton />
-              </ScrollContainer.Content>
-            </ScrollContainer.Root>
-          </div>
-
-          {!tracePanelDebug && selectedCommit && (
-            <div className='p-2'>
-              <JsonHighlighter
-                data={details[selectedCommit.id] ?? selectedCommit}
-                classNames='max-h-[20lh] border border-subdued-separator rounded-sm text-xs'
-              />
-            </div>
-          )}
+        <Panel.Content>
+          <Accordion.Root<TraceSection>
+            items={SECTIONS}
+            value={openSections}
+            onValueChange={setOpenSections}
+            classNames='h-full min-h-0 rounded-none border-y-0'
+          >
+            {({ items }) =>
+              items.map((section) => {
+                switch (section.id) {
+                  case 'processes':
+                    return (
+                      // TODO(burdon): Select process to show details.
+                      <Accordion.Item key={section.id} item={section} classNames='border-x-0'>
+                        <Accordion.ItemHeader hover>
+                          <span className='text-sm text-description'>{t('trace-processes.label')}</span>
+                        </Accordion.ItemHeader>
+                        <Accordion.ItemBody classNames='p-0'>
+                          <ProcessTreeContainer
+                            classNames='max-h-[8lh]'
+                            space={space}
+                            environments={environments}
+                            onProcessSelect={handleProcessSelect}
+                            onProcessTerminate={onProcessTerminate}
+                          />
+                        </Accordion.ItemBody>
+                      </Accordion.Item>
+                    );
+                  case 'trace':
+                    return (
+                      // The trace takes the slack: item and body are flex columns so the scroll
+                      // container inside gets a definite height to scroll within. The body's slide
+                      // animation is off here — it ramps to a measured height, and this body's height
+                      // comes from the flex slack, not its content.
+                      <Accordion.Item
+                        key={section.id}
+                        item={section}
+                        classNames={mx(
+                          'border-x-0 dx-grow flex flex-col',
+                          '[&>[data-part=item-content]]:dx-grow [&>[data-part=item-content]]:flex [&>[data-part=item-content]]:flex-col [&>[data-part=item-content]]:animate-none',
+                        )}
+                      >
+                        <Accordion.ItemHeader hover>
+                          <span className='text-sm text-description'>{t('trace.label')}</span>
+                        </Accordion.ItemHeader>
+                        <Accordion.ItemBody classNames='p-0 dx-grow grid grid-rows-[minmax(0,1fr)]'>
+                          <ScrollContainer.Root pin>
+                            <ScrollContainer.Content thin>
+                              <ScrollContainer.Fade />
+                              <ScrollContainer.Viewport>
+                                {tracePanelDebug ? (
+                                  <JsonHighlighter data={spanTree} classNames='text-xs' />
+                                ) : (
+                                  <Timeline
+                                    branches={branches}
+                                    branch={currentBranch}
+                                    commits={commits}
+                                    onSelect={handleCommitSelect}
+                                  />
+                                )}
+                              </ScrollContainer.Viewport>
+                              <ScrollContainer.ScrollDownButton />
+                            </ScrollContainer.Content>
+                          </ScrollContainer.Root>
+                        </Accordion.ItemBody>
+                      </Accordion.Item>
+                    );
+                  case 'details': {
+                    const commit = tracePanelDebug ? undefined : selectedCommit;
+                    return (
+                      // With nothing selected the section stays as a plain, closed row.
+                      <Accordion.Item key={section.id} item={section} disabled={!commit} classNames='border-x-0'>
+                        <Accordion.ItemHeader hover>
+                          <span className='block truncate text-sm text-description'>
+                            {commit?.message ?? t('trace-details.label')}
+                          </span>
+                        </Accordion.ItemHeader>
+                        {commit && (
+                          <Accordion.ItemBody classNames='p-0'>
+                            <JsonHighlighter data={details[commit.id] ?? commit} classNames='max-h-[20lh] text-xs' />
+                          </Accordion.ItemBody>
+                        )}
+                      </Accordion.Item>
+                    );
+                  }
+                }
+              })
+            }
+          </Accordion.Root>
         </Panel.Content>
       </Panel.Root>
     );
   },
 );
+
+type TraceSection = { id: 'processes' | 'trace' | 'details' };
+
+const SECTIONS: TraceSection[] = [{ id: 'processes' }, { id: 'trace' }, { id: 'details' }];
 
 // Stable ref.
 const atomEmpty = Atom.make(() => [] as const);
