@@ -48,6 +48,9 @@ const RECONNECT_INITIAL_DELAY = 1_000;
  */
 const RECONNECT_MAX_DELAY = 30_000;
 
+/** Bounds each feed RPC, so a host that stops answering cannot hold a flush or dispose open. */
+const RPC_TIMEOUT = 30_000;
+
 const APPEND_RETRY_INITIAL_DELAY = 1_000;
 
 const APPEND_RETRY_MAX_DELAY = 30_000;
@@ -81,6 +84,7 @@ export class FeedHandle {
             feedIds: [this._feedId],
           },
         }),
+        { timeout: RPC_TIMEOUT },
       );
       await this.#applyQueryResult(thisRefreshId, result);
     } catch (err) {
@@ -416,6 +420,7 @@ export class FeedHandle {
             feedId: this._feedId,
             objects: chunk.map(({ json }) => JSON.stringify(json)),
           }),
+          { timeout: RPC_TIMEOUT },
         );
       } catch (err) {
         this.#onAppendFailed(err, batch.slice(i));
@@ -443,7 +448,9 @@ export class FeedHandle {
 
     for (const { core, token } of batch) {
       core.revertCapture(token);
-      this.#dirtyCores.add(core);
+      if (!core.deleted) {
+        this.#dirtyCores.add(core);
+      }
     }
 
     if (endpointClosed) {
