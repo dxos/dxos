@@ -9,5 +9,12 @@
     "src/**/*.ts",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    }
+  ]
 }

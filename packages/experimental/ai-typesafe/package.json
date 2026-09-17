@@ -2,7 +2,7 @@
   "name": "@dxos/ai-typesafe",
   "version": "0.11.1",
   "private": true,
-  "description": "Experimental compile-time-safe model catalog: capabilities checked by the type-checker rather than at the provider.",
+  "description": "Experimental Effect client for TypeSafe System One (typesafe.ai): schema-defined decisions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -24,6 +24,11 @@
     "dist",
     "src"
   ],
+  "dependencies": {
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "effect": "catalog:"
+  },
   "publishConfig": {
     "access": "restricted"
   }
