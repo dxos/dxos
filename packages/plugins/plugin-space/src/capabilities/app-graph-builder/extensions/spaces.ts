@@ -24,6 +24,7 @@ import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { Expando } from '@dxos/schema';
+import { type Label } from '@dxos/ui-types/translations';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -297,14 +298,15 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 }),
               )
               .map((space) =>
-                constructSpaceNode({
-                  space,
-                  placeholder: isSpacePlaceholder({ state: spaceStates.get(space.id), orderResolved }),
-                  navigable: ephemeralState.navigableCollections,
-                  namesCache: state.spaceNames,
-                  graph,
-                  spacesOrder,
-                }),
+                isSpacePlaceholder({ state: spaceStates.get(space.id), orderResolved })
+                  ? constructSpacePlaceholderNode({ id: space.id, namesCache: state.spaceNames })
+                  : constructSpaceNode({
+                      space,
+                      navigable: ephemeralState.navigableCollections,
+                      namesCache: state.spaceNames,
+                      graph,
+                      spacesOrder,
+                    }),
               ),
           );
         } catch {
@@ -406,30 +408,64 @@ export const isSpacePlaceholder = ({
   orderResolved: boolean;
 }): boolean => !orderResolved || state !== SpaceState.SPACE_READY;
 
-/**
- * Builds an app-graph node for a space. A placeholder carries no space in `data`, so
- * `AppNodeMatcher.whenSpace` cannot match it and no child connector reaches an unopened database.
- */
+type SpaceNodeProperties = {
+  label: Label;
+  description: string | undefined;
+  hue: string | undefined;
+  icon: string | undefined;
+  iconHue: string | undefined;
+  disabled: boolean;
+  pending: boolean;
+  disposition: 'workspace';
+  testId: 'spacePlugin.space' | 'spacePlugin.space.pending';
+  onRearrange: ((nextOrder: string[]) => void) | undefined;
+  canDrop: typeof CAN_DROP_SPACE | undefined;
+};
+
+export const constructSpacePlaceholderNode = ({
+  id,
+  namesCache,
+}: {
+  id: string;
+  namesCache?: Record<string, string>;
+}): AppGraphNode.NodeArg<null, SpaceNodeProperties> =>
+  AppGraphNode.make({
+    id,
+    type: SpaceSchema.SPACE_TYPE,
+    data: null,
+    properties: {
+      label: namesCache?.[id] ?? LOADING_SPACE_LABEL,
+      description: undefined,
+      hue: undefined,
+      icon: undefined,
+      iconHue: undefined,
+      disabled: true,
+      pending: true,
+      disposition: 'workspace',
+      testId: 'spacePlugin.space.pending',
+      onRearrange: undefined,
+      canDrop: undefined,
+    },
+  });
+
 export const constructSpaceNode = ({
   space,
-  placeholder = false,
   navigable = false,
   namesCache,
   graph,
   spacesOrder,
 }: {
   space: Space;
-  placeholder?: boolean;
   navigable?: boolean;
   namesCache?: Record<string, string>;
   graph?: AppGraph.ExpandableGraph;
   spacesOrder?: Obj.Any;
-}) => {
-  const ready = !placeholder && space.state.get() === SpaceState.SPACE_READY;
-  const hasPendingMigration = !placeholder && checkPendingMigration(space);
+}): AppGraphNode.NodeArg<Space, SpaceNodeProperties> => {
+  const ready = space.state.get() === SpaceState.SPACE_READY;
+  const hasPendingMigration = checkPendingMigration(space);
 
   let onRearrange: ((nextOrder: string[]) => void) | undefined;
-  if (!placeholder && graph && spacesOrder) {
+  if (graph && spacesOrder) {
     onRearrange = spaceRearrangeCache.get(space.id);
     if (!onRearrange) {
       onRearrange = (nextOrder: string[]) => {
@@ -442,24 +478,23 @@ export const constructSpaceNode = ({
     }
   }
 
-  // The graph merges properties, so both variants emit every key for a transition to clear it.
   return AppGraphNode.make({
     id: space.id,
     type: SpaceSchema.SPACE_TYPE,
-    ...(!placeholder && { cacheable: AppNode.CACHEABLE_PROPS }),
-    data: placeholder ? null : space,
+    cacheable: AppNode.CACHEABLE_PROPS,
+    data: space,
     properties: {
-      label: placeholder ? (namesCache?.[space.id] ?? LOADING_SPACE_LABEL) : getSpaceDisplayName(space, { namesCache }),
+      label: getSpaceDisplayName(space, { namesCache }),
       description: ready ? space.properties.description : undefined,
       hue: ready ? space.properties.hue : undefined,
       icon: ready && space.properties.icon ? `ph--${space.properties.icon}--regular` : undefined,
       iconHue: ready ? space.properties.iconHue : undefined,
       disabled: !navigable || !ready || hasPendingMigration,
-      pending: placeholder,
+      pending: false,
       disposition: 'workspace',
-      testId: placeholder ? 'spacePlugin.space.pending' : 'spacePlugin.space',
+      testId: 'spacePlugin.space',
       onRearrange,
-      canDrop: placeholder ? undefined : CAN_DROP_SPACE,
+      canDrop: CAN_DROP_SPACE,
     },
   });
 };

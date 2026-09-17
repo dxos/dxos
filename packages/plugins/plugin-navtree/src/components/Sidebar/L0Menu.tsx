@@ -286,6 +286,7 @@ export type L0MenuProps = {
   topLevelItems: AppGraphNode.Node[];
   pinnedItems: AppGraphNode.Node[];
   userAccountItem?: AppGraphNode.Node;
+  workspacesPending?: boolean;
   parent?: AppGraphNode.Node;
   path: string[];
   onItemHover?: (params: { item: AppGraphNode.Node }) => void;
@@ -296,13 +297,12 @@ export const L0Menu = ({
   topLevelItems,
   pinnedItems,
   userAccountItem,
+  workspacesPending = false,
   parent,
   path,
   onItemHover,
 }: L0MenuProps) => {
   const { t } = useTranslation(meta.profile.key);
-  // The account node and the workspaces are both published once the client has initialised.
-  const clientInitialized = userAccountItem !== undefined;
   const runAction = useActionRunner();
   const handleAction = useCallback(
     (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {
@@ -375,7 +375,7 @@ export const L0Menu = ({
                 {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
               />
             ))
-          ) : !clientInitialized ? (
+          ) : workspacesPending ? (
             <L0PendingItem />
           ) : null}
         </ScrollArea.Viewport>

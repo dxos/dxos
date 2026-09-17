@@ -5,6 +5,7 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
@@ -12,7 +13,7 @@ import { Tabs } from '@dxos/react-ui';
 import { type MenuItem } from '@dxos/react-ui-menu';
 import { Position } from '@dxos/util';
 
-import { useLoadDescendents } from '#hooks';
+import { useActivationEventFired, useLoadDescendents } from '#hooks';
 
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar/index.ts';
@@ -28,6 +29,7 @@ export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string }
 export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
   const { onBack, onItemHover } = useNavTreeContext();
   const { topLevelActions, l0Items, pinnedItems, userAccountItem, topLevelItems } = useTopLevelNavItems(root);
+  const clientInitialized = useActivationEventFired(AppActivationEvents.ClientInitialized);
 
   useLoadDescendents(root);
   const path = useMemo(() => [id], [id]);
@@ -43,6 +45,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
         topLevelItems={l0Items}
         pinnedItems={pinnedItems}
         userAccountItem={userAccountItem}
+        workspacesPending={!clientInitialized}
         path={path}
         parent={root}
         onItemHover={onItemHover}

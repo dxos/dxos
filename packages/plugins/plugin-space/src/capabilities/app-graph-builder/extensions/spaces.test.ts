@@ -10,7 +10,14 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Entity, Obj } from '@dxos/echo';
 
-import { constructSpaceNode, isOrderResolved, isPendingSpace, isSpacePlaceholder, shouldListSpace } from './spaces.ts';
+import {
+  constructSpaceNode,
+  constructSpacePlaceholderNode,
+  isOrderResolved,
+  isPendingSpace,
+  isSpacePlaceholder,
+  shouldListSpace,
+} from './spaces.ts';
 
 describe('isPendingSpace', () => {
   test('a space on its way to ready is pending', ({ expect }) => {
@@ -42,14 +49,8 @@ describe('isPendingSpace', () => {
 describe('placeholder space node', () => {
   const SPACE_ID = 'BFEDCBA9876543210FEDCBA9876543210';
 
-  const makeFakeSpace = (): Space => ({ id: SPACE_ID }) as unknown as Space;
-
   const makePendingNode = (namesCache?: Record<string, string>): AppGraphNode.Node => {
-    const { id, type, data, properties } = constructSpaceNode({
-      space: makeFakeSpace(),
-      placeholder: true,
-      namesCache,
-    });
+    const { id, type, data, properties } = constructSpacePlaceholderNode({ id: SPACE_ID, namesCache });
     return { id, type, data, properties: properties ?? {} };
   };
 
@@ -98,17 +99,6 @@ describe('pending and ready space nodes', () => {
 
     expect(node.properties?.pending).toBe(false);
     expect(node.properties?.hue).toBe('amber');
-  });
-
-  test('a pending space publishes no appearance of its own', ({ expect }) => {
-    const properties: Record<string, unknown> =
-      constructSpaceNode({ space: makeReadySpace(), placeholder: true }).properties ?? {};
-
-    expect(properties.hue).toBeUndefined();
-    expect(properties.icon).toBeUndefined();
-    expect(properties.iconHue).toBeUndefined();
-    expect(properties.onRearrange).toBeUndefined();
-    expect(properties.canDrop).toBeUndefined();
   });
 });
 

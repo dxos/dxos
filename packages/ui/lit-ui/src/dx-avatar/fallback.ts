@@ -11,7 +11,6 @@ const getInitials = (label = ''): string[] =>
     .slice(0, 2)
     .map((word) => word[0].toUpperCase());
 
-// Not `\p{Emoji_Presentation}`: it rejects text-presentation emoji that rely on U+FE0F (☀️, ⚙️, ♻️).
 export const getFallbackGlyph = (fallback = ''): string => {
   const initials = getInitials(fallback);
   return initials.length > 0 ? initials.join('') : fallback;
