@@ -764,11 +764,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       using probe = host1.host.acquireDoc<{ text: string }>(handle.documentId);
       expect(probe.state).to.not.equal('ready');
 
-      // `authorizeDevice` re-emits `peer-disconnected` + `peer-candidate` through the
-      // EchoNetworkAdapter, which under subduction triggers a fresh handshake — that
-      // clears the stuck "all-failed" fetch entry and rebinds the subduction PeerId.
-      // Driving a no-op commit on the holder kicks `_sharePolicyChangedTask` →
-      // `shareConfigChanged()` for belt-and-suspenders recovery on the fetcher.
       await host1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host2.teleport.peerId);
       await host2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host1.teleport.peerId);
       await host2.host.createDoc({ kick: true });

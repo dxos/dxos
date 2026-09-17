@@ -63,6 +63,10 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   changes, with a fresh heal budget. Without this, a doc that exhausts heal on a dead connection is
   orphaned forever (a healthy WS never bumps the generation). Verified: after a drop, 100/100 rounds
   re-drove ~2.6 s post-settle and all succeeded.
+- **Never re-offer a peer whose auth scope widens**: under Subduction, `peer-disconnected` followed by
+  `peer-candidate` makes `AdapterConnections` bind a second connection to the same peer, stranding the
+  rounds pending on the first until the timeout. `EchoNetworkAdapter` takes `onConnectionAuthScopeChanged`,
+  and `AutomergeHost` uses it to re-drive only the denied rounds.
 - **`lastSyncGeneration` is stamped at round _start_, not enqueue** — a round queued behind the gate
   across a reconnect must count against the generation it actually runs under.
 
