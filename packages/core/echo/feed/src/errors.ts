@@ -12,3 +12,12 @@ export class SyncRpcTimeoutError extends BaseError.extend('SyncRpcTimeoutError')
     });
   }
 }
+
+export class SyncAppendPositionMismatchError extends BaseError.extend('SyncAppendPositionMismatchError') {
+  constructor(args: { requestId: string; spaceId: string; feedNamespace: string; blocks: number; positions: number }) {
+    super({
+      message: `Feed sync AppendResponse carried ${args.positions} positions for ${args.blocks} blocks (spaceId=${args.spaceId} feedNamespace=${args.feedNamespace} requestId=${args.requestId}).`,
+      context: args,
+    });
+  }
+}

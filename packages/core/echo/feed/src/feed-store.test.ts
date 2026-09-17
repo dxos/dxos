@@ -940,6 +940,31 @@ describe('FeedStore server token', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('setPosition leaves a slot alone when the block it was assigned to is gone', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const replica = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* replica.migrate();
+
+      yield* replica.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [replicatedBlock(feedId, 'bob', 0, 0)],
+      });
+
+      // A reply for a block deleted while its push was in flight must not evict the slot's holder.
+      const { displaced } = yield* replica.setPosition({
+        spaceId,
+        blocks: [{ feedId, feedNamespace: WellKnownNamespaces.data, actorId: ALICE, sequence: 7, position: 0 }],
+      });
+      expect(displaced).toBe(0);
+
+      const { blocks } = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(blocks.map((block) => [block.actorId, block.sequence, block.position])).toEqual([['bob', 0, 0]]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   const replicatedBlock = (feedId: string, actorId: string, sequence: number, position: number): Block => ({
     feedId,
     actorId,

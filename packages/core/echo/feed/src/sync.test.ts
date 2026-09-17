@@ -213,9 +213,10 @@ describe('Sync', () => {
 
     // Sync state written before servers reported a token carries progress but no token. Adopting
     // the first token must not wipe that progress (every client would re-sync everything the day
-    // tokens appear), yet a server replaced in the meantime must still be caught: here by the
-    // positions it re-issues, which the client already holds for other blocks.
-    test('adopts a first token over untokened progress and still catches a replaced server', async () => {
+    // tokens appear), yet a server replaced in the meantime must still be caught: the cursor steps
+    // back one slot, so the next pull re-fetches the block it was pulled from and a different block
+    // there replays the namespace.
+    test('verifies a first token over untokened progress by re-fetching the block at the cursor', async () => {
       await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
       const [server, client] = builder.peers;
 
@@ -225,12 +226,19 @@ describe('Sync', () => {
       await client.setSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, lastPulledPosition: 2 });
       await client.clearServerToken({ spaceId, feedNamespace: WellKnownNamespaces.data });
 
-      // Same server: the token is recorded and progress is left alone.
-      await builder.pull(client);
+      // Same server: the token is recorded, the batch discarded and the cursor stepped back.
+      expect(await builder.pull(client)).toEqual({ done: false });
+      expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: 1,
+        serverToken: await server.getServerToken(spaceId),
+      });
+      // The re-fetched block at 2 is the one already held, so progress simply resumes.
+      expect(await builder.pull(client)).toEqual({ done: false });
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 4,
         serverToken: await server.getServerToken(spaceId),
       });
+      expect(await blockPositions(client)).toEqual([0, 1, 2, 3, 4]);
       await client.setSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, lastPulledPosition: 2 });
       await client.clearServerToken({ spaceId, feedNamespace: WellKnownNamespaces.data });
 
@@ -240,8 +248,13 @@ describe('Sync', () => {
       const replacement = await builder.replaceServer();
       await seedBlocks(replacement, generateTestBlocks(10, 8), replacementFeedId);
 
-      // The first batch places the replacement's blocks where the old server's sit, which is what
-      // rewinds the cursor and replays the namespace.
+      expect(await builder.pull(client)).toEqual({ done: false });
+      expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: 1,
+        serverToken: await replacement.getServerToken(spaceId),
+      });
+      // The re-fetched block at 2 is the replacement's, which displaces the old server's and
+      // replays the namespace.
       expect(await builder.pull(client)).toEqual({ done: false });
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
@@ -255,6 +268,34 @@ describe('Sync', () => {
       expect(await blockPositions(client, replacementFeedId)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
       // The old server's blocks lost their slots to the replacement's and await a push.
       expect(await blockPositions(client, feedId)).toEqual([null, null, null, null, null]);
+    });
+
+    // The replacement's blocks above the cursor collide with nothing the client holds, so only the
+    // re-fetched block at the cursor can reveal the swap; without it the client would keep the old
+    // server's blocks positioned and never pull the replacement's below its cursor.
+    test('catches a replacement server whose blocks above an untokened cursor collide with nothing', async () => {
+      await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
+      const [server, client] = builder.peers;
+
+      await seedBlocks(server, generateTestBlocks(0, 5));
+      await builder.pull(client);
+      expect(await blockPositions(client)).toEqual([0, 1, 2, 3, 4]);
+      await client.clearServerToken({ spaceId, feedNamespace: WellKnownNamespaces.data });
+
+      const replacementFeedId = EntityId.random();
+      const replacement = await builder.replaceServer();
+      await seedBlocks(replacement, generateTestBlocks(10, 11), replacementFeedId);
+
+      let done = false;
+      while (!done) {
+        ({ done } = await builder.pull(client));
+      }
+      expect(await blockPositions(client, replacementFeedId)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      expect(await blockPositions(client, feedId)).toEqual([null, null, null, null, null]);
+      expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: 10,
+        serverToken: await replacement.getServerToken(spaceId),
+      });
     });
 
     test('does not duplicate blocks pulled from a replacement server', async () => {

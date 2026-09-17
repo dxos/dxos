@@ -999,6 +999,14 @@ export class FeedStore {
             if (feedPrivateId == null) {
               continue;
             }
+            const targets = yield* sql<{ insertionId: number }>`
+              SELECT insertionId FROM blocks
+              WHERE feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence}
+            `;
+            if (targets.length === 0) {
+              // The block was deleted while its push was in flight; the slot's holder stays.
+              continue;
+            }
             displaced += yield* this.#evictSlot(request.spaceId, block.feedNamespace, block.position, {
               ...block,
               feedPrivateId,

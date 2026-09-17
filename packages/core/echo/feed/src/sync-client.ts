@@ -12,7 +12,7 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { SyncRpcTimeoutError } from './errors.ts';
+import { SyncAppendPositionMismatchError, SyncRpcTimeoutError } from './errors.ts';
 import type { FeedStore } from './feed-store.ts';
 
 /** Default timeout for feed sync RPCs awaiting an edge response. */
@@ -223,6 +223,16 @@ export class SyncClient {
         serverToken,
         response.serverToken,
       );
+      if (reconciliation === 'verify') {
+        // Served from a cursor whose ordering is unproven; the next pull, from one slot back, settles it.
+        log('feed sync client pull deferred until the first server token is verified', {
+          requestId,
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          lastPulledPosition,
+        });
+        return { done: false };
+      }
       // On a reset the server ignored the stale `position`, so the batch restarts the namespace.
       const basePosition = reconciliation === 'reset' ? -1 : lastPulledPosition;
       // Positions only come from the server, so a local one above its high-water mark is a row the
@@ -429,9 +439,13 @@ export class SyncClient {
       // without a diagnostic; a responder that assigns no positions is not a position authority.
       if (response.positions.length !== unpositioned.blocks.length) {
         return yield* Effect.fail(
-          new Error(
-            `AppendResponse carried ${response.positions.length} positions for ${unpositioned.blocks.length} blocks (spaceId=${opts.spaceId} feedNamespace=${opts.feedNamespace} requestId=${requestId}).`,
-          ),
+          new SyncAppendPositionMismatchError({
+            requestId,
+            spaceId: opts.spaceId,
+            feedNamespace: opts.feedNamespace,
+            blocks: unpositioned.blocks.length,
+            positions: response.positions.length,
+          }),
         );
       }
       // Positions in the response belong to the responding server, so any stale local ones have to
@@ -468,7 +482,7 @@ export class SyncClient {
       // A block this replica had to push was not on the server, so a position for it at or below
       // the cursor is one the server issued after losing whatever the cursor was pulled from; the
       // same goes for a position another local block already held.
-      const cursor = reconciliation === 'unchanged' ? lastPulledPosition : -1;
+      const cursor = reconciliation === 'reset' ? -1 : lastPulledPosition;
       const lowestPosition = Math.min(...response.positions);
       if (displaced > 0 || lowestPosition <= cursor) {
         yield* self.#replayNamespace(opts, response.serverToken, {
@@ -528,12 +542,15 @@ export class SyncClient {
    * Reconciles the token the server reports against the one the local sync state was written under,
    * dropping everything derived from a server that is no longer there.
    *
-   * - `'unchanged'`: the tokens agree, or the server reports none (it predates the token). A first
-   *   token over untokened progress is only recorded: whether that progress came from this server
-   *   is settled by the ordering itself -- a replaced server re-issues positions the client holds
-   *   or reports a high-water mark below its cursor, and either replays the namespace. Wiping the
-   *   namespace on the first token instead made every client re-pull and re-push its whole history
-   *   the day the servers started reporting tokens, which is what saturated their sockets.
+   * - `'unchanged'`: the tokens agree, the server reports none (it predates the token), or the
+   *   first token arrives over a namespace nothing was pulled from yet and is simply recorded.
+   * - `'verify'`: the first token arrives over untokened progress, whose server may already have
+   *   been replaced. The token is recorded and the cursor stepped back one slot, so the next pull
+   *   re-fetches the block the cursor was pulled from: the same block de-duplicates and progress is
+   *   kept, a different one is a displacement and replays the namespace. The caller discards the
+   *   response, which was served from the unproven cursor. Wiping the namespace here instead made
+   *   every client re-pull and re-push its whole history the day the servers started reporting
+   *   tokens, which is what saturated their sockets.
    * - `'reset'`: they disagree, so the server was swapped or wiped. The request carried the stale
    *   token, so the response already restarts the namespace and the caller applies it as-is. Every
    *   position is dropped: the ordering was another store's, and the blocks are re-pushed.
@@ -542,20 +559,21 @@ export class SyncClient {
     opts: { spaceId: SpaceId; feedNamespace: string; lastPulledPosition: number },
     storedToken: string | undefined,
     reportedToken: string | undefined,
-  ): Effect.Effect<'unchanged' | 'reset', unknown, SqlClient.SqlClient> {
+  ): Effect.Effect<'unchanged' | 'verify' | 'reset', unknown, SqlClient.SqlClient> {
     const self = this;
     return Effect.gen(function* () {
       if (reportedToken == null || reportedToken === storedToken) {
         return 'unchanged';
       }
       if (storedToken == null) {
+        const verify = opts.lastPulledPosition >= 0;
         yield* self.#feedStore.setSyncState({
           spaceId: opts.spaceId,
           feedNamespace: opts.feedNamespace,
-          lastPulledPosition: opts.lastPulledPosition,
+          lastPulledPosition: verify ? opts.lastPulledPosition - 1 : opts.lastPulledPosition,
           serverToken: reportedToken,
         });
-        return 'unchanged';
+        return verify ? 'verify' : 'unchanged';
       }
       log.warn("feed sync positions are not the serving store's, resyncing namespace from scratch", {
         spaceId: opts.spaceId,

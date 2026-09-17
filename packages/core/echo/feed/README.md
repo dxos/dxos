@@ -49,8 +49,9 @@ Positions reach a replica only from the position authority, and the replica trea
 - **Server swap.** Every response carries the serving store's `serverToken`. A token that differs from
   the one the client recorded means the store was replaced or wiped, so the client drops every position
   in the namespace and replays it from the start; local blocks are re-pushed and de-duplicated by
-  `(actorId, sequence)`. The first token a client sees over progress it already holds is only recorded:
-  whether that progress came from this store is settled by the rollback checks below.
+  `(actorId, sequence)`. The first token a client sees over progress it already holds is verified rather
+  than acted on: the cursor steps back one slot, so the next pull re-fetches the block it was pulled from;
+  the same block de-duplicates and progress is kept, a different one is a displacement and replays.
 - **Server rollback.** A store that lost acknowledged rows keeps its token but re-issues their
   positions. The client notices when a position it is handed is already held by another local block,
   when a pushed block is placed at or below its pull cursor, or when its cursor is above the store's

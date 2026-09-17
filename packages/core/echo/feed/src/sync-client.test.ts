@@ -14,7 +14,7 @@ import { Context } from '@dxos/context';
 import { SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { SyncRpcTimeoutError } from './errors.ts';
+import { SyncAppendPositionMismatchError, SyncRpcTimeoutError } from './errors.ts';
 import { FeedStore } from './feed-store.ts';
 import { SyncClient } from './sync-client.ts';
 
@@ -182,7 +182,9 @@ describe('SyncClient', () => {
     );
     expect(Exit.isFailure(exit)).toBe(true);
     if (Exit.isFailure(exit)) {
-      expect(Cause.squash(exit.cause)).toMatchObject({ message: expect.stringContaining('1 positions for 2 blocks') });
+      const error = Cause.squash(exit.cause);
+      expect(error).toBeInstanceOf(SyncAppendPositionMismatchError);
+      expect(error).toMatchObject({ message: expect.stringContaining('1 positions for 2 blocks') });
     }
     // Nothing was applied: the whole batch is still pending, not just its tail.
     const { blocks } = await runtime.runPromise(feedStore.query({ spaceId, feedNamespace: WellKnownNamespaces.data }));
