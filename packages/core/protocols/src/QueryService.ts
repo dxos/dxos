@@ -151,7 +151,7 @@ export class Rpcs extends RpcGroup.make(
   /**
    * The activity ledger for a space, re-emitted whenever an index pass touches that space.
    */
-  Rpc.make('queryActivity', {
+  Rpc.make('activity', {
     payload: ActivityRequest,
     success: ActivityResponse,
     error: serviceError,

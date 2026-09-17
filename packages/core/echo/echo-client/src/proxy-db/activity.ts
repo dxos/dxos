@@ -39,18 +39,14 @@ export class ActivityQuery {
 
   subscribe(callback: (rows: readonly ActivityRow[]) => void): CleanupFn {
     const { spaceId, range, runtime, service } = this._params;
-    return subscribeStream(
-      runtime,
-      service['QueryService.queryActivity']({ spaceId, from: range.from, to: range.to }),
-      {
-        onData: (response) => callback(response.rows),
-        onError: (error) => {
-          if (error != null && !(error instanceof RpcClosedError)) {
-            log.catch(error);
-          }
-        },
+    return subscribeStream(runtime, service['QueryService.activity']({ spaceId, from: range.from, to: range.to }), {
+      onData: (response) => callback(response.rows),
+      onError: (error) => {
+        if (error != null && !(error instanceof RpcClosedError)) {
+          log.catch(error);
+        }
       },
-    );
+    });
   }
 
   get atom(): Atom.Atom<readonly ActivityRow[]> {

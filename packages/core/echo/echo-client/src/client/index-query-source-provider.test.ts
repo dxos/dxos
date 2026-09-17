@@ -61,7 +61,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
-      'QueryService.queryActivity': () => EffectStream.empty,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const source = new IndexQuerySource({
@@ -102,7 +102,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
-      'QueryService.queryActivity': () => EffectStream.empty,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const source = new IndexQuerySource({
@@ -145,7 +145,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
-      'QueryService.queryActivity': () => EffectStream.empty,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const source = new IndexQuerySource({
@@ -199,7 +199,7 @@ describe('IndexQuerySource', () => {
           emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
         }),
       'QueryService.reindex': () => Effect.void,
-      'QueryService.queryActivity': () => EffectStream.empty,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const updateEvent = new Event<ObjectUpdate>();

@@ -183,7 +183,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     });
   }
 
-  ['QueryService.queryActivity'](
+  ['QueryService.activity'](
     request: QueryService.ActivityRequest,
   ): EffectStream.Stream<QueryService.ActivityResponse, Error> {
     return EffectEx.streamFromEmitter<QueryService.ActivityResponse, Error>((emit) => {
