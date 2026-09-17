@@ -148,7 +148,7 @@ export default Capability.makeModule(
         } else if (!plankSubs.has(plankId)) {
           plankSubs.set(
             plankId,
-            registry.subscribe(graph.connections(plankId, AppNode.companionRelation()), () => {
+            registry.subscribe(graph.connections(plankId, AppNode.companion), () => {
               if (provisionForPlank(plankId, registry.get(variantAtom))) {
                 unsubPlank(plankId);
               }
@@ -187,7 +187,7 @@ const resolveEffectiveVariant = (
   plankId: string,
   preferredVariant: string | undefined,
 ): string | undefined => {
-  const companions = AppGraph.getConnections(graph, plankId, AppNode.companionRelation())
+  const companions = AppGraph.getConnections(graph, plankId, AppNode.companion)
     .filter(DeckSchema.isPlankCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 

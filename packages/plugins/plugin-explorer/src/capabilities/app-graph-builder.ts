@@ -22,7 +22,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'neighborhoodCompanion',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         match: AppNodeMatcher.whenEchoObjectMatches,
         connector: () =>
           Effect.succeed([

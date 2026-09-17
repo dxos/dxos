@@ -49,7 +49,7 @@ export default Capability.makeModule(
       // Private notes companion (a markdown editor over the book's notes document).
       AppGraphBuilder.createExtension({
         id: 'bookNotesCompanion',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         match: whenBook,
         connector: (book) =>
           Effect.succeed([

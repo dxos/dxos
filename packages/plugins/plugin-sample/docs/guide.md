@@ -67,8 +67,8 @@ See [Graph Builder API](../../../sdk/app-toolkit/docs/graph-builder-api.md) for 
 2. **Sub-graph section** — `whenSpace` matcher + `connector` creates a "Samples" section under each space.
 3. **Section children** — Custom matcher for the section type + `connector` populates SampleItem objects as child nodes.
 4. **Type-specific action** — `createTypeExtension` + `actions` adds an "Archive" action to SampleItem nodes.
-5. **Plank companion** — `createTypeExtension` + `relation: AppNode.companionRelation()` + `connector` attaches a "Related" side panel to SampleItem objects.
-6. **Deck companion** — `createExtension` + `NodeMatcher.whenRoot` + `relation: AppNode.companionRelation()` + `connector` adds a workspace-wide panel.
+5. **Plank companion** — `createTypeExtension` + `relation: AppNode.companion` + `connector` attaches a "Related" side panel to SampleItem objects.
+6. **Deck companion** — `createExtension` + `NodeMatcher.whenRoot` + `relation: AppNode.companion` + `connector` adds a workspace-wide panel.
 
 ## Schema Types
 

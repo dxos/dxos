@@ -78,7 +78,7 @@ const createMobileCompanionActions = (
     open.active[open.active.length - 1] ??
     (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
 
-  const activePlankCompanions = get(graph.connections(activeId, AppNode.companionRelation()))
+  const activePlankCompanions = get(graph.connections(activeId, AppNode.companion))
     .filter(DeckSchema.isPlankCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 

@@ -17,7 +17,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createTypeExtension({
         id: 'execute',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         type: Script.Script,
         connector: () =>
           Effect.succeed([
@@ -31,7 +31,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createTypeExtension({
         id: 'logs',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         type: Script.Script,
         connector: () =>
           Effect.succeed([

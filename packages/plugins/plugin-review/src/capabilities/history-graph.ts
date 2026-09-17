@@ -23,7 +23,7 @@ export default Capability.makeModule(
     // Version history plank companion, gated per-type by a HistoryProvider contribution.
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'history',
-      relation: AppNode.companionRelation(),
+      relation: AppNode.companion,
       match: (node) => {
         if (!Obj.isObject(node.data)) {
           return Option.none();

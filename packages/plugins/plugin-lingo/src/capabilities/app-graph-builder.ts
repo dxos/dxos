@@ -50,7 +50,7 @@ export default Capability.makeModule(
       // Drill companion on every deck.
       AppGraphBuilder.createExtension({
         id: 'flashcardsCompanion',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         match: (node) => (Vocabulary.instanceOf(node.data) ? Option.some(node) : Option.none()),
         connector: () =>
           Effect.succeed([
@@ -67,7 +67,7 @@ export default Capability.makeModule(
       // Reading companion on anything whose text this plugin can reach.
       AppGraphBuilder.createExtension({
         id: 'readerCompanion',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         match: (node) => (Obj.isObject(node.data) && isReadable(node.data) ? Option.some(node) : Option.none()),
         connector: () =>
           Effect.succeed([

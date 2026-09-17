@@ -31,7 +31,7 @@ const isDeckCompanion = (node: AppGraphNode.Node): node is DeckCompanion =>
 
 export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
-  return useConnections(graph, GraphNode.RootId, AppNode.companionRelation())
+  return useConnections(graph, GraphNode.RootId, AppNode.companion)
     .filter(isDeckCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 };

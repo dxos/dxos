@@ -45,7 +45,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         type: Channel.Channel,
         connector: (channel, get) => {
           const [callManager] = get(callManagerAtom);

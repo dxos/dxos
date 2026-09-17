@@ -77,7 +77,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           const companions = Function.pipe(
             AppGraph.getNode(graph, input.id),
             Option.map((node) =>
-              AppGraph.getConnections(graph, node.id, AppNode.companionRelation())
+              AppGraph.getConnections(graph, node.id, AppNode.companion)
                 .filter(DeckSchema.isPlankCompanion)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),

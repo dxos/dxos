@@ -65,7 +65,7 @@ describe('SearchPlugin', () => {
 
     expect(client.initialized).toBe(false);
     const companion = registry
-      .get(builder.graph.connections(GraphNode.RootId, AppNode.companionRelation()))
+      .get(builder.graph.connections(GraphNode.RootId, AppNode.companion))
       .find((node) => node.id.endsWith(Attention.linkedSegment('search')));
     expect(companion).toBeDefined();
     expect(companion?.data).toBeNull();

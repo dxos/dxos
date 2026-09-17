@@ -33,7 +33,7 @@ export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
       return;
     }
 
-    const atom = graph.connections(id, AppNode.companionRelation());
+    const atom = graph.connections(id, AppNode.companion);
     const update = () => {
       const next = registry
         .get(atom)

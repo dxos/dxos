@@ -33,9 +33,9 @@ export default Capability.makeModule(
       urlGrammar: {
         anchorKey: UrlPath.WORKSPACE_KEY,
         linkedKey: UrlPath.COMPANION_KEY,
-        linkedRelation: AppNode.companionRelation(),
+        linkedRelation: AppNode.companion,
       },
-      expandWithChildren: [AppNode.companionRelation()],
+      expandWithChildren: [AppNode.companion],
     });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());

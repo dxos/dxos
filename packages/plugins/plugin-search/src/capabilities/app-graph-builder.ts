@@ -38,7 +38,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'spaceSearch',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: (_node, get) =>
           Effect.sync(() => {

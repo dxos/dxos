@@ -34,7 +34,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'commentsCompanion',
-        relation: AppNode.companionRelation(),
+        relation: AppNode.companion,
         match: (node) => (getCommentConfig(capabilities, node.data) ? Option.some(node) : Option.none()),
         connector: () =>
           Effect.succeed([

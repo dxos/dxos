@@ -45,7 +45,7 @@ export default Capability.makeModule(
 
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
-      relation: AppNode.companionRelation(),
+      relation: AppNode.companion,
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {

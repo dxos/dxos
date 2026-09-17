@@ -305,14 +305,13 @@ export const makeObject = ({
 //
 
 /** The relation companions hang off their plank or the root through. */
-export const companionRelation = (direction: AppGraphNode.RelationDirection = 'outbound'): AppGraphNode.Relation =>
-  AppGraphNode.relation('companion', direction);
+export const companion: AppGraphNode.Relation = AppGraphNode.relation('companion');
 
 /**
  * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
  * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
  * addressable as `companion/<variant>` in the URL. Return it from an extension declared with
- * {@link companionRelation}.
+ * {@link companion}.
  */
 export const makeCompanion = <TData = string>({
   variant,
@@ -344,7 +343,7 @@ export const makeCompanion = <TData = string>({
  */
 export type DeckCompanionMount = 'always' | 'selected' | 'open';
 
-/** Build a deck-level (workspace-wide) companion panel node, returned from a root extension with {@link companionRelation}. */
+/** Build a deck-level (workspace-wide) companion panel node, returned from a root extension with {@link companion}. */
 export const makeDeckCompanion = <TData = any>({
   id,
   label,
