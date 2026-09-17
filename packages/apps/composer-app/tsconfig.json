@@ -94,6 +94,9 @@
       "path": "../../devtools/devtools"
     },
     {
+      "path": "../../e2e/perf-harness"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {

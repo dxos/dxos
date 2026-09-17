@@ -137,11 +137,12 @@ export const RESULT_PID_PATTERN = /<result pid=\d+>/;
  * Matches the label of a markdown link whose text is an object mnemonic (the last 6 Crockford
  * base-32 chars of an EntityId, uppercased) — the form task refs take in a rendered checklist.
  * The mnemonic is a projection of an id that {@link ENTITY_ID_PATTERN} already canonicalizes, so
- * it would otherwise drift with the id while its URI stayed normalized. The `](` lookahead keeps
- * six ordinary uppercase letters in prose from matching.
- * @example [KCNT8N](
+ * it would otherwise drift with the id while its URI stayed normalized. The `](echo:/` lookahead
+ * keeps six ordinary uppercase letters, and any non-ECHO link, from matching — two unrelated links
+ * canonicalized to the same label would otherwise share a fixture key.
+ * @example [KCNT8N](echo:/
  */
-export const MNEMONIC_LINK_LABEL_PATTERN = /\[[0-9A-HJKMNP-TV-Z]{6}\](?=\()/;
+export const MNEMONIC_LINK_LABEL_PATTERN = /\[[0-9A-HJKMNP-TV-Z]{6}\](?=\(echo:\/)/;
 
 /**
  * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
