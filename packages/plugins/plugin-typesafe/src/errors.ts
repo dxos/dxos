@@ -13,3 +13,9 @@ export class MissingCredentialError extends BaseError.extend(
     super({ context: { source: 'typesafe.ai' }, cause: options?.cause });
   }
 }
+
+/** The connector form was submitted without a usable API key. */
+export class MissingApiKeyError extends BaseError.extend(
+  'MissingApiKeyError',
+  'TypeSafe connection requires an API key',
+) {}

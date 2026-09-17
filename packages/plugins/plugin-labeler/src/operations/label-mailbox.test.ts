@@ -23,25 +23,31 @@ import { LabelerOperation } from '#types';
  * needs pinning here is the other half — that an answer becomes the right tag on the right message,
  * and that a re-run asks about nothing.
  */
-const ANSWERS: Record<string, Record<string, DecisionModel.Answer>> = {
+// The choice key is the tag's URI (labels are not unique), so the fixture learns it when the space
+// is seeded rather than hard-coding a label.
+let billingTagUri = '';
+
+const ANSWERS = (): Record<string, Record<string, DecisionModel.Answer>> => ({
   'Can you approve the invoice today?': {
     needsReply: { type: 'noul', noul: 0.95 },
     urgency: { type: 'score', score: 1.9, confidence: 0.9 },
-    label: { type: 'choice', choice: 'Billing', confidence: 0.9 },
+    label: { type: 'choice', choice: billingTagUri, confidence: 0.9 },
   },
   'July newsletter': {
     needsReply: { type: 'noul', noul: 0.05 },
     urgency: { type: 'score', score: 0.1, confidence: 0.9 },
     // Below the threshold, so nothing is applied rather than a guess.
-    label: { type: 'choice', choice: 'Billing', confidence: 0.2 },
+    label: { type: 'choice', choice: billingTagUri, confidence: 0.2 },
   },
-};
+});
+
+const SUBJECTS = ['Can you approve the invoice today?', 'July newsletter'];
 
 const decisionModelLayer = DecisionModel.layer({
   evaluate: (request) =>
     Effect.sync(() => {
       const subject = String((request.state as { subject?: string }).subject);
-      return { answers: ANSWERS[subject] ?? {} };
+      return { answers: ANSWERS()[subject] ?? {} };
     }),
 });
 
@@ -58,11 +64,12 @@ const seedMailbox = Effect.fnUntraced(function* () {
   const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
   const feed = yield* Database.load(mailbox.feed);
   // A user tag — the vocabulary the choice question is asked against.
-  db.add(Obj.make(Tag.Tag, { label: 'Billing' }));
+  const billing = db.add(Obj.make(Tag.Tag, { label: 'Billing' }));
+  billingTagUri = Obj.getURI(billing).toString();
   yield* Effect.promise(() =>
     db.appendToFeed(
       feed,
-      Object.keys(ANSWERS).map((subject, index) =>
+      SUBJECTS.map((subject, index) =>
         Message.make({
           created: new Date(Date.parse('2026-07-01T00:00:00.000Z') + index * 60_000).toISOString(),
           sender: { email: 'someone@example.com' },

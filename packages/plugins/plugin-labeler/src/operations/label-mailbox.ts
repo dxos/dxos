@@ -58,16 +58,18 @@ const handler = LabelerOperation.LabelMailbox.pipe(
 
       // The user's own tags are the choices; canonical and provider tags are not the user's vocabulary
       // and are owned by sync.
+      // Keyed by the tag's own URI, not its label: nothing stops two user tags sharing a label, and
+      // a label used as the choice key would collapse them and apply whichever won the map.
       const tags = (yield* Database.query(Filter.type(Tag.Tag)).run).filter((tag) => Tag.isUserTag(tag));
-      const byLabel = new Map(tags.map((tag) => [tag.label, Obj.getURI(tag).toString()]));
-      const criteria = Object.fromEntries(tags.map((tag) => [tag.label, tag.label]));
+      const tagUris = tags.map((tag) => Obj.getURI(tag).toString());
+      const criteria = Object.fromEntries(tags.map((tag, index) => [tagUris[index], tag.label]));
 
       const needsReplyTag = yield* Effect.promise(() => findOrCreateLabelerTag(db, 'needsReply'));
       const urgentTag = yield* Effect.promise(() => findOrCreateLabelerTag(db, 'urgent'));
       const needsReplyUri = Obj.getURI(needsReplyTag).toString();
       const urgentUri = Obj.getURI(urgentTag).toString();
       // A message carrying any tag this run could apply has been labelled already.
-      const applied = new Set([needsReplyUri, urgentUri, ...byLabel.values()]);
+      const applied = new Set([needsReplyUri, urgentUri, ...tagUris]);
 
       const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
       const pending = messages
@@ -106,7 +108,8 @@ const handler = LabelerOperation.LabelMailbox.pipe(
 
         const verdict = toVerdict(decisions, threshold);
         log.info('label: verdict', { subject: context.subject, decisions, verdict });
-        const labelUri = verdict.label ? byLabel.get(verdict.label) : undefined;
+        // The choice key IS the tag's URI, so a confident answer resolves without a lookup by label.
+        const labelUri = verdict.label && tagUris.includes(verdict.label) ? verdict.label : undefined;
         if (labelUri) {
           Tagging.set(message, labelUri, { index });
           labelled += 1;

@@ -11,6 +11,7 @@ import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { TYPESAFE_API_KEYS_URL, TYPESAFE_CONNECTOR_ID, TYPESAFE_SOURCE } from '../constants.ts';
+import { MissingApiKeyError } from '../errors.ts';
 
 const TypeSafeTokenForm = ConnectorSpec.TokenForm({
   title: 'API key',
@@ -30,7 +31,7 @@ export const typeSafeCredentialForm = {
   onValidate: ({ values }: { values: TypeSafeTokenFormValues; connector: ConnectorRef }) =>
     Effect.gen(function* () {
       if (values.token.trim().length === 0) {
-        return yield* Effect.fail(new Error('TypeSafe connection requires an API key.'));
+        return yield* Effect.fail(new MissingApiKeyError());
       }
     }),
   onSubmit: ({ values, connector }: { values: TypeSafeTokenFormValues; connector: ConnectorRef }) =>
@@ -38,7 +39,7 @@ export const typeSafeCredentialForm = {
       // Trim defensively: onValidate is optional and callers bypass it in tests.
       const token = values.token.trim();
       if (token.length === 0) {
-        return yield* Effect.fail(new Error('TypeSafe connection requires an API key.'));
+        return yield* Effect.fail(new MissingApiKeyError());
       }
 
       const accessToken = Obj.make(AccessToken.AccessToken, {

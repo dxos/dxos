@@ -89,7 +89,6 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
