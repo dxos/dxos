@@ -281,6 +281,11 @@ export class DocumentsSynchronizer extends Resource {
     }
     using lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
     if (!lease.loaded) {
+      // Gone from this host (e.g. wiped by garbage collection); its next save, if any, queues it again.
+      const [storedHeads] = await this._params.automergeHost.getHeads([documentId]);
+      if (storedHeads === undefined) {
+        return;
+      }
       try {
         await asyncTimeout(lease.waitUntilReady(), RELOAD_TIMEOUT);
       } catch (err) {
