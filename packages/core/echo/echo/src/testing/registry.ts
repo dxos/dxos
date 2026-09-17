@@ -30,7 +30,7 @@ export const registryLayerNoop: Layer.Layer<Registry.Service> = Layer.succeed(Re
   query: ((_queryOrFilter: unknown) => ({
     results: [],
     entries: [],
-    sources: [{ source: 'local', state: 'ready' }],
+    sources: [{ source: 'registry', state: 'ready' }],
     run: async () => [],
     runEntries: async () => [],
     runSync: () => [],

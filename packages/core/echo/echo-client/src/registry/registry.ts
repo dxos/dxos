@@ -288,7 +288,7 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
 
   /** The registry is in memory, so every read is the whole answer. */
   get sources(): readonly QueryResult.SourceStatus[] {
-    return [{ source: 'local', state: 'ready' }];
+    return [{ source: 'registry', state: 'ready' }];
   }
 
   run(): Promise<T[]> {
@@ -312,7 +312,7 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
       // `executeQuery` only knows `Entity.Unknown`; the caller's `T` is verified by `#query`'s own
       // filter/select AST at construction time, not by the compiler.
       result: entity as T,
-      resolution: { source: 'local', time: 0 },
+      resolution: { source: 'registry', time: 0 },
     }));
   }
 

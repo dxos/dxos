@@ -51,7 +51,7 @@ export class RegistryQuerySource implements QuerySource {
 
   getStatus(): QueryResult.SourceStatus | undefined {
     return this.#query !== undefined && this.#isValidSourceForQuery(this.#query)
-      ? { source: 'local', state: 'ready' }
+      ? { source: 'registry', state: 'ready' }
       : undefined;
   }
 
@@ -112,7 +112,7 @@ export class RegistryQuerySource implements QuerySource {
           id: object.id,
           result: object,
           match: { rank: 1 },
-          resolution: { source: 'local' as const, time: 0 },
+          resolution: { source: 'registry' as const, time: 0 },
         },
       ];
     });

@@ -48,7 +48,7 @@ export type Entry<T> = {
 /**
  * Where query results come from.
  */
-export type Source = 'remote' | 'local' | 'index';
+export type Source = 'remote' | 'local' | 'index' | 'registry';
 
 /**
  * Whether a source has answered the current query: `pending` until its first answer, `failed` when
