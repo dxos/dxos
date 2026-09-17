@@ -704,6 +704,8 @@ export interface HostLoadedStats {
   readonly documentsTotal: number;
   /** Active reactive queries registered with the host, across every space. */
   readonly queriesTotal: number;
+  /** Documents something on the host is using right now, across every space; the rest of `documentsTotal` is idle cache. */
+  readonly leases: number;
 }
 
 /**
