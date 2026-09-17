@@ -16,6 +16,7 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
+import * as Collection from './collection.ts';
 import * as GraphEdge from './GraphEdge.ts';
 import * as GraphModel from './GraphModel.ts';
 import * as GraphNode from './GraphNode.ts';
@@ -134,8 +135,7 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   outgoing(id: string): readonly Edge[];
 }
 
-/** A node to keep loaded with its structural descendants to `depth` levels, or all of them when absent. */
-export type Region = { readonly id: string; readonly depth?: number };
+export type Region = Collection.Region;
 
 /**
  * Names nodes the builder must keep loaded; the implementor derives it from state it already keeps. Once any
@@ -272,7 +272,7 @@ export class GraphBuilder<
   _unsubscribeRetention?: CleanupFn;
   /** The regions the last collection ran for, normalized; collection is skipped while they hold. */
   _collectedRegions?: string;
-  readonly _released = new Set<string>();
+  readonly _released: Collection.Released;
   _collectScheduled = false;
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
@@ -311,6 +311,7 @@ export class GraphBuilder<
     this._decorateNode = decorateNode ?? ((node) => node);
     this._unchanged = unchanged ?? (() => false);
     this._structural = structural ?? (() => true);
+    this._released = new Collection.Released(this._registry);
     this._store = store(
       {
         onExpand: (id, relation) => this._onExpand(id, relation),
@@ -385,9 +386,7 @@ export class GraphBuilder<
       true,
     );
     this._store.addNodes(nodes);
-    for (const nodeId of [...ids, ...currentInlineIds]) {
-      this._released.delete(nodeId);
-    }
+    this._released.flushed(key, [...ids, ...currentInlineIds]);
     this._store.addEdges(nodes.map((node) => ({ source: id, target: node.id, relation })));
     if (ids.length > 0) {
       const sortedIds = [...nodes]
@@ -433,64 +432,33 @@ export class GraphBuilder<
       return;
     }
 
-    const asked = new Map<string, number>();
-    for (const retention of this._retentions) {
-      for (const { id, depth = Infinity } of this._registry.get(retention.retained)) {
-        asked.set(id, Math.max(asked.get(id) ?? -1, depth));
-      }
-    }
-    const regions = [...asked]
-      .map(([id, depth]) => primaryKey(id, String(depth)))
-      .sort()
-      .join(PRIMARY);
+    const asked = Collection.combine(this._retentions.map((retention) => this._registry.get(retention.retained)));
+    const regions = Collection.key(asked);
     if (regions === this._collectedRegions) {
       return;
     }
     this._collectedRegions = regions;
 
-    const released = this._unretained(asked);
+    const released = Collection.unretained({
+      asked,
+      outgoing: (id) => this._store.outgoing(id),
+      structural: this._structural,
+      connectors: this._connectorStates(),
+    });
     if (released.size > 0) {
       release(this, [...released]);
     }
   }
 
-  /**
-   * Walks the graph from the root, which always stays with its children, carrying how many structural levels
-   * each node's retention leaves below it. A node reached with none left is unretained, and so is everything it alone
-   * leads to.
-   */
-  _unretained(asked: ReadonlyMap<string, number>): Set<string> {
-    const budgets = new Map([[GraphNode.RootId, Math.max(1, asked.get(GraphNode.RootId) ?? 1)]]);
-    const pending = [GraphNode.RootId];
-    while (pending.length > 0) {
-      const id = pending.pop()!;
-      const budget = budgets.get(id)!;
-      for (const { target, relation } of this._store.outgoing(id)) {
-        const step = this._structural(relation) ? 1 : 0;
-        const next = budget < 0 ? -1 : Math.max(-1, budget - step, asked.get(target) ?? -1);
-        const current = budgets.get(target);
-        if (current === undefined || next > current) {
-          budgets.set(target, next);
-          pending.push(target);
-        }
-      }
+  *_connectorStates(): Iterable<Collection.ConnectorState> {
+    for (const [key, outputs] of this._connectorPrevious) {
+      yield {
+        key,
+        source: relationFromConnectorKey(key).id,
+        outputs,
+        inline: this._connectorPreviousInlineIds.get(key) ?? [],
+      };
     }
-
-    const released = new Set([...budgets].filter(([, budget]) => budget < 0).map(([id]) => id));
-    // A retained connector whose own outputs all stay would never re-emit inline children released from under it.
-    let kept = true;
-    while (kept) {
-      kept = false;
-      for (const [key, inline] of this._connectorPreviousInlineIds) {
-        const outputs = this._connectorPrevious.get(key) ?? [];
-        if (!released.has(relationFromConnectorKey(key).id) && outputs.every((id) => !released.has(id))) {
-          for (const id of inline) {
-            kept = released.delete(id) || kept;
-          }
-        }
-      }
-    }
-    return released;
   }
 
   /**
@@ -600,6 +568,7 @@ export class GraphBuilder<
 
   _onRemoveNode(id: string): void {
     this._onRemoveNodes([id]);
+    this._released.removed(id);
   }
 
   _onRemoveNodes(ids: readonly string[]): void {
@@ -852,6 +821,9 @@ export const flush = async (builder: Any): Promise<void> => {
  */
 export const wasReleased = (builder: Any, id: string): boolean => builder._released.has(id);
 
+/** Changes whenever the answer {@link wasReleased} gives may have. */
+export const releasedVersion = (builder: Any): Atom.Atom<number> => builder._released.version;
+
 /**
  * Unloads the nodes and everything the builder remembers about them: expansion subscriptions, the
  * per-connector diff state, and provenance. The nodes leave the store outright rather than being
@@ -863,16 +835,16 @@ export const wasReleased = (builder: Any, id: string): boolean => builder._relea
  */
 export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
+  builder._released.add(released, builder._connectorStates());
   for (const [key, previous] of [...builder._connectorPrevious]) {
-    // A connector rooted at a released node, or one that produced one. The second case matters:
-    // its diff state still claims the node was emitted, so leaving it in place would mean the
-    // connector never re-emits and the node never comes back. Both tear down to "never expanded".
-    const inline = builder._connectorPreviousInlineIds.get(key) ?? [];
-    if (
-      released.has(relationFromConnectorKey(key).id) ||
-      previous.some((id) => released.has(id)) ||
-      inline.some((id) => released.has(id))
-    ) {
+    // A connector left naming a released node would never re-emit it, so it tears down to "never expanded".
+    const state = {
+      key,
+      source: relationFromConnectorKey(key).id,
+      outputs: previous,
+      inline: builder._connectorPreviousInlineIds.get(key) ?? [],
+    };
+    if (Collection.tornDown(released, state)) {
       builder._connectorPrevious.delete(key);
       builder._connectorPreviousArgs.delete(key);
       builder._connectorPreviousInlineIds.delete(key);
@@ -893,7 +865,6 @@ export const release = (builder: Any, ids: readonly string[]): void => {
     }
   }
 
-  ids.forEach((id) => builder._released.add(id));
   builder._onRemoveNodes(ids);
   builder._store.release(ids);
 };

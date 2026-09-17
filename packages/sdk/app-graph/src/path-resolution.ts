@@ -277,7 +277,7 @@ const resolveLinked = async (
   return match?.id ?? null;
 };
 
-/** A companion's segment carries this prefix so it shares attention with its owner; the variant follows it. */
+/** A companion's segment carries this prefix so it shares attention with its owner; mirrors `LINKED_PREFIX` in `@dxos/react-ui-attention`'s `Attention.ts`. */
 const LINKED_PREFIX = '~';
 
 const companionVariant = (id: string): string => {

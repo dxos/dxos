@@ -483,6 +483,50 @@ describe('retention', () => {
     expect(children('root/w1')).to.deep.equal([]);
   });
 
+  const changing = async () => {
+    const harness = setup();
+    const { builder, registry } = harness;
+    const workspaces = Atom.make(['w']).pipe(Atom.keepAlive);
+    const items = Atom.make(['a', 'b']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: (): GraphBuilder.ModelNodeArg[] => [],
+            onSome: (source) =>
+              (source.id === GraphNode.RootId ? get(workspaces) : source.id === 'root/w' ? get(items) : []).map(
+                (id) => ({ id }),
+              ),
+          }),
+        ),
+    });
+    await expand(harness, [GraphNode.RootId, 'root/w']);
+    GraphBuilder.setRetention(builder, [{ retained: Atom.make([]) }]);
+    await GraphBuilder.flush(builder);
+    return { ...harness, workspaces, items, version: () => registry.get(GraphBuilder.releasedVersion(builder)) };
+  };
+
+  test('a released node its connector no longer emits stops reporting as released', async () => {
+    const harness = await changing();
+    const { builder, registry, items, version } = harness;
+    expect(GraphBuilder.wasReleased(builder, 'root/w/a')).to.be.true;
+
+    const before = version();
+    registry.set(items, ['b']);
+    await expand(harness, ['root/w']);
+    expect(GraphBuilder.wasReleased(builder, 'root/w/a')).to.be.false;
+    expect(GraphBuilder.wasReleased(builder, 'root/w/b')).to.be.false;
+    expect(version()).to.be.greaterThan(before);
+  });
+
+  test('released nodes below a removed node stop reporting as released', async () => {
+    const { builder, registry, workspaces } = await changing();
+    registry.set(workspaces, []);
+    await GraphBuilder.flush(builder);
+    expect(GraphBuilder.wasReleased(builder, 'root/w/a')).to.be.false;
+  });
+
   test('flush waits for a collection the flush itself triggers', async () => {
     const harness = setup();
     const { builder, registry, children } = harness;

@@ -310,6 +310,7 @@ export {
   explore,
   flush,
   release,
+  releasedVersion,
   removeExtension,
   setRetention,
   wasReleased,
