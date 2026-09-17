@@ -2880,6 +2880,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -3056,6 +3059,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -3405,6 +3411,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../debug
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
@@ -3754,6 +3763,9 @@ importers:
 
   packages/common/storybook-utils:
     dependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../effect
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.115(effect@4.0.0-rc.115)(react@19.2.7)(scheduler@0.27.0)

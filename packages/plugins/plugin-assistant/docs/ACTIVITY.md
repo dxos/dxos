@@ -577,135 +577,181 @@ The panel hosts the page docked (deck drawer) or floating (`DebugPanelStatus` mo
 selection in view state, and — because the host is not space-bound — pages resolve their space
 with `useActiveSpace()` as `TracePanelSurface` and the devtools pages do.
 
-## 8. Proposal: the activity timeline
+## 8. Proposal: the Gantt as the dashboard
 
-One space-wide gantt of everything the agent runtime did and is doing, grouped by project, then
-session, then task — with the trace detail of the `TracePanel` one click away.
+One chart is the dashboard. `Gantt` grows from a drawing of lanes into the surface itself — with
+its own toolbar, a collapsible hierarchical legend, a details pane and live behaviour — and every
+host (the project article, the devtools page) is a thin container that feeds it. What makes that
+possible is a change on the data side first: activity is stamped with the project and the task it
+serves at the source, so the chart groups by fact rather than by inference.
 
-### 8.1 Scope
+### 8.1 Correlating activity with a project and a task
 
-- **Space-scoped**, like both existing views; the active space, with a space selector left for
-  later.
-- **Time-windowed**: the trace feed only grows, so the view takes a window (last hour / day / all)
-  and the builder drops messages outside it before building spans. This is the one new cost
-  control the existing views lack.
-- Rows, top to bottom:
-  1. **Project groups** — one per project that has at least one chat with activity in the window.
-  2. **Session lanes** under their project, including sessions **without** a checklist (a plain
-     chat that ran an agent turn is activity).
-  3. **Task lanes and sub-sessions** exactly as `buildSessionTimeline` produces them today.
-  4. An **"Unfiled"** group for sessions not under any project.
-  5. **Trigger groups** — one per trigger (routine) with a run in the window, labelled by the
-     trigger's name or its runnable's; under it one lane per run, spanning the run's
-     `operation.start`..`operation.end` (or the live process's `startedAt`..now), status from the
-     span outcome / process state, with the live progress meter's `current/total` shown on a
-     running lane. A nightly sync that ran four times is one group with four bars.
-  6. An **"Operations"** group for every other top-level process — UI-invoked operations and
-     anything the dispatcher did not start — one lane per process, hidden by default behind a
-     toolbar toggle because most are sub-second. This is what makes it a runtime dashboard rather
-     than a second project chart.
+Today the correlation is a chain of joins, each with a weakness (§1.4, §2.3):
 
-### 8.2 Data layer
+| From → to              | Today's join                                                                                      | Weakness                                                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| process → session      | `TargetAnnotation` / `environment.conversation` (live) or the agent's `meta.conversation` (trace) | Children carry neither in the trace; needs the parent's pid in the window.                                                                                           |
+| session → project      | `Chat.peekProject` — the ECHO parent walk                                                         | Fine for membership; unavailable to a trace reader without loading chats.                                                                                            |
+| session → tasks        | `chat.tasks`                                                                                      | Membership only; says nothing about _when_ a task was worked.                                                                                                        |
+| event → task           | `task.statusChanged` cutting the session into time segments; `delegationSpawned` for sub-agents   | Temporal inference: every event between two status moves is "that task's". A tool call for another task, or a move written by someone else, lands in the wrong lane. |
+| process → project/task | nothing                                                                                           | A triggered sync or a UI operation can never be filed under a project.                                                                                               |
 
-Reuse, do not fork. `buildSessionTimeline` already does the hard join; it gains one option and is
-composed, per project, by a new builder:
+**Proposal: a work context, fixed at spawn, inherited, and mirrored into the trace.**
+
+`Process.Environment` — already "what the process is running on behalf of, fixed at spawn and
+inherited by child processes" — gains two fields beside `space` and `conversation`:
 
 ```ts
-// react-ui-trace/src/session-timeline/activity-timeline.ts
-interface BuildActivityTimelineInput {
-  traceMessages: readonly Trace.Message[];
-  processes?: readonly Process.Info[];
-  chats: readonly Chat.Chat[];        // every chat in the space
-  tasks: readonly Task.Task[];        // every task in the space (the ledgers' union)
-  projects: readonly Project.Project[];
-  triggers?: readonly Trigger.Trigger[];
-  window?: { start: number; end?: number };
-  now?: number;
+interface Environment {
+  space?: SpaceId;
+  conversation?: URI; // the feed
+  project?: URI; // the Project the work is filed under
+  task?: URI; // the Task the work is for
 }
-buildActivityTimeline(input): SessionTimeline   // same output type; lanes gain a 'group' kind
 ```
 
-Steps:
+`createProcessTraceService` stamps the whole environment onto `Trace.Meta` (today it copies only
+`space`), so `Meta` gains `project` and `task` refs beside `conversation` and `trigger`. Nothing
+about persistence changes: the environment is already persisted with the process record and
+already inherited on spawn.
 
-1. Window the trace **per event**, not per message: flatten, keep every event with
-   `timestamp >= window.start`, and keep as well the begin-type events (`operation.start`,
-   `agentRequestBegin`, `task.statusChanged` → `started`) of spans and segments that are still open
-   at `window.start`, so a run crossing the boundary keeps its bar and its task attribution. A
-   message's events are batched, so filtering by one timestamp per message would drop events inside
-   the window.
-2. Partition chats by `Chat.peekProject(chat)?.id` → project groups + unfiled.
-3. For each partition call `buildSessionTimeline({ traceMessages, processes, chats, tasks, now,
-includeEmptySessions: true })` and re-parent its root lanes under a **group lane**
-   `{ id: 'project:<id>', kind: 'group', label, status: worst-of-children, start/end: hull }`.
-4. Add the trigger groups: every top-level span whose `meta.trigger` resolves (plus live processes
-   matched by `TargetAnnotation` once gap 10 is closed) is a run lane under a `group` lane per
-   trigger, labelled from the `Trigger` object (`useQuery` on `Trigger.Trigger`); status from the
-   span's `outcome` or the process `State`; the `ProgressRegistry` entry for a running pid supplies
-   `current/total` for the lane's meta column.
-5. Add the operations group as **process lanes**: the candidates are the top-level `Process.Info`s
-   and the traced top-level spans whose pid is neither a session pid (`laneByPid`, exposed by the
-   builder rather than recomputed) nor a triggered run. A live process and the span with its pid
-   are one candidate (merged by pid — the process supplies state and `startedAt`, the span the
-   events); two traced spans with the same pid stay two candidates, since a resumed process is a
-   second run. Each becomes a session-kind lane `process:<pid>` labelled `params.name ?? key`,
-   status from `State` (`RUNNING | HYBERNATING` → running, `SUCCEEDED` → done, `FAILED` → failed,
-   otherwise pending), start/end from `startedAt`/`completedAt` or the span; its children are
-   process lanes too, `parentId` from `parentPid`, and are selected like any lane.
-6. Merge lanes and markers, namespacing every id by partition and rewriting every reference to one
-   — `parentId`, `blockedOn`, `delegatedFrom.laneId` / `markerId`, `marker.laneId` — so nothing
-   dangles; compute the range over the union.
+Who sets what — each at the one place that knows:
 
-One change to `buildSessionTimeline`: an `includeEmptySessions` option that stops skipping chats
-with an empty checklist (default `false`, so the project chart is unchanged). One addition: the
-return value carries `laneByPid` so callers can tell which processes are already drawn.
+```mermaid
+flowchart TB
+  D["DelegateTaskToChat<br/>files the chat under the project"] --> AS
+  AS["AgentService.getSession<br/>environment: { space, conversation, project: Chat.peekProject(chat) }"] --> AG[AgentProcess]
+  AG -->|"tool call: invokeFiber(op, { environment: { task: currentTask } })"| TOOL[tool process]
+  AG -->|"DelegationStrategy: invokeFiber(RunInstructions, { environment: { task } })"| SUB[sub-agent process]
+  SUB -->|inherits project + task| SUBTOOL[its tool processes]
+  TD["TriggerDispatcher<br/>environment: { space, project?: routine's project }, traceMeta.trigger"] --> RUN[triggered run]
+  AG -. "currentTask = last task.statusChanged → started this process wrote" .-> AG
+  TS[createProcessTraceService] -->|"meta = { …environment, pid, parentPid, trigger }"| FEED[(trace feed)]
+```
 
-Hook: `useActivityTimeline(space, { window })` — `useTraceMessages` (debounced), the process
-tree atom (debounced), `useQuery` for chats, tasks and projects, and the 5 s `now` tick, mirroring
-`useSessionTimeline`.
+- **Project**: `AgentService.getSession` resolves it from the chat (`Chat.peekProject`) when it
+  spawns the agent; a triggered routine that belongs to a project (a project's sync) gets it from
+  the dispatcher; a UI operation invoked from a project's surface can pass it explicitly. Inherited
+  by every descendant.
+- **Task**: the delegation strategy already knows the task it spawns a sub-agent for and already
+  calls `invokeFiber(RunInstructions, …)`, which accepts `environment` — so the sub-agent and
+  everything under it carries the task. For work the agent does _in-session_, the agent process
+  tracks its **current task** — the task of the last `task.statusChanged → started` it wrote — and
+  stamps it on each tool process it spawns. An in-session task thus still has no process of its
+  own, but every tool call made while it was current names it, which is exactly what the time
+  segments were approximating.
+- **Session** and **space**: unchanged (`conversation`, `space`), now also on children.
 
-### 8.3 Gantt changes
+What the stamp buys:
 
-The component is presentation-only and gets exactly what the group rows need:
+1. Every process and every event answers "which project, which task" directly. The dashboard's
+   grouping is a group-by on `meta.project` / `meta.task`, not a pid-chain walk; a project filter
+   or a task filter is exact; sessions without a project are simply those with none.
+2. The task row in a ledger can show its own activity — the events with `meta.task = id` — without
+   the project chart in between; a task's bar is the hull of those events plus its status history
+   (§4 item 5).
+3. Attribution errors become visible: a `task.statusChanged` whose `data.taskId` is not the
+   process's `meta.task` is an agent moving a task other than the one it was given, which is worth
+   a marker of its own.
+4. `buildTaskSegments` becomes the fallback for traces recorded before the stamp, not the primary
+   rule, and can be retired once old feeds age out of any window.
 
-- `GanttLaneKind` gains `'group'`. `orderRows` visits a group as a header row and recurses into its
-  children with `depth + 1`; a group draws a full-width hull bar in a subdued style and no nodes.
-  Sessions inside keep their rectangles.
-- `Gantt.Legend` indents by depth (already does) and renders group labels as headers.
-- Nothing else: dependency and delegation connectors already work across the ordered rows.
+The object-side edges stay as they are: `Chat` under its `Project`, `chat.tasks`, `TaskSet.tasks`
+remain the membership truth and the navigation routes; the stamp records _attribution_, which is
+a different question ("what was this process doing") from membership ("what is on the list").
 
-### 8.4 The devtools page
+### 8.2 The `Gantt` composite as the dashboard
 
-Owner: the data layer, chart and panel live in **`@dxos/react-ui-trace`** (presentation only);
-the devtools page and its capability wiring in **`plugin-assistant`**, which already hosts the
-`TracePanel` container, so the page adds no cross-plugin dependency beyond the
-`@dxos/compute/Project` type.
+The chart becomes a Radix-style composite whose parts a host can arrange, and whose `Root` owns
+everything the reader touches:
 
-- `containers/ActivityPanel/ActivityPanel.tsx` — `Panel.Root` with a toolbar (time window select,
-  group filter, "show processes" toggle, a link to the trace companion) and `Gantt` in a
-  `ScrollArea`. `onLaneSelect` hands back the chart's own lane shape, which carries no session, so
-  the panel resolves it through the timeline's lane of the same id (`lane.sessionId`, as
-  `ProjectPipeline` does) and opens that chat (`LayoutOperation.Open` on the chat's graph path);
-  `onMarkerSelect` likewise resolves the timeline's `Marker` by id, whose `detail` the builder sets to
-  the `FlatEvent`, and shows it in a `JsonHighlighter` below the
-  chart — the `TracePanel`'s details pane, reused.
-- `capabilities/app-graph-builder.ts` — a `whenDebugGroup` extension contributing an `Agents`
-  branch with one `Activity` page (`data: 'org.dxos.plugin.assistant.activity'`), positioned after
-  Devtools (10).
-- `capabilities/react-surface.ts` — `Surface.create` on `AppSurface.literal(AppSurface.Article,
-ACTIVITY)` rendering `ActivityPanel` with `useActiveSpace()`.
-- Story: `ActivityPanel.stories.tsx` over the `sub-agent-delegation.json` fixture plus a second
-  project's chats, and one with the simulated agent (`TracePanel/testing/simulated-agent.ts`).
+| Part            | Owns                                                                                                                                                                                               |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Gantt.Root`    | The timeline data, the time window, `now`, the selection (a lane or marker id, in view state when the host gives it a context id), collapsed groups, the shared axis.                              |
+| `Gantt.Toolbar` | Window (1 h / 24 h / all, with the range shown), a project/trigger filter fed from the groups, the "operations" toggle, expand/collapse all, a "follow now" toggle for live runs.                  |
+| `Gantt.Legend`  | The rows as a tree: groups collapsible, with the lane kind's glyph and status colour, tokens/tool counts as trailing columns (today's `Meta`), and the selection highlight.                        |
+| `Gantt.Chart`   | Bars, nodes, threads, dependency and delegation connectors, the `now` line; hover previews a marker; click selects; the selected lane's descendants and edges are emphasised, the rest dimmed.     |
+| `Gantt.Details` | The selection resolved: for a lane its subject (project, chat, task, trigger, process) with an "open" action the host supplies; for a marker its event (`Marker.detail`, the `FlatEvent`) as JSON. |
+
+The lane model gains what the parts need and loses the inference:
+
+```ts
+type Lane = {
+  id: string;
+  kind: 'group' | 'session' | 'task' | 'process';
+  label: string;
+  status: LaneStatus;
+  start?: number;
+  end?: number;
+  parentId?: string;
+  /** What the lane stands for, so selection resolves to an object without a side lookup. */
+  subject?: { kind: 'project' | 'trigger' | 'chat' | 'task' | 'process'; uri: string };
+  blockedOn?: string[];
+  delegatedFrom?: { laneId: string; markerId: string };
+  tokens?: TokenUsage;
+  toolCalls?: number;
+  /** Live progress for a running lane, from the ProgressRegistry. */
+  progress?: { current?: number; total?: number };
+};
+type Marker = { id; laneId; kind; timestamp; label; level?; detail?: unknown };
+```
+
+`sessionId` / `taskId` / `pid` fold into `subject`; `ProjectPipeline` reads
+`lane.subject.kind === 'chat'` where it read `sessionId`.
+
+Behaviour worth naming:
+
+- **Selection is one thing across the chart.** Clicking a legend row or a bar selects the lane;
+  clicking a node selects the marker. Selecting a group emphasises everything under it. The
+  details pane follows the selection; the host's open action (a chat's graph path, a task in its
+  ledger, a trigger's routine) is a second gesture, never a side effect of selecting.
+- **Groups collapse**, and a collapsed group keeps its hull bar so the row still says when it ran.
+  Collapsed state is per host context, in view state.
+- **Live** means the `now` line advances, running lanes extend to it, their `progress` shows on the
+  legend, and with "follow now" on the axis scrolls with it.
+- **One component, two hosts.** The project article shows the same `Gantt` with a single project's
+  sessions and no group rows; the devtools page shows every group. Nothing in the component knows
+  which it is.
+
+### 8.3 Data layer
+
+`buildActivityTimeline` (pure, in `@dxos/react-ui-trace`) becomes mostly a group-by once the
+stamp exists, with the joins of §2.3 as its fallback for unstamped traces:
+
+1. Window the trace per event, keeping the begin events of spans and segments still open at the
+   window's start.
+2. Partition events and processes by `meta.project` (fallback: the session's chat → `peekProject`);
+   one `group` lane per project, one "Unfiled" group.
+3. Within a partition, session lanes from `meta.conversation` (fallback: pid chain), task lanes from
+   `meta.task` (fallback: `buildTaskSegments`), sub-sessions from `delegationSpawned` as today —
+   `buildSessionTimeline` keeps doing this, taking the stamped meta into account first.
+4. Trigger groups from `meta.trigger`, one lane per run; process lanes for the remaining top-level
+   processes, live process and traced span merged by pid.
+5. Merge partitions, namespacing ids and rewriting every reference.
+
+`useActivityTimeline` subscribes to the trace (debounced), the process tree, chats, tasks,
+projects and triggers, ticks `now`, and applies the window before building.
+
+### 8.4 Host wiring
+
+- `plugin-assistant` contributes the devtools page: a `whenDebugGroup` node and an
+  `AppSurface.literal(Article, …)` surface rendering `Gantt.Root` with the activity timeline, the
+  selection in view state under the page's id, and open actions that resolve a `subject` to a
+  graph path (`LayoutOperation.Open`).
+- `plugin-projects`' `ProjectPipeline` renders the same `Gantt` over one project's sessions, open
+  action = the chat's project path, as it does now.
 
 ### 8.5 What the unified view does not do
 
 - It does not replace the `TracePanel`: the commit graph is the right shape for reading one
   process's event order; the gantt is the right shape for reading concurrency and attribution.
-  The page links to the companion for the former.
+  The details pane links a lane to the trace companion narrowed to its process.
 - It does not persist or aggregate: everything is derived per render from the feed, the process
-  tree and the objects, as today. A materialised activity index is out of scope until the window
-  filter proves insufficient.
-- It does not draw anything without a trace: a task that was never started has a lane but no bar,
-  exactly as in the project chart.
+  tree and the objects. A materialised activity index is out of scope until the window filter
+  proves insufficient.
+- It does not draw anything without a trace or a process: a task never started has a lane and no
+  bar.
 
 ## 9. Decisions
 
@@ -719,6 +765,15 @@ Taken 2026-09-16:
 5. Group rows drawn as hull bars.
 6. Gaps 1–3 in §4 are fixed in the runtime ahead of the panel, so the chart never has to guess a
    process's end or a child's session.
+
+Revised 2026-09-17:
+
+7. The `Gantt` composite is the dashboard (toolbar, collapsible legend, chart, details); hosts
+   only feed it. No separate `ActivityPanel` beyond a thin container (§8.2).
+8. Attribution is stamped, not inferred: `Process.Environment` gains `project` and `task`,
+   inherited by children and mirrored onto `Trace.Meta`; the agent stamps its current task on the
+   tool processes it spawns and the delegation strategy stamps the task on each sub-agent (§8.1).
+   The time-segment rule stays as the fallback for older traces.
 
 ## 10. Plan
 
@@ -761,9 +816,14 @@ package should know about (§8.4, and the split the `TracePanel` container alrea
    orphan sweep move tasks through `Task.update` and write `TaskStatusChanged`, so the trace sees
    every status move and the task's history gains an entry for each. `TriggerDispatcher` stamps the
    trigger's URI as `TargetAnnotation` at spawn, the way the agent stamps its chat, so a live
-   triggered process is attributable before it has written a single event. Tests in
-   `compute-runtime` (lifecycle events on the three terminal paths, meta defaulting for a child)
-   and `assistant-toolkit` (a status event per supervisor move).
+   triggered process is attributable before it has written a single event. **The work context**
+   (§8.1): `Environment` gains `project` and `task`; `createProcessTraceService` mirrors the whole
+   environment onto `Meta`; `AgentService.getSession` sets `project` from the chat; the
+   delegation strategy passes `task` to `invokeFiber(RunInstructions, …)`; `AgentProcess` keeps
+   its current task and stamps it on each tool process it spawns. Tests in `compute-runtime`
+   (lifecycle events on the three terminal paths, meta mirroring and inheritance for a child) and
+   `assistant-toolkit` / `agent-runtime` (a status event per supervisor move; the task on a
+   spawned sub-agent and on a tool call made while a task is current).
    _Rationale_: these are the gaps the doc found (§4 items 1–3, 10); each is a few lines at the
    source and removes a heuristic downstream. They are also independently valuable — the
    `TracePanel` and the project chart read the same feed and get more accurate for free.
@@ -773,16 +833,21 @@ package should know about (§8.4, and the split the `TracePanel` container alrea
    stamped with date and actor; the move itself is only in prose. With this the project chart can
    draw a task bar from the object and the trace becomes the attribution to a session rather than
    the source of the times, which also covers views that have no trace at hand.
-3. **`Gantt`: a `group` lane kind.** `orderRows` visits a group as a header and recurses into its
-   children one level deeper; a group draws a hull bar and no nodes; the legend indents by depth as
-   it does now. Story. _Rationale_: the only presentational change the dashboard needs; dependency
-   and delegation connectors already work across ordered rows (§8.3), so nothing else in the
-   component moves.
+3. **`Gantt`: the composite.** The lane model of §8.2 (`kind` gains `group` and `process`,
+   `subject` replaces the id fields, `progress`, `Marker.detail`); `Root` owns selection, window,
+   `now` and collapsed groups (view state when given a context); `Toolbar`, a collapsible `Legend`,
+   `Chart` with selection emphasis and the `now` line, `Details`. `ProjectPipeline` moves to the new
+   props. Stories per part and one for the whole. _Rationale_: the chart is where the reader already
+   looks; giving it the controls and the details pane makes it the dashboard for every host instead
+   of a picture inside one, and keeps the project article and the devtools page the same component
+   (§8.2).
 4. **`buildSessionTimeline`: read the new facts, expose the joins.** Lane ends come from
    `process.exited` when present (falling back to the current end-event rule for old traces);
-   `includeEmptySessions` stops skipping chats with no checklist; `laneByPid` is returned so a
-   caller can tell which processes are already drawn; events that carry a `taskId` but no session
-   (a person's edit in the ledger) attach to the task's lane by id. Tests for each.
+   task attribution reads `meta.task` first and falls back to `buildTaskSegments`; sessions come
+   from `meta.conversation` on any event, not only the agent's; `includeEmptySessions` stops
+   skipping chats with no checklist; `laneByPid` is returned so a caller can tell which processes
+   are already drawn; events that carry a `taskId` but no session (a person's edit in the ledger)
+   attach to the task's lane by id. Tests for each, including one trace stamped and one not.
    _Rationale_: §4 items 6 and 8 are builder concerns, and the builder is where the delegation
    semantics are pinned — extending it keeps one source of truth for what a session lane means.
 5. **`buildActivityTimeline`.** Pure: windows the trace per event (keeping the begins of spans
@@ -800,13 +865,12 @@ package should know about (§8.4, and the split the `TracePanel` container alrea
    applied before the build. _Rationale_: mirrors `useSessionTimeline` so the two hooks read the
    same sources the same way; the window is the one new cost control (§4 item 7) and belongs at
    the subscription, before anything is built.
-7. **`ActivityPanel` and its page.** The panel in `@dxos/react-ui-trace` (toolbar with window,
-   group filter and the operations toggle; `Gantt` in a `ScrollArea`; the marker detail pane); the
-   container and the debug-root node in `plugin-assistant` (`whenDebugGroup` extension,
-   `AppSurface.literal(Article, …)` surface, lane → chat and marker → event resolution, translations).
-   Story over the fixtures plus a second project's chats. _Rationale_: the same presentational /
-   container split the `TracePanel` now has, so the panel is usable outside the app and the page
-   adds no dependency beyond `@dxos/compute/Project` (§8.4).
+7. **The devtools page.** A thin container in `plugin-assistant`: the debug-root node
+   (`whenDebugGroup`), the `AppSurface.literal(Article, …)` surface, `useActivityTimeline` into
+   `Gantt.Root` with the page's view-state context, and the open action resolving a `subject` to
+   a graph path (§8.4); translations. Story over the fixtures plus a second project's chats.
+   _Rationale_: with the composite carrying the UI, the page is wiring only, and adds no
+   dependency beyond `@dxos/compute/Project`.
 8. **Verify and ship.** Storybook for the panel and the group chart; the running app's debug panel
    with a delegated project, a mailbox sync and a plain operation on one axis; one changeset.
 
