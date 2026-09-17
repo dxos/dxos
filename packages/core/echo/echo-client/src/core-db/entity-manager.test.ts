@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -84,6 +85,34 @@ describe('DatabaseImpl', () => {
       expect(getObjectCore(text).docHandle?.url).to.eq(spaceRootHandle.url);
       // The first peer rebinds its object to space root too
       expect(getObjectCore(object).docHandle?.url).to.eq(spaceRootHandle.url);
+    });
+  });
+
+  describe('lazy loading', () => {
+    test('opening a space loads only the root until objects are asked for', async () => {
+      const tmpPath = createTmpPath();
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const spaceKey = PublicKey.random();
+      let rootUrl: string;
+      {
+        const peer = await testBuilder.createPeer({ storagePath: tmpPath });
+        const db = await peer.createDatabase(spaceKey);
+        range(5).forEach((index) => db.add(Obj.make(TestSchema.Expando, { name: `object-${index}` })));
+        await db.flush({ indexes: true });
+        rootUrl = db.rootUrl!;
+        await peer.close();
+      }
+
+      const peer = await testBuilder.createPeer({ storagePath: tmpPath });
+      const db = await peer.openDatabase(spaceKey, rootUrl);
+      // Long enough for a load queued on open to have happened.
+      await sleep(100);
+      expect(db.getLinkedDocHandles()).toHaveLength(0);
+
+      const objects = await db.query(Filter.type(TestSchema.Expando)).run();
+      expect(objects).toHaveLength(5);
+      expect(db.getLinkedDocHandles()).toHaveLength(5);
     });
   });
 

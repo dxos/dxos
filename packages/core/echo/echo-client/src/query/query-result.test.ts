@@ -9,8 +9,10 @@ import { describe, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Aggregate, Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { PublicKey } from '@dxos/keys';
+import { range } from '@dxos/util';
 
-import { EchoTestBuilder } from '../testing/index.ts';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
 import { QueryResultImpl } from './query-result.ts';
 
@@ -46,6 +48,63 @@ describe('QueryResultImpl', () => {
         { timeout: 20_000 },
       )
       .toBe(0);
+  });
+
+  test('a local write is in the results before the index has answered', async ({ expect }) => {
+    const builder = new EchoTestBuilder();
+    await builder.open();
+    try {
+      const peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const result = db.query(Filter.type(TestSchema.Person));
+      const unsubscribe = result.subscribe();
+      try {
+        expect(result.isComplete).toBe(false);
+        const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+        expect(result.runSync()).toEqual([alice]);
+
+        await expect.poll(() => result.isComplete).toBe(true);
+        expect(result.runSync()).toEqual([alice]);
+      } finally {
+        unsubscribe();
+      }
+    } finally {
+      await builder.close();
+    }
+  });
+
+  test('objects the tab has not loaded arrive from the index and complete the result', async ({ expect }) => {
+    const tmpPath = createTmpPath();
+    const builder = new EchoTestBuilder();
+    await builder.open();
+    try {
+      const spaceKey = PublicKey.random();
+      let rootUrl: string;
+      {
+        const peer = await builder.createPeer({ types: [TestSchema.Person], storagePath: tmpPath });
+        const db = await peer.createDatabase(spaceKey);
+        range(3).forEach((index) => db.add(Obj.make(TestSchema.Person, { name: `person-${index}` })));
+        await db.flush({ indexes: true });
+        rootUrl = db.rootUrl!;
+        await peer.close();
+      }
+
+      const peer = await builder.createPeer({ types: [TestSchema.Person], storagePath: tmpPath });
+      const db = await peer.openDatabase(spaceKey, rootUrl);
+      const result = db.query(Filter.type(TestSchema.Person));
+      const unsubscribe = result.subscribe();
+      try {
+        expect(result.isComplete).toBe(false);
+        expect(result.runSync()).toEqual([]);
+
+        await expect.poll(() => result.isComplete).toBe(true);
+        expect(result.runSync()).toHaveLength(3);
+      } finally {
+        unsubscribe();
+      }
+    } finally {
+      await builder.close();
+    }
   });
 
   test('a grouped count excludes the tombstones the presentation collapsed', async ({ expect }) => {
@@ -88,6 +147,7 @@ describe('QueryResultImpl', () => {
 const makeQueryContext = (results: SourceEntry[] = []): QueryContext => ({
   getResults: () => results,
   isSynchronous: () => true,
+  isComplete: () => true,
   changed: new Event<void>(),
   run: async () => [],
   update: () => {},

@@ -129,6 +129,9 @@ export class IndexQuerySource implements QuerySource {
   /** True while {@link _hydrateLoop} is running, so concurrent triggers coalesce instead of racing. */
   private _hydrating = false;
 
+  /** Set once the reactive stream's first response has been hydrated into {@link _results}. */
+  private _answered = false;
+
   /** Set when a new trigger arrives mid-pass, causing {@link _hydrateLoop} to run one more iteration. */
   private _hydratePending = false;
 
@@ -144,6 +147,7 @@ export class IndexQuerySource implements QuerySource {
 
   close(): void {
     this._open = false;
+    this._answered = false;
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
@@ -162,6 +166,14 @@ export class IndexQuerySource implements QuerySource {
   /** Index results are produced asynchronously from the host query stream. */
   isSynchronous(): boolean {
     return false;
+  }
+
+  isComplete(): boolean {
+    // A query the index does not serve has nothing outstanding here.
+    if (this._query === undefined || !queryTargetsSpacesOrFeeds(this._query)) {
+      return true;
+    }
+    return this._answered;
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
@@ -189,6 +201,7 @@ export class IndexQuerySource implements QuerySource {
     void this._hydrationCtx?.dispose().catch(() => {});
     this._hydrationCtx = undefined;
     this._results = [];
+    this._answered = false;
     this.changed.emit();
 
     // Don't start a reactive remote query until the query context is started (calls `open()`).
@@ -295,6 +308,12 @@ export class IndexQuerySource implements QuerySource {
           if (err != null && !(err instanceof RpcClosedError)) {
             log.catch(err);
           }
+          // Nothing more is coming on this stream; a subscriber waiting for the index must not wait
+          // for it forever.
+          if (this._reactiveQueryId === queryId) {
+            this._answered = true;
+            this.changed.emit();
+          }
         },
       },
     );
@@ -364,6 +383,7 @@ export class IndexQuerySource implements QuerySource {
         }
 
         this._results = results;
+        this._answered = true;
         this.changed.emit();
       } while (this._hydratePending);
     } catch (err: any) {

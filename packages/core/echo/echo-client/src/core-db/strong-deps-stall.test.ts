@@ -279,6 +279,8 @@ describe('Query pipeline strong-dependency stalls', () => {
       newDoc.links[depObjectId] = new A.RawString(orphanDepHandle.url);
     });
 
+    // Ask for the main object; its document loads, its dependency's never arrives.
+    db.getObjectCoreById(mainObjectId);
     await sleep(200);
 
     // Main object is materialized locally but its schema dep is unreachable.

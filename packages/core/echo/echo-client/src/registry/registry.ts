@@ -286,6 +286,11 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
     return this.runSync();
   }
 
+  /** The registry is in memory, so every read is the whole answer. */
+  get isComplete(): boolean {
+    return true;
+  }
+
   run(): Promise<T[]> {
     return Promise.resolve(this.runSync());
   }

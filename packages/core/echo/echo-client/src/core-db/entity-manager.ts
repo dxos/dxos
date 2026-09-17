@@ -18,7 +18,6 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
-  yieldToEventLoop,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
@@ -68,12 +67,6 @@ const TRACE_LOADING = false;
 
 /** Ceiling on db update emissions per second while a bulk delivery keeps arriving. */
 const DB_UPDATE_MAX_FREQ = 10;
-
-/**
- * Longest synchronous run of speculative link loading. A space root arriving over sync names every
- * object at once, and opening a handle per link is enough work per link to block input for the lot.
- */
-const LINK_LOAD_SLICE_MS = 8;
 
 /** A satisfaction request that will not change again without a new load. */
 const isSettled = (request: RefResolverRequest): boolean =>
@@ -214,10 +207,6 @@ export class EntityManager implements IDatabaseBinding {
   private _objectsForNextDbUpdate = new Set<string>();
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
-
-  /** Links seen on the space root that nothing has asked for yet, loaded in {@link LINK_LOAD_SLICE_MS} slices. */
-  #queuedLinkLoads = new Map<string, NonNullable<SpaceDocumentLinks>[string]>();
-  #drainingLinkLoads = false;
 
   // ── Private event field ──────────────────────────────────────────────────
   private readonly _rootChangedEvent = new Event<void>();
@@ -1468,57 +1457,6 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
-
-    const newLinks = Object.entries(links).filter(
-      ([objectId]) => !this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId),
-    );
-    if (newLinks.length > 0) {
-      this.#queueLinkLoads(newLinks);
-    }
-  }
-
-  #queueLinkLoads(links: [string, NonNullable<SpaceDocumentLinks>[string]][]): void {
-    for (const [objectId, link] of links) {
-      this.#queuedLinkLoads.set(objectId, link);
-    }
-    void this.#drainQueuedLinkLoads();
-  }
-
-  /**
-   * Opens handles for queued links a slice at a time. A link bound by another path while queued
-   * (an explicit load, a rebind) is skipped rather than loaded twice, and one the root no longer
-   * carries is dropped.
-   */
-  async #drainQueuedLinkLoads(): Promise<void> {
-    if (this.#drainingLinkLoads) {
-      return;
-    }
-    this.#drainingLinkLoads = true;
-    try {
-      // Speculative, so the update that queued these links finishes its own slice first.
-      await yieldToEventLoop();
-      while (this.#queuedLinkLoads.size > 0 && this._ctx && !this._ctx.disposed) {
-        const started = performance.now();
-        for (const [objectId, link] of this.#queuedLinkLoads) {
-          this.#queuedLinkLoads.delete(objectId);
-          if (
-            this._spaceRootDocHandle?.doc()?.links?.[objectId]?.toString() === link.toString() &&
-            !this._objectDocumentHandles.has(objectId) &&
-            !this._objectsPendingDocumentLoad.has(objectId)
-          ) {
-            this._loadLinkedObjects({ [objectId]: link }, { diskOnly: true });
-          }
-          if (performance.now() - started >= LINK_LOAD_SLICE_MS) {
-            break;
-          }
-        }
-        if (this.#queuedLinkLoads.size > 0) {
-          await yieldToEventLoop();
-        }
-      }
-    } finally {
-      this.#drainingLinkLoads = false;
-    }
   }
 
   private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
@@ -1602,7 +1540,6 @@ export class EntityManager implements IDatabaseBinding {
   private _clearHandleReferences(): string[] {
     const objectsWithHandles = [...this._objectDocumentHandles.keys()];
     this._objectDocumentHandles.clear();
-    this.#queuedLinkLoads.clear();
     this._documentObjects.clear();
     this._spaceRootDocHandle = null;
     return objectsWithHandles;

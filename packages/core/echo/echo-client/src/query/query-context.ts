@@ -38,6 +38,12 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
    */
   isSynchronous(): boolean;
 
+  /**
+   * Whether every source serving the current query has answered, so {@link getResults} is the whole
+   * result rather than the local working set's part of it.
+   */
+  isComplete(): boolean;
+
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
 

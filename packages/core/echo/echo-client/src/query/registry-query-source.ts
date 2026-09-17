@@ -50,6 +50,10 @@ export class RegistryQuerySource implements QuerySource {
   }
 
   /** The in-process registry is matched synchronously. */
+  isComplete(): boolean {
+    return true;
+  }
+
   isSynchronous(): boolean {
     return this.#query !== undefined && this.#isValidSourceForQuery(this.#query);
   }

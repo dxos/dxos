@@ -74,6 +74,13 @@ export interface QueryResult<T> {
   readonly results: T[];
 
   /**
+   * Whether every source serving the query has answered. False until the index responds, during
+   * which {@link results}, {@link runSync} and {@link runSyncEntries} hold only what the tab has
+   * loaded: objects created or updated locally, and index hits already hydrated.
+   */
+  readonly isComplete: boolean;
+
+  /**
    * Returns all known results.
    */
   run(opts?: RunOptions): Promise<T[]>;

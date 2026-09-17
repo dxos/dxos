@@ -56,6 +56,12 @@ export interface QuerySource {
   isSynchronous(): boolean;
 
   /**
+   * Whether this source has answered its current query. A source the query does not target is
+   * complete; an asynchronous source is complete once its first answer has been integrated.
+   */
+  isComplete(): boolean;
+
+  /**
    * One-shot query.
    */
   run(ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]>;
@@ -125,6 +131,13 @@ export class GraphQueryContext implements QueryContext {
       return false;
     }
     return Array.from(this._sources).some((source) => source.isSynchronous());
+  }
+
+  isComplete(): boolean {
+    if (!this._query) {
+      return false;
+    }
+    return Array.from(this._sources).every((source) => source.isComplete());
   }
 
   async run(
@@ -295,6 +308,11 @@ export class SpaceQuerySource implements QuerySource {
     // with order/skip/limit clauses contribute nothing here (see `queryHasWindowing`), so they are
     // not synchronous from this source's perspective.
     return this._query !== undefined && this._servesSpaceScope(this._query) && !queryHasWindowing(this._query);
+  }
+
+  /** The working set is scanned on read, so this source never has an answer outstanding. */
+  isComplete(): boolean {
+    return true;
   }
 
   getResults(): SourceEntry<Obj.Unknown>[] {
