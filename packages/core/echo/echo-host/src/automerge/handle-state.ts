@@ -60,3 +60,12 @@ export const getHandleState = (repo: Repo, documentId: DocumentId): HandleQueryS
   }
   return repo.findWithProgress(documentId).peek().state;
 };
+
+/**
+ * Whether a query holds the document as stored. `'ready'` fires on the first source to put data in
+ * the handle, and the subduction source rehydrates from its own commit store before the storage
+ * source has merged the current snapshot, so a reader that stops at `'ready'` can see a document
+ * behind disk.
+ */
+export const isLoaded = <T>(state: QueryState<T>): boolean =>
+  state.state === 'ready' && state.sources.storage !== 'pending';

@@ -54,7 +54,7 @@ import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
 import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
-import { type HandleQueryState, getHandleState } from './handle-state.ts';
+import { type HandleQueryState, getHandleState, isLoaded } from './handle-state.ts';
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
@@ -222,6 +222,9 @@ export class AutomergeHost extends Resource {
    * Fired after a batch of documents was saved to disk.
    */
   public readonly documentsSaved = new Event();
+
+  /** Fired per document whose heads a save advanced — what a reader of that document must catch up on. */
+  public readonly documentHeadsChanged = new Event<{ documentId: DocumentId; heads: Heads }>();
 
   private readonly _headsUpdates = new Map<DocumentId, Heads>();
   private _onHeadsChangedTask?: DeferredTask;
@@ -678,7 +681,7 @@ export class AutomergeHost extends Resource {
     lease: DocumentLease<T>,
     opts?: LoadDocOptions,
   ): Promise<DocumentLease<T> | null> {
-    if (lease.state === 'ready') {
+    if (lease.loaded) {
       return lease;
     }
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
@@ -749,7 +752,7 @@ export class AutomergeHost extends Resource {
    */
   private _waitForReady<T>(progress: DocumentProgress<T>, signal?: AbortSignal): Promise<DocHandle<T>> {
     const peeked = progress.peek();
-    if (peeked.state === 'ready') {
+    if (peeked.state === 'ready' && isLoaded(peeked)) {
       return Promise.resolve(peeked.handle);
     }
     if (peeked.state === 'failed') {
@@ -757,7 +760,7 @@ export class AutomergeHost extends Resource {
     }
     return new Promise<DocHandle<T>>((resolve, reject) => {
       const unsubscribe = progress.subscribe((state) => {
-        if (state.state === 'ready') {
+        if (state.state === 'ready' && isLoaded(state)) {
           unsubscribe();
           resolve(state.handle);
         } else if (state.state === 'failed') {
@@ -1501,6 +1504,10 @@ export class AutomergeHost extends Resource {
   }
 
   private _onHeadsChanged(docHeads: [DocumentId, Heads][]): void {
+    for (const [documentId, heads] of docHeads) {
+      this.documentHeadsChanged.emit({ documentId, heads });
+    }
+
     const collectionsChanged = new Set<CollectionId>();
 
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
