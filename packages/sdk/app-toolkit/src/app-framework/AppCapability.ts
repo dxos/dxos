@@ -17,23 +17,13 @@ import * as AppActivationEvents from './AppActivationEvents.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
- * Type of a maker built by {@link Capability$.moduleMaker}, spelled out explicitly (rather than
- * inferred) so a capability tag whose type structurally carries a type this module doesn't
- * re-export (e.g. `@dxos/compute`'s `Skill.Definition`) doesn't force that foreign type to be
- * named in this package's declaration emit (TS2883) — `C` is referenced here via `typeof`.
+ * Type of a maker built by {@link Capability$.moduleMaker}, read off the maker itself so the two
+ * cannot drift. Naming it is what keeps declaration emit portable: a capability tag whose type
+ * structurally carries a type this module doesn't re-export (e.g. `@dxos/compute`'s
+ * `Skill.Definition`) would otherwise have to be named here (TS2883), and `C` reaches this alias
+ * only through `typeof`.
  */
-type Maker<C extends Capability$.AnyTag> = <
-  Props = void,
-  Options = Props,
-  const Requires extends readonly Capability$.AnyTag[] = readonly [],
-  const Extra extends readonly Capability$.AnyTag[] = readonly [],
->(
-  // Same declaration-position false positive as `capability.ts#moduleMaker`, on the same
-  // `LoadModule` shape; see the note there for what was ruled out.
-  // @effect-diagnostics-next-line missingEffectContext:off
-  loader: Capability$.LoadModule<Props, Requires, readonly [C, ...Extra]>,
-  options?: Capability$.MakerOptions<Requires, Extra, Props, Options>,
-) => Capability$.Module<Options>;
+type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleMaker<C>>;
 
 //
 // Lazy module makers (loader-based bodies).
@@ -185,8 +175,8 @@ export const surface = <
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
-  // Same declaration-position false positive as `capability.ts#moduleMaker`, on the same
-  // `LoadModule` shape; see the note there for what was ruled out.
+  // Same rule bug as `capability.ts#moduleMaker`, on the same `LoadModule` shape: a tuple with a
+  // generic rest element, constrained to `readonly AnyTag[]`. See the note there.
   // @effect-diagnostics-next-line missingEffectContext:off
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },

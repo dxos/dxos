@@ -658,17 +658,12 @@ export const moduleMaker =
     const Requires extends readonly AnyTag[] = readonly [],
     const Extra extends readonly AnyTag[] = readonly [],
   >(
-    // Fires on this parameter's type, which is a declaration: there is no call here and no context
-    // to satisfy. The rule resolves the uninstantiated generics through their constraints and
-    // reports `CapabilityIdentifier<any, 'multi'>` missing; every concrete instantiation binds
-    // `Requires` to a real tuple, so no call site leaves it unsatisfied.
-    //
-    // The `any` in `AnyTag` is not the cause: bounding it to `string` only changes the reported
-    // type to `CapabilityIdentifier<string, 'multi'>` and the diagnostic survives. The anchor is
-    // the `Provides` argument rather than `Requires`, and those `any`s are load-bearing for the
-    // reason given at `AnyTag` itself. Nothing here is fixable from this side.
-    // TODO(wittjosiah): Report upstream; drop the directive when the rule stops walking
-    // constraints of uninstantiated type parameters.
+    // A tuple with a generic rest element lands here in a position constrained to
+    // `readonly AnyTag[]`, and a capability tag is an Effect, so the rule reads that constraint as
+    // one Effect. It keeps a single constituent of `Tag | MultiTag` and reports the other as
+    // missing, naming the same identifier whatever the tuple holds, and for `readonly [...Extra]`
+    // with no head element at all, so the finding says nothing about this code.
+    // TODO(wittjosiah): Report upstream (repro in the PR); drop the directive once it is fixed.
     // @effect-diagnostics-next-line missingEffectContext:off
     loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
     options?: MakerOptions<Requires, Extra, Props, Options>,
