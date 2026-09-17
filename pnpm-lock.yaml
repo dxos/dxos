@@ -3221,6 +3221,9 @@ importers:
 
   packages/common/effect:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
       '@dxos/context':
         specifier: workspace:*
         version: link:../context
@@ -14902,6 +14905,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -14956,9 +14962,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      main-thread-scheduling:
-        specifier: 'catalog:'
-        version: 14.2.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
