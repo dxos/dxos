@@ -140,6 +140,10 @@ export class Framer {
     return this.#writable;
   }
 
+  get isClosed(): boolean {
+    return this.#closed;
+  }
+
   /**
    * Number of bytes queued in the readable side, awaiting the consumer.
    */
@@ -178,11 +182,16 @@ export class Framer {
   /**
    * Fails every send still waiting for capacity. Resolving them instead would tell the sender its
    * bytes were accepted when the pipe carrying them is already gone.
+   *
+   * Stays `writable` and still emits `drain`: the readable is closed by now, so `pull` can never
+   * run again, and a sender parked on `drain` would wait for an event that cannot arrive. Its next
+   * `send` rejects immediately instead.
    */
   #failResponseQueue(reason?: unknown): void {
     const responseQueue = this.#sendCallbacks;
     this.#sendCallbacks = [];
-    this.#writable = false;
+    this.#writable = true;
+    this.drain.emit();
     const error = reason instanceof Error ? reason : new Error('Framer is closed.');
     responseQueue.forEach(({ reject }) => reject(error));
   }

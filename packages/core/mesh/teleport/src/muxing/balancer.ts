@@ -189,7 +189,7 @@ export class Balancer {
     chunk = this._getNextChunk();
     while (chunk) {
       // TODO(nf): determine whether this is needed since we await the chunk send
-      if (!this._framer.writable) {
+      if (!this._framer.writable && !this._framer.isClosed) {
         log('PAUSE for drain');
         await this._framer.drain.waitForCount(1);
         log('RESUME for drain');

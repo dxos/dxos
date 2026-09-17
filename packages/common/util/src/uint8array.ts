@@ -86,8 +86,12 @@ export const decodeUint8ArrayFromJson = (encoded: EncodedUint8Array): Uint8Array
  * Takes an iterable as well as varargs, since spreading an unbounded array would hit the argument limit.
  */
 export const concatUint8Arrays = (...arrays: [Iterable<Uint8Array>] | Uint8Array[]): Uint8Array => {
+  // `ArrayBuffer.isView`, not `instanceof`: a typed array from another realm (a worker, `node:vm`,
+  // a jsdom test environment) is not an `instanceof Uint8Array` and would be spread into numbers.
   const parts: Uint8Array[] =
-    arrays.length === 1 && !(arrays[0] instanceof Uint8Array) ? [...arrays[0]] : (arrays as Uint8Array[]);
+    arrays.length === 1 && !ArrayBuffer.isView(arrays[0])
+      ? [...(arrays[0] as Iterable<Uint8Array>)]
+      : (arrays as Uint8Array[]);
 
   let total = 0;
   for (const array of parts) {

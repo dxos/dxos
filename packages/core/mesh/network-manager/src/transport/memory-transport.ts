@@ -164,16 +164,20 @@ export class MemoryTransport implements Transport {
       this._pipes = [];
       remote._pipes = [];
 
-      let drainTimer: NodeJS.Timeout | undefined;
-      await Promise.race([
-        Promise.allSettled(pipes),
-        new Promise((resolve) => {
-          drainTimer = setTimeout(resolve, PIPE_DRAIN_TIMEOUT);
-        }),
-      ]);
-      clearTimeout(drainTimer);
-      this._abort.abort();
-      remote._abort.abort();
+      // Empty means the peer closed first and is draining these same pipes; aborting here would cut
+      // that drain short, which is the loss the grace period exists to prevent.
+      if (pipes.length > 0) {
+        let drainTimer: NodeJS.Timeout | undefined;
+        await Promise.race([
+          Promise.allSettled(pipes),
+          new Promise((resolve) => {
+            drainTimer = setTimeout(resolve, PIPE_DRAIN_TIMEOUT);
+          }),
+        ]);
+        clearTimeout(drainTimer);
+        this._abort.abort();
+        remote._abort.abort();
+      }
 
       remote.closed.emit();
       remote._remoteConnection = undefined;

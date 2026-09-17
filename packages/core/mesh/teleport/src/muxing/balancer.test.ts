@@ -115,4 +115,25 @@ describe('Balancer', () => {
 
     expect(balancer.buffersCount).to.equal(0);
   });
+
+  test('settles queued sends when the peer hangs up mid-backpressure', async () => {
+    const balancer = new Balancer(0);
+    const writer = balancer.stream.writable.getWriter();
+
+    // Nobody reads the readable, so these queue behind the framer's high-water mark.
+    const triggers = Array.from({ length: 40 }, () => new Trigger());
+    for (const trigger of triggers) {
+      balancer.pushData(new Uint8Array(8192), trigger, 0);
+    }
+
+    // The inbound pipe ending is how a peer hanging up reaches the framer. Every queued send has to
+    // settle: a sender parked on `drain` would otherwise wait for a readable that can never pull.
+    await writer.close();
+
+    const settled = await Promise.race([
+      Promise.allSettled(triggers.map((trigger) => trigger.wait())).then(() => true),
+      sleep(2_000).then(() => false),
+    ]);
+    expect(settled).to.equal(true);
+  });
 });

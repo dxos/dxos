@@ -173,8 +173,13 @@ export class Muxer {
     const writable = new WritableStream<Uint8Array>({
       write: async (data) => {
         if (destroyed) {
-          // The channel is gone; failing the write is what tells the producer to stop.
-          throw err ?? new Error(`Channel destroyed: ${tag}`);
+          // Only a faulted channel fails the write. A graceful destroy is an end-of-stream, and
+          // throwing there would report an ordinary close as a replication error.
+          if (err) {
+            throw err;
+          }
+
+          return;
         }
         await this._sendData(channel, data);
       },

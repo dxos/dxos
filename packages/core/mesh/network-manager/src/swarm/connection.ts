@@ -186,7 +186,11 @@ export class Connection {
       // this replaced could not fire before the stream was destroyed and so always arrived after
       // teardown; the web-stream `closed` fires as soon as the muxer disposes.
       scheduleTask(this._ctx, async () => {
-        await this.close({ error: err ?? new ProtocolError({ message: 'protocol stream closed' }) });
+        // Caught here rather than left to the context: `close()` disposes it, and `Context.raise` is
+        // a silent no-op on a disposed context, so a later throw would vanish.
+        await this.close({ error: err ?? new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
+          this.errors.raise(err),
+        );
       });
     });
 
