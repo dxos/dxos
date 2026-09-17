@@ -12,7 +12,7 @@ import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Dashboard } from '@dxos/react-ui-dashboard';
 
-import { SPACE_STATS_QUERY, countObjects, countTypenames } from '#dashboard';
+import { countObjects, countTypenames, spaceActivityQuery } from '#dashboard';
 import { meta } from '#meta';
 
 import { toActivity } from './activity.ts';
@@ -32,7 +32,7 @@ const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 
 /**
  * Space stats and activity matrix for the Home article. Both come from one count of objects by type
- * and last-updated hour, which the host answers from index rows, so no object is loaded to draw them.
+ * and local last-updated day, which the host answers from index rows, so no object is loaded to draw them.
  */
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
   if (!space) {
@@ -58,7 +58,8 @@ const SpaceDashboard = ({
   const plugins = useMemo(() => enabled.filter((id) => !core.includes(id)).length, [core, enabled]);
 
   // Deferred so a burst of index passes (a freshly opened space) never competes with input.
-  const counts = useDeferredValue(useQuery(space.db, SPACE_STATS_QUERY));
+  const query = useMemo(() => spaceActivityQuery(Intl.DateTimeFormat().resolvedOptions().timeZone), []);
+  const counts = useDeferredValue(useQuery(space.db, query));
   const activity = useMemo(() => toActivity(counts), [counts]);
 
   const values: Record<SpaceStatId, number> = {

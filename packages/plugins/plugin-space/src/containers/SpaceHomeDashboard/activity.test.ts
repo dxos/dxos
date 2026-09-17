@@ -6,15 +6,15 @@ import { describe, test } from 'vitest';
 
 import { toActivity } from './activity.ts';
 
-const hourOf = (date: Date): number => Math.floor(date.getTime() / 3_600_000) * 3_600_000;
-
 describe('toActivity', () => {
-  test('sums hours into local days and drops unknown hours', ({ expect }) => {
+  test('merges rows for the same day and drops unknown days', ({ expect }) => {
+    const monday = new Date(2026, 0, 5).getTime();
+    const tuesday = new Date(2026, 0, 6).getTime();
     const rows = [
-      { hour: hourOf(new Date(2026, 0, 5, 9)), count: 2 },
-      { hour: hourOf(new Date(2026, 0, 5, 17)), count: 1 },
-      { hour: null, count: 4 },
-      { hour: hourOf(new Date(2026, 0, 6, 1)), count: 5 },
+      { day: monday, count: 2 },
+      { day: tuesday, count: 5 },
+      { day: monday, count: 1 },
+      { day: null, count: 4 },
     ];
 
     expect(toActivity(rows)).toEqual([
