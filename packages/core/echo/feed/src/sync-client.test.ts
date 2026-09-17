@@ -132,6 +132,98 @@ describe('SyncClient', () => {
     await runtime.dispose();
   });
 
+  // The replay guard exists so one replay is not restarted on every page; armed before the rewind
+  // is written, a failed write left it set, and the next pull skipped its own rewind.
+  test('a rewind that fails to persist does not block the next one', async () => {
+    const runtime = ManagedRuntime.make(TestLayer);
+    const spaceId = SpaceId.random();
+    const feedStore = new FeedStore({ localActorId: 'alice', assignPositions: false });
+    await runtime.runPromise(feedStore.migrate());
+    await runtime.runPromise(
+      feedStore.setSyncState({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        lastPulledPosition: 10,
+        serverToken: 'token',
+      }),
+    );
+    // Positions above the cursor come from push acknowledgements; the server has since lost them.
+    await runtime.runPromise(
+      feedStore.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [11, 12].map((position) => ({
+          feedId: 'feed-1',
+          actorId: 'bob',
+          sequence: position,
+          prevActorId: null,
+          prevSequence: null,
+          position,
+          timestamp: 0,
+          data: new Uint8Array([position]),
+        })),
+      }),
+    );
+
+    // The first rewind dies before it is written, as a storage failure would.
+    const persist = feedStore.setSyncState;
+    let rewindFailures = 1;
+    feedStore.setSyncState = (opts) =>
+      opts.lastPulledPosition === -1 && rewindFailures-- > 0 ? Effect.die(new Error('write failed')) : persist(opts);
+
+    // Each pull is answered with a re-issued position this replica already holds.
+    const requests: FeedProtocol.QueryRequest[] = [];
+    const syncClient: SyncClient = new SyncClient({
+      peerId: 'client-peer',
+      feedStore,
+      sendMessage: (_ctx, message) => {
+        if (message._tag !== 'QueryRequest') {
+          return Effect.void;
+        }
+        requests.push(message);
+        const position = 10 + requests.length;
+        return syncClient.handleMessage({
+          _tag: 'QueryResponse',
+          requestId: message.requestId,
+          nextCursor: FeedProtocol.FeedCursor.make('token|-1'),
+          hasMore: false,
+          blocks: [
+            {
+              feedId: 'feed-1',
+              actorId: `carol-${position}`,
+              sequence: 0,
+              prevActorId: null,
+              prevSequence: null,
+              position,
+              timestamp: 0,
+              data: new Uint8Array([position]),
+            },
+          ],
+          serverToken: 'token',
+          maxPosition: 12,
+          senderPeerId: 'server-peer',
+          recipientPeerId: 'client-peer',
+        });
+      },
+    });
+
+    const ctx = new Context();
+    onTestFinished(() => void ctx.dispose());
+    const pull = () => runtime.runPromise(syncClient.pull(ctx, { spaceId, feedNamespace: WellKnownNamespaces.data }));
+    const syncState = () =>
+      runtime.runPromise(feedStore.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data }));
+
+    await expect(pull()).rejects.toThrow('write failed');
+    expect(await syncState()).toEqual({ lastPulledPosition: 10, serverToken: 'token' });
+
+    // The second displacement must rewind too; a guard left armed by the failed write would have let
+    // this pull advance the cursor past the re-issued positions instead.
+    expect(await pull()).toEqual({ done: false });
+    expect(await syncState()).toEqual({ lastPulledPosition: -1, serverToken: 'token' });
+
+    await runtime.dispose();
+  });
+
   // Zipping a short reply against the batch used to position the head and leave the tail pending,
   // so the push returned not-done forever and nothing said why.
   test('fails a push whose reply carries fewer positions than blocks', async () => {

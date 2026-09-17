@@ -565,7 +565,6 @@ export class SyncClient {
     if (this.#replaying.has(key)) {
       return Effect.succeed(false);
     }
-    this.#replaying.add(key);
     log.warn('feed sync replica ordering is out of step with the serving store, replaying namespace', {
       spaceId: opts.spaceId,
       feedNamespace: opts.feedNamespace,
@@ -578,7 +577,12 @@ export class SyncClient {
         lastPulledPosition: -1,
         serverToken,
       })
-      .pipe(Effect.as(true));
+      .pipe(
+        // Guard only a rewind that was written: set before a write that then fails, it would let
+        // the next pull skip its rewind and advance from the stale cursor.
+        Effect.tap(() => Effect.sync(() => this.#replaying.add(key))),
+        Effect.as(true),
+      );
   }
 
   /**
