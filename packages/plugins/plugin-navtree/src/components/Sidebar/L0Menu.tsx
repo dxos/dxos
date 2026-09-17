@@ -106,6 +106,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
             current: !getItem(path).current,
             option: event.altKey,
             shift: event.shiftKey,
+            meta: event.metaKey || event.ctrlKey,
           });
       }
     },

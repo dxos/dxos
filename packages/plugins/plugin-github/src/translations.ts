@@ -21,6 +21,7 @@ export const translations = [
         'import-pull-request-dialog.title': 'Import pull request',
         'import-pull-request-submit.label': 'Import',
         'import-pull-request-failed.title': 'Could not import the pull request',
+        'import-pull-request-no-space.title': 'Open a space to import a pull request into',
         'open-pull-request.label': 'Open pull request',
         'walkthrough-ready.title': 'Walkthrough ready',
         'walkthrough-failed.title': 'Walkthrough generation failed',

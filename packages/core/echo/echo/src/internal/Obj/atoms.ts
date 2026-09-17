@@ -50,7 +50,7 @@ const objectFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.
     get.addFinalizer(() => unsubscribe());
 
     return getSnapshot(obj) as unknown as Obj.Snapshot<T>;
-  }).pipe(Atom.keepAlive);
+  });
 });
 
 /**
@@ -69,44 +69,39 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
         // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
         get.setSelf(isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>));
       });
+      // Runs at once when the node was disposed while the target loaded.
+      get.addFinalizer(unsubscribeTarget);
       // Guard the initial value too: an already-deleted target must resolve to undefined, not leak a
       // snapshot until the next update.
       return isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>);
     };
 
-    get.addFinalizer(() => {
-      unsubscribeTarget?.();
-    });
-
     return loadRefTarget(ref, get, setupTargetSubscription);
-  }).pipe(Atom.keepAlive);
+  });
 });
 
 /**
- * Atom family for ECHO object properties.
- * Uses nested families: outer keyed by object, inner keyed by property key.
+ * Atom family for ECHO object properties, keyed by `[object, key]`.
  */
-const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
-  Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K]> => {
-    return Atom.make<T[K]>((get) => {
-      let previousSnapshot = snapshotForComparison(obj[key]);
+const propertyFamily = Atom.family(([obj, key]: readonly [Obj.Unknown, PropertyKey]): Atom.Atom<any> => {
+  return Atom.make<any>((get) => {
+    let previousSnapshot = snapshotForComparison((obj as any)[key]);
 
-      const unsubscribe2 = subscribe(obj, () => {
-        const newValue = obj[key];
-        // Content comparison against the last emitted snapshot: identity would be unequal for every
-        // array/object, firing on any mutation of `obj` (see `snapshotEquals`).
-        if (!snapshotEquals(newValue, previousSnapshot)) {
-          previousSnapshot = snapshotForComparison(newValue);
-          get.setSelf(previousSnapshot);
-        }
-      });
+    const unsubscribe2 = subscribe(obj, () => {
+      const newValue = (obj as any)[key];
+      // Content comparison against the last emitted snapshot: identity would be unequal for every
+      // array/object, firing on any mutation of `obj` (see `snapshotEquals`).
+      if (!snapshotEquals(newValue, previousSnapshot)) {
+        previousSnapshot = snapshotForComparison(newValue);
+        get.setSelf(previousSnapshot);
+      }
+    });
 
-      get.addFinalizer(() => unsubscribe2());
+    get.addFinalizer(() => unsubscribe2());
 
-      return snapshotForComparison(obj[key]);
-    }).pipe(Atom.keepAlive);
-  }),
-);
+    return snapshotForComparison((obj as any)[key]);
+  });
+});
 
 /**
  * Atom family for ECHO objects — returns the live object, not a snapshot.
@@ -120,7 +115,7 @@ const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): At
     get.addFinalizer(() => unsubscribe());
 
     return obj;
-  }).pipe(Atom.keepAlive);
+  });
 });
 
 /**
@@ -148,12 +143,10 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
  * Resolves the ref (reactively) then projects the property atom, so it fires when the ref resolves or when
  * that property changes. Yields `undefined` while the target is unresolved.
  */
-const refPropertyFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>) =>
-  Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K] | undefined> => {
-    return Atom.make<T[K] | undefined>((get) => {
-      const target = get(refWithReactiveFamily(ref));
-      return target ? get(propertyFamily(target)(key)) : undefined;
-    }).pipe(Atom.keepAlive);
+const refPropertyFamily = Atom.family(([ref, key]: readonly [Ref.Ref<any>, PropertyKey]): Atom.Atom<any> =>
+  Atom.make((get) => {
+    const target = get(refWithReactiveFamily(ref));
+    return target ? get(propertyFamily([target, key])) : undefined;
   }),
 );
 
@@ -170,7 +163,7 @@ const entityFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Ato
     get.addFinalizer(() => unsubscribe());
 
     return getSnapshot(entity) as unknown as Entity.Snapshot;
-  }).pipe(Atom.keepAlive);
+  });
 });
 
 /**
@@ -186,7 +179,7 @@ const relationFamily = Atom.family(<T extends Relation.Unknown>(relation: T): At
     get.addFinalizer(() => unsubscribe());
 
     return getSnapshot(relation) as unknown as Relation.Snapshot<T>;
-  }).pipe(Atom.keepAlive);
+  });
 });
 
 /**
@@ -217,12 +210,12 @@ export const makeProperty: {
   <T extends Obj.Unknown, K extends keyof T>(ref: Ref.Ref<T>, key: K): Atom.Atom<T[K] | undefined>;
 } = (objOrRef: Obj.Unknown | Ref.Ref<any>, key: any): Atom.Atom<any> => {
   if (isRef(objOrRef)) {
-    return refPropertyFamily(objOrRef as Ref.Ref<any>)(key);
+    return refPropertyFamily([objOrRef as Ref.Ref<any>, key]);
   }
 
   const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
-  return propertyFamily(obj)(key);
+  return propertyFamily([obj, key]);
 };
 
 /**
@@ -278,7 +271,7 @@ const labelAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.
 
     get.addFinalizer(() => unsubscribe());
     return previous;
-  }).pipe(Atom.keepAlive);
+  });
 });
 
 /**

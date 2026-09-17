@@ -5,27 +5,31 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import type * as Chat from '@dxos/assistant/Chat';
+import * as Chat from '@dxos/assistant/Chat';
 import type * as Process from '@dxos/compute/Process';
+import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { type Task } from '@dxos/types';
-
-import { type SessionTimeline, buildSessionTimeline } from '#session-timeline';
-
-import { useTraceMessages } from './useTraceMessages.ts';
+import {
+  type Session,
+  type SessionTimeline,
+  useSessionTimeline as useNaturalSessionTimeline,
+} from '@dxos/react-ui-trace';
+import { Task } from '@dxos/types';
 
 const atomEmpty = Atom.make(() => [] as const as readonly Process.Info[]);
 
-/** How often `now` advances while a session is open, so a running lane's range keeps growing. */
-const TICK_MS = 5_000;
-
-// The trace feed emits continuously while anything runs, and every emission rebuilds the whole
-// timeline from the full message history — so the rebuild rate is capped rather than the feed's.
-const TRACE_DEBOUNCE = Duration.millis(500);
+/** A chat as the timeline's session: its uri is the agent process's target, its feed the trace meta's. */
+export const sessionFromChat = (chat: Chat.Chat): Session => ({
+  id: chat.id,
+  label: chat.name,
+  uri: Obj.getURI(chat),
+  feedId: Chat.feedEntityId(chat),
+  taskIds: chat.tasks.map((ref) => Task.refEntityId(ref)).filter((id): id is string => id !== undefined),
+});
 
 export type UseSessionTimelineOptions = {
   /** The chats whose sessions are shown; each contributes a session lane and its checklist's task lanes. */
@@ -34,27 +38,16 @@ export type UseSessionTimelineOptions = {
 };
 
 /**
- * The live gantt-shaped view of the given chats' sessions: rebuilt as trace events land on the
- * space's trace feed and as the process tree changes, and ticked so open lanes keep extending.
+ * The live session timeline of the given chats, with the app's process monitor joined in.
  */
 export const useSessionTimeline = (
   space: Space | undefined,
   { chats, tasks }: UseSessionTimelineOptions,
 ): SessionTimeline => {
-  const traceMessages = useTraceMessages(space, { debounce: TRACE_DEBOUNCE });
   const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
   );
-
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => clearInterval(interval);
-  }, []);
-
-  return useMemo(
-    () => buildSessionTimeline({ traceMessages, processes, chats, tasks, now }),
-    [traceMessages, processes, chats, tasks, now],
-  );
+  const sessions = useMemo(() => chats.map(sessionFromChat), [chats]);
+  return useNaturalSessionTimeline(space, { sessions, tasks, processes });
 };

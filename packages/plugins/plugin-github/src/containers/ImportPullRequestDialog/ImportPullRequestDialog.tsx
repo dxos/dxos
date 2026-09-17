@@ -53,6 +53,13 @@ export const ImportPullRequestDialog = () => {
   const handleSave = useCallback(
     async ({ reference }: ImportPullRequestForm) => {
       if (!space) {
+        // The command is reachable from the root, which has no space of its own; saying so beats a
+        // button that appears to do nothing.
+        await invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}.import-pull-request`,
+          icon: 'ph--warning--regular',
+          title: ['import-pull-request-no-space.title', { ns: meta.profile.key }],
+        });
         return;
       }
 
