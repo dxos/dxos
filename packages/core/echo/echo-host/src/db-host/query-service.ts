@@ -194,7 +194,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         onError: (error) => void emit.fail(error),
       };
       this._activity.add(subscription);
-      this._updateQueries.schedule();
+      scheduleMicroTask(this._ctx, async () => this._updateQueries.schedule());
       return Effect.sync(() => {
         this._activity.delete(subscription);
       });

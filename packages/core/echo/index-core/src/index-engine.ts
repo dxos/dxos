@@ -133,12 +133,13 @@ export interface IndexDataSource {
   /**
    * Objects changed since `cursors`, and, when `opts.changes` is set, a summary of every change
    * behind them (the activity ledger's input). Both are relative to the same cursors, so a source
-   * reporting a change once per cursor advance reports it exactly once.
+   * reporting a change once per cursor advance reports it exactly once. `opts.objects === false`
+   * asks for the summaries alone, so a changes-only caller does not pay for object extraction.
    */
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number; changes?: boolean },
+    opts?: { limit?: number; changes?: boolean; objects?: boolean },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; changes?: ChangeSummary[] }>;
 }
 
@@ -420,7 +421,7 @@ export class IndexEngine {
       const {
         updated: updatedActivityIndex,
         done: doneActivityIndex,
-        objects: activityObjects,
+        spaces: activitySpaces,
       } = yield* this.#updateActivity(ctx, dataSource, {
         spaceId: opts.spaceId,
         limit: opts.limit,
@@ -428,7 +429,9 @@ export class IndexEngine {
       });
       result.updated += updatedActivityIndex;
       result.done = result.done && doneActivityIndex;
-      accumulateIndexingResult(result, activityObjects);
+      for (const spaceId of activitySpaces) {
+        result.spaces.add(spaceId);
+      }
 
       return result as IndexingResult;
     }).pipe(
@@ -527,26 +530,28 @@ export class IndexEngine {
     source: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
   ): Effect.Effect<
-    { updated: number; done: boolean; objects: readonly IndexerObject[] },
+    { updated: number; done: boolean; spaces: readonly SpaceId[] },
     SqlError.SqlError,
     SqlClient.SqlClient
   > {
     return Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
 
-      const {
-        objects,
-        cursors: updatedCursors,
-        changes,
-      } = yield* source.getChangedObjects(ctx, opts.cursors, { limit: opts.limit, changes: true });
+      // The ledger needs only the change summaries; skipping object extraction keeps this pass from
+      // re-serializing every object the other two passes already handled.
+      const { cursors: updatedCursors, changes = [] } = yield* source.getChangedObjects(ctx, opts.cursors, {
+        limit: opts.limit,
+        changes: true,
+        objects: false,
+      });
 
-      if (objects.length === 0 && (changes ?? []).length === 0) {
-        return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
+      if (updatedCursors.length === 0) {
+        return { updated: 0, done: true, spaces: [] };
       }
 
       return yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
-          yield* this.#activityIndex.record(changes ?? []);
+          yield* this.#activityIndex.record(changes);
           yield* this.#tracker.updateCursors(
             updatedCursors.map((_): IndexCursor => ({
               indexName: 'activity',
@@ -556,7 +561,10 @@ export class IndexEngine {
               cursor: _.cursor,
             })),
           );
-          return { updated: objects.length, done: false, objects };
+          // A document with no countable change (an empty one, whose heads never settle a cursor)
+          // is not progress: reporting it would keep the host re-running passes for nothing.
+          const spaces = new Set(changes.map((change) => change.spaceId));
+          return { updated: changes.length, done: changes.length === 0, spaces: [...spaces] };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#updateActivity'), SpanAttributes.annotateSpace(opts.spaceId));

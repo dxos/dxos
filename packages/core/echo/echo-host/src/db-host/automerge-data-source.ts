@@ -109,7 +109,7 @@ export class AutomergeDataSource implements IndexDataSource {
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number; changes?: boolean },
+    opts?: { limit?: number; changes?: boolean; objects?: boolean },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; changes?: ChangeSummary[] }> {
     return Effect.gen({ self: this }, function* () {
       // Build a map of documentId -> cursor for quick lookup.
@@ -137,7 +137,11 @@ export class AutomergeDataSource implements IndexDataSource {
       // Load changed documents and extract objects.
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
-      const changes: ChangeSummary[] = [];
+      // Per document until the loop ends: a branch document may precede its root in this batch,
+      // and a document whose extraction fails must not leave its changes behind to be recounted
+      // when the cursor that was never written brings it back.
+      const pendingChanges = new Map<DocumentId, ChangeSummary[]>();
+      const extractObjects = opts?.objects !== false;
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
@@ -173,15 +177,10 @@ export class AutomergeDataSource implements IndexDataSource {
           const existingCursor = cursorMap.get(documentId);
           const { changedObjectIds, updatedAt, changesMeta } = inspectDocChanges(doc, existingCursor, {
             changes: !!opts?.changes,
+            objects: extractObjects,
           });
 
-          if (opts?.changes && !this.#branchDocumentIds.has(documentId) && !this.#isBranchDocument?.(documentId)) {
-            for (const meta of changesMeta) {
-              changes.push({ spaceId, time: meta.time * 1000, ops: meta.maxOp - meta.startOp + 1 });
-            }
-          }
-
-          const docObjects = doc.objects ?? {};
+          const docObjects = extractObjects ? (doc.objects ?? {}) : {};
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
@@ -206,12 +205,30 @@ export class AutomergeDataSource implements IndexDataSource {
             resourceId: documentId,
             cursor: headsCodec.encode(docHeads),
           });
+          if (opts?.changes) {
+            pendingChanges.set(
+              documentId,
+              changesMeta
+                // A change with no clock (time 0) has no hour to land in.
+                .filter((meta) => meta.time > 0)
+                .map((meta) => ({ spaceId, time: meta.time * 1000, ops: meta.maxOp - meta.startOp + 1 })),
+            );
+          }
         } catch (error) {
           log.error('Error loading document for indexing', { documentId, error });
         }
       }
 
-      return opts?.changes ? { objects, cursors: updatedCursors, changes } : { objects, cursors: updatedCursors };
+      if (!opts?.changes) {
+        return { objects, cursors: updatedCursors };
+      }
+      const changes: ChangeSummary[] = [];
+      for (const [documentId, docChanges] of pendingChanges) {
+        if (!this.#branchDocumentIds.has(documentId) && !this.#isBranchDocument?.(documentId)) {
+          changes.push(...docChanges);
+        }
+      }
+      return { objects, cursors: updatedCursors, changes };
     });
   }
 }
@@ -229,7 +246,7 @@ export class AutomergeDataSource implements IndexDataSource {
 const inspectDocChanges = (
   doc: DatabaseDirectory,
   existingCursor: string | undefined,
-  opts: { changes: boolean },
+  opts: { changes: boolean; objects: boolean },
 ): { changedObjectIds: Set<string> | null; updatedAt: number; changesMeta: A.ChangeMetadata[] } => {
   if (!existingCursor) {
     // On first indexing we don't have a prior cursor so we can't isolate per-object
@@ -244,11 +261,13 @@ const inspectDocChanges = (
 
   const oldHeads = headsCodec.decode(existingCursor);
 
-  const patches = A.diff(doc, oldHeads, A.getHeads(doc));
+  // The object diff is the expensive part and only an object extraction reads it.
   const changedObjectIds = new Set<string>();
-  for (const patch of patches) {
-    if (patch.path.length >= 2 && patch.path[0] === 'objects') {
-      changedObjectIds.add(String(patch.path[1]));
+  if (opts.objects) {
+    for (const patch of A.diff(doc, oldHeads, A.getHeads(doc))) {
+      if (patch.path.length >= 2 && patch.path[0] === 'objects') {
+        changedObjectIds.add(String(patch.path[1]));
+      }
     }
   }
 

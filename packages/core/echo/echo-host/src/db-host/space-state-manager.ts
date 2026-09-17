@@ -116,7 +116,7 @@ export class SpaceStateManager extends Resource {
         continue;
       }
       for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
-        if (isValidAutomergeUrl(url) && interpretAsDocumentId(url as AutomergeUrl) === documentId) {
+        if (isValidAutomergeUrl(url) && interpretAsDocumentId(url) === documentId) {
           return true;
         }
       }

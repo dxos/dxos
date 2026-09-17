@@ -176,8 +176,8 @@ describe('IndexEngine', () => {
 
       // First update.
       const { updated } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      // Updates objectMeta, FTS, reverseRef, and activity indexes.
-      expect(updated).toBe(3);
+      // Updates objectMeta, FTS and reverseRef; the activity pass counts changes, and this source reports none.
+      expect(updated).toBe(2);
 
       // Verify using the SAME index instance.
       const results1 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
@@ -210,7 +210,7 @@ describe('IndexEngine', () => {
 
       // Second update.
       const { updated: updated2 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      expect(updated2).toBe(3);
+      expect(updated2).toBe(2);
 
       // Verify update.
       const results2 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });

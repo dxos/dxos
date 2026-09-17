@@ -486,12 +486,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return persistentSchema;
   }
 
-  // TODO(burdon): Type check.
-  /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
   activity(range: ActivityRange = {}): ActivityQuery {
     return new ActivityQuery({ spaceId: this.spaceId, range, runtime: this.#runtime, service: this.#queryService });
   }
 
+  // TODO(burdon): Type check.
+  /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
     return this._entityManager.getEntityById(id, { deleted }) as T | undefined;
   }
