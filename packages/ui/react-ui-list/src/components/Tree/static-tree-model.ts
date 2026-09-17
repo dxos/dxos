@@ -19,6 +19,8 @@ export type StaticTreeModelOptions<T extends { id: string }> = {
   getProps?: (item: T, path: string[]) => Partial<TreeItemDataProps>;
   /** Open state on a path's first read; closed by default. */
   isOpen?: (item: T, path: string[]) => boolean;
+  /** Current (selected) state on a path's first read, so a selection held outside survives a rebuild. */
+  isCurrent?: (item: T, path: string[]) => boolean;
 };
 
 export interface StaticTreeModel<T extends { id: string }> extends TreeModel<T> {
@@ -49,7 +51,7 @@ export const createStaticTreeModel = <T extends { id: string }>(
   root: T,
   options: StaticTreeModelOptions<T>,
 ): StaticTreeModel<T> => {
-  const { getChildren, getProps, isOpen } = options;
+  const { getChildren, getProps, isOpen, isCurrent } = options;
 
   const itemMap = new Map<string, T>();
   const childIdsMap = new Map<string, string[]>();
@@ -72,7 +74,8 @@ export const createStaticTreeModel = <T extends { id: string }>(
     if (!atom) {
       const item = itemMap.get(path.at(-1) ?? root.id);
       const open = item !== undefined && (isOpen?.(item, path) ?? false);
-      atom = Atom.make<TreeNodeState>({ open, current: false }).pipe(Atom.keepAlive);
+      const current = item !== undefined && (isCurrent?.(item, path) ?? false);
+      atom = Atom.make<TreeNodeState>({ open, current }).pipe(Atom.keepAlive);
       stateAtoms.set(key, atom);
     }
     return atom;

@@ -20,8 +20,9 @@ informational queries, quick lookups or clarifications, and avoid creating verif
 `update-tasks` takes `changes`, an array of edits applied together. Each change either names an
 existing task by its ref, or sets `create` to make a new one — never both.
 
-Every checklist line is followed by an indented note carrying the task's ref, e.g.
-`(ref: echo://.../01ABC...; started)`. Pass that ref back as `task: { "/": "echo://.../01ABC..." }`.
+Every checklist line is followed by an indented note carrying the task's ref as a link, e.g.
+`(ref: [01ABC](echo://.../01ABC...); started)`. Pass the link's target back as a plain string —
+`task: "echo://.../01ABC..."` — not the label, not the whole link, and not a `{ "/": ... }` wrapper.
 Never copy the ordinal or the note into a title.
 
 Each change contains:
@@ -65,20 +66,20 @@ Begins research work immediately in same response.
 </example>
 
 <example type="progress_update">
-<user_message>(The checklist shows "1. [ ] Research sustainable packaging materials" with ref echo://.../01AAA and "2. [ ] Compile cost comparison data" with ref echo://.../01BBB.)</user_message>
+<user_message>(The checklist shows "1. [ ] Research sustainable packaging materials" with ref [01AAA](echo://.../01AAA) and "2. [ ] Compile cost comparison data" with ref [01BBB](echo://.../01BBB).)</user_message>
 <assistant_action>
 Finishes the research and moves on:
-1. {task: {"/": "echo://.../01AAA"}, status: "done"}
-2. {task: {"/": "echo://.../01BBB"}, status: "started"}
+1. {task: "echo://.../01AAA", status: "done"}
+2. {task: "echo://.../01BBB", status: "started"}
 </assistant_action>
 <reasoning>Existing tasks are addressed by ref; starting the next one assigns it.</reasoning>
 </example>
 
 <example type="delegated_task">
-<user_message>You have been assigned tasks to work on in this session. (The checklist holds a project task whose sub-tasks you read through the project; one of them has ref echo://.../01CCC.)</user_message>
+<user_message>You have been assigned tasks to work on in this session. (The checklist holds a project task whose sub-tasks you read through the project; one of them has ref [01CCC](echo://.../01CCC).)</user_message>
 <assistant_action>
 Starts the existing sub-task rather than creating a copy of it:
-1. {task: {"/": "echo://.../01CCC"}, status: "started"}
+1. {task: "echo://.../01CCC", status: "started"}
 </assistant_action>
 <reasoning>Starting an existing task puts it on this checklist and assigns it to you; `create` would duplicate it.</reasoning>
 </example>

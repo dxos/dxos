@@ -13,7 +13,7 @@ import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
-import { EffectEx, Event, RuntimeProvider } from '@dxos/effect';
+import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -32,6 +32,14 @@ const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 const DEFAULT_MESSAGE_BLOCKS_LIMIT = 50;
 const DEFAULT_SYNC_CONCURRENCY = 5;
 const DEFAULT_POLLING_INTERVAL = 5_000;
+/**
+ * Full-poll interval used once the server has answered the subscribe handshake, and is therefore
+ * pushing {@link FeedProtocol.FeedAdvanced} hints. Hints carry the latency, so the poll degrades to
+ * a reconcile that only has to catch hints lost to an un-acked send or a socket closing mid-frame.
+ */
+const DEFAULT_RECONCILE_POLLING_INTERVAL = 30_000;
+/** Re-subscribe this long before the server's stated expiry, so a refresh never races the lapse. */
+const SUBSCRIPTION_REFRESH_MARGIN_MS = 5 * 60_000;
 const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
 const DEFAULT_PUSH_FAILURE_BACKOFF_MS = 250;
 const MAX_PUSH_FAILURE_BACKOFF_MS = 30_000;
@@ -62,10 +70,17 @@ export type FeedSyncerOptions = {
   syncConcurrency?: number;
 
   /**
-   * Interval between full polls.
-   * @default 10 seconds
+   * Interval between full polls while the server is not known to push hints.
+   * @default 5 seconds
    */
   pollingInterval?: number;
+
+  /**
+   * Interval between full polls once the server has answered the subscribe handshake and is pushing
+   * {@link FeedProtocol.FeedAdvanced} hints.
+   * @default 30 seconds
+   */
+  reconcilePollingInterval?: number;
 
   /**
    * Minimum delay between externally requested best-effort polls.
@@ -101,6 +116,7 @@ export class FeedSyncer extends Resource {
   readonly #messageBlocksLimit: number;
   readonly #syncConcurrency: number;
   readonly #pollingInterval: number;
+  readonly #reconcilePollingInterval: number;
   readonly #pollRequestThrottleMs: number;
   readonly #backgroundSync: boolean;
 
@@ -118,6 +134,16 @@ export class FeedSyncer extends Resource {
   readonly #feedStoreMutex = new Mutex();
   #pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
 
+  /**
+   * True once the server answered a `SubscribeRequest` on the current connection, which is the only
+   * evidence that it will push hints. An older EDGE ignores the request, so the interval must stay
+   * at {@link #pollingInterval} rather than relaxing on a hint that will never arrive. Cleared on
+   * reconnect, since the next socket may land on a different build.
+   */
+  #serverPushesHints = false;
+  /** Earliest `expiresAt` across live subscriptions; drives the refresh task. */
+  #subscriptionExpiresAt: number | null = null;
+
   constructor(options: FeedSyncerOptions) {
     super();
     this.#runtime = options.runtime;
@@ -134,6 +160,7 @@ export class FeedSyncer extends Resource {
     this.#messageBlocksLimit = options.messageBlocksLimit ?? DEFAULT_MESSAGE_BLOCKS_LIMIT;
     this.#syncConcurrency = options.syncConcurrency ?? DEFAULT_SYNC_CONCURRENCY;
     this.#pollingInterval = options.pollingInterval ?? DEFAULT_POLLING_INTERVAL;
+    this.#reconcilePollingInterval = options.reconcilePollingInterval ?? DEFAULT_RECONCILE_POLLING_INTERVAL;
     this.#pollRequestThrottleMs = options.pollRequestThrottleMs ?? DEFAULT_POLL_REQUEST_THROTTLE_MS;
     this.#backgroundSync = options.backgroundSync ?? true;
   }
@@ -159,6 +186,16 @@ export class FeedSyncer extends Resource {
           });
           // v4 dropped `Schema.validate`; decoding through the type side is the equivalent.
           const payload = yield* Schema.decodeEffect(Schema.toType(FeedProtocol.ProtocolMessage))(decoded);
+          // Server-initiated messages carry no `requestId`, so `SyncClient.handleMessage` — which
+          // matches responses to in-flight RPCs — would discard them.
+          if (payload._tag === 'FeedAdvanced') {
+            this.#onFeedAdvanced(payload);
+            return;
+          }
+          if (payload._tag === 'SubscribeResponse') {
+            this.#onSubscribeResponse(payload);
+            return;
+          }
           yield* this.#syncClient.handleMessage(payload);
         }).pipe(
           Effect.tapError((cause) =>
@@ -198,7 +235,12 @@ export class FeedSyncer extends Resource {
           peerKey: this.#edgeClient.peerKey,
           identityDid: this.#edgeClient.identityDid,
         });
+        // A reconnect may land on a different EDGE build, and any subscription the previous socket
+        // held is gone with it, so the capability has to be re-established rather than assumed.
+        this.#serverPushesHints = false;
+        this.#subscriptionExpiresAt = null;
         if (this.#backgroundSync) {
+          this.#sendSubscriptions();
           this.#resetSpacesToPoll();
           this.#pollTask.schedule();
           this.#pushTask.schedule();
@@ -210,6 +252,7 @@ export class FeedSyncer extends Resource {
     // the ready trigger; the `onReconnected` handler above schedules exactly this same work the
     // moment it connects, so a host that gates its dial until after boot loses nothing here.
     if (this.#backgroundSync && this.#edgeClient.status.state === EdgeStatus_ConnectionState.CONNECTED) {
+      this.#sendSubscriptions();
       this.#resetSpacesToPoll();
       this.#pollTask.schedule();
       // Flush blocks written before the syncer opened: `onNewBlocks` only fires on append,
@@ -223,6 +266,144 @@ export class FeedSyncer extends Resource {
       await this.#pollTask.close();
       await this.#pushTask.close();
     }
+  }
+
+  /**
+   * Full-poll interval currently in force.
+   *
+   * A server that never answers the subscribe handshake will never hint, so the tight interval is
+   * the only thing keeping remote writes visible against it.
+   */
+  get #currentPollingInterval(): number {
+    return this.#serverPushesHints ? this.#reconcilePollingInterval : this.#pollingInterval;
+  }
+
+  /**
+   * Announce interest in every synced namespace of every known space.
+   *
+   * Namespace-wide (empty `feedIds`): the client cannot enumerate a namespace's feed ids until it
+   * has pulled them, so per-feed subscription would miss exactly the feeds it has not seen yet.
+   */
+  #sendSubscriptions(): void {
+    for (const spaceId of this.#getSpaceIds()) {
+      for (const feedNamespace of this.#syncNamespaces) {
+        this.#sendServerBoundMessage(
+          {
+            _tag: 'SubscribeRequest',
+            spaceId,
+            feedNamespace,
+            feedIds: [],
+            senderPeerId: this.#edgeClient.peerKey,
+            recipientPeerId: undefined,
+          },
+          FeedProtocol.encodeServiceId(feedNamespace, spaceId),
+        );
+      }
+    }
+  }
+
+  /**
+   * Fire-and-forget send of a message the server does not answer with a correlated RPC response.
+   *
+   * Failure is logged and dropped: the reconcile poll is the backstop for every hint path, so a
+   * subscribe that does not land costs freshness rather than correctness.
+   */
+  #sendServerBoundMessage(message: FeedProtocol.ProtocolMessage, serviceId: string): void {
+    const send = Effect.tryPromise(async () =>
+      this.#edgeClient.send(
+        this._ctx,
+        createBuf(MessageSchema, {
+          source: {
+            identityDid: this.#edgeClient.identityDid,
+            peerKey: this.#edgeClient.peerKey,
+          },
+          serviceId,
+          payload: { value: bufferToArray(encoder.encode(message)) },
+        }),
+      ),
+    ).pipe(
+      Effect.tapError((cause) =>
+        Effect.sync(() =>
+          log('feed sync server-bound send failed', {
+            tag: message._tag,
+            serviceId,
+            cause: cause instanceof Error ? cause.message : String(cause),
+          }),
+        ),
+      ),
+      Effect.ignore,
+    );
+    void EffectEx.runPromise(send);
+  }
+
+  /**
+   * The server accepted a subscription, which is this client's only evidence that it is running a
+   * build that pushes hints — an older EDGE drops `SubscribeRequest` without replying.
+   */
+  #onSubscribeResponse(message: Extract<FeedProtocol.ProtocolMessage, { _tag: 'SubscribeResponse' }>): void {
+    const wasPushing = this.#serverPushesHints;
+    this.#serverPushesHints = true;
+    if (this.#subscriptionExpiresAt == null || message.expiresAt < this.#subscriptionExpiresAt) {
+      this.#subscriptionExpiresAt = message.expiresAt;
+      this.#scheduleSubscriptionRefresh();
+    }
+    if (!wasPushing) {
+      log('feed sync switched to push-driven reconcile', {
+        reconcilePollingInterval: this.#reconcilePollingInterval,
+        expiresAt: message.expiresAt,
+      });
+    }
+  }
+
+  /**
+   * The server says a namespace gained blocks. Queue exactly that space for the next pull rather
+   * than resetting every space, so an active space cannot drag the whole workspace into a full poll.
+   */
+  #onFeedAdvanced(message: Extract<FeedProtocol.ProtocolMessage, { _tag: 'FeedAdvanced' }>): void {
+    if (!this.#backgroundSync) {
+      return;
+    }
+    const { spaceId } = message;
+    if (!SpaceId.isValid(spaceId)) {
+      log.warn('feed sync hint carried an invalid space id', { spaceId: message.spaceId });
+      return;
+    }
+    // A well-formed id is not yet one this client tracks, and the hint is server-supplied: without
+    // this the server could drive pulls for arbitrary spaces.
+    if (!this.#getSpaceIds().includes(spaceId)) {
+      log.warn('feed sync hint named an untracked space', { spaceId });
+      return;
+    }
+    log('feed sync hint received', {
+      spaceId,
+      feedNamespace: message.feedNamespace,
+      position: message.position,
+    });
+    this.#spacesToPoll.add(spaceId);
+    this.#pollTask.schedule();
+  }
+
+  /** Re-announce subscriptions before the server's stated expiry lapses. */
+  #scheduleSubscriptionRefresh(): void {
+    if (this.#subscriptionExpiresAt == null) {
+      return;
+    }
+    const remaining = this.#subscriptionExpiresAt - Date.now();
+    if (remaining <= 0) {
+      return;
+    }
+    // Halving is what keeps a short-lived subscription from refreshing at zero delay, which would
+    // spin subscribe/response as fast as the socket allows.
+    const margin = Math.min(SUBSCRIPTION_REFRESH_MARGIN_MS, remaining / 2);
+    const delay = remaining - margin;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#subscriptionExpiresAt = null;
+        this.#sendSubscriptions();
+      },
+      delay,
+    );
   }
 
   /**
@@ -496,7 +677,7 @@ export class FeedSyncer extends Resource {
       );
 
       // If its time to do a full poll, reset the spaces to poll and schedule the next poll immediately.
-      if (this.#lastFullPoll == null || Date.now() - this.#lastFullPoll > this.#pollingInterval) {
+      if (this.#lastFullPoll == null || Date.now() - this.#lastFullPoll > this.#currentPollingInterval) {
         this.#resetSpacesToPoll();
         this.#pollTask.schedule();
       } else if (this.#spacesToPoll.size > 0) {
@@ -508,7 +689,7 @@ export class FeedSyncer extends Resource {
         scheduleTask(
           this._ctx,
           () => this.#pollTask.schedule(),
-          Math.max(this.#pollingInterval - (Date.now() - (this.#lastFullPoll ?? 0)), 0),
+          Math.max(this.#currentPollingInterval - (Date.now() - (this.#lastFullPoll ?? 0)), 0),
         );
       }
     }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
@@ -575,7 +756,11 @@ export type FeedSyncerLayerOptions = Pick<
  */
 export const FeedSyncerLayer = (
   options: FeedSyncerLayerOptions,
-): Layer.Layer<FeedSyncerService, never, Event.Bus | SqlClient.SqlClient | EchoHostService | EdgeConnectionService> =>
+): Layer.Layer<
+  FeedSyncerService,
+  never,
+  Hook.Controller | SqlClient.SqlClient | EchoHostService | EdgeConnectionService
+> =>
   Layer.effect(
     FeedSyncerService,
     Effect.gen(function* () {
@@ -604,7 +789,7 @@ export const FeedSyncerLayer = (
 
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => feedSyncer.close()));
-      yield* Event.on(
+      yield* Hook.on(
         StackOpened,
         Effect.fn('FeedSyncer.onStackOpened')(function* () {
           yield* Effect.promise(() => feedSyncer.open(ctx));

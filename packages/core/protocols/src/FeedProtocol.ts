@@ -230,6 +230,13 @@ export const SubscribeRequest = Schema.Struct({
    * Feeds to include in the subscription.
    */
   feedIds: Schema.Array(Schema.String),
+
+  /**
+   * Namespace the subscription covers. When set with an empty `feedIds`, the subscription is
+   * namespace-wide — the client does not learn feed ids until it pulls, so it cannot enumerate
+   * them at subscribe time.
+   */
+  feedNamespace: Schema.optional(Schema.String),
 });
 export interface SubscribeRequest extends Schema.Schema.Type<typeof SubscribeRequest> {}
 
@@ -302,6 +309,33 @@ export const AppendResponse = Schema.Struct({
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
 
 /**
+ * Server-initiated notification that a namespace has gained blocks beyond `position`.
+ *
+ * Carries no block data: the recipient re-pulls through the ordinary cursor path, so a hint that is
+ * dropped, duplicated or reordered costs latency rather than correctness. Sending blocks here
+ * instead would duplicate the position and `serverToken` reconciliation that `pull` already owns,
+ * and would make an undelivered frame a consistency problem rather than a slow one.
+ */
+export const FeedAdvanced = Schema.Struct({
+  /**
+   * Space the advanced namespace belongs to.
+   */
+  spaceId: Schema.String,
+
+  /**
+   * Namespace that gained blocks.
+   */
+  feedNamespace: Schema.String,
+
+  /**
+   * Highest position the server holds for the namespace, when known. Advisory only — the recipient
+   * compares it against its own cursor to skip a redundant pull, and pulls regardless if absent.
+   */
+  position: Schema.optional(Schema.Number),
+});
+export interface FeedAdvanced extends Schema.Schema.Type<typeof FeedAdvanced> {}
+
+/**
  * Tagged transport message union for queue protocol RPC traffic.
  *
  * The routing envelope is distributed over the members with `mapMembers`, which is what Effect 4
@@ -314,6 +348,7 @@ export const ProtocolMessage = Schema.Union([
   Schema.TaggedStruct('SubscribeResponse', SubscribeResponse.fields),
   Schema.TaggedStruct('AppendRequest', AppendRequest.fields),
   Schema.TaggedStruct('AppendResponse', AppendResponse.fields),
+  Schema.TaggedStruct('FeedAdvanced', FeedAdvanced.fields),
   Schema.TaggedStruct('Error', {
     /**
      * Human-readable error message.

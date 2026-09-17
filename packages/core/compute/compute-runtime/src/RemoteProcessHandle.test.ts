@@ -13,6 +13,7 @@ import { describe, test } from 'vitest';
 
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
+import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
@@ -147,11 +148,11 @@ const snapshot = (state: Process.State): RemoteProcessManager.Snapshot => ({
 });
 
 const traceMessage = (text: string): Trace.Message =>
-  ({
+  Obj.make(Trace.Message, {
     meta: { pid: TEST_PID },
     isEphemeral: true,
     events: [{ timestamp: 0, type: 'test.block', data: { text } }],
-  }) as unknown as Trace.Message;
+  });
 
 /**
  * A host whose ring holds `buffered` and which never settles, so a polled subscription stays open

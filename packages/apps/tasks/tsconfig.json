@@ -12,6 +12,9 @@
       "path": "./tsconfig.node.json"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/util"
     },
     {

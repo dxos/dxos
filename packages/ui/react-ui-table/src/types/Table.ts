@@ -9,8 +9,6 @@ import * as Schema from 'effect/Schema';
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Annotation, DXN, JsonSchema, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -19,12 +17,15 @@ export class Table extends Type.makeObject<Table>(DXN.make('org.dxos.type.table'
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
 
-    view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+    view: Ref.Ref(View.View).pipe(Annotation.FormInputAnnotation.set(false)),
 
     // TODO(wittjosiah): Key should be JsonPath.
-    sizes: Schema.Record(Schema.String, Schema.Number).pipe(Schema.mutableKey, FormInputAnnotation.set(false)),
+    sizes: Schema.Record(Schema.String, Schema.Number).pipe(
+      Schema.mutableKey,
+      Annotation.FormInputAnnotation.set(false),
+    ),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     ViewAnnotation.set(['view']),
     Annotation.IconAnnotation.set({ icon: 'ph--table--regular', hue: 'green' }),
   ),
@@ -35,7 +36,7 @@ type MakeProps = {
   sizes?: Record<string, number>;
   view: View.View;
   /** Required to auto-size columns. */
-  jsonSchema?: JsonSchemaType;
+  jsonSchema?: JsonSchema.JsonSchema;
 };
 
 /**

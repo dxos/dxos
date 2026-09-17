@@ -305,7 +305,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
   const label = (entry: ToolEntry) => entryLabel(entry, t);
 
   return (
-    <Accordion.Root<ToolEntry> items={entries} onValueChange={(value) => onOpen?.(value.length > 0)}>
+    <Accordion.Root<ToolEntry> rounded items={entries} onValueChange={(value) => onOpen?.(value.length > 0)}>
       {({ items }) =>
         items.map((entry) => {
           // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
@@ -325,7 +325,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
                 </span>
               </Accordion.ItemHeader>
               {detail && (
-                <Accordion.ItemBody>
+                <Accordion.ItemBody classNames='px-2'>
                   <ToolCallDetail entry={entry} />
                 </Accordion.ItemBody>
               )}
@@ -373,11 +373,10 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
     </div>
     <JsonHighlighter
       data={data}
-      // Scrolls on the inline axis only. The payload is the scroll container for a long line — it
-      // must not scroll the whole widget and carry the summary row out of view — but the block axis
-      // has to stay unscrollable: `JsonHighlighter` defaults to `overflow-auto`, so while the
-      // disclosure's height ramps the squeezed payload drew its own vertical scrollbar.
-      classNames='text-xs bg-transparent overflow-x-auto overflow-y-hidden'
+      // Inline axis only: a long line scrolls here rather than carrying the summary row out of view,
+      // while the block axis stays put so the disclosure's height ramp draws no vertical scrollbar.
+      scroll='horizontal'
+      classNames='text-xs bg-transparent'
       replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 128 }}
     />
   </div>

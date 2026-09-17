@@ -23,15 +23,17 @@ export class ToolResolverService extends Context.Service<
   {
     readonly resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError>;
   }
->()('@dxos/ai/ToolResolverService') {
-  static layerEmpty = Layer.succeed(ToolResolverService, {
+>()('@dxos/ai/ToolResolverService') {}
+
+export namespace ToolResolverService {
+  export const layerEmpty = Layer.succeed(ToolResolverService, {
     resolve: (id) => Effect.fail(new AiToolNotFoundError(id)),
   });
 
-  static resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError, ToolResolverService> = (id) =>
+  export const resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError, ToolResolverService> = (id) =>
     ToolResolverService.use((service) => service.resolve(id));
 
-  static resolveToolkit: (
+  export const resolveToolkit: (
     ids: ToolId[],
   ) => Effect.Effect<Toolkit.Toolkit<Record<string, Tool.Any>>, AiToolNotFoundError, ToolResolverService> = (ids) =>
     Effect.gen(function* () {

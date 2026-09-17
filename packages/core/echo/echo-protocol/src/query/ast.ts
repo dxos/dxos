@@ -246,6 +246,20 @@ export interface FilterHasParent extends Schema.Schema.Type<typeof FilterHasPare
 export const FilterHasParent: Schema.Codec<FilterHasParent> = FilterHasParent_;
 
 /**
+ * Filter objects by mnemonic — the human-memorable short form of an object's id
+ * (its last 6 characters, uppercased). Matching is a local predicate on the id,
+ * so it needs no index.
+ */
+const FilterMnemonic_ = Schema.Struct({
+  type: Schema.Literal('mnemonic'),
+  /** Normalized (uppercase) mnemonic. */
+  mnemonic: Schema.String,
+});
+
+export interface FilterMnemonic extends Schema.Schema.Type<typeof FilterMnemonic_> {}
+export const FilterMnemonic: Schema.Codec<FilterMnemonic> = FilterMnemonic_;
+
+/**
  * Union of filters.
  */
 export const Filter = Schema.Union([
@@ -261,6 +275,7 @@ export const Filter = Schema.Union([
   FilterTextSearch,
   FilterChildOf,
   FilterHasParent,
+  FilterMnemonic,
   FilterNot,
   FilterAnd,
   FilterOr,

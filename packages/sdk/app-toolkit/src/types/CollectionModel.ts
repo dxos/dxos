@@ -9,7 +9,6 @@ import * as Option from 'effect/Option';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { invariant } from '@dxos/invariant';
 
 import * as AppNode from '../app-graph/AppNode.ts';
@@ -33,7 +32,7 @@ export const containing = (object: Obj.Unknown): Query.Query<Collection.Collecti
  */
 const isHidden = (object: Obj.Unknown): boolean => {
   const type = Obj.getType(object);
-  return type ? HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)) : false;
+  return type ? Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)) : false;
 };
 
 export const add = Effect.fn(function* ({ object, target }: AddProps) {
