@@ -1,7 +1,9 @@
 name: Assistant evals
 
 # `DX_ANTHROPIC_API_KEY` is read from Depot's secret settings; restrict its variant to this workflow
-# file on `main` there, since any workflow that names it can read an unscoped variant.
+# file on `main` there, since any workflow that names it can read an unscoped variant. The same goes
+# for `DX_EVAL_MCP_TOKEN` and `DX_EVAL_SPACE_ID`, which the deployed-MCP job below needs: the token
+# is minted by hand and grants access to the space it names.
 
 # TODO(wittjosiah): Once a few weeks of nightly baseline exist, add an advisory `pull_request` job
 # that runs the cheap, deterministically graded scenarios (smoke, basic, database, markdown) on
@@ -16,6 +18,10 @@ on:
         type: string
         description: 'DX_EVAL_MODELS: comma-separated model variants for the scenarios that take them'
         default: ''
+      mcp_target:
+        type: string
+        description: 'DX_EVAL_MCP_TARGET for the deployed-MCP job: preview, dev or prod'
+        default: 'preview'
 
 permissions:
   contents: read
@@ -127,4 +133,115 @@ jobs:
         if: always() && steps.evals.outcome != 'success'
         run: |
           echo "::error::The eval run failed; see the summary above and the assistant-evals artifact."
+          exit 1
+
+  # The MCP server eval against the DEPLOYED surface, which the `evals` job above never exercises:
+  # it runs `local`, so a regression that only exists in a deployed worker is invisible to it.
+  #
+  # `preview` has no EDGE the harness can provision against, so this is a token-mode run: the write
+  # stages drop and only `operations-discovered` and `tool-latency` are scored. That still covers the
+  # failure this job exists for — a worker whose operation registry comes up short or slow.
+  mcp-deployed:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Refuse a patched checkout
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::The checkout has uncommitted changes; this workflow only runs committed code."
+            git status --short
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$EXPECTED_SHA" ]; then
+            echo "::error::HEAD $(git rev-parse HEAD) is not the event's commit $EXPECTED_SHA."
+            exit 1
+          fi
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Install Claude Code
+        run: |
+          npm install --prefix "$RUNNER_TEMP/claude" @anthropic-ai/claude-code@2.1.259
+          echo "$RUNNER_TEMP/claude/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Run the MCP eval against the deployed surface
+        id: evals
+        continue-on-error: true
+        working-directory: packages/core/compute/assistant-evals
+        env:
+          DX_ANTHROPIC_API_KEY: ${{ secrets.DX_ANTHROPIC_API_KEY }}
+          DX_EVAL_MCP_TARGET: ${{ inputs.mcp_target || 'preview' }}
+          DX_EVAL_MCP_TOKEN: ${{ secrets.DX_EVAL_MCP_TOKEN }}
+          DX_EVAL_SPACE_ID: ${{ secrets.DX_EVAL_SPACE_ID }}
+          DX_EVAL_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-mcp
+          DX_EVAL_RUN_NAME: ${{ github.ref_name }}-mcp-${{ inputs.mcp_target || 'preview' }}
+          DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          # Checked up front rather than left to the 401 and the space-not-in-context error the run
+          # would otherwise die on, which read as a broken worker rather than as missing secrets.
+          missing=''
+          [ -z "$DX_ANTHROPIC_API_KEY" ] && missing="$missing DX_ANTHROPIC_API_KEY"
+          [ -z "$DX_EVAL_MCP_TOKEN" ] && missing="$missing DX_EVAL_MCP_TOKEN"
+          [ -z "$DX_EVAL_SPACE_ID" ] && missing="$missing DX_EVAL_SPACE_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Not available to this run:$missing. Check the variant scoping in Depot's secret settings."
+            exit 1
+          fi
+          moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts
+
+      - name: Summarize
+        id: summary
+        if: always() && steps.evals.outcome != 'skipped'
+        working-directory: packages/core/compute/assistant-evals
+        env:
+          DX_EVAL_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-mcp
+          DX_EVAL_RUN_NAME: ${{ github.ref_name }}-mcp-${{ inputs.mcp_target || 'preview' }}
+          DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          if [ ! -f node_modules/.evalite/cache.sqlite ]; then
+            echo "::warning::evalite wrote no store; the run did not start."
+            echo "exported=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p out
+          moon run assistant-evals:evals-report
+          cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
+          echo "exported=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload results
+        if: always() && steps.summary.outputs.exported == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: assistant-evals-mcp-deployed
+          path: packages/core/compute/assistant-evals/out
+          retention-days: 30
+
+      - name: Fail on a red run
+        if: always() && steps.evals.outcome != 'success'
+        env:
+          EXPORTED: ${{ steps.summary.outputs.exported }}
+        run: |
+          # The secret preflight fails before evalite writes a store, so there is no artifact to
+          # point at; sending someone to look for one is how a configuration failure gets read as a
+          # broken eval.
+          if [ "$EXPORTED" = 'true' ]; then
+            echo "::error::The deployed-MCP eval run failed; see the summary above and the assistant-evals-mcp-deployed artifact."
+          else
+            echo "::error::The deployed-MCP eval run failed before producing results; see the step log above."
+          fi
           exit 1
