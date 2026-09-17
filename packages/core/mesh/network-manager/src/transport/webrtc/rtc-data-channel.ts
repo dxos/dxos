@@ -41,6 +41,8 @@ export const bindDataChannel = (
   // Held while the channel's send buffer is above the watermark, released by `onbufferedamountlow`.
   let flushed: (() => void) | null = null;
   let disposed = false;
+  // Frames convert one after another, so a blob's asynchronous read cannot let a later frame land first.
+  let frameOrder = Promise.resolve();
 
   const write = (chunk: any, callback: () => void): void => {
     if (chunk.length > MAX_MESSAGE_SIZE) {
@@ -103,30 +105,30 @@ export const bindDataChannel = (
     onOpen();
   };
 
+  channel.binaryType = 'arraybuffer';
   Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
     onopen: () => attachOutbound(),
 
     onclose: () => (disposed ? undefined : onClose()),
 
-    onmessage: async (event: MessageEvent) => {
+    onmessage: (event: MessageEvent) => {
       attachInbound();
       if (!duplex) {
         log.warn('ignoring message on a closed channel');
         return;
       }
 
-      let data = event.data;
-      if (data instanceof ArrayBuffer) {
-        data = Buffer.from(data);
-      } else if (data instanceof Blob) {
-        // The only await on this path, so re-read the binding after it: disposal in the meantime
-        // leaves nothing to push to.
-        data = Buffer.from(await data.arrayBuffer());
-        if (!duplex) {
-          return;
-        }
-      }
-      duplex.push(data);
+      const data = event.data;
+      frameOrder = frameOrder.then(async () => {
+        const frame =
+          data instanceof ArrayBuffer
+            ? Buffer.from(data)
+            : data instanceof Blob
+              ? Buffer.from(await data.arrayBuffer())
+              : data;
+        duplex?.push(frame);
+      });
+      return frameOrder;
     },
 
     onerror: (event: Event & any) => {
