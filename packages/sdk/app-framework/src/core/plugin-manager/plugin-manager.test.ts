@@ -2,12 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-// Four fixtures still hand the manager an untagged `Error` the way misbehaving third-party
-// plugin code would: an `activate` that throws before returning an Effect, two lazy loaders
-// whose import rejects, and a resolver that throws for an unknown id. Surviving those is the
-// thing under test, so tagging them would remove it. The eleven `Effect.fail(new Error(...))`
-// fixtures this once also covered ARE tagged now.
-/** @effect-diagnostics globalErrorInEffectFailure:skip-file */
+// The four directives below mark fixtures that hand the manager an untagged `Error` the way
+// misbehaving third-party plugin code would; surviving that is what they test, so tagging them
+// would remove the subject.
 
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
@@ -446,6 +443,7 @@ describe('PluginManager', () => {
             activate: (): Effect.Effect<void> => {
               // This throws immediately before even returning an Effect.
               // This is the most severe type of defect.
+              // @effect-diagnostics-next-line globalErrorInEffectFailure:off
               throw new Error('immediate throw before Effect');
             },
           }),
@@ -1708,6 +1706,7 @@ describe('PluginManager', () => {
     it.effect('wraps loader rejections in a descriptive error', () =>
       Effect.gen(function* () {
         const LazyTest = Plugin.lazy(lazyMeta, () =>
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
         );
         const lazyStub = LazyTest();
@@ -1733,6 +1732,7 @@ describe('PluginManager', () => {
     it.effect('publishes a lazy:<id> error message when resolution fails', () =>
       Effect.gen(function* () {
         const LazyTest = Plugin.lazy(lazyMeta, () =>
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
         );
         const lazyStub = LazyTest();
@@ -2214,6 +2214,7 @@ describe('PluginManager', () => {
           if (id === 'remote') {
             return { plugin: remote };
           }
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off
           throw new Error(`Unknown id: ${id}`);
         });
 

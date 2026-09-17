@@ -236,10 +236,9 @@ export interface MultiTag<T, S extends string = any>
 }
 
 /**
- * Either arity of capability tag. One interface rather than `Tag<any, any> | MultiTag<any, any>`:
- * both are assignable to it (`Context.Key` is covariant in both parameters), and a union of two
- * tag types in a constraint position makes `missingEffectContext` read the constraint as an Effect
- * and report one constituent's identifier as a missing service.
+ * Either arity of capability tag. One interface rather than a union of the two tag types: in a
+ * constraint position `missingEffectContext` reads the union as an Effect and reports one
+ * constituent's identifier as a missing service.
  */
 export interface AnyTag extends Context.Key<CapabilityIdentifier<any, Arity>, any>, InterfaceDef<any> {
   readonly arity: Arity;

@@ -17,11 +17,10 @@ import * as AppActivationEvents from './AppActivationEvents.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
- * Type of a maker built by {@link Capability$.moduleMaker}, read off the maker itself so the two
- * cannot drift. Naming it is what keeps declaration emit portable: a capability tag whose type
- * structurally carries a type this module doesn't re-export (e.g. `@dxos/compute`'s
- * `Skill.Definition`) would otherwise have to be named here (TS2883), and `C` reaches this alias
- * only through `typeof`.
+ * Type of a maker built by {@link Capability$.moduleMaker}. Naming it keeps declaration emit
+ * portable: a capability tag whose type structurally carries a type this module doesn't re-export
+ * (e.g. `@dxos/compute`'s `Skill.Definition`) would otherwise have to be named here (TS2883), and
+ * `C` reaches this alias only through `typeof`.
  */
 type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleMaker<C>>;
 

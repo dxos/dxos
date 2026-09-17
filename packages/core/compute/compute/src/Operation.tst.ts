@@ -50,8 +50,6 @@ describe('Operation.withHandler service requirements', () => {
           yield* UndeclaredService;
         }),
       ),
-      // Both diagnostics are the point of this test, in the order they are raised: the rule names
-      // the missing service, then the signature rejects the call.
     ).type.toRaiseError(
       'This Effect requires a service that is missing from the expected Effect context: `UndeclaredService`.',
       "Type 'UndeclaredService' is not assignable to type 'DeclaredService | Service'",

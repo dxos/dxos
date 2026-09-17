@@ -48,13 +48,6 @@
         // instead of importing from the barrel.
         "topLevelNamedReexports": "follow",
 
-        // Effect diagnostics gate the build at warning and error, which is the default, and
-        // every rule is now on: `diagnosticSeverity` is empty because nothing is turned down.
-        // Keep it that way. A rule that fires and is ignored trains people past build output,
-        // so a finding is fixed, or suppressed at its site with a comment saying why — the
-        // handful of standing suppressions are all cases where the rule cannot see through a
-        // generic or a deliberately opaque type, and each says so where it sits.
-        //
         // Style suggestions stay in the editor and out of build logs: 1529 of them
         // across the repo would bury everything else.
         "includeSuggestionsInTsc": false,

@@ -21,8 +21,6 @@ describe('Capability arity', () => {
   });
 
   it('contributeAll rejects a singleton tag', () => {
-    // Both diagnostics are the point of this test, in the order they are raised: the rule names the
-    // identifier a singleton contribution cannot satisfy, then the signature rejects the call.
     expect(Capability.contributeAll(single, [{ example: 'value' }])).type.toRaiseError(
       'This Effect requires a service that is missing from the expected Effect context: `CapabilityIdentifier<"org.dxos.test.single", "single">`.',
       "is not assignable to parameter of type 'MultiTag",

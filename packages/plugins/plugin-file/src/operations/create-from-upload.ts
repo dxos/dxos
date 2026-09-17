@@ -16,8 +16,6 @@ import { NoBackendError, resolveActiveStorage } from './create.ts';
 /** Raised when the named upload cannot be adopted — never uploaded, already consumed, or expired. */
 export class UploadNotFoundError extends BaseError.extend('UploadNotFoundError') {
   constructor(public readonly uploadId: string) {
-    // `BaseError` appends a non-empty context to the message, so the id goes in one or the other;
-    // the sentence reads better and `uploadId` is already a field on this class.
     super({ message: `No completed upload ${uploadId}. Upload the bytes to the signed URL before creating the file.` });
   }
 }
@@ -40,8 +38,6 @@ const handler: Operation.WithHandler<typeof FileOperation.CreateFromUpload> = Fi
         // `not-found` is the adoptable-upload miss; every other reason is a misconfigured backend,
         // which is the same condition `resolveActiveStorage` reports and should not be dressed up
         // as a missing upload.
-        // Annotated: the ternary's branches are two different errors now that both are tagged,
-        // and `catchTag` would otherwise infer the channel from the first branch alone.
         Effect.catchTag('BlobNotAvailableError', (error): Effect.Effect<never, NoBackendError | UploadNotFoundError> =>
           error.context.reason === 'not-found'
             ? Effect.fail(new UploadNotFoundError(uploadId))

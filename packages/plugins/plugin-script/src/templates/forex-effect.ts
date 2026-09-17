@@ -13,7 +13,6 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-/** Tagged so a caller can `Effect.catchTag('NoRateError', ...)` instead of matching on text. */
 class NoRateError extends Data.TaggedError('NoRateError')<{ from: string; to: string }> {}
 
 const ForexEffect = Operation.make({

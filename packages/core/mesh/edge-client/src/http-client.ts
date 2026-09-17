@@ -43,8 +43,6 @@ export const withRetry = (
   }: Partial<RetryOptions> = {},
 ) => {
   return effect.pipe(
-    // Annotated: the branches are two different errors now that the 500 case is tagged, and
-    // `flatMap` would otherwise infer the channel from the first branch alone.
     Effect.flatMap((res): Effect.Effect<unknown, EdgeClientError | HttpClientError.HttpClientError> =>
       // Treat 500 errors as retryable?
       res.status === 500 ? Effect.fail(new EdgeClientError({ message: res.status.toString() })) : res.json,

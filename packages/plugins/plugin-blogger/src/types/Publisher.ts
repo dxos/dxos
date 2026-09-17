@@ -57,10 +57,6 @@ export class MissingCredentialError extends BaseError.extend(
 /** Any failure a `PublisherService` raises. */
 export type Failure = PublisherError | MissingCredentialError;
 
-/**
- * Siblings rather than a hierarchy: `BaseError` derives `_tag` from `name`, so a subclass that
- * renames itself is no longer its parent's tag and `catchTag` stops narrowing either one. This is
- * the `instanceof` across both that the discarded subclassing used to give.
- */
+/** `instanceof` across every publisher failure, for a boundary that passes them through. */
 export const isFailure = (error: unknown): error is Failure =>
   error instanceof PublisherError || error instanceof MissingCredentialError;
