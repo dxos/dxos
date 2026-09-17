@@ -7,6 +7,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving') => void) => {
   const CleanupFns: Record<SpaceId, CleanupFn> = {};
@@ -40,31 +41,34 @@ export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 's
 const createSpaceSaveTracker = (space: Space, cb: (state: 'saved' | 'saving') => void): CleanupFn => {
   const ctx = new Context();
 
-  void space.waitUntilReady().then(() => {
-    if (ctx.disposed) {
-      return;
-    }
-
-    let hasUnsavedChanges = false;
-    let lastFlushPromise: Promise<void> | undefined;
-    space.internal.db.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
-      hasUnsavedChanges = unsavedDocuments.length > 0;
-    });
-    space.internal.db.saveStateChanged.debounce(500).on(ctx, () => {
-      if (hasUnsavedChanges) {
-        lastFlushPromise = undefined;
-        cb('saving');
-      } else {
-        const flushPromise = space.db.flush();
-        lastFlushPromise = flushPromise;
-        void flushPromise.then(() => {
-          if (lastFlushPromise === flushPromise) {
-            cb('saved');
-          }
-        });
+  void space
+    .waitUntilReady()
+    .then(() => {
+      if (ctx.disposed) {
+        return;
       }
-    });
-  });
+
+      let hasUnsavedChanges = false;
+      let lastFlushPromise: Promise<void> | undefined;
+      space.internal.db.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
+        hasUnsavedChanges = unsavedDocuments.length > 0;
+      });
+      space.internal.db.saveStateChanged.debounce(500).on(ctx, () => {
+        if (hasUnsavedChanges) {
+          lastFlushPromise = undefined;
+          cb('saving');
+        } else {
+          const flushPromise = space.db.flush();
+          lastFlushPromise = flushPromise;
+          void flushPromise.then(() => {
+            if (lastFlushPromise === flushPromise) {
+              cb('saved');
+            }
+          });
+        }
+      });
+    })
+    .catch((err) => log.catch(err));
 
   return () => {
     void ctx.dispose();

@@ -31,6 +31,7 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
+  RpcClosedError,
   runServiceCall,
   subscribeStream,
 } from '@dxos/protocols';
@@ -83,6 +84,8 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
   private readonly _status = MulticastObservable.from(this._statusUpdate, null);
+  private readonly _fatalErrorUpdate = new Event<Error | null>();
+  private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
   private readonly _echoClient = new EchoClient();
 
@@ -215,6 +218,13 @@ export class Client {
    */
   get status(): MulticastObservable<SystemStatus | null> {
     return this._status;
+  }
+
+  /**
+   * Set when the system status stream fails after open; cleared only when the client reopens.
+   */
+  get fatalError(): MulticastObservable<Error | null> {
+    return this._fatalError;
   }
 
   /**
@@ -556,12 +566,15 @@ export class Client {
     }
 
     log('client._open: subscribing to system status...');
+    this._fatalErrorUpdate.emit(null);
+    let statusReceived = false;
     this._statusStreamCleanup = subscribeStream(
       this._effectRuntime,
       this._services.rpc['SystemService.queryStatus']({ interval: 3_000 }),
       {
         onData: ({ status }) => {
           log('client._open: status received', { status });
+          statusReceived = true;
           this._statusTimeout && clearTimeout(this._statusTimeout);
           trigger.wake(undefined);
 
@@ -572,8 +585,18 @@ export class Client {
         },
         onError: (err) => {
           log('client._open: status error', { err });
-          trigger.wake(err);
           this._statusUpdate.emit(null);
+          if (!statusReceived) {
+            trigger.wake(err);
+            return;
+          }
+
+          // A lost connection is reopened by `_services.closed`, and a reset tears services down on purpose.
+          if (this._resetting || err instanceof RpcClosedError) {
+            return;
+          }
+          log.error('system status stream failed', { err });
+          this._fatalErrorUpdate.emit(err);
         },
         onClose: () => {
           trigger.wake(undefined);
