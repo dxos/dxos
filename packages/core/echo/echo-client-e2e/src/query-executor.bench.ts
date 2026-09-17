@@ -307,6 +307,7 @@ await settle();
 const afterSeed = process.memoryUsage();
 
 let checksum = 0;
+const failures: string[] = [];
 const phaseSamples: Record<string, number[]> = {};
 const record = (phase: string, value: number) => {
   (phaseSamples[phase] ??= []).push(value);
@@ -425,10 +426,12 @@ const collectMemory = async (): Promise<MemoryRow[]> => {
     await measureMemory('cold: reload + open + run type + property', async () => {
       await cold.peer.reload();
       cold.db = await cold.peer.openLastDatabase();
+      const queryStart = performance.now();
       let results = await cold.db.query(propertyQuery).run();
       for (let retry = 0; results.length !== EXPECTED_MATCHES && retry < SHORT_RESULT_RETRIES; retry++) {
         results = await cold.db.query(propertyQuery).run();
       }
+      record('cold run type + property, memory pass (to a full result set)', performance.now() - queryStart);
       checksum += results.length;
     }),
   );
@@ -470,6 +473,10 @@ afterAll(async () => {
   if (phaseLines.length > 0) {
     // eslint-disable-next-line no-console
     console.log(`\nPhase timings (measured inside the cold rows, ms unless noted):\n${phaseLines.join('\n')}\n`);
+  }
+  if (failures.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log(`\nRow failures:\n${failures.join('\n')}\n`);
   }
 
   await builder.close();
@@ -519,16 +526,23 @@ describe(
         // A query straight after a reload can come back short if the index is not yet complete. A short
         // result is re-run and counted so the row keeps its samples and the report shows how often it happened.
         const queryStart = performance.now();
-        let results = await db.query(propertyQuery).run();
-        for (let retry = 0; results.length !== EXPECTED_MATCHES && retry < SHORT_RESULT_RETRIES; retry++) {
-          record('short cold result, re-ran (value = results returned)', results.length);
-          results = await db.query(propertyQuery).run();
+        try {
+          let results = await db.query(propertyQuery).run();
+          for (let retry = 0; results.length !== EXPECTED_MATCHES && retry < SHORT_RESULT_RETRIES; retry++) {
+            record('short cold result, re-ran (value = results returned)', results.length);
+            results = await db.query(propertyQuery).run();
+          }
+          record('cold run type + property (to a full result set)', performance.now() - queryStart);
+          if (results.length !== EXPECTED_MATCHES) {
+            throw new Error(`cold: expected ${EXPECTED_MATCHES} results, got ${results.length}`);
+          }
+          checksum += results.length;
+        } catch (error) {
+          // tinybench keeps a failed task's error to itself and vitest prints the row without samples.
+          record('cold run FAILED (value = ms until the error)', performance.now() - queryStart);
+          failures.push(`cold run: ${error instanceof Error ? error.message : String(error)}`);
+          throw error;
         }
-        record('cold run type + property (to a full result set)', performance.now() - queryStart);
-        if (results.length !== EXPECTED_MATCHES) {
-          throw new Error(`cold: expected ${EXPECTED_MATCHES} results, got ${results.length}`);
-        }
-        checksum += results.length;
       },
       COLD_OPTIONS,
     );
