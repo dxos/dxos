@@ -131,13 +131,12 @@ export class DocumentsSynchronizer extends Resource {
     } finally {
       // Unsubscribed while loading: the state is gone and `removeDocuments` released the lease.
       if (this._syncStates.get(documentId) === syncState && syncState.initialLease === lease) {
-        const ready = lease.loaded;
         syncState.initialLease = undefined;
         lease[Symbol.dispose]();
-        if (ready) {
-          this._pendingUpdates.add(documentId);
-          this._sendUpdatesJob?.trigger();
-        }
+        // Queued whether or not the load succeeded: a failed one is retried by the send loop, which
+        // gives up on a document this host does not store rather than retrying it forever.
+        this._pendingUpdates.add(documentId);
+        this._sendUpdatesJob?.trigger();
       }
     }
   }

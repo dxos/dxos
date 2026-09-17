@@ -273,6 +273,18 @@ export class IndexQuerySource implements QuerySource {
     );
   }
 
+  /**
+   * Reports the current query as answered-with-nothing, so a subscriber waiting on this source stops
+   * waiting. Ignored once the query has been replaced or closed.
+   */
+  private _fail(queryId: number | undefined): void {
+    if (queryId === undefined || this._reactiveQueryId !== queryId) {
+      return;
+    }
+    this._state = 'failed';
+    this.changed.emit();
+  }
+
   /** Reactive query: pushes results on every host response and remembers the raw records. */
   private _startReactive(query: QueryAST.Query): void {
     const queryId = nextQueryId++;
@@ -300,6 +312,7 @@ export class IndexQuerySource implements QuerySource {
             this._scheduleHydrate();
           } catch (err: any) {
             log.catch(err);
+            this._fail(queryId);
           }
         },
         onError: (err) => {
@@ -308,10 +321,7 @@ export class IndexQuerySource implements QuerySource {
           }
           // Nothing more is coming on this stream; a subscriber waiting for the index must not wait
           // for it forever.
-          if (this._reactiveQueryId === queryId) {
-            this._state = 'failed';
-            this.changed.emit();
-          }
+          this._fail(queryId);
         },
       },
     );
@@ -386,6 +396,7 @@ export class IndexQuerySource implements QuerySource {
       } while (this._hydratePending);
     } catch (err: any) {
       log.catch(err);
+      this._fail(this._reactiveQueryId);
     } finally {
       this._hydrating = false;
     }

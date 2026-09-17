@@ -80,7 +80,8 @@ const startLagProbe = () => {
 /**
  * Documents held on the proxy thread and on the host, summed over `spaces`. `stats()` walks every
  * linked document to count objects, so `host` is the residency right after that walk; `hostLeases`
- * is what the host is holding for someone, which the walk does not change.
+ * is what the host is holding for someone, which the walk does not change. Leases are counted for
+ * the host as a whole rather than per space, so that one is read, not summed.
  */
 const countDocuments = async (spaces: { db: Space['db'] }[]) => {
   let tab = 0;
