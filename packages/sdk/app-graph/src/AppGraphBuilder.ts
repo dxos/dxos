@@ -85,15 +85,14 @@ export type UrlBinding = { key: string; kind: 'item' | 'singleton'; path: string
  *
  * The two keys are fixed tiers no extension declares (no connector produces their nodes): `anchorKey`
  * establishes the base that following pairs resolve against and is consumed as a rebase
- * (`w/<workspace>`); `linkedKey` addresses a node attached to the preceding item through
- * `linkedRelation` (`companion/<variant>`). `tailSeparator` joins the
+ * (`w/<workspace>`); `linked` addresses a node attached to the preceding item through its relation
+ * (`companion/<variant>`). `tailSeparator` joins the
  * fixed-depth node-id segments between a key's static `path` and the object id into one URL id
  * (`db/<slug>+<id>`) so a fixed-depth nested shape needs no resolver.
  */
 export type UrlGrammar = {
   anchorKey?: string;
-  linkedKey?: string;
-  linkedRelation?: Node.RelationInput;
+  linked?: { key: string; relation: Node.RelationInput };
   tailSeparator: string;
 };
 

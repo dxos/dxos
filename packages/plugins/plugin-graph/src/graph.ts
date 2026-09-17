@@ -31,8 +31,7 @@ export default Capability.makeModule(
     // produces their nodes (see `AppGraphBuilder.UrlGrammar`).
     const builder = AppGraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
       anchorKey: UrlPath.WORKSPACE_KEY,
-      linkedKey: UrlPath.COMPANION_KEY,
-      linkedRelation: AppNode.companion,
+      linked: { key: UrlPath.COMPANION_KEY, relation: AppNode.companion },
     });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());

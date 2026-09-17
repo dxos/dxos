@@ -47,7 +47,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   // The grammar's fixed tiers are builder config, not extensions (see `GraphBuilder.UrlKeys`).
   const builder = GraphBuilder.make({
     registry,
-    urlGrammar: { anchorKey: 'w', linkedKey: 'companion', linkedRelation: COMPANION },
+    urlGrammar: { anchorKey: 'w', linked: { key: 'companion', relation: COMPANION } },
   });
 
   const workspaces = Effect.runSync(
@@ -573,7 +573,10 @@ describe('path-resolution', () => {
     // path is the container the items hang off, so it addresses nothing of its own.
     test("a container at the binding's own path is unmapped", async ({ expect }) => {
       const registry = Registry.make();
-      const builder = GraphBuilder.make({ registry, urlGrammar: { anchorKey: 'w', linkedKey: 'companion' } });
+      const builder = GraphBuilder.make({
+        registry,
+        urlGrammar: { anchorKey: 'w', linked: { key: 'companion', relation: COMPANION } },
+      });
       GraphBuilder.addExtension(builder, [
         Effect.runSync(
           GraphBuilder.createExtension({

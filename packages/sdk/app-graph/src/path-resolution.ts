@@ -133,12 +133,12 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
  */
 export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
   const table = new Map<string, UrlKeyTableEntry>();
-  const { anchorKey, linkedKey } = builder.urlGrammar;
+  const { anchorKey, linked } = builder.urlGrammar;
   if (anchorKey) {
     table.set(anchorKey, { key: anchorKey, hasId: true, anchor: true });
   }
-  if (linkedKey) {
-    table.set(linkedKey, { key: linkedKey, hasId: true, anchor: false });
+  if (linked) {
+    table.set(linked.key, { key: linked.key, hasId: true, anchor: false });
   }
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.meta.key;
@@ -260,7 +260,7 @@ const resolveLinked = async (
   precedingNodeId: string,
   variant: string,
 ): Promise<string | null> => {
-  const relation = builder.urlGrammar.linkedRelation;
+  const relation = builder.urlGrammar.linked?.relation;
   if (!relation) {
     return null;
   }
@@ -298,7 +298,7 @@ const resolveUrlAsync = async (
   // module activation timeout, which disables the plugin rather than degrading to not-found.
   const groups: Array<number[]> = [];
   parsed.pairs.forEach((pair, pairIndex) => {
-    if (pair.key === builder.urlGrammar.linkedKey && groups.length > 0) {
+    if (pair.key === builder.urlGrammar.linked?.key && groups.length > 0) {
       groups[groups.length - 1].push(pairIndex);
     } else {
       groups.push([pairIndex]);
@@ -339,7 +339,7 @@ const resolveUrlAsync = async (
       const headPair = parsed.pairs[headIndex];
       // A leading linked pair has no item to attach to (groups only start with one when the chain
       // opens with it), so it resolves to nothing rather than against a stale base.
-      const head = headPair.key === builder.urlGrammar.linkedKey ? null : await resolveItem(headIndex);
+      const head = headPair.key === builder.urlGrammar.linked?.key ? null : await resolveItem(headIndex);
       const headNodeId = head?.nodeId;
       results[headIndex] = head?.nodeId
         ? { pairIndex: headIndex, nodeId: head.nodeId }
@@ -401,9 +401,9 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
     return Option.none();
   }
 
-  const linkedKey = builder.urlGrammar.linkedKey;
-  if (linkedKey && isCompanionIdEvenIfReleased(nodeId)) {
-    return Option.some({ key: linkedKey, id: companionVariant(nodeId), workspace });
+  const linked = builder.urlGrammar.linked;
+  if (linked && isCompanionIdEvenIfReleased(nodeId)) {
+    return Option.some({ key: linked.key, id: companionVariant(nodeId), workspace });
   }
 
   const extensionId = builder.getNodeExtensionId(nodeId);
