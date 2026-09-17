@@ -19,6 +19,13 @@ import { type Transport, type TransportFactory, type TransportOptions } from './
 const MEMORY_TRANSPORT_DELAY = 1;
 
 /**
+ * Grace period for in-flight chunks to reach the peer before the pipes are detached.
+ * Aborting outright discards whatever the delay transform is holding, which loses the peer's RPC
+ * `bye` and leaves its graceful close waiting out the full timeout.
+ */
+const PIPE_DRAIN_TIMEOUT = 100;
+
+/**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
  */
 const createStreamDelay = (delay: number): TransformStream<Uint8Array, Uint8Array> => {
@@ -151,8 +158,13 @@ export class MemoryTransport implements Transport {
 
       // Detach both directions. Cancelling the readables instead would destroy the wire-protocol
       // streams — including the peer's — where the `unpipe` this replaced only detached them.
-      this._abort.abort();
+      const pipes = this._pipes;
       this._pipes = [];
+      await Promise.race([
+        Promise.allSettled(pipes),
+        new Promise((resolve) => setTimeout(resolve, PIPE_DRAIN_TIMEOUT)),
+      ]);
+      this._abort.abort();
 
       this._remoteConnection.closed.emit();
       this._remoteConnection._remoteConnection = undefined;
