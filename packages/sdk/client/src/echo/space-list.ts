@@ -8,14 +8,13 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, PushStream, SubscriptionList, Trigger, scheduleMicroTask } from '@dxos/async';
 import {
   type ClientServicesProvider,
-  CREATE_SPACE_TIMEOUT,
   type Echo,
   IMPORT_SPACE_TIMEOUT,
   type Space,
   SpaceProperties,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
-import { Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { type EchoClient } from '@dxos/echo-client';
@@ -292,7 +291,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     });
     const spaceProxy = this._findProxy(space);
 
-    await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
+    await cancelWithContext(ctx, spaceProxy._databaseInitialized.wait());
     spaceProxy.db.add(Obj.make(SpaceProperties, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
