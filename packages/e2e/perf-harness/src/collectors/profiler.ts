@@ -35,12 +35,20 @@ export type ProfileSession = {
 };
 
 /**
- * Frames V8 attributes to no script — an idle or GC tick rather than the realm doing work.
+ * The one frame that means the realm was NOT working.
  *
  * Counted out because a profiler samples on a wall clock: a realm that slept through a stage still
  * produces a sample per interval, so raw sample count measures the stage's duration, not its cost.
+ *
+ * `(program)` is deliberately NOT here, though it looks like a sibling. V8's `EntryForVMState` maps
+ * only `IDLE` to `(idle)`; `JS`, `COMPILER`, `OTHER` and `EXTERNAL` all map to `(program)`, which is
+ * the realm doing work V8 could not attribute to a script — native code, compilation, an external
+ * callback. Counting it as idle understated every realm's CPU. Measured across the 36 profiles of
+ * one run: 69,591 `(idle)` samples against 1,958 `(program)`, the latter concentrated in the page
+ * on render-heavy stages, so Chrome does report real idleness as `(idle)` and `(program)` was
+ * ~2.0 s of discarded work. `(garbage collector)` counts too: a collecting realm is busy.
  */
-const IDLE_FRAMES = new Set(['(idle)', '(program)']);
+const IDLE_FRAMES = new Set(['(idle)']);
 
 type CpuProfile = {
   nodes: Array<{ id: number; callFrame: { functionName: string } }>;

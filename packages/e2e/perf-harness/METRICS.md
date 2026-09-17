@@ -70,7 +70,9 @@ target exists before the page, so that row carries no `cpuMsByRealm` at all.
 
 Idle ticks are counted out because a profiler samples on a wall clock — a realm that slept through
 a stage still produces a sample per interval, so raw sample count measures the stage's duration,
-not its cost.
+not its cost. **Only `(idle)` is idle.** `(program)` is V8's bucket for work it could not attribute
+to a script (native code, compilation, an external callback) and `(garbage collector)` is a realm
+collecting; both count. Treating `(program)` as idle understated CPU by ~2.0 s of a measured run.
 
 **The only instrument that reaches a worker.** `SystemInfo.getProcessInfo` folds a dedicated worker
 into its renderer, and the `Performance` domain does not exist on a worker target at all
@@ -263,18 +265,22 @@ number and the picture come from one source.
 ## Modes, and why timings do not cross them
 
 `measure` reads counters at stage boundaries and runs the sampling profiler for `cpuMsByRealm`,
-writing no profiles. It is the **sole mode trended**.
+**keeping its profiles** — a `measure` run writes a `.cpuprofile` per realm per stage and a still
+per stage, same as `diagnose`. It is the **sole mode trended**. The `measure (no instruments)` row
+in the cost table below is a no-profiler baseline for comparison, not how `measure` is configured.
 
-`diagnose` adds the screencast and keeps the profiles, producing artifacts (`.cpuprofile` per
-realm, stage stills) that are never trended.
+`diagnose` adds the screencast on top, and its stills come from screencast frames rather than
+one-off captures.
 
 The line between them is the screencast, not instrumentation in general.
 
-**`diagnose` is for an agent investigating a regression, run on demand and locally. CI never runs
-it.** Its output is evidence to read — a flame chart per realm per stage, a still of what the screen
+**`diagnose` is for an agent investigating a regression, run on demand and locally. The scheduled
+nightly never runs it** — it defaults to `measure`, though a manual `workflow_dispatch` can ask for
+`diagnose` explicitly, which is the one way it reaches a runner — and an untested one.
+
+Its output is evidence to read — a flame chart per realm per stage, a still of what the screen
 showed, a frame-gap figure — not a number to trend, and its timings are incomparable to the trend by
-construction. The nightly therefore runs `measure` only; reach for `diagnose` when a tile has moved
-and the question is _why_:
+construction. Reach for it when a tile has moved and the question is _why_:
 
 ```bash
 DX_PERF_MODES=diagnose moon run composer-app:e2e-perf

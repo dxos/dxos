@@ -146,9 +146,15 @@ export class StageRunner {
     if (!screenshotDir) {
       return undefined;
     }
-    mkdirSync(screenshotDir, { recursive: true });
     const file = path.join(screenshotDir, `${id}.png`);
-    // Never fatal: a stage that measured fine should not fail over its illustration.
+    // Never fatal, and that includes creating the directory: this runs after the stage's error
+    // boundary has closed, so a throw here rejects `stage()` before it pushes the measured row —
+    // losing the measurement over its illustration.
+    try {
+      mkdirSync(screenshotDir, { recursive: true });
+    } catch {
+      return undefined;
+    }
     return page
       .screenshot({ path: file })
       .then(() => file)

@@ -168,6 +168,8 @@ export const readTrace = async (file: string): Promise<Map<string, RealmCpu[]>> 
 
 /** Byte patterns a pass cares about, so only the matching events are ever parsed. */
 const TRACE_EVENTS_KEY = Buffer.from('"traceEvents"');
+/** Past this without finding the key, the document is not a Chrome trace. */
+const MAX_HEADER_BYTES = 1 << 20;
 const ARRAY_OPEN = 0x5b;
 const QUOTE = 0x22;
 const BACKSLASH = 0x5c;
@@ -201,12 +203,22 @@ const streamEvents = async (file: string, onEvent: (event: TraceEvent) => void, 
   let entered = false;
 
   for await (const chunk of source) {
-    // Concatenates the straddling remainder only, never the whole file.
+    // Concatenates the straddling remainder only, never the whole file — enforced below for the
+    // header search too, which is the one place that could otherwise accumulate without bound.
     let buffer = tail.length ? Buffer.concat([tail, chunk]) : chunk;
     if (!entered) {
       const key = buffer.indexOf(TRACE_EVENTS_KEY);
       const open = key < 0 ? -1 : buffer.indexOf(ARRAY_OPEN, key);
       if (open < 0) {
+        // A file that never contains the key would otherwise be concatenated whole and then read
+        // as zero events — the same unbounded-buffer failure this parser was rewritten to remove,
+        // and reachable from `readTrace` on any saved artifact that is truncated or not a Chrome
+        // trace. The marker appears in the first few hundred bytes of a real trace.
+        if (buffer.length > MAX_HEADER_BYTES) {
+          throw new Error(
+            `not a Chrome trace: no "traceEvents" array in the first ${MAX_HEADER_BYTES} bytes of ${file}`,
+          );
+        }
         tail = buffer;
         continue;
       }

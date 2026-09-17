@@ -82,9 +82,10 @@ export type ThreadMetrics = {
 /**
  * CPU a realm spent, measured by the sampling profiler.
  *
- * `diagnose` only, since it needs the profiler running. The instrument of last resort and the only
- * one that reaches a worker: process CPU folds a dedicated worker in with its renderer, and the
- * `Performance` domain is absent on worker targets.
+ * Present in BOTH modes: the profiler costs below the run-to-run noise, so worker CPU is trended
+ * rather than diagnose-only. The instrument of last resort and the only one that reaches a worker:
+ * process CPU folds a dedicated worker in with its renderer, and the `Performance` domain is absent
+ * on worker targets.
  */
 export type RealmCpu = {
   kind: TargetKind;
@@ -92,7 +93,10 @@ export type RealmCpu = {
   /** Non-idle samples x sampling interval. */
   cpuMs: number;
   samples: number;
-  /** Idle/GC ticks. `samples - idleSamples` is the realm's actual work. */
+  /**
+   * `(idle)` ticks alone. `samples - idleSamples` is the realm's actual work, which counts
+   * `(program)` and `(garbage collector)` — see `IDLE_FRAMES` for why those are not idle.
+   */
   idleSamples: number;
 };
 

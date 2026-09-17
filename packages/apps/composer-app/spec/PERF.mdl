@@ -45,8 +45,8 @@ comparable at all:
   split code-load vs API; long tasks and TBT for the page, and timer-drift lag per realm.
 - **Recorded on every row, or the trend is noise:** serving mode (`vite preview` over a production
   bundle — `vite serve` costs ~2.5x on the main thread), plugin set, profile state (first-run
-  performs onboarding and loads a different module set), settle time, and whether the run was
-  which instruments were attached. Per `scripts/memory/README.md` §"Comparing runs".
+  performs onboarding and loads a different module set), settle time, and which instruments were
+  attached. Per `scripts/memory/README.md` §"Comparing runs".
 - **Memory means four different things** that differ by 3-5x. The trended one is peak RSS, because
   it is what a user feels and the only one that counts wasm linear memory — where automerge
   documents live, outside every JS-heap reading, never returned to the OS.

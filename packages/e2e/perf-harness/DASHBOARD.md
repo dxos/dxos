@@ -20,15 +20,15 @@ envelope (`ciCommitSha`, `ciBranch`, `ciRunId`, …), so the harness emits `wall
 
 ### Dimensions — what a point is
 
-| property        | example             | role                                                                      |
-| --------------- | ------------------- | ------------------------------------------------------------------------- |
-| `ciFlow`        | `projects`          | Which flow. One today.                                                    |
-| `ciStage`       | `open-document`     | **The scenario.** Every chart breaks down by this.                        |
-| `ciStageIndex`  | `6`                 | Order within the flow, for sorting a stacked bar.                         |
-| `ciScale`       | `tasks=200,depth=2` | Fixture size label.                                                       |
-| `ciFixtureSize` | `203`               | Objects actually created. Not folded into `ciScale`, which is a join key. |
-| `ciIteration`   | `1`                 | Repeat within one run.                                                    |
-| `ciOk`          | `true`              | Always `true`; a failed stage is never published.                         |
+| property        | example                                   | role                                                                                          |
+| --------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `ciFlow`        | `projects-tasks`                          | Which flow. One today.                                                                        |
+| `ciStage`       | `open-document`                           | **The scenario.** Every chart breaks down by this.                                            |
+| `ciStageIndex`  | `6`                                       | Order within the flow, for sorting a stacked bar.                                             |
+| `ciScale`       | `tasks=200,depth=2,projects=1,docs=3x400` | Fixture shape label.                                                                          |
+| `ciFixtureSize` | `200`                                     | Tasks actually created (`fixture.taskCount`). Not folded into `ciScale`, which is a join key. |
+| `ciIteration`   | `1`                                       | Repeat within one run.                                                                        |
+| `ciOk`          | `true`                                    | Always `true`; a failed stage is never published.                                             |
 
 ### Comparability — pinned in every `WHERE`
 
