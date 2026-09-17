@@ -64,9 +64,16 @@ export class TestExtensionWithStreams implements TeleportExtension {
     streamEntry.writer = writer;
 
     const pushChunk = () => {
+      if (streamEntry.closed) {
+        return;
+      }
+
       streamEntry.timer = setTimeout(() => {
+        if (streamEntry.closed) {
+          return;
+        }
+
         const chunk = randomBytes(chunkSize);
-        // `ready` is the web-stream drain: it settles once the sink wants more.
         writer
           .write(chunk)
           .then(() => {
@@ -75,6 +82,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
           .catch(() => {
             streamEntry.sendErrors += 1;
           });
+        // `ready` is the web-stream drain: it settles once the sink wants more.
         void writer.ready.then(pushChunk).catch(() => {});
       }, interval);
     };
@@ -179,11 +187,11 @@ export class TestExtensionWithStreams implements TeleportExtension {
     log('onClose', { err });
     await this.callbacks.onClose?.();
     this.closed.wake();
-    for (const [streamTag, stream] of Object.entries(this._streams)) {
+    for (const [streamTag, stream] of this._streams) {
       log('closing stream', { streamTag });
-      clearTimeout(stream.interval);
       destroyTestStream(stream);
     }
+    this._streams.clear();
     await this._rpc?.close();
   }
 
@@ -264,11 +272,17 @@ type TestStream = {
   sendErrors: number;
   receiveErrors: number;
   timer?: NodeJS.Timeout;
+  closed?: boolean;
   startTimestamp?: number;
   reportingTimer?: NodeJS.Timeout;
 };
 
 const destroyTestStream = (stream: TestStream): void => {
+  // The push loop reschedules itself off `writer.ready`, so it has to be told to stop; closing the
+  // writer alone leaves a timer running for the rest of the process.
+  stream.closed = true;
+  clearTimeout(stream.timer);
+  clearInterval(stream.reportingTimer);
   void stream.writer?.close().catch(() => {});
   void stream.networkStream.readable.cancel().catch(() => {});
 };

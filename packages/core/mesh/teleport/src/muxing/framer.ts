@@ -28,6 +28,7 @@ const READABLE_HIGH_WATER_MARK = 64 * 1024;
 export class Framer {
   #messageCb?: (msg: Uint8Array) => void = undefined;
   #subscribeCb?: () => void = undefined;
+  #pendingWriteResolve?: () => void = undefined;
   #buffer?: Uint8Array = undefined; // The rest of the bytes from the previous write call.
   #sendCallbacks: (() => void)[] = [];
 
@@ -76,10 +77,10 @@ export class Framer {
 
       // Defer completion until the peer subscribes, so the chunk is not dropped.
       return new Promise<void>((resolve) => {
+        this.#pendingWriteResolve = resolve;
         this.#subscribeCb = () => {
           this.#popFrames();
-          this.#subscribeCb = undefined;
-          resolve();
+          this.#settlePendingWrite();
         };
       });
     },
@@ -157,6 +158,16 @@ export class Framer {
     return this.#buffer?.length ?? 0;
   }
 
+  /**
+   * Completes the write parked in `#writableStream` and clears the hooks that were waiting on it.
+   */
+  #settlePendingWrite(): void {
+    this.#subscribeCb = undefined;
+    const resolve = this.#pendingWriteResolve;
+    this.#pendingWriteResolve = undefined;
+    resolve?.();
+  }
+
   #processResponseQueue(): void {
     const responseQueue = this.#sendCallbacks;
     this.#sendCallbacks = [];
@@ -172,6 +183,9 @@ export class Framer {
     this.#closed = true;
     // Unblock anyone awaiting capacity, so a close cannot strand a pending send.
     this.#processResponseQueue();
+    // Settle a write parked waiting for a subscriber: nothing will consume it now, and leaving the
+    // promise pending strands the `pipeTo` feeding us, which in turn hangs the transport's close.
+    this.#settlePendingWrite();
     this.closed.emit(reason instanceof Error ? reason : undefined);
   }
 
