@@ -349,8 +349,10 @@ const scheduleOnMacrotasks = (builder: GraphBuilder.Any) => {
 };
 
 describe('retention', () => {
+  const ATTACHED = ['action', 'companion'];
+
   const tree = () => {
-    const harness = setup({ structural: (relation) => relation === 'child' });
+    const harness = setup();
     const produce = (relation: string, nodes: (id: string) => GraphBuilder.ModelNodeArg[]) =>
       GraphBuilder.addExtension(harness.builder, {
         id: relation,
@@ -391,7 +393,7 @@ describe('retention', () => {
       const atoms = answers.map((regions) => Atom.make(regions).pipe(Atom.keepAlive));
       GraphBuilder.setRetention(
         harness.builder,
-        atoms.map((retained) => ({ retained })),
+        atoms.map((retained) => ({ retained, attached: ATTACHED })),
       );
       await GraphBuilder.flush(harness.builder);
       return atoms;
@@ -436,6 +438,16 @@ describe('retention', () => {
     expect(present('root/w0/c0')).to.be.false;
     expect(present('root/w1/c0/k')).to.be.true;
     expect(present('root/w1/c0/c0')).to.be.false;
+  });
+
+  test('a relation no retention names as attached costs a level like any other', async () => {
+    const harness = await loaded();
+    const answer = Atom.make<readonly GraphBuilder.Region[]>([{ id: 'root/w1', depth: 1 }]).pipe(Atom.keepAlive);
+    GraphBuilder.setRetention(harness.builder, [{ retained: answer, attached: ['companion'] }]);
+    await GraphBuilder.flush(harness.builder);
+
+    expect(harness.present('root/w1/c0/k')).to.be.true;
+    expect(harness.present('root/w0/a')).to.be.false;
   });
 
   test('the deepest ask across retentions wins', async () => {

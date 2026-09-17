@@ -30,8 +30,8 @@ export const combine = (answers: Iterable<readonly Region[]>): Map<string, numbe
   return asked;
 };
 
-export const key = (asked: ReadonlyMap<string, number>): string =>
-  JSON.stringify([...asked].map(([id, depth]) => [id, String(depth)]).sort());
+export const key = (asked: ReadonlyMap<string, number>, attached: ReadonlySet<string>): string =>
+  JSON.stringify([[...asked].map(([id, depth]) => [id, String(depth)]).sort(), [...attached].sort()]);
 
 export type UnretainedProps = {
   readonly asked: ReadonlyMap<string, number>;

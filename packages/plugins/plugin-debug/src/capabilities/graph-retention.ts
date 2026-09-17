@@ -11,12 +11,13 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { DebugNodes } from '#types';
 
-import { mountedPanels } from '../containers/DebugPanel/mounted.ts';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // The panel's two hosts — the deck's drawer and the floating window — share this subtree, and
+    // neither owns its lifetime, so it stays loaded for the session.
+    // TODO(wittjosiah): Release it when no host is showing it.
     const retention: AppGraphBuilder.Retention = {
-      retained: Atom.make((get) => (get(mountedPanels) > 0 ? [{ id: DebugNodes.DEBUG_ROOT_ID }] : [])),
+      retained: Atom.make([{ id: DebugNodes.DEBUG_ROOT_ID }]),
     };
 
     return Capability.contribute(AppCapabilities.AppGraphRetention, retention);

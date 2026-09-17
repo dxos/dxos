@@ -805,6 +805,7 @@ describe('GraphBuilder', () => {
 
         GraphBuilder.setRetention(builder, [
           {
+            attached: [Node.actionRelation(), ATTACHED],
             retained: Atom.make([{ id: 'root/w0', depth: 1 }]),
           },
         ]);

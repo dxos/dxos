@@ -200,7 +200,6 @@ export class GraphBuilder extends Builder.GraphBuilder<
     super({
       registry,
       relationKey: (relation) => Graph.relationKey(relation ?? 'child'),
-      structural: (relation) => relation === CHILD_RELATION,
       inline,
       unchanged: nodeArgsUnchanged,
       decorateNode,
@@ -305,7 +304,6 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 // Named (not namespace) re-export: this module already exports its own `GraphBuilder` class above.
 export {
   type Region,
-  type Retention,
   addExtension,
   destroy,
   explore,
@@ -313,9 +311,23 @@ export {
   release,
   releasedVersion,
   removeExtension,
-  setRetention,
   wasReleased,
 } from '@dxos/graph/GraphBuilder';
+
+/** {@link Builder.Retention} whose `attached` names app relations rather than their encoded keys. */
+export type Retention = Omit<Builder.Retention, 'attached'> & {
+  readonly attached?: readonly Node.RelationInput[];
+};
+
+/** {@link Builder.setRetention}, encoding each policy's attached relations. */
+export const setRetention = (builder: Builder.Any, retentions: readonly Retention[]): void =>
+  Builder.setRetention(
+    builder,
+    retentions.map(({ retained, attached }) => ({
+      retained,
+      attached: attached?.map((relation) => Graph.relationKey(relation)),
+    })),
+  );
 
 /**
  * Flatten arbitrarily nested extension groups into a single list. Pinned to the app extension type,

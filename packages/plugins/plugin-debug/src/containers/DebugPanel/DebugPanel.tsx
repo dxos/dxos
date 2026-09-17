@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Splitter } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
@@ -11,7 +10,6 @@ import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { DebugPanelContext, type DebugPanelContextValue } from './DebugPanelContext.ts';
 import { DebugPanelMain } from './DebugPanelMain.tsx';
 import { DebugPanelSidebar } from './DebugPanelSidebar.tsx';
-import { mountedPanels } from './mounted.ts';
 import { DEBUG_PANEL_CONTEXT, type DebugPanelMode, debugPanelAspect } from './view-state.ts';
 
 export type DebugPanelRootProps = PropsWithChildren<{
@@ -38,11 +36,6 @@ const DebugPanelRoot = ({ contextId = DEBUG_PANEL_CONTEXT, children }: DebugPane
     [update],
   );
   const setMode = useCallback((mode: DebugPanelMode) => update((prev) => ({ ...prev, mode })), [update]);
-  const registry = useContext(RegistryContext);
-  useEffect(() => {
-    registry.update(mountedPanels, (count) => count + 1);
-    return () => registry.update(mountedPanels, (count) => count - 1);
-  }, [registry]);
   const value = useMemo<DebugPanelContextValue>(
     () => ({ contextId, nodeId, open, mode, select, setOpen, setMode }),
     [contextId, nodeId, open, mode, select, setOpen, setMode],

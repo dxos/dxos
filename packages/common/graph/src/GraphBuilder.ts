@@ -144,6 +144,11 @@ export type Region = Collection.Region;
 export interface Retention {
   /** Collected whenever this changes; across every installed retention the deepest ask for a node wins. */
   readonly retained: Atom.Atom<readonly Region[]>;
+  /**
+   * Relation keys whose targets live and die with their source rather than sitting a level below it.
+   * Union of every installed retention's list; a relation no retention names counts as a level.
+   */
+  readonly attached?: readonly string[];
 }
 
 /**
@@ -204,11 +209,6 @@ export type Props<
    * Defaults to treating every re-read as a change, which is correct but does redundant work.
    */
   unchanged?: (prev: readonly Arg[], next: readonly Arg[]) => boolean;
-  /**
-   * Whether an edge of this relation key places its target a level below its source. Targets of other
-   * relations stay loaded exactly as long as their source. Defaults to every relation.
-   */
-  structural?: (relation: string) => boolean;
 };
 
 export type TraverseOptions<Node extends NodeLike, Rel> = {
@@ -293,23 +293,13 @@ export class GraphBuilder<
   readonly _relationKey: (relation: Rel | undefined) => string;
   readonly _decorateNode: (node: Arg, extension?: Extension<Node, Arg, Rel, Meta>) => Arg;
   readonly _unchanged: (prev: readonly Arg[], next: readonly Arg[]) => boolean;
-  readonly _structural: (relation: string) => boolean;
 
-  constructor({
-    registry,
-    store,
-    relationKey,
-    inline,
-    decorateNode,
-    unchanged,
-    structural,
-  }: Props<Node, Arg, Rel, Meta, G>) {
+  constructor({ registry, store, relationKey, inline, decorateNode, unchanged }: Props<Node, Arg, Rel, Meta, G>) {
     this._registry = registry ?? Registry.make();
     this._relationKey = relationKey;
     this._inline = inline ?? defaultInline;
     this._decorateNode = decorateNode ?? ((node) => node);
     this._unchanged = unchanged ?? (() => false);
-    this._structural = structural ?? (() => true);
     this._released = new Collection.Released(this._registry);
     this._store = store(
       {
@@ -432,7 +422,8 @@ export class GraphBuilder<
     }
 
     const asked = Collection.combine(this._retentions.map((retention) => this._registry.get(retention.retained)));
-    const regions = Collection.key(asked);
+    const attached = new Set(this._retentions.flatMap((retention) => retention.attached ?? []));
+    const regions = Collection.key(asked, attached);
     if (regions === this._collectedAskKey) {
       return;
     }
@@ -441,7 +432,7 @@ export class GraphBuilder<
     const released = Collection.unretained({
       asked,
       outgoing: (id) => this._store.outgoing(id),
-      structural: this._structural,
+      structural: (relation) => !attached.has(relation),
       connectors: this._connectorStates(),
     });
     if (released.size > 0) {
@@ -608,7 +599,7 @@ export const makeModel = (options?: GraphModel.Options<ModelNode, ModelEdge>): M
 
 export type ModelProps<Meta = unknown> = Pick<
   Props<ModelNode, ModelNodeArg, string, Meta, Model>,
-  'registry' | 'decorateNode' | 'unchanged' | 'structural'
+  'registry' | 'decorateNode' | 'unchanged'
 > & {
   /** The graph to build into; a fresh one holding only the root by default. */
   model?: Model;
