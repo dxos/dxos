@@ -50,6 +50,7 @@ const EVENT_KINDS = ['meeting', 'call', 'deadline'] as const;
 const TARGET_EVENT_KIND = 'deadline';
 const ORDER_LIMIT = 20;
 const SEED_BATCH_SIZE = 200;
+const SEED_PROGRESS_EVERY = 1_000;
 const FIRST_RESULT_TIMEOUT_MS = 30_000;
 const SHORT_RESULT_RETRIES = 10;
 const MEMORY_ITERATIONS = 3;
@@ -243,11 +244,25 @@ const seed = async (storagePath?: string): Promise<Seeded> => {
   for (let index = 0; index < ORG_COUNT; index++) {
     db.add(Obj.make(TestSchema.Organization, { name: `org-${index}`, properties: { region: `region-${index % 7}` } }));
   }
+  // Seeding dominates a large run and the RPC behind `flush` times out at 30 s, so the log shows where
+  // the per-flush cost goes as the store grows.
   let added = 0;
+  let slowestFlush = 0;
+  const phaseStart = performance.now();
   const addBatched = async (object: Obj.Any) => {
     db.add(object);
     if (++added % SEED_BATCH_SIZE === 0) {
+      const flushStart = performance.now();
       await db.flush();
+      slowestFlush = Math.max(slowestFlush, performance.now() - flushStart);
+    }
+    if (added % SEED_PROGRESS_EVERY === 0) {
+      const elapsed = (performance.now() - phaseStart) / 1000;
+      // eslint-disable-next-line no-console
+      console.log(
+        `seed ${storagePath ? 'cold' : 'warm'}: ${added} objects, ${elapsed.toFixed(0)} s, slowest flush in window ${slowestFlush.toFixed(0)} ms`,
+      );
+      slowestFlush = 0;
     }
   };
   for (let index = 0; index < TASK_COUNT; index++) {
