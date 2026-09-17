@@ -7,6 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
+import * as Schema from 'effect/Schema';
 
 import * as DecisionModel from './DecisionModel.ts';
 import { DecisionError } from './errors.ts';
@@ -52,10 +53,17 @@ export const make = ({
             throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
           }
 
-          return (await response.json()) as DecisionModel.EvaluateResponse;
+          return await response.json();
         },
         catch: (error) => new DecisionError({ endpoint, model }, { cause: error }),
-      }),
+      }).pipe(
+        // A 200 proves nothing about the body, so the payload is validated rather than asserted.
+        Effect.flatMap((body) =>
+          Schema.decodeUnknownEffect(DecisionModel.EvaluateResponse)(body).pipe(
+            Effect.mapError((error) => new DecisionError({ endpoint, model }, { cause: error })),
+          ),
+        ),
+      ),
   });
 
 export const layer = (options: Options): Layer.Layer<DecisionModel.DecisionModel> => DecisionModel.layer(make(options));

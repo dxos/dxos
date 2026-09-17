@@ -26,19 +26,35 @@ export type Question =
 
 export type NoulCriteria = { readonly true: string; readonly false: string };
 
-/** An answer as the System One API returns it; which member is set follows `type`. */
-export type Answer = {
-  readonly type: 'noul' | 'choice' | 'score';
-  readonly noul?: number;
-  readonly choice?: string;
-  readonly score?: number;
-  readonly probabilities?: Record<string, number>;
-  /** Score answers only: the criterion each scale position stands for. */
-  readonly legend?: Record<string, string>;
-  readonly confidence?: number;
-};
+const Probability = Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }));
 
-export type Usage = { readonly input_tokens: number; readonly output_tokens: number };
+/**
+ * An answer as the System One API returns it, as a union discriminated on `type` — a payload that
+ * does not match its own `type` is a malformed answer, not an answer with fields left unset.
+ */
+export const Answer = Schema.Union([
+  Schema.Struct({ type: Schema.Literal('noul'), noul: Probability }),
+  Schema.Struct({
+    type: Schema.Literal('choice'),
+    choice: Schema.String,
+    confidence: Probability,
+    probabilities: Schema.optional(Schema.Record(Schema.String, Probability)),
+  }),
+  Schema.Struct({
+    type: Schema.Literal('score'),
+    score: Schema.Number,
+    confidence: Probability,
+    probabilities: Schema.optional(Schema.Record(Schema.String, Probability)),
+    /** The criterion each scale position stands for. */
+    legend: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  }),
+]);
+
+export type Answer = typeof Answer.Type;
+
+export const Usage = Schema.Struct({ input_tokens: Schema.Number, output_tokens: Schema.Number });
+
+export type Usage = typeof Usage.Type;
 
 export type EvaluateRequest = {
   /** The content every question is evaluated against. */
@@ -46,10 +62,13 @@ export type EvaluateRequest = {
   readonly questions: Record<string, Question>;
 };
 
-export type EvaluateResponse = {
-  readonly answers: Record<string, Answer>;
-  readonly usage?: Usage;
-};
+export const EvaluateResponse = Schema.Struct({
+  model: Schema.optional(Schema.String),
+  answers: Schema.Record(Schema.String, Answer),
+  usage: Schema.optional(Usage),
+});
+
+export type EvaluateResponse = typeof EvaluateResponse.Type;
 
 //
 // Service.
@@ -130,10 +149,12 @@ export const Choice: {
  * Rates the state against ordered criteria, returning a position on that scale (0 for the first
  * criterion, `criteria.length - 1` for the last) and the model's confidence.
  */
-export const Score = <const Criteria extends readonly [string, ...string[]]>(
-  ...criteria: Criteria
-): Schema.Struct<{ score: typeof Schema.Number; confidence: typeof Confidence }> =>
-  Schema.Struct({ score: Schema.Number, confidence: Confidence }).annotate({
+export const Score = <const Criteria extends readonly [string, ...string[]]>(...criteria: Criteria) =>
+  Schema.Struct({
+    // The scale is the criteria themselves, so a position outside them is not an answer to this question.
+    score: Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: criteria.length - 1 })),
+    confidence: Confidence,
+  }).annotate({
     [QuestionAnnotationId]: { type: 'score', criteria } satisfies QuestionAnnotation,
   });
 
@@ -142,6 +163,18 @@ export const Score = <const Criteria extends readonly [string, ...string[]]>(
 //
 
 type Field = { readonly question: Question; readonly decode: (answer: Answer) => unknown };
+
+/** The answer a question was asked for, or a failure naming the mismatch. */
+const matching = (name: string, question: Question, answer: Answer | undefined): Answer => {
+  if (answer === undefined) {
+    throw new DecisionError({ field: name, expected: question.type, reason: 'unanswered' });
+  }
+  if (answer.type !== question.type) {
+    throw new DecisionError({ field: name, expected: question.type, received: answer.type });
+  }
+
+  return answer;
+};
 
 const readAnnotations = (schema: Schema.Top): Record<string, unknown> =>
   (SchemaAST.resolveAnnotations(schema.ast) ?? {}) as Record<string, unknown>;
@@ -158,7 +191,7 @@ const compileField = (name: string, schema: Schema.Top): Field => {
     return {
       question: { ...declared, instructions } as Question,
       decode: (answer) => {
-        switch (declared.type) {
+        switch (answer.type) {
           case 'noul':
             return answer.noul;
           case 'choice':
@@ -175,7 +208,7 @@ const compileField = (name: string, schema: Schema.Top): Field => {
   if (literals?.every((literal) => typeof literal === 'string')) {
     return {
       question: { type: 'choice', instructions, criteria: toChoiceCriteria(literals as string[]) },
-      decode: (answer) => answer.choice,
+      decode: (answer) => (answer.type === 'choice' ? answer.choice : undefined),
     };
   }
 
@@ -183,7 +216,7 @@ const compileField = (name: string, schema: Schema.Top): Field => {
   if (SchemaAST.isBooleanKeyword(schema.ast)) {
     return {
       question: { type: 'noul', instructions },
-      decode: (answer) => (answer.noul ?? 0) >= 0.5,
+      decode: (answer) => answer.type === 'noul' && answer.noul >= 0.5,
     };
   }
 
@@ -233,12 +266,16 @@ export const generate = <S extends Schema.Struct<Schema.Struct.Fields>>({
       questions: Object.fromEntries(Object.entries(fields).map(([name, field]) => [name, field.question])),
     });
 
-    const decoded = Object.fromEntries(
-      Object.entries(fields).map(([name, field]) => {
-        const answer = response.answers[name];
-        return [name, answer === undefined ? undefined : field.decode(answer)];
-      }),
-    );
+    const decoded = yield* Effect.try({
+      try: () =>
+        Object.fromEntries(
+          Object.entries(fields).map(([name, field]) => [
+            name,
+            field.decode(matching(name, field.question, response.answers[name])),
+          ]),
+        ),
+      catch: (error) => error as DecisionError,
+    });
 
     return yield* Schema.decodeUnknownEffect(schema)(decoded).pipe(
       Effect.mapError((error) => new DecisionError({ answers: response.answers }, { cause: error })),

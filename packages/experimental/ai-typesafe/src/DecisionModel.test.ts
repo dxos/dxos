@@ -175,6 +175,46 @@ describe('DecisionModel', () => {
     expect(error).toBeInstanceOf(DecisionSchemaError);
   });
 
+  test('an answer of the wrong kind is rejected before it is decoded', async ({ expect }) => {
+    // A choice payload under a question that asked for a score would otherwise decode to undefined.
+    const { layer } = stub({ frustration: { type: 'choice', choice: 'technical', confidence: 1 } });
+    const schema = Schema.Struct({
+      frustration: DecisionModel.Score('Calm', 'Frustrated').annotate({ description: 'How frustrated?' }),
+    });
+
+    const error = await EffectEx.runPromise(
+      DecisionModel.generate({ context: TICKET, schema }).pipe(Effect.provide(layer), Effect.flip),
+    );
+
+    expect(error.message).toMatch(/Decision request failed/);
+  });
+
+  test('an unanswered question fails rather than yielding undefined', async ({ expect }) => {
+    const { layer } = stub({});
+    const schema = Schema.Struct({
+      urgent: DecisionModel.Noul.annotate({ description: 'Does this convey urgency?' }),
+    });
+
+    const error = await EffectEx.runPromise(
+      DecisionModel.generate({ context: TICKET, schema }).pipe(Effect.provide(layer), Effect.flip),
+    );
+
+    expect(error.message).toMatch(/Decision request failed/);
+  });
+
+  test('a score outside the declared scale is not a valid answer', async ({ expect }) => {
+    const { layer } = stub({ frustration: { type: 'score', score: 3.2, confidence: 0.5 } });
+    const schema = Schema.Struct({
+      frustration: DecisionModel.Score('Calm', 'Frustrated', 'Very angry').annotate({ description: 'How frustrated?' }),
+    });
+
+    const error = await EffectEx.runPromise(
+      DecisionModel.generate({ context: TICKET, schema }).pipe(Effect.provide(layer), Effect.flip),
+    );
+
+    expect(error.message).toMatch(/Decision request failed/);
+  });
+
   test('an answer that violates the schema fails rather than being handed back', async ({ expect }) => {
     const { layer } = stub({ team: { type: 'choice', choice: 'technical', confidence: 1.4 } });
     const schema = Schema.Struct({
@@ -223,6 +263,22 @@ describe('TypeSafeClient', () => {
     expect(calls[0].body.model).toBe(TypeSafeClient.DEFAULT_MODEL);
     expect(calls[0].body.state).toBe(TICKET);
     expect(result.urgent).toBe(0.9);
+  });
+
+  test('a 200 with a malformed body surfaces as a decision error', async ({ expect }) => {
+    const layer = DecisionModel.layer(
+      TypeSafeClient.make({
+        apiKey: Redacted.make('test-key'),
+        fetch: async () => new Response(JSON.stringify({ model: 'jev-1.13.0' })),
+      }),
+    );
+
+    const schema = Schema.Struct({ urgent: DecisionModel.Noul.annotate({ description: 'Urgent?' }) });
+    const error = await EffectEx.runPromise(
+      DecisionModel.generate({ context: TICKET, schema }).pipe(Effect.provide(layer), Effect.flip),
+    );
+
+    expect(error.message).toMatch(/Decision request failed/);
   });
 
   test('a failed request surfaces as a decision error', async ({ expect }) => {
