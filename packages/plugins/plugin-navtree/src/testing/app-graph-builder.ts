@@ -13,11 +13,6 @@ import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
 export type StorybookGraphOptions = {
-  /**
-   * How the rail's workspaces are published. `growing` (the default) starts at three and adds one
-   * every few seconds; `none` withholds them and the account node, as before the client has initialised; `pending` emits
-   * them as spaces that are listed but have not opened.
-   */
   spaces?: 'growing' | 'none' | 'pending';
 };
 
@@ -134,8 +129,6 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
               AppGraphNode.make({
                 id: `space-${i}`,
                 type: 'space',
-                // A pending space publishes its cached name but no hue or icon, since those live in
-                // the database it has not opened.
                 properties:
                   spaces === 'pending'
                     ? getProperties(`space-pending-${i}`, {

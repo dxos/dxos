@@ -173,8 +173,6 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const pending = item.properties.pending === true;
 
   useLayoutEffect(() => {
-    // A pending workspace has no space to reorder into yet, and its ordering is written to the
-    // settings space, so it stays undraggable until it opens.
     if (!itemElement.current || !onRearrange || pending) {
       return;
     }
@@ -258,8 +256,6 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(meta.profile.key);
 
-  // A space that has not opened yet has no hue or icon of its own to show, so it holds the frame
-  // rather than rendering an avatar that would change under the user once it lands.
   if (item.properties.pending === true) {
     return <L0PendingAvatar />;
   }
@@ -305,6 +301,8 @@ export const L0Menu = ({
   onItemHover,
 }: L0MenuProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // The account node and the workspaces are both published once the client has initialised.
+  const clientInitialized = userAccountItem !== undefined;
   const runAction = useActionRunner();
   const handleAction = useCallback(
     (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {
@@ -328,7 +326,6 @@ export const L0Menu = ({
           : targetIndex +
             (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
       const nextOrder = arrayMove([...topLevelItems], sourceIndex, insertIndex);
-      // Ids rather than data, so a pending workspace keeps its slot although it has no data.
       return sourceItem.properties.onRearrange(nextOrder.map((item) => item.id));
     },
     [topLevelItems],
@@ -378,9 +375,7 @@ export const L0Menu = ({
                 {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
               />
             ))
-          ) : !userAccountItem ? (
-            // Workspaces and the account node both arrive once the client has initialised, so an
-            // empty rail is loading only until then.
+          ) : !clientInitialized ? (
             <L0PendingItem />
           ) : null}
         </ScrollArea.Viewport>
@@ -405,8 +400,6 @@ export const L0Menu = ({
             />
           </L0ItemRoot>
         ) : (
-          // The account node arrives with the client; hold its place so the corner of the rail is
-          // never empty, rather than collapsing the row until then.
           <div className='flex w-full justify-center items-center'>
             <UserAccountAvatar size={10} />
           </div>

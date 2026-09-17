@@ -83,7 +83,6 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
     >
       {shouldRenderContent &&
         (pending ? (
-          // Its children live in a database that has not opened, so there is no tree to build yet.
           <Empty
             label={t('loading-workspace.label')}
             icon='ph--circle-notch--regular'

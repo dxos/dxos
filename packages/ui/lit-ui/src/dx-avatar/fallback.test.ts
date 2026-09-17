@@ -19,8 +19,6 @@ describe('avatar fallback glyph', () => {
   });
 
   test('text-presentation emoji render rather than initialising to nothing', ({ expect }) => {
-    // The `idEmoji` palette entries that `\p{Emoji_Presentation}` rejects, which previously left
-    // the avatar a coloured circle with no symbol.
     for (const emoji of ['👁️', '🐿️', '☀️', '☄️', '☁️', '⛱️', '🌶️', '🏔️', '🏝️', '🛰️', '🎙️', '⚙️', '🌡️', '🛎️', '♻️']) {
       expect(getFallbackGlyph(emoji)).toBe(emoji);
     }

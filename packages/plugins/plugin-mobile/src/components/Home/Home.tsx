@@ -61,7 +61,6 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const { invokePromise } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const name = toLocalizedString(data.properties.label, t);
-  // A space that has not opened has nothing to switch to yet.
   const pending = data.properties.pending === true;
   const isSelected = selectedValue === data.id;
   const cardRef = useRef<HTMLDivElement>(null);

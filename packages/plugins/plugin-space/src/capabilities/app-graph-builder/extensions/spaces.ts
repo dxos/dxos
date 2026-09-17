@@ -50,20 +50,9 @@ import {
 // to re-emit the node and remount the Home article on every evaluation.
 const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }] as const;
 
-/**
- * How long a space may take to open. Well beyond any plausible open, so reaching it means the space
- * is broken rather than slow: a listed space is dropped from the rail, and the settings space stops
- * holding the others back for its ordering.
- */
-// TODO(wittjosiah): Surface a timed-out space as a deletable node once space nodes carry actions.
 const SPACE_OPEN_TIMEOUT = 60_000;
 
-/**
- * Flips to true once {@link SPACE_OPEN_TIMEOUT} elapses after it is first read, and stays true while
- * it is read. A stuck space produces no state change of its own, so without this the connector would
- * never re-run.
- */
-const makeOpenDeadline = () =>
+const makeDeadlineAtom = () =>
   Atom.make((get) => {
     const timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
     get.addFinalizer(() => clearTimeout(timeout));
@@ -80,12 +69,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
-  // Read only while waiting, so a space that opens releases its deadline and gets a fresh one if it
-  // ever starts opening again.
-  const openDeadlineFamily = Atom.family((_spaceId: string) => makeOpenDeadline());
-  // Once the rail has rendered for real, a lost ordering may re-sort it but never turn it back into
-  // placeholders.
-  let orderSettled = false;
+  const openDeadlineFamily = Atom.family((_spaceId: string) => makeDeadlineAtom());
+  const orderSettledAtom = Atom.make(false).pipe(Atom.keepAlive);
 
   return yield* Effect.all([
     AppGraphBuilder.createExtension({
@@ -247,9 +232,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
-        // Cross-space ordering lives in the settings space. `spacesAtom` covers the space appearing;
-        // its state is read through an atom so the ordering also appears when an already-listed
-        // settings space finishes opening.
         const settingsSpace = AppSpace.getSettingsSpace(client);
         const settingsSpaceState = settingsSpace ? get(CreateAtom.fromObservable(settingsSpace.state)) : undefined;
         const orderingSpace = settingsSpaceState === SpaceState.SPACE_READY ? settingsSpace : undefined;
@@ -276,6 +258,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
           const lazySpaceOpen = !!client.config.values.runtime?.client?.lazySpaceOpen;
+          const orderSettled = get(orderSettledAtom);
           const orderResolved =
             orderSettled ||
             isOrderResolved({
@@ -284,7 +267,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               lazySpaceOpen,
               timedOut: () => !!settingsSpace && get(openDeadlineFamily(settingsSpace.id)),
             });
-          orderSettled = orderResolved && spaces.length > 0;
+          if (!orderSettled && orderResolved && spaces.length > 0) {
+            get.set(orderSettledAtom, true);
+          }
 
           // Keyed by id rather than position: the array below is re-sorted by `orderMap`, so a
           // positional lookup would test one space's readiness against another's state.
@@ -304,8 +289,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space) => AppSpace.isVisibleSpace(space))
-              // A space that is listed but still opening gets a node too, so the rail shows how
-              // many workspaces are arriving instead of filling in from nothing.
               .filter((space) =>
                 shouldListSpace({
                   state: spaceStates.get(space.id),
@@ -314,15 +297,14 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 }),
               )
               .map((space) =>
-                !isSpacePlaceholder({ state: spaceStates.get(space.id), orderResolved })
-                  ? constructSpaceNode({
-                      space,
-                      navigable: ephemeralState.navigableCollections,
-                      namesCache: state.spaceNames,
-                      graph,
-                      spacesOrder,
-                    })
-                  : constructPendingSpaceNode({ space, namesCache: state.spaceNames }),
+                constructSpaceNode({
+                  space,
+                  placeholder: isSpacePlaceholder({ state: spaceStates.get(space.id), orderResolved }),
+                  navigable: ephemeralState.navigableCollections,
+                  namesCache: state.spaceNames,
+                  graph,
+                  spacesOrder,
+                }),
               ),
           );
         } catch {
@@ -384,37 +366,20 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 // Helpers
 //
 
-/**
- * Whether a listed space is on its way to `SPACE_READY` and should hold a place in the rail.
- * `SpaceList` opens every space through `SPACE_CLOSED` and `SPACE_CONTROL_ONLY`, except under
- * `lazySpaceOpen`, where a space can rest in either. Excludes the states a space can rest in
- * (inactive, error, awaiting migration), which are not loading.
- */
 export const isPendingSpace = (state: SpaceState | undefined, lazySpaceOpen = false): boolean =>
   state === SpaceState.SPACE_INITIALIZING ||
   (!lazySpaceOpen && (state === SpaceState.SPACE_CLOSED || state === SpaceState.SPACE_CONTROL_ONLY));
 
-/**
- * Whether a listed space appears in the rail at all. A space that never opened is dropped once it
- * times out, since a placeholder it can never resolve is worse than the absence it replaced.
- * Keyed on the space's own state, so holding every space for the ordering cannot hide them all.
- */
 export const shouldListSpace = ({
   state,
   timedOut,
   lazySpaceOpen = false,
 }: {
   state: SpaceState | undefined;
-  /** Only called for a pending space, so a ready one holds no deadline. */
   timedOut: () => boolean;
   lazySpaceOpen?: boolean;
 }): boolean => state === SpaceState.SPACE_READY || (isPendingSpace(state, lazySpaceOpen) && !timedOut());
 
-/**
- * Whether spaces can stop waiting for the cross-space ordering. It is worth waiting for only while
- * the settings space is opening or open with the query outstanding. An unlisted settings space, one
- * resting short of ready, or one that exceeds its open deadline falls back to natural order.
- */
 export const isOrderResolved = ({
   found,
   settingsSpaceState,
@@ -424,7 +389,6 @@ export const isOrderResolved = ({
   found: boolean;
   settingsSpaceState: SpaceState | undefined;
   lazySpaceOpen?: boolean;
-  /** Only called while waiting, so the deadline is released once the ordering resolves. */
   timedOut: () => boolean;
 }): boolean => {
   if (found) {
@@ -434,11 +398,6 @@ export const isOrderResolved = ({
   return !waiting || timedOut();
 };
 
-/**
- * Whether a listed space renders as a placeholder rather than itself: it has not opened, or the
- * cross-space ordering has not resolved. Rendering before the ordering lands would show every space
- * in arrival order and then re-sort them under the user, so they all wait for it together.
- */
 export const isSpacePlaceholder = ({
   state,
   orderResolved,
@@ -448,59 +407,29 @@ export const isSpacePlaceholder = ({
 }): boolean => !orderResolved || state !== SpaceState.SPACE_READY;
 
 /**
- * Builds an app-graph node for a space that has not opened yet. `data` is null so
- * `AppNodeMatcher.whenSpace` cannot match it: every child connector — in this plugin and in every
- * other — funnels through that matcher, and each would otherwise query a database or read the
- * `properties` getter that throws until the space is ready.
+ * Builds an app-graph node for a space. A placeholder carries no space in `data`, so
+ * `AppNodeMatcher.whenSpace` cannot match it and no child connector reaches an unopened database.
  */
-export const constructPendingSpaceNode = ({
-  space,
-  namesCache,
-}: {
-  space: Space;
-  namesCache?: Record<string, string>;
-}) =>
-  AppGraphNode.make({
-    id: space.id,
-    type: SpaceSchema.SPACE_TYPE,
-    data: null,
-    properties: {
-      // Names are cached from previous sessions, so a returning user sees real labels while the
-      // spaces behind them open; a space never yet seen has none to show.
-      label: namesCache?.[space.id] ?? LOADING_SPACE_LABEL,
-      // Cleared rather than omitted, so a space that closes after being ready drops the appearance
-      // and affordances it had then — the merge above would otherwise keep them.
-      description: undefined,
-      hue: undefined,
-      icon: undefined,
-      iconHue: undefined,
-      onRearrange: undefined,
-      canDrop: undefined,
-      disabled: true,
-      pending: true,
-      disposition: 'workspace',
-      testId: 'spacePlugin.space.pending',
-    },
-  });
-
-/** Builds an app-graph node for a space, including settings children and optional rearrange handler. */
 export const constructSpaceNode = ({
   space,
+  placeholder = false,
   navigable = false,
   namesCache,
   graph,
   spacesOrder,
 }: {
   space: Space;
+  placeholder?: boolean;
   navigable?: boolean;
   namesCache?: Record<string, string>;
   graph?: AppGraph.ExpandableGraph;
   spacesOrder?: Obj.Any;
 }) => {
-  const hasPendingMigration = checkPendingMigration(space);
+  const ready = !placeholder && space.state.get() === SpaceState.SPACE_READY;
+  const hasPendingMigration = !placeholder && checkPendingMigration(space);
 
   let onRearrange: ((nextOrder: string[]) => void) | undefined;
-  if (graph && spacesOrder) {
+  if (!placeholder && graph && spacesOrder) {
     onRearrange = spaceRearrangeCache.get(space.id);
     if (!onRearrange) {
       onRearrange = (nextOrder: string[]) => {
@@ -513,28 +442,24 @@ export const constructSpaceNode = ({
     }
   }
 
+  // The graph merges properties, so both variants emit every key for a transition to clear it.
   return AppGraphNode.make({
     id: space.id,
     type: SpaceSchema.SPACE_TYPE,
-    cacheable: AppNode.CACHEABLE_PROPS,
-    data: space,
+    ...(!placeholder && { cacheable: AppNode.CACHEABLE_PROPS }),
+    data: placeholder ? null : space,
     properties: {
-      label: getSpaceDisplayName(space, { namesCache }),
-      description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
-      hue: space.state.get() === SpaceState.SPACE_READY && space.properties.hue,
-      icon:
-        space.state.get() === SpaceState.SPACE_READY && space.properties.icon
-          ? `ph--${space.properties.icon}--regular`
-          : undefined,
-      iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
-      disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
-      // Emitted on every generation, not just when true: the graph merges properties, so a key the
-      // pending generation set and this one omitted could never be cleared.
-      pending: false,
+      label: placeholder ? (namesCache?.[space.id] ?? LOADING_SPACE_LABEL) : getSpaceDisplayName(space, { namesCache }),
+      description: ready ? space.properties.description : undefined,
+      hue: ready ? space.properties.hue : undefined,
+      icon: ready && space.properties.icon ? `ph--${space.properties.icon}--regular` : undefined,
+      iconHue: ready ? space.properties.iconHue : undefined,
+      disabled: !navigable || !ready || hasPendingMigration,
+      pending: placeholder,
       disposition: 'workspace',
-      testId: 'spacePlugin.space',
+      testId: placeholder ? 'spacePlugin.space.pending' : 'spacePlugin.space',
       onRearrange,
-      canDrop: CAN_DROP_SPACE,
+      canDrop: placeholder ? undefined : CAN_DROP_SPACE,
     },
   });
 };

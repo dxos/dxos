@@ -281,18 +281,15 @@ export const UnavailableWorkspace: Story = {
   },
 };
 
-/** Spaces the client has listed but not yet opened: named from cache, with nothing to navigate into. */
 export const PendingWorkspaces: Story = {
   decorators: navTreeDecorators({ spaces: 'pending' }),
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    // Every listed space holds a place in the rail, so the count is right before any of them opens.
     const items = await canvas.findAllByTestId('spacePlugin.space.pending', {}, { timeout: 15000 });
     await expect(items).toHaveLength(3);
   },
 };
 
-/** Before the client has initialised, when the app knows it will have workspaces but not how many. */
 export const NoWorkspacesYet: Story = {
   decorators: navTreeDecorators({ spaces: 'none' }),
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
