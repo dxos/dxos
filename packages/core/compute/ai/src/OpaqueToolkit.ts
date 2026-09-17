@@ -21,6 +21,16 @@ export const TypeId = '~@dxos/ai/OpaqueToolkit';
 export type TypeId = typeof TypeId;
 
 /**
+ * What an opaque toolkit's layer provides, with the individual tool names erased.
+ *
+ * `Tool.Handler<any>` rather than `unknown`: the toolkit cannot name its tools statically, but it
+ * only ever provides tool handlers. `unknown` is the top type, so it discharged every requirement
+ * a consumer had, not just the handler ones, which is what made independent handler layers read
+ * as though each fed the next.
+ */
+export type Handlers = Tool.Handler<any>;
+
+/**
  * Type-safe way to define toolkits where we don't know specific types of tools,
  * and we want to bundle definition and handlers together.
  *
@@ -41,7 +51,7 @@ export interface OpaqueToolkit<TR = never, E = never, R = never> extends Pipeabl
   /**
    * Handlers layer.
    */
-  readonly layer: Layer.Layer<unknown, E, R>;
+  readonly layer: Layer.Layer<Handlers, E, R>;
 
   /**
    * Handlers effect.
@@ -57,7 +67,7 @@ export interface OpaqueToolkit<TR = never, E = never, R = never> extends Pipeabl
 export interface Any {
   readonly [TypeId]: TypeId;
   readonly toolkit: Toolkit.Toolkit<any>;
-  readonly layer: Layer.Layer<unknown, any, any>;
+  readonly layer: Layer.Layer<Handlers, any, any>;
   readonly handlers: Effect.Effect<Toolkit.WithHandler<any>, any, any>;
 }
 

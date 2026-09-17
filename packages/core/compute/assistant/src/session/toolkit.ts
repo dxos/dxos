@@ -46,18 +46,15 @@ export const createToolkit = ({
     const duplicates = toolNames.filter((name, index) => toolNames.indexOf(name) !== index);
     invariant(duplicates.length === 0, `Duplicate tool names in session toolkit: ${duplicates.join(', ')}`);
     const mergedToolkit = Toolkit.merge(...toolkitDefs);
-    // TODO(wittjosiah): Revisit if `OpaqueToolkit.layer` ever gains a typed output.
-    // `OpaqueToolkit.layer` is `Layer<unknown, E, R>` by design: the point of an opaque toolkit is
-    // that the consumer cannot see which handlers it carries. To this rule an `unknown` output, and
-    // the `Handler<any>` a resolved skill toolkit yields, look like they satisfy any other layer's
-    // requirement, so it reads a dependency into three handler layers that are independent peers.
-    // `mergeAll` is the right combinator here, and the finding clears only by giving up the opacity.
-    const combinedHandlerLayer = Layer.mergeAll(
-      // @effect-diagnostics-next-line layerMergeAllWithDependencies:off
-      Layer.succeedContext(skillToolHandler),
-      toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
-      // @effect-diagnostics-next-line layerMergeAllWithDependencies:off
-      opaqueToolkit.layer,
+    // The three handler layers are independent peers, but `OpaqueToolkit.Any` has to declare `any`
+    // requirements to be a constraint, so `mergeAll` cannot show the rule they do not feed each
+    // other. `provideMerge` yields the same merged context and additionally satisfies a dependency
+    // if one ever appears, so it is the safe reading of the same intent.
+    const combinedHandlerLayer = Layer.succeedContext(skillToolHandler).pipe(
+      Layer.provideMerge(toolkitProp?.layer ?? OpaqueToolkit.empty.layer),
+      Layer.provideMerge(opaqueToolkit.layer),
     );
-    return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer as any) as OpaqueToolkit.OpaqueToolkit;
+    return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer);
+    // `OpaqueToolkit.Any` carries `any` for E and R, so the merge widens them; the declared type is
+    // the narrower truth for every caller. TODO(wittjosiah): Thread E/R through instead.
   }) as Effect.Effect<OpaqueToolkit.OpaqueToolkit, AiToolNotFoundError, ToolResolverService | ToolExecutionService>;
