@@ -86,7 +86,7 @@ export interface BookingService {
 }
 
 /** Thrown by a `BookingService` when its credentials are not configured. */
-export class MissingApiKeyError extends BaseError.extend('MissingApiKeyError') {
+export class MissingApiKeyError extends BaseError.extend('BookingSearchMissingApiKeyError') {
   constructor(public readonly serviceId: string) {
     super({ message: `Missing API key for booking service: ${serviceId}` });
   }

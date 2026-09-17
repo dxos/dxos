@@ -23,7 +23,7 @@ const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
 const RENDER_READY_DATASET_KEY = 'composerProxy';
 const DEFAULT_RENDER_TIMEOUT_MS = 20_000;
 
-export class FetchError extends BaseError.extend('FetchError', 'Fetch failed.') {}
+export class FetchError extends BaseError.extend('VideoFetchError', 'Fetch failed.') {}
 
 type RenderRequest = {
   version: 1;
