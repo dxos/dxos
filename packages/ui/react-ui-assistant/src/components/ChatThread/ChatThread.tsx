@@ -225,7 +225,7 @@ const ScrollToBottom = () => {
       disabled={hidden}
       aria-hidden={hidden}
       classNames={[
-        'absolute bottom-1 left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300',
+        'absolute bottom-2 left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300',
         hidden && 'opacity-0 pointer-events-none',
       ]}
       data-testid='assistant.thread.scroll-to-bottom'

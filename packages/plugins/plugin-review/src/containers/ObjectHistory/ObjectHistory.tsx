@@ -11,7 +11,7 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type Commit, Timeline } from '@dxos/react-ui-components';
+import { type Commit, Timeline } from '@dxos/react-ui-trace';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
