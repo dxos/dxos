@@ -188,7 +188,9 @@ const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
     case 'type':
       return '';
     case 'timestamp':
-      return '"hour"';
+      return aggregate.timeZone !== undefined
+        ? `${JSON.stringify(aggregate.unit)}, { timeZone: ${JSON.stringify(aggregate.timeZone)} }`
+        : JSON.stringify(aggregate.unit);
     case 'items':
       return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
     case 'group':
