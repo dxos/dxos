@@ -307,8 +307,7 @@ export class InvitationHostExtension
     if (!validStates.includes(invitation.state)) {
       scheduleTask(this._ctx, () => this.close());
       throw new InvariantViolation(
-        `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]` +
-          ` (this connection last attempted ${stateToString(this._lastSetState)}, holdsFlowLock=${this.hasFlowLock()})`,
+        `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]`,
       );
     }
   }

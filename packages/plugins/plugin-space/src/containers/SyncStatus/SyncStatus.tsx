@@ -12,7 +12,7 @@ import { Flex, Grid, Icon, IconButton, Popover, useTranslation } from '@dxos/rea
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
-import { createClientSaveTracker, getIcon, getStatus, getUploadedSpaceIds } from '#components';
+import { createClientSaveTracker, getIcon, getStatus } from '#components';
 import { useEdgeStatus, useStalled } from '#hooks';
 import { meta } from '#meta';
 
@@ -56,11 +56,7 @@ export const SyncStatusIndicator = ({
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <StatusBar.Item
-          data-testid='spacePlugin.syncStatus'
-          data-status={status}
-          data-uploaded-spaces={saved && !offline ? getUploadedSpaceIds(state).join(' ') : ''}
-        >
+        <StatusBar.Item>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
           <IconButton variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>

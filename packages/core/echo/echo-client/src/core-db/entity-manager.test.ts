@@ -2,25 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
-import * as Scope from 'effect/Scope';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { Trigger } from '@dxos/async';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
 import { DXN, EntityId, PublicKey } from '@dxos/keys';
-import { type LogConfig, type LogEntry, log } from '@dxos/log';
-import { makeInProcessClient } from '@dxos/protocols';
-import { DataService, QueryService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { EchoClient } from '../client/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
@@ -356,59 +347,6 @@ describe('DatabaseImpl', () => {
         await db.flush();
         const rootDoc = db.getSpaceRootDocHandle().doc();
         expect(rootDoc?.links?.[object.id]).to.not.be.undefined;
-      });
-
-      test('a flush reports a failed document creation only when it waited on it', async () => {
-        const testBuilder = new EchoTestBuilder();
-        await openAndClose(testBuilder);
-        const peer = await testBuilder.createPeer();
-        let hostAskedToFlush = false;
-        const refusing = new Proxy(peer.host.dataService, {
-          get: (target, property, receiver) => {
-            const handler = Reflect.get(target, property, receiver);
-            switch (property) {
-              case 'DataService.createDocument':
-                return () => Effect.fail(new Error('document creation refused'));
-              case 'DataService.flush':
-                return (...args: unknown[]) => {
-                  hostAskedToFlush = true;
-                  return Reflect.apply(handler, target, args);
-                };
-              default:
-                return handler;
-            }
-          },
-        });
-        const scope = Effect.runSync(Scope.make());
-        onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-        const [dataService, queryService] = await EffectEx.runPromise(
-          Effect.all([
-            makeInProcessClient(DataService.Rpcs, refusing),
-            makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
-          ]).pipe(Effect.provideService(Scope.Scope, scope)),
-        );
-        const client = new EchoClient().connectToService({ dataService, queryService });
-        await client.graph.registry.add([TestSchema.Expando]);
-        await openAndClose(client);
-        const db = await peer.createDatabase(PublicKey.random(), { client });
-
-        hostAskedToFlush = false;
-        db.add(Obj.make(TestSchema.Expando, { name: 'refused' }));
-        await expect(db.flush()).rejects.toThrow('document creation refused');
-        // The refusal must not keep the rest of the database's writes from being persisted.
-        expect(hostAskedToFlush).toBe(true);
-
-        const creationFailed = new Trigger();
-        onTestFinished(
-          log.addProcessor((_config: LogConfig, entry: LogEntry) => {
-            if (entry.message === 'object not bound: its document was not created') {
-              creationFailed.wake();
-            }
-          }),
-        );
-        db.add(Obj.make(TestSchema.Expando, { name: 'refused before any flush' }));
-        await creationFailed.wait();
-        await expect(db.flush()).resolves.toBeUndefined();
       });
 
       test('object becomes available via loadObjectCoreById after linked document is loaded', async () => {

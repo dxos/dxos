@@ -34,14 +34,11 @@ test.describe('Basic tests', () => {
   });
 
   test('create identity, space is created by default', async () => {
-    // Onboarding seeds the default space and its README after the account appears, which is all
-    // `init` waits for, so every assertion here outlasts a boot rather than an interaction.
-    test.slow();
-
-    await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1, { timeout: 30_000 });
+    await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
+    // First run lands on Home, and onboarding seeds the README, so it appears under Recent.
     const plank = host.deck.plank();
-    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible({ timeout: 30_000 });
-    await expect(plank.locator.getByText('README')).toBeVisible({ timeout: 30_000 });
+    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible();
+    await expect(plank.locator.getByText('README')).toBeVisible();
   });
 
   test('create space, which is displayed in tree', async () => {

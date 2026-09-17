@@ -98,9 +98,8 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
         })
       : undefined;
   // x86_64 Linux WebKit: every captured boot crash faulted in the wasm in-place interpreter (IPInt) with a corrupted
-  // locals base or wasm PC; wasm OSR off is an unproven workaround for spurious Automerge traps (cf. oven-sh/bun#26366)
-  // and, with IPInt off, still disables BBQ-to-OMG loop OSR entry.
-  const disableWasmIPIntAndOSR = process.platform === 'linux' && process.arch === 'x64';
+  // locals base or wasm PC.
+  const disableWasmIPInt = process.platform === 'linux' && process.arch === 'x64';
   const errnoShim =
     errnoShimSupported() && (browser === 'all' || browser === 'webkit')
       ? buildErrnoShim(join(workspaceRoot, 'node_modules/.cache/dxos-test-utils'))
@@ -138,7 +137,7 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
         launchOptions: {
           // Replaces the browser's whole environment rather than extending it.
           env: {
-            ...(disableWasmIPIntAndOSR ? { JSC_useWasmIPInt: 'false', JSC_useWasmOSR: 'false' } : {}),
+            ...(disableWasmIPInt ? { JSC_useWasmIPInt: 'false' } : {}),
             ...definedEnv(),
             ...(errnoShim ? { LD_PRELOAD: [errnoShim, process.env.LD_PRELOAD].filter(Boolean).join(':') } : {}),
             ...(webkitRtcEvents ? { [WEBKIT_RTC_EVENTS_FILE_ENV]: webkitRtcEvents.fifoPath } : {}),

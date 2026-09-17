@@ -110,11 +110,6 @@ export interface AutomergeReplicatorConnection {
    * @returns true if the collection should be synced to this peer.
    */
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
-
-  /**
-   * Called once Subduction completes its handshake with this peer; until then the connection carries no sync.
-   */
-  onPeerBound?(): void;
 }
 
 export type ShouldAdvertiseProps = {
