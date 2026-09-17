@@ -72,8 +72,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return this._query;
   }
 
-  get isComplete(): boolean {
-    return this._queryContext.isComplete();
+  get sources(): readonly QueryResult.SourceStatus[] {
+    return this._queryContext.getSourceStatuses();
   }
 
   get entries(): QueryResult.EntityEntry<T>[] {
@@ -173,7 +173,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     if (
       callback &&
       opts?.fire &&
-      (this._queryContext.isComplete() ||
+      (this._queryContext.getSourceStatuses().every(({ state }) => state !== 'pending') ||
         this._objectCache !== undefined ||
         (this._queryContext.isSynchronous() && this._queryContext.getResults().length > 0))
     ) {

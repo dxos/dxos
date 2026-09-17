@@ -10,6 +10,7 @@ import { GroupBy, QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { isNonNullable } from '@dxos/util';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
@@ -56,10 +57,10 @@ export interface QuerySource {
   isSynchronous(): boolean;
 
   /**
-   * Whether this source has answered its current query. A source the query does not target is
-   * complete; an asynchronous source is complete once its first answer has been integrated.
+   * Whether this source has answered its current query, or undefined when the query does not
+   * target it. An asynchronous source is `ready` once its first answer has been integrated.
    */
-  isComplete(): boolean;
+  getStatus(): QueryResult.SourceStatus | undefined;
 
   /**
    * One-shot query.
@@ -133,11 +134,13 @@ export class GraphQueryContext implements QueryContext {
     return Array.from(this._sources).some((source) => source.isSynchronous());
   }
 
-  isComplete(): boolean {
+  getSourceStatuses(): QueryResult.SourceStatus[] {
     if (!this._query) {
-      return false;
+      return [];
     }
-    return Array.from(this._sources).every((source) => source.isComplete());
+    return Array.from(this._sources)
+      .map((source) => source.getStatus())
+      .filter(isNonNullable);
   }
 
   async run(
@@ -311,8 +314,10 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   /** The working set is scanned on read, so this source never has an answer outstanding. */
-  isComplete(): boolean {
-    return true;
+  getStatus(): QueryResult.SourceStatus | undefined {
+    return this._query !== undefined && this._servesSpaceScope(this._query)
+      ? { source: 'local', state: 'ready' }
+      : undefined;
   }
 
   getResults(): SourceEntry<Obj.Unknown>[] {

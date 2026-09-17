@@ -7,7 +7,7 @@ import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldToEventLoop } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
+import { Entity, Feed, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -129,8 +129,8 @@ export class IndexQuerySource implements QuerySource {
   /** True while {@link _hydrateLoop} is running, so concurrent triggers coalesce instead of racing. */
   private _hydrating = false;
 
-  /** Set once the reactive stream's first response has been hydrated into {@link _results}. */
-  private _answered = false;
+  /** Whether the reactive stream has answered: its first response hydrated, or the stream failed. */
+  private _state: QueryResult.SourceState = 'pending';
 
   /** Set when a new trigger arrives mid-pass, causing {@link _hydrateLoop} to run one more iteration. */
   private _hydratePending = false;
@@ -147,7 +147,7 @@ export class IndexQuerySource implements QuerySource {
 
   close(): void {
     this._open = false;
-    this._answered = false;
+    this._state = 'pending';
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
@@ -168,12 +168,11 @@ export class IndexQuerySource implements QuerySource {
     return false;
   }
 
-  isComplete(): boolean {
-    // A query the index does not serve has nothing outstanding here.
+  getStatus(): QueryResult.SourceStatus | undefined {
     if (this._query === undefined || !queryTargetsSpacesOrFeeds(this._query)) {
-      return true;
+      return undefined;
     }
-    return this._answered;
+    return { source: 'index', state: this._state };
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
@@ -201,7 +200,7 @@ export class IndexQuerySource implements QuerySource {
     void this._hydrationCtx?.dispose().catch(() => {});
     this._hydrationCtx = undefined;
     this._results = [];
-    this._answered = false;
+    this._state = 'pending';
     this.changed.emit();
 
     // Don't start a reactive remote query until the query context is started (calls `open()`).
@@ -311,7 +310,7 @@ export class IndexQuerySource implements QuerySource {
           // Nothing more is coming on this stream; a subscriber waiting for the index must not wait
           // for it forever.
           if (this._reactiveQueryId === queryId) {
-            this._answered = true;
+            this._state = 'failed';
             this.changed.emit();
           }
         },
@@ -383,7 +382,7 @@ export class IndexQuerySource implements QuerySource {
         }
 
         this._results = results;
-        this._answered = true;
+        this._state = 'ready';
         this.changed.emit();
       } while (this._hydratePending);
     } catch (err: any) {

@@ -36,13 +36,29 @@ export type Entry<T> = {
   // TODO(dmaretskyi): Rename to meta?
   resolution?: {
     // TODO(dmaretskyi): Make this more generic.
-    source: 'remote' | 'local' | 'index';
+    source: Source;
 
     /**
      * Query resolution time in milliseconds.
      */
     time: number;
   };
+};
+
+/**
+ * Where query results come from.
+ */
+export type Source = 'remote' | 'local' | 'index';
+
+/**
+ * Whether a source has answered the current query: `pending` until its first answer, `failed` when
+ * it stopped without one.
+ */
+export type SourceState = 'pending' | 'ready' | 'failed';
+
+export type SourceStatus = {
+  source: Source;
+  state: SourceState;
 };
 
 /**
@@ -74,11 +90,12 @@ export interface QueryResult<T> {
   readonly results: T[];
 
   /**
-   * Whether every source serving the query has answered. False until the index responds, during
-   * which {@link results}, {@link runSync} and {@link runSyncEntries} hold only what the tab has
-   * loaded: objects created or updated locally, and index hits already hydrated.
+   * One entry per source serving the query. While any is `pending`, {@link results}, {@link runSync}
+   * and {@link runSyncEntries} hold only what the sources that have answered know: for a database
+   * query before the index responds, objects created or updated locally and index hits already
+   * hydrated.
    */
-  readonly isComplete: boolean;
+  readonly sources: readonly SourceStatus[];
 
   /**
    * Returns all known results.

@@ -93,9 +93,9 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     return false;
   }
 
-  isComplete(): boolean {
+  getSourceStatuses(): QueryResult.SourceStatus[] {
     // Only `run` answers; a subscription never does.
-    return false;
+    return [{ source: 'remote', state: 'pending' }];
   }
 
   async run(

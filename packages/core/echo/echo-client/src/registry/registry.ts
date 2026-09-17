@@ -287,8 +287,8 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   }
 
   /** The registry is in memory, so every read is the whole answer. */
-  get isComplete(): boolean {
-    return true;
+  get sources(): readonly QueryResult.SourceStatus[] {
+    return [{ source: 'local', state: 'ready' }];
   }
 
   run(): Promise<T[]> {

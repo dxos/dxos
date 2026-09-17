@@ -49,11 +49,13 @@ export class RegistryQuerySource implements QuerySource {
     return this.#match(simple.filter);
   }
 
-  /** The in-process registry is matched synchronously. */
-  isComplete(): boolean {
-    return true;
+  getStatus(): QueryResult.SourceStatus | undefined {
+    return this.#query !== undefined && this.#isValidSourceForQuery(this.#query)
+      ? { source: 'local', state: 'ready' }
+      : undefined;
   }
 
+  /** The in-process registry is matched synchronously. */
   isSynchronous(): boolean {
     return this.#query !== undefined && this.#isValidSourceForQuery(this.#query);
   }

@@ -59,11 +59,11 @@ describe('QueryResultImpl', () => {
       const result = db.query(Filter.type(TestSchema.Person));
       const unsubscribe = result.subscribe();
       try {
-        expect(result.isComplete).toBe(false);
+        expect(result.sources).toEqual(INDEX_PENDING);
         const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
         expect(result.runSync()).toEqual([alice]);
 
-        await expect.poll(() => result.isComplete).toBe(true);
+        await expect.poll(() => result.sources).toEqual(INDEX_READY);
         expect(result.runSync()).toEqual([alice]);
       } finally {
         unsubscribe();
@@ -94,10 +94,10 @@ describe('QueryResultImpl', () => {
       const result = db.query(Filter.type(TestSchema.Person));
       const unsubscribe = result.subscribe();
       try {
-        expect(result.isComplete).toBe(false);
+        expect(result.sources).toEqual(INDEX_PENDING);
         expect(result.runSync()).toEqual([]);
 
-        await expect.poll(() => result.isComplete).toBe(true);
+        await expect.poll(() => result.sources).toEqual(INDEX_READY);
         expect(result.runSync()).toHaveLength(3);
       } finally {
         unsubscribe();
@@ -144,10 +144,19 @@ describe('QueryResultImpl', () => {
   });
 });
 
+const INDEX_PENDING = [
+  { source: 'local', state: 'ready' },
+  { source: 'index', state: 'pending' },
+];
+const INDEX_READY = [
+  { source: 'local', state: 'ready' },
+  { source: 'index', state: 'ready' },
+];
+
 const makeQueryContext = (results: SourceEntry[] = []): QueryContext => ({
   getResults: () => results,
   isSynchronous: () => true,
-  isComplete: () => true,
+  getSourceStatuses: () => [],
   changed: new Event<void>(),
   run: async () => [],
   update: () => {},
