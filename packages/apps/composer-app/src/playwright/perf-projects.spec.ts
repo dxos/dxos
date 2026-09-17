@@ -302,6 +302,20 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     });
 
     const rows = runner.rows;
+    const name = `${FLOW}-${mode}`;
+    // One timestamp for both writes below, so the re-write after the trace resolves onto the same
+    // PostHog uuid rather than duplicating every stage.
+    const capturedAt = new Date().toISOString();
+
+    // Written BEFORE the trace is read, and `appendRows` deliberately only here: reading the trace
+    // is post-processing over an ~800 MB stream, and a slow read must not be able to lose stages
+    // that already completed — a run whose ten stages all succeeded lost every row that way.
+    // `tracedCpuMsByRealm` is a comparison field, so the durable record is complete without it.
+    appendRows(WORKSPACE_ROOT, name, rows);
+    writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
+    if (mode === 'measure') {
+      writePosthogBatch(WORKSPACE_ROOT, name, rows, capturedAt);
+    }
 
     // After the flow, because a trace cannot be rotated per stage: the marks the runner emitted
     // are what attribute it, so the numbers only exist once the whole trace has been read.
@@ -322,16 +336,14 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
           row.tracedCpuMsByRealm = perRealm;
         }
       }
+      // Overwrites rather than appends, which is why the NDJSON is not rewritten here.
+      writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
+      if (mode === 'measure') {
+        writePosthogBatch(WORKSPACE_ROOT, name, rows, capturedAt);
+      }
     }
 
     runner.dispose();
-
-    const name = `${FLOW}-${mode}`;
-    appendRows(WORKSPACE_ROOT, name, rows);
-    writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
-    if (mode === 'measure') {
-      writePosthogBatch(WORKSPACE_ROOT, name, rows, new Date().toISOString());
-    }
 
     for (const row of rows) {
       log.info('stage', {
