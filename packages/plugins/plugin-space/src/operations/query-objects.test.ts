@@ -137,13 +137,25 @@ describe('SpaceOperation.QueryObjects', () => {
         }
         yield* Database.flush();
 
-        // "Omit both to list everything" is the documented contract of the no-argument form.
-        const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {});
-        expect(results.length).toBeGreaterThanOrEqual(count);
+        // A capped page must say so, or the caller reads it as the whole space.
+        const { results, truncated } = yield* Operation.invoke(SpaceOperation.QueryObjects, {});
+        expect(results).toHaveLength(10);
+        expect(truncated).toBe(true);
 
-        // An explicit limit still bounds the result.
-        const { results: bounded } = yield* Operation.invoke(SpaceOperation.QueryObjects, { limit: 5 });
+        // An explicit limit bounds the result and reports the same way.
+        const { results: bounded, truncated: boundedTruncated } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+          limit: 5,
+        });
         expect(bounded).toHaveLength(5);
+        expect(boundedTruncated).toBe(true);
+
+        // A limit the result fits inside is not a truncation, and must not over-fetch.
+        const { results: whole, truncated: wholeTruncated } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+          typename: Type.getTypename(TestObject),
+          limit: count + 1,
+        });
+        expect(whole).toHaveLength(count);
+        expect(wholeTruncated).toBe(false);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
