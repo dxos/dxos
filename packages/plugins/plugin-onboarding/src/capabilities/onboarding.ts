@@ -42,13 +42,7 @@ export default Capability.makeModule(
     // wired up in the constructor.
     void manager.initialize().catch((error) => log.catch(error));
 
-    // `destroy` disposes the manager's context asynchronously, so the finalizer awaits it
-    // rather than dropping the promise.
-    yield* Effect.addFinalizer(() =>
-      Effect.tryPromise(() => manager.destroy()).pipe(
-        Effect.catch((error) => Effect.sync(() => log.warn('onboarding manager destroy failed', { error }))),
-      ),
-    );
+    yield* Effect.addFinalizer(() => Effect.promise(() => manager.destroy().catch((error) => log.catch(error))));
     return Capability.contribute(OnboardingCapabilities.Onboarding, manager);
   }),
 );

@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-// The subject of these tests is a plain `Error`'s stack frames, so they construct and re-raise
-// one deliberately; a tagged error would carry the catch's stack instead of the thunk's. Both
-// rules fire, at three separate anchors: `globalErrorInEffectCatch` on the `Effect.try` call
-// itself rather than on its `catch` property, and `globalErrorInEffectFailure` on both the
-// thrown value and the one the catch returns. Every test added here will construct raw errors
-// for the same reason, so the directive covers the file rather than three moving line numbers.
-/** @effect-diagnostics globalErrorInEffectCatch:skip-file globalErrorInEffectFailure:skip-file */
+// These tests assert on a plain `Error`'s stack frames, so the `catch` returns the thrown value
+// untouched; narrowing it would buy nothing (`failWith` takes `unknown`) and re-wrapping it would
+// replace the stack under test. Dropping the `catch` does not work either: `Effect.try(thunk)`
+// wraps the throw in `UnknownError` and `causeToError` then reports the wrapper's stack. All three
+// rules fire here, at three anchors across nine lines, so the directive covers the file.
+/** @effect-diagnostics unknownInEffectCatch:skip-file globalErrorInEffectCatch:skip-file globalErrorInEffectFailure:skip-file */
 
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
@@ -52,7 +51,7 @@ describe('causeToError', () => {
         try: () => {
           throw new Error('failure');
         },
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        catch: (error) => error,
       }),
       // `map` calls the thunk through an anonymous runtime callback, which carries no `~effect/` name and stays.
       Effect.succeed(1).pipe(
