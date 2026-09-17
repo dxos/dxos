@@ -4,13 +4,11 @@
 
 import { type ActivityDatum } from '@dxos/react-ui-dashboard';
 
-/** One row of an hour-bucketed count: `Aggregate.bucket('updatedAt')` plus `Aggregate.count()`. */
+/** One row of an hourly count: `Aggregate.updated('hour')` plus `Aggregate.count()`. */
 export type HourCount = {
   readonly hour: number | null;
   readonly count: number;
 };
-
-const HOUR_MS = 3_600_000;
 
 /**
  * Sums UTC-hour counts into local calendar days, which is what the activity calendar draws.
@@ -23,7 +21,7 @@ export const toActivity = (...sources: readonly (readonly HourCount[])[]): Activ
       if (hour === null) {
         continue;
       }
-      const at = new Date(hour * HOUR_MS);
+      const at = new Date(hour);
       const date = new Date(at.getFullYear(), at.getMonth(), at.getDate());
       const datum = days.get(date.getTime());
       if (datum) {

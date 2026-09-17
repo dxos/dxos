@@ -34,7 +34,7 @@ type SpaceHomeDashboardProps = {
 const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 
 const hourly = (filter: Filter.Any) =>
-  Query.select(filter).aggregate({ hour: Aggregate.bucket('updatedAt'), count: Aggregate.count() });
+  Query.select(filter).aggregate({ hour: Aggregate.updated('hour'), count: Aggregate.count() });
 
 type ActivityHistory = { cutoff: number; hours: readonly HourCount[] };
 
@@ -60,7 +60,7 @@ const NO_HISTORY: ActivityHistory = { cutoff: Number.POSITIVE_INFINITY, hours: [
 
 /**
  * Space stats and activity matrix for the Home article. Every number comes from host-side counts
- * (`Aggregate.type()`, `Aggregate.bucket()`), so no object is loaded into the tab to draw it.
+ * (`Aggregate.type()`, `Aggregate.updated()`), so no object is loaded into the tab to draw it.
  */
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
   if (!space) {
