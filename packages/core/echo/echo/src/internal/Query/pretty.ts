@@ -181,7 +181,10 @@ export const prettyQuery = (query: QueryAST.Query): string => {
 const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
   switch (aggregate.kind) {
     case 'count':
+    case 'type':
       return '';
+    case 'bucket':
+      return JSON.stringify(aggregate.field);
     case 'items':
       return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
     case 'group':

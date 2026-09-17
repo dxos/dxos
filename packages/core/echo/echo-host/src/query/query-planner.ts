@@ -63,7 +63,71 @@ export class QueryPlanner {
     plan = this._optimizeSoloUnions(plan);
     plan = this._ensureOrderStep(plan);
     plan = this._optimizeLimits(plan);
+    plan = this._optimizeSqlAggregate(plan);
     return plan;
+  }
+
+  /**
+   * Rewrites a plan that only counts or buckets index rows into a single {@link QueryPlan.SqlAggregateStep},
+   * so the host never loads a document to answer it. Eligible shape: one space-scoped
+   * wildcard/type/timestamp `SelectStep`, optional deleted handling, a trivial type re-check, the
+   * natural `OrderStep` `_ensureOrderStep` inserts, then an `AggregateStep` whose every aggregate is
+   * computable from meta-index columns. Group order becomes key order, which an unordered aggregate
+   * leaves unspecified anyway.
+   */
+  private _optimizeSqlAggregate(plan: QueryPlan.Plan): QueryPlan.Plan {
+    if (this._options.noIndexes) {
+      return plan;
+    }
+    const [select, ...rest] = plan.steps;
+    const aggregate = rest.at(-1);
+    if (
+      select?._tag !== 'SelectStep' ||
+      aggregate?._tag !== 'AggregateStep' ||
+      select.feedCursorRange !== undefined ||
+      select.limit !== undefined ||
+      !select.scope.every((scope): scope is QueryAST.SpaceScope => scope._tag === 'space' && !scope.includeAllFeeds) ||
+      !aggregate.aggregates.every((entry) => entry.kind === 'count' || entry.kind === 'type' || entry.kind === 'bucket')
+    ) {
+      return plan;
+    }
+    const selector = select.selector;
+    if (
+      selector._tag !== 'WildcardSelector' &&
+      selector._tag !== 'TimestampSelector' &&
+      (selector._tag !== 'TypeSelector' || selector.inverted)
+    ) {
+      return plan;
+    }
+
+    let deleted: QueryPlan.SqlAggregateStep['deleted'] = 'include';
+    for (const step of rest.slice(0, -1)) {
+      if (step._tag === 'FilterDeletedStep') {
+        deleted = step.mode === 'only-deleted' ? 'only' : 'exclude';
+      } else if (step._tag === 'OrderStep') {
+        if (step.limit !== undefined || !step.order.every((order) => order.kind === 'natural')) {
+          return plan;
+        }
+      } else if (step._tag === 'FilterStep') {
+        // The type selection re-checks its typename in a FilterStep because the index ignores schema
+        // versions; the SQL type condition applies the same version rule, so the re-check is redundant.
+        const typenames: readonly string[] = selector._tag === 'TypeSelector' ? selector.typename : [];
+        const filter = step.filter;
+        if (
+          filter.type !== 'object' ||
+          !isTrivialTypenameFilter(filter) ||
+          !typenames.includes(String(filter.typename))
+        ) {
+          return plan;
+        }
+      } else {
+        return plan;
+      }
+    }
+
+    return QueryPlan.Plan.make([
+      { _tag: 'SqlAggregateStep', scope: select.scope, selector, deleted, aggregates: aggregate.aggregates },
+    ]);
   }
 
   private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {

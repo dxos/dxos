@@ -452,6 +452,16 @@ export class IndexQuerySource implements QuerySource {
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle?: Set<string>,
   ): Promise<SourceEntry | null> {
+    // A collapsed group carries no object, so there is nothing to load: pass its values through.
+    if (result.aggregates !== undefined) {
+      return {
+        id: result.id,
+        match: { rank: result.rank },
+        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+        group: _groupFromRemoteResult(result),
+      };
+    }
+
     recordObjectDiagnostic(result.id, () => ({
       objectId: result.id,
       spaceId: result.spaceId,
@@ -630,4 +640,10 @@ const emittedSchemaValidationWarnings = new Set<string>();
  * implies at least one member) is defensive and matches the working-set source's fallback.
  */
 const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['group'] =>
-  result.groupKey !== undefined ? { key: JSON.parse(result.groupKey), count: result.groupCount ?? 1 } : undefined;
+  result.groupKey !== undefined
+    ? {
+        key: JSON.parse(result.groupKey),
+        count: result.groupCount ?? 1,
+        ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
+      }
+    : undefined;

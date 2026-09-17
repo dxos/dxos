@@ -1632,6 +1632,41 @@ describe('QueryPlanner', () => {
       expect(aggregateStep).toMatchObject({ aggregates: [{ name: 'title', kind: 'group', properties: ['title'] }] });
     });
 
+    test('a count over index keys collapses to one SqlAggregateStep; member rows keep the row plan', () => {
+      const counted = Query.select(Filter.type(TestSchema.Task)).aggregate({
+        type: Aggregate.type(),
+        hour: Aggregate.bucket('updatedAt'),
+        count: Aggregate.count(),
+      });
+      const plan = planner.createPlan(withSpaceIdOptions(counted.ast));
+      expect(plan.steps).toMatchObject([
+        {
+          _tag: 'SqlAggregateStep',
+          scope: [{ _tag: 'space', spaceId: SPACE_ID }],
+          selector: { _tag: 'TypeSelector', typename: ['dxn:com.example.type.task:0.1.0'], inverted: false },
+          deleted: 'exclude',
+          aggregates: [
+            { name: 'type', kind: 'type' },
+            { name: 'hour', kind: 'bucket', field: 'updatedAt' },
+            { name: 'count', kind: 'count' },
+          ],
+        },
+      ]);
+
+      const withMembers = Query.select(Filter.type(TestSchema.Task)).aggregate({
+        type: Aggregate.type(),
+        items: Aggregate.items(),
+      });
+      const rowPlan = planner.createPlan(withSpaceIdOptions(withMembers.ast));
+      expect(rowPlan.steps.map((step) => step._tag)).toEqual([
+        'SelectStep',
+        'FilterDeletedStep',
+        'FilterStep',
+        'OrderStep',
+        'AggregateStep',
+      ]);
+    });
+
     test('an explicit orderBy before aggregate is preserved (no natural order inserted)', () => {
       const query = Query.select(Filter.type(TestSchema.Task))
         .orderBy(Order.property('title', 'desc'))

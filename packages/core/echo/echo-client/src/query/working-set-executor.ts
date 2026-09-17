@@ -61,10 +61,19 @@ const WorkingSetItem = Object.freeze({
   getGroupKey(item: WorkingSetItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue {
     const key: GroupKeyValue = {};
     for (const aggregate of aggregates) {
-      if (aggregate.kind === 'group') {
-        key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
-          WorkingSetItem.getAggregateProperty(item, property),
-        );
+      switch (aggregate.kind) {
+        case 'group':
+          key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
+            WorkingSetItem.getAggregateProperty(item, property),
+          );
+          break;
+        case 'type':
+          key[aggregate.name] = EntityStructure.getTypeReference(item.core.getObjectStructure())?.['/'] ?? null;
+          break;
+        case 'bucket':
+          // A core carries no index timestamps; `tryExecute` already declines plans that bucket.
+          key[aggregate.name] = null;
+          break;
       }
     }
     return key;
@@ -134,6 +143,14 @@ export class WorkingSetQueryExecutor {
           ? GroupBy.dropGroups(ws, step.skip, _serializeItemGroupKey)
           : ws.slice(step.skip);
       case 'AggregateStep':
+        // A count over whatever the tab happens to hold is not a count of the space, and a bucket
+        // needs index timestamps a core does not carry: both defer to the index-backed source.
+        if (
+          !step.aggregates.some((aggregate) => aggregate.kind === 'items') ||
+          step.aggregates.some((aggregate) => aggregate.kind === 'bucket')
+        ) {
+          return null;
+        }
         return this._execAggregateStep(step, ws);
       default:
         return null;

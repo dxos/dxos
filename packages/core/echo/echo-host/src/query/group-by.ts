@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+
+const { isGroupKeyAggregate } = QueryAST;
 
 /**
  * A (possibly composite) group key: one coerced scalar component per grouped property.
@@ -187,7 +189,7 @@ export const GroupBy = Object.freeze({
    * requested across the group's `items`-kind aggregates — two conflicting orders are rejected
    * rather than silently honoring only one of them.
    */
-  withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
+  withGroupAggregates: <T extends { groupKey?: GroupKeyValue; aggregates?: GroupAggregates }>(
     items: readonly T[],
     getKey: (item: T) => string,
     aggregates: readonly QueryAST.GroupAggregate[],
@@ -240,9 +242,9 @@ export const GroupBy = Object.freeze({
         computed[aggregate.name] =
           aggregate.kind === 'count'
             ? members.length
-            : aggregate.kind === 'group'
-              ? // All members of a group share the key, so read the group value off any member.
-                GroupBy.resolveKeyComponent(aggregate.properties, (property) => getProperty(members[0], property))
+            : isGroupKeyAggregate(aggregate)
+              ? // All members of a group share the key, so read the component off any member.
+                (members[0].groupKey?.[aggregate.name] ?? null)
               : GroupBy.reduceAggregate(
                   members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
                   aggregate.kind,
@@ -251,6 +253,29 @@ export const GroupBy = Object.freeze({
       for (const member of members) {
         result.push({ ...member, aggregates: computed });
       }
+      index = end;
+    }
+    return result;
+  },
+
+  /**
+   * Keeps one member per group as its stand-in, recording the group size. Used when the query asks
+   * for no members, so nothing downstream has to carry or ship the objects.
+   * Assumes `items` are already partitioned into contiguous groups (see {@link partitionByGroupKey}).
+   */
+  collapseGroups: <T extends { collapsed?: { size: number } }>(
+    items: readonly T[],
+    getKey: (item: T) => string,
+  ): T[] => {
+    const result: T[] = [];
+    let index = 0;
+    while (index < items.length) {
+      const key = getKey(items[index]);
+      let end = index;
+      while (end < items.length && getKey(items[end]) === key) {
+        end += 1;
+      }
+      result.push({ ...items[index], collapsed: { size: end - index } });
       index = end;
     }
     return result;

@@ -239,6 +239,47 @@ const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefi
   return sql` AND queuePosition > ${window.after}${upper} ORDER BY queuePosition ASC${limit}`;
 };
 
+/** One key an `AggregateQuery` groups rows by, in `groupBy` order. */
+export type AggregateGroupBy =
+  | { readonly kind: 'type' }
+  | { readonly kind: 'bucket'; readonly field: 'createdAt' | 'updatedAt'; readonly unit: 'hour' };
+
+export type AggregateQuery = {
+  readonly spaceIds: readonly string[];
+  /** Restrict to these type DXNs (same semantics as `queryTypes`: versionless matches every version). Omit for all types. */
+  readonly typeDxns?: readonly string[];
+  /** `'exclude'` (default) keeps `deleted = 0`, `'only'` keeps `deleted = 1`, `'include'` keeps both. */
+  readonly deleted?: 'exclude' | 'include' | 'only';
+  /** Inclusive bounds on `updatedAt`/`createdAt`, unix ms. */
+  readonly updatedAfter?: number;
+  readonly updatedBefore?: number;
+  readonly createdAfter?: number;
+  readonly createdBefore?: number;
+  readonly includeAllQueues?: boolean;
+  readonly queues?: readonly QueueRef[] | null;
+  /** Grouping keys, in order; empty means one row for the whole set. */
+  readonly groupBy: readonly AggregateGroupBy[];
+  /** Whether to compute min/max of these timestamp fields per group. */
+  readonly minOf?: readonly ('createdAt' | 'updatedAt')[];
+  readonly maxOf?: readonly ('createdAt' | 'updatedAt')[];
+};
+
+export type AggregateRow = {
+  /** One entry per `groupBy`, in order: the `typeDXN` string, or the bucket index (unix hours) as a number; null when the field is NULL. */
+  readonly key: readonly (string | number | null)[];
+  readonly count: number;
+  readonly min: Partial<Record<'createdAt' | 'updatedAt', number | null>>;
+  readonly max: Partial<Record<'createdAt' | 'updatedAt', number | null>>;
+};
+
+/** SELECT/GROUP BY/ORDER BY expression for one `AggregateGroupBy` key: the type column, or an hour bucket via SQLite integer division (NULL groups under NULL). */
+const buildAggregateKeyExpr = (sql: SqlClient.SqlClient, groupBy: AggregateGroupBy): Statement.Fragment =>
+  groupBy.kind === 'type'
+    ? sql`typeDXN`
+    : groupBy.field === 'createdAt'
+      ? sql`(createdAt / 3600000)`
+      : sql`(updatedAt / 3600000)`;
+
 export class EntityMetaIndex implements Index {
   /**
    * Applies any migrations this database has not recorded yet.
@@ -737,6 +778,73 @@ export class EntityMetaIndex implements Index {
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  /**
+   * Grouped counts (and optional min/max timestamps) over the meta index, computed by SQLite so
+   * callers can report on a space without loading any documents.
+   */
+  queryAggregate = Effect.fn('EntityMetaIndex.queryAggregate')(
+    (query: AggregateQuery): Effect.Effect<readonly AggregateRow[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const conditions: Statement.Fragment[] = [
+          buildSourceCondition(sql, query.spaceIds, query.includeAllQueues ?? false, query.queues ?? null),
+        ];
+
+        if (query.typeDxns && query.typeDxns.length > 0) {
+          conditions.push(buildTypeDxnCondition(sql, query.typeDxns));
+        }
+
+        const deletedMode = query.deleted ?? 'exclude';
+        if (deletedMode === 'exclude') {
+          conditions.push(sql`deleted = 0`);
+        } else if (deletedMode === 'only') {
+          conditions.push(sql`deleted = 1`);
+        }
+
+        if (query.updatedAfter != null) {
+          conditions.push(sql`updatedAt >= ${query.updatedAfter}`);
+        }
+        if (query.updatedBefore != null) {
+          conditions.push(sql`updatedAt <= ${query.updatedBefore}`);
+        }
+        if (query.createdAfter != null) {
+          conditions.push(sql`createdAt >= ${query.createdAfter}`);
+        }
+        if (query.createdBefore != null) {
+          conditions.push(sql`createdAt <= ${query.createdBefore}`);
+        }
+
+        const keyExprs = query.groupBy.map((groupBy) => buildAggregateKeyExpr(sql, groupBy));
+        const keyColumns = keyExprs.map((expr, i) => sql`${expr} AS ${sql(`key${i}`)}`);
+
+        const minOf = query.minOf ?? [];
+        const maxOf = query.maxOf ?? [];
+        const timestampColumn = (field: 'createdAt' | 'updatedAt'): Statement.Fragment =>
+          field === 'createdAt' ? sql`createdAt` : sql`updatedAt`;
+        const minColumns = minOf.map((field) => sql`MIN(${timestampColumn(field)}) AS ${sql(`min_${field}`)}`);
+        const maxColumns = maxOf.map((field) => sql`MAX(${timestampColumn(field)}) AS ${sql(`max_${field}`)}`);
+
+        const selectList = sql.csv([...keyColumns, sql`COUNT(*) AS count`, ...minColumns, ...maxColumns]);
+        const groupByClause = keyExprs.length > 0 ? sql` GROUP BY ${sql.csv(keyExprs)}` : sql``;
+        const orderByClause = keyExprs.length > 0 ? sql` ORDER BY ${sql.csv(keyExprs)}` : sql``;
+
+        type RawRow = Record<string, number | string | null>;
+        const rows =
+          yield* sql<RawRow>`SELECT ${selectList} FROM objectMeta WHERE ${sql.and(conditions)}${groupByClause}${orderByClause}`;
+
+        return rows.map((row) => ({
+          key: query.groupBy.map((_, i) => row[`key${i}`] ?? null),
+          count: Number(row.count),
+          min: Object.fromEntries(minOf.map((field) => [field, row[`min_${field}`] ?? null])),
+          max: Object.fromEntries(maxOf.map((field) => [field, row[`max_${field}`] ?? null])),
         }));
       }),
   );

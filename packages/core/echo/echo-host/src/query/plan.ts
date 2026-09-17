@@ -28,6 +28,7 @@ export namespace QueryPlan {
   export type Step =
     | ClearWorkingSetStep
     | SelectStep
+    | SqlAggregateStep
     | FilterStep
     | FilterDeletedStep
     | TraverseStep
@@ -343,6 +344,24 @@ export namespace QueryPlan {
     _tag: 'AggregateStep';
 
     /** Aggregate declarations; `group`-kind entries define the grouping keys. */
+    aggregates: readonly QueryAST.GroupAggregate[];
+  };
+
+  /**
+   * A whole plan answered by one grouped SQL query over the object meta index, loading no document.
+   * The planner emits it in place of `SelectStep` + deleted handling + `AggregateStep` when the
+   * selection is a space-scoped wildcard, type or timestamp selector and every aggregate is computable
+   * from index columns (`count`, `type`, `bucket`). Always the plan's only step.
+   */
+  export type SqlAggregateStep = {
+    _tag: 'SqlAggregateStep';
+
+    scope: readonly QueryAST.SpaceScope[];
+
+    selector: WildcardSelector | TypeSelector | TimestampSelector;
+
+    deleted: 'exclude' | 'include' | 'only';
+
     aggregates: readonly QueryAST.GroupAggregate[];
   };
 }

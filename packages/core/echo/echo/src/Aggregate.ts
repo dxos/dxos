@@ -21,7 +21,9 @@ export type Spec =
   | { kind: 'max'; property: string }
   | { kind: 'min'; property: string }
   | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
-  | { kind: 'count' };
+  | { kind: 'count' }
+  | { kind: 'type' }
+  | { kind: 'bucket'; field: 'createdAt' | 'updatedAt' };
 
 export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
 export type AggregateTypeId = typeof AggregateTypeId;
@@ -115,3 +117,16 @@ export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Agg
  * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.
  */
 export const count = <T>(): Aggregate<T, number> => new AggregateClass({ kind: 'count' });
+
+/**
+ * Group members by their type URI (the field carries the URI string). Unlike {@link group} the key
+ * comes from the index, so a query whose keys are all `type`/`bucket` runs without loading objects.
+ */
+export const type = <T>(): Aggregate<T, string | null> => new AggregateClass({ kind: 'type' });
+
+/**
+ * Group members by the UTC hour of a system timestamp (the field carries the unix-hour index,
+ * `Math.floor(ms / 3_600_000)`); roll hours up to local days at read time.
+ */
+export const bucket = <T>(field: 'createdAt' | 'updatedAt'): Aggregate<T, number | null> =>
+  new AggregateClass({ kind: 'bucket', field });
