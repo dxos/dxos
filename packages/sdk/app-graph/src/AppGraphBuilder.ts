@@ -12,6 +12,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { Entity, type Type } from '@dxos/echo';
 import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphRetention from '@dxos/graph/Retention';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position, isNonNullable } from '@dxos/util';
@@ -303,7 +304,6 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 // The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.
 // Named (not namespace) re-export: this module already exports its own `GraphBuilder` class above.
 export {
-  type Region,
   addExtension,
   destroy,
   explore,
@@ -311,23 +311,14 @@ export {
   release,
   releasedVersion,
   removeExtension,
+  setRetention,
   wasReleased,
 } from '@dxos/graph/GraphBuilder';
 
-/** {@link Builder.Retention} whose `attached` names app relations rather than their encoded keys. */
-export type Retention = Omit<Builder.Retention, 'attached'> & {
-  readonly attached?: readonly Node.RelationInput[];
-};
+export type Region = GraphRetention.Region;
 
-/** {@link Builder.setRetention}, encoding each policy's attached relations. */
-export const setRetention = (builder: Builder.Any, retentions: readonly Retention[]): void =>
-  Builder.setRetention(
-    builder,
-    retentions.map(({ retained, attached }) => ({
-      retained,
-      attached: attached?.map((relation) => Graph.relationKey(relation)),
-    })),
-  );
+/** A retention policy over app relations. */
+export type Retention = GraphRetention.Retention<Node.RelationInput>;
 
 /**
  * Flatten arbitrarily nested extension groups into a single list. Pinned to the app extension type,

@@ -77,7 +77,6 @@ export const DeckState = Capability.lazyModule(
       AppCapabilities.Layout,
       DeckCapabilities.Platform,
       DeckCapabilities.Projection,
-      DeckCapabilities.WorkspaceSeed,
     ],
   },
   () => import('./state.ts'),

@@ -10,6 +10,20 @@ import * as GraphNode from './GraphNode.ts';
 /** A node to keep loaded with its structural descendants to `depth` levels, or all of them when absent. */
 export type Region = { readonly id: string; readonly depth?: number };
 
+/**
+ * Names nodes the builder must keep loaded; the implementor derives it from state it already keeps. Once any
+ * retention is installed, whatever none of them reaches below the root's children is released.
+ */
+export interface Retention<Rel = string> {
+  /** Collected whenever this changes; across every installed retention the deepest ask for a node wins. */
+  readonly retained: Atom.Atom<readonly Region[]>;
+  /**
+   * Relations whose targets live and die with their source rather than sitting a level below it. Union
+   * of every installed retention's list; a relation no retention names counts as a level.
+   */
+  readonly attached?: readonly Rel[];
+}
+
 export type ConnectorState = {
   readonly key: string;
   readonly source: string;
@@ -88,8 +102,8 @@ const keepInlineOfSurvivingConnectors = (released: Set<string>, states: readonly
   }
 };
 
-/** Released ids keyed by the connector that emitted them, so a re-flush or a removed source forgets them. */
-export class Released {
+/** The released ids, keyed by the connector that emitted them so a re-flush or a removed source forgets them. */
+export class Ledger {
   readonly #connectorOf = new Map<string, string>();
   readonly #byConnector = new Map<string, { source: string; ids: Set<string> }>();
   readonly #version = Atom.make(0).pipe(Atom.keepAlive);

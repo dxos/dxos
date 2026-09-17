@@ -16,10 +16,10 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
-import * as Collection from './collection.ts';
 import * as GraphEdge from './GraphEdge.ts';
 import * as GraphModel from './GraphModel.ts';
 import * as GraphNode from './GraphNode.ts';
+import * as Retention from './Retention.ts';
 
 // Separates the components of the compound keys this module builds (a node id from a relation key, a
 // node id from a subscription kind). Control characters, so they cannot occur in an id or a relation.
@@ -135,21 +135,7 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   outgoing(id: string): readonly Edge[];
 }
 
-export type Region = Collection.Region;
-
-/**
- * Names nodes the builder must keep loaded; the implementor derives it from state it already keeps. Once any
- * retention is installed, whatever none of them reaches below the root's children is released.
- */
-export interface Retention {
-  /** Collected whenever this changes; across every installed retention the deepest ask for a node wins. */
-  readonly retained: Atom.Atom<readonly Region[]>;
-  /**
-   * Relation keys whose targets live and die with their source rather than sitting a level below it.
-   * Union of every installed retention's list; a relation no retention names counts as a level.
-   */
-  readonly attached?: readonly string[];
-}
+export type { Region, Retention } from './Retention.ts';
 
 /**
  * Callbacks the store drives the builder through: `onExpand` when a relation of a node is first read,
@@ -268,10 +254,10 @@ export class GraphBuilder<
   readonly _connectorPreviousArgs = new Map<string, Arg[]>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
-  _retentions: readonly Retention[] = [];
+  _retentions: readonly Retention.Retention[] = [];
   _unsubscribeRetention?: CleanupFn;
   _collectedAskKey?: string;
-  readonly _released: Collection.Released;
+  readonly _released: Retention.Ledger;
   _collectScheduled = false;
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
@@ -300,7 +286,7 @@ export class GraphBuilder<
     this._inline = inline ?? defaultInline;
     this._decorateNode = decorateNode ?? ((node) => node);
     this._unchanged = unchanged ?? (() => false);
-    this._released = new Collection.Released(this._registry);
+    this._released = new Retention.Ledger(this._registry);
     this._store = store(
       {
         onExpand: (id, relation) => this._onExpand(id, relation),
@@ -421,15 +407,15 @@ export class GraphBuilder<
       return;
     }
 
-    const asked = Collection.combine(this._retentions.map((retention) => this._registry.get(retention.retained)));
+    const asked = Retention.combine(this._retentions.map((retention) => this._registry.get(retention.retained)));
     const attached = new Set(this._retentions.flatMap((retention) => retention.attached ?? []));
-    const regions = Collection.key(asked, attached);
+    const regions = Retention.key(asked, attached);
     if (regions === this._collectedAskKey) {
       return;
     }
     this._collectedAskKey = regions;
 
-    const released = Collection.unretained({
+    const released = Retention.unretained({
       asked,
       outgoing: (id) => this._store.outgoing(id),
       structural: (relation) => !attached.has(relation),
@@ -440,7 +426,7 @@ export class GraphBuilder<
     }
   }
 
-  *_connectorStates(): Iterable<Collection.ConnectorState> {
+  *_connectorStates(): Iterable<Retention.ConnectorState> {
     for (const [key, outputs] of this._connectorPrevious) {
       yield {
         key,
@@ -827,7 +813,7 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
   builder._released.recordEmitted(released, builder._connectorStates());
   for (const state of [...builder._connectorStates()]) {
-    if (Collection.tornDown(released, state)) {
+    if (Retention.tornDown(released, state)) {
       builder._connectorPrevious.delete(state.key);
       builder._connectorPreviousArgs.delete(state.key);
       builder._connectorPreviousInlineIds.delete(state.key);
@@ -856,9 +842,15 @@ export const release = (builder: Any, ids: readonly string[]): void => {
  * Replaces the installed retentions. With none installed nothing is collected, since a host that keeps no
  * record of what is on screen cannot say what must stay.
  */
-export const setRetention = (builder: Any, retentions: readonly Retention[]): void => {
+export const setRetention = <B extends Any>(
+  builder: B,
+  retentions: readonly Retention.Retention<RelationOf<B>>[],
+): void => {
   builder._unsubscribeRetention?.();
-  builder._retentions = retentions;
+  builder._retentions = retentions.map(({ retained, attached }) => ({
+    retained,
+    attached: attached?.map((relation) => builder._relationKey(relation)),
+  }));
   builder._collectedAskKey = undefined;
   const unsubscribes = retentions.map((retention) =>
     builder._registry.subscribe(retention.retained, () => builder._collectOnOwnTask(), { immediate: true }),

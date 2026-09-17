@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as FiberHandle from 'effect/FiberHandle';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -46,8 +44,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
-      const seed = yield* Capability.get(DeckCapabilities.WorkspaceSeed);
-      yield* FiberHandle.clear(seed);
 
       yield* applyWorkspace(input.subject);
 
@@ -74,14 +70,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
 
       if (seeds && seeded.length === 0) {
-        yield* FiberHandle.run(
-          seed,
+        // Detached: a switch that lands first leaves this one to find the deck already moved on.
+        yield* Effect.forkDetach(
           seedWhenLoaded(graph, input.subject, workspace).pipe(
-            Effect.catchCause((cause) =>
-              Cause.hasInterruptsOnly(cause)
-                ? Effect.void
-                : Effect.sync(() => log.warn('seeding the workspace failed', { cause })),
-            ),
+            Effect.catchCause((cause) => Effect.sync(() => log.warn('seeding the workspace failed', { cause }))),
           ),
         );
       }

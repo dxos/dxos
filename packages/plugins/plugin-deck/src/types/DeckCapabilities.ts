@@ -38,11 +38,6 @@ export const Projection = Capability.makeSingleton<FiberHandle.FiberHandle<strin
   `${meta.profile.key}.capability.projection`,
 );
 
-/** Holds the fiber seeding a workspace switched into before its children loaded, so the next switch interrupts it. */
-export const WorkspaceSeed = Capability.makeSingleton<FiberHandle.FiberHandle<void, never>>()(
-  `${meta.profile.key}.capability.workspaceSeed`,
-);
-
 /**
  * The active workspace's deck: its persisted preferences, plus what the URL says is open. The two
  * live in different atoms because only one of them is the deck's to remember.
