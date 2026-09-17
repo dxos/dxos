@@ -226,16 +226,15 @@ export class GraphBuilder extends Builder.GraphBuilder<
   override _onExpand(id: string, relation: string): void {
     super._onExpand(id, relation);
 
-    // Readers of a node's children expect its actions and companions to be loaded too.
-    const decoded = Graph.relationFromKey(relation);
-    if (decoded.kind === 'child' && decoded.direction === 'outbound') {
-      Graph.expandSync(this.graph, id, 'action');
-      Graph.expandSync(this.graph, id, Node.companionRelation());
+    if (relation === CHILD_RELATION) {
+      EXPANDED_WITH_CHILDREN.forEach((attached) => Graph.expandSync(this.graph, id, attached));
     }
   }
 }
 
 const CHILD_RELATION = Graph.relationKey('child');
+
+const EXPANDED_WITH_CHILDREN = [Node.actionRelation(), Node.companionRelation()];
 
 /**
  * How an app node argument's inline descendants are traversed. Actions are qualified and tracked like

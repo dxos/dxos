@@ -270,8 +270,7 @@ export class GraphBuilder<
   _flushScheduled = false;
   _retentions: readonly Retention[] = [];
   _unsubscribeRetention?: CleanupFn;
-  /** The regions the last collection ran for, normalized; collection is skipped while they hold. */
-  _collectedRegions?: string;
+  _collectedAskKey?: string;
   readonly _released: Collection.Released;
   _collectScheduled = false;
   _collectPromise: Promise<void> = Promise.resolve();
@@ -434,10 +433,10 @@ export class GraphBuilder<
 
     const asked = Collection.combine(this._retentions.map((retention) => this._registry.get(retention.retained)));
     const regions = Collection.key(asked);
-    if (regions === this._collectedRegions) {
+    if (regions === this._collectedAskKey) {
       return;
     }
-    this._collectedRegions = regions;
+    this._collectedAskKey = regions;
 
     const released = Collection.unretained({
       asked,
@@ -835,21 +834,14 @@ export const releasedVersion = (builder: Any): Atom.Atom<number> => builder._rel
  */
 export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
-  builder._released.add(released, builder._connectorStates());
-  for (const [key, previous] of [...builder._connectorPrevious]) {
-    // A connector left naming a released node would never re-emit it, so it tears down to "never expanded".
-    const state = {
-      key,
-      source: relationFromConnectorKey(key).id,
-      outputs: previous,
-      inline: builder._connectorPreviousInlineIds.get(key) ?? [],
-    };
+  builder._released.recordEmitted(released, builder._connectorStates());
+  for (const state of [...builder._connectorStates()]) {
     if (Collection.tornDown(released, state)) {
-      builder._connectorPrevious.delete(key);
-      builder._connectorPreviousArgs.delete(key);
-      builder._connectorPreviousInlineIds.delete(key);
-      builder._dirtyConnectors.delete(key);
-      builder._onReleaseRelation(relationFromConnectorKey(key));
+      builder._connectorPrevious.delete(state.key);
+      builder._connectorPreviousArgs.delete(state.key);
+      builder._connectorPreviousInlineIds.delete(state.key);
+      builder._dirtyConnectors.delete(state.key);
+      builder._onReleaseRelation(relationFromConnectorKey(state.key));
     }
   }
 
@@ -876,7 +868,7 @@ export const release = (builder: Any, ids: readonly string[]): void => {
 export const setRetention = (builder: Any, retentions: readonly Retention[]): void => {
   builder._unsubscribeRetention?.();
   builder._retentions = retentions;
-  builder._collectedRegions = undefined;
+  builder._collectedAskKey = undefined;
   const unsubscribes = retentions.map((retention) =>
     builder._registry.subscribe(retention.retained, () => builder._collectOnOwnTask(), { immediate: true }),
   );

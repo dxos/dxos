@@ -171,8 +171,6 @@ export default Capability.makeModule(
         },
       }),
 
-      // Comments companion for the Post plank: anchors the comments panel to the post's single body
-      // `Markdown.Document` (where post comments are anchored).
       AppGraphBuilder.createExtension({
         id: 'postComments',
         relation: AppGraphNode.companionRelation(),

@@ -145,10 +145,6 @@ export default Capability.makeModule(
           // Already provisioned — no need to watch connections.
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
-          // Not yet resolved — subscribe to companion connections so we re-try
-          // when graph builder extensions add companion nodes (after expand). This subscription
-          // outlives the current `provision()` run, so re-read the latest variant at callback time
-          // rather than closing over the one captured here.
           plankSubs.set(
             plankId,
             registry.subscribe(graph.connections(plankId, AppGraphNode.companionRelation()), () => {

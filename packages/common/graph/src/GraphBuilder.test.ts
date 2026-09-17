@@ -349,7 +349,6 @@ const scheduleOnMacrotasks = (builder: GraphBuilder.Any) => {
 };
 
 describe('retention', () => {
-  // root (action `ra`, companion `rk`) → w0, w1 (action `a`) → c0 (companion `k`), c1 → g.
   const tree = () => {
     const harness = setup({ structural: (relation) => relation === 'child' });
     const produce = (relation: string, nodes: (id: string) => GraphBuilder.ModelNodeArg[]) =>

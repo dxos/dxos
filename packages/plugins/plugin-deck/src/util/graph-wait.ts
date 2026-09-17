@@ -11,8 +11,7 @@ import { log } from '@dxos/log';
 
 import { openableChildren } from './openable-children.ts';
 
-/** Waits until none of `ids` is still released, which is once each is produced again or known not to be. */
-export const awaitReleased = (
+export const awaitReleaseSettled = (
   registry: Registry.AtomRegistry,
   builder: AppGraphBuilder.GraphBuilder,
   ids: readonly string[],

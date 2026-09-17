@@ -12,12 +12,13 @@ export type WorkspaceRetention = {
   retainedPlanks: readonly string[];
 };
 
-/** The workspaces the deck shows or is about to, kept whole; the graph root is never named, since that would keep everything. */
+const wouldKeepWholeGraph = (id: string): boolean => id === GraphNode.RootId;
+
 export const retainedWorkspaces = ({
   activeDeck,
   previousDeck,
   retainedPlanks,
 }: WorkspaceRetention): AppGraphBuilder.Region[] =>
   [...new Set([activeDeck, previousDeck, ...retainedPlanks.map(GraphPath.getWorkspaceFromPath)])]
-    .filter((id) => id !== GraphNode.RootId)
+    .filter((id) => !wouldKeepWholeGraph(id))
     .map((id) => ({ id }));

@@ -37,7 +37,7 @@ import {
   updatePlankNames,
 } from '../util/index.ts';
 import {
-  awaitReleased,
+  awaitReleaseSettled,
   isCompanionOpen,
   openableChildren,
   openCompanionPlank,
@@ -45,7 +45,6 @@ import {
   updateActiveDeck,
 } from '../util/index.ts';
 
-/** Marks the subjects as opening until the scope closes, so their workspaces stay loaded while they arrive. */
 const holdOpening = (ids: readonly string[]) =>
   ids.length === 0
     ? Effect.void
@@ -93,7 +92,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           yield* applyWorkspace(input.workspace);
         }
       }
-      yield* awaitReleased(registry, builder, input.subject, RESOLVE_TIMEOUT_MS);
+      yield* awaitReleaseSettled(registry, builder, input.subject, RESOLVE_TIMEOUT_MS);
 
       // Dedup subjects against the active deck using EID identity.
       // The same object can appear under different graph paths (e.g., via collections vs types).

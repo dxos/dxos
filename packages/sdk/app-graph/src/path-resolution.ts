@@ -134,8 +134,6 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
  */
 export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
   const table = new Map<string, UrlKeyTableEntry>();
-  // The grammar's fixed tiers are configured on the builder, not declared by any extension: the anchor
-  // rebases the chain, and the linked key addresses a companion of the preceding item.
   const { anchorKey, linkedKey } = builder.urlGrammar;
   if (anchorKey) {
     table.set(anchorKey, { key: anchorKey, hasId: true, anchor: true });
@@ -258,10 +256,6 @@ const resolveKeyId = async (
   return waited ? { nodeId: waited } : { candidateId };
 };
 
-/**
- * Resolve a linked pair (`<key>/<variant>`) against the companion of `precedingNodeId` whose variant it
- * names. A single expand, no BFS, and independent of which extension produced the companion.
- */
 const resolveLinked = async (
   builder: GraphBuilder.GraphBuilder,
   precedingNodeId: string,
@@ -277,8 +271,9 @@ const resolveLinked = async (
   return match?.id ?? null;
 };
 
-/** A companion's segment carries this prefix so it shares attention with its owner; mirrors `LINKED_PREFIX` in `@dxos/react-ui-attention`'s `Attention.ts`. */
 const LINKED_PREFIX = '~';
+
+const isCompanionIdEvenIfReleased = (id: string): boolean => GraphNode.segmentId(id).startsWith(LINKED_PREFIX);
 
 const companionVariant = (id: string): string => {
   const segment = GraphNode.segmentId(id);
@@ -404,9 +399,8 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
     return Option.none();
   }
 
-  // Read from the id rather than the relation, so a companion plank whose node was released keeps its URL.
   const linkedKey = builder.urlGrammar.linkedKey;
-  if (linkedKey && GraphNode.segmentId(nodeId).startsWith(LINKED_PREFIX)) {
+  if (linkedKey && isCompanionIdEvenIfReleased(nodeId)) {
     return Option.some({ key: linkedKey, id: companionVariant(nodeId), workspace });
   }
 
