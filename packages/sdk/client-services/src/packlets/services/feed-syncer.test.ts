@@ -59,7 +59,7 @@ const createEdgeConnection = ({
    * request so the client waits out its RPC timeout, as it does for a space the server has deleted.
    */
   interceptRequest?: (message: ProtocolMessage) => ProtocolMessage | 'drop' | undefined;
-}): EdgeConnection => {
+}): EdgeConnection & { reconnect: () => void } => {
   const reconnectListeners = new Set<ReconnectListener>();
   const deliver = (message: ProtocolMessage) => {
     const routerMessage = createBuf(MessageSchema, {
@@ -116,6 +116,12 @@ const createEdgeConnection = ({
     onReconnected: (listener: ReconnectListener) => {
       reconnectListeners.add(listener);
       return () => reconnectListeners.delete(listener);
+    },
+    /** Fires the reconnect listeners as a new socket would. */
+    reconnect: () => {
+      for (const listener of reconnectListeners) {
+        void listener();
+      }
     },
   };
 };
@@ -208,7 +214,17 @@ const createFeedSyncHarness = async ({
 
   onTestFinished(close);
 
-  return { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer, close, sentMessages, pushToClient };
+  return {
+    serverRuntime,
+    clientRuntime,
+    serverFeedStore,
+    clientFeedStore,
+    syncer,
+    close,
+    sentMessages,
+    pushToClient,
+    reconnect: edgeClient.reconnect,
+  };
 };
 
 /** Appends `count` local blocks to one feed of a space, so a 150-block seed is three 50-block pages. */
@@ -701,6 +717,50 @@ describe('FeedSyncer', () => {
       },
       { timeout: 4_000 },
     );
+  });
+
+  // The server drops frames for a deleted space, so before this the client waited out its RPC timeout
+  // on every request to it; with the reason named, the space costs nothing until the next connection.
+  test('stops syncing a space the server reports deleted until the connection is re-established', async () => {
+    const deletedSpaceId = SpaceId.random();
+    const liveSpaceId = SpaceId.random();
+    const { syncer, sentMessages, reconnect } = await createFeedSyncHarness({
+      spaceId: liveSpaceId,
+      spaceIds: [deletedSpaceId, liveSpaceId],
+      pollingInterval: 100,
+      interceptRequest: (message) =>
+        (message._tag === 'QueryRequest' || message._tag === 'AppendRequest') && message.spaceId === deletedSpaceId
+          ? {
+              _tag: 'Error',
+              requestId: message.requestId,
+              message: 'space deleted',
+              code: FeedProtocol.ErrorCode.SPACE_DELETED,
+              senderPeerId: 'server',
+              recipientPeerId: 'client',
+            }
+          : undefined,
+    });
+    const requestsFor = (spaceId: SpaceId) =>
+      sentMessages.filter(
+        (message) =>
+          (message._tag === 'QueryRequest' || message._tag === 'AppendRequest') && message.spaceId === spaceId,
+      ).length;
+
+    await syncer.open(new Context());
+    await vi.waitFor(() => expect(requestsFor(deletedSpaceId)).toBeGreaterThanOrEqual(1));
+    const afterReport = requestsFor(deletedSpaceId);
+    const liveBefore = requestsFor(liveSpaceId);
+
+    // Several polling intervals: the live space keeps being polled, the deleted one is never asked again.
+    await vi.waitFor(() => expect(requestsFor(liveSpaceId)).toBeGreaterThanOrEqual(liveBefore + 3));
+    expect(requestsFor(deletedSpaceId)).toBe(afterReport);
+
+    // A new connection may be to a server that revived the space, so the report is checked once more.
+    reconnect();
+    await vi.waitFor(() => expect(requestsFor(deletedSpaceId)).toBe(afterReport + 1));
+    const liveAfterReconnect = requestsFor(liveSpaceId);
+    await vi.waitFor(() => expect(requestsFor(liveSpaceId)).toBeGreaterThanOrEqual(liveAfterReconnect + 3));
+    expect(requestsFor(deletedSpaceId)).toBe(afterReport + 1);
   });
 
   test('a hint for an unknown space id is ignored rather than throwing', async () => {

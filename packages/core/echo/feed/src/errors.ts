@@ -13,6 +13,15 @@ export class SyncRpcTimeoutError extends BaseError.extend('SyncRpcTimeoutError')
   }
 }
 
+export class SyncSpaceDeletedError extends BaseError.extend('SyncSpaceDeletedError') {
+  constructor(args: { requestId: string; message: string }) {
+    super({
+      message: `Feed sync request refused, the server reports the space deleted (requestId=${args.requestId}): ${args.message}`,
+      context: args,
+    });
+  }
+}
+
 export class SyncAppendPositionMismatchError extends BaseError.extend('SyncAppendPositionMismatchError') {
   constructor(args: { requestId: string; spaceId: string; feedNamespace: string; blocks: number; positions: number }) {
     super({

@@ -10,9 +10,9 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 
-import { SyncAppendPositionMismatchError, SyncRpcTimeoutError } from './errors.ts';
+import { SyncAppendPositionMismatchError, SyncRpcTimeoutError, SyncSpaceDeletedError } from './errors.ts';
 import type { FeedStore } from './feed-store.ts';
 
 /** Default timeout for feed sync RPCs awaiting an edge response. */
@@ -115,7 +115,12 @@ export class SyncClient {
       error: message._tag === 'Error' ? message.message : undefined,
     });
     if (message._tag === 'Error') {
-      return Effect.andThen(Deferred.fail(deferred, new Error(message.message)), () => Effect.void);
+      // A deleted space never answers again, so the caller has to stop asking rather than retry.
+      const error =
+        message.code === FeedProtocol.ErrorCode.SPACE_DELETED
+          ? new SyncSpaceDeletedError({ requestId, message: message.message })
+          : new Error(message.message);
+      return Effect.andThen(Deferred.fail(deferred, error), () => Effect.void);
     }
     return Effect.andThen(Deferred.succeed(deferred, message), () => Effect.void);
   }

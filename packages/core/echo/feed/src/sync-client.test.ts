@@ -14,7 +14,7 @@ import { Context } from '@dxos/context';
 import { SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { SyncAppendPositionMismatchError, SyncRpcTimeoutError } from './errors.ts';
+import { SyncAppendPositionMismatchError, SyncRpcTimeoutError, SyncSpaceDeletedError } from './errors.ts';
 import { FeedStore } from './feed-store.ts';
 import { SyncClient } from './sync-client.ts';
 
@@ -220,6 +220,41 @@ describe('SyncClient', () => {
     // this pull advance the cursor past the re-issued positions instead.
     expect(await pull()).toEqual({ done: false });
     expect(await syncState()).toEqual({ lastPulledPosition: -1, serverToken: 'token' });
+
+    await runtime.dispose();
+  });
+
+  // The server names the reason so the syncer can stop asking; a plain error would only be retried.
+  test('an Error reply coded space_deleted fails the request with SyncSpaceDeletedError', async () => {
+    const runtime = ManagedRuntime.make(TestLayer);
+    const spaceId = SpaceId.random();
+    const feedStore = new FeedStore({ localActorId: 'alice', assignPositions: false });
+    await runtime.runPromise(feedStore.migrate());
+
+    const syncClient: SyncClient = new SyncClient({
+      peerId: 'client-peer',
+      feedStore,
+      sendMessage: (_ctx, message) =>
+        syncClient.handleMessage({
+          _tag: 'Error',
+          requestId: message.requestId,
+          message: 'space deleted',
+          code: FeedProtocol.ErrorCode.SPACE_DELETED,
+          senderPeerId: 'server-peer',
+          recipientPeerId: 'client-peer',
+        }),
+    });
+
+    const ctx = new Context();
+    onTestFinished(() => void ctx.dispose());
+
+    const exit = await runtime.runPromiseExit(
+      syncClient.pull(ctx, { spaceId, feedNamespace: WellKnownNamespaces.data }),
+    );
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      expect(Cause.squash(exit.cause)).toBeInstanceOf(SyncSpaceDeletedError);
+    }
 
     await runtime.dispose();
   });

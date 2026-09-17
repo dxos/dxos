@@ -368,6 +368,15 @@ export const FeedAdvanced = Schema.Struct({
 export interface FeedAdvanced extends Schema.Schema.Type<typeof FeedAdvanced> {}
 
 /**
+ * Machine-readable reasons an `Error` reply may carry, for a caller to act on rather than retry.
+ */
+export const ErrorCode = {
+  /** The space no longer exists on the server, so nothing addressed to it will ever be answered. */
+  SPACE_DELETED: 'space_deleted',
+} as const;
+export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
+
+/**
  * Tagged transport message union for queue protocol RPC traffic.
  *
  * The routing envelope is distributed over the members with `mapMembers`, which is what Effect 4
@@ -392,6 +401,13 @@ export const ProtocolMessage = Schema.Union([
      * Human-readable error message.
      */
     message: Schema.String,
+
+    /**
+     * One of {@link ErrorCode}, when the caller should act on the failure instead of retrying it.
+     * Typed as a string so a client decodes a code it does not know yet and treats the reply as an
+     * ordinary error.
+     */
+    code: Schema.optional(Schema.String),
   }),
 ]).mapMembers(
   Tuple.map(
