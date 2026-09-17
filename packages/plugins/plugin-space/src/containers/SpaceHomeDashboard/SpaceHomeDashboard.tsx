@@ -15,7 +15,7 @@ import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Dashboard } from '@dxos/react-ui-dashboard';
 
-import { SPACE_STATS_QUERY, typenameOf } from '#dashboard';
+import { SPACE_STATS_QUERY, countObjects, countTypenames } from '#dashboard';
 import { meta } from '#meta';
 
 import { type HourCount, toActivity } from './activity.ts';
@@ -36,24 +36,27 @@ const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 const hourly = (filter: Filter.Any) =>
   Query.select(filter).aggregate({ hour: Aggregate.bucket('updatedAt'), count: Aggregate.count() });
 
+type ActivityHistory = { cutoff: number; hours: readonly HourCount[] };
+
 /**
  * Activity before the start of today, read once per space for the session. The snapshot is never
  * recomputed: an object touched on an earlier day keeps that day even after it is edited again,
  * which the per-object `updatedAt` it is built from could not tell us. The live window from
- * `cutoff` onward is a separate reactive query.
+ * `cutoff` onward is a separate reactive query. The family returns the atom itself: a kept-alive
+ * atom is what pins the cache entry, so a wrapper object around it would be collected and rebuilt.
  */
-const activityHistory = Atom.family((space: Space) => {
-  const today = new Date();
-  const cutoff = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-  const history = Atom.make(() =>
-    Effect.promise((): Promise<readonly HourCount[]> =>
-      space.db.query(hourly(Filter.updated({ before: cutoff - 1 }))).run(),
-    ),
-  ).pipe(Atom.keepAlive);
-  return { cutoff, history };
-});
+const activityHistory = Atom.family((space: Space) =>
+  Atom.make(() =>
+    Effect.promise(async (): Promise<ActivityHistory> => {
+      const today = new Date();
+      const cutoff = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      const hours = await space.db.query(hourly(Filter.updated({ before: cutoff - 1 }))).run();
+      return { cutoff, hours };
+    }),
+  ).pipe(Atom.keepAlive),
+);
 
-const NO_HOURS: readonly HourCount[] = [];
+const NO_HISTORY: ActivityHistory = { cutoff: Number.POSITIVE_INFINITY, hours: [] };
 
 /**
  * Space stats and activity matrix for the Home article. Every number comes from host-side counts
@@ -84,26 +87,20 @@ const SpaceDashboard = ({
 
   // Deferred so a burst of index passes (a freshly opened space) never competes with input.
   const counts = useDeferredValue(useQuery(space.db, SPACE_STATS_QUERY));
-  const { cutoff, history } = activityHistory(space);
-  const historyResult = useAtomValue(history);
-  const liveQuery = useMemo(() => hourly(Filter.updated({ after: cutoff })), [cutoff]);
-  const live = useDeferredValue(useQuery(space.db, liveQuery));
-
-  const activity = useMemo(
-    () =>
-      toActivity(
-        AsyncResult.getOrElse(historyResult, () => NO_HOURS),
-        live,
-      ),
-    [historyResult, live],
+  const history = AsyncResult.getOrElse(useAtomValue(activityHistory(space)), () => NO_HISTORY);
+  // Until the snapshot has a cutoff the live window has no start; an empty selection keeps the
+  // query shape stable instead of briefly counting everything.
+  const liveQuery = useMemo(
+    () => hourly(Number.isFinite(history.cutoff) ? Filter.updated({ after: history.cutoff }) : Filter.nothing()),
+    [history.cutoff],
   );
+  const live = useDeferredValue(useQuery(space.db, liveQuery));
+  const activity = useMemo(() => toActivity(history.hours, live), [history.hours, live]);
 
   const values: Record<SpaceStatId, number> = {
-    'objects': counts.reduce((total, row) => total + row.count, 0),
-    'types': counts.filter((row) => row.type !== null).length,
-    'collections': counts
-      .filter((row) => row.type !== null && typenameOf(row.type) === COLLECTION_TYPENAME)
-      .reduce((total, row) => total + row.count, 0),
+    'objects': countObjects(counts),
+    'types': countTypenames(counts),
+    'collections': countObjects(counts, COLLECTION_TYPENAME),
     'members': members.length,
     'active-days': activity.length,
     'plugins': plugins,
