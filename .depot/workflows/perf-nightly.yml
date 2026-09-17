@@ -74,6 +74,13 @@ jobs:
       - name: Setup
         uses: ./.depot/actions/setup
 
+      # The `e2e` job in `check.yml` installs browsers the same way. Chromium alone, because the
+      # config pins the single chromium project and the harness launches Chromium over CDP —
+      # `playwright install` with no argument also fetches firefox and webkit, which nothing here
+      # ever starts.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium
+
       - name: Run the flows
         id: flows
         continue-on-error: true
