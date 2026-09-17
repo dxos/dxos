@@ -127,7 +127,7 @@ describe('SpaceOperation.QueryObjects', () => {
   );
 
   it.effect(
-    'an unfiltered query lists every object, and the default limit does not silently truncate',
+    'a result capped by the limit reports itself as truncated',
     Effect.fnUntraced(
       function* ({ expect }) {
         // More objects than the handler's default limit, so a truncating default is visible.
