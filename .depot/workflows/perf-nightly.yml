@@ -124,8 +124,13 @@ jobs:
       # durations are the budgets they exhausted), but the flow step is `continue-on-error`, so a
       # run that died partway would otherwise publish whatever it had managed to write — a trend
       # built from a truncated run reads as a regression nobody caused.
+      #
+      # A manual dispatch publishes too, from any branch. Recording is not what protects the trend:
+      # every row carries `ciBranch`, and each dashboard tile filters `ciBranch = 'main'`, so a
+      # branch run is stored and simply not charted. Refusing to record it instead made the numbers
+      # from a dispatch unreachable, which is the opposite of why the run exists.
       - name: Trend the measured rows
-        if: steps.flows.outcome == 'success' && github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+        if: steps.flows.outcome == 'success' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         continue-on-error: true
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
