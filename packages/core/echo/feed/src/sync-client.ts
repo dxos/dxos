@@ -425,6 +425,15 @@ export class SyncClient {
         rpcTag: 'AppendRequest',
       });
       const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
+      // Pairing a short reply with the batch would leave the tail unpositioned and the push looping
+      // without a diagnostic; a responder that assigns no positions is not a position authority.
+      if (response.positions.length !== unpositioned.blocks.length) {
+        return yield* Effect.fail(
+          new Error(
+            `AppendResponse carried ${response.positions.length} positions for ${unpositioned.blocks.length} blocks (spaceId=${opts.spaceId} feedNamespace=${opts.feedNamespace} requestId=${requestId}).`,
+          ),
+        );
+      }
       // Positions in the response belong to the responding server, so any stale local ones have to
       // go before they are applied.
       const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({

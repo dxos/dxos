@@ -132,6 +132,65 @@ describe('SyncClient', () => {
     await runtime.dispose();
   });
 
+  // Zipping a short reply against the batch used to position the head and leave the tail pending,
+  // so the push returned not-done forever and nothing said why.
+  test('fails a push whose reply carries fewer positions than blocks', async () => {
+    const runtime = ManagedRuntime.make(TestLayer);
+    const spaceId = SpaceId.random();
+    const feedStore = new FeedStore({ localActorId: 'alice', assignPositions: false });
+    await runtime.runPromise(feedStore.migrate());
+    await runtime.runPromise(
+      feedStore.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [0, 1].map((sequence) => ({
+          feedId: 'feed-1',
+          actorId: 'alice',
+          sequence,
+          prevActorId: sequence === 0 ? null : 'alice',
+          prevSequence: sequence === 0 ? null : sequence - 1,
+          position: null,
+          timestamp: 0,
+          data: new Uint8Array([sequence]),
+        })),
+      }),
+    );
+
+    const syncClient: SyncClient = new SyncClient({
+      peerId: 'client-peer',
+      feedStore,
+      sendMessage: (_ctx, message) => {
+        if (message._tag !== 'AppendRequest') {
+          return Effect.void;
+        }
+        return syncClient.handleMessage({
+          _tag: 'AppendResponse',
+          requestId: message.requestId,
+          positions: [5],
+          serverToken: 'token',
+          senderPeerId: 'server-peer',
+          recipientPeerId: 'client-peer',
+        });
+      },
+    });
+
+    const ctx = new Context();
+    onTestFinished(() => void ctx.dispose());
+
+    const exit = await runtime.runPromiseExit(
+      syncClient.push(ctx, { spaceId, feedNamespace: WellKnownNamespaces.data }),
+    );
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      expect(Cause.squash(exit.cause)).toMatchObject({ message: expect.stringContaining('1 positions for 2 blocks') });
+    }
+    // Nothing was applied: the whole batch is still pending, not just its tail.
+    const { blocks } = await runtime.runPromise(feedStore.query({ spaceId, feedNamespace: WellKnownNamespaces.data }));
+    expect(blocks.map((block) => block.position)).toEqual([null, null]);
+
+    await runtime.dispose();
+  });
+
   // A server that predates the token reports none; treating that as a change would wipe positions
   // on every pull.
   test('keeps pulling incrementally from a server that reports no token', async () => {
