@@ -56,10 +56,9 @@ export class MemoryTransport implements Transport {
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private _pipes: Promise<void>[] = [];
-  // Detaches both pipe directions without ending either peer's wire-protocol stream, which is what
-  // `unpipe` meant here: the streams outlive the transport and the peer's must survive our close.
-  // Re-made on every connect: an AbortController is single-use, so reusing one across a reconnect
-  // aborts the new pipes the moment they attach.
+  // Detaches both pipe directions without ending either peer's wire-protocol stream: the streams
+  // outlive the transport and the peer's must survive our close. Re-made on every connect, since an
+  // AbortController is single-use.
   private _abort = new AbortController();
 
   private _closed = false;
@@ -158,16 +157,26 @@ export class MemoryTransport implements Transport {
 
       // Detach both directions. Cancelling the readables instead would destroy the wire-protocol
       // streams — including the peer's — where the `unpipe` this replaced only detached them.
-      const pipes = this._pipes;
+      // Only the peer that won the connect race holds the pipes, and either peer may close first,
+      // so both sides are torn down here rather than whichever one `close()` was called on.
+      const remote = this._remoteConnection;
+      const pipes = [...this._pipes, ...remote._pipes];
       this._pipes = [];
+      remote._pipes = [];
+
+      let drainTimer: NodeJS.Timeout | undefined;
       await Promise.race([
         Promise.allSettled(pipes),
-        new Promise((resolve) => setTimeout(resolve, PIPE_DRAIN_TIMEOUT)),
+        new Promise((resolve) => {
+          drainTimer = setTimeout(resolve, PIPE_DRAIN_TIMEOUT);
+        }),
       ]);
+      clearTimeout(drainTimer);
       this._abort.abort();
+      remote._abort.abort();
 
-      this._remoteConnection.closed.emit();
-      this._remoteConnection._remoteConnection = undefined;
+      remote.closed.emit();
+      remote._remoteConnection = undefined;
       this._remoteConnection = undefined;
     }
 

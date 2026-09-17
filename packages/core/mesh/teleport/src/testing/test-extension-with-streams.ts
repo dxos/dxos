@@ -82,7 +82,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
           .catch(() => {
             streamEntry.sendErrors += 1;
           });
-        // `ready` is the web-stream drain: it settles once the sink wants more.
+        // `ready` settles once the sink wants more, which is what paces this loop.
         void writer.ready.then(pushChunk).catch(() => {});
       }, interval);
     };

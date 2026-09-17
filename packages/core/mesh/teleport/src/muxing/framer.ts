@@ -30,7 +30,7 @@ export class Framer {
   #subscribeCb?: () => void = undefined;
   #pendingWriteResolve?: () => void = undefined;
   #buffer?: Uint8Array = undefined; // The rest of the bytes from the previous write call.
-  #sendCallbacks: (() => void)[] = [];
+  #sendCallbacks: { resolve: () => void; reject: (err: Error) => void }[] = [];
 
   #bytesSent = 0;
   #bytesReceived = 0;
@@ -106,10 +106,9 @@ export class Framer {
         const frame = encodeFrame(message);
         this.#bytesSent += frame.length;
         controller.enqueue(frame);
-        // `desiredSize` is the web-stream spelling of the `push()` return value this used to check.
         this.#writable = (controller.desiredSize ?? 0) > 0;
         if (!this.#writable) {
-          this.#sendCallbacks.push(resolve);
+          this.#sendCallbacks.push({ resolve, reject });
         } else {
           resolve();
         }
@@ -173,7 +172,19 @@ export class Framer {
     this.#sendCallbacks = [];
     this.#writable = true;
     this.drain.emit();
-    responseQueue.forEach((cb) => cb());
+    responseQueue.forEach(({ resolve }) => resolve());
+  }
+
+  /**
+   * Fails every send still waiting for capacity. Resolving them instead would tell the sender its
+   * bytes were accepted when the pipe carrying them is already gone.
+   */
+  #failResponseQueue(reason?: unknown): void {
+    const responseQueue = this.#sendCallbacks;
+    this.#sendCallbacks = [];
+    this.#writable = false;
+    const error = reason instanceof Error ? reason : new Error('Framer is closed.');
+    responseQueue.forEach(({ reject }) => reject(error));
   }
 
   #handleClosed(reason?: unknown): void {
@@ -181,8 +192,11 @@ export class Framer {
       return;
     }
     this.#closed = true;
-    // Unblock anyone awaiting capacity, so a close cannot strand a pending send.
-    this.#processResponseQueue();
+    // End the readable too: a close arriving from the writable side otherwise leaves it open, and
+    // whatever is piping out of it never completes.
+    this.#closeController(reason);
+    // Fail anyone awaiting capacity rather than strand them.
+    this.#failResponseQueue(reason);
     // Settle a write parked waiting for a subscriber: nothing will consume it now, and leaving the
     // promise pending strands the `pipeTo` feeding us, which in turn hangs the transport's close.
     this.#settlePendingWrite();
@@ -213,6 +227,18 @@ export class Framer {
     }
   }
 
+  #closeController(reason?: unknown): void {
+    try {
+      if (reason instanceof Error) {
+        this.#controller?.error(reason);
+      } else {
+        this.#controller?.close();
+      }
+    } catch {
+      // Already closed, errored or cancelled by the consumer; nothing left to end.
+    }
+  }
+
   destroy(): void {
     if (this.readableLength > 0) {
       log('framer destroyed while there are still read bytes in the buffer.');
@@ -221,14 +247,7 @@ export class Framer {
       log.warn('framer destroyed while there are still write bytes in the buffer.');
     }
 
-    if (!this.#closed) {
-      try {
-        this.#controller?.close();
-      } catch {
-        // Already closed or errored by the consumer; the close below is what matters.
-      }
-      this.#handleClosed(undefined);
-    }
+    this.#handleClosed(undefined);
   }
 }
 

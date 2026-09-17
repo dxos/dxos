@@ -132,56 +132,97 @@ export class TcpTransport implements Transport {
     });
 
     this.connected.emit();
-    connectDuplexStreams(socketToDuplexStream(this._socket!), this.options.stream, (err) => this.errors.raise(err));
+    connectDuplexStreams(socketToDuplexStream(this._socket!), this.options.stream, (err) => {
+      // A pipe rejecting is how a connection normally ends, and `socket.on('error')` above already
+      // raises the real faults; re-raising here would report every disconnect twice.
+      log('pipe ended', { err });
+    });
   }
 }
 
 /**
  * Adapts a Node socket to the web-stream seam.
  *
- * Written out rather than using `Duplex.toWeb`, whose `node:stream/web` types are a different
- * declaration of `ReadableStream` than the global one this codebase types the seam with.
+ * Hand-written because `Duplex.toWeb` returns `node:stream/web`'s `ReadableStream`, a different
+ * declaration from the global one the seam is typed with.
  */
-const socketToDuplexStream = (socket: Socket): DuplexStream => ({
-  readable: new ReadableStream<Uint8Array>({
-    start: (controller) => {
-      // Copied: socket chunks come from a shared pool, so holding the view would alias later reads.
-      socket.on('data', (data) => controller.enqueue(new Uint8Array(data)));
-      socket.on('end', () => {
-        try {
-          controller.close();
-        } catch {
-          // Already closed by a cancel racing the socket ending.
+const socketToDuplexStream = (socket: Socket): DuplexStream => {
+  let detach = () => {};
+
+  return {
+    readable: new ReadableStream<Uint8Array>({
+      start: (controller) => {
+        let ended = false;
+        const end = (err?: Error) => {
+          if (ended) {
+            return;
+          }
+          ended = true;
+          detach();
+          try {
+            err ? controller.error(err) : controller.close();
+          } catch {
+            // Already closed, errored or cancelled by the consumer.
+          }
+        };
+
+        // Copied: socket chunks come from a shared pool, so holding the view would alias later reads.
+        const onData = (data: Buffer) => {
+          controller.enqueue(new Uint8Array(data));
+          // The socket has no view of the stream's queue, so backpressure is relayed by hand.
+          if ((controller.desiredSize ?? 0) <= 0) {
+            socket.pause();
+          }
+        };
+        const onEnd = () => end();
+        const onError = (err: Error) => end(err);
+        // `close` also covers `destroy()`, which tears the socket down without ever emitting `end`.
+        const onClose = () => end();
+
+        detach = () => {
+          socket.off('data', onData);
+          socket.off('end', onEnd);
+          socket.off('error', onError);
+          socket.off('close', onClose);
+        };
+
+        socket.on('data', onData);
+        socket.on('end', onEnd);
+        socket.on('error', onError);
+        socket.on('close', onClose);
+      },
+      pull: () => {
+        socket.resume();
+      },
+      cancel: () => {
+        detach();
+        socket.destroy();
+      },
+    }),
+    writable: new WritableStream<Uint8Array>({
+      write: async (chunk) => {
+        if (!socket.write(chunk)) {
+          // `drain` is the socket's backpressure signal, mapped onto the write promise. An error or
+          // a close while parked here must settle it too, or the writer outlives the transport.
+          await new Promise<void>((resolve, reject) => {
+            const settle = (err?: Error) => {
+              socket.off('drain', onDrain);
+              socket.off('error', onWriteError);
+              socket.off('close', onWriteClose);
+              err ? reject(err) : resolve();
+            };
+            const onDrain = () => settle();
+            const onWriteError = (err: Error) => settle(err);
+            const onWriteClose = () => settle(new Error('Socket closed while awaiting drain.'));
+            socket.once('drain', onDrain);
+            socket.once('error', onWriteError);
+            socket.once('close', onWriteClose);
+          });
         }
-      });
-    },
-    cancel: () => {
-      socket.destroy();
-    },
-  }),
-  writable: new WritableStream<Uint8Array>({
-    write: async (chunk) => {
-      if (!socket.write(chunk)) {
-        // `drain` is the socket's backpressure signal, mapped onto the write promise. An error or
-        // a close while parked here must settle it too, or the writer outlives the transport.
-        await new Promise<void>((resolve, reject) => {
-          const settle = (err?: Error) => {
-            socket.off('drain', onDrain);
-            socket.off('error', onError);
-            socket.off('close', onClose);
-            err ? reject(err) : resolve();
-          };
-          const onDrain = () => settle();
-          const onError = (err: Error) => settle(err);
-          const onClose = () => settle(new Error('Socket closed while awaiting drain.'));
-          socket.once('drain', onDrain);
-          socket.once('error', onError);
-          socket.once('close', onClose);
-        });
-      }
-    },
-    close: () => {
-      socket.end();
-    },
-  }),
-});
+      },
+      close: () => {
+        socket.end();
+      },
+    }),
+  };
+};

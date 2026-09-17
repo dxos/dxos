@@ -159,6 +159,7 @@ export class Muxer {
 
     let controller: ReadableStreamDefaultController<Uint8Array>;
     let readableClosed = false;
+    let err: Error | undefined;
     const readable = new ReadableStream<Uint8Array>({
       start: (ctrl) => {
         controller = ctrl;
@@ -168,8 +169,13 @@ export class Muxer {
       },
     });
 
+    let destroyed = false;
     const writable = new WritableStream<Uint8Array>({
       write: async (data) => {
+        if (destroyed) {
+          // The channel is gone; failing the write is what tells the producer to stop.
+          throw err ?? new Error(`Channel destroyed: ${tag}`);
+        }
         await this._sendData(channel, data);
       },
     });
@@ -180,13 +186,16 @@ export class Muxer {
         controller.enqueue(data);
       }
     };
-    channel.destroy = (err) => {
+    channel.destroy = (error) => {
+      // Both halves end: a producer piping into a destroyed channel otherwise never finds out.
+      destroyed = true;
+      err = error;
       if (readableClosed) {
         return;
       }
       readableClosed = true;
-      if (err) {
-        controller.error(err);
+      if (error) {
+        controller.error(error);
       } else {
         controller.close();
       }

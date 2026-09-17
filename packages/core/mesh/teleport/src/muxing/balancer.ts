@@ -99,13 +99,14 @@ export class Balancer {
     if (!this._receiveBuffers.has(channelId)) {
       if (chunk.length < dataLength!) {
         this._receiveBuffers.set(channelId, {
-          // Copied: `chunk` is a view into the framer's receive buffer, which is resliced and
-          // reallocated as more bytes arrive, so retaining the view across turns is not safe.
+          // Copied: `chunk` views the framer's receive buffer, which is resliced and reallocated
+          // as more bytes arrive, so retaining the view across turns is not safe.
           buffer: new Uint8Array(chunk),
           msgLength: dataLength!,
         });
       } else {
-        this.incomingData.emit(chunk);
+        // Copied for the same reason as below: `chunk` views the framer's receive buffer.
+        this.incomingData.emit(new Uint8Array(chunk));
       }
     } else {
       const channelBuffer = this._receiveBuffers.get(channelId)!;

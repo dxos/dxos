@@ -13,8 +13,8 @@ import { type DuplexStream } from '@dxos/teleport';
  * the interface and is not ours to reshape. Keeping the bridge here — rather than in the muxer —
  * is what lets every other package in the stack compile without the `readable-stream` polyfill.
  *
- * Written out rather than using `Duplex.fromWeb`, whose `node:stream/web` types are a different
- * declaration of `ReadableStream` than the global one the seam is typed with.
+ * Hand-written because `Duplex.fromWeb` takes `node:stream/web`'s `ReadableStream`, a different
+ * declaration from the global one the seam is typed with.
  */
 export const toNodeDuplex = (stream: DuplexStream): Duplex => {
   const reader = stream.readable.getReader();

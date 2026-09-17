@@ -138,7 +138,7 @@ export class WebSocketMuxer {
       return undefined;
     }
 
-    const reassembled = concatUint8Arrays(...chunkAccumulator);
+    const reassembled = concatUint8Arrays(chunkAccumulator);
     const chunkCount = chunkAccumulator.length;
     this._inMessageAccumulator.delete(channelId);
     try {
