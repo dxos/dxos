@@ -233,6 +233,15 @@ jobs:
 
       - name: Fail on a red run
         if: always() && steps.evals.outcome != 'success'
+        env:
+          EXPORTED: ${{ steps.summary.outputs.exported }}
         run: |
-          echo "::error::The deployed-MCP eval run failed; see the summary above and the assistant-evals-mcp-deployed artifact."
+          # The secret preflight fails before evalite writes a store, so there is no artifact to
+          # point at; sending someone to look for one is how a configuration failure gets read as a
+          # broken eval.
+          if [ "$EXPORTED" = 'true' ]; then
+            echo "::error::The deployed-MCP eval run failed; see the summary above and the assistant-evals-mcp-deployed artifact."
+          else
+            echo "::error::The deployed-MCP eval run failed before producing results; see the step log above."
+          fi
           exit 1
