@@ -66,16 +66,19 @@ test QA-1: Label an inbox from the toolbar
   actors: human
   covers: [F-1.1, F-2.1, F-3.1, F-3.3]
   status: partial            # 2026-09-17; recorded against the Northwind Sales template with a live
-                             # TypeSafe key. Steps 1 and the re-run verified; the tag assertions in
-                             # steps 2-3 are NOT observable in the app — Composer's message list and
-                             # properties pane do not render tags held in a mailbox's TagIndex, which
-                             # is where this plugin (and plugin-inbox's own classifier) writes them.
-                             # The tagging itself is covered by src/operations/label-mailbox.test.ts.
+                             # TypeSafe key. Steps 1, 2 and the re-run verified on screen: four of the
+                             # eight messages take "Needs reply" and the rest none. Step 3 is NOT
+                             # covered — the template seeds no user tags, so the label question is not
+                             # asked at all and the choice path is only covered by
+                             # src/operations/label-mailbox.test.ts.
+                             # Tag chips render only with Inbox's "Group by conversation" OFF:
+                             # in conversation mode MailboxArticle passes no tagsAtom to the tile.
   given:
     - an identity exists
     - space: a space is open with a synced mailbox holding at least one request and one receipt
     - TypeSafe is connected in that space (see plugin-typesafe QA-1)
     - tags: at least one user tag exists in the space (e.g. "Receipts")
+    - inbox: "Group by conversation" is off, so per-message tag chips render
     - plugin-labeler is enabled
   steps:
     - name: Run the labeller
