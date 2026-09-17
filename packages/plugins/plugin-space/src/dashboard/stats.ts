@@ -16,8 +16,8 @@ export type TypeCount = {
 };
 
 /**
- * Counts every live object in a space by type. The host answers it from the meta index without
- * loading an object, so it is cheap enough to keep live.
+ * Counts every live object in a space by type. The host counts in the worker and sends one row per
+ * type, so the tab loads no objects.
  */
 export const SPACE_STATS_QUERY = Query.select(Filter.everything()).aggregate({
   type: Aggregate.type(),
