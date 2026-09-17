@@ -2,30 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type ActivityDatum } from '@dxos/react-ui-dashboard';
 
-/** A daily count: `Aggregate.updated('day', { timeZone })` plus `Aggregate.count()`. */
+/** Counts live objects by the local day in `timeZone` they were last updated; one row per day. */
+export const dailyActivityQuery = (timeZone: string) =>
+  Query.select(Filter.everything()).aggregate({
+    day: Aggregate.updated('day', { timeZone }),
+    count: Aggregate.count(),
+  });
+
+/** A row of {@link dailyActivityQuery}. */
 export type DayCount = {
   readonly day: number | null;
   readonly count: number;
 };
 
-/**
- * Sums counts that share a day into one calendar entry; rows arrive per type as well as per day.
- * A `null` day (no timestamp recorded) has no square to land on and is dropped.
- */
-export const toActivity = (rows: readonly DayCount[]): ActivityDatum[] => {
-  const days = new Map<number, ActivityDatum>();
-  for (const { day, count } of rows) {
-    if (day === null) {
-      continue;
-    }
-    const datum = days.get(day);
-    if (datum) {
-      datum.value += count;
-    } else {
-      days.set(day, { date: new Date(day), value: count });
-    }
-  }
-  return [...days.values()];
-};
+/** One calendar entry per day; a `null` day (no timestamp recorded) has no square and is dropped. */
+export const toActivity = (rows: readonly DayCount[]): ActivityDatum[] =>
+  rows.flatMap(({ day, count }) => (day === null ? [] : [{ date: new Date(day), value: count }]));

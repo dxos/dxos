@@ -24,17 +24,6 @@ export const SPACE_STATS_QUERY = Query.select(Filter.everything()).aggregate({
   count: Aggregate.count(),
 });
 
-/**
- * {@link SPACE_STATS_QUERY} also split by the local day in `timeZone` each object was last updated,
- * so one result gives both per-type totals and per-day activity.
- */
-export const spaceActivityQuery = (timeZone: string) =>
-  Query.select(Filter.everything()).aggregate({
-    type: Aggregate.type(),
-    day: Aggregate.updated('day', { timeZone }),
-    count: Aggregate.count(),
-  });
-
 /** The versionless typename a stored type URI names, or the URI itself when it is not a DXN. */
 export const typenameOf = (type: string): string => {
   const dxn = DXN.tryMake(type);

@@ -7,14 +7,11 @@ import { describe, test } from 'vitest';
 import { toActivity } from './activity.ts';
 
 describe('toActivity', () => {
-  test('merges rows for the same day and drops unknown days', ({ expect }) => {
-    const monday = new Date(2026, 0, 5).getTime();
-    const tuesday = new Date(2026, 0, 6).getTime();
+  test('gives each day one calendar entry and drops unknown days', ({ expect }) => {
     const rows = [
-      { day: monday, count: 2 },
-      { day: tuesday, count: 5 },
-      { day: monday, count: 1 },
+      { day: new Date(2026, 0, 5).getTime(), count: 3 },
       { day: null, count: 4 },
+      { day: new Date(2026, 0, 6).getTime(), count: 5 },
     ];
 
     expect(toActivity(rows)).toEqual([
