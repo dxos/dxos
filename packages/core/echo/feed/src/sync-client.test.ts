@@ -6,7 +6,6 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Fiber from 'effect/Fiber';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
@@ -114,7 +113,7 @@ describe('SyncClient', () => {
     // Position advanced from the stored one rather than restarting, and the token was kept.
     expect(
       await runtime.runPromise(feedStore.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })),
-    ).toEqual({ lastPulledPosition: 3, serverToken: 'token-from-a-newer-server' });
+    ).toEqual({ lastPulledPosition: 3, serverToken: 'token-from-a-newer-server', blocksToPull: 0 });
 
     await runtime.dispose();
   });
@@ -170,128 +169,17 @@ describe('SyncClient', () => {
     onTestFinished(() => void ctx.dispose());
     const opts = { spaceId, feedNamespace: WellKnownNamespaces.data };
 
+    const backlog = async () => (await runtime.runPromise(feedStore.getSyncState(opts))).blocksToPull;
+
     await runtime.runPromise(syncClient.pull(ctx, opts));
-    expect(feedStore.getRemoteBacklog(opts)).toBe(1);
+    expect(await backlog()).toBe(1);
     await runtime.runPromise(syncClient.pull(ctx, opts));
-    expect(feedStore.getRemoteBacklog(opts)).toBe(0);
+    expect(await backlog()).toBe(0);
     await runtime.runPromise(syncClient.pull(ctx, opts));
-    expect(feedStore.getRemoteBacklog(opts)).toBe(1);
+    expect(await backlog()).toBe(1);
+    // A failed pull learns nothing about the server, so it leaves the last estimate alone.
     expect(Exit.isFailure(await runtime.runPromiseExit(syncClient.pull(ctx, opts)))).toBe(true);
-    expect(feedStore.getRemoteBacklog(opts)).toBe(0);
-
-    await runtime.dispose();
-  });
-
-  test('a pull that dies clears the backlog like any other failed read', async () => {
-    const runtime = ManagedRuntime.make(TestLayer);
-    const spaceId = SpaceId.random();
-    const feedStore = new FeedStore({ localActorId: 'alice', assignPositions: false });
-    await runtime.runPromise(feedStore.migrate());
-
-    // The second batch carries a block with no feed id, which the store rejects by throwing rather
-    // than by failing, so the cause is a defect.
-    let requests = 0;
-    const syncClient: SyncClient = new SyncClient({
-      peerId: 'client-peer',
-      feedStore,
-      sendMessage: (_ctx, message) => {
-        if (message._tag !== 'QueryRequest') {
-          return Effect.void;
-        }
-        const feedId = requests++ === 0 ? 'feed-1' : undefined;
-        return syncClient.handleMessage({
-          _tag: 'QueryResponse',
-          requestId: message.requestId,
-          nextCursor: FeedProtocol.FeedCursor.make('legacy|-1'),
-          hasMore: true,
-          blocks: [
-            {
-              feedId,
-              actorId: 'bob',
-              sequence: 0,
-              prevActorId: null,
-              prevSequence: null,
-              position: 1,
-              timestamp: 0,
-              data: new Uint8Array([1]),
-            },
-          ],
-          senderPeerId: 'server-peer',
-          recipientPeerId: 'client-peer',
-        });
-      },
-    });
-
-    const ctx = new Context();
-    onTestFinished(() => void ctx.dispose());
-    const opts = { spaceId, feedNamespace: WellKnownNamespaces.data };
-
-    await runtime.runPromise(syncClient.pull(ctx, opts));
-    expect(feedStore.getRemoteBacklog(opts)).toBe(1);
-
-    expect(Exit.isFailure(await runtime.runPromiseExit(syncClient.pull(ctx, opts)))).toBe(true);
-    expect(feedStore.getRemoteBacklog(opts)).toBe(0);
-
-    await runtime.dispose();
-  });
-
-  test('a torn-down pull keeps the backlog the last pull recorded', async () => {
-    const runtime = ManagedRuntime.make(TestLayer);
-    const spaceId = SpaceId.random();
-    const feedStore = new FeedStore({ localActorId: 'alice', assignPositions: false });
-    await runtime.runPromise(feedStore.migrate());
-
-    // Only the first request is answered, so later pulls are still in flight when torn down.
-    let requests = 0;
-    const syncClient: SyncClient = new SyncClient({
-      peerId: 'client-peer',
-      feedStore,
-      sendMessage: (_ctx, message) => {
-        if (message._tag !== 'QueryRequest' || requests++ > 0) {
-          return Effect.void;
-        }
-        return syncClient.handleMessage({
-          _tag: 'QueryResponse',
-          requestId: message.requestId,
-          nextCursor: FeedProtocol.FeedCursor.make('legacy|-1'),
-          hasMore: true,
-          blocks: [
-            {
-              feedId: 'feed-1',
-              actorId: 'bob',
-              sequence: 0,
-              prevActorId: null,
-              prevSequence: null,
-              position: 1,
-              timestamp: 0,
-              data: new Uint8Array([1]),
-            },
-          ],
-          senderPeerId: 'server-peer',
-          recipientPeerId: 'client-peer',
-        });
-      },
-    });
-
-    const ctx = new Context();
-    onTestFinished(() => void ctx.dispose());
-    const opts = { spaceId, feedNamespace: WellKnownNamespaces.data };
-
-    await runtime.runPromise(syncClient.pull(ctx, opts));
-    expect(feedStore.getRemoteBacklog(opts)).toBe(1);
-
-    const interrupted = runtime.runFork(syncClient.pull(ctx, opts));
-    await vi.waitFor(() => expect(requests).toBe(2));
-    await runtime.runPromise(Fiber.interrupt(interrupted));
-    expect(feedStore.getRemoteBacklog(opts)).toBe(1);
-
-    // Closing the syncer disposes the context, which fails the in-flight request rather than
-    // interrupting it.
-    const disposed = runtime.runPromiseExit(syncClient.pull(ctx, opts));
-    await vi.waitFor(() => expect(requests).toBe(3));
-    await ctx.dispose();
-    expect(Exit.isFailure(await disposed)).toBe(true);
-    expect(feedStore.getRemoteBacklog(opts)).toBe(1);
+    expect(await backlog()).toBe(1);
 
     await runtime.dispose();
   });

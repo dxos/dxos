@@ -171,6 +171,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 4,
         serverToken,
+        blocksToPull: 0,
       });
 
       const positions = await blockPositions(client);
@@ -202,6 +203,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: freshToken,
+        blocksToPull: 0,
       });
 
       // Blocks survived the reset and are re-pushed to the new server.
@@ -235,6 +237,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: await replacement.getServerToken(spaceId),
+        blocksToPull: 0,
       });
 
       // Replaying now reaches every block, including those below the stale position.

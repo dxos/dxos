@@ -32,9 +32,6 @@ type SubscribeResponse = FeedProtocol.SubscribeResponse;
 /** A block payload ready for insertion, encrypted when the cypher asked for it. */
 type SealedBlock = { data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null };
 
-/** Key for the per-space, per-namespace remote backlog estimate. */
-const backlogKey = (spaceId: string, feedNamespace: string) => `${spaceId}:${feedNamespace}`;
-
 export interface FeedStoreOptions {
   /**
    * The actor ID of the local user.
@@ -65,6 +62,11 @@ export type SyncState = {
    * response carrying one, which is also the case for state written by earlier releases.
    */
   serverToken: string | undefined;
+  /**
+   * Blocks the server still held past {@link lastPulledPosition} when it was written. An estimate:
+   * the server reports only whether more remains, so a batch's size stands in for the next one.
+   */
+  blocksToPull: number;
 };
 
 /**
@@ -93,9 +95,6 @@ export class FeedStore {
    * reset, or a new remote backlog recorded.
    */
   readonly onSyncStateChanged = new Event<{ spaceId: string }>();
-
-  /** Blocks the sync server still holds past the last pull, keyed by `spaceId:feedNamespace`; not persisted. */
-  readonly #remoteBacklog = new Map<string, number>();
 
   /**
    * Applies any migrations this database has not recorded yet.
@@ -429,13 +428,14 @@ export class FeedStore {
   }): Effect.Effect<SyncState, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<{ lastPulledPosition: number; serverToken: string | null }>`
-        SELECT lastPulledPosition, serverToken FROM sync_state
+      const rows = yield* sql<{ lastPulledPosition: number; serverToken: string | null; blocksToPull: number }>`
+        SELECT lastPulledPosition, serverToken, blocksToPull FROM sync_state
         WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
       `;
       return {
         lastPulledPosition: rows[0]?.lastPulledPosition ?? -1,
         serverToken: rows[0]?.serverToken ?? undefined,
+        blocksToPull: rows[0]?.blocksToPull ?? 0,
       };
     }).pipe(Effect.withSpan('FeedStore.getSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
@@ -448,37 +448,22 @@ export class FeedStore {
     lastPulledPosition: number;
     /** Token of the server that assigned `lastPulledPosition`; leaves the stored token as-is when omitted. */
     serverToken?: string;
+    /** See {@link SyncState.blocksToPull}. Defaults to 0: a pull that reports nothing drained it. */
+    blocksToPull?: number;
   }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const serverToken = opts.serverToken ?? null;
+      const blocksToPull = opts.blocksToPull ?? 0;
       yield* sql`
-        INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition, serverToken)
-        VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition}, ${serverToken})
+        INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition, serverToken, blocksToPull)
+        VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition}, ${serverToken}, ${blocksToPull})
         ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET
           lastPulledPosition = ${opts.lastPulledPosition},
-          serverToken = COALESCE(${serverToken}, sync_state.serverToken)
+          serverToken = COALESCE(${serverToken}, sync_state.serverToken),
+          blocksToPull = ${blocksToPull}
       `;
     }).pipe(Effect.withSpan('FeedStore.setSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
-
-  /**
-   * Records an estimate of how many blocks the sync server holds beyond the last pull.
-   */
-  setRemoteBacklog(opts: { spaceId: SpaceId; feedNamespace: string; blocksToPull: number }): void {
-    const key = backlogKey(opts.spaceId, opts.feedNamespace);
-    if (this.#remoteBacklog.get(key) === opts.blocksToPull) {
-      return;
-    }
-    this.#remoteBacklog.set(key, opts.blocksToPull);
-    this.onSyncStateChanged.emit({ spaceId: opts.spaceId });
-  }
-
-  /**
-   * Remote backlog last recorded by {@link FeedStore.setRemoteBacklog}; 0 before the first pull.
-   */
-  getRemoteBacklog(opts: { spaceId: SpaceId; feedNamespace: string }): number {
-    return this.#remoteBacklog.get(backlogKey(opts.spaceId, opts.feedNamespace)) ?? 0;
-  }
 
   /**
    * Discards everything derived from a server that no longer exists: strips the global position
@@ -514,7 +499,6 @@ export class FeedStore {
           `;
         }),
       );
-      this.#remoteBacklog.delete(backlogKey(opts.spaceId, opts.feedNamespace));
       this.#emitBlocksChanged(opts.spaceId);
     }).pipe(Effect.withSpan('FeedStore.resetSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
@@ -637,6 +621,25 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.append'));
 
   /**
+   * Records pull progress for a pull that brought no blocks. Writes and notifies only when the
+   * stored row would actually change, so a caught-up namespace polls without touching the database.
+   */
+  recordPullProgress = (request: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    lastPulledPosition: number;
+    blocksToPull: number;
+  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const current = yield* this.getSyncState(request);
+      if (current.lastPulledPosition === request.lastPulledPosition && current.blocksToPull === request.blocksToPull) {
+        return;
+      }
+      yield* this.setSyncState(request);
+      this.onSyncStateChanged.emit({ spaceId: request.spaceId });
+    }).pipe(Effect.withSpan('FeedStore.recordPullProgress'), SpanAttributes.annotateSpace(request.spaceId));
+
+  /**
    * Applies a pulled batch: the blocks, the position it advanced pull progress to, and the backlog
    * the server still holds. Subscribers see one change rather than a partially applied batch.
    */
@@ -662,10 +665,10 @@ export class FeedStore {
             feedNamespace: request.feedNamespace,
             lastPulledPosition: request.lastPulledPosition,
             serverToken: request.serverToken,
+            blocksToPull: request.blocksToPull,
           });
         }),
       );
-      this.#remoteBacklog.set(backlogKey(request.spaceId, request.feedNamespace), request.blocksToPull);
       this.#emitBlocksChanged(request.spaceId);
     }).pipe(Effect.withSpan('FeedStore.applyPulledBatch'), SpanAttributes.annotateSpace(request.spaceId));
 

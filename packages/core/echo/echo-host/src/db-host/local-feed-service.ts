@@ -253,9 +253,10 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
                 spaceId,
                 feedNamespace,
               });
+              const { blocksToPull } = yield* this.#feedStore.getSyncState({ spaceId, feedNamespace });
               return {
                 namespace: feedNamespace,
-                blocksToPull: String(this.#feedStore.getRemoteBacklog({ spaceId, feedNamespace })),
+                blocksToPull: String(blocksToPull),
                 blocksToPush: String(blocksToPush),
                 totalBlocks: String(totalBlocks),
               };

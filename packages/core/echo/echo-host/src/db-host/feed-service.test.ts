@@ -271,7 +271,7 @@ describe('LocalFeedServiceImpl', () => {
         const [written] = yield* pull;
         expect(dataState(written)?.blocksToPush).toBe('1');
 
-        feedStore.setRemoteBacklog({ spaceId, feedNamespace, blocksToPull: 3 });
+        yield* feedStore.recordPullProgress({ spaceId, feedNamespace, lastPulledPosition: -1, blocksToPull: 3 });
         const [remote] = yield* pull;
         expect(dataState(remote)?.blocksToPull).toBe('3');
 

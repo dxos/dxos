@@ -903,8 +903,8 @@ describe('FeedStore server token', () => {
         feedNamespace: WellKnownNamespaces.data,
         lastPulledPosition: 2,
         serverToken: 'old',
+        blocksToPull: 5,
       });
-      feed.setRemoteBacklog({ spaceId, feedNamespace: WellKnownNamespaces.data, blocksToPull: 5 });
 
       const changed: string[] = [];
       const blocksChanged: string[] = [];
@@ -916,11 +916,11 @@ describe('FeedStore server token', () => {
       expect(changed).toEqual([spaceId]);
       // Stripping positions changes what a feed subscription serves, not just the sync state.
       expect(blocksChanged).toEqual([spaceId]);
-      // The estimate belonged to the server whose positions were just discarded.
-      expect(feed.getRemoteBacklog({ spaceId, feedNamespace: WellKnownNamespaces.data })).toBe(0);
       expect(yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: 'new',
+        // The estimate belonged to the server whose positions were just discarded.
+        blocksToPull: 0,
       });
       const { blocks } = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
       expect(blocks.map((block) => block.position)).toEqual([null, null, null]);
@@ -938,7 +938,24 @@ describe('FeedStore server token', () => {
       yield* feed.applyPulledBatch(pulledBatch(spaceId, 7));
 
       expect(notifications).toBe(1);
-      expect(feed.getRemoteBacklog({ spaceId, feedNamespace: WellKnownNamespaces.data })).toBe(7);
+      const syncState = yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(syncState.blocksToPull).toBe(7);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('the backlog estimate survives a restart', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      yield* feed.applyPulledBatch(pulledBatch(spaceId, 7));
+
+      // A second store over the same database stands in for a restart: the estimate is a row, not
+      // process state, so a cold start no longer reports a drained namespace.
+      const restarted = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      const syncState = yield* restarted.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data });
+
+      expect(syncState.blocksToPull).toBe(7);
     }).pipe(Effect.provide(TestLayer)),
   );
 

@@ -3,7 +3,6 @@
 //
 
 import * as Array from 'effect/Array';
-import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Semaphore from 'effect/Semaphore';
@@ -29,16 +28,6 @@ type RequestMessage = QueryRequestMessage | AppendRequestMessage;
 type RequestPayload =
   | Omit<QueryRequestMessage, 'senderPeerId' | 'recipientPeerId'>
   | Omit<AppendRequestMessage, 'senderPeerId' | 'recipientPeerId'>;
-
-/** The caller going away, rather than the read failing: fiber interruption, or a closing context. */
-const isTeardown = (reason: Cause.Reason<unknown>): boolean =>
-  reason._tag === 'Interrupt' || (reason._tag === 'Fail' && reason.error instanceof ContextDisposedError);
-
-/**
- * Whether a cause means the read itself failed, which includes a defect. Teardown leaves what the
- * last successful pull recorded.
- */
-const isReadFailure = (cause: Cause.Cause<unknown>): boolean => !cause.reasons.every(isTeardown);
 
 export type SyncClientOptions = {
   /** This client's peer id. Set as senderPeerId on all requests. */
@@ -259,9 +248,10 @@ export class SyncClient {
         // On a reset the server ignored the stale `position`, so the batch restarts the namespace.
         const basePosition = reconciliation === 'reset' ? -1 : lastPulledPosition;
         if (response.blocks.length === 0) {
-          self.#feedStore.setRemoteBacklog({
+          yield* self.#feedStore.recordPullProgress({
             spaceId: opts.spaceId,
             feedNamespace: opts.feedNamespace,
+            lastPulledPosition: basePosition,
             blocksToPull: 0,
           });
           log.trace('feed sync client pull done (empty batch)', {
@@ -294,18 +284,7 @@ export class SyncClient {
           maxPulledPosition,
         });
         return { done: false };
-      }).pipe(
-        // A failed pull leaves the backlog unknown rather than at its last estimate.
-        Effect.onErrorIf(isReadFailure, () =>
-          Effect.sync(() =>
-            self.#feedStore.setRemoteBacklog({
-              spaceId: opts.spaceId,
-              feedNamespace: opts.feedNamespace,
-              blocksToPull: 0,
-            }),
-          ),
-        ),
-      ),
+      }),
     );
   }
 
@@ -313,7 +292,7 @@ export class SyncClient {
    * Probes remote for blocks after the last pulled position without mutating local storage.
    * Returns the number of blocks in the first batch (0 when caught up with remote).
    *
-   * @deprecated `pull` records the remote backlog in {@link FeedStore.getRemoteBacklog}.
+   * @deprecated `pull` records the remote backlog in {@link FeedStore.getSyncState}.
    * TODO(wittjosiah): Remove?
    */
   peekPull(
