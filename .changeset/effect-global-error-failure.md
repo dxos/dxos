@@ -1,10 +1,5 @@
 ---
 '@dxos/client-services': patch
-'@dxos/network-manager': patch
-'@dxos/echo-host': patch
-'@dxos/functions-runtime-cloudflare': patch
-'@dxos/plugin-assistant': patch
-'@dxos/plugin-file': patch
 ---
 
 Effect failure channels carry tagged errors rather than the global `Error`. Where the channel was also annotated `Effect<..., Error>` the annotation is narrowed too, since a tagged error behind an `Error` annotation is not something `catchTag` can see: the RPC service implementations declare `BaseError`, and the assistant's connector validation declares the error it actually raises.

@@ -111,6 +111,10 @@ export class BookingProviderError extends BaseError.extend('BookingProviderError
 /** Any failure a `BookingService` raises. */
 export type Failure = MissingApiKeyError | BookingProviderError;
 
-/** `instanceof` across every booking failure, for a boundary that passes them through. */
+/**
+ * Every booking failure, for a boundary that passes them through. Matched by name rather than
+ * `instanceof`: an error that crossed an operation boundary is rebuilt by `decodeError` as a plain
+ * `BaseError` carrying the name, so the prototype is gone by the time a handler sees it.
+ */
 export const isFailure = (error: unknown): error is Failure =>
-  error instanceof MissingApiKeyError || error instanceof BookingProviderError;
+  MissingApiKeyError.is(error) || BookingProviderError.is(error);
