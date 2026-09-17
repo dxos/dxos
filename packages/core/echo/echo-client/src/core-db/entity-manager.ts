@@ -211,6 +211,12 @@ export class EntityManager implements IDatabaseBinding {
   // ── Private event field ──────────────────────────────────────────────────
   private readonly _rootChangedEvent = new Event<void>();
 
+  /** Object ids the space root has started routing, as it gains them. */
+  private readonly _linksAddedEvent = new Event<string[]>();
+
+  /** Ids {@link _linksAddedEvent} has already reported. */
+  #linkedObjectIds = new Set<string>();
+
   constructor(options: EntityManagerProps) {
     this._createEntity = options.createEntity;
     this._spaceKey = options.spaceKey;
@@ -235,6 +241,10 @@ export class EntityManager implements IDatabaseBinding {
 
   get rootChanged(): ReadOnlyEvent<void> {
     return this._rootChangedEvent;
+  }
+
+  get linksAdded(): ReadOnlyEvent<string[]> {
+    return this._linksAddedEvent;
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -1440,6 +1450,13 @@ export class EntityManager implements IDatabaseBinding {
     if (!links) {
       return;
     }
+    // A reader that could not route an object to its document — an index hit, say — can once these
+    // arrive.
+    const added = Object.keys(links).filter((objectId) => !this.#linkedObjectIds.has(objectId));
+    if (added.length > 0) {
+      added.forEach((objectId) => this.#linkedObjectIds.add(objectId));
+      this._linksAddedEvent.emit(added);
+    }
     const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
       this._objectsPendingDocumentLoad.has(objectId),
     );
@@ -1540,6 +1557,7 @@ export class EntityManager implements IDatabaseBinding {
   private _clearHandleReferences(): string[] {
     const objectsWithHandles = [...this._objectDocumentHandles.keys()];
     this._objectDocumentHandles.clear();
+    this.#linkedObjectIds.clear();
     this._documentObjects.clear();
     this._spaceRootDocHandle = null;
     return objectsWithHandles;

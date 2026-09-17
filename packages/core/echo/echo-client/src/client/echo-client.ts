@@ -179,12 +179,18 @@ export class EchoClient extends Resource {
 
     // Forward this database's local object updates to the aggregated signal so reactive index
     // sources can re-hydrate index hits once their documents become available locally.
-    this._dbUpdateSubscriptions.set(
-      spaceId,
-      db._entityManager._updateEvent.on((event) => {
-        this._objectsUpdated.emit({ spaceId, objectIds: event.itemsUpdated.map((item) => item.id) });
-      }),
-    );
+    const unsubscribeFromUpdates = db._entityManager._updateEvent.on((event) => {
+      this._objectsUpdated.emit({ spaceId, objectIds: event.itemsUpdated.map((item) => item.id) });
+    });
+    // An index hit dropped because this client's space root did not route it yet is re-hydrated when
+    // the root gains the link, rather than staying missing until the next host response.
+    const unsubscribeFromLinks = db.linksAdded.on((objectIds) => {
+      this._objectsUpdated.emit({ spaceId, objectIds });
+    });
+    this._dbUpdateSubscriptions.set(spaceId, () => {
+      unsubscribeFromUpdates();
+      unsubscribeFromLinks();
+    });
 
     return db;
   }
