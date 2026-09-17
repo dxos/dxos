@@ -13,6 +13,9 @@
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
+      "path": "packages/experimental/ai-typesafe/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {

@@ -7354,6 +7354,8 @@ importers:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
+  packages/experimental/ai-typesafe: {}
+
   packages/experimental/discord-bot:
     dependencies:
       '@dxos/config':
