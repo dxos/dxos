@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { rmSync } from 'node:fs';
+import { rmSync, writeFileSync } from 'node:fs';
 import v8 from 'node:v8';
 import vm from 'node:vm';
 import { afterAll, bench, describe } from 'vitest';
@@ -29,9 +29,12 @@ import { blackhole, parseBenchCount } from './testing/bench-util.ts';
 // is the host-side re-execution path. `afterAll` reads the host's execution traces for each query
 // shape and prints them.
 //
-// The cold row reloads a file-backed peer and times the first `run()` of the type+property query; the
-// reload is inside the timed body, since vitest's `bench()` has no per-iteration hooks, so the
-// query-only phase is also recorded from inside the row and reported from `afterAll`.
+// The store is seeded once, into the file-backed warm peer; the cold peer opens a copy of that SQLite
+// file (`exportSqliteDatabase`), because seeding a second peer in the same process gets slower with
+// everything the first one left resident and hits the 30 s flush RPC timeout around 10k objects. The
+// cold row reloads that peer and times the first `run()` of the type+property query; the reload is
+// inside the timed body, since vitest's `bench()` has no per-iteration hooks, so the query-only phase
+// is also recorded from inside the row and reported from `afterAll`.
 //
 // Memory is measured from `afterAll`, outside tinybench: for each shape the heap is collected, the
 // query run a few times under a 1 ms sampler recording peak heap and RSS, and collected again for the
@@ -162,12 +165,17 @@ const SHAPES: QueryShape[] = [
   },
 ];
 
+const warmStoragePath = createTmpPath();
 const coldStoragePath = createTmpPath();
 process.once('exit', () => {
-  try {
-    rmSync(coldStoragePath, { recursive: true, force: true });
-  } catch {
-    // Best-effort: EchoTestBuilder.close() is async and can't run from a sync exit handler.
+  for (const path of [warmStoragePath, coldStoragePath]) {
+    for (const suffix of ['', '-wal', '-shm']) {
+      try {
+        rmSync(`${path}${suffix}`, { force: true });
+      } catch {
+        // Best-effort: EchoTestBuilder.close() is async and can't run from a sync exit handler.
+      }
+    }
   }
 });
 
@@ -244,7 +252,7 @@ type Seeded = {
   db: EchoDatabase;
 };
 
-const seed = async (storagePath?: string): Promise<Seeded> => {
+const seed = async (storagePath: string): Promise<Seeded> => {
   const peer = await builder.createPeer({ types: TYPES, storagePath });
   const db = await peer.createDatabase();
   const persons = Array.from({ length: PERSON_COUNT }, (unusedValue, index) =>
@@ -269,7 +277,7 @@ const seed = async (storagePath?: string): Promise<Seeded> => {
       const elapsed = (performance.now() - phaseStart) / 1000;
       // eslint-disable-next-line no-console
       console.log(
-        `seed ${storagePath ? 'cold' : 'warm'}: ${added} objects, ${elapsed.toFixed(0)} s, slowest flush in window ${slowestFlush.toFixed(0)} ms`,
+        `seed: ${added} objects, ${elapsed.toFixed(0)} s, slowest flush in window ${slowestFlush.toFixed(0)} ms`,
       );
       slowestFlush = 0;
     }
@@ -308,9 +316,11 @@ const seed = async (storagePath?: string): Promise<Seeded> => {
 };
 
 const seedStart = performance.now();
-const warm = await seed();
-const cold = await seed(coldStoragePath);
+const warm = await seed(warmStoragePath);
 const seedTime = performance.now() - seedStart;
+writeFileSync(coldStoragePath, await warm.peer.exportSqliteDatabase());
+const coldPeer = await builder.createPeer({ types: TYPES, storagePath: coldStoragePath });
+const cold: Seeded = { peer: coldPeer, db: await coldPeer.openLastDatabase() };
 forceGc();
 await settle();
 const afterSeed = process.memoryUsage();
