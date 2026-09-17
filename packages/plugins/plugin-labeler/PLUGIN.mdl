@@ -66,8 +66,10 @@ test QA-1: Label an inbox from the toolbar
   actors: human
   covers: [F-1.1, F-2.1, F-3.1, F-3.3]
   status: partial            # 2026-09-17; recorded against the Northwind Sales template with a live
-                             # TypeSafe key. Steps 1, 2 and the re-run verified on screen: four of the
-                             # eight messages take "Needs reply" and the rest none. Step 3 is NOT
+                             # TypeSafe key. Steps 1 and 2 verified on screen in the recorded take:
+                             # four of the eight messages take "Needs reply" and the rest none. The
+                             # re-run (step 4) was verified in an earlier take on the same build,
+                             # which reported every message skipped. Step 3 is NOT
                              # covered — the template seeds no user tags, so the label question is not
                              # asked at all and the choice path is only covered by
                              # src/operations/label-mailbox.test.ts.
