@@ -51,7 +51,10 @@ test QA-1: Connect TypeSafe and label a mailbox
   desc: The only user-visible journey this plugin has — connect the key, then watch a consumer use it.
   actors: human
   covers: [F-1.1, F-1.2, F-2.1]
-  status: untested           # no recording yet; needs a TypeSafe key in a running Composer
+  status: partial            # 2026-09-17; connector, credential and endpoint setting all exercised
+                             # against a running Composer with a live key. The direct vendor call is
+                             # blocked by CORS (see docs/DESIGN.md), so the endpoint pointed at a
+                             # local proxy for the run.
   given:
     - an identity exists
     - space: a space is open with a synced mailbox

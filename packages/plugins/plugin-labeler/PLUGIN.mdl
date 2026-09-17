@@ -65,7 +65,12 @@ test QA-1: Label an inbox from the toolbar
   desc: The plugin's whole journey — a mailbox of mixed mail, one click, tags that match.
   actors: human
   covers: [F-1.1, F-2.1, F-3.1, F-3.3]
-  status: untested           # no recording yet; needs a TypeSafe key and a synced mailbox
+  status: partial            # 2026-09-17; recorded against the Northwind Sales template with a live
+                             # TypeSafe key. Steps 1 and the re-run verified; the tag assertions in
+                             # steps 2-3 are NOT observable in the app — Composer's message list and
+                             # properties pane do not render tags held in a mailbox's TagIndex, which
+                             # is where this plugin (and plugin-inbox's own classifier) writes them.
+                             # The tagging itself is covered by src/operations/label-mailbox.test.ts.
   given:
     - an identity exists
     - space: a space is open with a synced mailbox holding at least one request and one receipt
