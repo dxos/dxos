@@ -5,12 +5,12 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Field, Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
@@ -34,7 +34,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
-  const tasks = useTasks(taskSet);
+  const allTasks = useTasks(taskSet);
+  // The toolbar's text filter; a section (embedded in a host that owns the chrome) shows every task.
+  const [filter, setFilter] = useState('');
+  const tasks = useFilteredTasks(allTasks, filter);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
   const handleCreate = useOperation(
@@ -126,7 +129,18 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       fallback={
         <Panel.Root role={role}>
           <Panel.Toolbar asChild>
-            <Toolbar.Root disabled={!hasAttention} />
+            <Toolbar.Root disabled={!hasAttention}>
+              <Field.Root>
+                <Field.Label srOnly>{t('filter.label')}</Field.Label>
+                <Field.Input
+                  variant='subdued'
+                  placeholder={t('filter.placeholder')}
+                  value={filter}
+                  data-testid='tasks.filter'
+                  onChange={(event) => setFilter(event.target.value)}
+                />
+              </Field.Root>
+            </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content>{content}</Panel.Content>
         </Panel.Root>
@@ -179,6 +193,41 @@ const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
       return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
+
+  return useAtomValue(atom);
+};
+
+/**
+ * The tasks whose title or description contains `filter` (case-insensitive), with the ancestors
+ * of every match kept so a matching sub-task still hangs off its branch. Empty filter: every task.
+ * Read through atoms so a title edited in a row re-runs the match.
+ */
+const useFilteredTasks = (tasks: readonly Task.Task[], filter: string): readonly Task.Task[] => {
+  const query = filter.trim().toLowerCase();
+  const atom = useMemo(
+    () =>
+      Atom.make((get): readonly Task.Task[] => {
+        if (!query) {
+          return tasks;
+        }
+        const byId = new Map(tasks.map((task) => [task.id, task]));
+        const keep = new Set<string>();
+        for (const task of tasks) {
+          const title = get(Obj.atomProperty(task, 'title')) ?? '';
+          const description = get(Obj.atomProperty(task, 'description')) ?? '';
+          if (!`${title}\n${description}`.toLowerCase().includes(query)) {
+            continue;
+          }
+          for (let current: Task.Task | undefined = task; current && !keep.has(current.id);) {
+            keep.add(current.id);
+            const parentId = Task.parentTaskId(current);
+            current = parentId ? byId.get(parentId) : undefined;
+          }
+        }
+        return tasks.filter((task) => keep.has(task.id));
+      }),
+    [tasks, query],
+  );
 
   return useAtomValue(atom);
 };

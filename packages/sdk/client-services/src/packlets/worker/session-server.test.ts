@@ -14,7 +14,7 @@ import { describe, test } from 'vitest';
 import { Rpc, makeClientServicesRpc } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
-import { BridgeService } from '@dxos/protocols/rpc';
+import { RTCService } from '@dxos/protocols/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
 import { makeWorkerRuntime } from './worker-runtime.ts';
@@ -36,22 +36,19 @@ describe('worker session server', () => {
             }),
           );
 
-          // The tab's side of the reverse direction: the worker's bridge client needs a peer to
+          // The tab's side of the reverse direction: the worker's RTC client needs a peer to
           // finish its handshake, but nothing dials in this test, so every call is a test bug.
-          const bridgeHandlers = Object.fromEntries(
-            [...BridgeService.Rpcs.requests.keys()].map((tag) => [
+          const rtcHandlers = Object.fromEntries(
+            [...RTCService.Rpcs.requests.keys()].map((tag) => [
               tag,
-              () => Effect.die(new Error(`unexpected bridge call in this test: ${tag}`)),
+              () => Effect.die(new Error(`unexpected rtc call in this test: ${tag}`)),
             ]),
           );
-          const bridgeServer = Rpc.serve(
-            reverse.port2,
-            BridgeService.Rpcs,
-            BridgeService.Rpcs.toLayer(bridgeHandlers as never),
-            { disableTracing: true },
-          );
-          yield* Effect.promise(() => bridgeServer.open());
-          yield* Effect.addFinalizer(() => Effect.promise(() => bridgeServer.close()));
+          const rtcServer = Rpc.serve(reverse.port2, RTCService.Rpcs, RTCService.Rpcs.toLayer(rtcHandlers as never), {
+            disableTracing: true,
+          });
+          yield* Effect.promise(() => rtcServer.open());
+          yield* Effect.addFinalizer(() => Effect.promise(() => rtcServer.close()));
 
           const protocols = yield* Layer.build(
             Layer.merge(

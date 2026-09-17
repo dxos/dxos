@@ -200,6 +200,7 @@
     "@dxos/echo-solid": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/perf-harness": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

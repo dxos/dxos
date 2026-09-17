@@ -3,11 +3,11 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
+import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react';
 import React, { Component, type PropsWithChildren } from 'react';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { waitForCondition } from '@dxos/async';
+import { Event, MulticastObservable, Trigger, waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus } from '@dxos/client';
 import { fromHost } from '@dxos/client/local';
 import { log } from '@dxos/log';
@@ -32,14 +32,31 @@ const TestComponent = () => {
   );
 };
 
-describe('Client hook', function () {
-  const render = () => useClient();
+class TestErrorBoundary extends Component<
+  PropsWithChildren<{ onError: (error: unknown) => void }>,
+  { error?: unknown }
+> {
+  override state: { error?: unknown } = {};
 
+  static getDerivedStateFromError(error: unknown) {
+    return { error };
+  }
+
+  override componentDidCatch(error: unknown) {
+    this.props.onError(error);
+  }
+
+  override render() {
+    return this.state.error === undefined ? this.props.children : null;
+  }
+}
+
+describe('Client hook', function () {
   test.skip('should throw when used outside a context', function () {
     // TODO(wittjosiah): Fix and factor out.
     // Based on https://github.com/testing-library/react-testing-library/pull/991#issuecomment-1207138334
     let error;
-    const { result } = renderHook(render, {
+    const { result } = renderHook(() => useClient(), {
       wrapper: class Wrapper extends Component<PropsWithChildren<unknown>> {
         constructor(props: PropsWithChildren<unknown>) {
           super(props);
@@ -81,7 +98,7 @@ describe('Client hook', function () {
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
-    const { result } = renderHook(render, { wrapper });
+    const { result } = renderHook(() => useClient(), { wrapper });
     await act(async () => {
       await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
     });
@@ -160,5 +177,83 @@ describe('ClientProvider', () => {
     // If client is provided externally, the provider will not destroy it.
     expect(client.initialized).toBe(true);
     expect(() => screen.getByText('Identity is NOT there')).not.toThrow();
+  });
+
+  test('onInitialized rejection reaches the error boundary', async () => {
+    const failure = new Error('onInitialized failed');
+    const initialized = new Trigger();
+    let caught: unknown;
+    const uninitialized = new Client({ services: fromHost() });
+    render(
+      <TestErrorBoundary onError={(error) => (caught = error)}>
+        <ClientProvider
+          client={uninitialized}
+          onInitialized={async () => {
+            initialized.wake();
+            throw failure;
+          }}
+        >
+          <TestComponent />
+        </ClientProvider>
+      </TestErrorBoundary>,
+    );
+
+    await act(async () => {
+      await initialized.wait();
+    });
+    await waitFor(() => expect(caught).toBe(failure));
+    expect(screen.queryByText('Hello World')).toBeNull();
+    await uninitialized.destroy();
+  });
+
+  test('initialize rejection reaches the error boundary without running onInitialized', async () => {
+    const failure = new Error('initialize failed');
+    class FailingClient extends Client {
+      override async initialize(): Promise<Client> {
+        throw failure;
+      }
+    }
+
+    let caught: unknown;
+    const onInitialized = vi.fn();
+    render(
+      <TestErrorBoundary onError={(error) => (caught = error)}>
+        <ClientProvider client={new FailingClient()} onInitialized={onInitialized}>
+          <TestComponent />
+        </ClientProvider>
+      </TestErrorBoundary>,
+    );
+
+    await waitFor(() => expect(caught).toBe(failure));
+    expect(onInitialized).not.toHaveBeenCalled();
+  });
+
+  test('fatal client error after initialization reaches the error boundary', async () => {
+    const failure = new Error('services lost');
+    const fatalErrorUpdate = new Event<Error | null>();
+    const fatalError = MulticastObservable.from(fatalErrorUpdate, null);
+    class LostClient extends Client {
+      override get fatalError(): MulticastObservable<Error | null> {
+        return fatalError;
+      }
+    }
+
+    const lost = new LostClient({ services: fromHost() });
+    await lost.initialize();
+    onTestFinished(() => lost.destroy());
+
+    let caught: unknown;
+    render(
+      <TestErrorBoundary onError={(error) => (caught = error)}>
+        <ClientProvider client={lost}>
+          <TestComponent />
+        </ClientProvider>
+      </TestErrorBoundary>,
+    );
+    await waitFor(() => expect(screen.queryByText('Hello World')).not.toBeNull());
+
+    act(() => fatalErrorUpdate.emit(failure));
+    await waitFor(() => expect(caught).toBe(failure));
+    expect(screen.queryByText('Hello World')).toBeNull();
   });
 });

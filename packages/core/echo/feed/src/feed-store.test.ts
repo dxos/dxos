@@ -927,28 +927,17 @@ describe('FeedStore server token', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('applyPulledBatch notifies once for the blocks and the backlog together', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
-      yield* feed.migrate();
-      let notifications = 0;
-      feed.onSyncStateChanged.on(() => void notifications++);
-
-      yield* feed.applyPulledBatch(pulledBatch(spaceId, 7));
-
-      expect(notifications).toBe(1);
-      const syncState = yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data });
-      expect(syncState.blocksToPull).toBe(7);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
   it.effect('the backlog estimate survives a restart', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
       yield* feed.migrate();
-      yield* feed.applyPulledBatch(pulledBatch(spaceId, 7));
+      yield* feed.setSyncState({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        lastPulledPosition: 1,
+        blocksToPull: 7,
+      });
 
       // A second store over the same database stands in for a restart: the estimate is a row, not
       // process state, so a cold start no longer reports a drained namespace.
@@ -959,39 +948,15 @@ describe('FeedStore server token', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('applyPulledBatch keeps no blocks when advancing the pull position fails', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
-      yield* feed.migrate();
-      feed.setSyncState = () => Effect.die(new Error('sync state write failed'));
-
-      const exit = yield* Effect.exit(feed.applyPulledBatch(pulledBatch(spaceId, 0)));
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      const { blocks } = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
-      expect(blocks).toEqual([]);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  const pulledBatch = (spaceId: SpaceId, blocksToPull: number) => ({
-    spaceId,
-    feedNamespace: WellKnownNamespaces.data,
-    blocks: [
-      {
-        feedId: EntityId.random(),
-        actorId: 'bob',
-        sequence: 0,
-        prevActorId: null,
-        prevSequence: null,
-        position: 1,
-        timestamp: 0,
-        data: new Uint8Array([1]),
-      },
-    ],
-    lastPulledPosition: 1,
-    serverToken: 'token',
-    blocksToPull,
+  const replicatedBlock = (feedId: string, actorId: string, sequence: number, position: number): Block => ({
+    feedId,
+    actorId,
+    sequence,
+    prevActorId: null,
+    prevSequence: null,
+    position,
+    timestamp: 0,
+    data: new Uint8Array([sequence]),
   });
 
   const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>

@@ -212,8 +212,7 @@ export const RemoveObjects = Operation.make({
       'when the entities themselves are not held.',
     icon: 'ph--trash--regular',
   },
-  // The space comes from the input itself — live entities, or refs that are always space-qualified.
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),
     // References are what a caller outside this process can supply; resolved to the same entities
@@ -716,8 +715,9 @@ export const QueryObjects = Operation.make({
     key: DXN.make('org.dxos.operation.space.queryObjects'),
     name: 'Query Objects',
     description:
-      'Query the space for objects by typename and/or full-text search. Omit both to list everything. ' +
-      'The typename filter matches every version of the type.',
+      'Query the space for objects by typename and/or full-text search. Omit both to match everything. ' +
+      'The typename filter matches every version of the type. A result capped by `limit` says so ' +
+      'with `truncated`; raise `limit` to see the rest.',
     icon: 'ph--magnifying-glass--regular',
   },
   services: [Database.Service],
@@ -732,7 +732,9 @@ export const QueryObjects = Operation.make({
     includeContent: Schema.optional(Schema.Boolean).annotate({
       description: 'Return full object data (default false); false returns id/type/label only.',
     }),
-    limit: Schema.optional(Schema.Number).annotate({ description: 'Maximum number of results (default 10).' }),
+    limit: Schema.optional(Schema.Number).annotate({
+      description: 'Maximum number of results (default 10). A capped result sets `truncated`.',
+    }),
     includeQueues: Schema.optional(Schema.Boolean).annotate({
       description:
         'Also search the space queues (default false). Queue-backed content — mailbox emails, ' +
@@ -741,6 +743,9 @@ export const QueryObjects = Operation.make({
   }),
   output: Schema.Struct({
     results: Schema.Array(Schema.Unknown),
+    truncated: Schema.Boolean.annotate({
+      description: 'True when `limit` cut the result short, so a caller never reads a capped page as the whole set.',
+    }),
   }),
 }).pipe(Operation.mutation('none'));
 

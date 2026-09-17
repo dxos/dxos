@@ -16,7 +16,8 @@ import { Issue, PullRequest, Repo } from '@dxos/types';
 import { GitHubCapabilities } from '#types';
 
 import { GITHUB_PROVIDER_ID } from '../constants.ts';
-import { type GitHubLink, parseGitHubLink } from '../extensions/index.ts';
+import { type GitHubLink, githubLinkIcon, parseGitHubLink } from '../extensions/index.ts';
+import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
 
 /**
@@ -35,6 +36,7 @@ export default Capability.makeModule(
           const link = parseGitHubLink(url);
           return link && (link.number !== undefined ? `#${link.number}` : `${link.owner}/${link.repo}`);
         },
+        icon: githubLinkIcon,
         resolve: ({ eid }, context) =>
           Effect.gen(function* () {
             const link = parseGitHubLink(eid);
@@ -132,19 +134,4 @@ const toIssue = ({ owner, repo, number = 0, url }: GitHubLink, issue: GitHubApi.
 const toPullRequest = (
   { owner, repo, number = 0, url }: GitHubLink,
   pull: GitHubApi.GitHubPull,
-): PullRequest.PullRequest =>
-  PullRequest.make({
-    owner,
-    repo,
-    number,
-    title: pull.title,
-    url: pull.html_url ?? url,
-    state:
-      pull.merged || pull.merged_at ? 'merged' : pull.draft ? 'draft' : pull.state === 'closed' ? 'closed' : 'open',
-    author: pull.user?.login,
-    description: pull.body ?? undefined,
-    baseBranch: pull.base?.ref,
-    headBranch: pull.head?.ref,
-    additions: pull.additions,
-    deletions: pull.deletions,
-  });
+): PullRequest.PullRequest => PullRequest.make(toPullRequestProps({ owner, repo, number, url }, pull));

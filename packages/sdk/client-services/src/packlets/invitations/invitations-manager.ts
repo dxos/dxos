@@ -15,7 +15,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { Event as EffectEvent, EffectEx } from '@dxos/effect';
+import { EffectEx, Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -411,7 +411,7 @@ export class InvitationsManager {
 export const InvitationsManagerLayer = (): Layer.Layer<
   InvitationsManagerService,
   never,
-  EffectEvent.Bus | InvitationsHandlerService | IMetadataStoreService
+  Hook.Controller | InvitationsHandlerService | IMetadataStoreService
 > =>
   Layer.effect(
     InvitationsManagerService,
@@ -421,7 +421,7 @@ export const InvitationsManagerLayer = (): Layer.Layer<
       const invitationsManager = new InvitationsManager(invitationsHandler, metadataStore);
 
       const ctx = yield* EffectEx.contextFromScope();
-      yield* EffectEvent.on(
+      yield* Hook.on(
         StackOpened,
         Effect.fn('InvitationsManager.onStackOpened')(function* () {
           const loaded = yield* Effect.promise(() => invitationsManager.loadPersistentInvitations(ctx));

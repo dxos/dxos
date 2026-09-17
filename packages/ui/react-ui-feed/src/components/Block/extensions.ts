@@ -6,6 +6,8 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import {
+  type ObjectLinkProps,
+  type WidgetDef,
   WidgetHostOptions,
   type XmlWidgetRegistry,
   createBasicExtensions,
@@ -24,6 +26,8 @@ import { highlights, highlightTheme } from './highlight.ts';
 
 export type ItemExtensionOptions = {
   registry?: XmlWidgetRegistry;
+  /** The block widget for `![label](echo://…)` — an object embedded as a card; none by default. */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   editable?: boolean;
   themeMode?: 'light' | 'dark';
   setWidgets?: WidgetHostOptions['setWidgets'];
@@ -44,13 +48,16 @@ export type ItemExtensionOptions = {
  */
 export const createBlockExtensions = ({
   registry,
+  objectImage,
   editable = false,
   themeMode = 'light',
   setWidgets,
 }: ItemExtensionOptions = {}): Extension[] => [
   ...sharedExtensions(registry, editable, themeMode),
   // The one part that cannot be shared: the callback that hands this item's widgets back to it.
-  ...(registry ? [widgetHost({ setWidgets, bookmarks: ['prompt'] }), xmlTags({ registry }), objectLinks()] : []),
+  ...(registry
+    ? [widgetHost({ setWidgets, bookmarks: ['prompt'] }), xmlTags({ registry }), objectLinks({ image: objectImage })]
+    : []),
 ];
 
 /** Registries are compared by identity, so a feed's single registry is a single cache scope. */

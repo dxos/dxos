@@ -48,9 +48,9 @@ describe.skip('NamedEntityRecognition', () => {
     expect(elonMusk?.entity).toMatch(/PER/);
 
     // Verify SpaceX and Tesla are recognized as organizations
-    const companies = entities.filter((e: any) => e.text === 'SpaceX' || e.text === 'Tesla');
+    const companies = entities.filter((e) => e.text === 'SpaceX' || e.text === 'Tesla');
     expect(companies.length).toBe(2);
-    companies.forEach((company: any) => {
+    companies.forEach((company) => {
       expect(company.entity).toMatch(/ORG/);
     });
   });

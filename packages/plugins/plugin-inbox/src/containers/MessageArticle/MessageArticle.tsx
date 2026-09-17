@@ -245,7 +245,11 @@ export const MessageArticle = ({
   // Per-message delete action, backed by the space operation for removing objects.
   const handleDelete = useCallback(
     (message: MessageType.Message) => {
-      void invoker.invokePromise(SpaceOperation.RemoveObjects, { objects: [message] });
+      void invoker.invokePromise(
+        SpaceOperation.RemoveObjects,
+        { objects: [message] },
+        { spaceId: Obj.getDatabase(message)?.spaceId },
+      );
     },
     [invoker],
   );

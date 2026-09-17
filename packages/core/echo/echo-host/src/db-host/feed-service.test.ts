@@ -10,6 +10,7 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
+import { invariant } from '@dxos/invariant';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
@@ -278,13 +279,16 @@ describe('LocalFeedServiceImpl', () => {
         const { blocks } = yield* feedStore.query({ spaceId, feedNamespace, unpositionedOnly: true });
         yield* feedStore.setPosition({
           spaceId,
-          blocks: blocks.map((block, position) => ({
-            feedId: block.feedId,
-            actorId: block.actorId,
-            sequence: block.sequence,
-            feedNamespace,
-            position,
-          })),
+          blocks: blocks.map((block, position) => {
+            invariant(block.feedId != null, 'queried block carries no feed id');
+            return {
+              feedId: block.feedId,
+              actorId: block.actorId,
+              sequence: block.sequence,
+              feedNamespace,
+              position,
+            };
+          }),
         });
         const [pushed] = yield* pull;
         expect(dataState(pushed)?.blocksToPush).toBe('0');

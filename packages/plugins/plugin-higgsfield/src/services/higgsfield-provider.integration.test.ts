@@ -5,9 +5,17 @@
 import * as Redacted from 'effect/Redacted';
 import { describe, test } from 'vitest';
 
+import { Obj, Ref } from '@dxos/echo';
+import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
+import * as Variant from '@dxos/plugin-studio/Variant';
+
 import { HIGGSFIELD_DEFAULT_IMAGE_MODEL } from '../constants.ts';
 import { joinCredential } from './higgsfield-credential.ts';
-import { makeHiggsfieldProvider, makeHiggsfieldVideoService } from './higgsfield-service.ts';
+import {
+  makeHiggsfieldImageService,
+  makeHiggsfieldProvider,
+  makeHiggsfieldVideoService,
+} from './higgsfield-service.ts';
 
 //
 // Live integration test against the real Higgsfield API. Skipped unless HIGGSFIELD_API_KEY and
@@ -40,16 +48,39 @@ describe.skipIf(!credential)('HiggsfieldProvider (live)', () => {
       return;
     }
 
+    const apiKey = Redacted.make(credential);
+    // The still is its own artifact: the image service produces it, and the video request references it.
+    const imageService = makeHiggsfieldImageService();
+    const image = await imageService.enqueue?.(
+      { model: HIGGSFIELD_DEFAULT_IMAGE_MODEL, prompt: 'A quiet alpine lake at sunrise, mist drifting.' },
+      { apiKey },
+    );
+    const still = image && (await imageService.awaitResult?.(image.jobId, { apiKey }));
+    expect(still?.variants[0]?.url).toMatch(/^https:\/\//);
+    const cover = Variant.make({ name: 'still', ...still?.variants[0] });
+    const reference = MediaArtifact.make({ name: 'lake', kind: 'image' });
+    Obj.update(reference, (reference) => {
+      reference.cover = Ref.make(cover);
+    });
+
     const service = makeHiggsfieldVideoService();
     const { enqueue, awaitResult } = service;
     expect(enqueue && awaitResult).toBeTruthy();
     if (!enqueue || !awaitResult) {
       return;
     }
-    const apiKey = Redacted.make(credential);
     const { jobId } = await enqueue(
-      { ...service.defaultRequest, prompt: 'A quiet alpine lake at sunrise; slow dolly in, mist drifting.' },
-      { apiKey },
+      { ...service.defaultRequest, prompt: 'Slow dolly in.', imageArtifact: Ref.make(reference) },
+      {
+        apiKey,
+        load: async (ref) => {
+          const target = ref.target;
+          if (!target) {
+            throw new Error('unresolved');
+          }
+          return target;
+        },
+      },
     );
     expect(jobId).toMatch(/^[0-9a-f-]{36}$/);
     const { variants } = await awaitResult(jobId, { apiKey });

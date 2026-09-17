@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Database, DXN, EID, Filter, Format, Obj, Query, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { type EntityId } from '@dxos/echo/Key';
@@ -76,7 +75,7 @@ export const StatusOptions: Option<Status>[] = [
   { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--square--regular' },
   { id: 'backlog', title: 'Backlog', color: 'neutral', icon: 'ph--tray--regular' },
   { id: 'started', title: 'Started', color: 'sky', icon: 'ph--hourglass--regular' },
-  { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--eye--regular' },
+  { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--user-sound--regular' },
   { id: 'done', title: 'Done', color: 'green', icon: 'ph--check--regular' },
   { id: 'duplicate', title: 'Duplicate', color: 'orange', icon: 'ph--copy--regular' },
   { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
@@ -109,7 +108,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
   Schema.Struct({
     title: Schema.String.pipe(
       Schema.annotate({ title: 'Title' }),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'lorem.words',
         args: [{ min: 3, max: 10 }],
       }),
@@ -117,7 +116,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     description: Schema.optional(
       Schema.String.pipe(
         Schema.annotate({ title: 'Description' }),
-        GeneratorAnnotation.set({
+        Annotation.GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',
           args: [{ min: 1, max: 3 }],
         }),
@@ -142,7 +141,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     status: Status.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [['todo', 'started', 'done']],
       }),
@@ -160,7 +159,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     // TODO(burdon): Customize or opinionated?
     priority: Priority.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [Priority.literals],
       }),
@@ -177,7 +176,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     estimate: Estimate.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [Estimate.literals],
       }),
@@ -231,7 +230,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
     // backref here: enumeration stays one array read and a move stays one field write.
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
   ),
 ) {}

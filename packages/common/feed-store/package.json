@@ -64,10 +64,10 @@
   "beast": {
     "classDiagrams": [
       {
-        "root": "src/feed-store.ts"
+        "root": "src/hypercore-store.ts"
       },
       {
-        "root": "src/feed-iterator.ts"
+        "root": "src/hypercore-iterator.ts"
       }
     ]
   }

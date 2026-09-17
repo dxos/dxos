@@ -11,7 +11,7 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type Commit, Timeline } from '@dxos/react-ui-components';
+import { type Commit, Timeline } from '@dxos/react-ui-trace';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
@@ -139,7 +139,10 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
 
   const handleSelect = useCallback(
     (commit: Commit | undefined) => {
+      // Clearing the timeline's selection (clicking the selected commit, or Enter on it) returns to
+      // the current version; otherwise the view would keep showing a version the timeline no longer marks.
       if (!commit) {
+        setSelection({ kind: 'current' });
         return;
       }
       const next = commitToSelection(subject, commit);

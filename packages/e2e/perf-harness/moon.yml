@@ -1,0 +1,25 @@
+# `library`, not `automation` like its siblings under packages/e2e: moon's layering rules forbid an
+# `application` depending on `automation`, and composer-app's specs import this package directly.
+layer: library
+language: typescript
+tags:
+  # `ts-test` contributes `test`, which does not collide with the `build` below; the `typecheck`
+  # tag is still avoided because its `build` would.
+  - ts-test
+
+tasks:
+  # No `typecheck` tag: that tag also contributes a `build` task (`tsc --noEmit`) which would merge
+  # with this one and suppress the emit. Plain `tsc` both typechecks and, via the base config's
+  # `emitDeclarationOnly`, writes the `.d.ts` that composer-app's project reference needs.
+  build:
+    command: pnpm exec tsc
+    deps:
+      - ^:build
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(sources)'
+    outputs:
+      - dist/types/
+    options:
+      timeout: 60

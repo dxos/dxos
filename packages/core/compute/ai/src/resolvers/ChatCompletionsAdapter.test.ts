@@ -101,13 +101,41 @@ describe('ChatCompletionsLanguageModel', () => {
   }
 });
 
+/** One `tool_calls` entry in a captured OpenAI/Ollama chat-completions request body. */
+interface WireToolCall {
+  readonly id: string;
+  readonly type: 'function';
+  readonly function: { readonly name: string; readonly arguments: string | Record<string, unknown> };
+}
+
+/** One message in a captured OpenAI/Ollama chat-completions request body. */
+interface WireMessage {
+  readonly role: 'system' | 'user' | 'assistant' | 'tool';
+  readonly content?: string | null;
+  readonly reasoning_content?: string;
+  readonly tool_calls?: WireToolCall[];
+}
+
+/** The request body the adapter sends, as much of it as these tests assert against. */
+interface WireRequestBody {
+  readonly model: string;
+  readonly messages: WireMessage[];
+}
+
+/** The lone assistant message in a captured request body — every caller here expects exactly one. */
+const assistantMessage = (body: WireRequestBody): WireMessage => {
+  const message = body.messages.find((message) => message.role === 'assistant');
+  invariant(message, 'expected an assistant message in the captured request body');
+  return message;
+};
+
 /**
  * Captures the request body the adapter sends, so the wire shape can be asserted without a live
  * server (the suites above are `manual` and need one).
  */
 const captureRequestBody = (
   apiFormat: ChatCompletionsAdapter.ApiFormat,
-  capture: (body: any) => void,
+  capture: (body: WireRequestBody) => void,
   provider?: string,
 ) => {
   const stub = HttpClient.make((request) =>
@@ -192,19 +220,18 @@ describe('tool call encoding', () => {
   it.effect(
     'DeepSeek receives an assistant turn with its reasoning_content; other servers do not',
     Effect.fn(function* (_) {
-      let deepseek: any;
+      let deepseek!: WireRequestBody;
       yield* LanguageModel.generateText({ prompt: promptWithReasonedToolCall }).pipe(
         Effect.provide(captureRequestBody('openai', (captured) => (deepseek = captured), 'deepseek')),
       );
-      let openai: any;
+      let openai!: WireRequestBody;
       yield* LanguageModel.generateText({ prompt: promptWithReasonedToolCall }).pipe(
         Effect.provide(captureRequestBody('openai', (captured) => (openai = captured))),
       );
 
-      const assistantOf = (body: any) => body.messages.find((message: any) => message.role === 'assistant');
-      expect(assistantOf(deepseek).reasoning_content).toBe('The id looks like an EID.');
-      expect(assistantOf(deepseek).tool_calls).toHaveLength(1);
-      expect(assistantOf(openai)).not.toHaveProperty('reasoning_content');
+      expect(assistantMessage(deepseek).reasoning_content).toBe('The id looks like an EID.');
+      expect(assistantMessage(deepseek).tool_calls).toHaveLength(1);
+      expect(assistantMessage(openai)).not.toHaveProperty('reasoning_content');
     }),
   );
 
@@ -213,12 +240,12 @@ describe('tool call encoding', () => {
   it.effect(
     'DeepSeek receives an empty reasoning_content on a tool-calling turn without reasoning',
     Effect.fn(function* (_) {
-      let body: any;
+      let body!: WireRequestBody;
       yield* LanguageModel.generateText({ prompt: promptWithToolCall }).pipe(
         Effect.provide(captureRequestBody('openai', (captured) => (body = captured), 'deepseek')),
       );
 
-      const assistant = body.messages.find((message: any) => message.role === 'assistant');
+      const assistant = assistantMessage(body);
       expect(assistant.reasoning_content).toBe('');
       expect(assistant.tool_calls).toHaveLength(1);
     }),
@@ -247,15 +274,17 @@ describe('tool call encoding', () => {
       ];
       const prompt = yield* AiPreprocessor.preprocessPrompt(history);
 
-      let body: any;
+      let body!: WireRequestBody;
       yield* LanguageModel.generateText({ prompt }).pipe(
         Effect.provide(captureRequestBody('openai', (captured) => (body = captured), 'deepseek')),
       );
 
-      const assistants = body.messages.filter((message: any) => message.role === 'assistant');
+      const assistants = body.messages.filter((message) => message.role === 'assistant');
       expect(assistants).toHaveLength(1);
-      expect(assistants[0].reasoning_content).toBe('Two reads, then decide.');
-      expect(assistants[0].tool_calls.map((call: any) => call.id)).toEqual(['c1', 'c2']);
+      const assistant = assistants[0];
+      invariant(assistant.tool_calls, 'expected tool_calls');
+      expect(assistant.reasoning_content).toBe('Two reads, then decide.');
+      expect(assistant.tool_calls.map((call) => call.id)).toEqual(['c1', 'c2']);
     }),
   );
 
@@ -391,6 +420,12 @@ const toolCallDelta = (
     ],
   });
 
+/** True when `part` is one of the three parts that stream a tool call's parameters — the ones that carry `id`. */
+const isToolParamsPart = <T extends { type: string }>(
+  part: T,
+): part is Extract<T, { type: 'tool-params-start' | 'tool-params-delta' | 'tool-params-end' }> =>
+  part.type === 'tool-params-start' || part.type === 'tool-params-delta' || part.type === 'tool-params-end';
+
 const ParallelToolkit = Toolkit.make(
   Tool.make('alpha', { description: 'alpha', parameters: Schema.Struct({ x: Schema.Number }), success: Schema.String }),
   Tool.make('beta', { description: 'beta', parameters: Schema.Struct({ y: Schema.Number }), success: Schema.String }),
@@ -432,8 +467,8 @@ describe('streamed parallel tool calls', () => {
         ),
       );
 
-      const paramParts = parts.filter((part) => part.type.startsWith('tool-params-'));
-      expect(paramParts.map((part) => [part.type, (part as any).id])).toEqual([
+      const paramParts = parts.filter(isToolParamsPart);
+      expect(paramParts.map((part) => [part.type, part.id])).toEqual([
         ['tool-params-start', 'call_a'],
         ['tool-params-delta', 'call_a'],
         ['tool-params-end', 'call_a'],

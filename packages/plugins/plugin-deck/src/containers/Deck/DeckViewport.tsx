@@ -165,8 +165,6 @@ const PlankContext = createContext<PlankContextValue>({
   markExposeSelect: () => {},
 });
 
-const usePlankContext = () => useContext(PlankContext);
-
 //
 // DeckViewport
 //
@@ -450,7 +448,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
-  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = usePlankContext();
+  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = useContext(PlankContext);
   const { open: companion, companionId } = useDeckCompanion(id);
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
@@ -1412,7 +1410,13 @@ export const DeckPlanks = () => {
     maxPlankWidthPx,
     scrollIntentRef,
   });
-  useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
+  useScrollIntoView({
+    viewportRef,
+    stackRef,
+    getPlankTiles,
+    scrollIntoViewId: state.scrollIntoView?.id,
+    scrollIntentRef,
+  });
   useExposeInert({ getPlankTiles, expose });
   useExposeScale({ viewportRef, stackRef, hostRef, getPlankTiles, expose });
   // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have

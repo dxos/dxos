@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { ExecutionGraph } from '@dxos/assistant/ExecutionGraph';
 import { InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
+import { Timeline } from '@dxos/react-ui-trace';
 
 export const ExecutionGraphModule = () => {
   const space = useActiveSpace();
@@ -35,7 +36,12 @@ const ExecutionGraphContainer = ({ space }: { space: Space }) => {
     space.db,
     feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
   );
-  const { branches, commits } = useExecutionGraph(objects);
+  // The message-based graph, built from the feed's objects rather than the trace.
+  const { branches, commits } = useMemo(() => {
+    const graph = new ExecutionGraph();
+    graph.addEvents([...objects]);
+    return graph.getGraph();
+  }, [objects]);
 
   return (
     <Panel.Root>

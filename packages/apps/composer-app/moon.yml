@@ -89,14 +89,14 @@ tasks:
         env:
           DX_PWA: 'false'
   # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
-  # frontend + macOS ollama sidecar are hoisted to task deps here (no moon-in-moon). Locally
+  # frontend + macOS ollama runtime are hoisted to task deps here (no moon-in-moon). Locally
   # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
-  # prebuilt artifact, sidecar fetched directly — to keep moon out of the native job.
+  # prebuilt artifact, runtime fetched directly — to keep moon out of the native job.
   tauri-build:
     deps:
       - bundle
       - fetch-ollama
-  # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only). Embeds the
+  # iOS counterpart of `tauri-build`; no ollama (its runtime is desktop-only). Embeds the
   # PRODUCTION plugin set unconditionally — iOS is still deployed out of the `dev` environment, but what
   # TestFlight carries should be what `composer.space` carries, not the full catalog that environment
   # would otherwise select. `tauri-ios` (the dev loop) extends `serve-prod` for the same reason.
@@ -107,9 +107,9 @@ tasks:
       - target: bundle
         env:
           DX_PLUGIN_SET: production
-  # Both native dev loops run this app's `vite dev` through `beforeDevCommand` (`tauri.ios.conf.json`
-  # overrides only `bundle`), so they need exactly `serve`'s narrowed dependency set rather than the
-  # `tauri` tag's whole-graph `^:build` — extended so the three inner loops cannot drift.
+  # Both native dev loops run this app's `vite dev` through `beforeDevCommand`, so they need exactly
+  # `serve`'s narrowed dependency set rather than the `tauri` tag's whole-graph `^:build` — extended
+  # so the three inner loops cannot drift.
   tauri-dev:
     extends: serve
     command: pnpm exec tauri dev
@@ -122,9 +122,9 @@ tasks:
     command: pnpm exec tauri ios dev
     options:
       mergeArgs: replace
-  # Downloads the pinned macOS ollama runtime + triple-named sidecars embedded in the desktop app. Cacheable:
-  # keyed on the fetch script (which pins the version + SHA-256), with the downloaded sidecar dir as the
-  # output — so a cache hit restores it instead of re-downloading the (large) runtime.
+  # Downloads the pinned macOS ollama runtime embedded in the desktop app. Cacheable: keyed on the
+  # fetch script (which pins the version + SHA-256), with the downloaded runtime dir as the output —
+  # so a cache hit restores it instead of re-downloading the (large) runtime.
   fetch-ollama:
     command: node scripts/fetch-ollama.mjs
     inputs:
@@ -248,6 +248,24 @@ tasks:
       - ~:#prebuild
       # `vite preview` serves `out/composer`, and PWA is a build-time decision — so the flag rides
       # the dep too, or the harness measures a service worker precaching ~30 MB mid-run.
+      - target: bundle
+        env:
+          DX_PWA: 'false'
+  # Performance flows — `perf-*.spec.ts` against `vite preview`, driven by `@dxos/perf-harness`.
+  # Outside the `e2e` pool for the same reason as `e2e-startup`: it records measurements rather than
+  # asserting behaviour, so a number must never gate a merge. Scale tier and modes come from the
+  # environment (`DX_PERF_SCALE`, `DX_PERF_MODES`) so the nightly can sweep them without a task per
+  # combination. Not cacheable — the point is to measure this commit on this machine.
+  e2e-perf:
+    command: pnpm exec playwright test --config=src/playwright/playwright-perf.config.ts
+    env:
+      DX_PWA: 'false'
+    options:
+      cache: false
+    deps:
+      - ~:#prebuild
+      # PWA is a build-time decision, so the flag rides the dep too — otherwise a service worker
+      # precaches ~30 MB mid-run and lands in the network split as app code.
       - target: bundle
         env:
           DX_PWA: 'false'

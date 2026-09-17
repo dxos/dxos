@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredential, credentialPayload } from '@dxos/credentials';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -28,8 +28,8 @@ describe('space/control-pipeline', () => {
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
 
-    const feedStore = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring,
         hypercore: {
@@ -38,13 +38,13 @@ describe('space/control-pipeline', () => {
       }),
     });
 
-    const createFeed = async () => {
+    const createHypercore = async () => {
       const feedKey = await keyring.createKey();
-      return feedStore.openFeed(feedKey, { writable: true });
+      return hypercoreStore.openHypercore(feedKey, { writable: true });
     };
 
     // TODO(dmaretskyi): Separate test for cold start after genesis.
-    const genesisFeed = await createFeed();
+    const genesisFeed = await createHypercore();
     const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
     await metadata.addSpace(
       create(SpaceMetadataSchema, {
@@ -56,7 +56,7 @@ describe('space/control-pipeline', () => {
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
-      feedProvider: (key) => feedStore.openFeed(key),
+      feedProvider: (key) => hypercoreStore.openHypercore(key),
       metadataStore: metadata,
     });
 
@@ -89,7 +89,7 @@ describe('space/control-pipeline', () => {
     }
 
     // New control feed.
-    const controlFeed2 = await createFeed();
+    const controlFeed2 = await createHypercore();
     {
       await controlPipeline.pipeline.writer!.write(
         credentialPayload(
@@ -112,7 +112,7 @@ describe('space/control-pipeline', () => {
     }
 
     // New data feed.
-    const dataFeed1 = await createFeed();
+    const dataFeed1 = await createHypercore();
     {
       await controlPipeline.pipeline.writer!.write(
         credentialPayload(
@@ -136,7 +136,7 @@ describe('space/control-pipeline', () => {
     }
 
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
-    const dataFeed2 = await createFeed();
+    const dataFeed2 = await createHypercore();
     {
       await dataFeed1.append(
         create(FeedMessageSchema, {

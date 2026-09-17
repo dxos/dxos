@@ -10,8 +10,9 @@ import { invalidateProviderOptions, loadProviderOptions } from './provider-optio
 describe('provider options cache', () => {
   beforeEach(() => invalidateProviderOptions());
 
-  const makeProvider = (calls: { count: number }, fail = false) => ({
+  const makeProvider = (calls: { count: number }, fail = false, kind: 'image' | 'video' = 'image') => ({
     id: 'test',
+    kind,
     fieldOptions: {
       model: async () => {
         calls.count += 1;
@@ -37,6 +38,13 @@ describe('provider options cache', () => {
 
     // A different credential is a different list.
     await loadProviderOptions(provider, 'model', { apiKey: Redacted.make('other') });
+    expect(calls.count).toBe(2);
+  });
+
+  test('services of one provider for different kinds never share a list', async ({ expect }) => {
+    const calls = { count: 0 };
+    await loadProviderOptions(makeProvider(calls, false, 'image'), 'model', {});
+    await loadProviderOptions(makeProvider(calls, false, 'video'), 'model', {});
     expect(calls.count).toBe(2);
   });
 

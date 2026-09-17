@@ -4,6 +4,7 @@
 
 import React, { useCallback } from 'react';
 
+import { Format } from '@dxos/echo';
 import { Field, type InputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
@@ -30,6 +31,8 @@ export const TextField = ({
     return <FormStaticValue value={value} format={format} />;
   }
 
+  // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.
+  const key = format === Format.TypeFormat.Key;
   return (
     <Field.Input
       noAutoFill
@@ -38,6 +41,7 @@ export const TextField = ({
       value={value}
       onBlur={onBlur}
       onChange={handleChange}
+      {...(key && { classNames: 'font-mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />
   );
 };

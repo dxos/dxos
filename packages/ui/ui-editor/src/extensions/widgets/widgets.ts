@@ -28,7 +28,7 @@ import {
   keymap,
 } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
-import { type FunctionComponent } from 'react';
+import { type FunctionComponent, type ReactNode } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -63,16 +63,18 @@ export interface WidgetStateManager {
   updateWidget<T>(id: string, props: StateDispatch<T>): void;
 }
 
-export type WidgetEventHandler<TEvent = any> = (event: TEvent) => void;
+export type WidgetEventHandler<TEvent = unknown> = (event: TEvent) => void;
 
 /**
- * Props every widget receives: what matched (`_tag`), where, and the host's context.
+ * Props every widget receives: what matched (`_tag`), where, and the host's context. `TProps`
+ * defaults to an index signature (rather than `unknown`) so a matcher can carry the tag's own
+ * caller-defined attributes (see `xml-tags.ts`) without narrowing them first.
  */
-export type WidgetProps<TProps = any, TContext = any> = TProps & {
+export type WidgetProps<TProps = Record<string, unknown>, TContext = unknown> = TProps & {
   _tag: string;
-  view?: EditorView;
+  view?: EditorView | null;
   range: Range;
-  children?: any[];
+  children?: ReactNode[];
   context?: TContext;
   onEvent?: WidgetEventHandler;
 };
@@ -126,7 +128,7 @@ export type WidgetDef<TProps extends WidgetProps = WidgetProps> = {
 export type WidgetState = {
   id: string;
   root: HTMLElement;
-  props: any;
+  props: WidgetProps;
   Component: FunctionComponent<WidgetProps>;
 };
 
@@ -139,7 +141,7 @@ export type { WidgetNotifier };
 /**
  * Update context.
  */
-export const widgetContextEffect = StateEffect.define<any>();
+export const widgetContextEffect = StateEffect.define<unknown>();
 
 /**
  * Reset all state.
@@ -152,21 +154,26 @@ export const widgetResetEffect = StateEffect.define();
  */
 export const widgetRebuildEffect = StateEffect.define();
 
+/** A widget update either replaces the accumulated props outright or derives them from the prior value. */
+type WidgetPropsUpdate = Partial<WidgetProps> | ((prev: Partial<WidgetProps> | undefined) => Partial<WidgetProps>);
+
 /**
  * Update widget.
  */
-export const widgetUpdateEffect = StateEffect.define<{ id: string; value: any }>();
+export const widgetUpdateEffect = StateEffect.define<{ id: string; value: WidgetPropsUpdate }>();
 
 //
 // Matchers
 //
 
-type WidgetStateMap = Record<string, any>;
+/** Widget props updates accumulated by id, merged over a widget's baked props at mount/re-render. */
+type WidgetStateMap = Record<string, Partial<WidgetProps>>;
 
 /** What a matcher sees for one node of the tree walk. */
 export type WidgetMatchContext = {
   state: EditorState;
-  context: any;
+  /** Opaque host-supplied value (theme, callbacks, …); narrowed by the host's own widget code. */
+  context: unknown;
   widgetStateMap: WidgetStateMap;
   notifier: WidgetNotifier;
   /** Per-build scratch counters, for ids that must not depend on document position. */
@@ -290,7 +297,7 @@ export const createWidget = <TProps extends WidgetProps>({
 /**
  * Context state.
  */
-const widgetContextStateField = StateField.define<any>({
+const widgetContextStateField = StateField.define<unknown>({
   create: () => undefined,
   update: (value, tr) => {
     for (const effect of tr.effects) {
@@ -337,7 +344,7 @@ const widgetStateMapStateField = StateField.define<WidgetStateMap>({
  * later rebuild from replacing the instance.
  */
 const withCurrentWidgetState = (state: WidgetState): WidgetState => {
-  const view: EditorView | undefined = state.props?.view;
+  const view: EditorView | null | undefined = state.props?.view;
   const widgetState = view?.state.field(widgetStateMapStateField, false)?.[state.id];
   return widgetState ? { ...state, props: { ...state.props, ...widgetState } } : state;
 };
@@ -360,7 +367,7 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
       }
       setWidgets?.([...widgets.values()]);
     },
-    updated: (id: string, widgetState: any) => {
+    updated: (id: string, widgetState: Partial<WidgetProps>) => {
       const current = widgets.get(id);
       if (!current || !widgetState) {
         return;

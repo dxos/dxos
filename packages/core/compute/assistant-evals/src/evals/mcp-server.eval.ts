@@ -4,13 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 import { evalite } from 'evalite';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import * as Project from '@dxos/compute/Project';
-import { Database, Filter, Query, Ref, Type } from '@dxos/echo';
+import { Blob, Database, Filter, Query, Ref, Type } from '@dxos/echo';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
+import { type Turn } from '@dxos/test-utils/claude-agent';
+import { File, Milestone, Outline, Task, TaskSet } from '@dxos/types';
 
 import { findObject } from '../assertions.ts';
 import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';
@@ -28,16 +32,22 @@ import * as Scorer from '../Scorer.ts';
 // so there is no CLI binary to build, no profile to bootstrap, and one database — which is what
 // lets a scorer grade the write rather than the model's account of it.
 //
-// Only the server's tools are allowed. No Bash, no file tools: an agent that can shell out could
-// satisfy a prompt without ever reaching the surface, and the run would prove nothing about it.
+// Only the server's tools are allowed, plus `Bash(curl:*)` — no file tools, and no other shell. The
+// rule and its one exception have the same root: an agent that can shell out freely could satisfy a
+// prompt without ever reaching the surface, and the run would prove nothing about it. `curl` is
+// admitted because the upload stage measures a flow that is DEFINED by the bytes not passing
+// through the model, so there is no version of it the agent can complete through MCP alone. It
+// cannot be used to fake the other stages: each asserts the MCP tool call it required by name, and
+// the agent is never told an endpoint or credential it could reach the surface with by hand.
 //
 // `DX_EVAL_MCP_TARGET` picks the surface: `local` (the in-process host, the default), `local-edge`
-// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Against `dev` the harness
-// brings its own identity: it replicates the space it seeds to dev EDGE and mints the worker's grant
-// itself (`McpAuth`), so the run is graded from the database exactly as a local one is — every write
-// the agent makes through the deployed worker comes back by replication. A worker reached with a
-// hand-minted `DX_EVAL_MCP_TOKEN` serves a space this process cannot see, so that run drops the
-// write stages and scores what a client can see from outside: discovery, and per-tool latency.
+// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Against `dev` and `main` the
+// harness brings its own identity: it binds a `test+*@dxos.org` account through that EDGE's test
+// hatch, replicates the space it seeds, and mints the worker's grant itself (`McpAuth`), so the run
+// is graded from the database exactly as a local one is — every write the agent makes through the
+// deployed worker comes back by replication. `prod`, whose hatch is closed, and any worker reached
+// with a hand-minted `DX_EVAL_MCP_TOKEN` serve a space this process cannot see, so those runs drop
+// the write stages and score what a client can see from outside: discovery, and per-tool latency.
 //
 
 const TARGET = McpTarget.fromEnv();
@@ -46,6 +56,15 @@ const REMOTE = !McpTarget.isLocal(TARGET);
 
 /** Whether the run can be graded from the database (see {@link McpTarget.mode}). */
 const GRADED = McpTarget.mode(TARGET) !== 'token';
+
+/**
+ * Whether to run the direct-upload stage.
+ *
+ * Deployed targets only. The in-process host has no blob service behind it and defaults to inline
+ * storage, so there is no signed URL to `curl` and nothing the stage could measure — running it
+ * locally would score the absence of a backend rather than the flow.
+ */
+const UPLOAD_STAGE = GRADED && REMOTE;
 
 /**
  * The calls the latency report is built from.
@@ -108,6 +127,85 @@ const BACKFILL = 'Backfill the sync telemetry dashboard';
 
 const DESCRIPTION = 'picked up by the eval agent';
 
+/** Filename the upload stage plants and then asks for back, distinctive enough not to collide. */
+const UPLOAD_NAME = 'eval-capture.png';
+
+/**
+ * Bytes the upload stage transfers.
+ *
+ * Comfortably past what any model would emit inline, so a run that somehow satisfied the stage
+ * through a base64 tool argument would be visible as a vastly more expensive turn rather than
+ * passing quietly. Random, so the size assertion below cannot be met by an empty or truncated
+ * transfer that happens to compress to the same thing.
+ */
+const UPLOAD_BYTES = 3 * 1024 * 1024;
+
+/**
+ * A PNG header on random bytes: `FileLimits` accepts by declared media type, and `curl` derives
+ * that from the extension, so the fixture has to be plausible enough for the type it claims.
+ */
+const uploadFixture = (): Uint8Array => {
+  const bytes = new Uint8Array(UPLOAD_BYTES);
+  // Filled in 64KB chunks: `getRandomValues` rejects a view longer than 65536 bytes outright, so a
+  // single call for a multi-megabyte fixture throws rather than returning short.
+  const CHUNK = 65_536;
+  for (let offset = 0; offset < bytes.length; offset += CHUNK) {
+    crypto.getRandomValues(bytes.subarray(offset, Math.min(offset + CHUNK, bytes.length)));
+  }
+  bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0);
+  return bytes;
+};
+
+/** The uploaded file as the database holds it, bytes included, read outside the agent. */
+const readUploadedFile = Effect.gen(function* () {
+  const file = yield* findObject(File.File, (candidate) => candidate.name === UPLOAD_NAME);
+  if (!file) {
+    return undefined;
+  }
+  const blob = yield* Database.load(file.data);
+  return {
+    size: blob.size,
+    type: blob.type,
+    external: blob.data._tag === 'external',
+    // The bytes themselves, because a length is not an identity: a truncated-then-padded or
+    // substituted payload of the same size would satisfy every other check here.
+    bytes: yield* Blob.read(blob),
+  };
+});
+
+/** Whether two byte arrays are identical. */
+const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
+  left.length === right.length && left.every((byte, index) => byte === right[index]);
+
+/** The operation the upload stage exists to exercise. */
+const CREATE_FROM_UPLOAD = 'org.dxos.operation.file.createFromUpload';
+
+/**
+ * Every tool call of a turn with its arguments.
+ *
+ * `Turn.toolCalls` carries names only, and a name is not enough here: `invokeOperation` is one tool
+ * standing in front of every projected verb, so asking whether it was called says nothing about
+ * which one ran.
+ */
+const toolUses = (turn: Turn): { name: string; input: Record<string, unknown> }[] => {
+  const uses: { name: string; input: Record<string, unknown> }[] = [];
+  for (const event of turn.events) {
+    if (event?.type !== 'assistant') {
+      continue;
+    }
+    for (const block of event.message?.content ?? []) {
+      if (block?.type === 'tool_use' && typeof block.name === 'string') {
+        uses.push({ name: block.name, input: (block.input ?? {}) as Record<string, unknown> });
+      }
+    }
+  }
+  return uses;
+};
+
+/** Whether the turn invoked a named operation through `invokeOperation`. */
+const invokedOperation = (turn: Turn, key: string): boolean =>
+  toolUses(turn).some((use) => use.name === tool('invokeOperation') && use.input.key === key);
+
 type TaskRow = { title?: string; status?: string; description?: string };
 
 /** Every task in the ledger, read outside the agent. */
@@ -136,6 +234,8 @@ type Staged = {
   readOnly: boolean;
   completed: boolean;
   started: boolean;
+  /** `undefined` when the stage did not run — see {@link UPLOAD_STAGE}. */
+  uploaded?: boolean;
 };
 
 const NOTHING_STAGED: Staged = {
@@ -193,6 +293,17 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
     description: 'A second turn set the other task started with its description, without rolling the first back.',
     score: Effect.succeed(staged.started),
   }),
+  ...(staged.uploaded === undefined
+    ? []
+    : [
+        Scorer.make({
+          name: 'upload-round-trip',
+          description:
+            'The agent uploaded a 3MB file off its own disk through the signed URL and turned it ' +
+            'into a File object whose blob holds exactly those bytes, compared byte for byte.',
+          score: Effect.succeed(staged.uploaded),
+        }),
+      ]),
   Scorer.database({
     name: 'ledger-intact',
     // The ledger's own length, not a filter: the natural failure of an agent that cannot find a task
@@ -205,7 +316,9 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
 ];
 
 /** Names and descriptions only; the marks come from the run, through `output.scores`. */
-const SCORERS = GRADED ? scorers(NOTHING_STAGED) : remoteScorers(false);
+const SCORERS = GRADED
+  ? scorers({ ...NOTHING_STAGED, ...(UPLOAD_STAGE ? { uploaded: false } : {}) })
+  : remoteScorers(false);
 
 /**
  * A deployed worker over a space this process cannot see, driven from the outside: no seed, no
@@ -233,8 +346,17 @@ const localTask = () =>
     {
       target: TARGET,
       skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }],
-      plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
-      types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
+      plugins: [ProjectsPlugin.make(), TasksPlugin.make(), FilePlugin.make()],
+      types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet, File.File, Blob.Blob],
+      // The server's own tools, plus `curl` for the upload stage only — see the header comment for
+      // why the no-shell rule has this one exception and why it cannot launder the other stages.
+      allowedTools: [
+        tool('queryOperations'),
+        tool('invokeOperation'),
+        tool('loadSkill'),
+        tool('createUpload'),
+        'Bash(curl:*)',
+      ],
       seed: () =>
         Effect.gen(function* () {
           const tasks = yield* Effect.forEach([ROTATE, BACKFILL], (title) =>
@@ -250,7 +372,7 @@ const localTask = () =>
           yield* Database.add(Project.make({ name: PROJECT_NAME, taskSet: Ref.make(taskSet) }));
         }),
     },
-    async ({ spaceId, send, query, score, latency }) => {
+    async ({ spaceId, workdir, send, query, score, latency }) => {
       // Stage 1 — the starting state, proven before a single token is spent. Without it, a later
       // "the task is done" score cannot distinguish the agent's work from a bad fixture.
       const seeded = await query(readTasks);
@@ -305,17 +427,55 @@ const localTask = () =>
         // Still done: a later turn must not roll back what an earlier one committed.
         find(afterStart, ROTATE)?.status === 'done';
 
+      // Stage 5 — the direct-upload path, which exists precisely because these bytes cannot travel
+      // as a tool argument. The fixture is planted on the agent's disk rather than described to it,
+      // so the only way through is `createUpload` -> shell transfer -> `createFromUpload`.
+      let uploaded: boolean | undefined;
+      let uploadTurn: Turn | undefined;
+      if (UPLOAD_STAGE) {
+        const fixture = uploadFixture();
+        fs.writeFileSync(path.join(workdir, UPLOAD_NAME), fixture);
+        const upload = await send(
+          `The file ./${UPLOAD_NAME} in your working directory is a ${UPLOAD_BYTES}-byte screenshot. ` +
+            `Add it to space ${spaceId} as a file named "${UPLOAD_NAME}". It is far too large to pass ` +
+            'as a tool argument, so upload it directly: get an upload URL, transfer the bytes with ' +
+            'curl, then create the file object from the upload id.',
+        );
+        uploadTurn = upload;
+        const stored = await query(readUploadedFile);
+        uploaded =
+          !upload.isError &&
+          upload.toolCalls.includes(tool('createUpload')) &&
+          // The operation by name, not merely `invokeOperation`. Without this the stage is
+          // satisfiable through `createFromSource`'s base64 arm — which also stores to edge, so the
+          // external check below does not exclude it — and would pass by doing the one thing this
+          // path exists to avoid. The uploadId needs no separate check: the byte comparison already
+          // fails if the operation adopted a different upload.
+          invokedOperation(upload, CREATE_FROM_UPLOAD) &&
+          // The bytes are the real assertion: they can only match if the transfer completed intact
+          // and the service stored what it received, which no amount of model narration produces.
+          stored?.size === UPLOAD_BYTES &&
+          sameBytes(stored.bytes, fixture) &&
+          // External, not inline — an inline blob would mean the bytes came back through the model
+          // after all, which is the exact failure this whole path exists to prevent.
+          stored.external === true;
+      }
+
       // After the turns, so the probe's own connection is not competing with the agent's for the
       // listener — and so a latency figure is never what a scenario's writes waited behind. The
       // ledger is at its fullest here too, which is the state worth timing a read against.
       const project = await query(findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME));
       const report = await latency([...readProbes(spaceId), ...(project ? refProbes(spaceId, project.id) : [])]);
 
-      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started }, report));
+      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started, uploaded }, report));
       return {
         scores,
         latency: report,
-        turns: [read, complete, start].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
+        turns: [read, complete, start, ...(uploadTurn ? [uploadTurn] : [])].map(({ isError, toolCalls, result }) => ({
+          isError,
+          toolCalls,
+          result,
+        })),
       };
     },
   );

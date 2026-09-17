@@ -312,6 +312,10 @@ const DefaultStory = ({
   );
 };
 
+/** The row's title cell: the grid track that the mnemonic chip and the title text share. */
+const titleCell = (row: Element): HTMLElement =>
+  row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!.parentElement!;
+
 const meta = {
   title: 'ui/react-ui-task/TaskList',
   render: DefaultStory,
@@ -457,7 +461,7 @@ export const TestAgentSpinner: Story = {
     const spinning = () =>
       [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')]
         .filter((row) => row.querySelector('[data-testid="taskList.item.status"] .animate-spin'))
-        .map((row) => row.querySelector('span.truncate')?.textContent ?? '');
+        .map((row) => row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '');
 
     await waitFor(async () => expect(spinning()).toEqual(['Draft launch email']), { timeout: 10_000 });
   },
@@ -597,7 +601,7 @@ export const TestEdit: Story = {
 
     // Selecting a task fills the pane with it.
     const first = rows()[0];
-    const firstTitleElement = first.querySelector('.truncate');
+    const firstTitleElement = first.querySelector('[data-testid="taskList.item.title"]');
     if (!firstTitleElement) {
       throw new Error('Task title element not found.');
     }
@@ -789,7 +793,7 @@ export const TestEditWithoutDescription: Story = {
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
     const first = rows()[0];
-    const firstTitle = first.querySelector('.truncate')!.textContent;
+    const firstTitle = first.querySelector('[data-testid="taskList.item.title"]')!.textContent;
     first.click();
 
     // The task IS selected — the title proves the pane followed the selection — and the description
@@ -849,7 +853,7 @@ export const TestHierarchy: Story = {
         .filter((row) => !row.closest('[hidden]'))
         .map((row) => ({
           row,
-          title: row.querySelector('.truncate')?.textContent ?? '',
+          title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
           // A leaf IS the `treeitem`, but a branch's `treeitem` is a `display: contents` wrapper
           // around the focusable row — so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
@@ -988,15 +992,13 @@ export const TestHierarchy: Story = {
       }
     }
 
-    // A description lines up under its own title, not under the column — it is indented with the
-    // row and clears the disclosure toggle.
+    // A description lines up under its own title cell (the mnemonic chip leads the title in it), not
+    // under the column — it is indented with the row and clears the disclosure toggle.
     const described = rows().find(({ row }) => row.querySelector('.line-clamp-3'))!;
     const description = described.row.querySelector<HTMLElement>('.line-clamp-3')!;
     const textStart = (element: HTMLElement) =>
       Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
-    await expect(textStart(description)).toEqual(
-      Math.round(described.row.querySelector('.truncate')!.getBoundingClientRect().left),
-    );
+    await expect(textStart(description)).toEqual(Math.round(titleCell(described.row).getBoundingClientRect().left));
   },
 };
 
@@ -1027,7 +1029,8 @@ export const Test: Story = {
     // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
     // child — the same column a row's status toggle occupies.
     const createIcon = firstCell(create);
-    const rowLabel = row.querySelector<HTMLElement>('.truncate');
+    // The title cell, not the title text: the mnemonic chip leads the text within the cell.
+    const rowLabel = titleCell(row);
     // The title input itself: its field root takes no box, so a positional pick would measure nothing.
     const createLabel = create.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]');
     // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading

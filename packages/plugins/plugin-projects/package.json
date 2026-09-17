@@ -92,6 +92,11 @@
       "types": "./dist/types/src/types/ProjectOperation.d.ts",
       "import": "./dist/lib/ProjectOperation.mjs"
     },
+    "./ProjectView": {
+      "source": "./src/types/ProjectView.ts",
+      "types": "./dist/types/src/types/ProjectView.d.ts",
+      "import": "./dist/lib/ProjectView.mjs"
+    },
     "./ProjectsEvents": {
       "source": "./src/types/ProjectsEvents.ts",
       "types": "./dist/types/src/types/ProjectsEvents.d.ts",
@@ -165,12 +170,12 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
+    "@dxos/react-ui-trace": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

@@ -36,18 +36,23 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
       );
 
       const scoped = parents && parents.length > 0 ? selected.select(Filter.childOf(parents)) : selected;
+      // One past the limit, so a full page can be told from a page that happens to end on it.
+      const probe = scoped.limit(limit + 1);
       // Queues must be scoped to the current space: `from({ allFeedsFromSpaces: true })` alone has no
       // spaceIds, so the SQL index returns nothing (see EntityMetaIndex.buildSourceCondition).
-      const query = includeQueues ? scoped.limit(limit).from(db, { includeFeeds: true }) : scoped.limit(limit);
+      const query = includeQueues ? probe.from(db, { includeFeeds: true }) : probe;
 
       yield* Database.flush();
-      const results = yield* Database.query(query).run;
+      const matched = yield* Database.query(query).run;
+      const truncated = matched.length > limit;
+      const results = truncated ? matched.slice(0, limit) : matched;
       return {
         results: results.map((object) =>
           includeContent
             ? object
             : { dxn: Obj.getURI(object), typename: Obj.getTypename(object), label: Obj.getLabel(object) },
         ),
+        truncated,
       };
     }),
   ),
