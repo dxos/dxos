@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
@@ -29,8 +30,12 @@ export default Capability.makeModule(
     // The grammar's fixed tiers, configured here rather than declared by an extension: no connector
     // produces their nodes (see `AppGraphBuilder.UrlGrammar`).
     const builder = AppGraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
-      anchorKey: UrlPath.WORKSPACE_KEY,
-      linkedKey: UrlPath.COMPANION_KEY,
+      urlGrammar: {
+        anchorKey: UrlPath.WORKSPACE_KEY,
+        linkedKey: UrlPath.COMPANION_KEY,
+        linkedRelation: AppNode.companionRelation(),
+      },
+      expandWithChildren: [AppNode.companionRelation()],
     });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());

@@ -173,7 +173,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'postComments',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: (node) => (Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data }) : Option.none()),
         connector: ({ post }, get) => {
           const snapshot = get(Obj.atom(post));

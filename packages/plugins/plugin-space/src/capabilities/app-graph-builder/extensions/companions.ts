@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { Obj, Type } from '@dxos/echo';
@@ -28,7 +27,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       // Object settings plank companion.
       AppGraphBuilder.createExtension({
         id: 'settings',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: AppNodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
@@ -45,7 +44,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       // Related objects plank companion.
       AppGraphBuilder.createExtension({
         id: 'related',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: AppNodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
@@ -62,7 +61,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       // View selected objects companion.
       AppGraphBuilder.createExtension({
         id: 'selectedObjects',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: (node) => {
           // Type/schema node (e.g. a TypeArticle plank): the table's own row selection feeds this
           // companion directly, no view lookup needed.

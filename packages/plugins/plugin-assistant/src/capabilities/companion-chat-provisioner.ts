@@ -12,6 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -147,7 +148,7 @@ export default Capability.makeModule(
         } else if (!plankSubs.has(plankId)) {
           plankSubs.set(
             plankId,
-            registry.subscribe(graph.connections(plankId, AppGraphNode.companionRelation()), () => {
+            registry.subscribe(graph.connections(plankId, AppNode.companionRelation()), () => {
               if (provisionForPlank(plankId, registry.get(variantAtom))) {
                 unsubPlank(plankId);
               }
@@ -186,7 +187,7 @@ const resolveEffectiveVariant = (
   plankId: string,
   preferredVariant: string | undefined,
 ): string | undefined => {
-  const companions = AppGraph.getConnections(graph, plankId, AppGraphNode.companionRelation())
+  const companions = AppGraph.getConnections(graph, plankId, AppNode.companionRelation())
     .filter(DeckSchema.isPlankCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 

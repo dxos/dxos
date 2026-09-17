@@ -40,10 +40,16 @@ const WORKSPACE_B = 'workspaceB';
  * `doc`) -> comments companion (urlKey `comments`, id-less). A second, later-registered extension
  * also declares `doc` to exercise a shared key: both extensions' nodes are reachable via `doc`.
  */
+const COMPANION = Node.relation('companion');
+
 const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const registry = Registry.make();
   // The grammar's fixed tiers are builder config, not extensions (see `GraphBuilder.UrlKeys`).
-  const builder = GraphBuilder.make({ registry, urlGrammar: { anchorKey: 'w', linkedKey: 'companion' } });
+  const builder = GraphBuilder.make({
+    registry,
+    urlGrammar: { anchorKey: 'w', linkedKey: 'companion', linkedRelation: COMPANION },
+    expandWithChildren: [COMPANION],
+  });
 
   const workspaces = Effect.runSync(
     GraphBuilder.createExtension({
@@ -80,7 +86,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const comments = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'comments',
-      relation: Node.companionRelation(),
+      relation: COMPANION,
       match: GraphNodeMatcher.whenNodeType(DOC_TYPE),
       connector: () => Effect.succeed([{ id: '~comments', type: COMMENTS_TYPE }]),
     }),

@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Script from '@dxos/compute/Script';
@@ -18,7 +17,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createTypeExtension({
         id: 'execute',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         type: Script.Script,
         connector: () =>
           Effect.succeed([
@@ -32,7 +31,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createTypeExtension({
         id: 'logs',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         type: Script.Script,
         connector: () =>
           Effect.succeed([

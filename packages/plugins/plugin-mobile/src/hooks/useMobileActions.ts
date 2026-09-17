@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
@@ -77,7 +78,7 @@ const createMobileCompanionActions = (
     open.active[open.active.length - 1] ??
     (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
 
-  const activePlankCompanions = get(graph.connections(activeId, AppGraphNode.companionRelation()))
+  const activePlankCompanions = get(graph.connections(activeId, AppNode.companionRelation()))
     .filter(DeckSchema.isPlankCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 

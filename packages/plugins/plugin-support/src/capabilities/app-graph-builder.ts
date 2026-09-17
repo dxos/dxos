@@ -105,14 +105,14 @@ export default Capability.makeModule(
       // renders the owning plugin's `meta.description`.
       AppGraphBuilder.createExtension({
         id: 'helpCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: AppNodeMatcher.whenEchoObject,
         connector: (_object, get) => Effect.succeed(showHelpCompanions(get) ? [makeHelpCompanion()] : []),
       }),
 
       AppGraphBuilder.createExtension({
         id: 'homeHelpCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: (node) =>
           node.type === SpaceSchema.SPACE_HOME_NODE_TYPE ? Option.some(node) : Option.none<AppGraphNode.Node>(),
         connector: (_node, get) => Effect.succeed(showHelpCompanions(get) ? [makeHelpCompanion()] : []),
@@ -122,7 +122,7 @@ export default Capability.makeModule(
       // Renders the FeedbackPanel via the `deck-companion--help` surface.
       AppGraphBuilder.createExtension({
         id: 'help',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -142,7 +142,7 @@ export default Capability.makeModule(
       // Hidden by default; toggled via the showDiscordCompanion setting.
       AppGraphBuilder.createExtension({
         id: 'discord',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: GraphNodeMatcher.whenRoot,
         connector: (_root, get) => {
           const [settingsAtom] = get(settingsCapabilityAtom);

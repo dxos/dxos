@@ -8,7 +8,6 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -86,7 +85,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createTypeExtension({
         id: 'callCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         type: Channel.Channel,
         connector: (channel, get) =>
           Effect.gen(function* () {
@@ -124,7 +123,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createTypeExtension({
         id: 'callTranscript',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         type: Channel.Channel,
         actions: (channel, get) =>
           Effect.gen(function* () {
@@ -210,7 +209,7 @@ export default Capability.makeModule(
       // plank can hold the call (its Call tab).
       AppGraphBuilder.createTypeExtension({
         id: 'meetingCallCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.gen(function* () {

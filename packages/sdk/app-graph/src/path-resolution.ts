@@ -17,7 +17,6 @@ import { Position } from '@dxos/util';
 
 import * as Graph from './AppGraph.ts';
 import * as GraphBuilder from './AppGraphBuilder.ts';
-import * as Node from './AppGraphNode.ts';
 
 /**
  * A single `(prefix, id?)` pair as parsed by `@dxos/app-toolkit`'s `UrlPath.parse`. Kept as a
@@ -261,7 +260,10 @@ const resolveLinked = async (
   precedingNodeId: string,
   variant: string,
 ): Promise<string | null> => {
-  const relation = Node.companionRelation();
+  const relation = builder.urlGrammar.linkedRelation;
+  if (!relation) {
+    return null;
+  }
   Graph.expandSync(builder.graph, precedingNodeId, relation);
   await GraphBuilder.flush(builder);
 

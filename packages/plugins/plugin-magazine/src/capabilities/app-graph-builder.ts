@@ -8,7 +8,6 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -73,7 +72,7 @@ export default Capability.makeModule(
       // Companion panel: resolve the selected Post under a Magazine node.
       AppGraphBuilder.createExtension({
         id: 'magazinePost',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: (node) =>
           Magazine.instanceOf(node.data)
             ? Option.some({ magazine: node.data as Magazine.Magazine, nodeId: node.id })

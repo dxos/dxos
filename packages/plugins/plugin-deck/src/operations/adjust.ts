@@ -9,8 +9,8 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
@@ -77,7 +77,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           const companions = Function.pipe(
             AppGraph.getNode(graph, input.id),
             Option.map((node) =>
-              AppGraph.getConnections(graph, node.id, AppGraphNode.companionRelation())
+              AppGraph.getConnections(graph, node.id, AppNode.companionRelation())
                 .filter(DeckSchema.isPlankCompanion)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),

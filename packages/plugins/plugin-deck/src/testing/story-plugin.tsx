@@ -241,7 +241,7 @@ const storyGraphBuilder = Capability.inlineModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'storyItemCompanions',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: GraphNodeMatcher.whenNodeType('story-item'),
         connector: (node) =>
           Effect.succeed([

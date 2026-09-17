@@ -51,7 +51,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'atprotoCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: whenPublishable,
         connector: (object) =>
           Effect.succeed([

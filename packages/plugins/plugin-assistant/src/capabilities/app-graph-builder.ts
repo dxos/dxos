@@ -149,7 +149,7 @@ export default Capability.makeModule(
       // Don't show assistant companion when a chat is already the primary object.
       AppGraphBuilder.createExtension({
         id: 'companionChat',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
@@ -187,7 +187,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'invocations',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: GraphNodeMatcher.whenAny(
           AppNodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
           AppNodeMatcher.whenEchoTypeMatches(Instructions.Instructions),
@@ -205,7 +205,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'trace',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

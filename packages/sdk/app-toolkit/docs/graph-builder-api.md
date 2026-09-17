@@ -78,7 +78,7 @@ GraphBuilder.createTypeExtension({
 GraphBuilder.createTypeExtension({
   id: 'item-details',
   type: MyItem.MyItem,
-  relation: Node.companionRelation(),
+  relation: AppNode.companionRelation(),
   connector: (item, get) => Effect.succeed([
     AppNode.makeCompanion({ variant: 'details', label: [...], icon: '...', data: 'details' }),
   ]),
@@ -145,7 +145,7 @@ Node.make({
 
 ### `AppNode.makeCompanion(options)`
 
-Creates a plank-level companion node (a side panel attached to a specific object). Return it from an extension declared with `relation: AppGraphNode.companionRelation()`; under the default `child` relation it shows up in the navtree instead of the companion tabs.
+Creates a plank-level companion node (a side panel attached to a specific object). Return it from an extension declared with `relation: AppNode.companionRelation()`; under the default `child` relation it shows up in the navtree instead of the companion tabs.
 
 ```typescript
 import { AppNode } from '@dxos/app-toolkit';
@@ -161,7 +161,7 @@ AppNode.makeCompanion({
 
 ### `AppNode.makeDeckCompanion(options)`
 
-Creates a deck-level (workspace-wide) companion node. Return it from an extension on the root declared with `relation: AppGraphNode.companionRelation()`.
+Creates a deck-level (workspace-wide) companion node. Return it from an extension on the root declared with `relation: AppNode.companionRelation()`.
 
 ```typescript
 AppNode.makeDeckCompanion({

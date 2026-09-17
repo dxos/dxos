@@ -3,7 +3,7 @@
 //
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import type * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/hooks';
@@ -31,7 +31,7 @@ const isDeckCompanion = (node: AppGraphNode.Node): node is DeckCompanion =>
 
 export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
-  return useConnections(graph, GraphNode.RootId, AppGraphNode.companionRelation())
+  return useConnections(graph, GraphNode.RootId, AppNode.companionRelation())
     .filter(isDeckCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 };

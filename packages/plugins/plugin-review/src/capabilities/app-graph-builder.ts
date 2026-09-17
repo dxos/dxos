@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
@@ -35,7 +34,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'commentsCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: (node) => (getCommentConfig(capabilities, node.data) ? Option.some(node) : Option.none()),
         connector: () =>
           Effect.succeed([

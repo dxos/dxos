@@ -23,6 +23,7 @@ import * as Node from './AppGraphNode.ts';
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'org.dxos.type.example';
+const ATTACHED = Node.relation('attached');
 
 describe('GraphBuilder', () => {
   describe('connector', () => {
@@ -734,9 +735,11 @@ describe('GraphBuilder', () => {
         expect(connections[0].id).to.equal('parent/child');
       });
 
-      test('companions expand with the child relation and stay out of it', async ({ expect }) => {
+      test('relations configured to expand with children do, and stay out of the child relation', async ({
+        expect,
+      }) => {
         const registry = Registry.make();
-        const builder = GraphBuilder.make({ registry });
+        const builder = GraphBuilder.make({ registry, expandWithChildren: [ATTACHED] });
         const graph = builder.graph;
         GraphBuilder.addExtension(builder, [
           ...Effect.runSync(
@@ -749,7 +752,7 @@ describe('GraphBuilder', () => {
           ...Effect.runSync(
             GraphBuilder.createExtension({
               id: 'companions',
-              relation: Node.companionRelation(),
+              relation: ATTACHED,
               match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
               connector: () => Effect.succeed([{ id: '~comments', type: 'other' }]),
             }),
@@ -761,16 +764,14 @@ describe('GraphBuilder', () => {
         await GraphBuilder.flush(builder);
 
         expect(registry.get(graph.connections('parent', 'child')).map(({ id }) => id)).to.deep.equal(['parent/child']);
-        expect(registry.get(graph.connections('parent', Node.companionRelation())).map(({ id }) => id)).to.deep.equal([
+        expect(registry.get(graph.connections('parent', ATTACHED)).map(({ id }) => id)).to.deep.equal([
           'parent/~comments',
         ]);
       });
 
-      test('retention counts child edges as levels and keeps actions and companions with their node', async ({
-        expect,
-      }) => {
+      test('retention counts child edges as levels and keeps attached nodes with their owner', async ({ expect }) => {
         const registry = Registry.make();
-        const builder = GraphBuilder.make({ registry });
+        const builder = GraphBuilder.make({ registry, expandWithChildren: [ATTACHED] });
         const graph = builder.graph;
         GraphBuilder.addExtension(builder, [
           ...Effect.runSync(
@@ -791,7 +792,7 @@ describe('GraphBuilder', () => {
           ...Effect.runSync(
             GraphBuilder.createExtension({
               id: 'companions',
-              relation: Node.companionRelation(),
+              relation: ATTACHED,
               match: GraphNodeMatcher.whenNodeType('item'),
               connector: () => Effect.succeed([{ id: '~comments', type: 'companion' }]),
             }),

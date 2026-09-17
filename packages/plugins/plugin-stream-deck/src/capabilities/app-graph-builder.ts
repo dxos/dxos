@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -19,7 +18,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'deckCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

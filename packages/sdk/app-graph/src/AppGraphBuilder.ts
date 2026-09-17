@@ -85,14 +85,15 @@ export type UrlBinding = { key: string; kind: 'item' | 'singleton'; path: string
  *
  * The two keys are fixed tiers no extension declares (no connector produces their nodes): `anchorKey`
  * establishes the base that following pairs resolve against and is consumed as a rebase
- * (`w/<workspace>`); `linkedKey` addresses a companion of the preceding item
- * (`companion/<variant>`), resolved through the companion relation. `tailSeparator` joins the
+ * (`w/<workspace>`); `linkedKey` addresses a node attached to the preceding item through
+ * `linkedRelation` (`companion/<variant>`). `tailSeparator` joins the
  * fixed-depth node-id segments between a key's static `path` and the object id into one URL id
  * (`db/<slug>+<id>`) so a fixed-depth nested shape needs no resolver.
  */
 export type UrlGrammar = {
   anchorKey?: string;
   linkedKey?: string;
+  linkedRelation?: Node.RelationInput;
   tailSeparator: string;
 };
 
@@ -170,6 +171,8 @@ export type GraphBuilderTraverseOptions = Builder.TraverseOptions<Node.Node, Nod
 /** Construction params: the backing graph's props plus the URL grammar's fixed keys. */
 export type GraphBuilderProps = Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'> & {
   urlGrammar?: UrlGrammarProps;
+  /** Relations expanded whenever a node's children are, beside its actions. */
+  expandWithChildren?: readonly Node.RelationInput[];
   /**
    * Applied to each connector-produced node before it enters the graph. Defaults to stamping the
    * URL segment implied by the producing extension's binding.
@@ -191,8 +194,9 @@ export class GraphBuilder extends Builder.GraphBuilder<
 > {
   /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
   readonly urlGrammar: UrlGrammar;
+  readonly _expandWithChildren: readonly Node.RelationInput[];
 
-  constructor({ registry, urlGrammar, decorateNode, ...graphProps }: GraphBuilderProps = {}) {
+  constructor({ registry, urlGrammar, expandWithChildren = [], decorateNode, ...graphProps }: GraphBuilderProps = {}) {
     const grammar: UrlGrammar = {
       tailSeparator: DEFAULT_TAIL_SEPARATOR,
       ...urlGrammar,
@@ -207,6 +211,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
       store: (hooks, resolvedRegistry) => makeStore(graphProps, hooks, resolvedRegistry),
     });
     this.urlGrammar = grammar;
+    this._expandWithChildren = [Node.actionRelation(), ...expandWithChildren];
   }
 
   /** Hand flushes to the scheduler so a large expansion yields to the main thread. */
@@ -227,14 +232,12 @@ export class GraphBuilder extends Builder.GraphBuilder<
     super._onExpand(id, relation);
 
     if (relation === CHILD_RELATION) {
-      EXPANDED_WITH_CHILDREN.forEach((attached) => Graph.expandSync(this.graph, id, attached));
+      this._expandWithChildren.forEach((attached) => Graph.expandSync(this.graph, id, attached));
     }
   }
 }
 
 const CHILD_RELATION = Graph.relationKey('child');
-
-const EXPANDED_WITH_CHILDREN = [Node.actionRelation(), Node.companionRelation()];
 
 /**
  * How an app node argument's inline descendants are traversed. Actions are qualified and tracked like
@@ -290,13 +293,17 @@ export const make = (params?: GraphBuilderProps): GraphBuilder => new GraphBuild
 /**
  * Creates a GraphBuilder from a serialized pickle string.
  */
-export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGrammar?: UrlGrammarProps): GraphBuilder => {
+export const from = (
+  pickle?: string,
+  registry?: Registry.AtomRegistry,
+  props?: Pick<GraphBuilderProps, 'urlGrammar' | 'expandWithChildren'>,
+): GraphBuilder => {
   if (!pickle) {
-    return make({ registry, urlGrammar });
+    return make({ registry, ...props });
   }
 
   const { nodes, edges } = JSON.parse(pickle);
-  return make({ nodes, edges, registry, urlGrammar });
+  return make({ nodes, edges, registry, ...props });
 };
 
 // The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.

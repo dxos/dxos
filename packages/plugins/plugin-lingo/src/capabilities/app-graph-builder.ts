@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -51,7 +50,7 @@ export default Capability.makeModule(
       // Drill companion on every deck.
       AppGraphBuilder.createExtension({
         id: 'flashcardsCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: (node) => (Vocabulary.instanceOf(node.data) ? Option.some(node) : Option.none()),
         connector: () =>
           Effect.succeed([
@@ -68,7 +67,7 @@ export default Capability.makeModule(
       // Reading companion on anything whose text this plugin can reach.
       AppGraphBuilder.createExtension({
         id: 'readerCompanion',
-        relation: AppGraphNode.companionRelation(),
+        relation: AppNode.companionRelation(),
         match: (node) => (Obj.isObject(node.data) && isReadable(node.data) ? Option.some(node) : Option.none()),
         connector: () =>
           Effect.succeed([
