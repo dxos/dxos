@@ -54,7 +54,10 @@ const SEED_PROGRESS_EVERY = 1_000;
 const FIRST_RESULT_TIMEOUT_MS = 30_000;
 const SHORT_RESULT_RETRIES = 10;
 const MEMORY_ITERATIONS = 3;
-const MEMORY_SAMPLE_INTERVAL_MS = 1;
+// `process.memoryUsage()` reads /proc on every call; at 1 ms the sampler ate enough of the event loop to
+// push the client's 2 s per-object load budget over on a cold 1,000-result query. 10 ms still gives a
+// dozen samples per warm iteration.
+const MEMORY_SAMPLE_INTERVAL_MS = 10;
 // tinybench warms up for 16 iterations by default; a short warm-up keeps the row bounded.
 const WARM_OPTIONS = { time: 1_000, warmupIterations: 3 };
 // Every cold sample reloads a peer; a small fixed sample count keeps the row bounded.
@@ -179,6 +182,9 @@ const forceGc = (): void => {
   exposedGc();
 };
 
+/** Row and memory-pass errors, printed from `afterAll`; tinybench and a failing hook otherwise hide them. */
+const failures: string[] = [];
+
 /** A macrotask turn, so finalization registry callbacks and freed handles settle before sampling. */
 const settle = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
 
@@ -195,20 +201,23 @@ type MemoryRow = {
   retainedRssDelta: number;
 };
 
-const measureMemory = async (label: string, work: () => Promise<void>): Promise<MemoryRow> => {
+/** Resolves to nothing when `work` throws, so the remaining measurements and the table still run. */
+const measureMemory = async (label: string, work: () => Promise<void>): Promise<MemoryRow | undefined> => {
   forceGc();
   await settle();
   const before = process.memoryUsage();
   let peakHeap = before.heapUsed;
   let peakRss = before.rss;
   const sample = () => {
-    const usage = process.memoryUsage();
-    peakHeap = Math.max(peakHeap, usage.heapUsed);
-    peakRss = Math.max(peakRss, usage.rss);
+    peakHeap = Math.max(peakHeap, v8.getHeapStatistics().used_heap_size);
+    peakRss = Math.max(peakRss, process.memoryUsage.rss());
   };
   const timer = setInterval(sample, MEMORY_SAMPLE_INTERVAL_MS);
   try {
     await work();
+  } catch (error) {
+    failures.push(`memory pass, ${label}: ${error instanceof Error ? error.message : String(error)}`);
+    return undefined;
   } finally {
     clearInterval(timer);
   }
@@ -307,7 +316,6 @@ await settle();
 const afterSeed = process.memoryUsage();
 
 let checksum = 0;
-const failures: string[] = [];
 const phaseSamples: Record<string, number[]> = {};
 const record = (phase: string, value: number) => {
   (phaseSamples[phase] ??= []).push(value);
@@ -412,7 +420,7 @@ const collectTraces = async ({ peer, db }: Seeded): Promise<TraceRow[]> => {
 };
 
 const collectMemory = async (): Promise<MemoryRow[]> => {
-  const rows: MemoryRow[] = [];
+  const rows: (MemoryRow | undefined)[] = [];
   for (const shape of SHAPES) {
     rows.push(
       await measureMemory(`warm: ${shape.label} x${MEMORY_ITERATIONS}`, async () => {
@@ -440,7 +448,7 @@ const collectMemory = async (): Promise<MemoryRow[]> => {
       checksum += (await runExpecting(cold.db, SHAPES[0])).length;
     }),
   );
-  return rows;
+  return rows.filter((row) => row !== undefined);
 };
 
 afterAll(async () => {
