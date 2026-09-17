@@ -2,7 +2,7 @@
 '@dxos/echo': minor
 ---
 
-ECHO queries are now evaluated inside SQLite. The host compiles a query plan into one SQL statement over the index tables (`objectMeta`, the new `objectData` body store, `reverseRef`, `ftsIndex`) and no longer loads an Automerge document to answer a query; document rows are shipped as identity only (the client hydrates them itself, as before), feed rows keep their body. The legacy in-memory executor remains selectable with `DX_ECHO_QUERY_EXECUTOR=memory` or `EchoHost({ queryExecutor: 'memory' })` for this release.
+ECHO queries are now evaluated inside SQLite. The host compiles a query plan into one SQL statement over the index tables (`objectMeta`, the new `objectData` body store, `reverseRef`, `ftsIndex`) and no longer loads an Automerge document to answer a query; document rows are shipped as identity only (the client hydrates them itself, as before), feed rows keep their body. The in-memory executor and the `DX_ECHO_QUERY_EXECUTOR` switch are removed.
 
 Storage: `objectData(recordId, body JSONB)` is written by the indexer alongside `objectMeta`; `objectMeta` gains `parentId`/`sourceId`/`targetId`, `reverseRef` gains `propPathNormalized`. Existing databases backfill on the first open after upgrade (queries await the backfill once); SQLite 3.45 or newer is required and asserted at open.
 

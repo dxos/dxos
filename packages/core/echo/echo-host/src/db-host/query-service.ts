@@ -13,21 +13,15 @@ import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
-import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { type AutomergeHost } from '../automerge/index.ts';
-import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
+import { type ExecutionTrace, QueryExecutor } from '../query/index.ts';
 import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
-import type { SpaceStateManager } from './space-state-manager.ts';
 
 export type QueryServiceProps = {
-  indexEngine: IndexEngine;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
-  automergeHost: AutomergeHost;
-  spaceStateManager: SpaceStateManager;
   /**
    * Brings the index up to date and resolves once done. Awaited before a feed-scoped query's first
    * execution so that a query issued right after a feed append reads the just-written items instead
@@ -41,8 +35,6 @@ export type QueryServiceProps = {
    * first execution awaits indexing, as feed-scoped queries always do.
    */
   hasCompleteBodies?: () => Promise<boolean>;
-  /** Evaluation path for every query this service creates; see {@link QueryExecutorMode}. */
-  executor?: QueryExecutorMode;
 };
 
 /**
@@ -228,14 +220,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
     const queryEntry: ActiveQuery = {
       executor: new QueryExecutor({
-        indexEngine: this._params.indexEngine,
         runtime: this._params.runtime,
-        automergeHost: this._params.automergeHost,
         queryId: request.queryId ?? raise(new Error('query id required')),
         query: parsedQuery,
         reactivity: request.reactivity,
-        spaceStateManager: this._params.spaceStateManager,
-        executor: this._params.executor,
       }),
       dirty: true,
       open: false,

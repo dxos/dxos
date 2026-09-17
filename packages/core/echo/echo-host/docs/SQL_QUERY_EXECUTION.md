@@ -509,11 +509,10 @@ What landed, and where it departs from the proposal above.
   one index lags, as during this backfill, does each diff against its own cursors in its own pass.
 - **The query gate** is `QueryServiceProps.hasCompleteBodies`; `QueryServiceImpl` awaits
   `updateIndexes()` before a query's first execution while it is false and caches `true` once seen.
-- **The executor keeps both paths for this release.** `QueryExecutorMode` is `sql` (default) or
-  `memory`, from `EchoHost({ queryExecutor })` or `DX_ECHO_QUERY_EXECUTOR`. The legacy step
-  methods are unchanged; both produce `QueryService.QueryResult[]` and share the `changed` diff.
-  Deleting the memory path is the last step of phase 3 and is deferred until the before/after
-  benchmark has been recorded from a build that carries both.
+- **The in-memory path is deleted.** It went once both benchmark runs were recorded (the `memory`
+  column in `BENCHMARKS.md` comes from `c5294281`). `QueryExecutor` now depends only on the
+  `SqlClient` runtime: it compiles the plan, runs the statement and diffs the rows for `changed`,
+  with no `IndexEngine`, `AutomergeHost` or `SpaceStateManager` dependency.
 - **Three-valued logic** was the one class of bug the differential test found: `NOT (json_type(b, p)
 = 'text' AND ...)` is `NULL` for a missing property, and a `NULL` predicate drops the row where
   the matcher's `!==` keeps it. Every type test is `COALESCE(json_type(...), 'missing')` for this

@@ -673,9 +673,12 @@ enough to suggest the shared handler cost anything. Stage E's case is the deleti
 # Query executor: memory vs sql — `src/query-executor.bench.ts`
 
 The same query workload under the host's two query executors, side by side in one process. The `memory`
-executor loads every candidate document from the Automerge repo and evaluates the plan in JS; the `sql`
-executor compiles the plan into one SQLite statement over the index tables and loads no documents. One peer
-per mode is built with `createPeer({ queryExecutor })`, so both columns come from one run. Run with:
+column was produced by the legacy executor, which loaded every candidate document from the Automerge repo and
+evaluated the plan in JS; the `sql` executor compiles the plan into one SQLite statement over the index tables
+and loads no documents. The legacy executor was deleted in the commit following `c5294281`, so the two runs
+recorded below are the before/after record and the bench now exercises the sql executor only. To reproduce
+the `memory` column, check out `c5294281`, where one peer per mode was built with
+`createPeer({ queryExecutor })` and both columns came from one run. Run with:
 
 ```bash
 DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run query-executor --outputJson /tmp/query-executor.json
@@ -692,7 +695,7 @@ Priority cycles 1..5 and task _i_ is assigned to person _i_ mod 50, so `priority
 assignees are 10 distinct persons. Objects are added in batches of 200 with a flush per batch and a final
 `flush({ indexes: true })` before any row runs.
 
-**Rows**, per mode:
+**Rows** (per mode in the recorded runs):
 
 - `run: type` — `Query.select(Filter.type(BenchTask)).run()`, 2,000 results.
 - `run: type + property` — `Filter.type(BenchTask, { priority: Filter.eq(3) })`, 400 results.
@@ -702,7 +705,7 @@ assignees are 10 distinct persons. Objects are added in batches of 200 with a fl
   result, unsubscribe. Each sample uses a distinct `.limit(n > N)` so the AST differs: the client caches
   `QueryResult` by AST and fires a subscriber only when the result set changes, so re-subscribing to the
   identical query never fires a second time.
-- `cold: reload + open + run type + property` — a file-backed peer per mode is reloaded, its database
+- `cold: reload + open + run type + property` — a file-backed peer is reloaded, its database
   reopened, and the type + property query run once; the reload is inside the timed body (no per-iteration
   hooks in `bench()`), so the query-only phase is also timed inside the row and printed from `afterAll`. 3
   samples + 1 warm-up. A short result (the index source's 2 s per-object load budget) would be re-run and
