@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.ScrollIntoView> = La
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
         ...state,
-        scrollIntoView: input.subject,
+        scrollIntoView: input.subject === undefined ? undefined : { id: input.subject, focus: input.focus },
       }));
     }),
   ),
