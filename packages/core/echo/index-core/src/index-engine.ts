@@ -14,8 +14,6 @@ import type { EntityId, SpaceId, URI } from '@dxos/keys';
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import {
-  type AggregateQuery,
-  type AggregateRow,
   type EntityMeta,
   EntityMetaIndex,
   FtsIndex,
@@ -280,12 +278,6 @@ export class IndexEngine {
     queues?: readonly QueueRef[] | null;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryByTimeRange(query);
-  }
-
-  queryAggregate(
-    query: AggregateQuery,
-  ): Effect.Effect<readonly AggregateRow[], SqlError.SqlError, SqlClient.SqlClient> {
-    return this.#objectMetaIndex.queryAggregate(query);
   }
 
   queryRelations(query: {
