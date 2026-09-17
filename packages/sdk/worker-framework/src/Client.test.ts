@@ -77,10 +77,18 @@ const createWorkerFactory =
     channel.port1.start();
     // A worker closed before it starts never runs, as a terminated one would not.
     let closed = false;
-    channel.port1.addEventListener('close', () => {
-      closed = true;
-      onClose?.();
-    });
+    const markClosed = () => {
+      if (!closed) {
+        closed = true;
+        onClose?.();
+      }
+    };
+    // Recorded from both ends' `close` calls: browsers do not reliably fire a port's `close` event.
+    const closeClientEnd = channel.port2.close.bind(channel.port2);
+    channel.port2.close = () => {
+      closeClientEnd();
+      markClosed();
+    };
     void started.then(() => {
       if (closed) {
         return;
@@ -90,7 +98,10 @@ const createWorkerFactory =
           postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
           addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
           removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
-          close: () => channel.port1.close(),
+          close: () => {
+            channel.port1.close();
+            markClosed();
+          },
         },
         storageLockKey,
         createRuntime,
