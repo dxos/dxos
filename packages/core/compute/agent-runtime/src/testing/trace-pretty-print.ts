@@ -6,18 +6,17 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { CompleteBlock } from '@dxos/assistant';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Query } from '@dxos/echo';
 
 /**
- * Pretty-prints assistant trace messages to stdout (CompleteBlock, process spawn/exit).
+ * Pretty-prints assistant trace messages to stdout (Trace.CompleteBlock, process spawn/exit).
  */
 export const prettyPrintTraceMessage = (message: Trace.Message): void => {
   for (const event of message.events) {
-    if (Trace.isOfType(CompleteBlock, event)) {
+    if (Trace.isOfType(Trace.CompleteBlock, event)) {
       const tag = message.meta.processName ?? `${message.meta.pid ?? 'unknown'}`;
       console.log(`[${tag}] ${event.data.role.toUpperCase()}`);
       new ConsolePrinter({ tag }).printContentBlock(event.data.block);

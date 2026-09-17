@@ -13,13 +13,7 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
     },
     {
       "path": "../../common/random"
@@ -29,12 +23,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/progress"

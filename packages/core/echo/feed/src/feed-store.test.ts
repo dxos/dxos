@@ -849,6 +849,179 @@ describe('FeedStore server token', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('a position authority reports its high-water mark, a replica does not', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const authority = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* authority.migrate();
+
+      const empty = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(empty.maxPosition).toBe(-1);
+
+      yield* seed(authority, spaceId, feedId, 3);
+      const caughtUp = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 2 });
+      expect(caughtUp.blocks).toHaveLength(0);
+      expect(caughtUp.maxPosition).toBe(2);
+
+      // Same database, so the replica sees the same rows; only the role differs.
+      const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
+      const fromReplica = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(fromReplica.blocks).toHaveLength(3);
+      expect(fromReplica.maxPosition).toBeUndefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // The high-water mark says nothing once the authority has been written past a client's cursor
+  // again, so the response also names the block it holds there.
+  it.effect('a position authority names the block at the requested position', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const authority = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* authority.migrate();
+      yield* seed(authority, spaceId, feedId, 3);
+
+      const atOne = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 1 });
+      expect(atOne.cursorBlock).toEqual({ feedId, actorId: ALICE, sequence: 1 });
+      expect(atOne.blocks.map((block) => block.position)).toEqual([2]);
+
+      // Nothing at 5: a client with its cursor there is caching a position this store never had.
+      const beyond = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 5 });
+      expect(beyond.cursorBlock).toBeNull();
+
+      // Before the first pull there is no cursor to check.
+      const fromStart = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: -1 });
+      expect(fromStart.cursorBlock).toBeUndefined();
+
+      const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
+      const fromReplica = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 1 });
+      expect(fromReplica.cursorBlock).toBeUndefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // A position only ever reaches a replica from its authority, so when the authority hands out a
+  // position the replica already gave another block, it is the replica's copy that is stale.
+  it.effect('a replica adopts the positions it is handed and clears whatever else held them', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const replica = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* replica.migrate();
+
+      const pulled = yield* replica.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [replicatedBlock(feedId, 'bob', 0, 0), replicatedBlock(feedId, 'bob', 1, 1)],
+      });
+      expect(pulled.displaced).toBe(0);
+
+      // The authority now places another block at 1 and bob's second block at 5.
+      const reissued = yield* replica.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [replicatedBlock(feedId, 'carol', 0, 1), replicatedBlock(feedId, 'bob', 1, 5)],
+      });
+      expect(reissued.displaced).toBe(1);
+      // Carol's block had already cleared bob's second block out of 1 when its new position arrived,
+      // so the batch reports one displacement rather than a move.
+      expect(reissued.moved).toBe(0);
+
+      const { blocks } = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(blocks.map((block) => [block.actorId, block.sequence, block.position])).toEqual([
+        ['bob', 0, 0],
+        ['carol', 0, 1],
+        ['bob', 1, 5],
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // A re-issued position that lands in a slot nobody holds displaces nothing, so the move of the
+  // block itself is the only sign the authority's ordering changed.
+  it.effect('a replica counts a block handed a new position as moved even into an empty slot', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const replica = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* replica.migrate();
+
+      yield* replica.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [replicatedBlock(feedId, 'bob', 0, 0), replicatedBlock(feedId, 'bob', 1, 1)],
+      });
+
+      const moved = yield* replica.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [replicatedBlock(feedId, 'bob', 1, 7)],
+      });
+      expect(moved).toMatchObject({ displaced: 0, moved: 1 });
+
+      // Handing out the position a block already holds is not a move.
+      const unchanged = yield* replica.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [replicatedBlock(feedId, 'bob', 1, 7)],
+      });
+      expect(unchanged).toMatchObject({ displaced: 0, moved: 0 });
+
+      const { blocks } = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(blocks.map((block) => [block.actorId, block.sequence, block.position])).toEqual([
+        ['bob', 0, 0],
+        ['bob', 1, 7],
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('setPosition takes the authority over a stale local ordering', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const replica = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* replica.migrate();
+
+      yield* replica.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [replicatedBlock(feedId, 'bob', 0, 0), replicatedBlock(feedId, 'bob', 1, 1)],
+      });
+      // Sequences are per feed, so alice's block continues after bob's.
+      const [aliceBlock] = yield* seed(replica, spaceId, feedId, 1);
+      expect(aliceBlock.sequence).toBe(2);
+
+      // The authority answers a push of alice's block with 1, and moves bob's second block to 2.
+      const { displaced, moved } = yield* replica.setPosition({
+        spaceId,
+        blocks: [
+          { feedId, feedNamespace: WellKnownNamespaces.data, actorId: ALICE, sequence: 2, position: 1 },
+          { feedId, feedNamespace: WellKnownNamespaces.data, actorId: 'bob', sequence: 1, position: 2 },
+        ],
+      });
+      expect(displaced).toBe(1);
+      // Alice's block cleared bob's second out of 1 before its own new position was applied.
+      expect(moved).toBe(0);
+
+      const { blocks } = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(blocks.map((block) => [block.actorId, block.sequence, block.position])).toEqual([
+        ['bob', 0, 0],
+        [ALICE, 2, 1],
+        ['bob', 1, 2],
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  const replicatedBlock = (feedId: string, actorId: string, sequence: number, position: number): Block => ({
+    feedId,
+    actorId,
+    sequence,
+    prevActorId: null,
+    prevSequence: null,
+    position,
+    timestamp: 0,
+    data: new Uint8Array([sequence]),
+  });
+
   const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>
     feed.appendLocal(
       Array.from({ length: count }, (_unused, index) => ({

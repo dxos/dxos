@@ -5,7 +5,9 @@
 import React, { type FC } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
+import { Timeline } from '@dxos/react-ui-trace';
+
+import { useExecutionGraph } from './useExecutionGraph.ts';
 
 type ExecutionGraphPanelProps = {
   objects: readonly Obj.Unknown[];

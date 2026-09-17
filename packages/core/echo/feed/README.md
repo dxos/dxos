@@ -42,6 +42,26 @@ The protocol supports partial replication:
   - It is NOT possible to replicate only historical data without subscribing to new data.
   - Logic: `replicate(feedId, fromPosition) -> [fromPosition, Infinity)`
 
+#### Recovery
+
+Positions reach a replica only from the position authority, and the replica treats them as final:
+
+- **Server swap.** Every response carries the serving store's `serverToken`. A token that differs from
+  the one the client recorded means the store was replaced or wiped, so the client drops every position
+  in the namespace and replays it from the start; local blocks are re-pushed and de-duplicated by
+  `(actorId, sequence)`. The first token a client sees over progress it already holds is verified rather
+  than acted on: the cursor steps back one slot, so the next pull re-fetches the block it was pulled from;
+  the same block de-duplicates and progress is kept, a different one is a displacement and replays.
+- **Server rollback.** A store that lost acknowledged rows keeps its token but re-issues their
+  positions. The client notices when a position it is handed is already held by another local block,
+  when a block it already holds arrives at a different position, when a pushed block is placed at or
+  below its pull cursor, or when its cursor is above the store's `maxPosition`. Once other clients
+  have written the store back past the cursor none of those fire, so every response also names the
+  block the store holds at the requested position (`cursorBlock`), and a client holding a different
+  block there replays as well. The displaced or above-mark blocks are unpositioned again (and so
+  re-pushed), the handed position wins, and the pull cursor is rewound so the namespace is replayed —
+  nothing is dropped, and the client never keeps retrying a position the store will not accept.
+
 ### Server Architecture (Cloudflare)
 
 - **Initial Strategy**: **One Durable Object (DO) per Space**.

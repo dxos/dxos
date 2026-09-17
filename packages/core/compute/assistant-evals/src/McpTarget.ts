@@ -50,13 +50,16 @@ export const fromEnv = (value: string | undefined = process.env.DX_EVAL_MCP_TARG
 };
 
 /**
- * The EDGE deployment behind a target, for a run that brings its own identity and space.
+ * The EDGE deployments behind a target, for a run that brings its own identity and space.
  *
- * Only `dev` has one: it is the one EDGE whose test-account hatch admits a throwaway identity, which
- * the run needs before it can mint its token (`McpAuth.mintApiToken`).
+ * Exactly those whose test-account hatch admits a throwaway identity, which the run needs before it
+ * can replicate its space and mint its token (`McpAuth.mintApiToken`). Edge's
+ * `isTestAccountEnvironment` is the authority — dev-like environments plus preview, never staging or
+ * production — so `prod` has no entry and never will.
  */
 const EDGE_URLS: Partial<Record<Target, string>> = {
   dev: 'https://dev.dxos.network',
+  main: 'https://preview.dxos.network',
 };
 
 /** True for the in-process host, the one target whose writes a scorer can read back. */
@@ -71,8 +74,8 @@ export const isLocal = (target: Target): boolean => target === 'local';
  * - `token`: a deployed worker reached with a hand-minted `DX_EVAL_MCP_TOKEN` over a space this
  *   process cannot see; only discovery and latency are measurable.
  *
- * A token, when given, wins: it is the only way to reach `main`/`prod`, and on `dev` it says the
- * caller wants a specific existing session rather than a fresh one.
+ * A token, when given, wins: it is the only way to reach `prod`, and elsewhere it says the caller
+ * wants a specific existing session rather than a fresh one.
  */
 export type Mode = 'local' | 'provisioned' | 'token';
 
@@ -87,12 +90,11 @@ export const mode = (target: Target): Mode => {
 /**
  * The EDGE a `provisioned` run registers against; `DX_EVAL_EDGE_URL` overrides it.
  *
- * `dev` alone, override included: provisioning starts by binding a fresh identity to a test account,
- * which only dev's hatch admits, so pointing another target at an EDGE would only move the failure
- * to the login that refuses it.
+ * The override is gated on the target having an entry rather than applied to any target: on one
+ * without an open hatch it would only move the failure to the login that refuses the bind.
  */
 export const edgeUrl = (target: Target): string | undefined =>
-  target === 'dev' ? (process.env.DX_EVAL_EDGE_URL ?? EDGE_URLS[target]) : undefined;
+  EDGE_URLS[target] == null ? undefined : (process.env.DX_EVAL_EDGE_URL ?? EDGE_URLS[target]);
 
 /** The endpoint to dial, or undefined for the in-process host, whose URL is only known once bound. */
 export const url = (target: Target): string | undefined =>
