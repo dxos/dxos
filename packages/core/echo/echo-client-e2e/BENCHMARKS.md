@@ -667,3 +667,128 @@ even that is not enough to resolve a ten-percent effect on a 300 ms window under
 
 What can be said: reads remain in the tens of nanoseconds and flat in object width, and nothing moved
 enough to suggest the shared handler cost anything. Stage E's case is the deletion, not a number.
+
+---
+
+# Query executor: memory vs sql — `src/query-executor.bench.ts`
+
+The same query workload under the host's two query executors, side by side in one process. The `memory`
+executor loads every candidate document from the Automerge repo and evaluates the plan in JS; the `sql`
+executor compiles the plan into one SQLite statement over the index tables and loads no documents. One peer
+per mode is built with `createPeer({ queryExecutor })`, so both columns come from one run. Run with:
+
+```bash
+DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run query-executor --outputJson /tmp/query-executor.json
+```
+
+`--outputJson` matters: vitest 4's bench reporter prints its per-row table only on a TTY, so a logged run
+shows the `BENCH Summary` ratios and nothing else. `QUERY_EXECUTOR_BENCH_COUNT` overrides N (default 2,000).
+
+**Data.** Per peer, N tasks of a bench-local `BenchTask` type (`title`, `description`, `priority`, `assignee`
+ref) and 50 `TestSchema.Person`. `TestSchema.Task` has no numeric field to filter and order on, hence the
+local type; every field is optional, as in `TestSchema`, because `Filter.eq(n)` is a `Filter<number |
+undefined>` and the typed props overload of `Filter.type` only accepts it against an optional field.
+Priority cycles 1..5 and task _i_ is assigned to person _i_ mod 50, so `priority = 3` matches 400 tasks whose
+assignees are 10 distinct persons. Objects are added in batches of 200 with a flush per batch and a final
+`flush({ indexes: true })` before any row runs.
+
+**Rows**, per mode:
+
+- `run: type` — `Query.select(Filter.type(BenchTask)).run()`, 2,000 results.
+- `run: type + property` — `Filter.type(BenchTask, { priority: Filter.eq(3) })`, 400 results.
+- `run: reference traversal` — the type + property query `.reference('assignee')`, 10 results.
+- `run: order + limit` — `Filter.type(BenchTask)` ordered by `priority desc`, `limit(20)`, 20 results.
+- `reactive first result` — subscribe a reactive query for type + property, wait for the first non-empty
+  result, unsubscribe. Each sample uses a distinct `.limit(n > N)` so the AST differs: the client caches
+  `QueryResult` by AST and fires a subscriber only when the result set changes, so re-subscribing to the
+  identical query never fires a second time.
+- `cold: reload + open + run type + property` — a file-backed peer per mode is reloaded, its database
+  reopened, and the type + property query run once; the reload is inside the timed body (no per-iteration
+  hooks in `bench()`), so the query-only phase is also timed inside the row and printed from `afterAll`. 3
+  samples + 1 warm-up. A short result (the index source's 2 s per-object load budget) would be re-run and
+  counted; none occurred in this run.
+
+Every `run:` row checks its result count and throws on a mismatch, so a row that reports a number returned
+the full set.
+
+## `f261daf7` (dirty tree) — 2026-09-17 — N = 2,000
+
+Node 22.22.2. The bench file is as committed; the tree carries uncommitted changes to `echo-host`,
+`echo-client` and `index-core`. Warm rows: 1 s window, 3 warm-up iterations. Means ± rme, sample count in
+parentheses.
+
+| row                                         |                memory |                   sql |            sql vs memory |
+| ------------------------------------------- | --------------------: | --------------------: | -----------------------: |
+| `run: type` (2,000 results)                 |   294.9 ms ±7.1% (10) |   178.3 ms ±2.6% (10) |                    1.65× |
+| `run: type + property` (400)                |   172.8 ms ±2.3% (10) |    67.6 ms ±2.7% (15) |                    2.56× |
+| `run: reference traversal` (10)             |   192.4 ms ±4.3% (10) | 3,245.5 ms ±6.8% (10) | **0.06×** (16.9× slower) |
+| `run: order + limit` (20)                   |   107.7 ms ±2.9% (10) |    13.0 ms ±2.3% (77) |                    8.28× |
+| `reactive first result` (400)               |   137.8 ms ±1.8% (10) |    41.6 ms ±2.3% (25) |                    3.31× |
+| `cold: reload + open + run type + property` | 7,070.6 ms ±46.6% (3) | 2,311.3 ms ±41.7% (3) |                    3.06× |
+
+Cold phases, timed inside the row (n = 4 including the warm-up; min in parentheses):
+
+| phase                            |           memory |              sql |
+| -------------------------------- | ---------------: | ---------------: |
+| reload + open                    |     811 ms (479) |     596 ms (322) |
+| run type + property, first, cold | 7,114 ms (5,074) | 1,863 ms (1,744) |
+
+### Host traces
+
+Read from `peer.host.queryService.getQueryTraces()` after the first result of a reactive query for each
+shape, on the warm peers. `docsLoaded` and `indexHits` are summed over the trace tree; `exec` is the root
+trace's `executionTime` on the sql path and the sum of the step traces on the memory path, because the
+memory path's root trace is created with `beginTs: 0` and its own `executionTime` reads as the process
+uptime (~290 s in this run).
+
+| mode   | query               | objects | docsLoaded | indexHits |       exec | of which doc load |
+| ------ | ------------------- | ------: | ---------: | --------: | ---------: | ----------------: |
+| memory | type                |   2,000 |      2,000 |     2,000 |   104.5 ms |           64.7 ms |
+| memory | type + property     |     400 |      2,000 |     2,000 |   103.0 ms |           60.7 ms |
+| memory | reference traversal |     400 |      2,000 |     2,000 |   117.5 ms |           77.9 ms |
+| memory | order + limit       |      20 |      2,000 |     2,000 |   101.6 ms |           58.0 ms |
+| sql    | type                |   2,000 |          0 |     2,000 |    13.6 ms |                 0 |
+| sql    | type + property     |     400 |          0 |       400 |     7.6 ms |                 0 |
+| sql    | reference traversal |      10 |          0 |        10 | 3,135.6 ms |                 0 |
+| sql    | order + limit       |      20 |          0 |        20 |     9.8 ms |                 0 |
+
+The memory path's `objects` for the traversal is the host's working set before the client dedupes it (400
+task → assignee hops onto 10 persons); the sql statement groups by target and returns 10.
+
+### Reading
+
+- **The host no longer loads documents on the sql path.** `docsLoaded` is 0 for every shape; on the memory
+  path it is 2,000 for every shape — including the 400-result property filter and the 20-result
+  `order + limit`, because the memory executor's type selector returns all 2,000 index hits, loads each
+  document, and applies the predicate, order and limit in JS. The sql path's `indexHits` of 400 and 20 show
+  the predicate and the limit moved into the statement. Host execution goes from ~100–118 ms (of which
+  58–78 ms is document loading) to 8–14 ms.
+- **What the client sees is smaller than what the host saved, in proportion to the result size.** `run:
+type` returns 2,000 objects and improves 295 → 178 ms: the host's ~90 ms saving is a third of the row, and
+  the rest is the client hydrating 2,000 result objects from their documents, which both modes pay. `order
+  - limit` returns 20 objects and improves 108 → 13 ms (8×), because the memory path still loaded 2,000
+    documents to sort 20. Type + property (400 objects) sits between at 2.6×, and the reactive first result
+    for the same query at 3.3× (138 → 42 ms).
+- **Outgoing reference traversal is 17× slower on the sql path**: 3.2 s against 192 ms, and the host trace
+  places all of it in the statement (`exec` 3,136 ms, no document loads, 10 hits). The compiled traversal
+  joins each source row's `objectData` body through `json_each`, then joins `objectMeta` on the URI split
+  into space and local id by `CASE`/`substr` expressions (`compile.ts`, `#compileTraverse`), so 400 source
+  rows are matched against 2,050 `objectMeta` rows on computed columns. Whether the planner can use the
+  `(spaceId, objectId)` index against those expressions is what `EXPLAIN QUERY PLAN` would show; this run
+  did not capture it (the executor's `DX_TRACE_QUERY_EXECUTION` switch is read from `import.meta.env`,
+  which vitest does not populate from `DX_` variables). The number is the finding; the cause is not
+  established here.
+- **Cold, the sql path is 3× faster but still pays the client's loads**: 2.3 s against 7.1 s inclusive of
+  the reload, 1.86 s against 7.1 s for the query alone. On the memory path the host loads all 2,000 documents
+  from disk before filtering; on the sql path the host loads none, and the 1.7–2.0 s is the reload-heavy
+  client hydrating 400 results. Cold rows carry ±40–47% rme from 3 samples that include one slow first reload;
+  read the min alongside the mean. No cold query came back short in either mode.
+
+### Harness notes
+
+- Unsubscribing from inside a `subscribe` callback hung the first run indefinitely: the callback runs inside
+  the query's own `changed` emission, where a throw from `unsubscribe()` → `_stop()` is routed to the
+  context's error handler rather than the caller, so the bench's promise never settled. The bench resolves
+  from the callback and unsubscribes from the awaiting code.
+- The memory-mode warm rows take ~300 ms per iteration; tinybench's default 16 warm-up iterations added
+  ~5 s per row, so the rows cap warm-up at 3.
