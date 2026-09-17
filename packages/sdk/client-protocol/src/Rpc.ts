@@ -52,9 +52,9 @@ const defectLogLayer = Layer.succeed(DefectLogMiddleware, (handler, { rpc }) =>
   ),
 );
 
-const makeServerLayer = <G, H extends Layer.Layer<never, never, never>>(
+const makeServerLayer = <G, ROut, R>(
   group: G,
-  handlers: H,
+  handlers: Layer.Layer<ROut, never, R>,
   options: ServeOptions | undefined,
 ) => {
   const timingEnabled = RpcTiming.isEnabled(options?.timing);
@@ -114,21 +114,6 @@ export const makeClient = <G>(
   );
 
 /**
- * Re-tags a handler layer for the same rpcs carrying {@link RpcTiming.Middleware}.
- *
- * `Rpc.AddMiddleware` changes the handler tags' type but not the handlers: a timed server dispatches
- * to the very values the untimed one takes, and effect-rpc offers no way to say that in the type.
- */
-const asTimedHandlers = <Rpcs extends Rpc.Any, R>(
-  handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
-): Layer.Layer<
-  | Rpc.ToHandler<Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>>
-  | Rpc.ServicesServer<Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>>,
-  never,
-  R
-> => handlers as never;
-
-/**
  * Effect-native server for an {@link RpcGroup}: a layer that serves `group` with `handlers` over the
  * ambient {@link RpcServer.Protocol} for the life of the layer.
  */
@@ -136,21 +121,7 @@ export const serverLayer = <Rpcs extends Rpc.Any, R>(
   group: RpcGroup.RpcGroup<Rpcs>,
   handlers: Layer.Layer<Rpc.ToHandler<Rpcs> | Rpc.ServicesServer<Rpcs>, never, R>,
   options?: ServeOptions,
-): Layer.Layer<never, never, RpcServer.Protocol | R> => {
-  const serverOptions = {
-    disableTracing: options?.disableTracing ?? true,
-    concurrency: options?.concurrency ?? ('unbounded' as const),
-  };
-  if (!RpcTiming.isEnabled(options?.timing)) {
-    return RpcServer.layer(group, serverOptions).pipe(Layer.provide(handlers));
-  }
-
-  return RpcServer.layer(RpcTiming.applyMiddleware(group), serverOptions).pipe(
-    Layer.provide(
-      Layer.merge(asTimedHandlers(handlers), RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing))),
-    ),
-  );
-};
+): Layer.Layer<never, never, RpcServer.Protocol | R> => makeServerLayer(group, handlers, options);
 
 export type GroupServer = {
   open(): Promise<void>;

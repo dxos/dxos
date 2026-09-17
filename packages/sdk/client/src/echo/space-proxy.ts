@@ -135,6 +135,9 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private _initializing = false;
 
+  /** Set by a failed initialization, whose rejected triggers the next attempt re-arms. */
+  private _initializationFailed = false;
+
   /**
    * @internal
    */
@@ -356,7 +359,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
     const isFirstTimeInitializing =
-      space.state === SpaceState.SPACE_READY && !(this._initialized || this._initializing);
+      space.state === SpaceState.SPACE_READY &&
+      !(this._initialized || this._initializing) &&
+      // A failed initialization starts over when the space returns to ready, not on every re-sent ready update.
+      (!this._initializationFailed || this._data.state !== SpaceState.SPACE_READY);
     const isReopening =
       this._data.state !== SpaceState.SPACE_READY && space.state === SpaceState.SPACE_READY && !this._databaseOpen;
     const shouldReset = this._databaseOpen && space.state === SpaceState.SPACE_REQUIRES_MIGRATION;
@@ -418,6 +424,11 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
 
     this._ctx = new Context({ parent: ctx });
+    if (this._initializationFailed) {
+      this._initializationFailed = false;
+      this._databaseInitialized.reset();
+      this._initializationComplete.reset();
+    }
 
     log('initializing...', { space: this.key });
     this._initializing = true;
@@ -429,6 +440,9 @@ export class SpaceProxy implements Space, CustomInspectable {
       const error = err instanceof Error ? err : new Error(String(err));
       this._databaseInitialized.throw(error);
       this._initializationComplete.throw(error);
+      // Starts over when the space next returns to ready (see `_processSpaceUpdate`).
+      this._initializationFailed = true;
+      this._initializing = false;
       throw err;
     }
 
@@ -444,7 +458,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _initializeDb(ctx: Context): Promise<void> {
     this._databaseOpen = true;
 
-    {
+    try {
       const automergeRoot = this._data.pipeline?.directoryUrl;
       if (automergeRoot !== undefined) {
         await this._db.setSpaceRoot(automergeRoot);
@@ -452,6 +466,10 @@ export class SpaceProxy implements Space, CustomInspectable {
         log.warn('no automerge root found for space', { spaceId: this.id });
       }
       await this._db.open(ctx);
+    } catch (err) {
+      // Left set, a failed open would also block the reopen path, which requires a closed database.
+      this._databaseOpen = false;
+      throw err;
     }
 
     log('ready');

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
 import * as Client from './Client.ts';
@@ -76,10 +77,18 @@ const createWorkerFactory =
     channel.port1.start();
     // A worker closed before it starts never runs, as a terminated one would not.
     let closed = false;
-    channel.port1.addEventListener('close', () => {
-      closed = true;
-      onClose?.();
-    });
+    const markClosed = () => {
+      if (!closed) {
+        closed = true;
+        onClose?.();
+      }
+    };
+    // Recorded from both ends' `close` calls: browsers do not reliably fire a port's `close` event.
+    const closeClientEnd = channel.port2.close.bind(channel.port2);
+    channel.port2.close = () => {
+      closeClientEnd();
+      markClosed();
+    };
     void started.then(() => {
       if (closed) {
         return;
@@ -89,7 +98,10 @@ const createWorkerFactory =
           postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
           addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
           removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
-          close: () => channel.port1.close(),
+          close: () => {
+            channel.port1.close();
+            markClosed();
+          },
         },
         storageLockKey,
         createRuntime,
@@ -356,8 +368,10 @@ describe('Connection multi-client', () => {
       const hub = createHub();
       const keys = uniqueKeys();
 
-      const startError = new Error('TEST: migration failed', { cause: new Error('TEST: wasm trap') });
-      startError.name = name;
+      const startError = new BaseError(name, {
+        message: 'TEST: migration failed',
+        cause: new Error('TEST: wasm trap'),
+      });
       let workersCreated = 0;
       let workersClosed = 0;
       const createWorker = createWorkerFactory(keys.storageLockKey, {
@@ -441,7 +455,7 @@ describe('Connection multi-client', () => {
     const hub = createHub();
     const keys = uniqueKeys();
 
-    const startError = new Error('TEST: migration failed');
+    const startError = new BaseError('StartError', { message: 'TEST: migration failed' });
     let shutdownFirstWorker: (() => void) | undefined;
     let workersCreated = 0;
     const createWorker = createWorkerFactory(keys.storageLockKey, {

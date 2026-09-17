@@ -5,13 +5,24 @@
 import { Role } from '../../../common/index.ts';
 import { SurfaceContext } from './context.ts';
 import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent.tsx';
-import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug.tsx';
+import {
+  type MountedSurface,
+  getMountedSurfaces,
+  getSelectedSurfaceRole,
+  isSurfaceDebugEnabled,
+  setSelectedSurfaceRole,
+  setSurfaceDebug,
+  useMountedSurfaces,
+  useSelectedSurfaceRole,
+} from './SurfaceDebug.tsx';
 import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics.ts';
 import {
   SurfaceProfilerProvider,
+  aggregateSurfaceProfilerStats,
   useSurfaceProfilerCallback,
   useSurfaceProfilerClear,
   useSurfaceProfilerEntries,
+  useSurfaceProfilerSnapshot,
   useSurfaceProfilerStats,
 } from './SurfaceProfilerContext.tsx';
 import {
@@ -54,11 +65,24 @@ export namespace Surface {
   export const useProfilerCallback = useSurfaceProfilerCallback;
   export const useProfilerEntries = useSurfaceProfilerEntries;
   export const useProfilerStats = useSurfaceProfilerStats;
+  export const useProfilerSnapshot = useSurfaceProfilerSnapshot;
+  export const aggregateProfilerStats = aggregateSurfaceProfilerStats;
   export const useProfilerClear = useSurfaceProfilerClear;
 
   export type Metric = SurfaceMetric;
   export const useMetrics = useSurfaceMetrics;
   export const clearMetrics = () => surfaceMetrics.clear();
+  export type Mounted = MountedSurface;
+  /** The surfaces mounted right now (dev builds), without subscribing. */
+  export const getMounted = getMountedSurfaces;
+  /** The mounted surfaces, updated on mount and unmount. */
+  export const useMounted = useMountedSurfaces;
+  /** Selects a role's mounted surfaces for the highlight overlay and the Surfaces card. */
+  export const select = setSelectedSurfaceRole;
+  export const getSelected = getSelectedSurfaceRole;
+  export const useSelected = useSelectedSurfaceRole;
+  /** The current metrics without subscribing; see `useProfilerSnapshot`. */
+  export const getMetrics = (): SurfaceMetric[] => [...surfaceMetrics.getSnapshot()];
 }
 
 export type { SurfaceProfilerEntry, SurfaceProfilerStats } from './SurfaceProfilerContext.tsx';

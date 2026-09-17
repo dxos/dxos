@@ -27,7 +27,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
-import { makeInProcessClient } from '@dxos/protocols';
+import { WorkerRuntimeStartError, makeInProcessClient } from '@dxos/protocols';
 import {
   ContactsService,
   DataService,
@@ -136,7 +136,7 @@ export const makeWorkerRuntime = ({
   automaticallyConnectWebrtc = true,
   sqliteLayer,
   memorySignalManagerContext,
-}: WorkerRuntimeOptions): Effect.Effect<WorkerRuntimeService, Error, Scope.Scope> =>
+}: WorkerRuntimeOptions): Effect.Effect<WorkerRuntimeService, WorkerRuntimeStartError, Scope.Scope> =>
   Effect.gen(function* () {
     // Held so effects that outlive this construction — a session finalizer, which the framework runs
     // when it closes a session scope — still reach the controller.
@@ -272,7 +272,10 @@ export const makeWorkerRuntime = ({
       Effect.catchCause((cause) =>
         Effect.gen(function* () {
           const squashed = Cause.squash(cause);
-          const error = squashed instanceof Error ? squashed : new Error(String(squashed), { cause: squashed });
+          const error = new WorkerRuntimeStartError({
+            message: squashed instanceof Error ? squashed.message : String(squashed),
+            cause: squashed,
+          });
           ready.wake(error);
           log.error('starting', error);
           yield* closeStack;
@@ -348,8 +351,9 @@ export const makeWorkerRuntime = ({
 /**
  * Layer providing the {@link WorkerRuntime} service; the runtime lives as long as the layer.
  */
-export const layerWorkerRuntime = (options: WorkerRuntimeOptions): Layer.Layer<WorkerRuntime, Error> =>
-  Layer.effect(WorkerRuntime, makeWorkerRuntime(options));
+export const layerWorkerRuntime = (
+  options: WorkerRuntimeOptions,
+): Layer.Layer<WorkerRuntime, WorkerRuntimeStartError> => Layer.effect(WorkerRuntime, makeWorkerRuntime(options));
 
 const DB_NAME = 'DXOS';
 

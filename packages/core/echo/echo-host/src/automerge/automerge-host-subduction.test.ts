@@ -24,7 +24,6 @@ import { range } from '@dxos/util';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing/index.ts';
 import { AutomergeHost } from './automerge-host.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
-import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
 // (limited concurrency, signal-server timing). Re-enable once the suite
@@ -708,45 +707,6 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
         .toEqual('mesh-authorized');
     });
 
-    // Neither device is authorized when the connection opens, so collection sync has no interested peer; authorizing
-    // afterwards must start it without the peer being offered again.
-    test(
-      'collection sync starts when devices are authorized after connecting',
-      { timeout: 10_000 },
-      async ({ expect }) => {
-        const spaceKey = PublicKey.random();
-        const spaceId = await createIdFromSpaceKey(spaceKey);
-        const teleportBuilder = new TeleportBuilder();
-        onTestFinished(() => teleportBuilder.destroy());
-
-        const rt1 = createRuntime();
-        onTestFinished(() => rt1.dispose());
-        const host1 = await setupMeshAutomergeHost({ runtime: rt1.runtime, spaceKey, teleportBuilder });
-        const rt2 = createRuntime();
-        onTestFinished(() => rt2.dispose());
-        const host2 = await setupMeshAutomergeHost({ runtime: rt2.runtime, spaceKey, teleportBuilder });
-
-        const handle = await host2.host.createDoc({ text: 'late-authorized' });
-        await host2.host.flush(Context.default());
-        const collectionId = deriveCollectionIdFromSpaceId(spaceId);
-        await host1.host.updateLocalCollectionState(collectionId, []);
-        await host2.host.updateLocalCollectionState(collectionId, [handle.documentId]);
-
-        await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
-        const updates: CollectionId[] = [];
-        const unsubscribe = host1.host.collectionStateUpdated.on(({ collectionId }) => {
-          updates.push(collectionId);
-        });
-        onTestFinished(() => unsubscribe());
-        await sleep(POLICY_NEGATIVE_DELAY_MS);
-        expect(updates).toEqual([]);
-
-        await host1.meshReplicator.authorizeDevice(spaceId, host2.teleport.peerId);
-        await host2.meshReplicator.authorizeDevice(spaceId, host1.teleport.peerId);
-        await expect.poll(() => updates, { timeout: 5_000 }).toContain(collectionId);
-      },
-    );
-
     // Two hosts in the same space, but neither side `authorizeDevice`s the other.
     // `MeshReplicatorConnection.shouldAdvertise` consults `_authorizedDevices`, which
     // is empty → `_subductionPolicy.authorizeFetch` rejects on the holder → fetcher
@@ -804,9 +764,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       using probe = host1.host.acquireDoc<{ text: string }>(handle.documentId);
       expect(probe.state).to.not.equal('ready');
 
-      // `authorizeDevice` widens the connection's auth scope, which under subduction schedules
-      // `shareConfigChanged()` on each host. A no-op commit on the holder gives the fetcher a
-      // fresh round, since the holder's reset does not clear the fetcher's failed entry.
+      // `authorizeDevice` schedules `shareConfigChanged()` on each side, which clears the fetcher's
+      // stuck "all-failed" entry; the no-op commit on the holder drives a fresh round.
       await host1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host2.teleport.peerId);
       await host2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host1.teleport.peerId);
       await host2.host.createDoc({ kick: true });
@@ -893,6 +852,52 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       expect(progress.state).to.not.equal('ready');
       expect(progress.doc()?.text).to.be.undefined;
     });
+
+    // Each space has its own teleport connection, and the mesh replicator multiplexes a peer's
+    // connections, so a second space arriving mid-fetch widens the scope of a live connection.
+    test(
+      'a second space connecting to the same peer mid-fetch does not stall the fetch',
+      { timeout: 10_000 },
+      async ({ expect }) => {
+        const spaceA = PublicKey.random();
+        const spaceB = PublicKey.random();
+        const teleportBuilder = new TeleportBuilder();
+        onTestFinished(() => teleportBuilder.destroy());
+
+        const spaceADocId = parseAutomergeUrl(generateAutomergeUrl()).documentId;
+        const spaceBDocId = parseAutomergeUrl(generateAutomergeUrl()).documentId;
+        const spaceLookup = (documentId: string): PublicKey | undefined =>
+          documentId === spaceADocId ? spaceA : documentId === spaceBDocId ? spaceB : undefined;
+
+        const rt1 = createRuntime();
+        onTestFinished(() => rt1.dispose());
+        const host1 = await setupMeshAutomergeHost({ runtime: rt1.runtime, spaceLookup, teleportBuilder });
+        const rt2 = createRuntime();
+        onTestFinished(() => rt2.dispose());
+        const host2 = await setupMeshAutomergeHost({ runtime: rt2.runtime, spaceLookup, teleportBuilder });
+
+        await host2.host.createDoc(Automerge.from({ text: 'space-A-doc' }), {
+          documentId: spaceADocId,
+          preserveHistory: true,
+        });
+        await host2.host.createDoc(Automerge.from({ text: 'space-B-doc' }), {
+          documentId: spaceBDocId,
+          preserveHistory: true,
+        });
+        await host2.host.flush(Context.default());
+        await waitForSubductionSave();
+
+        await connectMeshPeers(teleportBuilder, host1, host2, spaceA, /* authorized */ true);
+        const spaceADoc = host1.host.loadDoc<{ text: string }>(Context.default(), spaceADocId, { timeout: 3_000 });
+        await connectMeshPeers(teleportBuilder, host1, host2, spaceB, /* authorized */ true);
+
+        expect((await spaceADoc)?.doc()?.text).toEqual('space-A-doc');
+        const spaceBDoc = await host1.host.loadDoc<{ text: string }>(Context.default(), spaceBDocId, {
+          timeout: 3_000,
+        });
+        expect(spaceBDoc?.doc()?.text).toEqual('space-B-doc');
+      },
+    );
   });
 });
 

@@ -152,7 +152,7 @@ export const encodeError = (error: unknown): SerializedError => {
       cause: value.cause === undefined || path.has(value.cause) ? undefined : encode(value.cause, path),
       errors:
         value instanceof AggregateError
-          ? value.errors.filter((inner) => !path.has(inner)).map((inner) => encode(inner, path))
+          ? value.errors.map((inner) => (path.has(inner) ? { name: 'Error', message: '<cycle>' } : encode(inner, path)))
           : undefined,
     };
   };

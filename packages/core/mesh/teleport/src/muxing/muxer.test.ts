@@ -8,7 +8,6 @@ import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
-import { ProtocolError } from '@dxos/protocols';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
   TestRpcRequestSchema,
@@ -139,36 +138,6 @@ describe('Muxer', () => {
     await sleep(500);
     expect(received).toEqual(Array.from({ length: count + later }, (_, index) => index));
   }, 15_000);
-
-  test('data that arrives before the remote opened the channel closes the muxer', async () => {
-    const peer1 = new Muxer();
-    const peer2 = new Muxer();
-    onTestFinished(async () => {
-      await peer1.destroy();
-      await peer2.destroy();
-    });
-    // Drops peer2's first frame, its OpenChannel.
-    let dropped = false;
-    const dropFirstFrame = new Transform({
-      transform: (chunk, _encoding, callback) => {
-        if (dropped) {
-          callback(null, chunk);
-          return;
-        }
-        dropped = true;
-        callback();
-      },
-    });
-    peer1.stream.pipe(peer2.stream);
-    peer2.stream.pipe(dropFirstFrame).pipe(peer1.stream);
-
-    const closed = peer1.afterClosed.waitForCount(1);
-    const port2 = await peer2.createPort('example.extension/rpc');
-    await port2.send(new Uint8Array([1]));
-    await peer1.createPort('example.extension/rpc');
-
-    expect(await asyncTimeout(closed, 2_000)).toBeInstanceOf(ProtocolError);
-  });
 
   test('a write made after the remote opens the channel waits on the link', async () => {
     const peer1 = new Muxer();

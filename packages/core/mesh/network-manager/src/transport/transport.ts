@@ -34,7 +34,8 @@ export interface Transport {
   /**
    * Transport-specific stats.
    */
-  getStats(): Promise<TransportStats>;
+  /** Undefined when there is nothing to sample, such as a transport that has closed. */
+  getStats(): Promise<TransportStats | undefined>;
 
   /**
    * Transport-specific connection details.

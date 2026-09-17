@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 import * as EffectStream from 'effect/Stream';
-import { describe, expect, onTestFinished, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -267,14 +267,52 @@ describe('RepoProxy', () => {
     }
   });
 
-  test('a document the host refuses to create settles instead of staying pending', { timeout: 5_000 }, async () => {
+  test('flush throws while the host refuses to create a document', { timeout: 5_000 }, async () => {
     const { dataService } = await setup(undefined, (props) => new RefusingDataService(props));
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+
+    // Closing settles the handle rather than leaving `whenReady` pending forever.
+    await clientRepo.close();
+    await expect(handle.whenReady()).rejects.toThrow('document creation refused');
+  });
+
+  test('a document the host failed to create is created by the next flush', { timeout: 5_000 }, async () => {
+    let refusing: RefusingDataService | undefined;
+    const { dataService, host } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
+    invariant(refusing);
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
 
-    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
-    await expect(handle.whenReady()).rejects.toThrow();
+    const handle = clientRepo.create<{ text: string }>({ text: 'retried' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+
+    refusing.refuse = false;
     await clientRepo.flush();
+    await handle.whenReady();
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), handle.url!);
+    invariant(hostHandle);
+    expect(hostHandle.doc()?.text).toEqual('retried');
+  });
+
+  test('a document deleted before the host created it is not requested again', { timeout: 5_000 }, async () => {
+    let refusing: RefusingDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
+    invariant(refusing);
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'deleted' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+    const requests = refusing.requests;
+
+    handle.delete();
+    refusing.refuse = false;
+    await clientRepo.flush();
+    expect(refusing.requests).toEqual(requests);
   });
 
   test('document mutation persists with `flush`', async () => {
@@ -529,36 +567,6 @@ describe('RepoProxy', () => {
     await expect.poll(() => hostHandle.doc()?.text, { timeout: 5000 }).toEqual(text);
   });
 
-  test('a document that stops accepting host updates is rebuilt from the host copy', async () => {
-    const { droppable, host, clientHandle } = await setupWithDroppableSubscription();
-    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
-    invariant(hostHandle);
-    await hostHandle.waitUntilReady();
-
-    // Throws on every update while the handle holds this document, as one does once a call into its
-    // wasm runtime has trapped.
-    const unusable = clientHandle.doc();
-    const integrate = clientHandle._integrateHostUpdate.bind(clientHandle);
-    vi.spyOn(clientHandle, '_integrateHostUpdate').mockImplementation((mutation) => {
-      if (clientHandle.doc() === unusable) {
-        clientHandle._markForRebuild();
-        throw new Error('recursive use of an object detected which would lead to unsafe aliasing in rust');
-      }
-      integrate(mutation);
-    });
-
-    hostHandle.change((doc: { text: string }) => {
-      doc.text = 'after the trap';
-    });
-    await expect.poll(() => clientHandle.doc().text, { timeout: 5000 }).toEqual('after the trap');
-
-    hostHandle.change((doc: { text: string }) => {
-      doc.text = 'and after that';
-    });
-    await expect.poll(() => clientHandle.doc().text, { timeout: 5000 }).toEqual('and after that');
-    expect(droppable.subscribeCount).toEqual(2);
-  });
-
   test('flush during a dropped subscription delivers the write', async () => {
     const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
 
@@ -600,8 +608,16 @@ const setupWithDroppableSubscription = async () => {
 
 /** Fails every document creation, as a host that is gone or refuses the call does. */
 class RefusingDataService extends DataServiceImpl {
-  override ['DataService.createDocument'](): Effect.Effect<DataService.CreateDocumentResponse, Error> {
-    return Effect.fail(new Error('document creation refused'));
+  'refuse' = true;
+  'requests' = 0;
+
+  override ['DataService.createDocument'](
+    request: DataService.CreateDocumentRequest,
+  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
+    this.requests++;
+    return this.refuse
+      ? Effect.fail(new Error('document creation refused'))
+      : super['DataService.createDocument'](request);
   }
 }
 

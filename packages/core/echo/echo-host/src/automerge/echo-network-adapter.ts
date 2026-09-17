@@ -50,8 +50,8 @@ export type EchoNetworkAdapterProps = {
   /** Invoked when a replicator connection opens (including after reconnect). */
   onConnectionOpen?: () => void;
   /**
-   * Handles a connection whose auth scope changed. Without it the peer is dropped and offered again, which classic
-   * automerge-repo sync needs to re-announce documents.
+   * Invoked when a connected peer gains access to more spaces. Defaults to re-announcing the peer,
+   * which is how a classical sync network re-evaluates its share policy.
    */
   onConnectionAuthScopeChanged?: (peerId: PeerId) => void;
   monitor?: NetworkDataMonitor;
@@ -139,10 +139,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     if (entry) {
       this._onConnectionAuthScopeChanged(entry.connection);
     }
-  }
-
-  onPeerBound(peerId: PeerId): void {
-    this._connections.get(peerId)?.connection.onPeerBound?.();
   }
 
   @synchronized

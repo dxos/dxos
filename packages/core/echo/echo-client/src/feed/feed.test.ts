@@ -13,12 +13,12 @@ import { Event, sleep } from '@dxos/async';
 import { Database, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { EID, PublicKey } from '@dxos/keys';
-import { type LogConfig, type LogEntry, log } from '@dxos/log';
 import { FeedProtocol, RpcClosedError, makeInProcessClient } from '@dxos/protocols';
-import { FeedService } from '@dxos/protocols/rpc';
+import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
-import { EchoTestBuilder } from '../testing/index.ts';
+import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
 
 describe('Feed', () => {
   let builder: EchoTestBuilder;
@@ -389,15 +389,6 @@ describe('Feed', () => {
       };
       db._setFeedService(await makeFeedClient(closingHandlers));
 
-      const lostCounts: unknown[] = [];
-      onTestFinished(
-        log.addProcessor((_config: LogConfig, entry: LogEntry) => {
-          if (entry.message === 'feed handle disposed with writes its closed endpoint could not send') {
-            lostCounts.push(entry.computedContext?.pending);
-          }
-        }),
-      );
-
       const feed = db.add(Feed.make({ name: 'closing' }));
       // 16 objects span two 15-object append chunks: the first commits, the second meets the closed endpoint.
       const people = Array.from({ length: 16 }, (_, i) => Obj.make(TestSchema.Person, { name: `person-${i}` }));
@@ -407,9 +398,108 @@ describe('Feed', () => {
         RpcClosedError,
       );
 
-      await db.evictFeedHandle(feed);
       // The lost chunk's one object and the refused append; the committed chunk is not counted.
-      expect(lostCounts).toEqual([2]);
+      await expect(db.evictFeedHandle(feed)).rejects.toThrow('disposed with 2 unsent writes');
+    });
+
+    test('flush throws when writes made before the feed service disconnects cannot be sent', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let connected = true;
+      const handlers: FeedService.Handlers = {
+        ...peer.host.feedService,
+        'FeedService.insertIntoFeed': (...args) =>
+          connected ? peer.host.feedService['FeedService.insertIntoFeed'](...args) : Effect.fail(new RpcClosedError()),
+      };
+      db._setFeedService(await makeFeedClient(handlers));
+      const feed = db.add(Feed.make({ name: 'disconnecting' }));
+      await db.flush();
+
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      connected = false;
+      await expect(db.flush()).rejects.toThrow(RpcClosedError);
+    });
+
+    test('flush throws while an append keeps failing', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      db._setFeedService(await makeFeedClient(refusingHandlers(peer.host.feedService, 'alice')));
+
+      const feed = db.add(Feed.make({ name: 'refusing' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'alice' }), { to: feed });
+      await expect(db.flush()).rejects.toThrow('alice refused');
+    });
+
+    test('a failed append does not retry an object deleted while it was in flight', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'deleted' }));
+      await db.flush();
+
+      let inserts = 0;
+      const sent = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<void>();
+      const realHandlers = peer.host.feedService;
+      db._setFeedService(
+        await makeFeedClient({
+          ...realHandlers,
+          'FeedService.deleteFromFeed': (...args) => realHandlers['FeedService.deleteFromFeed'](...args),
+          'FeedService.insertIntoFeed': (...args) => {
+            inserts++;
+            if (inserts > 1) {
+              return realHandlers['FeedService.insertIntoFeed'](...args);
+            }
+            sent.resolve();
+            return Effect.promise(() => release.promise).pipe(Effect.andThen(Effect.fail(new Error('john refused'))));
+          },
+        }),
+      );
+
+      const john = db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      await sent.promise;
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri);
+      await db._tryGetFeedHandle(feedUri)?.delete([john.id]);
+      release.resolve();
+
+      await db.flush();
+      expect(inserts).toEqual(1);
+    });
+
+    test('a successful append leaves the error of a failed append that awaits its retry', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      db._setFeedService(await makeFeedClient(refusingHandlers(peer.host.feedService, 'alice')));
+
+      const feed = db.add(Feed.make({ name: 'refusing' }));
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'alice' })]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'bob' })]);
+
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri);
+      expect(db._tryGetFeedHandle(feedUri)?.error?.message).toEqual('alice refused');
+    });
+
+    test('the flush after a feed service swap throws for writes the retired handle could not send', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'swapped' }));
+      await db.flush();
+
+      db._updateServices(
+        await makeServiceClients(peer, {
+          ...peer.host.feedService,
+          'FeedService.insertIntoFeed': () => Effect.fail(new RpcClosedError()),
+        }),
+      );
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      db._updateServices(await makeServiceClients(peer, peer.host.feedService));
+
+      await expect(db.flush()).rejects.toThrow('disposed with 1 unsent writes');
+      await db.flush();
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {
@@ -659,4 +749,26 @@ const makeFeedClient = async (handlers: FeedService.Handlers): Promise<FeedServi
   return EffectEx.runPromise(
     makeInProcessClient(FeedService.Rpcs, handlers).pipe(Effect.provideService(Scope.Scope, scope)),
   );
+};
+
+/** Fails every insert carrying an object with `name`, passing the rest to `handlers`. */
+const refusingHandlers = (handlers: FeedService.Handlers, name: string): FeedService.Handlers => ({
+  ...handlers,
+  'FeedService.insertIntoFeed': (...args) =>
+    args[0].objects?.some((object) => object.includes(name))
+      ? Effect.fail(new Error(`${name} refused`))
+      : handlers['FeedService.insertIntoFeed'](...args),
+});
+
+const makeServiceClients = async (peer: EchoTestPeer, feedHandlers: FeedService.Handlers) => {
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const [dataService, queryService, feedService] = await EffectEx.runPromise(
+    Effect.all([
+      makeInProcessClient(DataService.Rpcs, peer.host.dataService),
+      makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
+      makeInProcessClient(FeedService.Rpcs, feedHandlers),
+    ]).pipe(Effect.provideService(Scope.Scope, scope)),
+  );
+  return { dataService, queryService, feedService };
 };

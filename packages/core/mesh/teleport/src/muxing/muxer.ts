@@ -11,7 +11,7 @@ import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { ProtocolError, TimeoutError } from '@dxos/protocols';
+import { TimeoutError } from '@dxos/protocols';
 import {
   type ConnectionInfo_StreamStats,
   ConnectionInfo_StreamStatsSchema,
@@ -191,8 +191,15 @@ export class Muxer {
 
     // NOTE: Make sure channel.push is set before sending the command.
     try {
-      await this._sendOpenChannel(channel);
-      log('openChannel sent', { tag: channel.tag, id: channel.id });
+      await this._sendCommand(
+        create(CommandSchema, {
+          payload: {
+            case: 'openChannel',
+            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
+          },
+        }),
+        SYSTEM_CHANNEL_ID,
+      );
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -243,8 +250,15 @@ export class Muxer {
 
     // NOTE: Make sure channel.push is set before sending the command.
     try {
-      await this._sendOpenChannel(channel);
-      log('openChannel sent', { tag: channel.tag, id: channel.id });
+      await this._sendCommand(
+        create(CommandSchema, {
+          payload: {
+            case: 'openChannel',
+            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
+          },
+        }),
+        SYSTEM_CHANNEL_ID,
+      );
     } catch (err: any) {
       this._destroyChannel(channel, err);
       throw err;
@@ -362,7 +376,6 @@ export class Muxer {
         contentType: cmd.payload.value.contentType,
       });
       const remoteId = cmd.payload.value.id;
-      log('openChannel received', { tag: channel.tag, id: channel.id, remoteId, buffered: channel.buffer.length });
       // Only the first OpenChannel hands the buffer over; sending it again would duplicate every buffered frame.
       if (channel.remoteOpened) {
         return;
@@ -395,28 +408,8 @@ export class Muxer {
         log.warn('Received data for channel before it was opened', { tag: stream.tag });
         return;
       }
-      // The remote's OpenChannel goes out ahead of its data on the channel, so data first means that frame was lost.
-      if (!stream.remoteOpened) {
-        if (!this._destroying) {
-          log.warn('data arrived before the remote opened the channel', { tag: stream.tag });
-          await this.destroy(new ProtocolError({ message: `Data on ${stream.tag} arrived before its OpenChannel.` }));
-        }
-        return;
-      }
       stream.push(cmd.payload.value.data);
     }
-  }
-
-  private async _sendOpenChannel(channel: Channel): Promise<void> {
-    await this._sendCommand(
-      create(CommandSchema, {
-        payload: {
-          case: 'openChannel',
-          value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
-        },
-      }),
-      SYSTEM_CHANNEL_ID,
-    );
   }
 
   private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {

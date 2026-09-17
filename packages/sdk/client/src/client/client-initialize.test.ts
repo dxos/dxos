@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { TimeoutError, Trigger } from '@dxos/async';
+import { TimeoutError, Trigger, sleep } from '@dxos/async';
+import { RpcClosedError } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SystemService } from '@dxos/protocols/rpc';
 
@@ -102,5 +103,49 @@ describe('Client.fatalError', () => {
     lost.wake();
     await expect.poll(() => client.fatalError.get()).toBe(failure);
     await client.destroy();
+  });
+
+  test('a status stream closed by a lost connection is not fatal', async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    const services = testBuilder.createLocalClientServices();
+    await services.open();
+    const system = EffectContext.get(services.stack, SystemService.Tag);
+    const lost = new Trigger();
+    vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>
+      Stream.make({ status: SystemStatus.ACTIVE }).pipe(
+        Stream.concat(
+          Stream.fromEffect(Effect.promise(() => lost.wait())).pipe(
+            Stream.flatMap(() => Stream.fail(new RpcClosedError())),
+          ),
+        ),
+      ),
+    );
+
+    const client = new Client({ services });
+    await client.initialize();
+    onTestFinished(() => client.destroy());
+
+    lost.wake();
+    await sleep(100);
+    expect(client.fatalError.get()).toBeNull();
+  });
+});
+
+describe('Client.reset', () => {
+  test('completes when the host shuts down before answering', async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    const services = testBuilder.createLocalClientServices();
+    await services.open();
+    const system = EffectContext.get(services.stack, SystemService.Tag);
+    vi.spyOn(system, 'SystemService.reset').mockImplementation(() => Effect.fail(new RpcClosedError()));
+
+    const client = new Client({ services });
+    await client.initialize();
+
+    await expect(client.reset()).resolves.toBeUndefined();
   });
 });

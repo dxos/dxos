@@ -67,9 +67,9 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const handleDeleteRows = useCallback(
       (_row: number, objects: any[]) => {
-        void invokePromise(SpaceOperation.RemoveObjects, { objects });
+        void invokePromise(SpaceOperation.RemoveObjects, { objects }, { spaceId: db?.spaceId });
       },
-      [invokePromise],
+      [invokePromise, db],
     );
 
     const handleDeleteColumn = useCallback(

@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
 
-import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldToEventLoop } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -19,13 +19,6 @@ import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
-
-/**
- * Longest synchronous run of host-update integration before the event loop gets a turn. A first sync
- * hands the client hundreds of full documents per batch, and loading each one is Automerge work that
- * would otherwise block input for the whole batch.
- */
-const INTEGRATE_SLICE_MS = 8;
 
 /**
  * Batch size from which its documents are integrated as a bulk delivery, whose downstream fan-out
@@ -71,6 +64,12 @@ export class RepoProxy extends Resource {
   private _subscriptionReady = new Trigger();
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
+
+  /** Creations the host did not take; the handle stays unready until {@link flushCreations} lands one. */
+  private readonly _failedCreations = new Map<
+    string,
+    { handle: DocHandleProxy<any>; error: Error; retry: () => void }
+  >();
 
   /**
    * Document ids that have pending updates.
@@ -118,21 +117,14 @@ export class RepoProxy extends Resource {
 
   /**
    * Consecutive attempts to replace a dropped subscription, backing off so a host that is gone for
-   * good is not retried in a tight loop. Reset by a batch whose documents all integrate.
+   * good is not retried in a tight loop. Reset by the first batch the replacement delivers.
    */
   private _resubscribeAttempts = 0;
 
   /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
   private _resubscribeDelay = 0;
 
-  /** Documents that failed to integrate an update, until their handle rebuilds from the host copy. */
-  private readonly _rebuildIds = new Set<string>();
-
-  /** Subscriptions opened so far; each host update carries the one that delivered it. */
-  #subscriptions = 0;
-
-  /** Host updates not yet integrated, in arrival order; drained in {@link INTEGRATE_SLICE_MS} slices. */
-  #inbox: { update: DataService.DocumentUpdate; bulk: boolean; subscription: number }[] = [];
+  #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
 
@@ -217,8 +209,7 @@ export class RepoProxy extends Resource {
    * as `flush()` resolves — so resolving over a re-queued batch loses the write silently.
    */
   async flush(): Promise<void> {
-    // Wait for all creations to be completed.
-    await Promise.all([...this._pendingCreations.values()]);
+    await this.flushCreations();
     // Wait for all updates to be sent, retrying a failed batch before giving up on it.
     for (let attempt = 1; ; attempt++) {
       const failuresBefore = this._sendFailureCount;
@@ -239,6 +230,28 @@ export class RepoProxy extends Resource {
     }
   }
 
+  /**
+   * Waits until every pending document creation has reached the host, requesting again the ones it did not take.
+   * Throws if one still cannot be created.
+   */
+  async flushCreations(): Promise<void> {
+    for (let attempt = 1; ; attempt++) {
+      for (const [id, { retry }] of this._failedCreations) {
+        this._failedCreations.delete(id);
+        retry();
+      }
+      await Promise.all([...this._pendingCreations.values()]);
+      const failed = this._failedCreations.values().next().value;
+      if (!failed || this._lifecycleState === LifecycleState.CLOSED) {
+        return;
+      }
+      if (attempt >= FLUSH_ATTEMPTS) {
+        throw failed.error;
+      }
+      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+    }
+  }
+
   protected override async _open(): Promise<void> {
     // A close during the resubscribe delay cancels the task that clears this flag.
     this._isReconnecting = false;
@@ -255,6 +268,11 @@ export class RepoProxy extends Resource {
     }
 
     this._handles = {};
+    for (const { handle, error } of this._failedCreations.values()) {
+      handle.off('change');
+      handle._failReady(error);
+    }
+    this._failedCreations.clear();
     this._subscriptionCleanup?.();
     this._subscriptionCleanup = undefined;
   }
@@ -317,12 +335,11 @@ export class RepoProxy extends Resource {
     // old trigger holds the scheduler until its RPC timeout.
     this._subscriptionReady.wake();
     this._subscriptionReady.reset();
-    const subscription = ++this.#subscriptions;
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
       this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
       {
-        onData: (updates) => this._receiveUpdate(updates, subscription),
+        onData: (updates) => this._receiveUpdate(updates),
         onError: (error) => this._onSubscriptionDropped(error),
         onClose: () => this._onSubscriptionDropped(),
       },
@@ -453,11 +470,14 @@ export class RepoProxy extends Resource {
       update();
     };
 
+    let deleted = false;
     const cleanup = () => {
       log('onDelete', { documentId: handle.documentId, internalId: handle._internalId });
+      deleted = true;
       handle.off('change', onChange);
 
       if (!handle.documentId) {
+        this._failedCreations.delete(handle._internalId);
         return;
       }
 
@@ -470,9 +490,8 @@ export class RepoProxy extends Resource {
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
     handle.on('change', onChange);
-    this._pendingCreations.set(
-      handle._internalId,
-      runServiceCall(
+    const request = () => {
+      const creation: Promise<void> = runServiceCall(
         this._runtime,
         this._dataService['DataService.createDocument']({
           spaceId: this._spaceId,
@@ -485,6 +504,11 @@ export class RepoProxy extends Resource {
         .then(
           (response) => {
             const documentId = response.documentId as DocumentId;
+            if (deleted) {
+              this._pendingRemoveIds.add(documentId);
+              this._sendUpdatesJob?.trigger();
+              return;
+            }
             handle._setDocumentId(documentId);
             this._pendingAddIds.add(documentId);
             this._handles[documentId] = handle;
@@ -493,16 +517,29 @@ export class RepoProxy extends Resource {
           },
           // A failed call leaves the handle unbound; an error after the host returned a document must not discard it.
           (err) => {
-            log.catch(err);
-            handle._failReady(err);
-            cleanup();
+            if (this._lifecycleState === LifecycleState.CLOSED) {
+              handle._failReady(err);
+              cleanup();
+              return;
+            }
+            if (!(err instanceof RpcClosedError)) {
+              log.catch(err);
+            }
+            if (deleted) {
+              return;
+            }
+            this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
           },
         )
         .catch((err) => log.catch(err))
         .finally(() => {
-          this._pendingCreations.delete(handle._internalId);
-        }),
-    );
+          if (this._pendingCreations.get(handle._internalId) === creation) {
+            this._pendingCreations.delete(handle._internalId);
+          }
+        });
+      this._pendingCreations.set(handle._internalId, creation);
+    };
+    request();
 
     return handle;
   }
@@ -516,22 +553,19 @@ export class RepoProxy extends Resource {
   }
 
   /** @internal */
-  _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates, subscription = this.#subscriptions): void {
+  _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
     // The host opens every subscription with an empty batch once it is registered; a real update
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
+    // A batch proves the subscription is live, so the next drop starts from the shortest backoff.
+    this._resubscribeAttempts = 0;
     if (!updates) {
-      // A batch proves the subscription is live, so the next drop starts from the shortest backoff —
-      // unless a document is still waiting on the full copy that would show it recovered.
-      if (!this._isRebuildPending()) {
-        this._resubscribeAttempts = 0;
-      }
       return;
     }
 
     const bulk = updates.length >= BULK_BATCH_DOCUMENTS;
     for (const update of updates) {
-      this.#inbox.push({ update, bulk, subscription });
+      this.#inbox.push({ update, bulk });
     }
     void this.#drainInbox();
   }
@@ -547,17 +581,11 @@ export class RepoProxy extends Resource {
     this.#draining = true;
     try {
       while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
-        const started = performance.now();
-        do {
-          const { update, bulk, subscription } = this.#inbox[this.#inboxHead++];
-          this.#integrate(update, bulk, subscription);
-        } while (this.#inboxHead < this.#inbox.length && performance.now() - started < INTEGRATE_SLICE_MS);
+        const { update, bulk } = this.#inbox[this.#inboxHead++];
+        this.#integrate(update, bulk);
         if (this.#inboxHead < this.#inbox.length) {
-          await yieldToEventLoop();
+          await yieldOrContinue('smooth');
         }
-      }
-      if (!this._isRebuildPending()) {
-        this._resubscribeAttempts = 0;
       }
     } finally {
       this.#inbox = [];
@@ -566,11 +594,7 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate(
-    { documentId, mutation, requesting }: DataService.DocumentUpdate,
-    bulk: boolean,
-    subscription: number,
-  ): void {
+  #integrate({ documentId, mutation, requesting }: DataService.DocumentUpdate, bulk: boolean): void {
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -587,41 +611,12 @@ export class RepoProxy extends Resource {
 
     if (mutation) {
       try {
-        if (handle._isAwaitingRebuild()) {
-          // Only the replacement subscription's first update is a full copy; the old one's are increments.
-          if (this._isReconnecting || subscription !== this.#subscriptions) {
-            return;
-          }
-          handle._rebuild(mutation);
-        } else {
-          handle._integrateHostUpdate(mutation, { bulk });
-        }
+        handle._integrateHostUpdate(mutation, { bulk });
       } catch (err) {
-        // A throw from outside the document, such as a change listener, is not recovered by replacing it,
-        // and must not strand the updates queued behind it.
-        if (!handle._isAwaitingRebuild()) {
-          log.catch(err, { documentId });
-          return;
-        }
-        log.error('document could not integrate a host update; rebuilding it from the host copy', {
-          documentId,
-          error: err,
-        });
-        this._rebuildIds.add(documentId);
-        // A replacement subscription starts the host from scratch, so its first update for each document
-        // is the full copy a marked handle rebuilds from.
-        this._onSubscriptionDropped(err instanceof Error ? err : new Error(String(err)));
+        // One bad document must not strand every update queued behind it.
+        log.catch(err, { documentId });
       }
     }
-  }
-
-  private _isRebuildPending(): boolean {
-    for (const documentId of this._rebuildIds) {
-      if (!this._handles[documentId]?._isAwaitingRebuild()) {
-        this._rebuildIds.delete(documentId);
-      }
-    }
-    return this._rebuildIds.size > 0;
   }
 
   /**

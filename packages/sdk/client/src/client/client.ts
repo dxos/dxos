@@ -31,6 +31,7 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
+  RpcClosedError,
   runServiceCall,
   subscribeStream,
 } from '@dxos/protocols';
@@ -593,7 +594,10 @@ export class Client {
             return;
           }
 
-          // Closing interrupts the stream rather than failing it, and nothing resubscribes it.
+          // A lost connection is reopened by `_services.closed`, and a reset tears services down on purpose.
+          if (this._resetting || err instanceof RpcClosedError) {
+            return;
+          }
           log.error('system status stream failed', { err });
           this._fatalErrorUpdate.emit(err);
         },
@@ -743,6 +747,10 @@ export class Client {
     invariant(this._services, 'Client not initialized.');
     await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
+    }).catch((err) => {
+      if (!isHostShutDownByReset(err)) {
+        throw err;
+      }
     });
     await this._close();
 
@@ -753,3 +761,5 @@ export class Client {
     log('reset complete');
   }
 }
+
+const isHostShutDownByReset = (err: unknown): boolean => err instanceof RpcClosedError;

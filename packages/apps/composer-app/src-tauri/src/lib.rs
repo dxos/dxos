@@ -5,6 +5,8 @@ mod audio_input;
 mod asset_cache;
 pub mod channel;
 #[cfg(desktop)]
+mod last_url;
+#[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
@@ -37,6 +39,12 @@ pub fn webview_port(identifier: &str) -> u16 {
     }
 }
 
+/// Root of the app the desktop webview loads.
+#[cfg(desktop)]
+fn app_root_url(identifier: &str) -> tauri::Url {
+    format!("http://localhost:{}", webview_port(identifier)).parse().expect("app root URL is valid")
+}
+
 /// Whether the asset server can still claim this channel's port. `tauri-plugin-localhost` only panics
 /// on a background thread when its bind fails, leaving the webview to load whatever else answers there
 /// — so the port is probed before the plugin is registered rather than after it has failed.
@@ -67,10 +75,7 @@ fn recover_webview<R: tauri::Runtime>(webview: &tauri::Webview<R>) -> tauri::Res
         .and_then(Result::ok);
     let url = match current {
         Some(url) => url,
-        None => {
-            let port = webview_port(&webview.app_handle().config().identifier);
-            format!("http://localhost:{port}").parse().expect("app root URL is valid")
-        }
+        None => app_root_url(&webview.app_handle().config().identifier),
     };
     webview.navigate(url)
 }
@@ -297,8 +302,8 @@ pub fn run() {
                     return Ok(());
                 }
 
-                let app_port = webview_port(&app.config().identifier);
-                let url: tauri::Url = format!("http://localhost:{}", app_port).parse().unwrap();
+                let root = app_root_url(&app.config().identifier);
+                let url = last_url::initial_url(app.handle(), root.clone());
                 let main_window = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::External(url))
                     .title("Composer")
                     .inner_size(1600.0, 1200.0)
@@ -328,6 +333,16 @@ pub fn run() {
                     }
                 }
                 window_state::setup_window_state_tracking(&main_window);
+
+                // Saved on blur as well as close, so a crash or force quit still reopens a recent page.
+                {
+                    let window = main_window.clone();
+                    main_window.on_window_event(move |event| {
+                        if matches!(event, tauri::WindowEvent::CloseRequested { .. } | tauri::WindowEvent::Focused(false)) {
+                            last_url::save(&window, &root);
+                        }
+                    });
+                }
 
                 #[cfg(target_os = "macos")]
                 {
@@ -368,6 +383,16 @@ pub fn run() {
 
             Ok(())
         })
-        .run(context)
-        .expect("error while running tauri application");
+        .build(context)
+        .expect("error while building tauri application")
+        .run(|_app, _event| {
+            // Quit from the menu, Cmd+Q and the updater's relaunch exit without closing the window first.
+            #[cfg(desktop)]
+            if let tauri::RunEvent::ExitRequested { .. } = _event {
+                use tauri::Manager;
+                if let Some(window) = _app.get_webview_window(MAIN_WINDOW_LABEL) {
+                    last_url::save(&window, &app_root_url(&_app.config().identifier));
+                }
+            }
+        });
 }

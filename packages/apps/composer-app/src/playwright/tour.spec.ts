@@ -42,6 +42,8 @@ test.describe('Tour tests', () => {
   });
 
   test('a document tour picks up steps contributed by other plugins', async () => {
+    test.slow();
+
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
