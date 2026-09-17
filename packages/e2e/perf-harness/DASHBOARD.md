@@ -2,6 +2,9 @@
 
 # The PostHog dashboard
 
+**[Composer performance (nightly)](https://eu.posthog.com/project/126171/dashboard/958200)** —
+project `Composer` (126171), `eu.posthog.com`.
+
 What the nightly publishes and how it is charted. Field semantics live in
 [`METRICS.md`](./METRICS.md); this file covers only the event contract and the tiles.
 
