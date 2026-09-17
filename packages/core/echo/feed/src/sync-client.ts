@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context, ContextDisposedError } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
@@ -255,35 +256,48 @@ export class SyncClient {
               position: response.maxPosition,
             })
           : 0;
+      const { displaced, moved } =
+        response.blocks.length > 0
+          ? yield* self.#feedStore.append({
+              spaceId: opts.spaceId,
+              feedNamespace: opts.feedNamespace,
+              blocks: response.blocks,
+            })
+          : { displaced: 0, moved: 0 };
+      // A cursor above the server's high-water mark was pulled from rows the server has lost, so
+      // nothing above it will ever arrive. Replayed even mid-replay: the server shrank again
+      // underneath this one.
+      const beyondServer = response.maxPosition != null && basePosition > response.maxPosition;
+      if (beyondServer) {
+        self.#replaying.delete(self.#namespaceKey(opts));
+      }
+      // Each of these means the server lost rows and re-issued their positions, along with whatever
+      // it wrote since, which sits below the cursor and would otherwise never be pulled.
+      const reason = beyondServer
+        ? 'cursor beyond the server'
+        : displaced > 0 || moved > 0
+          ? 'positions re-issued'
+          : cleared > 0
+            ? 'positions above the server'
+            : cursorBlockDiffers
+              ? 'another block at the cursor'
+              : undefined;
+      if (
+        reason != null &&
+        (yield* self.#replayNamespace(opts, response.serverToken, {
+          requestId,
+          reason,
+          lastPulledPosition: basePosition,
+          maxPosition: response.maxPosition,
+          displaced,
+          moved,
+          cleared,
+          cursorBlock: response.cursorBlock,
+        }))
+      ) {
+        return { done: false };
+      }
       if (response.blocks.length === 0) {
-        // Nothing above the cursor and the server's high-water mark below it: the server lost what
-        // this cursor was pulled from, so it will never serve anything above it, and everything it
-        // has written since sits below it.
-        if (response.maxPosition != null && basePosition > response.maxPosition) {
-          // Unconditional, even mid-replay: the server shrank again underneath this one.
-          self.#replaying.delete(self.#namespaceKey(opts));
-          yield* self.#replayNamespace(opts, response.serverToken, {
-            requestId,
-            reason: 'cursor beyond the server',
-            lastPulledPosition: basePosition,
-            maxPosition: response.maxPosition,
-            cleared,
-          });
-          return { done: false };
-        }
-        if (cleared > 0 || cursorBlockDiffers) {
-          const rewound = yield* self.#replayNamespace(opts, response.serverToken, {
-            requestId,
-            reason: cleared > 0 ? 'positions above the server' : 'another block at the cursor',
-            lastPulledPosition: basePosition,
-            maxPosition: response.maxPosition,
-            cleared,
-            cursorBlock: response.cursorBlock,
-          });
-          if (rewound) {
-            return { done: false };
-          }
-        }
         self.#replaying.delete(self.#namespaceKey(opts));
         log.trace('feed sync client pull done (empty batch)', {
           requestId,
@@ -291,35 +305,6 @@ export class SyncClient {
           feedNamespace: opts.feedNamespace,
         });
         return { done: true };
-      }
-      const { displaced, moved } = yield* self.#feedStore.append({
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        blocks: response.blocks,
-      });
-      // The server handed out positions this replica had already given to other blocks, or moved
-      // blocks it already held, so the server lost rows and re-issued their positions -- along
-      // with anything it wrote since, which sits below the cursor and would otherwise never be
-      // pulled.
-      if (displaced > 0 || moved > 0 || cleared > 0 || cursorBlockDiffers) {
-        const rewound = yield* self.#replayNamespace(opts, response.serverToken, {
-          requestId,
-          reason:
-            displaced > 0 || moved > 0
-              ? 'positions re-issued'
-              : cleared > 0
-                ? 'positions above the server'
-                : 'another block at the cursor',
-          lastPulledPosition: basePosition,
-          maxPosition: response.maxPosition,
-          displaced,
-          moved,
-          cleared,
-          cursorBlock: response.cursorBlock,
-        });
-        if (rewound) {
-          return { done: false };
-        }
       }
 
       // Update sync state with the max position from the pulled batch.
@@ -482,13 +467,16 @@ export class SyncClient {
       );
       const { displaced, moved } = yield* self.#feedStore.setPosition({
         spaceId: opts.spaceId,
-        blocks: Array.zipWith(response.positions, unpositioned.blocks, (position, block) => ({
-          feedId: block.feedId,
-          feedNamespace: opts.feedNamespace,
-          actorId: block.actorId,
-          sequence: block.sequence,
-          position,
-        })),
+        blocks: Array.zipWith(response.positions, unpositioned.blocks, (position, block) => {
+          invariant(block.feedId != null, 'queried block carries no feed id');
+          return {
+            feedId: block.feedId,
+            feedNamespace: opts.feedNamespace,
+            actorId: block.actorId,
+            sequence: block.sequence,
+            position,
+          };
+        }),
       });
       log('feed sync client push positions applied', {
         requestId,

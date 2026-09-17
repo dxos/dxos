@@ -199,16 +199,12 @@ export class FeedStore {
    * more and told where it really is. Namespace-wide, not per feed: the authority's counter is one
    * per namespace, and a block left holding a position that another feed's block now owns would
    * count as synced and never be pushed again.
-   *
-   * With `requireHolder` the slot is left alone unless the holder exists, so a reply for a block
-   * deleted while its push was in flight evicts nothing.
    */
   #evictSlot = (
     spaceId: string,
     feedNamespace: string,
     position: number,
     holder: Pick<Block, 'actorId' | 'sequence'> & { feedPrivateId: number },
-    { requireHolder = false }: { requireHolder?: boolean } = {},
   ): Effect.Effect<{ displaced: number; moved: number }, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
@@ -218,16 +214,6 @@ export class FeedStore {
         WHERE feedPrivateId IN (
             SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
           )
-          ${
-            requireHolder
-              ? sql`AND EXISTS (
-                  SELECT 1 FROM blocks AS existing
-                  WHERE existing.feedPrivateId = ${holder.feedPrivateId}
-                    AND existing.actorId = ${holder.actorId}
-                    AND existing.sequence = ${holder.sequence}
-                )`
-              : sql``
-          }
           AND (
             (
               position = ${position}
@@ -1057,45 +1043,31 @@ export class FeedStore {
    */
   setPosition = (request: {
     spaceId: string;
-    blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
+    blocks: { feedId: string; feedNamespace: string; actorId: string; sequence: number; position: number }[];
   }): Effect.Effect<{ displaced: number; moved: number }, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       return yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
           // A push batch is almost always one feed, so resolve each feed once rather than per block.
-          const feedPrivateIds = new Map<string, number | undefined>();
+          const feedPrivateIds = new Map<string, number>();
           let displaced = 0;
           let moved = 0;
           for (const block of request.blocks) {
-            if (block.position == null) {
-              continue;
-            }
             const feedKey = `${block.feedNamespace}|${block.feedId}`;
-            if (!feedPrivateIds.has(feedKey)) {
-              const feeds = yield* sql<{ feedPrivateId: number }>`
-                SELECT feedPrivateId FROM feeds
-                WHERE spaceId = ${request.spaceId} AND feedId = ${block.feedId} AND feedNamespace = ${block.feedNamespace}
-              `;
-              feedPrivateIds.set(feedKey, feeds[0]?.feedPrivateId);
-            }
-            const feedPrivateId = feedPrivateIds.get(feedKey);
-            if (feedPrivateId == null) {
-              continue;
-            }
-            const evicted = yield* this.#evictSlot(
-              request.spaceId,
-              block.feedNamespace,
-              block.position,
-              { ...block, feedPrivateId },
-              { requireHolder: true },
-            );
+            const feedPrivateId =
+              feedPrivateIds.get(feedKey) ??
+              (yield* this.#ensureFeed(request.spaceId, block.feedId, block.feedNamespace));
+            feedPrivateIds.set(feedKey, feedPrivateId);
+            const evicted = yield* this.#evictSlot(request.spaceId, block.feedNamespace, block.position, {
+              ...block,
+              feedPrivateId,
+            });
             displaced += evicted.displaced;
             moved += evicted.moved;
             yield* sql`
               UPDATE blocks SET position = ${block.position}
               WHERE feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence}
-                AND position IS NOT ${block.position}
             `;
           }
           return { displaced, moved };

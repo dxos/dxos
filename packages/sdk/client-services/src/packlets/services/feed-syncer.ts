@@ -389,9 +389,6 @@ export class FeedSyncer extends Resource {
       log.warn('feed sync hint named an untracked space', { spaceId });
       return;
     }
-    if (this.#deletedSpaces.has(spaceId)) {
-      return;
-    }
     log('feed sync hint received', {
       spaceId,
       feedNamespace: message.feedNamespace,
@@ -654,8 +651,9 @@ export class FeedSyncer extends Resource {
   }
 
   /**
-   * Stops syncing a space for the rest of this connection once the server reports it deleted.
-   * Logged once: the report is the answer to every request the space will ever get.
+   * Stops syncing a space for the rest of this connection once the server reports it deleted: the
+   * namespace counts as done, and the other namespaces are not asked. Logged once, since both tasks
+   * may report it.
    */
   #dropDeletedSpace(spaceId: SpaceId, feedNamespace: string, cause: SyncSpaceDeletedError): void {
     if (this.#deletedSpaces.has(spaceId)) {
@@ -697,12 +695,11 @@ export class FeedSyncer extends Resource {
         this.#spacesToPoll,
         (spaceId) =>
           Effect.gen({ self: this }, function* () {
-            if (this.#deletedSpaces.has(spaceId)) {
-              this.#spacesToPoll.delete(spaceId);
-              return;
-            }
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
+              if (this.#deletedSpaces.has(spaceId)) {
+                break;
+              }
               let done = false;
               for (let page = 0; !done && page < MAX_PAGES_PER_RUN; page++) {
                 const pulled = yield* this.#syncClient
@@ -716,10 +713,10 @@ export class FeedSyncer extends Resource {
                       Effect.sync(() => {
                         if (cause instanceof SyncSpaceDeletedError) {
                           this.#dropDeletedSpace(spaceId, feedNamespace, cause);
-                        } else {
-                          this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
-                          hadPullFailure = true;
+                          return { done: true };
                         }
+                        this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
+                        hadPullFailure = true;
                         return undefined;
                       }),
                     ),
@@ -729,14 +726,11 @@ export class FeedSyncer extends Resource {
                 }
                 done = pulled.done;
               }
-              if (this.#deletedSpaces.has(spaceId)) {
-                break;
-              }
               if (!done) {
                 doneForAllNamespaces = false;
               }
             }
-            if (doneForAllNamespaces || this.#deletedSpaces.has(spaceId)) {
+            if (doneForAllNamespaces) {
               this.#spacesToPoll.delete(spaceId);
             }
           }),
@@ -775,12 +769,12 @@ export class FeedSyncer extends Resource {
         this.#getSpaceIds(),
         (spaceId) =>
           Effect.gen({ self: this }, function* () {
-            if (this.#deletedSpaces.has(spaceId)) {
-              return;
-            }
             let needsMorePush = false;
             let hadPushFailure = false;
             for (const feedNamespace of this.#syncNamespaces) {
+              if (this.#deletedSpaces.has(spaceId)) {
+                break;
+              }
               let done = false;
               for (let batch = 0; !done && batch < MAX_PAGES_PER_RUN; batch++) {
                 const pushed = yield* this.#syncClient
@@ -799,10 +793,10 @@ export class FeedSyncer extends Resource {
                       Effect.sync(() => {
                         if (cause instanceof SyncSpaceDeletedError) {
                           this.#dropDeletedSpace(spaceId, feedNamespace, cause);
-                        } else {
-                          this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
-                          hadPushFailure = true;
+                          return { done: true };
                         }
+                        this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
+                        hadPushFailure = true;
                         return undefined;
                       }),
                     ),
@@ -811,9 +805,6 @@ export class FeedSyncer extends Resource {
                   break;
                 }
                 done = pushed.done;
-              }
-              if (this.#deletedSpaces.has(spaceId)) {
-                return;
               }
               if (!done) {
                 needsMorePush = true;
