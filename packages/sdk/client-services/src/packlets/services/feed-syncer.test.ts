@@ -54,11 +54,8 @@ const createEdgeConnection = ({
   serverRuntime: ReturnType<typeof createRuntime>;
   messageListeners: Set<(message: RouterMessage) => void>;
   sentMessages: ProtocolMessage[];
-  /**
-   * Answers a request in place of the server when it returns a message; `'drop'` swallows the
-   * request so the client waits out its RPC timeout, as it does for a space the server has deleted.
-   */
-  interceptRequest?: (message: ProtocolMessage) => ProtocolMessage | 'drop' | undefined;
+  /** Answers a request in place of the server when it returns a message. */
+  interceptRequest?: (message: ProtocolMessage) => ProtocolMessage | undefined;
 }): EdgeConnection & { reconnect: () => void } => {
   const reconnectListeners = new Set<ReconnectListener>();
   const deliver = (message: ProtocolMessage) => {
@@ -100,9 +97,6 @@ const createEdgeConnection = ({
         return;
       }
       const intercepted = interceptRequest?.(decoded);
-      if (intercepted === 'drop') {
-        return;
-      }
       if (intercepted) {
         deliver(intercepted);
         return;
@@ -132,7 +126,6 @@ const createFeedSyncHarness = async ({
   pollingInterval,
   syncNamespaces: namespaces = [syncNamespace],
   reconcilePollingInterval,
-  syncRpcTimeoutMs,
   interceptRequest,
 }: {
   spaceId: SpaceId;
@@ -141,8 +134,7 @@ const createFeedSyncHarness = async ({
   pollingInterval?: number;
   syncNamespaces?: string[];
   reconcilePollingInterval?: number;
-  syncRpcTimeoutMs?: number;
-  interceptRequest?: (message: ProtocolMessage) => ProtocolMessage | 'drop' | undefined;
+  interceptRequest?: (message: ProtocolMessage) => ProtocolMessage | undefined;
 }) => {
   const serverRuntime = createRuntime();
   const clientRuntime = createRuntime();
@@ -203,7 +195,6 @@ const createFeedSyncHarness = async ({
     syncNamespaces: namespaces,
     pollingInterval,
     reconcilePollingInterval,
-    syncRpcTimeoutMs,
   });
 
   const close = async () => {
@@ -647,65 +638,6 @@ describe('FeedSyncer', () => {
     );
   });
 
-  // A run of either task lasts as long as its slowest space. Paging once per run held a space with a
-  // backlog to 50 blocks per run while a space whose requests never come back, such as one the
-  // server has deleted, kept every run open for the RPC timeout.
-  test('a space whose pushes never get a reply does not hold another space to one batch per run', async () => {
-    const hangingSpaceId = SpaceId.random();
-    const healthySpaceId = SpaceId.random();
-    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
-      spaceId: healthySpaceId,
-      spaceIds: [hangingSpaceId, healthySpaceId],
-      pollingInterval: 60_000,
-      syncRpcTimeoutMs: 5_000,
-      interceptRequest: (message) =>
-        message._tag === 'AppendRequest' && message.spaceId === hangingSpaceId ? 'drop' : undefined,
-    });
-    await seedBlocks(clientFeedStore, clientRuntime, hangingSpaceId, 1);
-    // Three batches at the default 50-block limit.
-    await seedBlocks(clientFeedStore, clientRuntime, healthySpaceId, 150);
-
-    await syncer.open(new Context());
-
-    // One batch per run would need the hanging space's timeout to expire twice before the third
-    // batch; within a run the three land in well under a second.
-    await vi.waitFor(
-      async () => {
-        const { blocks } = await serverFeedStore
-          .query({ spaceId: healthySpaceId, feedNamespace: syncNamespace })
-          .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
-        expect(blocks).toHaveLength(150);
-      },
-      { timeout: 4_000 },
-    );
-  });
-
-  test('a space whose pulls never get a reply does not hold another space to one page per run', async () => {
-    const hangingSpaceId = SpaceId.random();
-    const healthySpaceId = SpaceId.random();
-    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
-      spaceId: healthySpaceId,
-      spaceIds: [hangingSpaceId, healthySpaceId],
-      pollingInterval: 60_000,
-      syncRpcTimeoutMs: 5_000,
-      interceptRequest: (message) =>
-        message._tag === 'QueryRequest' && message.spaceId === hangingSpaceId ? 'drop' : undefined,
-    });
-    await seedBlocks(serverFeedStore, serverRuntime, healthySpaceId, 150);
-
-    await syncer.open(new Context());
-
-    await vi.waitFor(
-      async () => {
-        const { blocks } = await clientFeedStore
-          .query({ spaceId: healthySpaceId, feedNamespace: syncNamespace })
-          .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
-        expect(blocks).toHaveLength(150);
-      },
-      { timeout: 4_000 },
-    );
-  });
-
   // The push back-off is one value for every space and namespace. Reset by any push that went
   // through, it never grew while one namespace kept failing next to a healthy one, so the failing
   // push was retried at the minimum delay for as long as the failure lasted.
@@ -803,7 +735,7 @@ describe('FeedSyncer', () => {
   });
 });
 
-/** Appends `count` local blocks to one feed of a space, so a 150-block seed is three 50-block pages. */
+/** Appends `count` local blocks to one feed of a space. */
 const seedBlocks = (
   feedStore: FeedStore,
   runtime: ReturnType<typeof createRuntime>,

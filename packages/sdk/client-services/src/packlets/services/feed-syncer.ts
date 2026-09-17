@@ -44,13 +44,6 @@ const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
 const DEFAULT_FAILURE_BACKOFF_MS = 250;
 const MAX_FAILURE_BACKOFF_MS = 30_000;
 const MAX_BLOCKING_SYNC_ITERATIONS = 100;
-/**
- * Pages one namespace may pull or push within a single run of the poll or push task. A run lasts as
- * long as its slowest space, so paging once per run held every namespace with a backlog to the pace
- * of a space whose requests never come back; this drains a typical backlog in one run while a huge
- * one still yields to the other task between runs.
- */
-const MAX_PAGES_PER_RUN = 20;
 
 export type FeedSyncerOptions = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
@@ -700,32 +693,25 @@ export class FeedSyncer extends Resource {
               if (this.#deletedSpaces.has(spaceId)) {
                 break;
               }
-              let done = false;
-              for (let page = 0; !done && page < MAX_PAGES_PER_RUN; page++) {
-                const pulled = yield* this.#syncClient
-                  .pull(this._ctx, {
-                    spaceId,
-                    feedNamespace,
-                    limit: this.#messageBlocksLimit,
-                  })
-                  .pipe(
-                    Effect.catch((cause) =>
-                      Effect.sync(() => {
-                        if (cause instanceof SyncSpaceDeletedError) {
-                          this.#dropDeletedSpace(spaceId, feedNamespace, cause);
-                          return { done: true };
-                        }
-                        this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
-                        hadPullFailure = true;
-                        return undefined;
-                      }),
-                    ),
-                  );
-                if (pulled == null) {
-                  break;
-                }
-                done = pulled.done;
-              }
+              const { done } = yield* this.#syncClient
+                .pull(this._ctx, {
+                  spaceId,
+                  feedNamespace,
+                  limit: this.#messageBlocksLimit,
+                })
+                .pipe(
+                  Effect.catch((cause) =>
+                    Effect.sync(() => {
+                      if (cause instanceof SyncSpaceDeletedError) {
+                        this.#dropDeletedSpace(spaceId, feedNamespace, cause);
+                        return { done: true };
+                      }
+                      this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
+                      hadPullFailure = true;
+                      return { done: false };
+                    }),
+                  ),
+                );
               if (!done) {
                 doneForAllNamespaces = false;
               }
@@ -775,32 +761,25 @@ export class FeedSyncer extends Resource {
               if (this.#deletedSpaces.has(spaceId)) {
                 break;
               }
-              let done = false;
-              for (let batch = 0; !done && batch < MAX_PAGES_PER_RUN; batch++) {
-                const pushed = yield* this.#syncClient
-                  .push(this._ctx, {
-                    spaceId,
-                    feedNamespace,
-                    limit: this.#messageBlocksLimit,
-                  })
-                  .pipe(
-                    Effect.catch((cause) =>
-                      Effect.sync(() => {
-                        if (cause instanceof SyncSpaceDeletedError) {
-                          this.#dropDeletedSpace(spaceId, feedNamespace, cause);
-                          return { done: true };
-                        }
-                        this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
-                        hadFailure = true;
-                        return undefined;
-                      }),
-                    ),
-                  );
-                if (pushed == null) {
-                  break;
-                }
-                done = pushed.done;
-              }
+              const { done } = yield* this.#syncClient
+                .push(this._ctx, {
+                  spaceId,
+                  feedNamespace,
+                  limit: this.#messageBlocksLimit,
+                })
+                .pipe(
+                  Effect.catch((cause) =>
+                    Effect.sync(() => {
+                      if (cause instanceof SyncSpaceDeletedError) {
+                        this.#dropDeletedSpace(spaceId, feedNamespace, cause);
+                        return { done: true };
+                      }
+                      this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
+                      hadFailure = true;
+                      return { done: false };
+                    }),
+                  ),
+                );
               if (!done) {
                 needsMore = true;
               }
