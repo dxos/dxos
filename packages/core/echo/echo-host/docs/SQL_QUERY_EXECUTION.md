@@ -522,6 +522,10 @@ What landed, and where it departs from the proposal above.
   from `@dxos/echo/internal` rather than adding a `semver` dependency to `echo-host`.
 - **Traversals dedupe** on `recordId` (`GROUP BY`), where the legacy executor could yield the same
   target twice when two anchors referenced it; the client deduplicated by id anyway.
-- **Not done here**: phase 4 (EDGE indexer DO), phase 5 (`ensurePropertyIndex`, contentless
-  `ftsIndex`, `DeletionResolver` on the `dep` CTE), and the `queryTypes` seekable versionless
-  predicate. Benchmark results: `echo-client-e2e/BENCHMARKS.md`, "Query executor: memory vs sql".
+- **The versionless type predicate seeks.** `buildTypeDxnCondition` bounds each form with
+  `typeDXN >= form AND typeDXN < form || ';'` ahead of the exact `= OR LIKE` residual, so both the
+  compiler and the legacy `queryTypes` path get `(spaceId=? AND typeDXN>? AND typeDXN<?)` instead
+  of a partition scan.
+- **Not done here**: phase 4 (EDGE indexer DO) and phase 5 (`ensurePropertyIndex`, contentless
+  `ftsIndex`, `DeletionResolver` on the `dep` CTE). Benchmark results:
+  `echo-client-e2e/BENCHMARKS.md`, "Query executor: memory vs sql".

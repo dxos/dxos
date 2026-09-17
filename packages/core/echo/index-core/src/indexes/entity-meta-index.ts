@@ -93,9 +93,19 @@ export const buildTypeDxnCondition = (sql: SqlClient.SqlClient, typeDxns: readon
       const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
       const forms = _typeUriEquivalents(normalized);
       const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
-      return hasNoVersion
-        ? sql.or([exactMatch, sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`))])
-        : exactMatch;
+      if (!hasNoVersion) {
+        return exactMatch;
+      }
+      // A range bounds the seek on `(spaceId, typeDXN)`; `= OR LIKE` alone makes SQLite scan the
+      // space partition. `;` is the code point after `:`, so the range covers the bare form and
+      // every `form:<version>`; the exact predicate stays as the residual because the range also
+      // admits `form` followed by a code point below `:`.
+      return sql.or(
+        forms.map(
+          (form) =>
+            sql`(typeDXN >= ${form} AND typeDXN < ${form + ';'} AND (typeDXN = ${form} OR typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'))`,
+        ),
+      );
     }),
   );
 
