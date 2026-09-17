@@ -24,7 +24,63 @@ export type GroupAggregates = Record<string, AggregateValue>;
  * client `WorkingSetQueryExecutor`. The clause itself is declared in `QueryPlan.AggregateStep`; this
  * module holds the runtime grouping/pagination algorithms that the executors apply.
  */
+const HOUR_MS = 3_600_000;
+
+const dateTimeFormats = new Map<string, Intl.DateTimeFormat>();
+
+/** Wall-clock fields of `timestamp` in `timeZone`, from a formatter cached per zone. */
+const wallClock = (timestamp: number, timeZone: string) => {
+  let format = dateTimeFormats.get(timeZone);
+  if (!format) {
+    format = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    });
+    dateTimeFormats.set(timeZone, format);
+  }
+  const parts = format.formatToParts(timestamp);
+  const field = (type: Intl.DateTimeFormatPartTypes): number => Number(parts.find((part) => part.type === type)?.value);
+  return {
+    year: field('year'),
+    month: field('month'),
+    day: field('day'),
+    hour: field('hour'),
+    minute: field('minute'),
+    second: field('second'),
+  };
+};
+
+/** How far `timeZone` is ahead of UTC at `timestamp`, in ms. */
+const zoneOffset = (timestamp: number, timeZone: string): number => {
+  const { year, month, day, hour, minute, second } = wallClock(timestamp, timeZone);
+  return Date.UTC(year, month - 1, day, hour, minute, second) - Math.floor(timestamp / 1000) * 1000;
+};
+
 export const GroupBy = Object.freeze({
+  /**
+   * The start of the hour or calendar day `timestamp` falls in, in unix ms, or `null` when unknown.
+   * Hours are UTC. Days follow `timeZone` (UTC when absent), so a day that starts or ends on a
+   * daylight-saving change still begins at that zone's local midnight.
+   */
+  truncateTimestamp: (timestamp: number | null | undefined, unit: 'hour' | 'day', timeZone = 'UTC'): number | null => {
+    if (timestamp == null) {
+      return null;
+    }
+    if (unit === 'hour') {
+      return Math.floor(timestamp / HOUR_MS) * HOUR_MS;
+    }
+    const { year, month, day } = wallClock(timestamp, timeZone);
+    const midnightAsUtc = Date.UTC(year, month - 1, day);
+    // The offset at local midnight can differ from the offset at `timestamp` across a DST change.
+    return midnightAsUtc - zoneOffset(midnightAsUtc - zoneOffset(midnightAsUtc, timeZone), timeZone);
+  },
+
   /**
    * Coerces a raw property value into a group-key component.
    * `typeof value` must be `string`, `number`, or `boolean`; anything else (missing,

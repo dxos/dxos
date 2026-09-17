@@ -187,7 +187,7 @@ const QueryItem = Object.freeze({
           key[aggregate.name] = QueryItem.getTypeUri(item);
           break;
         case 'timestamp':
-          key[aggregate.name] = QueryAST.startOfHour(item[aggregate.field]);
+          key[aggregate.name] = GroupBy.truncateTimestamp(item[aggregate.field], aggregate.unit, aggregate.timeZone);
           break;
       }
     }
