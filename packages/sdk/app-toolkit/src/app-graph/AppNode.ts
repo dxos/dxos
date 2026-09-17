@@ -307,8 +307,8 @@ export const makeObject = ({
 /**
  * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
  * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
- * addressable as `companion/<variant>` in the URL; the graph builder stamps the `urlSegment` for these
- * nodes (the declared `linked` tier).
+ * addressable as `companion/<variant>` in the URL. Return it from an extension declared with
+ * `AppGraphNode.companionRelation()`.
  */
 export const makeCompanion = <TData = string>({
   variant,
@@ -340,7 +340,7 @@ export const makeCompanion = <TData = string>({
  */
 export type DeckCompanionMount = 'always' | 'selected' | 'open';
 
-/** Build a deck-level (workspace-wide) companion panel node. */
+/** Build a deck-level (workspace-wide) companion panel node, returned from a root extension with `AppGraphNode.companionRelation()`. */
 export const makeDeckCompanion = <TData = any>({
   id,
   label,

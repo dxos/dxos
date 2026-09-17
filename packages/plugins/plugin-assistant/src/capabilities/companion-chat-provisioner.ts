@@ -10,7 +10,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
@@ -145,13 +145,13 @@ export default Capability.makeModule(
           // Already provisioned — no need to watch connections.
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
-          // Not yet resolved — subscribe to child connections so we re-try
+          // Not yet resolved — subscribe to companion connections so we re-try
           // when graph builder extensions add companion nodes (after expand). This subscription
           // outlives the current `provision()` run, so re-read the latest variant at callback time
           // rather than closing over the one captured here.
           plankSubs.set(
             plankId,
-            registry.subscribe(graph.connections(plankId, 'child'), () => {
+            registry.subscribe(graph.connections(plankId, AppGraphNode.companionRelation()), () => {
               if (provisionForPlank(plankId, registry.get(variantAtom))) {
                 unsubPlank(plankId);
               }
@@ -190,9 +190,7 @@ const resolveEffectiveVariant = (
   plankId: string,
   preferredVariant: string | undefined,
 ): string | undefined => {
-  const companions = AppGraph.getConnections(graph, plankId, 'child')
-    .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
-    .toSorted((a, b) => Position.compare(a.properties, b.properties));
+  const companions = AppGraph.getConnections(graph, plankId, AppGraphNode.companionRelation()).toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   const selected = DeckSchema.selectCompanion(companions, preferredVariant);
   return selected && Attention.getLinkedVariant(selected.id);

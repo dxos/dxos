@@ -176,6 +176,7 @@ export default Capability.makeModule(
       // node for that doc so the in-editor comment toolbar action resolves.
       AppGraphBuilder.createExtension({
         id: 'postComments',
+        relation: AppGraphNode.companionRelation(),
         match: (node) => (Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data }) : Option.none()),
         connector: ({ post }, get) => {
           const snapshot = get(Obj.atom(post));

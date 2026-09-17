@@ -12,6 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Client } from '@dxos/client';
@@ -64,7 +65,7 @@ describe('SearchPlugin', () => {
 
     expect(client.initialized).toBe(false);
     const companion = registry
-      .get(builder.graph.connections(GraphNode.RootId, 'child'))
+      .get(builder.graph.connections(GraphNode.RootId, AppGraphNode.companionRelation()))
       .find((node) => node.id.endsWith(Attention.linkedSegment('search')));
     expect(companion).toBeDefined();
     expect(companion?.data).toBeNull();

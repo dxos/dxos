@@ -77,12 +77,10 @@ const createMobileCompanionActions = (
     open.active[open.active.length - 1] ??
     (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
 
-  // Keys off the active plank's own child connections rather than `deck.companionPlanks` (the desktop
+  // Keys off the active plank's own companion connections rather than `deck.companionPlanks` (the desktop
   // side-by-side flag a declared-chain open in open.ts carries onto a replacement plank), so that
   // bookkeeping stays inert for the mobile companion picker.
-  const companions = get(graph.connections(activeId, 'child'))
-    .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
-    .toSorted((a, b) => Position.compare(a.properties, b.properties));
+  const companions = get(graph.connections(activeId, AppGraphNode.companionRelation())).toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   const nodes: ActionGraphProps['nodes'] = [];
   const edges: ActionGraphProps['edges'] = [];

@@ -162,13 +162,13 @@ export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
   'org.dxos.app-framework.capability.appGraphBuilder',
 );
 
-/** Which subgraphs the graph may unload, contributed by the plugin that knows what a releasable unit is. */
+/** Nodes the graph must keep loaded, contributed by each plugin that knows what it is showing. */
 export type AppGraphRetention = AppGraphBuilder$.Retention;
 
 /**
  * @category Capability
  */
-export const AppGraphRetention = Capability$.makeSingleton<AppGraphRetention>()(
+export const AppGraphRetention = Capability$.make<AppGraphRetention>()(
   'org.dxos.app-framework.capability.appGraphRetention',
 );
 

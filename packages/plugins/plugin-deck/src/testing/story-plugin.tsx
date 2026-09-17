@@ -241,6 +241,7 @@ const storyGraphBuilder = Capability.inlineModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'storyItemCompanions',
+        relation: AppGraphNode.companionRelation(),
         match: GraphNodeMatcher.whenNodeType('story-item'),
         connector: (node) =>
           Effect.succeed([
@@ -335,7 +336,7 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const connections = useConnections(graph, id, 'child');
   const items = useMemo(
     () =>
-      connections.filter((node) => !AppGraphNode.isActionLike(node) && node.type !== DeckSchema.PLANK_COMPANION_TYPE),
+      connections.filter((node) => !AppGraphNode.isActionLike(node)),
     [connections],
   );
 

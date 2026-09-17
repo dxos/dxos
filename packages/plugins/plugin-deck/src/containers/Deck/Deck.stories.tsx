@@ -347,6 +347,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           // plank to plank as attention changes.
           AppGraphBuilder.createExtension({
             id: 'storyItemCompanions',
+            relation: AppGraphNode.companionRelation(),
             match: (node) =>
               node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
             connector: (node) =>

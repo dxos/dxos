@@ -59,7 +59,7 @@ export default Capability.makeModule(
     const retentionAtom = yield* Capability.atom(AppCapabilities.AppGraphRetention);
     const unsubscribeRetention = registry.subscribe(
       retentionAtom,
-      ([retention]) => AppGraphBuilder.setRetention(builder, retention),
+      (retentions) => AppGraphBuilder.setRetention(builder, retentions),
       { immediate: true },
     );
 
@@ -73,7 +73,7 @@ export default Capability.makeModule(
         // clearInterval(interval);
         unsubscribe();
         unsubscribeRetention();
-        AppGraphBuilder.setRetention(builder, undefined);
+        AppGraphBuilder.setRetention(builder, []);
       }),
     );
     return Capability.contribute(AppCapabilities.AppGraph, builder);

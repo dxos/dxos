@@ -246,6 +246,7 @@ export default Capability.makeModule(
                   icon: workspace.icon ? `ph--${workspace.icon}--regular` : 'ph--folder--regular',
                   hue: workspace.hue,
                   disposition: 'workspace',
+                  [AppGraphBuilder.RetainDepthProperty]: 0,
                   testId: 'fileSystem.workspace',
                   position: orderMap.get(workspace.id),
                   onRearrange,

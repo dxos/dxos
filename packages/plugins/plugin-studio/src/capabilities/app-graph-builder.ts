@@ -53,6 +53,7 @@ export default Capability.makeModule(
       // The frame companion: the selected frame's artifact article beside the storyboard plank.
       AppGraphBuilder.createTypeExtension({
         id: 'frameCompanion',
+        relation: AppGraphNode.companionRelation(),
         type: Storyboard.Storyboard,
         connector: () =>
           Effect.succeed([

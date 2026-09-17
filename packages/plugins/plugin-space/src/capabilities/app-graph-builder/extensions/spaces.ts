@@ -389,6 +389,7 @@ const constructSpaceNode = ({
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       disposition: 'workspace',
+      [AppGraphBuilder.RetainDepthProperty]: 0,
       testId: 'spacePlugin.space',
       onRearrange,
       canDrop: CAN_DROP_SPACE,

@@ -72,8 +72,15 @@ GraphBuilder.createTypeExtension({
       },
     }),
   ]),
+});
+
+// Companions attach through their own relation, so they need an extension of their own.
+GraphBuilder.createTypeExtension({
+  id: 'item-details',
+  type: MyItem.MyItem,
+  relation: Node.companionRelation(),
   connector: (item, get) => Effect.succeed([
-    AppNode.makeCompanion({ id: 'details', label: [...], icon: '...', data: 'details' }),
+    AppNode.makeCompanion({ variant: 'details', label: [...], icon: '...', data: 'details' }),
   ]),
 });
 ```
@@ -138,13 +145,13 @@ Node.make({
 
 ### `AppNode.makeCompanion(options)`
 
-Creates a plank-level companion node (a side panel attached to a specific object).
+Creates a plank-level companion node (a side panel attached to a specific object). Return it from an extension declared with `relation: AppGraphNode.companionRelation()`; under the default `child` relation it shows up in the navtree instead of the companion tabs.
 
 ```typescript
 import { AppNode } from '@dxos/app-toolkit';
 
 AppNode.makeCompanion({
-  id: 'related', // Identifies which surface renders.
+  variant: 'related', // Identifies which surface renders; the node id is `~related`.
   label: ['related.label', { ns: meta.id }], // i18n label.
   icon: 'ph--users-three--regular', // Tab icon.
   data: 'related', // Data passed to the surface filter.
@@ -154,7 +161,7 @@ AppNode.makeCompanion({
 
 ### `AppNode.makeDeckCompanion(options)`
 
-Creates a deck-level (workspace-wide) companion node.
+Creates a deck-level (workspace-wide) companion node. Return it from an extension on the root declared with `relation: AppGraphNode.companionRelation()`.
 
 ```typescript
 AppNode.makeDeckCompanion({

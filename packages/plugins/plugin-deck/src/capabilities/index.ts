@@ -43,7 +43,7 @@ export const NotificationTracker = Capability.lazyModule(
 export const GraphRetention = Capability.lazyModule(
   'GraphRetention',
   {
-    requires: [DeckCapabilities.State, AppCapabilities.Layout, AppCapabilities.AppGraph],
+    requires: [DeckCapabilities.State, AppCapabilities.Layout],
     provides: [AppCapabilities.AppGraphRetention],
   },
   () => import('./graph-retention.ts'),

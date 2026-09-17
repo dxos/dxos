@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -16,7 +17,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Attention } from '@dxos/react-ui-attention/types';
 import { Position } from '@dxos/util';
 
-import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
+import { CompanionViewState, DeckCapabilities, DeckOperation } from '#types';
 
 import { computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
 import { incrementPlank } from '../util/index.ts';
@@ -76,9 +77,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           const companions = Function.pipe(
             AppGraph.getNode(graph, input.id),
             Option.map((node) =>
-              AppGraph.getConnections(graph, node.id, 'child')
-                .filter((n) => n.type === DeckSchema.PLANK_COMPANION_TYPE)
-                .toSorted((a, b) =>
+              AppGraph.getConnections(graph, node.id, AppGraphNode.companionRelation()).toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
                 ),
             ),

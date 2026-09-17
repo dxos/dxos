@@ -180,6 +180,7 @@ export default Capability.makeModule(
       // Reactively appears and disappears as cursors are created or removed.
       AppGraphBuilder.createExtension({
         id: 'connectorCompanion',
+        relation: AppGraphNode.companionRelation(),
         match: whenObjectHasCursor,
         connector: (cursor) =>
           Effect.succeed([

@@ -4,29 +4,24 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import type * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 export const pendingPlanks = Atom.make<readonly string[]>([]).pipe(Atom.keepAlive);
 
-export const sameWorkspaces = (a: readonly string[], b: readonly string[]): boolean =>
-  a.length === b.length && a.every((id) => b.includes(id));
-
 export type WorkspaceRetention = {
-  rootChildren: readonly string[];
   activeDeck: string;
   previousDeck: string;
   retainedPlanks: readonly string[];
 };
 
-export const evictableWorkspaces = ({
-  rootChildren,
+/** The workspaces the deck shows or is about to, kept whole; the graph root is never named, since that would keep everything. */
+export const retainedWorkspaces = ({
   activeDeck,
   previousDeck,
   retainedPlanks,
-}: WorkspaceRetention): string[] => {
-  const retained = new Set([activeDeck, previousDeck, ...retainedPlanks.map(GraphPath.getWorkspaceFromPath)]);
-  return rootChildren.filter((id) => {
-    const spaceId = GraphPath.getSpaceIdFromPath(id);
-    return spaceId !== undefined && id === GraphPath.getSpacePath(spaceId) && !retained.has(id);
-  });
-};
+}: WorkspaceRetention): AppGraphBuilder.Region[] =>
+  [...new Set([activeDeck, previousDeck, ...retainedPlanks.map(GraphPath.getWorkspaceFromPath)])]
+    .filter((id) => id !== GraphNode.RootId)
+    .map((id) => ({ id }));
