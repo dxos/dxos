@@ -141,7 +141,7 @@ jobs:
   # `preview` has no EDGE the harness can provision against, so this is a token-mode run: the write
   # stages drop and only `operations-discovered` and `tool-latency` are scored. That still covers the
   # failure this job exists for — a worker whose operation registry comes up short or slow.
-  mcp-preview:
+  mcp-deployed:
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -227,12 +227,12 @@ jobs:
         if: always() && steps.summary.outputs.exported == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: assistant-evals-mcp-preview
+          name: assistant-evals-mcp-deployed
           path: packages/core/compute/assistant-evals/out
           retention-days: 30
 
       - name: Fail on a red run
         if: always() && steps.evals.outcome != 'success'
         run: |
-          echo "::error::The deployed-MCP eval run failed; see the summary above and the assistant-evals-mcp-preview artifact."
+          echo "::error::The deployed-MCP eval run failed; see the summary above and the assistant-evals-mcp-deployed artifact."
           exit 1
