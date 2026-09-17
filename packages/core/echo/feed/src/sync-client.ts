@@ -223,11 +223,6 @@ export class SyncClient {
         serverToken,
         response.serverToken,
       );
-      if (reconciliation === 'restart') {
-        // This batch was served from a position that is no longer meaningful; the next pull, now
-        // carrying the recorded token, replays the namespace from the start.
-        return { done: false };
-      }
       // On a reset the server ignored the stale `position`, so the batch restarts the namespace.
       const basePosition = reconciliation === 'reset' ? -1 : lastPulledPosition;
       // Positions only come from the server, so a local one above its high-water mark is a row the
@@ -524,30 +519,27 @@ export class SyncClient {
    * Reconciles the token the server reports against the one the local sync state was written under,
    * dropping everything derived from a server that is no longer there.
    *
-   * - `'unchanged'`: the tokens agree, or the server reports none (it predates the token).
+   * - `'unchanged'`: the tokens agree, or the server reports none (it predates the token). A first
+   *   token over untokened progress is only recorded: whether that progress came from this server
+   *   is settled by the ordering itself -- a replaced server re-issues positions the client holds
+   *   or reports a high-water mark below its cursor, and either replays the namespace. Wiping the
+   *   namespace on the first token instead made every client re-pull and re-push its whole history
+   *   the day the servers started reporting tokens, which is what saturated their sockets.
    * - `'reset'`: they disagree, so the server was swapped or wiped. The request carried the stale
-   *   token, so the response already restarts the namespace and the caller applies it as-is.
-   * - `'restart'`: progress exists under no token at all -- state written before this protocol,
-   *   whose server may already have been replaced. The request carried no token, so the response
-   *   was served from the stale position and must be discarded rather than applied; the caller
-   *   re-pulls, now under the recorded token.
-   *
-   * Positions are dropped in both the `'reset'` and `'restart'` cases: a token the client never
-   * observed cannot confirm the ordering it is holding, and adopting it silently would leave the
-   * namespace permanently missing everything below the stale position.
+   *   token, so the response already restarts the namespace and the caller applies it as-is. Every
+   *   position is dropped: the ordering was another store's, and the blocks are re-pushed.
    */
   #reconcileServerToken(
     opts: { spaceId: SpaceId; feedNamespace: string; lastPulledPosition: number },
     storedToken: string | undefined,
     reportedToken: string | undefined,
-  ): Effect.Effect<'unchanged' | 'reset' | 'restart', unknown, SqlClient.SqlClient> {
+  ): Effect.Effect<'unchanged' | 'reset', unknown, SqlClient.SqlClient> {
     const self = this;
     return Effect.gen(function* () {
       if (reportedToken == null || reportedToken === storedToken) {
         return 'unchanged';
       }
-      if (storedToken == null && opts.lastPulledPosition < 0) {
-        // Nothing pulled yet, so there is no ordering to distrust: just record who is serving.
+      if (storedToken == null) {
         yield* self.#feedStore.setSyncState({
           spaceId: opts.spaceId,
           feedNamespace: opts.feedNamespace,
@@ -568,7 +560,7 @@ export class SyncClient {
         feedNamespace: opts.feedNamespace,
         serverToken: reportedToken,
       });
-      return storedToken == null ? 'restart' : 'reset';
+      return 'reset';
     });
   }
 

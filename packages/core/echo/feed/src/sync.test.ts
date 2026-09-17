@@ -211,10 +211,11 @@ describe('Sync', () => {
       expect(await blockPositions(client)).toEqual([0, 1, 2, 3, 4]);
     });
 
-    // Sync state written before servers reported a token carries progress but no token. Its server
-    // may already have been replaced, so the first token a client sees cannot be trusted to
-    // describe the ordering that progress came from.
-    test('replays the namespace when adopting a token over untokened progress', async () => {
+    // Sync state written before servers reported a token carries progress but no token. Adopting
+    // the first token must not wipe that progress (every client would re-sync everything the day
+    // tokens appear), yet a server replaced in the meantime must still be caught: here by the
+    // positions it re-issues, which the client already holds for other blocks.
+    test('adopts a first token over untokened progress and still catches a replaced server', async () => {
       await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
       const [server, client] = builder.peers;
 
@@ -224,25 +225,36 @@ describe('Sync', () => {
       await client.setSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, lastPulledPosition: 2 });
       await client.clearServerToken({ spaceId, feedNamespace: WellKnownNamespaces.data });
 
+      // Same server: the token is recorded and progress is left alone.
+      await builder.pull(client);
+      expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: 4,
+        serverToken: await server.getServerToken(spaceId),
+      });
+      await client.setSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, lastPulledPosition: 2 });
+      await client.clearServerToken({ spaceId, feedNamespace: WellKnownNamespaces.data });
+
       // The replacement holds a different feed, so anything below the stale position that the
       // client fails to replay is data it never sees.
       const replacementFeedId = EntityId.random();
       const replacement = await builder.replaceServer();
       await seedBlocks(replacement, generateTestBlocks(10, 8), replacementFeedId);
 
-      // The batch this pull received was served from the stale position, so it is discarded.
+      // The first batch places the replacement's blocks where the old server's sit, which is what
+      // rewinds the cursor and replays the namespace.
       expect(await builder.pull(client)).toEqual({ done: false });
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: await replacement.getServerToken(spaceId),
       });
 
-      // Replaying now reaches every block, including those below the stale position.
       let done = false;
       while (!done) {
         ({ done } = await builder.pull(client));
       }
       expect(await blockPositions(client, replacementFeedId)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+      // The old server's blocks lost their slots to the replacement's and await a push.
+      expect(await blockPositions(client, feedId)).toEqual([null, null, null, null, null]);
     });
 
     test('does not duplicate blocks pulled from a replacement server', async () => {
