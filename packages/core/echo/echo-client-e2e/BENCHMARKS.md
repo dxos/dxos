@@ -853,3 +853,18 @@ Same method as the first run.
   `order + limit`, where the memory path still loads 2,000 documents to return 20. The sql host executes
   every shape in 7–15 ms with no document loads; the memory host takes 112–135 ms, 70–94 ms of it loading
   documents.
+
+## `fd6e6782` — 2026-09-17 — N = 2,000, sql only, after the in-memory executor was deleted
+
+A confirmation run of the collapsed harness, to check that the deletion changed nothing on the surviving
+path. Every row is within the noise of the `c5294281` sql column; host traces are unchanged (0 documents
+loaded, 6–12 ms per shape).
+
+| row                                         |                   sql |
+| ------------------------------------------- | --------------------: |
+| `run: type` (2,000 results)                 |   167.3 ms ±3.8% (10) |
+| `run: type + property` (400)                |    61.3 ms ±2.1% (17) |
+| `run: reference traversal` (10)             |    44.0 ms ±1.8% (23) |
+| `run: order + limit` (20)                   |   10.1 ms ±1.5% (100) |
+| `reactive first result` (400)               |    37.1 ms ±1.6% (27) |
+| `cold: reload + open + run type + property` | 2,086.5 ms ±18.0% (3) |
