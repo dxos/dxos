@@ -58,7 +58,7 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
 
   constructor(private readonly _client: EdgeHttpClient) {}
 
-  listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error> {
+  listPlugins(): Effect.Effect<readonly Plugin.Meta[], RegistryError> {
     return Effect.tryPromise({
       try: () => this._client.getRegistryPlugins(Context.default()),
       catch: RegistryError.wrap(),
