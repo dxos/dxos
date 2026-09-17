@@ -3,7 +3,7 @@
 //
 
 // This file needs invalid usage, so the diagnostic reporting it is the assertion.
-/** @effect-diagnostics unnecessaryEffectGen:skip-file missingEffectContext:skip-file */
+/** @effect-diagnostics unnecessaryEffectGen:skip-file */
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -50,7 +50,12 @@ describe('Operation.withHandler service requirements', () => {
           yield* UndeclaredService;
         }),
       ),
-    ).type.toRaiseError("Type 'UndeclaredService' is not assignable to type 'DeclaredService | Service'");
+      // Both diagnostics are the point of this test, in the order they are raised: the rule names
+      // the missing service, then the signature rejects the call.
+    ).type.toRaiseError(
+      'This Effect requires a service that is missing from the expected Effect context: `UndeclaredService`.',
+      "Type 'UndeclaredService' is not assignable to type 'DeclaredService | Service'",
+    );
   });
 
   it('accepts Operation.Service without declaring it', () => {

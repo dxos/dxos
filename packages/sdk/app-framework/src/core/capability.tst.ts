@@ -3,7 +3,7 @@
 //
 
 // This file needs invalid usage, so the diagnostic reporting it is the assertion.
-/** @effect-diagnostics unnecessaryEffectGen:skip-file missingEffectContext:skip-file */
+/** @effect-diagnostics unnecessaryEffectGen:skip-file */
 
 import * as Effect from 'effect/Effect';
 import { describe, expect, it } from 'tstyche';
@@ -21,7 +21,10 @@ describe('Capability arity', () => {
   });
 
   it('contributeAll rejects a singleton tag', () => {
+    // Both diagnostics are the point of this test, in the order they are raised: the rule names the
+    // identifier a singleton contribution cannot satisfy, then the signature rejects the call.
     expect(Capability.contributeAll(single, [{ example: 'value' }])).type.toRaiseError(
+      'This Effect requires a service that is missing from the expected Effect context: `CapabilityIdentifier<"org.dxos.test.single", "single">`.',
       "is not assignable to parameter of type 'MultiTag",
     );
   });
