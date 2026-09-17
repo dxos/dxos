@@ -80,6 +80,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const comments = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'comments',
+      relation: Node.companionRelation(),
       match: GraphNodeMatcher.whenNodeType(DOC_TYPE),
       connector: () => Effect.succeed([{ id: '~comments', type: COMMENTS_TYPE }]),
     }),
@@ -540,7 +541,7 @@ describe('path-resolution', () => {
       expect(Option.getOrThrow(represented)).toEqual({ key: 'home', workspace: WORKSPACE_A });
     });
 
-    test('maps a linked node by the grammar rather than by its producing extension', async ({ expect }) => {
+    test('maps a companion by its relation rather than by its producing extension', async ({ expect }) => {
       const builder = buildTestBuilder();
       await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
@@ -553,7 +554,7 @@ describe('path-resolution', () => {
       );
       const represented = PathResolution.representNode(
         builder,
-        `${GraphNode.RootId}/${WORKSPACE_A}/docA/${builder.urlGrammar.linkedPrefix}comments`,
+        `${GraphNode.RootId}/${WORKSPACE_A}/docA/~comments`,
       );
       expect(Option.getOrThrow(represented)).toEqual({ key: 'companion', id: 'comments', workspace: WORKSPACE_A });
     });

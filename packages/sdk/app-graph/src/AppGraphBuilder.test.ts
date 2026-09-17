@@ -734,6 +734,92 @@ describe('GraphBuilder', () => {
         expect(connections[0].id).to.equal('parent/child');
       });
 
+      test('companions expand with the child relation and stay out of it', async ({ expect }) => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+        GraphBuilder.addExtension(builder, [
+          ...Effect.runSync(
+            GraphBuilder.createExtension({
+              id: 'children',
+              match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+              connector: () => Effect.succeed([{ id: 'child', type: 'other' }]),
+            }),
+          ),
+          ...Effect.runSync(
+            GraphBuilder.createExtension({
+              id: 'companions',
+              relation: Node.companionRelation(),
+              match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+              connector: () => Effect.succeed([{ id: '~comments', type: 'other' }]),
+            }),
+          ),
+        ]);
+
+        Graph.addNode(graph as Graph.WritableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        expect(registry.get(graph.connections('parent', 'child')).map(({ id }) => id)).to.deep.equal(['parent/child']);
+        expect(registry.get(graph.connections('parent', Node.companionRelation())).map(({ id }) => id)).to.deep.equal([
+          'parent/~comments',
+        ]);
+      });
+
+      test('retention counts child edges as levels and keeps actions and companions with their node', async ({
+        expect,
+      }) => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+        GraphBuilder.addExtension(builder, [
+          ...Effect.runSync(
+            GraphBuilder.createExtension({
+              id: 'workspaces',
+              match: GraphNodeMatcher.whenNodeType(Node.RootType),
+              connector: () =>
+                Effect.succeed(
+                  ['w0', 'w1'].map((id) => ({
+                    id,
+                    type: EXAMPLE_TYPE,
+                    properties: { [GraphBuilder.RetainDepthProperty]: 0 },
+                  })),
+                ),
+            }),
+          ),
+          ...Effect.runSync(
+            GraphBuilder.createExtension({
+              id: 'items',
+              match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+              connector: () => Effect.succeed([{ id: 'item', type: 'item' }]),
+              actions: () => Effect.succeed([{ id: 'act', data: () => Effect.void, properties: { label: 'A' } }]),
+            }),
+          ),
+          ...Effect.runSync(
+            GraphBuilder.createExtension({
+              id: 'companions',
+              relation: Node.companionRelation(),
+              match: GraphNodeMatcher.whenNodeType('item'),
+              connector: () => Effect.succeed([{ id: '~comments', type: 'companion' }]),
+            }),
+          ),
+        ]);
+        for (const id of [GraphNode.RootId, 'root/w0', 'root/w1', 'root/w0/item', 'root/w1/item']) {
+          Graph.expandSync(graph, id, 'child');
+          await GraphBuilder.flush(builder);
+        }
+
+        GraphBuilder.setRetention(builder, [{ retained: Atom.make([{ id: 'root/w0', depth: 1 }]) }]);
+        await GraphBuilder.flush(builder);
+
+        const present = (id: string) => Option.isSome(Graph.getNode(graph, id));
+        expect(present('root/w0/item/~comments')).to.be.true;
+        expect(present('root/w1')).to.be.true;
+        expect(present('root/w1/act')).to.be.true;
+        expect(present('root/w1/item')).to.be.false;
+        expect(present('root/w1/item/~comments')).to.be.false;
+      });
+
       test('actions appear when extension registered after expand', async ({ expect }) => {
         const registry = Registry.make();
         const builder = GraphBuilder.make({ registry });

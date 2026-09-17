@@ -17,6 +17,7 @@ import { Position } from '@dxos/util';
 
 import * as Graph from './AppGraph.ts';
 import * as GraphBuilder from './AppGraphBuilder.ts';
+import * as Node from './AppGraphNode.ts';
 
 /**
  * A single `(prefix, id?)` pair as parsed by `@dxos/app-toolkit`'s `UrlPath.parse`. Kept as a
@@ -134,7 +135,7 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
 export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
   const table = new Map<string, UrlKeyTableEntry>();
   // The grammar's fixed tiers are configured on the builder, not declared by any extension: the anchor
-  // rebases the chain, and the linked key addresses a `~<variant>` child of the preceding item.
+  // rebases the chain, and the linked key addresses a companion of the preceding item.
   const { anchorKey, linkedKey } = builder.urlGrammar;
   if (anchorKey) {
     table.set(anchorKey, { key: anchorKey, hasId: true, anchor: true });
@@ -258,25 +259,28 @@ const resolveKeyId = async (
 };
 
 /**
- * Resolve a linked pair (`<key>/<variant>`) against the item it attaches to: the linked-segment child
- * (`<precedingNodeId>/~<variant>`) of `precedingNodeId`. A single expand, no BFS — a linked node is
- * always a direct child of the item it attaches to. Matched by the variant (the `~`-stripped last
- * segment), so it works regardless of which extension produced the node.
+ * Resolve a linked pair (`<key>/<variant>`) against the companion of `precedingNodeId` whose variant it
+ * names. A single expand, no BFS, and independent of which extension produced the companion.
  */
 const resolveLinked = async (
   builder: GraphBuilder.GraphBuilder,
   precedingNodeId: string,
   variant: string,
 ): Promise<string | null> => {
-  Graph.expandSync(builder.graph, precedingNodeId, 'child');
+  const relation = Node.companionRelation();
+  Graph.expandSync(builder.graph, precedingNodeId, relation);
   await GraphBuilder.flush(builder);
 
-  const linkedSegment = `${builder.urlGrammar.linkedPrefix}${variant}`;
-  const match = Graph.getConnections(builder.graph, precedingNodeId, 'child').find(
-    (child) => child.id.slice(child.id.lastIndexOf('/') + 1) === linkedSegment,
+  const match = Graph.getConnections(builder.graph, precedingNodeId, relation).find(
+    (companion) => companionVariant(companion.id) === variant,
   );
   return match?.id ?? null;
 };
+
+/** A companion's segment carries `~` so it shares attention with its owner; the variant is what follows. */
+const companionVariant = (id: string): string => GraphNode.segmentId(id).replace(/^~/, '');
+
+const COMPANION_RELATION = Graph.relationKey(Node.companionRelation());
 
 const resolveUrlAsync = async (
   builder: GraphBuilder.GraphBuilder,
@@ -383,7 +387,7 @@ export const resolveUrl = (
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of
- * `resolveUrl`. A linked node (a `~<variant>` segment) maps to the declared `linked` key
+ * `resolveUrl`. A companion (a node reached through the companion relation) maps to the declared `linked` key
  * with the variant as its id — independent of the producing extension, so every linked node is
  * addressable. Any other node maps via its producing extension's `urlKey` (`getNodeExtensionId`);
  * a node with no key-declaring producer returns `Option.none()` (unmapped — serialization skips it
@@ -397,14 +401,9 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
     return Option.none();
   }
 
-  const lastSegment = segments[segments.length - 1];
-  if (lastSegment.startsWith(builder.urlGrammar.linkedPrefix)) {
-    // Linked node: keyed by the grammar's `linked` key, with the variant (the `~`-stripped segment) as
-    // its id — matched by the convention, independent of the producing extension.
-    const linkedKey = builder.urlGrammar.linkedKey;
-    if (linkedKey) {
-      return Option.some({ key: linkedKey, id: lastSegment.slice(builder.urlGrammar.linkedPrefix.length), workspace });
-    }
+  const linkedKey = builder.urlGrammar.linkedKey;
+  if (linkedKey && Graph.incoming(builder.graph, nodeId).some(({ relation }) => relation === COMPANION_RELATION)) {
+    return Option.some({ key: linkedKey, id: companionVariant(nodeId), workspace });
   }
 
   const extensionId = builder.getNodeExtensionId(nodeId);

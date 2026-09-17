@@ -762,9 +762,19 @@ export const sortEdges = <T extends ExpandableGraph | WritableGraph>(
  */
 export const batch = <T extends WritableGraph, A>(graph: T, fn: () => A): A => getInternal(graph)._model.batch(fn);
 
-/** Ids below `roots` that nothing outside them holds, which is what {@link release} can drop without emptying another view. */
-export const subgraph = (graph: BaseGraph, roots: Iterable<string>): string[] =>
-  getInternal(graph)._model.subgraph(roots);
+type StoredEdge = { source: string; target: string; relation: string };
+
+/** The edges leaving `id` in their stored outbound form, read without subscribing. */
+export const outgoing = (graph: BaseGraph, id: string): StoredEdge[] =>
+  getInternal(graph)
+    ._model.outgoing(id)
+    .map(({ source, target, type }) => ({ source, target, relation: type }));
+
+/** The edges arriving at `id` in their stored outbound form, read without subscribing. */
+export const incoming = (graph: BaseGraph, id: string): StoredEdge[] =>
+  getInternal(graph)
+    ._model.incoming(id)
+    .map(({ source, target, type }) => ({ source, target, relation: type }));
 
 /**
  * Unloads the nodes: they leave the model outright, along with the expansion bookkeeping that would

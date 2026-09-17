@@ -86,24 +86,18 @@ export type UrlBinding = { key: string; kind: 'item' | 'singleton'; path: string
  * The two keys are fixed tiers no extension declares (no connector produces their nodes): `anchorKey`
  * establishes the base that following pairs resolve against and is consumed as a rebase
  * (`w/<workspace>`); `linkedKey` addresses the linked-segment child of the preceding item
- * (`companion/<variant>`), resolved structurally. The separators are the id-encoding conventions:
- * `linkedPrefix` marks a linked segment (`<parent>/~<variant>`), and `tailSeparator` joins the
+ * (`companion/<variant>`), resolved through the companion relation. `tailSeparator` joins the
  * fixed-depth node-id segments between a key's static `path` and the object id into one URL id
  * (`db/<slug>+<id>`) so a fixed-depth nested shape needs no resolver.
  */
 export type UrlGrammar = {
   anchorKey?: string;
   linkedKey?: string;
-  linkedPrefix: string;
   tailSeparator: string;
 };
 
 /** {@link UrlGrammar} as supplied at construction: the separators fall back to their defaults. */
 export type UrlGrammarProps = Partial<UrlGrammar>;
-
-/** Default linked-segment prefix; mirrors `@dxos/react-ui-attention`'s `linkedSegment`. Internal: read
- * the resolved value from `builder.urlGrammar` rather than the default. */
-const DEFAULT_LINKED_PREFIX = '~';
 
 /** Default tail separator; never appears in an entity id or a type slug. Internal, as above. */
 const DEFAULT_TAIL_SEPARATOR = '+';
@@ -200,13 +194,13 @@ export class GraphBuilder extends Builder.GraphBuilder<
 
   constructor({ registry, urlGrammar, decorateNode, ...graphProps }: GraphBuilderProps = {}) {
     const grammar: UrlGrammar = {
-      linkedPrefix: DEFAULT_LINKED_PREFIX,
       tailSeparator: DEFAULT_TAIL_SEPARATOR,
       ...urlGrammar,
     };
     super({
       registry,
       relationKey: (relation) => Graph.relationKey(relation ?? 'child'),
+      structural: (relation) => relation === CHILD_RELATION,
       inline,
       unchanged: nodeArgsUnchanged,
       decorateNode,
@@ -236,9 +230,12 @@ export class GraphBuilder extends Builder.GraphBuilder<
     const decoded = Graph.relationFromKey(relation);
     if (decoded.kind === 'child' && decoded.direction === 'outbound') {
       Graph.expandSync(this.graph, id, 'action');
+      Graph.expandSync(this.graph, id, Node.companionRelation());
     }
   }
 }
+
+const CHILD_RELATION = Graph.relationKey('child');
 
 /**
  * How an app node argument's inline descendants are traversed. Actions are qualified and tracked like
@@ -282,7 +279,7 @@ const makeStore = (
     setNode: (id, node) => graph._setNode(id, node),
     batch: (fn) => Graph.batch(graph, fn),
     release: (ids) => void Graph.release(graph, ids),
-    subgraph: (roots) => Graph.subgraph(graph, roots),
+    outgoing: (id) => Graph.outgoing(graph, id),
     constructNode: (node) => graph._constructNode(node),
   };
 };
@@ -307,7 +304,9 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 // The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.
 // Named (not namespace) re-export: this module already exports its own `GraphBuilder` class above.
 export {
+  type Region,
   type Retention,
+  RetainDepthProperty,
   addExtension,
   destroy,
   explore,
