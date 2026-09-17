@@ -54,6 +54,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       sendMessage: async (ctx, message) => await messenger.sendMessage(ctx, message),
       onSignal,
       onOffer,
+      onClose: async () => {},
       topic,
     });
 

@@ -1410,7 +1410,13 @@ export const DeckPlanks = () => {
     maxPlankWidthPx,
     scrollIntentRef,
   });
-  useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
+  useScrollIntoView({
+    viewportRef,
+    stackRef,
+    getPlankTiles,
+    scrollIntoViewId: state.scrollIntoView?.id,
+    scrollIntentRef,
+  });
   useExposeInert({ getPlankTiles, expose });
   useExposeScale({ viewportRef, stackRef, hostRef, getPlankTiles, expose });
   // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have

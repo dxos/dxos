@@ -8,12 +8,18 @@ import { AppManager } from './app-manager.ts';
 import { Markdown } from './plugins/index.ts';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
+  const sharedWorkspace = host.workspaceId;
+  expect(sharedWorkspace, 'the host must be in a workspace before it can share one').toBeDefined();
   await host.shareSpace();
   const invitationCode = await host.createSpaceInvitation();
   const authCode = await host.getAuthCode();
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
+
+  await expect.poll(() => guest.workspaceId, { timeout: 30_000 }).toBe(sharedWorkspace);
+  await guest.waitForSpaceReady(30_000);
+
   await navigateToNewDocument(host);
 };
 
