@@ -175,9 +175,6 @@ export const surface = <
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
-  // Same rule bug as `capability.ts#moduleMaker`, on the same `LoadModule` shape: a tuple with a
-  // generic rest element, constrained to `readonly AnyTag[]`. See the note there.
-  // @effect-diagnostics-next-line missingEffectContext:off
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
 ): Capability$.Module<Options> => {

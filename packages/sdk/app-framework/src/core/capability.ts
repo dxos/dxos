@@ -235,7 +235,15 @@ export interface MultiTag<T, S extends string = any>
   readonly arity: 'multi';
 }
 
-export type AnyTag = Tag<any, any> | MultiTag<any, any>;
+/**
+ * Either arity of capability tag. One interface rather than `Tag<any, any> | MultiTag<any, any>`:
+ * both are assignable to it (`Context.Key` is covariant in both parameters), and a union of two
+ * tag types in a constraint position makes `missingEffectContext` read the constraint as an Effect
+ * and report one constituent's identifier as a missing service.
+ */
+export interface AnyTag extends Context.Key<CapabilityIdentifier<any, Arity>, any>, InterfaceDef<any> {
+  readonly arity: Arity;
+}
 
 /**
  * Compile-time error surfaced when the service type is omitted from the curried factory form.
@@ -658,13 +666,6 @@ export const moduleMaker =
     const Requires extends readonly AnyTag[] = readonly [],
     const Extra extends readonly AnyTag[] = readonly [],
   >(
-    // A tuple with a generic rest element lands here in a position constrained to
-    // `readonly AnyTag[]`, and a capability tag is an Effect, so the rule reads that constraint as
-    // one Effect. It keeps a single constituent of `Tag | MultiTag` and reports the other as
-    // missing, naming the same identifier whatever the tuple holds, and for `readonly [...Extra]`
-    // with no head element at all, so the finding says nothing about this code.
-    // TODO(wittjosiah): Report upstream (repro in the PR); drop the directive once it is fixed.
-    // @effect-diagnostics-next-line missingEffectContext:off
     loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
     options?: MakerOptions<Requires, Extra, Props, Options>,
   ): Module<Options> => {
