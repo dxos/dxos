@@ -29,6 +29,7 @@ import {
   createRepo,
   createRepoTopology,
   createSqliteAdapter,
+  createStarTopology,
   disconnectAdapters,
   findInStates,
   reconnectAdapters,
@@ -323,6 +324,71 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
 
       await expect.poll(() => handleB.doc()?.fromHost, { timeout: 30_000 }).toEqual('host-offline');
       await expect.poll(() => handleA.doc()?.fromClient, { timeout: 30_000 }).toEqual('client-offline');
+    });
+
+    test('a peer offered again mid-round does not hold back later edits', { timeout: 30_000 }, async () => {
+      let framesDelivered: 'on' | 'off' = 'on';
+      const { repos, adapters } = await createHostClientRepoTopology({
+        connectionStateProvider: () => framesDelivered,
+        subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
+      });
+      const [host, client] = repos;
+      await connectAdapters(adapters);
+
+      const handle = host.create<{ text?: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'first';
+      });
+      await waitForSubductionSave();
+      const observed = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
+      await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      framesDelivered = 'off';
+      handle.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await waitForSubductionSave();
+      handle.change((doc: any) => {
+        doc.text = 'third';
+      });
+      await waitForSubductionSave();
+
+      framesDelivered = 'on';
+      await reconnectAdapters(adapters);
+      await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
+    });
+
+    test('losing one peer mid-round does not hold back edits for the others', { timeout: 30_000 }, async () => {
+      let server1Reachable: 'on' | 'off' = 'on';
+      const { repos, adapters } = await createStarTopology({
+        connectionStateProviderByConnection: { 0: () => server1Reachable },
+        subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
+      });
+      const [client, , server2] = repos;
+      await connectAdapters(adapters);
+
+      const handle = client.create<{ text?: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'first';
+      });
+      await waitForSubductionSave();
+      const observed = await findInStates<{ text?: string }>(server2, handle.url, FIND_STATES);
+      await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      server1Reachable = 'off';
+      handle.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await waitForSubductionSave();
+      handle.change((doc: any) => {
+        doc.text = 'third';
+      });
+      await waitForSubductionSave();
+
+      const [clientSide, server1Side] = adapters[0];
+      clientSide.peerDisconnected(server1Side.peerId!);
+      server1Side.peerDisconnected(clientSide.peerId!);
+      await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
     });
 
     // Mirrored from `automerge-repo.test.ts:'replicate document after request'`,

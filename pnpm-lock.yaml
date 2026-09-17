@@ -1656,7 +1656,7 @@ pnpmfileChecksum: sha256-HfdXnQ57lkGOnGDIqwvpKXC8RFCIbD00oMkDJI7W7aQ=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.48':
-    hash: 86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5
+    hash: b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe
     path: patches/@automerge__automerge-repo@2.6.0-subduction.48.patch
   '@automerge/automerge-subduction@0.17.2':
     hash: ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7
@@ -1664,6 +1664,9 @@ patchedDependencies:
   '@vitest/browser@4.1.10':
     hash: a986f87598d00b4753574afb9fcad1a84d9b0145eaf80189a0b49d32b7af569a
     path: patches/@vitest__browser@4.1.10.patch
+  '@zag-js/presence@1.43.3':
+    hash: 724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58
+    path: patches/@zag-js__presence@1.43.3.patch
   js-clipper@1.0.1:
     hash: 6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f
     path: patches/js-clipper@1.0.1.patch
@@ -2074,7 +2077,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../../packages/common/keys
@@ -2153,7 +2156,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@automerge/automerge-subduction':
         specifier: 0.17.2
         version: 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
@@ -5415,7 +5418,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -5612,7 +5615,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@automerge/automerge-subduction':
         specifier: 0.17.2
         version: 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
@@ -5737,7 +5740,7 @@ importers:
     dependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -7121,7 +7124,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: 'catalog:'
         version: 2.6.0-subduction.48
@@ -7221,9 +7224,6 @@ importers:
       esbuild-plugin-wasm:
         specifier: 'catalog:'
         version: 1.1.0
-      fast-check:
-        specifier: 'catalog:'
-        version: 3.23.2
       ioredis:
         specifier: 'catalog:'
         version: 5.11.1
@@ -18267,7 +18267,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -18500,7 +18500,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -18758,7 +18758,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+        version: 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -42959,7 +42959,7 @@ snapshots:
       '@zag-js/password-input': 1.43.3
       '@zag-js/pin-input': 1.43.3
       '@zag-js/popover': 1.43.3
-      '@zag-js/presence': 1.43.3
+      '@zag-js/presence': 1.43.3(patch_hash=724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58)
       '@zag-js/progress': 1.43.3
       '@zag-js/qr-code': 1.43.3
       '@zag-js/radio-group': 1.43.3
@@ -43266,13 +43266,13 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.48':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)
+      '@automerge/automerge-repo': 2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo@2.6.0-subduction.48(patch_hash=86f69e7c7bafbcc84cdb2e91b7d233613237b555df4cf6c465fe4de86708f7b5)':
+  '@automerge/automerge-repo@2.6.0-subduction.48(patch_hash=b5daddb741d34b92d3e9073fbb9dedcaedac59f1256299c8b48cf67934879ebe)':
     dependencies:
       '@automerge/automerge': 3.5.0
       '@automerge/automerge-subduction': 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
@@ -54183,7 +54183,7 @@ snapshots:
       '@zag-js/dom-query': 1.43.3
       '@zag-js/utils': 1.43.3
 
-  '@zag-js/presence@1.43.3':
+  '@zag-js/presence@1.43.3(patch_hash=724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58)':
     dependencies:
       '@zag-js/core': 1.43.3
       '@zag-js/dom-query': 1.43.3
