@@ -11,11 +11,12 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { DeckCapabilities } from '#types';
 
-import { pendingPlanks, retainedWorkspaces } from '../util/index.ts';
+import { retainedWorkspaces } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const stateAtom = yield* DeckCapabilities.State;
+    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
     const layoutAtom = yield* AppCapabilities.Layout;
 
     const retention: AppGraphBuilder.Retention = {
@@ -24,7 +25,7 @@ export default Capability.makeModule(
         return retainedWorkspaces({
           activeDeck,
           previousDeck,
-          retainedPlanks: [...get(layoutAtom).active, ...get(pendingPlanks)],
+          retainedPlanks: [...get(layoutAtom).active, ...(get(ephemeralAtom).opening ?? [])],
         });
       }),
     };

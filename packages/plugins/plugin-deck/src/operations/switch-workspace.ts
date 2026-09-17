@@ -4,7 +4,7 @@
 
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
+import * as FiberHandle from 'effect/FiberHandle';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -23,8 +23,6 @@ import { firstOpenableChild, openableChildren } from '../util/index.ts';
 
 const replaceEmptyDeck = (params: Omit<Parameters<typeof navigateDeck>[0], 'method'>) =>
   navigateDeck({ ...params, method: 'replace' });
-
-let pendingSeed: Fiber.Fiber<void> | undefined;
 
 const seedWhenLoaded = Effect.fnUntraced(function* (
   graph: AppGraph.ExpandableGraph,
@@ -48,10 +46,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
-      if (pendingSeed) {
-        yield* Fiber.interrupt(pendingSeed);
-        pendingSeed = undefined;
-      }
+      const seed = yield* Capability.get(DeckCapabilities.WorkspaceSeed);
+      yield* FiberHandle.clear(seed);
 
       yield* applyWorkspace(input.subject);
 
@@ -77,7 +73,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
 
       if (seeds && seeded.length === 0) {
-        pendingSeed = yield* Effect.forkDetach(
+        yield* FiberHandle.run(
+          seed,
           seedWhenLoaded(graph, input.subject, workspace).pipe(
             Effect.catchCause((cause) =>
               Cause.hasInterruptsOnly(cause)

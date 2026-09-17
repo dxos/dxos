@@ -10,6 +10,8 @@ import { useConnections } from '@dxos/plugin-graph/hooks';
 import { type Label } from '@dxos/ui-types/translations';
 import { Position } from '@dxos/util';
 
+import { DeckSchema } from '#types';
+
 export type DeckCompanion = AppGraphNode.Node<
   any,
   {
@@ -24,8 +26,12 @@ export type DeckCompanion = AppGraphNode.Node<
   }
 >;
 
+const isDeckCompanion = (node: AppGraphNode.Node): node is DeckCompanion =>
+  node.type === DeckSchema.DECK_COMPANION_TYPE;
+
 export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
-  const companions = useConnections(graph, GraphNode.RootId, AppGraphNode.companionRelation()) as DeckCompanion[];
-  return companions.toSorted((a, b) => Position.compare(a.properties, b.properties));
+  return useConnections(graph, GraphNode.RootId, AppGraphNode.companionRelation())
+    .filter(isDeckCompanion)
+    .toSorted((a, b) => Position.compare(a.properties, b.properties));
 };

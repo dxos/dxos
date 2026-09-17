@@ -17,7 +17,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Attention } from '@dxos/react-ui-attention/types';
 import { Position } from '@dxos/util';
 
-import { CompanionViewState, DeckCapabilities, DeckOperation } from '#types';
+import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 
 import { computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
 import { incrementPlank } from '../util/index.ts';
@@ -77,9 +77,11 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           const companions = Function.pipe(
             AppGraph.getNode(graph, input.id),
             Option.map((node) =>
-              AppGraph.getConnections(graph, node.id, AppGraphNode.companionRelation()).toSorted((a, b) =>
-                Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
-              ),
+              AppGraph.getConnections(graph, node.id, AppGraphNode.companionRelation())
+                .filter(DeckSchema.isPlankCompanion)
+                .toSorted((a, b) =>
+                  Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
+                ),
             ),
             Option.getOrElse(() => []),
           );

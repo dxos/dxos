@@ -190,9 +190,9 @@ const resolveEffectiveVariant = (
   plankId: string,
   preferredVariant: string | undefined,
 ): string | undefined => {
-  const companions = AppGraph.getConnections(graph, plankId, AppGraphNode.companionRelation()).toSorted((a, b) =>
-    Position.compare(a.properties, b.properties),
-  );
+  const companions = AppGraph.getConnections(graph, plankId, AppGraphNode.companionRelation())
+    .filter(DeckSchema.isPlankCompanion)
+    .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   const selected = DeckSchema.selectCompanion(companions, preferredVariant);
   return selected && Attention.getLinkedVariant(selected.id);

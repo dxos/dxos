@@ -5,23 +5,39 @@
 import * as Effect from 'effect/Effect';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import * as AppGraph from '@dxos/app-graph/AppGraph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import { log } from '@dxos/log';
 
 import { openableChildren } from './openable-children.ts';
 
-export const awaitNodes = (
-  graph: AppGraph.ReadableGraph,
+/** Waits until none of `ids` is still released, which is once each is produced again or known not to be. */
+export const awaitReleased = (
+  registry: Registry.AtomRegistry,
+  builder: AppGraphBuilder.GraphBuilder,
   ids: readonly string[],
   timeoutMs: number,
-): Effect.Effect<void> =>
-  Effect.all(
-    ids.map((id) =>
-      AppGraph.waitFor(graph, id).pipe(
-        Effect.timeoutOrElse({ duration: `${timeoutMs} millis`, orElse: () => Effect.void }),
-      ),
-    ),
-    { concurrency: 'unbounded', discard: true },
+): Effect.Effect<void> => {
+  const pending = () => ids.filter((id) => AppGraphBuilder.wasReleased(builder, id));
+  return Effect.callback<void>((resume) => {
+    if (pending().length === 0) {
+      resume(Effect.void);
+      return;
+    }
+
+    const unsubscribe = registry.subscribe(AppGraphBuilder.releasedVersion(builder), () => {
+      if (pending().length === 0) {
+        resume(Effect.void);
+      }
+    });
+    return Effect.sync(unsubscribe);
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: `${timeoutMs} millis`,
+      orElse: () => Effect.sync(() => log.warn('released subjects did not return', { ids: pending() })),
+    }),
   );
+};
 
 export const firstOpenableChild = (
   registry: Registry.AtomRegistry,
@@ -30,25 +46,19 @@ export const firstOpenableChild = (
   timeoutMs: number,
 ): Effect.Effect<string | undefined> =>
   Effect.callback<string>((resume) => {
-    let found = false;
-    let unsubscribe: (() => void) | undefined;
-    unsubscribe = registry.subscribe(
-      graph.connections(id, 'child'),
-      () => {
-        const [first] = openableChildren(graph, id);
-        if (first && !found) {
-          found = true;
-          unsubscribe?.();
-          resume(Effect.succeed(first));
-        }
-      },
-      { immediate: true },
-    );
-    if (found) {
-      unsubscribe();
+    const [present] = openableChildren(graph, id);
+    if (present) {
+      resume(Effect.succeed(present));
+      return;
     }
 
-    return Effect.sync(() => unsubscribe?.());
+    const unsubscribe = registry.subscribe(graph.connections(id, 'child'), () => {
+      const [first] = openableChildren(graph, id);
+      if (first) {
+        resume(Effect.succeed(first));
+      }
+    });
+    return Effect.sync(unsubscribe);
   }).pipe(
     Effect.timeoutOrElse({
       duration: `${timeoutMs} millis`,

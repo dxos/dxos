@@ -556,6 +556,14 @@ describe('path-resolution', () => {
       expect(Option.getOrThrow(represented)).toEqual({ key: 'companion', id: 'comments', workspace: WORKSPACE_A });
     });
 
+    test('maps a companion whose node is not loaded', ({ expect }) => {
+      const represented = PathResolution.representNode(
+        buildTestBuilder(),
+        `${GraphNode.RootId}/${WORKSPACE_A}/docA/~comments`,
+      );
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'companion', id: 'comments', workspace: WORKSPACE_A });
+    });
+
     // The counterpart of `nodeUrlSegment` returning undefined: a node sitting exactly at its binding's
     // path is the container the items hang off, so it addresses nothing of its own.
     test("a container at the binding's own path is unmapped", async ({ expect }) => {

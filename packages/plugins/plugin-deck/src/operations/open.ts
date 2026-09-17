@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -38,40 +37,38 @@ import {
   updatePlankNames,
 } from '../util/index.ts';
 import {
-  awaitNodes,
+  awaitReleased,
   isCompanionOpen,
   openableChildren,
   openCompanionPlank,
-  pendingPlanks,
   resolveDeckSpec,
   updateActiveDeck,
 } from '../util/index.ts';
 
-const withPendingPlanks = <A, E, R>(ids: readonly string[], effect: Effect.Effect<A, E, R>) =>
-  Effect.gen(function* () {
-    if (ids.length === 0) {
-      return yield* effect;
-    }
+/** Marks the subjects as opening until the scope closes, so their workspaces stay loaded while they arrive. */
+const holdOpening = (ids: readonly string[]) =>
+  ids.length === 0
+    ? Effect.void
+    : Effect.acquireRelease(
+        Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
+          ...state,
+          opening: [...(state.opening ?? []), ...ids],
+        })),
+        () =>
+          Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
+            ...state,
+            opening: withoutOnce(state.opening ?? [], ids),
+          })).pipe(Effect.orDie),
+      );
 
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    return yield* Effect.acquireUseRelease(
-      Effect.sync(() => registry.update(pendingPlanks, (pending) => [...pending, ...ids])),
-      () => effect,
-      () =>
-        Effect.sync(() =>
-          registry.update(pendingPlanks, (pending) => {
-            const remaining = [...pending];
-            for (const id of ids) {
-              const index = remaining.indexOf(id);
-              if (index !== -1) {
-                remaining.splice(index, 1);
-              }
-            }
-            return remaining;
-          }),
-        ),
-    );
-  });
+const withoutOnce = (list: readonly string[], ids: readonly string[]): string[] =>
+  ids.reduce(
+    (remaining, id) => {
+      const index = remaining.indexOf(id);
+      return index === -1 ? remaining : remaining.toSpliced(index, 1);
+    },
+    [...list],
+  );
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
@@ -84,203 +81,194 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      const releasedSubjects = input.subject.filter(
-        (id) => Option.isNone(AppGraph.getNode(graph, id)) && AppGraphBuilder.wasReleased(builder, id),
-      );
-      yield* withPendingPlanks(
-        releasedSubjects,
-        Effect.gen(function* () {
-          for (const subjectId of input.subject) {
-            NotFound.expandPath(graph, subjectId);
-          }
+      const registry = yield* Capability.get(Capabilities.AtomRegistry);
+      yield* holdOpening(input.subject.filter((id) => Option.isNone(AppGraph.getNode(graph, id))));
+      for (const subjectId of input.subject) {
+        NotFound.expandPath(graph, subjectId);
+      }
 
-          {
-            const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-            if (input.workspace && state.activeDeck !== input.workspace) {
-              yield* applyWorkspace(input.workspace);
+      {
+        const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+        if (input.workspace && state.activeDeck !== input.workspace) {
+          yield* applyWorkspace(input.workspace);
+        }
+      }
+      yield* awaitReleased(registry, builder, input.subject, RESOLVE_TIMEOUT_MS);
+
+      // Dedup subjects against the active deck using EID identity.
+      // The same object can appear under different graph paths (e.g., via collections vs types).
+      // Resolve each subject's EID and, if it matches an already-open deck item, remap the
+      // subject to the existing deck entry so the already-open check matches by identity.
+      {
+        const deck = yield* DeckCapabilities.getDeck();
+        const active = deck.active;
+        if (active.length > 0 && input.subject.length > 0) {
+          // Build EID → deck item ID map for active items.
+          const deckEidMap = new Map<string, string>();
+          for (const deckId of active) {
+            const eid = GraphPath.tryGetEid(graph, deckId);
+            if (Option.isSome(eid)) {
+              deckEidMap.set(eid.value, deckId);
             }
           }
-          yield* awaitNodes(graph, releasedSubjects, RESOLVE_TIMEOUT_MS);
 
-          // Dedup subjects against the active deck using EID identity.
-          // The same object can appear under different graph paths (e.g., via collections vs types).
-          // Resolve each subject's EID and, if it matches an already-open deck item, remap the
-          // subject to the existing deck entry so the already-open check matches by identity.
-          {
-            const deck = yield* DeckCapabilities.getDeck();
-            const active = deck.active;
-            if (active.length > 0 && input.subject.length > 0) {
-              // Build EID → deck item ID map for active items.
-              const deckEidMap = new Map<string, string>();
-              for (const deckId of active) {
-                const eid = GraphPath.tryGetEid(graph, deckId);
-                if (Option.isSome(eid)) {
-                  deckEidMap.set(eid.value, deckId);
+          // Remap subjects whose EID matches an existing deck item.
+          if (deckEidMap.size > 0) {
+            const remapped = input.subject.map((subjectId) => {
+              const eid = GraphPath.tryGetEid(graph, subjectId);
+              if (Option.isSome(eid)) {
+                const existing = deckEidMap.get(eid.value);
+                if (existing && existing !== subjectId) {
+                  return existing;
                 }
               }
-
-              // Remap subjects whose EID matches an existing deck item.
-              if (deckEidMap.size > 0) {
-                const remapped = input.subject.map((subjectId) => {
-                  const eid = GraphPath.tryGetEid(graph, subjectId);
-                  if (Option.isSome(eid)) {
-                    const existing = deckEidMap.get(eid.value);
-                    if (existing && existing !== subjectId) {
-                      return existing;
-                    }
-                  }
-                  return subjectId;
-                });
-                input = { ...input, subject: remapped };
-              }
-            }
-          }
-
-          // Compute the next active deck state and apply it. Dispositions:
-          // - 'solo' (default): navigate — the deck becomes just the subjects, unless they are all already
-          //   open (scroll-into-view only).
-          // - 'add': always insert the subjects as new planks, immediately after `pivotId` when provided,
-          //   else at the end; never replaces. A card passes its own plank as `pivotId` (see
-          //   `useCardPivot`), so opened objects appear beside the plank the card lives in.
-          // - 'auto': follow the deck — add beside the origin (`pivotId`, falling back to the attended
-          //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank inline references
-          //   use this so they grow a sliding deck but replace a solo one.
-          // Holding shift forces any disposition into an add (callers forward the raw modifier rather than
-          // encoding the policy). Only 'auto' falls back to the attended plank; a shift-forced add from the
-          // nav-tree (a 'solo' gesture with no pivot) appends at the end.
-          const navigateSolo = (active: readonly string[]): string[] =>
-            input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
-
-          const { segments } = yield* DeckCapabilities.getDeck();
-
-          let previouslyOpenIds: Set<string>;
-          {
-            const deck = yield* DeckCapabilities.getDeck();
-            previouslyOpenIds = new Set<string>(deck.active);
-
-            const disposition = input.disposition ?? 'solo';
-            const shift = !!input.modifiers?.shift;
-            const sliding = deck.active.length >= 2;
-            const anchorToOrigin = disposition === 'auto';
-            const addBesideOrigin = shift || disposition === 'add' || (anchorToOrigin && sliding);
-
-            // A type may declare what its deck opens (`AppAnnotation.DeckAnnotation`); a Collection opens
-            // the documents it contains rather than a plank showing the collection itself.
-            const seeded = resolveSeededPlanks({
-              initial: resolveDeckSpec(
-                input.subject[0] ? Option.getOrUndefined(AppGraph.getNode(graph, input.subject[0])) : undefined,
-              )?.initial,
-              addBesideOrigin,
-              children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
+              return subjectId;
             });
-
-            // An open at a declared level: the level supplies the plank name and closes the levels below
-            // it, so a chain like `mailbox / message / attachment` stays consistent without the caller
-            // tracking any of it.
-            const levelOpen =
-              input.root && input.level && input.subject[0]
-                ? resolveLevelOpen({
-                    active: deck.active,
-                    plankNames: deck.plankNames,
-                    segments,
-                    spec: resolveDeckSpec(Option.getOrUndefined(AppGraph.getNode(graph, input.root))),
-                    root: input.root,
-                    level: input.level,
-                    subjectId: input.subject[0],
-                  })
-                : undefined;
-
-            let next: string[];
-            if (platform === 'mobile') {
-              // A stack has one open semantic: push (or surface) the subjects; solo-replace, pivots, and
-              // seeded side-by-side planks are deck-geometry concepts with no stack analog.
-              next = pushSubjectsToStack(deck.active, input.subject);
-            } else if (levelOpen) {
-              next = levelOpen.next;
-            } else if (seeded) {
-              next = seeded;
-            } else if (addBesideOrigin) {
-              const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
-              const pivotId =
-                input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
-              // A named open reuses the plank already holding that name, the way a browser tab is reused.
-              const replaceId = input.name
-                ? plankIdForName(input.name, { active: deck.active, plankNames: deck.plankNames, segments })
-                : undefined;
-              next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
-            } else {
-              next = navigateSolo(deck.active);
-            }
-
-            const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
-            const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
-            // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
-            // so names whose plank this open closed are dropped rather than left dangling.
-            // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
-            const boundName = levelOpen?.name ?? input.name;
-            const segmentOfId = (id: string) =>
-              Navigation.recordedOrGraphSegment(builder, segments, id) ?? Navigation.segmentOf(undefined, id);
-            const nextSegments = next.map(segmentOfId);
-            const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
-            const plankNames = updatePlankNames(
-              deck.plankNames,
-              nextSegments,
-              boundName && boundSegment ? { name: boundName, segment: boundSegment } : undefined,
-            );
-            // The companion follows a level swap: the new plank stands in for the replaced one, and closing
-            // it mid-read would also narrow the deck, which the browser answers by clamping the scroll — a
-            // one-frame snap measured at exactly the lost width.
-            const companionPlanks =
-              levelOpen?.replacedId &&
-              input.subject[0] &&
-              isCompanionOpen(deck.companionPlanks, flatten, levelOpen.replacedId)
-                ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
-                : deckUpdates.companionPlanks;
-            yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-              updateActiveDeck(state, { plankNames }),
-            );
-            const current = yield* currentNavigation();
-            const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
-            yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });
+            input = { ...input, subject: remapped };
           }
+        }
+      }
 
-          // Schedule side-effects for the newly opened items: scroll into view, expose in
-          // the navigation sidebar, and emit observability events.
-          // When nothing is newly opened (subject was already visible), the fallback
-          // `input.subject[0]` still triggers scroll and expose so the user is taken there.
-          {
-            const deck = yield* DeckCapabilities.getDeck();
-            const newlyOpen = deck.active.filter((i: string) => !previouslyOpenIds.has(i));
+      // Compute the next active deck state and apply it. Dispositions:
+      // - 'solo' (default): navigate — the deck becomes just the subjects, unless they are all already
+      //   open (scroll-into-view only).
+      // - 'add': always insert the subjects as new planks, immediately after `pivotId` when provided,
+      //   else at the end; never replaces. A card passes its own plank as `pivotId` (see
+      //   `useCardPivot`), so opened objects appear beside the plank the card lives in.
+      // - 'auto': follow the deck — add beside the origin (`pivotId`, falling back to the attended
+      //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank inline references
+      //   use this so they grow a sliding deck but replace a solo one.
+      // Holding shift forces any disposition into an add (callers forward the raw modifier rather than
+      // encoding the policy). Only 'auto' falls back to the attended plank; a shift-forced add from the
+      // nav-tree (a 'solo' gesture with no pivot) appends at the end.
+      const navigateSolo = (active: readonly string[]): string[] =>
+        input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
 
-            if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
-              yield* Operation.schedule(LayoutOperation.ScrollIntoView, {
-                subject: newlyOpen[0] ?? input.subject[0],
-              });
-            }
+      const { segments } = yield* DeckCapabilities.getDeck();
 
-            if (newlyOpen[0] ?? input.subject[0]) {
-              yield* Operation.schedule(LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
-            }
+      let previouslyOpenIds: Set<string>;
+      {
+        const deck = yield* DeckCapabilities.getDeck();
+        previouslyOpenIds = new Set<string>(deck.active);
 
-            for (const subjectId of newlyOpen) {
-              const typename = Option.match(AppGraph.getNode(graph, subjectId), {
-                onNone: () => undefined,
-                onSome: (node) => {
-                  const active = node.data;
-                  return Obj.isObject(active) ? Obj.getTypename(active) : undefined;
-                },
-              });
-              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-                name: 'navigation.activate',
-                properties: { subjectId, typename },
-              });
-            }
-          }
-        }),
-      );
+        const disposition = input.disposition ?? 'solo';
+        const shift = !!input.modifiers?.shift;
+        const sliding = deck.active.length >= 2;
+        const anchorToOrigin = disposition === 'auto';
+        const addBesideOrigin = shift || disposition === 'add' || (anchorToOrigin && sliding);
+
+        // A type may declare what its deck opens (`AppAnnotation.DeckAnnotation`); a Collection opens
+        // the documents it contains rather than a plank showing the collection itself.
+        const seeded = resolveSeededPlanks({
+          initial: resolveDeckSpec(
+            input.subject[0] ? Option.getOrUndefined(AppGraph.getNode(graph, input.subject[0])) : undefined,
+          )?.initial,
+          addBesideOrigin,
+          children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
+        });
+
+        // An open at a declared level: the level supplies the plank name and closes the levels below
+        // it, so a chain like `mailbox / message / attachment` stays consistent without the caller
+        // tracking any of it.
+        const levelOpen =
+          input.root && input.level && input.subject[0]
+            ? resolveLevelOpen({
+                active: deck.active,
+                plankNames: deck.plankNames,
+                segments,
+                spec: resolveDeckSpec(Option.getOrUndefined(AppGraph.getNode(graph, input.root))),
+                root: input.root,
+                level: input.level,
+                subjectId: input.subject[0],
+              })
+            : undefined;
+
+        let next: string[];
+        if (platform === 'mobile') {
+          // A stack has one open semantic: push (or surface) the subjects; solo-replace, pivots, and
+          // seeded side-by-side planks are deck-geometry concepts with no stack analog.
+          next = pushSubjectsToStack(deck.active, input.subject);
+        } else if (levelOpen) {
+          next = levelOpen.next;
+        } else if (seeded) {
+          next = seeded;
+        } else if (addBesideOrigin) {
+          const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
+          const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
+          // A named open reuses the plank already holding that name, the way a browser tab is reused.
+          const replaceId = input.name
+            ? plankIdForName(input.name, { active: deck.active, plankNames: deck.plankNames, segments })
+            : undefined;
+          next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
+        } else {
+          next = navigateSolo(deck.active);
+        }
+
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+        const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
+        // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
+        // so names whose plank this open closed are dropped rather than left dangling.
+        // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
+        const boundName = levelOpen?.name ?? input.name;
+        const segmentOfId = (id: string) =>
+          Navigation.recordedOrGraphSegment(builder, segments, id) ?? Navigation.segmentOf(undefined, id);
+        const nextSegments = next.map(segmentOfId);
+        const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
+        const plankNames = updatePlankNames(
+          deck.plankNames,
+          nextSegments,
+          boundName && boundSegment ? { name: boundName, segment: boundSegment } : undefined,
+        );
+        // The companion follows a level swap: the new plank stands in for the replaced one, and closing
+        // it mid-read would also narrow the deck, which the browser answers by clamping the scroll — a
+        // one-frame snap measured at exactly the lost width.
+        const companionPlanks =
+          levelOpen?.replacedId &&
+          input.subject[0] &&
+          isCompanionOpen(deck.companionPlanks, flatten, levelOpen.replacedId)
+            ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
+            : deckUpdates.companionPlanks;
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
+        const current = yield* currentNavigation();
+        const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
+        yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });
+      }
+
+      // Schedule side-effects for the newly opened items: scroll into view, expose in
+      // the navigation sidebar, and emit observability events.
+      // When nothing is newly opened (subject was already visible), the fallback
+      // `input.subject[0]` still triggers scroll and expose so the user is taken there.
+      {
+        const deck = yield* DeckCapabilities.getDeck();
+        const newlyOpen = deck.active.filter((i: string) => !previouslyOpenIds.has(i));
+
+        if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, {
+            subject: newlyOpen[0] ?? input.subject[0],
+          });
+        }
+
+        if (newlyOpen[0] ?? input.subject[0]) {
+          yield* Operation.schedule(LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
+        }
+
+        for (const subjectId of newlyOpen) {
+          const typename = Option.match(AppGraph.getNode(graph, subjectId), {
+            onNone: () => undefined,
+            onSome: (node) => {
+              const active = node.data;
+              return Obj.isObject(active) ? Obj.getTypename(active) : undefined;
+            },
+          });
+          yield* Operation.schedule(ObservabilityOperation.SendEvent, {
+            name: 'navigation.activate',
+            properties: { subjectId, typename },
+          });
+        }
+      }
 
       return input.subject;
-    }),
+    }, Effect.scoped),
   ),
 );
 

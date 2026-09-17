@@ -15,6 +15,9 @@ import { meta } from '#meta';
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
+/** A companion of a plank, as opposed to one of the deck. */
+export const isPlankCompanion = (node: { type?: string }): boolean => node.type === PLANK_COMPANION_TYPE;
+
 export const selectCompanion = <T extends { id: string }>(
   companions: readonly T[],
   preferredVariant?: string,
@@ -180,6 +183,8 @@ export const EphemeralDeckState = Schema.Struct({
    * remembered for as long as the session lasts and no longer.
    */
   open: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(OpenDeck))),
+  /** Subjects an open is waiting on, whose workspaces stay loaded until they arrive. */
+  opening: Schema.optional(Schema.Array(Schema.String)),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
   dialogBlockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),

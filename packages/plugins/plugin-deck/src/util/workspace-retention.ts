@@ -2,13 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-
 import type * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
-
-export const pendingPlanks = Atom.make<readonly string[]>([]).pipe(Atom.keepAlive);
 
 export type WorkspaceRetention = {
   activeDeck: string;

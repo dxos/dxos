@@ -9,6 +9,8 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
+import { DeckSchema } from '#types';
+
 /**
  * Companion nodes for a plank; `undefined` until the first read, which is a commit after
  * mount — a caller that lays out from this needs to tell "not read yet" from "none".
@@ -32,7 +34,10 @@ export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
 
     const atom = graph.connections(id, AppGraphNode.companionRelation());
     const update = () => {
-      const next = registry.get(atom).toSorted((a, b) => Position.compare(a.properties, b.properties));
+      const next = registry
+        .get(atom)
+        .filter(DeckSchema.isPlankCompanion)
+        .toSorted((a, b) => Position.compare(a.properties, b.properties));
       setCompanions((prev) =>
         prev && prev.length === next.length && prev.every((node, index) => node === next[index]) ? prev : next,
       );

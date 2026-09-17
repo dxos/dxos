@@ -59,6 +59,7 @@ export default Capability.makeModule(
     // One projection at a time: `FiberHandle.run` interrupts whatever it is holding, and the handle
     // interrupts its fiber when this module's scope closes.
     const projection = yield* FiberHandle.make<string | undefined, any>();
+    const workspaceSeed = yield* FiberHandle.make<void, never>();
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
     const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultDeckEphemeralState }).pipe(
@@ -88,6 +89,7 @@ export default Capability.makeModule(
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
       Capability.contribute(DeckCapabilities.Projection, projection),
+      Capability.contribute(DeckCapabilities.WorkspaceSeed, workspaceSeed),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
       Capability.contribute(DeckCapabilities.Platform, platform),
     ];
