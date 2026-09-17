@@ -1,0 +1,74 @@
+---
+id: org.dxos.plugin.typesafe
+name: TypeSafePlugin
+version: 0.1.0
+---
+
+Connects TypeSafe System One (`jev`) to a space and provides its decision model to every operation
+running there. Headless: a connector and a layer, no surfaces.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+
+## Features
+
+```mdl
+feat F-1: Bring your own key
+
+  req F-1.1: A connector for source `typesafe.ai` takes an API key pasted by the user.
+  req F-1.2: The key is stored as an AccessToken plus a Connection, resolvable by CredentialsService.
+  req F-1.3: A blank or whitespace-only key fails inline, leaving the dialog open with the reason.
+
+feat F-2: Decision model in the space
+
+  req F-2.1: A space-affinity LayerSpec provides DecisionModel to every operation in the space.
+  req F-2.2: The key is read per call, so connecting or disconnecting takes effect on the next question.
+  req F-2.3: A space with no key connected fails the decision with DecisionError, never a defect.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: A pasted key reaches the model
+  given: a space with no TypeSafe connection
+  when: the user pastes a valid API key into the TypeSafe connector
+  then: an operation requiring DecisionModel resolves and answers
+
+scenario T-2: No key is a failed decision, not a crash
+  given: a space with no TypeSafe connection
+  when: an operation requiring DecisionModel runs
+  then: it fails with DecisionError naming the missing typesafe.ai credential, and the space slice stays up
+```
+
+## QA
+
+```mdl
+test QA-1: Connect TypeSafe and label a mailbox
+  desc: The only user-visible journey this plugin has — connect the key, then watch a consumer use it.
+  actors: human
+  covers: [F-1.1, F-1.2, F-2.1]
+  status: untested           # no recording yet; needs a TypeSafe key in a running Composer
+  given:
+    - an identity exists
+    - space: a space is open with a synced mailbox
+    - plugin-typesafe and plugin-labeler are enabled
+    - key: a TypeSafe API key from https://docs.typesafe.ai/quickstart
+    - no TypeSafe connection exists in this space — ABORT rather than removing one
+  steps:
+    - name: Open the connector
+      do: In Settings, open Connections and choose TypeSafe.
+      expect: a dialog asking for an API key
+    - name: Paste an empty key
+      do: Leave the field blank and submit.
+      expect: the dialog stays open reporting that an API key is required
+    - name: Paste the key
+      do: Paste the TypeSafe API key and submit.
+      expect: the dialog closes and TypeSafe is listed as connected
+    - name: Use it
+      do: Open the mailbox and run "Label messages" from the toolbar menu.
+      expect: messages gain tags — the labelling run does not report a missing credential
+```
