@@ -369,12 +369,15 @@ export class IndexQuerySource implements QuerySource {
   /** Hydrate the latest remembered records, set `_results`, and emit — repeating while triggers arrive. */
   private async _hydrateLoop(): Promise<void> {
     this._hydrating = true;
+    // The query the pass that throws was hydrating, which a replacement installed meanwhile is not.
+    let passQueryId: number | undefined;
     try {
       do {
         this._hydratePending = false;
 
         const query = this._query;
         const queryId = this._reactiveQueryId;
+        passQueryId = queryId;
         if (!this._open || query == null || queryId == null) {
           break;
         }
@@ -396,9 +399,13 @@ export class IndexQuerySource implements QuerySource {
       } while (this._hydratePending);
     } catch (err: any) {
       log.catch(err);
-      this._fail(this._reactiveQueryId);
+      this._fail(passQueryId);
     } finally {
       this._hydrating = false;
+      // A trigger that arrived while the failed pass was running, which nothing else would serve.
+      if (this._hydratePending && this._open) {
+        this._scheduleHydrate();
+      }
     }
   }
 
