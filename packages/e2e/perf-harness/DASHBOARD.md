@@ -85,6 +85,9 @@ scenarios and never a ten-by-four grid nobody can read.
 
 - **Tiles are dated by run, not by commit.** A nightly can run hours after the commit it measures,
   the same caveat the EDGE join-latency dashboard carries.
+- **`ciDomNodes` is the only machine-independent measure here.** Across a CI runner and a local
+  sandbox it differs by 1% while wall time differs 1.7x and TBT 3x. Read it for regressions; read
+  the timing tiles as trends.
 - **The run-to-run noise floor is ~20% per stage, and the nightly runs one iteration per mode.** A
   single point moving is not a regression; only a level shift sustained over several nights is. The
   fix is more iterations per night charted as a median, not a tighter chart — until then, read
