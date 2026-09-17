@@ -23,4 +23,12 @@ Hypercore replication is unaffected. `@dxos/vendor-hypercore` dictates a Node st
 
 `concatUint8Arrays` is added to `@dxos/util` as the `Buffer.concat` replacement.
 
+Space and device authentication now compares the auth nonce byte-wise rather than through
+`Buffer.prototype.equals`. The browser `buffer` polyfill's `isBuffer()` rejects a plain
+`Uint8Array` — which is what protobuf decoding yields for `credential.proof.nonce` — and threw
+`TypeError: Argument must be a Buffer`, failing every authentication and so blocking all feed
+replication in the browser. The remaining browser-reachable `Buffer` calls in `edge-client` are
+gone for the same reason: a Node `Buffer` is a `Uint8Array`, so one `instanceof` check covers both
+runtimes, and base64 is decoded with the protobuf wire codec already in use.
+
 Throughput: Node's web-stream primitives cost a promise and a microtask per chunk, so the framer alone measures ~5x slower than the `Duplex` it replaces (822k -> 126k frames/s at 64B). The full muxer stack peaks at ~27k frames/s, well below that ceiling, so the estimated end-to-end cost is ~18%. Frame batching and a manual pump were both tried and neither helps, because every producer awaits each send.
