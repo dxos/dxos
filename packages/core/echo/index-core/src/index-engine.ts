@@ -21,6 +21,7 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
+  ObjectDataIndex,
   type QueueRef,
   type QueueWindow,
   type Referrer,
@@ -137,16 +138,35 @@ export interface IndexEngineParams {
   objectMetaIndex: EntityMetaIndex;
   ftsIndex: FtsIndex;
   reverseRefIndex: ReverseRefIndex;
+  objectDataIndex?: ObjectDataIndex;
 
   /** Defaults to a fresh store; injectable for tests. */
   convergenceKeyIntents?: ConvergenceKeyIntentStore;
 }
+
+/**
+ * JSONB (`jsonb()`, 3.45) is the oldest feature the body store and the query compiler rely on.
+ * Checked at migration so an older runtime fails at open, not at the first query.
+ */
+const MIN_SQLITE_VERSION = [3, 45, 0] as const;
+
+const compareVersions = (version: string, minimum: readonly number[]): number => {
+  const parts = version.split('.').map((part) => Number.parseInt(part, 10));
+  for (let index = 0; index < minimum.length; index++) {
+    const actual = parts[index] ?? 0;
+    if (actual !== minimum[index]) {
+      return actual < minimum[index] ? -1 : 1;
+    }
+  }
+  return 0;
+};
 
 export class IndexEngine {
   readonly #tracker: IndexTracker;
   readonly #objectMetaIndex: EntityMetaIndex;
   readonly #ftsIndex: FtsIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
+  readonly #objectDataIndex: ObjectDataIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
 
   constructor(params?: IndexEngineParams) {
@@ -154,17 +174,34 @@ export class IndexEngine {
     this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
     this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
+    this.#objectDataIndex = params?.objectDataIndex ?? new ObjectDataIndex();
     this.#convergenceKeyIntents = params?.convergenceKeyIntents ?? new ConvergenceKeyIntentStore();
   }
 
   migrate() {
     return Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const [{ version }] = yield* sql<{ version: string }>`SELECT sqlite_version() AS version`;
+      if (compareVersions(version, MIN_SQLITE_VERSION) < 0) {
+        return yield* Effect.die(
+          new Error(`SQLite ${version} is below the ${MIN_SQLITE_VERSION.join('.')} the index requires`),
+        );
+      }
       yield* this.#tracker.migrate();
       yield* this.#objectMetaIndex.migrate();
+      yield* this.#objectDataIndex.migrate();
       yield* this.#ftsIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
       yield* this.#convergenceKeyIntents.migrate();
     });
+  }
+
+  /**
+   * True once every `objectMeta` row has a body in `objectData`. False while the backfill after
+   * the body store's introduction is still running, during which queries must await indexing.
+   */
+  hasCompleteBodies(): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectDataIndex.countMissingBodies().pipe(Effect.map((missing) => missing === 0));
   }
 
   /**
@@ -206,7 +243,7 @@ export class IndexEngine {
    * Used to load queue objects from indexed snapshots.
    */
   querySnapshotsJSON(recordIds: number[]) {
-    return this.#ftsIndex.querySnapshotsJSON(recordIds);
+    return this.#objectDataIndex.queryBodies(recordIds);
   }
 
   /**
@@ -330,6 +367,7 @@ export class IndexEngine {
           if (recordIds.length > 0) {
             yield* this.#ftsIndex.deleteByRecordIds(recordIds);
             yield* this.#reverseRefIndex.deleteByRecordIds(recordIds);
+            yield* this.#objectDataIndex.deleteByRecordIds(recordIds);
             yield* this.#objectMetaIndex.deleteByRecordIds(recordIds);
           }
           if (opts.documentIds.length > 0) {
@@ -358,6 +396,22 @@ export class IndexEngine {
         spaceId: opts.spaceId ?? undefined,
       });
 
+      // Bodies first: a fresh cursor set (`objectData1`) is what backfills them on an upgraded
+      // database, and the same pass fills `objectMeta`'s normalized id columns.
+      const {
+        updated: updatedObjectData,
+        done: doneObjectData,
+        objects: objectDataObjects,
+      } = yield* this.#update(ctx, this.#objectDataIndex, dataSource, {
+        indexName: 'objectData1',
+        spaceId: opts.spaceId,
+        limit: opts.limit,
+        cursors: cursorsByIndex.get('objectData1') ?? [],
+      });
+      result.updated += updatedObjectData;
+      result.done = result.done && doneObjectData;
+      accumulateIndexingResult(result, objectDataObjects);
+
       const {
         updated: updatedFtsIndex,
         done: doneFtsIndex,
@@ -377,10 +431,11 @@ export class IndexEngine {
         done: doneReverseRefIndex,
         objects: reverseRefObjects,
       } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
-        indexName: 'reverseRef2',
+        // Bumped from `reverseRef2` so every object is re-presented and `propPathNormalized` filled.
+        indexName: 'reverseRef3',
         spaceId: opts.spaceId,
         limit: opts.limit,
-        cursors: cursorsByIndex.get('reverseRef2') ?? [],
+        cursors: cursorsByIndex.get('reverseRef3') ?? [],
       });
       result.updated += updatedReverseRefIndex;
       result.done = result.done && doneReverseRefIndex;

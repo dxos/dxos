@@ -19,7 +19,7 @@ import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge/index.ts';
-import { QueryExecutor } from '../query/index.ts';
+import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
 import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
 import type { SpaceStateManager } from './space-state-manager.ts';
 
@@ -35,6 +35,14 @@ export type QueryServiceProps = {
    * fallback, so the index is their only source of truth.
    */
   updateIndexes: () => Promise<void>;
+  /**
+   * False while the index still lacks bodies for some objects (the backfill after the body store's
+   * introduction). The compiled executor reads bodies only, so until it is true every query's
+   * first execution awaits indexing, as feed-scoped queries always do.
+   */
+  hasCompleteBodies?: () => Promise<boolean>;
+  /** Evaluation path for every query this service creates; see {@link QueryExecutorMode}. */
+  executor?: QueryExecutorMode;
 };
 
 /**
@@ -79,6 +87,11 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   /** Reactive queries currently registered, across every space. */
   get 'activeQueryCount'(): number {
     return this._queries.size;
+  }
+
+  /** Execution traces of the active queries' last runs, for diagnostics and benchmarks. */
+  'getQueryTraces'(): ExecutionTrace[] {
+    return Array.from(this._queries, (query) => query.executor.trace);
   }
 
   // 'all' = catch-all; null = no pending hint.
@@ -160,7 +173,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       );
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
-        if (queryEntry.feedScoped) {
+        if (queryEntry.feedScoped || !(await this.#bodiesComplete())) {
           await this._params.updateIndexes();
         }
         queryEntry.open = true;
@@ -172,6 +185,20 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       });
     });
   }
+
+  /** Cached once true: bodies never become incomplete again after the backfill drains. */
+  #bodiesComplete = async (): Promise<boolean> => {
+    if (this.#bodiesKnownComplete || !this._params.hasCompleteBodies) {
+      return true;
+    }
+    const complete = await this._params.hasCompleteBodies();
+    if (complete) {
+      this.#bodiesKnownComplete = true;
+    }
+    return complete;
+  };
+
+  #bodiesKnownComplete = false;
 
   /**
    * Schedule re-execution of queries, optionally guided by a targeted hint.
@@ -208,6 +235,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         query: parsedQuery,
         reactivity: request.reactivity,
         spaceStateManager: this._params.spaceStateManager,
+        executor: this._params.executor,
       }),
       dirty: true,
       open: false,

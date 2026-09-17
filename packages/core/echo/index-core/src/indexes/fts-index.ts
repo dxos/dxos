@@ -8,7 +8,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type * as Statement from 'effect/unstable/sql/Statement';
 
-import type { Obj } from '@dxos/echo';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import type { SpaceId } from '@dxos/keys';
 
@@ -98,6 +97,27 @@ const escapeFts5Query = (text: string): string => {
     .filter(Boolean)
     .map((term) => `"${term.replace(/"/g, '""')}"`)
     .join(' ');
+};
+
+/**
+ * The `WHERE` fragment matching `ftsIndex f` against free text, and whether BM25 ranking applies.
+ * Terms shorter than the trigram tokenizer's three characters fall back to `LIKE` over the
+ * snapshot, which cannot rank. `undefined` when the text has no terms.
+ */
+export const buildFtsCondition = (
+  sql: SqlClient.SqlClient,
+  text: string,
+): { condition: Statement.Fragment; ranked: boolean } | undefined => {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const terms = trimmed.split(/\s+/).filter(Boolean);
+  const minTermLength = Math.min(...terms.map((term) => term.length));
+  if (minTermLength < 3) {
+    return { condition: sql.and(terms.map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)), ranked: false };
+  }
+  return { condition: sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`, ranked: true };
 };
 
 export class FtsIndex implements Index {
@@ -208,42 +228,6 @@ export class FtsIndex implements Index {
         `;
         return rows.map((row) => ({ ...row, rank: 1 }));
       }
-    });
-  }
-
-  /**
-   * Query snapshots by recordIds.
-   * Returns the parsed JSON snapshots for queue objects.
-   * RecordIds not present in the FTS index are silently omitted from the result.
-   */
-  querySnapshotsJSON(
-    recordIds: number[],
-  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
-      if (recordIds.length === 0) {
-        return [];
-      }
-      const sql = yield* SqlClient.SqlClient;
-
-      // Chunk to avoid SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER,
-      // typically 999 in wasm builds). 500 gives a safe margin.
-      const chunks: number[][] = [];
-      for (let i = 0; i < recordIds.length; i += SQL_CHUNK_SIZE) {
-        chunks.push(recordIds.slice(i, i + SQL_CHUNK_SIZE));
-      }
-
-      const allResults: { recordId: number; snapshot: Obj.JSON }[] = [];
-      for (const chunk of chunks) {
-        const rows = yield* sql<{
-          rowid: number;
-          snapshot: string;
-        }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
-        for (const r of rows) {
-          allResults.push({ recordId: r.rowid, snapshot: JSON.parse(r.snapshot) });
-        }
-      }
-
-      return allResults;
     });
   }
 

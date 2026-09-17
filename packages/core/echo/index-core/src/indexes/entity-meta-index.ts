@@ -62,6 +62,25 @@ const _escapeLikePrefix = (prefix: string) => {
 };
 
 /**
+ * Bare entity id of a reference that is local to `spaceId`; `null` for a cross-space reference,
+ * a non-entity URI, or no reference. Feeds `objectMeta.parentId`/`sourceId`/`targetId`.
+ */
+export const localEntityId = (uri: unknown, spaceId: SpaceId): string | null => {
+  if (typeof uri !== 'string') {
+    return null;
+  }
+  const eid = EID.tryParse(uri);
+  if (!eid) {
+    return null;
+  }
+  const referencedSpaceId = EID.getSpaceId(eid);
+  if (referencedSpaceId !== undefined && referencedSpaceId !== spaceId) {
+    return null;
+  }
+  return EID.getEntityId(eid) ?? null;
+};
+
+/**
  * WHERE fragment matching the `typeDXN` column against any of the given type identifiers,
  * covering legacy-equivalent stored forms and — for versionless DXNs — versioned rows via a
  * LIKE prefix. Shared with `FtsIndex` so type scoping matches identically across indexes.
@@ -132,7 +151,7 @@ export interface QueueRef {
  * Builds a SQL condition for filtering by space and queue source.
  * When `includeAllQueues` is false and no `queues`, only non-queue objects are returned.
  */
-const buildSourceCondition = (
+export const buildSourceCondition = (
   sql: SqlClient.SqlClient,
   spaceIds: readonly string[],
   includeAllQueues: boolean,
@@ -218,7 +237,7 @@ export interface NaturalQueueWindow {
  * Empty when there is no window, so the unwindowed query keeps its previous shape (and its
  * unspecified row order).
  */
-const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
+export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
   if (window === undefined) {
     return sql``;
   }
@@ -425,15 +444,18 @@ export class EntityMetaIndex implements Index {
                 source: string | null;
                 target: string | null;
                 parent: string | null;
+                parentId: string | null;
+                sourceId: string | null;
+                targetId: string | null;
                 convergenceKey: string | null;
               };
               let existing: readonly ExistingRow[];
               if (documentId) {
                 existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
               } else if (queueId) {
                 existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
               } else {
                 // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
                 existing = [];
@@ -482,6 +504,10 @@ export class EntityMetaIndex implements Index {
                   : null;
               // Parent (nullable).
               const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
+              // Bare local ids of the dependencies, the columns the query compiler joins through.
+              const parentId = preserveBody ? priorRow.parentId : localEntityId(parent, spaceId);
+              const sourceId = preserveBody ? priorRow.sourceId : localEntityId(source, spaceId);
+              const targetId = preserveBody ? priorRow.targetId : localEntityId(target, spaceId);
               // Convergence key (nullable) — from the meta section of the serialized object. The meta
               // arrives as raw replicated JSON, so anything but a string is treated as no key.
               const rawConvergenceKey = (castData[ATTR_META] as { convergenceKey?: unknown } | undefined)
@@ -512,6 +538,9 @@ export class EntityMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
+                    parentId = ${parentId},
+                    sourceId = ${sourceId},
+                    targetId = ${targetId},
                     convergenceKey = ${convergenceKey},
                     updatedAt = ${updatedAtTimestamp},
                     queuePosition = ${queuePosition ?? null}
@@ -521,12 +550,13 @@ export class EntityMetaIndex implements Index {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDXN, deleted, source, target, parent, convergenceKey, version,
-                    createdAt, updatedAt, queuePosition
+                    entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
+                    convergenceKey, version, createdAt, updatedAt, queuePosition
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
-                    ${source}, ${target}, ${parent}, ${convergenceKey}, ${version},
+                    ${source}, ${target}, ${parent}, ${parentId}, ${sourceId}, ${targetId},
+                    ${convergenceKey}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
                   )
                 `;

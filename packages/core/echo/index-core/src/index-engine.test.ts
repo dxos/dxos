@@ -15,7 +15,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
-import { EntityMetaIndex, FtsIndex, type IndexerObject, ReverseRefIndex } from './indexes/index.ts';
+import { EntityMetaIndex, FtsIndex, type IndexerObject, ObjectDataIndex, ReverseRefIndex } from './indexes/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
@@ -95,17 +95,31 @@ describe('IndexEngine', () => {
     yield* ftsIndex.migrate();
     const reverseRefIndex = new ReverseRefIndex();
     yield* reverseRefIndex.migrate();
-    const indexEngine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex, reverseRefIndex });
-    return { indexEngine, tracker, metaIndex, ftsIndex, reverseRefIndex };
+    const objectDataIndex = new ObjectDataIndex();
+    yield* objectDataIndex.migrate();
+    const indexEngine = new IndexEngine({
+      tracker,
+      ftsIndex,
+      objectMetaIndex: metaIndex,
+      reverseRefIndex,
+      objectDataIndex,
+    });
+    return { indexEngine, tracker, metaIndex, ftsIndex, reverseRefIndex, objectDataIndex };
   });
 
   it.effect(
     'should index and update objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex, objectDataIndex } = yield* setup;
 
       // Inject dependencies.
-      const engine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex, reverseRefIndex });
+      const engine = new IndexEngine({
+        tracker,
+        ftsIndex,
+        objectMetaIndex: metaIndex,
+        reverseRefIndex,
+        objectDataIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -128,8 +142,8 @@ describe('IndexEngine', () => {
 
       // First update.
       const { updated } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      // Updates objectMeta, FTS, and reverseRef indexes.
-      expect(updated).toBe(2);
+      // One count per dependent pass: objectData, FTS and reverseRef.
+      expect(updated).toBe(3);
 
       // Verify using the SAME index instance.
       const results1 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
@@ -162,7 +176,7 @@ describe('IndexEngine', () => {
 
       // Second update.
       const { updated: updated2 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      expect(updated2).toBe(2);
+      expect(updated2).toBe(3);
 
       // Verify update.
       const results2 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
@@ -183,9 +197,15 @@ describe('IndexEngine', () => {
   it.effect(
     'should handle multiple objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex, objectDataIndex } = yield* setup;
 
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        reverseRefIndex,
+        objectDataIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -257,9 +277,15 @@ describe('IndexEngine', () => {
   it.effect(
     'done is true only when all sub-indexes have no remaining work',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex, objectDataIndex } = yield* setup;
 
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        reverseRefIndex,
+        objectDataIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -299,8 +325,14 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult contains correct sets for a batch with multiple objects across spaces',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex, objectDataIndex } = yield* setup;
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        reverseRefIndex,
+        objectDataIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId1 = SpaceId.random();
       const spaceId2 = SpaceId.random();
@@ -356,8 +388,14 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult includes typename for deleted objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex, objectDataIndex } = yield* setup;
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        reverseRefIndex,
+        objectDataIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -390,8 +428,14 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult is empty when no objects are indexed',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex, objectDataIndex } = yield* setup;
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        reverseRefIndex,
+        objectDataIndex,
+      });
       const dataSource = new MockIndexDataSource();
 
       const result: IndexingResult = yield* engine.update(Context.default(), dataSource, { spaceId: null });
@@ -403,6 +447,54 @@ describe('IndexEngine', () => {
       expect(result.documents.size).toBe(0);
       expect(result.types.size).toBe(0);
       expect(result.objects.size).toBe(0);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'an update pass writes the objectData1 cursor and completes the bodies',
+    Effect.fnUntraced(function* () {
+      const { indexEngine, tracker } = yield* setup;
+      const dataSource = new MockIndexDataSource();
+      dataSource.push([
+        {
+          spaceId: SpaceId.random(),
+          documentId: 'doc-1',
+          queueId: null,
+          queueNamespace: null,
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Hello' },
+        },
+      ]);
+
+      yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+
+      const cursors = yield* tracker.queryCursors({ indexName: 'objectData1' });
+      expect(cursors.map((cursor) => cursor.resourceId)).toEqual(['doc-1']);
+      expect(yield* indexEngine.hasCompleteBodies()).toBe(true);
+    }, Effect.provide(TestLayer)),
+  );
+
+  // The state of an upgraded database before its first pass: metadata rows exist, bodies do not.
+  it.effect(
+    'hasCompleteBodies is false while objectMeta rows lack a body',
+    Effect.fnUntraced(function* () {
+      const { indexEngine, metaIndex } = yield* setup;
+      yield* metaIndex.update([
+        {
+          spaceId: SpaceId.random(),
+          documentId: 'doc-1',
+          queueId: null,
+          queueNamespace: null,
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT },
+        },
+      ]);
+
+      expect(yield* indexEngine.hasCompleteBodies()).toBe(false);
     }, Effect.provide(TestLayer)),
   );
 });

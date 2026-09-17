@@ -9,6 +9,13 @@ import { invariant } from '@dxos/invariant';
 export type EntityPropPath = string[];
 
 /**
+ * A property path with array-index segments removed, the form `reverseRef.propPathNormalized`
+ * stores: `['items', '0', 'assignee']` and `['items', 'assignee']` name the same property.
+ */
+export const normalizePropPath = (path: readonly string[]): EntityPropPath =>
+  path.filter((segment) => !/^[0-9]+$/.test(segment));
+
+/**
  * SQLite bound-variable limit (`SQLITE_LIMIT_VARIABLE_NUMBER`, typically 999 in wasm builds).
  * Batch `IN (...)` queries below this; 500 gives a safe margin.
  */

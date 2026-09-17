@@ -48,6 +48,7 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
+import { type QueryExecutorMode } from '../query/index.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
@@ -75,6 +76,8 @@ const AUTOMATIC_GARBAGE_COLLECTION = false;
 export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
 
 export type EchoHostProps = {
+  /** Query evaluation path; defaults to the compiled SQL executor (see `QueryExecutorMode`). */
+  queryExecutor?: QueryExecutorMode;
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
@@ -174,6 +177,7 @@ export class EchoHost extends Resource {
     runtime,
     assignQueuePositions = false,
     useSubduction,
+    queryExecutor,
   }: EchoHostProps) {
     super();
 
@@ -224,6 +228,8 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
       updateIndexes: () => this.updateIndexes(),
+      hasCompleteBodies: () => RuntimeProvider.runPromise(this._runtime)(this._indexEngine.hasCompleteBodies()),
+      executor: queryExecutor,
     });
 
     this._dataService = new DataServiceImpl({

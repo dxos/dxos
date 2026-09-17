@@ -3,8 +3,8 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
-import type * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';
@@ -42,6 +42,25 @@ import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
 import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
+import { type CompiledRow, compilePlan } from './sql/index.ts';
+
+/**
+ * Which evaluation path answers queries: `sql` compiles the plan into one SQLite statement over
+ * the index tables; `memory` is the legacy executor that loads Automerge documents and evaluates
+ * every step in JS. Selected per host through `QueryExecutorOptions.executor`, else by the
+ * `DX_ECHO_QUERY_EXECUTOR` environment variable, defaulting to `sql`.
+ */
+export type QueryExecutorMode = 'sql' | 'memory';
+
+export const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
+  if (explicit) {
+    return explicit;
+  }
+  const fromEnv =
+    import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
+  return fromEnv === 'memory' ? 'memory' : 'sql';
+};
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -52,6 +71,7 @@ type QueryExecutorOptions = {
   queryId: string;
   query: QueryAST.Query;
   reactivity: QueryReactivity;
+  executor?: QueryExecutorMode;
 };
 
 type QueryExecutionResult = {
@@ -246,6 +266,11 @@ export type ExecutionTrace = {
   documentLoadTime: number;
 
   children: ExecutionTrace[];
+
+  /** The compiled statement, on the `sql` path. */
+  sql?: string;
+  /** `EXPLAIN QUERY PLAN` of the compiled statement, when execution tracing is on. */
+  explain?: string[];
 };
 
 export const ExecutionTrace = Object.freeze({
@@ -316,6 +341,7 @@ declare global {
 
   interface ImportMetaEnv {
     DX_TRACE_QUERY_EXECUTION: string;
+    DX_ECHO_QUERY_EXECUTOR: string | undefined;
   }
 }
 
@@ -546,8 +572,9 @@ export class QueryExecutor extends Resource {
   private _plan: QueryPlan.Plan;
   #scopes: QueryScopes;
   readonly #includeAllFeeds: boolean;
+  readonly #mode: QueryExecutorMode;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
-  private _lastResultSet: QueryItem[] = [];
+  private _lastResultSet: QueryService.QueryResult[] = [];
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -572,6 +599,7 @@ export class QueryExecutor extends Resource {
     this._id = options.queryId;
     this._query = options.query;
     this._reactivity = options.reactivity;
+    this.#mode = resolveQueryExecutorMode(options.executor);
 
     const queryPlanner = new QueryPlanner();
     this._plan = queryPlanner.createPlan(this._query);
@@ -595,34 +623,12 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
+  get mode(): QueryExecutorMode {
+    return this.#mode;
+  }
+
   getResults(): QueryService.QueryResult[] {
-    // Computed over the final (post-filter) result set so counts always match shipped records.
-    const groupCounts = new Map<string, number>();
-    for (const item of this._lastResultSet) {
-      if (item.groupKey === undefined) {
-        continue;
-      }
-      const serialized = GroupBy.serializeGroupKey(item.groupKey);
-      groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
-    }
-
-    return this._lastResultSet.map((item): QueryService.QueryResult => {
-      const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
-      return {
-        id: item.objectId,
-        documentId: item.documentId ?? undefined,
-        queueId: item.queueId ?? undefined,
-        queueNamespace: item.queueNamespace ?? undefined,
-        spaceId: item.spaceId,
-
-        rank: item.rank,
-
-        documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
-
-        groupKey: serializedGroupKey,
-        groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
-      };
-    });
+    return this._lastResultSet;
   }
 
   /**
@@ -650,48 +656,86 @@ export class QueryExecutor extends Resource {
     log('exec query', {
       queryId: this._id,
       query: Query.pretty(Query.fromAst(this._query)),
+      mode: this.#mode,
     });
 
-    // Subquery results can change between reactive runs, so resolved `in-query` sets must not
-    // survive across `execQuery` calls.
-    this.#inQuerySetCache = new Map();
-    this.#inQueryTracesAttached = new Set();
-
     const prevResultSet = this._lastResultSet;
-    const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
-    // Omit objects whose strong deps cannot be resolved from local state so they
-    // never reach the client, where hydration would fail or stall on them.
-    const workingSet = await this._filterUnresolvableStrongDeps(rawWorkingSet);
-    this._lastResultSet = workingSet;
+    const { results, trace } = this.#mode === 'sql' ? await this.#execCompiled() : await this.#execInMemory();
+    this._lastResultSet = results;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
     this._trace = trace;
 
     const changed =
-      prevResultSet.length !== workingSet.length ||
+      prevResultSet.length !== results.length ||
       prevResultSet.some(
         (item, index) =>
-          workingSet[index].objectId !== item.objectId ||
-          workingSet[index].spaceId !== item.spaceId ||
-          workingSet[index].documentId !== item.documentId ||
-          workingSet[index].queueId !== item.queueId ||
-          workingSet[index].queueNamespace !== item.queueNamespace ||
+          results[index].id !== item.id ||
+          results[index].spaceId !== item.spaceId ||
+          results[index].documentId !== item.documentId ||
+          results[index].queueId !== item.queueId ||
+          results[index].queueNamespace !== item.queueNamespace ||
           // A property edit can move an item between groups without changing its flat position
           // (e.g. the last item of group A becomes the first item of group B at the same index).
-          _serializeOptionalGroupKey(workingSet[index].groupKey) !== _serializeOptionalGroupKey(item.groupKey),
+          results[index].groupKey !== item.groupKey,
       );
-
-    // Disabled because concurrent queries don't print hierarchies correctly.
-    // ExecutionTrace.putOnPerformanceTimeline(trace);
 
     if (TRACE_QUERY_EXECUTION) {
       // eslint-disable-next-line no-console
       console.log(ExecutionTrace.format(trace));
+      if (trace.sql) {
+        // eslint-disable-next-line no-console
+        console.log(trace.sql, trace.explain);
+      }
     }
 
     return {
       changed,
     };
+  }
+
+  /**
+   * The compiled path: one statement over the index tables, no document loads. Document rows ship
+   * identity only, since the client hydrates them from the document itself; feed rows carry the
+   * indexed body.
+   */
+  async #execCompiled(): Promise<{ results: QueryService.QueryResult[]; trace: ExecutionTrace }> {
+    const trace: ExecutionTrace = { ...ExecutionTrace.makeEmpty(), beginTs: performance.now() };
+    const plan = this._plan;
+    const { rows, sql, explain } = await this._runInRuntime(
+      Effect.gen(function* () {
+        const compiled = yield* compilePlan(plan);
+        const rows = yield* compiled.statement;
+        const explain = TRACE_QUERY_EXECUTION
+          ? (yield* (yield* SqlClient.SqlClient).unsafe<{ detail: string }>(
+              `EXPLAIN QUERY PLAN ${compiled.sql}`,
+              compiled.statement.compile()[1],
+            )).map((row) => row.detail)
+          : undefined;
+        return { rows, sql: compiled.sql, explain };
+      }),
+    );
+    trace.indexQueryTime = performance.now() - trace.beginTs;
+    trace.indexHits = rows.length;
+    trace.objectCount = rows.length;
+    trace.sql = sql;
+    trace.explain = explain;
+    ExecutionTrace.markEnd(trace);
+    return { results: rows.map(compiledRowToResult), trace };
+  }
+
+  /** The legacy path: every step evaluated in JS over loaded documents. */
+  async #execInMemory(): Promise<{ results: QueryService.QueryResult[]; trace: ExecutionTrace }> {
+    // Subquery results can change between reactive runs, so resolved `in-query` sets must not
+    // survive across `execQuery` calls.
+    this.#inQuerySetCache = new Map();
+    this.#inQueryTracesAttached = new Set();
+
+    const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
+    // Omit objects whose strong deps cannot be resolved from local state so they
+    // never reach the client, where hydration would fail or stall on them.
+    const workingSet = await this._filterUnresolvableStrongDeps(rawWorkingSet);
+    return { results: queryItemsToResults(workingSet), trace };
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
@@ -2320,3 +2364,41 @@ function filterContainsTimestamp(filter: QueryAST.Filter): boolean {
  * resolution across every occurrence of the same subquery within an `execQuery` run.
  */
 const _inQueryCacheKey = (node: QueryAST.FilterInQuery): string => `${JSON.stringify(node.subquery)}\0${node.property}`;
+
+/** Wire records for a legacy working set, group counts computed over the final set. */
+const queryItemsToResults = (workingSet: QueryItem[]): QueryService.QueryResult[] => {
+  const groupCounts = new Map<string, number>();
+  for (const item of workingSet) {
+    if (item.groupKey === undefined) {
+      continue;
+    }
+    const serialized = GroupBy.serializeGroupKey(item.groupKey);
+    groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
+  }
+  return workingSet.map((item): QueryService.QueryResult => {
+    const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
+    return {
+      id: item.objectId,
+      documentId: item.documentId ?? undefined,
+      queueId: item.queueId ?? undefined,
+      queueNamespace: item.queueNamespace ?? undefined,
+      spaceId: item.spaceId,
+      rank: item.rank,
+      documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
+      groupKey: serializedGroupKey,
+      groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
+    };
+  });
+};
+
+const compiledRowToResult = (row: CompiledRow): QueryService.QueryResult => ({
+  id: row.objectId,
+  spaceId: row.spaceId,
+  documentId: row.documentId !== '' ? row.documentId : undefined,
+  queueId: row.queueId !== '' ? row.queueId : undefined,
+  queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
+  rank: row.rank,
+  documentJson: row.documentJson ?? undefined,
+  groupKey: row.groupKey ?? undefined,
+  groupCount: row.groupCount ?? undefined,
+});

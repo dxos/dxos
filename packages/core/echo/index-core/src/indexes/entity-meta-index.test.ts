@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store.ts';
@@ -827,6 +827,77 @@ describe('EntityMetaIndex', () => {
         window: { kind: 'natural', direction: 'asc', limit: 2, deleted: false },
       });
       expect(live.map((row) => row.objectId)).toEqual(objectIds.slice(2, 4));
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // The query compiler joins `parentId`/`sourceId`/`targetId` to `objectId` within one space, so a
+  // reference into another space must not be normalized to an id that may collide there.
+  it.effect('fills the normalized id columns for local references only', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+      const sql = yield* SqlClient.SqlClient;
+
+      const spaceId = SpaceId.random();
+      const otherSpaceId = SpaceId.random();
+      const parentId = EntityId.random();
+      const sourceId = EntityId.random();
+      const targetId = EntityId.random();
+
+      const object: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_PARENT]: EID.make({ entityId: parentId }),
+        },
+      };
+      const relation: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_RELATION,
+          [ATTR_RELATION_SOURCE]: EID.make({ entityId: sourceId }),
+          [ATTR_RELATION_TARGET]: EID.make({ spaceId: otherSpaceId, entityId: targetId }),
+        },
+      };
+      const qualifiedParent: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_PARENT]: EID.make({ spaceId, entityId: parentId }),
+        },
+      };
+
+      yield* index.update([object, relation, qualifiedParent]);
+
+      type NormalizedIds = { parentId: string | null; sourceId: string | null; targetId: string | null };
+      const rowFor = (objectId: string) =>
+        sql<NormalizedIds>`SELECT parentId, sourceId, targetId FROM objectMeta WHERE objectId = ${objectId}`;
+
+      expect(yield* rowFor(object.data.id)).toEqual([{ parentId, sourceId: null, targetId: null }]);
+      expect(yield* rowFor(relation.data.id)).toEqual([{ parentId: null, sourceId, targetId: null }]);
+      // A reference qualified with the row's own space is still local.
+      expect(yield* rowFor(qualifiedParent.data.id)).toEqual([{ parentId, sourceId: null, targetId: null }]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

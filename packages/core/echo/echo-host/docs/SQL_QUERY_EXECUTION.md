@@ -1,7 +1,9 @@
 # ECHO query execution in SQLite
 
-Status: **proposal**, 2026-09-17. Nothing here is implemented. The SQL shapes below were run against
-SQLite 3.51 in a scratch script and behave as described; no product code has changed.
+Status: **implemented through phase 3**, 2026-09-17, on this branch. Phase 4 (EDGE) is a
+cross-repo change and phase 5 (property indexes, contentless FTS) is not started. Where the
+implementation departs from the proposal below, the "Implementation notes" section at the end
+records the departure and why.
 
 ## Problem
 
@@ -485,3 +487,41 @@ suite through the linked build.
 - EDGE: `edge/packages/services/db-service/src/worker/{query,indexer}/`
 - Prior art: `.agents/projects/sql-migrations/DESIGN.md`, `plans/feed-query-path/PLAN.md`,
   `packages/core/echo/echo-host/docs/GARBAGE_COLLECTION.md`, `echo-client-e2e/BENCHMARKS.md`
+
+## Implementation notes
+
+What landed, and where it departs from the proposal above.
+
+- **The compiler lives in `echo-host`, not `index-core`**: `packages/core/echo/echo-host/src/query/sql/compile.ts`.
+  `QueryPlan` and `QueryPlanner` are `echo-host` modules and `index-core` cannot depend on
+  `echo-host` (the dependency runs the other way), so putting the compiler in `index-core` first
+  means moving the plan types there. That move is the first step of phase 4, since EDGE is the
+  consumer that needs it; until then the compiler imports the index fragments it shares
+  (`buildSourceCondition`, `buildTypeDxnCondition`, `buildQueueWindow`, `buildFtsCondition`) from
+  `index-core`.
+- **Backfill is a fresh cursor set, not cursor retirement.** `objectData` is a dependent index
+  named `objectData1` in `IndexEngine.update`, run before `fts6`; on an upgraded database its
+  cursors are empty, so every document and feed block is re-presented through it and
+  `objectMeta`'s normalized id columns fill in the same pass. The reverse-reference index name
+  bumped `reverseRef2` to `reverseRef3` for `propPathNormalized`, with tracker migration 0004
+  dropping the orphaned rows. Cost: `IndexEngine.#update` runs `EntityMetaIndex.update` once per
+  dependent index, so an object is now written to `objectMeta` three times per pass instead of
+  two. Sharing one batch across indexes with identical cursors is the obvious follow-up.
+- **The query gate** is `QueryServiceProps.hasCompleteBodies`; `QueryServiceImpl` awaits
+  `updateIndexes()` before a query's first execution while it is false and caches `true` once seen.
+- **The executor keeps both paths for this release.** `QueryExecutorMode` is `sql` (default) or
+  `memory`, from `EchoHost({ queryExecutor })` or `DX_ECHO_QUERY_EXECUTOR`. The legacy step
+  methods are unchanged; both produce `QueryService.QueryResult[]` and share the `changed` diff.
+  Deleting the memory path is the last step of phase 3 and is deferred until the before/after
+  benchmark has been recorded from a build that carries both.
+- **Three-valued logic** was the one class of bug the differential test found: `NOT (json_type(b, p)
+= 'text' AND ...)` is `NULL` for a missing property, and a `NULL` predicate drops the row where
+  the matcher's `!==` keeps it. Every type test is `COALESCE(json_type(...), 'missing')` for this
+  reason (`sql/differential.test.ts` is the guard).
+- **`metaVersion`** resolves as the two-statement pre-pass (open question 3), reusing `matchMetaKey`
+  from `@dxos/echo/internal` rather than adding a `semver` dependency to `echo-host`.
+- **Traversals dedupe** on `recordId` (`GROUP BY`), where the legacy executor could yield the same
+  target twice when two anchors referenced it; the client deduplicated by id anyway.
+- **Not done here**: phase 4 (EDGE indexer DO), phase 5 (`ensurePropertyIndex`, contentless
+  `ftsIndex`, `DeletionResolver` on the `dep` CTE), and the `queryTypes` seekable versionless
+  predicate. Benchmark results: `echo-client-e2e/BENCHMARKS.md`, "Query executor: memory vs sql".
