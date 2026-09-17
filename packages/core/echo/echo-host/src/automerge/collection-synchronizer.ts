@@ -161,7 +161,11 @@ export class CollectionSynchronizer extends Resource {
         return;
       }
       for (const [collectionId, state] of this._perCollectionStates.entries()) {
-        if (this._activeCollections.has(collectionId) && this._shouldSyncCollection(collectionId, peerId)) {
+        if (
+          this._activeCollections.has(collectionId) &&
+          !state.interestedPeers.has(peerId) &&
+          this._shouldSyncCollection(collectionId, peerId)
+        ) {
           state.interestedPeers.add(peerId);
           state.lastQueried.set(peerId, Date.now());
           this._queryCollectionState(collectionId, peerId);
