@@ -98,7 +98,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
           return void runAction(item as AppGraphNode.Action, caller ? { parent, path, caller } : { parent, path });
         }
         case 'tab':
-          return onTabChange?.(item);
+          return item.properties.pending === true ? undefined : onTabChange?.(item);
         case 'link':
           return onSelect?.({
             item,
@@ -134,13 +134,14 @@ const L0ItemRoot = memo(
           <Tabs.TabPrimitive
             className={mx(
               'group/l0item flex w-full justify-center items-center relative',
-              'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer',
+              'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer aria-disabled:cursor-default',
               l0Breakpoints[item.properties.l0Breakpoint],
             )}
             tabIndex={type === 'tab' ? 0 : undefined}
             data-type={type}
             data-testid={testId}
             data-object-id={id}
+            {...(item.properties.pending === true && { 'aria-disabled': true })}
             value={item.id}
             onClick={handleClick}
             onMouseEnter={onMouseEnter}

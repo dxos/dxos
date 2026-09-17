@@ -10,7 +10,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import { DensityProvider, IconButton, ScrollArea, Tabs, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, Icon, IconButton, ScrollArea, Tabs, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Empty, Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -29,7 +29,7 @@ import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns.tsx';
  */
 const ITEM_END_SIZE = '1.25rem';
 
-/** Delay before the unavailable-workspace message appears. */
+/** Delay before a pending or unavailable workspace renders anything. */
 const RENDER_DELAY = '1s';
 
 export type L1PanelProps = {
@@ -83,12 +83,14 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
     >
       {shouldRenderContent &&
         (pending ? (
-          <Empty
-            label={t('pending-workspace.label')}
-            icon='ph--circle-notch--regular'
-            classNames='row-start-2 self-start animate-fade-in [&_svg]:animate-spin'
+          <div
+            role='status'
+            aria-label={t('pending-workspace.label')}
+            className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
-          />
+          >
+            <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
+          </div>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
