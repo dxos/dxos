@@ -23,6 +23,7 @@ import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
 import type { ObjectCore } from '../core-db/index.ts';
+import { aggregateNeedsIndex } from './util.ts';
 
 export type WorkingSetItem = {
   objectId: EntityId;
@@ -143,15 +144,7 @@ export class WorkingSetQueryExecutor {
           ? GroupBy.dropGroups(ws, step.skip, _serializeItemGroupKey)
           : ws.slice(step.skip);
       case 'AggregateStep':
-        // A count over whatever the tab happens to hold is not a count of the space, and a bucket
-        // needs index timestamps a core does not carry: both defer to the index-backed source.
-        if (
-          !step.aggregates.some((aggregate) => aggregate.kind === 'items') ||
-          step.aggregates.some((aggregate) => aggregate.kind === 'bucket')
-        ) {
-          return null;
-        }
-        return this._execAggregateStep(step, ws);
+        return aggregateNeedsIndex(step.aggregates) ? null : this._execAggregateStep(step, ws);
       default:
         return null;
     }

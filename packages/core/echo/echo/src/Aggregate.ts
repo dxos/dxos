@@ -119,8 +119,9 @@ export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Agg
 export const count = <T>(): Aggregate<T, number> => new AggregateClass({ kind: 'count' });
 
 /**
- * Group members by their type URI (the field carries the URI string). Unlike {@link group} the key
- * comes from the index, so a query whose keys are all `type`/`bucket` runs without loading objects.
+ * Group members by their stored type URI (the field carries the URI string as written, so two
+ * schema versions are two groups). Unlike {@link group} the key comes from the index, so a query
+ * whose keys are all `type`/`bucket` runs without loading objects.
  */
 export const type = <T>(): Aggregate<T, string | null> => new AggregateClass({ kind: 'type' });
 

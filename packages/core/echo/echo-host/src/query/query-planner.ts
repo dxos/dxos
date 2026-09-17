@@ -73,7 +73,8 @@ export class QueryPlanner {
    * wildcard/type/timestamp `SelectStep`, optional deleted handling, a trivial type re-check, the
    * natural `OrderStep` `_ensureOrderStep` inserts, then an `AggregateStep` whose every aggregate is
    * computable from meta-index columns. Group order becomes key order, which an unordered aggregate
-   * leaves unspecified anyway.
+   * leaves unspecified anyway. One space only: the index groups across every space it is given, and
+   * a record has a single `spaceId` to carry.
    */
   private _optimizeSqlAggregate(plan: QueryPlan.Plan): QueryPlan.Plan {
     if (this._options.noIndexes) {
@@ -86,7 +87,11 @@ export class QueryPlanner {
       aggregate?._tag !== 'AggregateStep' ||
       select.feedCursorRange !== undefined ||
       select.limit !== undefined ||
-      !select.scope.every((scope): scope is QueryAST.SpaceScope => scope._tag === 'space' && !scope.includeAllFeeds) ||
+      select.scope.length !== 1 ||
+      !select.scope.every(
+        (scope): scope is QueryAST.SpaceScope =>
+          scope._tag === 'space' && scope.spaceId !== undefined && !scope.includeAllFeeds,
+      ) ||
       !aggregate.aggregates.every((entry) => entry.kind === 'count' || entry.kind === 'type' || entry.kind === 'bucket')
     ) {
       return plan;
