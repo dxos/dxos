@@ -45,31 +45,6 @@ import {
   updateActiveDeck,
 } from '../util/index.ts';
 
-/** Retains the workspaces of subjects that are not in the graph yet, for as long as the open runs. */
-const holdOpening = (ids: readonly string[]) =>
-  ids.length === 0
-    ? Effect.void
-    : Effect.acquireRelease(
-        Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
-          ...state,
-          opening: [...(state.opening ?? []), ...ids],
-        })),
-        () =>
-          Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
-            ...state,
-            opening: withoutOnce(state.opening ?? [], ids),
-          })).pipe(Effect.orDie),
-      );
-
-const withoutOnce = (list: readonly string[], ids: readonly string[]): string[] =>
-  ids.reduce(
-    (remaining, id) => {
-      const index = remaining.indexOf(id);
-      return index === -1 ? remaining : remaining.toSpliced(index, 1);
-    },
-    [...list],
-  );
-
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -82,7 +57,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       );
 
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      yield* holdOpening(input.subject.filter((id) => Option.isNone(AppGraph.getNode(graph, id))));
       for (const subjectId of input.subject) {
         NotFound.expandPath(graph, subjectId);
       }
@@ -268,7 +242,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       }
 
       return input.subject;
-    }, Effect.scoped),
+    }),
   ),
 );
 

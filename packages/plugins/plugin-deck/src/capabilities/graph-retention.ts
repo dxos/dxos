@@ -18,7 +18,6 @@ import { retainedWorkspaces } from '../util/index.ts';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const stateAtom = yield* DeckCapabilities.State;
-    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
     const layoutAtom = yield* AppCapabilities.Layout;
 
     const retention: AppGraphBuilder.Retention = {
@@ -29,7 +28,7 @@ export default Capability.makeModule(
         return retainedWorkspaces({
           activeDeck,
           previousDeck,
-          retainedPlanks: [...get(layoutAtom).active, ...(get(ephemeralAtom).opening ?? [])],
+          retainedPlanks: get(layoutAtom).active,
         });
       }),
     };

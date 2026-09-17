@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -40,7 +41,8 @@ const seedWhenLoaded = Effect.fnUntraced(function* (
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+      const builder = yield* Capability.get(AppCapabilities.AppGraph);
+      const { graph } = builder;
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
@@ -62,13 +64,17 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
 
       const seeds = remembered.length === 0 && platform !== 'mobile';
       if (seeds) {
-        // A workspace entered after release has no children until its connectors run again.
+        // A workspace entered after release has no children until its connectors run again, and their
+        // output lands on a flush — so the switch waits for it and seeds in one navigation.
         AppGraph.expandSync(graph, input.subject, 'child');
+        yield* Effect.promise(() => AppGraphBuilder.flush(builder));
       }
       const seeded = seeds ? openableChildren(graph, input.subject).slice(0, 1) : [];
       const active = remembered.length > 0 ? remembered : seeded;
       yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
 
+      // Only a workspace whose children are still loading reaches here, and its seed replaces the
+      // empty URL rather than pushing a second entry.
       if (seeds && seeded.length === 0) {
         // Detached: a switch that lands first leaves this one to find the deck already moved on.
         yield* Effect.forkDetach(

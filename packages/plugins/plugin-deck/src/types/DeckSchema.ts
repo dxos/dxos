@@ -191,8 +191,6 @@ export const EphemeralDeckState = Schema.Struct({
    * remembered for as long as the session lasts and no longer.
    */
   open: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(OpenDeck))),
-  /** Subjects an open is waiting on, whose workspaces stay loaded until they arrive. */
-  opening: Schema.optional(Schema.Array(Schema.String)),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
   dialogBlockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),

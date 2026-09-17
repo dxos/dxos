@@ -15,7 +15,7 @@ export type WorkspaceRetention = {
 /** A region at the root reaches every node, so a plank outside any workspace names nothing to retain. */
 const wouldKeepWholeGraph = (id: string): boolean => id === GraphNode.RootId;
 
-/** The workspaces the deck is showing, was last showing, or is opening into. */
+/** The workspaces the deck is showing or was last showing. */
 export const retainedWorkspaces = ({
   activeDeck,
   previousDeck,
