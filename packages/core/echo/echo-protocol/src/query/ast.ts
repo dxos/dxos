@@ -504,9 +504,8 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
  *   input stream / the resulting groups, not this aggregate's member selection).
  * - `count` yields the member count. Opt-in — a row carries no count otherwise.
  * - `type` partitions members by their type URI; the field carries the URI string.
- * - `bucket` partitions members by the UTC hour of a system timestamp; the field carries the hour
- *   index (`Math.floor(ms / 3_600_000)`). Both are computable from the meta index alone, so a query using only
- *   key kinds other than `group` can be answered without loading any document.
+ * - `timestamp` partitions members by the UTC hour of a system timestamp; the field carries the
+ *   start of that hour in unix ms.
  */
 const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
@@ -529,11 +528,11 @@ const GroupAggregateItems_ = Schema.Struct({
 });
 const GroupAggregateCount_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('count') });
 const GroupAggregateType_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('type') });
-// Only `kind` may be a literal: a View stores its query AST, and ECHO's union validation demands
-// exactly one literal discriminator per member. The bucket unit is therefore fixed (one UTC hour).
-const GroupAggregateBucket_ = Schema.Struct({
+// No `unit` field while hours are the only unit: a one-value literal would be a second discriminator,
+// which ECHO's union validation rejects for the query AST a View stores.
+const GroupAggregateTimestamp_ = Schema.Struct({
   name: Schema.String,
-  kind: Schema.Literal('bucket'),
+  kind: Schema.Literal('timestamp'),
   field: Schema.Literals(['createdAt', 'updatedAt']),
 });
 
@@ -544,21 +543,20 @@ const GroupAggregate_ = Schema.Union([
   GroupAggregateItems_,
   GroupAggregateCount_,
   GroupAggregateType_,
-  GroupAggregateBucket_,
+  GroupAggregateTimestamp_,
 ]);
 
 /** Aggregate kinds that contribute a component to the group key. */
 export const isGroupKeyAggregate = (
   aggregate: GroupAggregate,
-): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'bucket' }> =>
-  aggregate.kind === 'group' || aggregate.kind === 'type' || aggregate.kind === 'bucket';
+): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'timestamp' }> =>
+  aggregate.kind === 'group' || aggregate.kind === 'type' || aggregate.kind === 'timestamp';
 
-/** Width of a `bucket` key: one UTC hour in milliseconds. */
-export const BUCKET_MS = 3_600_000;
+const HOUR_MS = 3_600_000;
 
-/** The `bucket` key component for a timestamp: its hour index, or `null` when the timestamp is unknown. */
-export const bucketOf = (timestamp: number | null | undefined): number | null =>
-  timestamp == null ? null : Math.floor(timestamp / BUCKET_MS);
+/** The `timestamp` key component: the start of the timestamp's UTC hour in unix ms, or `null` when unknown. */
+export const startOfHour = (timestamp: number | null | undefined): number | null =>
+  timestamp == null ? null : Math.floor(timestamp / HOUR_MS) * HOUR_MS;
 
 export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
 export const GroupAggregate: Schema.Codec<GroupAggregate> = GroupAggregate_;

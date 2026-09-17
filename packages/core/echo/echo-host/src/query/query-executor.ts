@@ -20,7 +20,6 @@ import {
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
 import {
-  type AggregateGroupBy,
   type EntityMeta,
   EscapedPropPath,
   type IndexEngine,
@@ -164,8 +163,8 @@ const QueryItem = Object.freeze({
         case 'type':
           key[aggregate.name] = QueryItem.getTypeUri(item);
           break;
-        case 'bucket':
-          key[aggregate.name] = QueryAST.bucketOf(item[aggregate.field]);
+        case 'timestamp':
+          key[aggregate.name] = QueryAST.startOfHour(item[aggregate.field]);
           break;
       }
     }
@@ -484,21 +483,6 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
         }
         break;
       }
-      case 'SqlAggregateStep': {
-        scopes.spaceIds ??= new Set();
-        for (const scope of step.scope) {
-          if (scope.spaceId !== undefined) {
-            scopes.spaceIds.add(SpaceId.make(scope.spaceId));
-          }
-        }
-        if (step.selector._tag === 'TypeSelector') {
-          scopes.typenames ??= new Set();
-          for (const typename of step.selector.typename) {
-            scopes.typenames.add(canonicalTypename(String(typename)));
-          }
-        }
-        break;
-      }
       case 'TraverseStep':
       case 'UnionStep':
       case 'SetDifferenceStep':
@@ -594,9 +578,6 @@ export class QueryExecutor extends Resource {
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
 
-  /** Group records of a plan answered entirely by the index (`SqlAggregateStep`); no items exist for them. */
-  private _lastGroupRecords?: QueryService.QueryResult[] = undefined;
-
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
    * `JSON.stringify(subquery) + '\0' + property`. Two FilterSteps embedding the same subquery
@@ -644,10 +625,6 @@ export class QueryExecutor extends Resource {
   }
 
   getResults(): QueryService.QueryResult[] {
-    if (this._lastGroupRecords !== undefined) {
-      return this._lastGroupRecords;
-    }
-
     // Computed over the final (post-filter) result set so counts always match shipped records.
     const groupCounts = new Map<string, number>();
     for (const item of this._lastResultSet) {
@@ -719,11 +696,6 @@ export class QueryExecutor extends Resource {
     this.#inQuerySetCache = new Map();
     this.#inQueryTracesAttached = new Set();
 
-    const [onlyStep] = this._plan.steps;
-    if (this._plan.steps.length === 1 && onlyStep._tag === 'SqlAggregateStep') {
-      return this._execSqlAggregate(onlyStep);
-    }
-
     const prevResultSet = this._lastResultSet;
     const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
     // Omit objects whose strong deps cannot be resolved from local state so they
@@ -761,77 +733,6 @@ export class QueryExecutor extends Resource {
     return {
       changed,
     };
-  }
-
-  /**
-   * Answers the whole query with one grouped SQL read of the meta index: no document is loaded and
-   * the results are group records only (see `SqlAggregateStep`).
-   */
-  private async _execSqlAggregate(step: QueryPlan.SqlAggregateStep): Promise<QueryExecutionResult> {
-    const trace: ExecutionTrace = { ...ExecutionTrace.makeEmpty(), name: 'SqlAggregate', beginTs: performance.now() };
-    trace.details = JSON.stringify({ selector: step.selector, deleted: step.deleted, aggregates: step.aggregates });
-    const spaceIds = step.scope.flatMap((scope) => (scope.spaceId !== undefined ? [SpaceId.make(scope.spaceId)] : []));
-    const keyAggregates = step.aggregates.filter(QueryAST.isGroupKeyAggregate);
-    const groupBy = keyAggregates.flatMap((aggregate): AggregateGroupBy[] =>
-      aggregate.kind === 'type'
-        ? [{ kind: 'type' }]
-        : aggregate.kind === 'bucket'
-          ? [{ kind: 'bucket', field: aggregate.field, unit: 'hour' }]
-          : [],
-    );
-    const selector = step.selector;
-    const rows = await this._runInRuntime(
-      this._indexEngine.queryAggregate({
-        spaceIds,
-        typeDxns: selector._tag === 'TypeSelector' ? selector.typename : undefined,
-        deleted: step.deleted,
-        ...(selector._tag === 'TimestampSelector'
-          ? {
-              updatedAfter: selector.updatedAfter,
-              updatedBefore: selector.updatedBefore,
-              createdAfter: selector.createdAfter,
-              createdBefore: selector.createdBefore,
-            }
-          : {}),
-        groupBy,
-      }),
-    );
-    trace.indexHits = rows.length;
-    trace.objectCount = rows.length;
-    trace.name = 'Root';
-    trace.details = JSON.stringify({
-      id: this._id,
-      query: Query.pretty(Query.fromAst(this._query)),
-      step: step.selector,
-    });
-    ExecutionTrace.markEnd(trace);
-    this._trace = trace;
-
-    const records = rows.map((row): QueryService.QueryResult => {
-      const groupKey: GroupKeyValue = {};
-      keyAggregates.forEach((aggregate, index) => {
-        groupKey[aggregate.name] = row.key[index] ?? null;
-      });
-      const aggregates: GroupAggregates = {};
-      for (const aggregate of step.aggregates) {
-        if (aggregate.kind === 'count') {
-          aggregates[aggregate.name] = row.count;
-        }
-      }
-      const serializedGroupKey = GroupBy.serializeGroupKey(groupKey);
-      return {
-        id: serializedGroupKey,
-        spaceId: spaceIds[0],
-        rank: 1,
-        groupKey: serializedGroupKey,
-        groupCount: row.count,
-        aggregates: JSON.stringify(aggregates),
-      };
-    });
-    const changed = JSON.stringify(this._lastGroupRecords ?? null) !== JSON.stringify(records);
-    this._lastGroupRecords = records;
-    this._lastResultSet = [];
-    return { changed };
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {

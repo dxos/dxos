@@ -491,13 +491,13 @@ describe('Query', () => {
         .query(
           Query.select(Filter.everything()).aggregate({
             type: Aggregate.type(),
-            hour: Aggregate.bucket('updatedAt'),
+            hour: Aggregate.updated('hour'),
             count: Aggregate.count(),
           }),
         )
         .run();
 
-      const thisHour = Math.floor(Date.now() / 3_600_000);
+      const thisHour = Math.floor(Date.now() / 3_600_000) * 3_600_000;
       const countOf = (typename: string) => rows.find((row) => String(row.type).includes(typename))?.count;
       expect(rows).to.have.length(2);
       expect(countOf(Type.getTypename(TestSchema.Person))).to.equal(2);

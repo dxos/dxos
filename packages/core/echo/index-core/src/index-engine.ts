@@ -16,8 +16,6 @@ import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import {
   ActivityIndex,
   type ActivityRow,
-  type AggregateQuery,
-  type AggregateRow,
   type ChangeSummary,
   type EntityMeta,
   EntityMetaIndex,
@@ -304,12 +302,6 @@ export class IndexEngine {
     queues?: readonly QueueRef[] | null;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryByTimeRange(query);
-  }
-
-  queryAggregate(
-    query: AggregateQuery,
-  ): Effect.Effect<readonly AggregateRow[], SqlError.SqlError, SqlClient.SqlClient> {
-    return this.#objectMetaIndex.queryAggregate(query);
   }
 
   queryRelations(query: {

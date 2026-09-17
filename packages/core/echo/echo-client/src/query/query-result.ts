@@ -441,7 +441,7 @@ const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly
   switch (aggregate.kind) {
     case 'group':
     case 'type':
-    case 'bucket':
+    case 'timestamp':
       return undefined; // Group-key fields are assembled from the source key, not here.
     case 'items':
       return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;

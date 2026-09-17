@@ -23,7 +23,7 @@ export type Spec =
   | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
   | { kind: 'count' }
   | { kind: 'type' }
-  | { kind: 'bucket'; field: 'createdAt' | 'updatedAt' };
+  | { kind: 'timestamp'; field: 'createdAt' | 'updatedAt' };
 
 export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
 export type AggregateTypeId = typeof AggregateTypeId;
@@ -119,15 +119,21 @@ export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Agg
 export const count = <T>(): Aggregate<T, number> => new AggregateClass({ kind: 'count' });
 
 /**
- * Group members by their stored type URI (the field carries the URI string as written, so two
- * schema versions are two groups). Unlike {@link group} the key comes from the index, so a query
- * whose keys are all `type`/`bucket` runs without loading objects.
+ * Group members by their stored type URI. The field carries the URI string as written, so two
+ * schema versions are two groups.
  */
 export const type = <T>(): Aggregate<T, string | null> => new AggregateClass({ kind: 'type' });
 
+/** Time units a timestamp aggregate can group by. */
+export type TimeUnit = 'hour';
+
 /**
- * Group members by the UTC hour of a system timestamp (the field carries the unix-hour index,
- * `Math.floor(ms / 3_600_000)`); roll hours up to local days at read time.
+ * Group members by the UTC `unit` their system `updatedAt` falls in. The field carries the start of
+ * that interval in unix ms, or `null` when the timestamp is unknown.
  */
-export const bucket = <T>(field: 'createdAt' | 'updatedAt'): Aggregate<T, number | null> =>
-  new AggregateClass({ kind: 'bucket', field });
+export const updated = <T>(_unit: TimeUnit): Aggregate<T, number | null> =>
+  new AggregateClass({ kind: 'timestamp', field: 'updatedAt' });
+
+/** Like {@link updated}, over the system `createdAt` timestamp. */
+export const created = <T>(_unit: TimeUnit): Aggregate<T, number | null> =>
+  new AggregateClass({ kind: 'timestamp', field: 'createdAt' });

@@ -170,12 +170,16 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'aggregate': {
       const aggregates = query.aggregates.map((aggregate) => {
-        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${prettyAggregateArg(aggregate)})`;
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${prettyAggregateName(aggregate)}(${prettyAggregateArg(aggregate)})`;
       });
       return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
     }
   }
 };
+
+/** The `Aggregate.*` constructor that produced an aggregate. */
+const prettyAggregateName = (aggregate: QueryAST.GroupAggregate): string =>
+  aggregate.kind === 'timestamp' ? (aggregate.field === 'updatedAt' ? 'updated' : 'created') : aggregate.kind;
 
 /** Renders one aggregate's constructor argument, mirroring the `Aggregate.*` call that produced it. */
 const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
@@ -183,8 +187,8 @@ const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
     case 'count':
     case 'type':
       return '';
-    case 'bucket':
-      return JSON.stringify(aggregate.field);
+    case 'timestamp':
+      return '"hour"';
     case 'items':
       return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
     case 'group':
