@@ -11,11 +11,12 @@ export type ButtonStyleProps = Partial<{
   density: Density;
   elevation: Elevation;
   disabled: boolean;
-  variant: 'default' | 'primary' | 'ghost' | 'outline';
+  variant: 'default' | 'primary' | 'ghost' | 'outline' | 'destructive' | 'valence' | 'tag';
 }>;
 
-const root: ComponentFunction<ButtonStyleProps> = (_props, ...etc) => {
-  return mx('dx-button dx-focus-ring group gap-1 [&_span]:truncate', ...etc);
+// The `tag` variant carries `dx-tag` too, so the hue rules in `tag.css` colour it by `data-hue`.
+const root: ComponentFunction<ButtonStyleProps> = ({ variant }, ...etc) => {
+  return mx('dx-button dx-focus-ring group gap-1 [&_span]:truncate', variant === 'tag' && 'dx-tag', ...etc);
 };
 
 const group: ComponentFunction<{ elevation?: Elevation }> = (_props, ...etc) => {

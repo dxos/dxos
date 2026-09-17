@@ -17,16 +17,12 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
-  AgentRequestBegin,
-  AgentRequestEnd,
   AiContext,
   Alarm,
-  DelegationSpawned,
   HarnessControl,
   type PendingState,
   SessionStore,
   SkillHooks,
-  emitRequestPhase,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -289,7 +285,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // waiting on the wake rather than on the turn — so the last stage of that turn is no longer
         // what is happening.
         const reportSleeping = (state: PendingState): Effect.Effect<void, never, Trace.TraceService> =>
-          state.pendingAlarms.length > 0 ? emitRequestPhase('sleeping') : Effect.void;
+          state.pendingAlarms.length > 0 ? Trace.emitRequestPhase('sleeping') : Effect.void;
 
         const maybeCompleteWith = (state: PendingState) =>
           Effect.gen(function* () {
@@ -380,7 +376,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // Earliest point the agent can report to a reader who is already waiting: draining the
               // queue below reads the feed, which is itself part of the wait. An empty wake emits it
               // too, but that path returns in milliseconds and the turn settling clears the line.
-              yield* emitRequestPhase('preparing');
+              yield* Trace.emitRequestPhase('preparing');
 
               for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
                 log.info('skip tool result that was reported synchronously', { pid });
@@ -477,7 +473,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               log('begin request', { prompt });
               log('trace agent request begin');
-              yield* Trace.write(AgentRequestBegin, {});
+              yield* Trace.write(Trace.AgentRequestBegin, {});
               yield* session
                 .runTurn({
                   prompt,
@@ -488,7 +484,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 })
                 .pipe(
                   Effect.onExit((exit) =>
-                    Trace.write(AgentRequestEnd, {
+                    Trace.write(Trace.AgentRequestEnd, {
                       status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                       error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                     }),
@@ -516,7 +512,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   const pid = yield* delegation.spawn;
                   delegations.push({ pid, id: delegation.id });
                   log('delegated work', { pid, id: delegation.id });
-                  yield* Trace.write(DelegationSpawned, { taskId: delegation.id, pid: String(pid) });
+                  yield* Trace.write(Trace.DelegationSpawned, { taskId: delegation.id, pid: String(pid) });
                 }
                 if (pending.length > 0) {
                   yield* DelegationsCell.set(delegations);
@@ -565,7 +561,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                     const pid = yield* next.spawn;
                     delegations.push({ pid, id: next.id });
                     log('delegated work', { pid, id: next.id });
-                    yield* Trace.write(DelegationSpawned, { taskId: next.id, pid: String(pid) });
+                    yield* Trace.write(Trace.DelegationSpawned, { taskId: next.id, pid: String(pid) });
                   }
                   if (pending.length > 0) {
                     yield* DelegationsCell.set(delegations);
