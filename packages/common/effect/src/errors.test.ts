@@ -2,6 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// These tests assert on a plain `Error`'s stack frames, so the `catch` returns the thrown value
+// untouched; narrowing it would buy nothing (`failWith` takes `unknown`) and re-wrapping it would
+// replace the stack under test.
+/** @effect-diagnostics unknownInEffectCatch:skip-file */
+
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -44,9 +49,7 @@ describe('causeToError', () => {
         try: () => {
           throw new Error('failure');
         },
-        // Narrowed rather than passed through as `unknown`, so the failure channel stays typed;
-        // the thrown `Error` is returned as-is, preserving the stack the assertions read.
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        catch: (error) => error,
       }),
       // `map` calls the thunk through an anonymous runtime callback, which carries no `~effect/` name and stays.
       Effect.succeed(1).pipe(
