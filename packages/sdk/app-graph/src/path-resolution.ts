@@ -277,10 +277,13 @@ const resolveLinked = async (
   return match?.id ?? null;
 };
 
-/** A companion's segment carries `~` so it shares attention with its owner; the variant is what follows. */
-const companionVariant = (id: string): string => GraphNode.segmentId(id).replace(/^~/, '');
+/** A companion's segment carries this prefix so it shares attention with its owner; the variant follows it. */
+const LINKED_PREFIX = '~';
 
-const COMPANION_RELATION = Graph.relationKey(Node.companionRelation());
+const companionVariant = (id: string): string => {
+  const segment = GraphNode.segmentId(id);
+  return segment.startsWith(LINKED_PREFIX) ? segment.slice(LINKED_PREFIX.length) : segment;
+};
 
 const resolveUrlAsync = async (
   builder: GraphBuilder.GraphBuilder,
@@ -387,7 +390,7 @@ export const resolveUrl = (
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of
- * `resolveUrl`. A companion (a node reached through the companion relation) maps to the declared `linked` key
+ * `resolveUrl`. A companion (a `~<variant>` segment) maps to the declared `linked` key
  * with the variant as its id — independent of the producing extension, so every linked node is
  * addressable. Any other node maps via its producing extension's `urlKey` (`getNodeExtensionId`);
  * a node with no key-declaring producer returns `Option.none()` (unmapped — serialization skips it
@@ -401,8 +404,9 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
     return Option.none();
   }
 
+  // Read from the id rather than the relation, so a companion plank whose node was released keeps its URL.
   const linkedKey = builder.urlGrammar.linkedKey;
-  if (linkedKey && Graph.incoming(builder.graph, nodeId).some(({ relation }) => relation === COMPANION_RELATION)) {
+  if (linkedKey && GraphNode.segmentId(nodeId).startsWith(LINKED_PREFIX)) {
     return Option.some({ key: linkedKey, id: companionVariant(nodeId), workspace });
   }
 

@@ -59,7 +59,7 @@ export type NodeArgLike = { readonly id: string; readonly properties?: Record<st
 
 /**
  * The property a node declares its default retention depth in: how many structural levels below it stay
- * loaded when no {@link Retention} asks for more. A node that declares none keeps everything below it.
+ * loaded when no {@link Retention} asks for more. A node that declares none adds no limit of its own.
  */
 export const RetainDepthProperty = 'retainDepth';
 
@@ -467,7 +467,7 @@ export class GraphBuilder<
    */
   _unretained(asked: ReadonlyMap<string, number>): Set<string> {
     const budgets = new Map<string, { own: number; granted: number }>([
-      [GraphNode.RootId, { own: Infinity, granted: -1 }],
+      [GraphNode.RootId, { own: Infinity, granted: asked.get(GraphNode.RootId) ?? -1 }],
     ]);
     const pending = [GraphNode.RootId];
     while (pending.length > 0) {
@@ -497,10 +497,16 @@ export class GraphBuilder<
       [...budgets].filter(([, { own, granted }]) => Math.max(own, granted) < 0).map(([id]) => id),
     );
     // A retained connector whose own outputs all stay would never re-emit inline children released from under it.
-    for (const [key, inline] of this._connectorPreviousInlineIds) {
-      const outputs = this._connectorPrevious.get(key) ?? [];
-      if (!released.has(relationFromConnectorKey(key).id) && outputs.every((id) => !released.has(id))) {
-        inline.forEach((id) => released.delete(id));
+    let kept = true;
+    while (kept) {
+      kept = false;
+      for (const [key, inline] of this._connectorPreviousInlineIds) {
+        const outputs = this._connectorPrevious.get(key) ?? [];
+        if (!released.has(relationFromConnectorKey(key).id) && outputs.every((id) => !released.has(id))) {
+          for (const id of inline) {
+            kept = released.delete(id) || kept;
+          }
+        }
       }
     }
     return released;

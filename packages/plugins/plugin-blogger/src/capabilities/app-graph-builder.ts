@@ -172,8 +172,7 @@ export default Capability.makeModule(
       }),
 
       // Comments companion for the Post plank: anchors the comments panel to the post's single body
-      // `Markdown.Document` (where post comments are anchored), and contributes a hidden, addressable
-      // node for that doc so the in-editor comment toolbar action resolves.
+      // `Markdown.Document` (where post comments are anchored).
       AppGraphBuilder.createExtension({
         id: 'postComments',
         relation: AppGraphNode.companionRelation(),
@@ -195,6 +194,22 @@ export default Capability.makeModule(
               data: contentDoc,
               position: Position.first,
             }),
+          ]);
+        },
+      }),
+
+      AppGraphBuilder.createExtension({
+        id: 'postContentDoc',
+        match: (node) => (Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data }) : Option.none()),
+        connector: ({ post }, get) => {
+          const snapshot = get(Obj.atom(post));
+          get(Obj.atom(snapshot.content));
+          const contentDoc = snapshot.content.target;
+          if (!contentDoc) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
             // Hidden, addressable node for the body doc so the in-editor comment toolbar action resolves.
             // The doc has no navtree node, so `graph.actions(<post node id>/<doc.id>)` — the id
             // PostArticle uses as the editor's `attendableId` — would otherwise be empty. plugin-review's

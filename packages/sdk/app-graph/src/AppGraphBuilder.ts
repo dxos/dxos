@@ -85,7 +85,7 @@ export type UrlBinding = { key: string; kind: 'item' | 'singleton'; path: string
  *
  * The two keys are fixed tiers no extension declares (no connector produces their nodes): `anchorKey`
  * establishes the base that following pairs resolve against and is consumed as a rebase
- * (`w/<workspace>`); `linkedKey` addresses the linked-segment child of the preceding item
+ * (`w/<workspace>`); `linkedKey` addresses a companion of the preceding item
  * (`companion/<variant>`), resolved through the companion relation. `tailSeparator` joins the
  * fixed-depth node-id segments between a key's static `path` and the object id into one URL id
  * (`db/<slug>+<id>`) so a fixed-depth nested shape needs no resolver.
@@ -226,7 +226,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
   override _onExpand(id: string, relation: string): void {
     super._onExpand(id, relation);
 
-    // TODO(wittjosiah): Remove. This is for backwards compatibility.
+    // Readers of a node's children expect its actions and companions to be loaded too.
     const decoded = Graph.relationFromKey(relation);
     if (decoded.kind === 'child' && decoded.direction === 'outbound') {
       Graph.expandSync(this.graph, id, 'action');

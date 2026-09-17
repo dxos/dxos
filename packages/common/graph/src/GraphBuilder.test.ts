@@ -461,6 +461,13 @@ describe('retention', () => {
     expect(present('root/w1/c0')).to.be.false;
   });
 
+  test('a retention may ask for the root like any other node', async () => {
+    const { retain, present } = await loaded({ workspaceDepth: 0 });
+    await retain([{ id: GraphNode.RootId, depth: 2 }]);
+    expect(present('root/w1/c0')).to.be.true;
+    expect(present('root/w1/c0/g')).to.be.false;
+  });
+
   test('a node asked for below a released node goes with it', async () => {
     const { retain, present } = await loaded({ workspaceDepth: 0 });
     await retain([{ id: 'root/w1/c0/g' }]);

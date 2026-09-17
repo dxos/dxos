@@ -750,18 +750,10 @@ export const sortEdges = <T extends ExpandableGraph | WritableGraph>(
  */
 export const batch = <T extends WritableGraph, A>(graph: T, fn: () => A): A => getInternal(graph)._model.batch(fn);
 
-type StoredEdge = { source: string; target: string; relation: string };
-
 /** The edges leaving `id` in their stored outbound form, read without subscribing. */
-export const outgoing = (graph: BaseGraph, id: string): StoredEdge[] =>
+export const outgoing = (graph: BaseGraph, id: string): { source: string; target: string; relation: string }[] =>
   getInternal(graph)
     ._model.outgoing(id)
-    .map(({ source, target, type }) => ({ source, target, relation: type }));
-
-/** The edges arriving at `id` in their stored outbound form, read without subscribing. */
-export const incoming = (graph: BaseGraph, id: string): StoredEdge[] =>
-  getInternal(graph)
-    ._model.incoming(id)
     .map(({ source, target, type }) => ({ source, target, relation: type }));
 
 /**
