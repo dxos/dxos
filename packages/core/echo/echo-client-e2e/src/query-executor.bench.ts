@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { rmSync } from 'node:fs';
 import { afterAll, bench, describe } from 'vitest';
 
-import { Filter, Obj, Order, Query, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Order, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '@dxos/echo-client/testing';
 import { type ExecutionTrace, type QueryExecutorMode } from '@dxos/echo-host';
@@ -41,7 +41,8 @@ const SEED_BATCH_SIZE = 200;
 const FIRST_RESULT_TIMEOUT_MS = 30_000;
 const SHORT_RESULT_RETRIES = 10;
 const MODES: QueryExecutorMode[] = ['memory', 'sql'];
-const WARM_OPTIONS = { time: 1_000 };
+// tinybench warms up for 16 iterations by default, ~30 s on a memory-mode row over 2,000 documents.
+const WARM_OPTIONS = { time: 1_000, warmupIterations: 3 };
 // Every cold sample reloads a peer and, on the memory path, reloads 2,000 documents; a small fixed
 // sample count keeps the row bounded.
 const COLD_OPTIONS = { iterations: 3, time: 0, warmupIterations: 1, warmupTime: 0 };
@@ -155,12 +156,19 @@ const runExpecting = async (db: EchoDatabase, shape: QueryShape): Promise<unknow
   return results;
 };
 
+type FirstResult<T> = { value: T; unsubscribe: () => void };
+
 /**
- * Opens a reactive query, resolves with the size of its first non-empty result set, and unsubscribes.
- * Subscribing without `fire` means the callback runs only once the host has executed the query.
+ * Opens a reactive query and resolves on its first non-empty result with whatever `read` takes from
+ * it while the query is still active; the caller unsubscribes. Subscribing without `fire` means the
+ * callback runs only once the host has executed the query.
  */
-const firstReactiveResult = (db: EchoDatabase, query: Query.Any): Promise<number> =>
-  new Promise<number>((resolve, reject) => {
+const awaitFirstResult = <T>(
+  db: EchoDatabase,
+  query: Query.Any,
+  read: (result: QueryResult.QueryResult<unknown>) => T,
+): Promise<FirstResult<T>> =>
+  new Promise<FirstResult<T>>((resolve, reject) => {
     let unsubscribe: (() => void) | undefined;
     let settled = false;
     const timer = setTimeout(() => {
@@ -176,8 +184,9 @@ const firstReactiveResult = (db: EchoDatabase, query: Query.Any): Promise<number
       }
       settled = true;
       clearTimeout(timer);
-      unsubscribe?.();
-      resolve(result.results.length);
+      // The teardown is left to the caller: unsubscribing here runs inside the query's own `changed`
+      // emission, where a throw is routed to the context's error handler instead of this promise.
+      resolve({ value: read(result), unsubscribe: () => unsubscribe?.() });
     });
   });
 
@@ -208,32 +217,14 @@ const sumTrace = (trace: ExecutionTrace, field: 'documentsLoaded' | 'indexHits' 
 const collectTraces = async ({ mode, peer, db }: Seeded): Promise<TraceRow[]> => {
   const rows: TraceRow[] = [];
   for (const shape of SHAPES) {
-    let trace: ExecutionTrace | undefined;
-    await new Promise<void>((resolve, reject) => {
-      let unsubscribe: (() => void) | undefined;
-      let settled = false;
-      const timer = setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          unsubscribe?.();
-          reject(new Error(`${mode}/${shape.label}: no reactive result within ${FIRST_RESULT_TIMEOUT_MS} ms`));
-        }
-      }, FIRST_RESULT_TIMEOUT_MS);
-      unsubscribe = db.query(shape.query).subscribe((result) => {
-        if (settled || result.results.length === 0) {
-          return;
-        }
-        settled = true;
-        clearTimeout(timer);
-        const candidates = peer.host.queryService
-          .getQueryTraces()
-          .filter((candidate) => candidate.details.includes(Type.getTypename(BenchTask)))
-          .sort((left, right) => right.endTs - left.endTs);
-        trace = candidates[0];
-        unsubscribe?.();
-        resolve();
-      });
-    });
+    const { value: trace, unsubscribe } = await awaitFirstResult(db, shape.query, () =>
+      peer.host.queryService
+        .getQueryTraces()
+        .filter((candidate) => candidate.details.includes(Type.getTypename(BenchTask)))
+        .sort((left, right) => right.endTs - left.endTs)
+        .at(0),
+    );
+    unsubscribe();
     if (!trace) {
       throw new Error(`${mode}/${shape.label}: no host trace found`);
     }
@@ -296,7 +287,12 @@ describe(`query executor: memory vs sql (N=${TASK_COUNT})`, { tags: ['manual'], 
         'reactive first result (type + property)',
         async () => {
           const { db } = getSeeded(warm, mode);
-          const count = await firstReactiveResult(db, distinctPropertyQuery());
+          const { value: count, unsubscribe } = await awaitFirstResult(
+            db,
+            distinctPropertyQuery(),
+            (result) => result.results.length,
+          );
+          unsubscribe();
           if (count !== EXPECTED_MATCHES) {
             throw new Error(`reactive: expected ${EXPECTED_MATCHES} results, got ${count}`);
           }
