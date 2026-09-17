@@ -94,6 +94,8 @@ export class SqlPlanCompiler {
   readonly #subqueries = new Map<string, string>();
   /** Resolved `metaVersion` literal sets, keyed by `key\0range`. */
   readonly #metaVersions: Map<string, readonly string[]>;
+  /** Whether any select in the plan scopes a space with its feeds, which lets a traversal reach feed items. */
+  #includeAllFeeds = false;
 
   constructor(sql: SqlClient.SqlClient, metaVersions: Map<string, readonly string[]> = new Map()) {
     this.#sql = sql;
@@ -102,6 +104,7 @@ export class SqlPlanCompiler {
 
   compile(plan: QueryPlan.Plan, options: CompileOptions = {}): CompiledQuery {
     const sql = this.#sql;
+    this.#includeAllFeeds = planIncludesAllFeeds(plan);
     let root = this.#compilePlan(plan, undefined);
     if (options.strongDependencyFilter !== false) {
       root = this.#compileStrongDependencyFilter(root);
@@ -694,13 +697,15 @@ export class SqlPlanCompiler {
           // The property holds one reference or an array of them; either way each is `{"/": uri}`.
           const refs = sql`json_each(CASE json_type(d.body, ${at}) WHEN 'array' THEN json_extract(d.body, ${at}) ELSE json_array(json_extract(d.body, ${at})) END)`;
           const uri = sql`json_extract(ref.value, '$."/"')`;
+          // A target in a feed is reachable only when the plan scopes the space with its feeds.
+          const targetKind = this.#includeAllFeeds ? sql`1 = 1` : sql`t.queueId = ''`;
           return this.#define(
             'ws',
             sql`${project(sql`t`)} FROM ${wsRef} w
               JOIN objectMeta m ON m.recordId = w.recordId
               JOIN objectData d ON d.recordId = w.recordId
               JOIN ${refs} ref
-              JOIN objectMeta t ON t.spaceId = COALESCE(${spaceIdOfUri(sql, uri)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, uri)} AND t.queueId = ''
+              JOIN objectMeta t ON t.spaceId = COALESCE(${spaceIdOfUri(sql, uri)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, uri)} AND ${targetKind}
               WHERE ${uri} LIKE 'echo:%'
               GROUP BY t.recordId`,
           );
@@ -1057,6 +1062,21 @@ export const compilePlan = (
 //
 
 const metaVersionKey = (key: string, range: string): string => `${key}\0${range}`;
+
+/** True when any select step, sub-plans included, scopes a space with `includeAllFeeds`. */
+const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
+  plan.steps.some((step) => {
+    switch (step._tag) {
+      case 'SelectStep':
+        return step.scope.some((scope) => scope._tag === 'space' && scope.includeAllFeeds === true);
+      case 'UnionStep':
+        return step.plans.some(planIncludesAllFeeds);
+      case 'SetDifferenceStep':
+        return planIncludesAllFeeds(step.source) || planIncludesAllFeeds(step.exclude);
+      default:
+        return false;
+    }
+  });
 
 /** Every `(metaKey, metaVersion)` pair in the plan, sub-plans and subqueries included. */
 const collectMetaVersionFilters = (plan: QueryPlan.Plan): [key: string, range: string][] => {
