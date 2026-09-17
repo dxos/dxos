@@ -54,10 +54,13 @@ Positions reach a replica only from the position authority, and the replica trea
   the same block de-duplicates and progress is kept, a different one is a displacement and replays.
 - **Server rollback.** A store that lost acknowledged rows keeps its token but re-issues their
   positions. The client notices when a position it is handed is already held by another local block,
-  when a pushed block is placed at or below its pull cursor, or when its cursor is above the store's
-  `maxPosition`. The displaced or above-mark blocks are unpositioned again (and so re-pushed), the
-  handed position wins, and the pull cursor is rewound so the namespace is replayed — nothing is
-  dropped, and the client never keeps retrying a position the store will not accept.
+  when a block it already holds arrives at a different position, when a pushed block is placed at or
+  below its pull cursor, or when its cursor is above the store's `maxPosition`. Once other clients
+  have written the store back past the cursor none of those fire, so every response also names the
+  block the store holds at the requested position (`cursorBlock`), and a client holding a different
+  block there replays as well. The displaced or above-mark blocks are unpositioned again (and so
+  re-pushed), the handed position wins, and the pull cursor is rewound so the namespace is replayed —
+  nothing is dropped, and the client never keeps retrying a position the store will not accept.
 
 ### Server Architecture (Cloudflare)
 

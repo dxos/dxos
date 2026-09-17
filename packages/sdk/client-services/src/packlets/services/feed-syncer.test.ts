@@ -29,6 +29,8 @@ import { FeedSyncer } from './feed-syncer.ts';
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
+/** Timers measured with `Date.now()` can read a few milliseconds short of their scheduled delay. */
+const TIMER_SLACK_MS = 10;
 const syncNamespace = FeedProtocol.WellKnownNamespaces.data;
 const syncNamespaces = [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace];
 
@@ -114,12 +116,15 @@ const createEdgeConnection = ({
 
 const createFeedSyncHarness = async ({
   spaceId,
+  spaceIds = [spaceId],
   pollingInterval,
   syncNamespaces: namespaces = [syncNamespace],
   reconcilePollingInterval,
   interceptRequest,
 }: {
   spaceId: SpaceId;
+  /** Every space the syncer tracks; defaults to `spaceId` alone. */
+  spaceIds?: SpaceId[];
   pollingInterval?: number;
   syncNamespaces?: string[];
   reconcilePollingInterval?: number;
@@ -180,7 +185,7 @@ const createFeedSyncHarness = async ({
     feedStore: clientFeedStore,
     edgeClient: edgeClient as any,
     peerId: 'client',
-    getSpaceIds: () => [spaceId],
+    getSpaceIds: () => spaceIds,
     syncNamespaces: namespaces,
     pollingInterval,
     reconcilePollingInterval,
@@ -534,32 +539,87 @@ describe('FeedSyncer', () => {
   // against the server for a pull that fails the same way every time.
   test('backs off between polls while a pull keeps failing', async () => {
     const spaceId = SpaceId.random();
-    const { syncer, sentMessages } = await createFeedSyncHarness({
+    const failedAt: number[] = [];
+    const { syncer } = await createFeedSyncHarness({
       spaceId,
       pollingInterval: 60_000,
       syncNamespaces,
-      interceptRequest: (message) =>
-        message._tag === 'QueryRequest' && message.feedNamespace === FeedProtocol.WellKnownNamespaces.trace
-          ? {
-              _tag: 'Error',
-              requestId: message.requestId,
-              message: 'trace namespace unavailable',
-              senderPeerId: 'server',
-              recipientPeerId: 'client',
-            }
-          : undefined,
+      interceptRequest: (message) => {
+        if (message._tag !== 'QueryRequest' || message.feedNamespace !== FeedProtocol.WellKnownNamespaces.trace) {
+          return undefined;
+        }
+        failedAt.push(Date.now());
+        return {
+          _tag: 'Error',
+          requestId: message.requestId,
+          message: 'trace namespace unavailable',
+          senderPeerId: 'server',
+          recipientPeerId: 'client',
+        };
+      },
     });
 
     await syncer.open(new Context());
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    await vi.waitFor(() => expect(failedAt.length).toBeGreaterThanOrEqual(3), { timeout: 5_000, interval: 10 });
 
-    // Retries at 250ms and 500ms after the failing rounds fit in the window; an immediate re-poll
-    // would have sent them by the dozen.
-    const tracePulls = sentMessages.filter(
-      (message) => message._tag === 'QueryRequest' && message.feedNamespace === FeedProtocol.WellKnownNamespaces.trace,
+    // Each gap is at least the delay scheduled before it, so a stalled runner can only widen them,
+    // whereas an immediate re-poll would have sent the retries within milliseconds.
+    const [firstGap, secondGap] = [failedAt[1] - failedAt[0], failedAt[2] - failedAt[1]];
+    expect(firstGap).toBeGreaterThanOrEqual(250 - TIMER_SLACK_MS);
+    expect(secondGap).toBeGreaterThanOrEqual(500 - TIMER_SLACK_MS);
+  });
+
+  // The back-off must leave the full-poll bookkeeping in place: the failing space stays in the set
+  // to poll while every healthy space left it as done, so without the interval nothing but a hint
+  // would ever poll the healthy ones again.
+  test('a pull that keeps failing does not stop the other spaces from being polled', async () => {
+    const failingSpaceId = SpaceId.random();
+    const healthySpaceId = SpaceId.random();
+    const healthyFeedId = EntityId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer, sentMessages } =
+      await createFeedSyncHarness({
+        spaceId: failingSpaceId,
+        spaceIds: [failingSpaceId, healthySpaceId],
+        pollingInterval: 200,
+        interceptRequest: (message) =>
+          message._tag === 'QueryRequest' && message.spaceId === failingSpaceId
+            ? {
+                _tag: 'Error',
+                requestId: message.requestId,
+                message: 'space unavailable',
+                senderPeerId: 'server',
+                recipientPeerId: 'client',
+              }
+            : undefined,
+      });
+
+    await syncer.open(new Context());
+    // The first retry means the first round is over, with the healthy space polled and done.
+    const failingPulls = () =>
+      sentMessages.filter((message) => message._tag === 'QueryRequest' && message.spaceId === failingSpaceId);
+    await vi.waitFor(() => expect(failingPulls().length).toBeGreaterThanOrEqual(2));
+
+    await serverFeedStore
+      .appendLocal([
+        { spaceId: healthySpaceId, feedId: healthyFeedId, feedNamespace: syncNamespace, data: new Uint8Array([1]) },
+      ])
+      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
+
+    // No hint is sent, so only the interval-driven full poll can bring the block over.
+    await vi.waitFor(
+      async () => {
+        const { blocks } = await clientFeedStore
+          .query({
+            spaceId: healthySpaceId,
+            feedNamespace: syncNamespace,
+            position: -1,
+            query: { feedIds: [healthyFeedId] },
+          })
+          .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
+        expect(blocks).toHaveLength(1);
+      },
+      { timeout: 5_000 },
     );
-    expect(tracePulls.length).toBeGreaterThanOrEqual(2);
-    expect(tracePulls.length).toBeLessThanOrEqual(5);
   });
 
   test('a hint for an unknown space id is ignored rather than throwing', async () => {

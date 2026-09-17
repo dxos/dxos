@@ -691,19 +691,20 @@ export class FeedSyncer extends Resource {
         { concurrency: this.#syncConcurrency },
       );
 
-      if (hadPullFailure) {
-        this.#schedulePollRetry();
-        return;
+      // A failed pull only swaps the immediate re-poll for the back-off; the full-poll bookkeeping
+      // below still runs, or the failing space would become the only one ever polled again.
+      const scheduleNext = hadPullFailure ? () => this.#schedulePollRetry() : () => this.#pollTask.schedule();
+      if (!hadPullFailure) {
+        this.#pullFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
       }
-      this.#pullFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
 
       // If its time to do a full poll, reset the spaces to poll and schedule the next poll immediately.
       if (this.#lastFullPoll == null || Date.now() - this.#lastFullPoll > this.#currentPollingInterval) {
         this.#resetSpacesToPoll();
-        this.#pollTask.schedule();
+        scheduleNext();
       } else if (this.#spacesToPoll.size > 0) {
         // If there are some spaces still syncing, poll them immediately.
-        this.#pollTask.schedule();
+        scheduleNext();
       } else {
         // All spaces sync, and there's time before the next full poll, schedule it later.
         this.#resetSpacesToPoll();

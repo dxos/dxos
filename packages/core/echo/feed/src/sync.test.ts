@@ -382,6 +382,69 @@ describe('Sync', () => {
         serverToken: await server.getServerToken(spaceId),
       });
     });
+
+    // The first push after a rollback regrows the server, so a client that pulls later finds the
+    // high-water mark back at its cursor and nothing above it: only the block at the cursor itself
+    // can reveal that the ordering below it is stale, and that its own blocks are gone.
+    test('a client the server has regrown to its cursor replays and re-pushes what the server lost', async () => {
+      await using builder = await new TestBuilder({ numPeers: 3, spaceId, logSql: LOG_SQL }).open();
+      const [server, client, writer] = builder.peers;
+
+      await seedBlocks(client, generateTestBlocks(0, 5));
+      await builder.push(client);
+      await builder.pull(client);
+      expect(await blockPositions(client)).toEqual([0, 1, 2, 3, 4]);
+
+      await server.dropBlocksFromPosition({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 2 });
+      const writerFeedId = EntityId.random();
+      await seedBlocks(writer, generateTestBlocks(10, 3), writerFeedId);
+      await builder.push(writer);
+      expect(await blockPositions(server, writerFeedId)).toEqual([2, 3, 4]);
+
+      await syncUntilDone(builder, client);
+
+      // The writer's blocks kept 2..4; the client's lost blocks were pushed again behind them.
+      expect(await blockPositions(client, writerFeedId)).toEqual([2, 3, 4]);
+      expect(await blockPositions(client, feedId)).toEqual([0, 1, 5, 6, 7]);
+      expect(await placements(client)).toEqual(await placements(server));
+    });
+
+    // A server that predates `cursorBlock` is caught the moment it re-issues, above the cursor, a
+    // position for a block this client already holds: the slot it lands in is empty here, so the
+    // block's own move is the only trace of the rollback.
+    test('replays when a server that does not report the cursor block moves a held block above the cursor', async () => {
+      await using builder = await new TestBuilder({
+        numPeers: 3,
+        spaceId,
+        logSql: LOG_SQL,
+        mapServerReply: (message) =>
+          message._tag === 'QueryResponse' ? { ...message, cursorBlock: undefined } : message,
+      }).open();
+      const [server, client, other] = builder.peers;
+
+      await seedBlocks(client, generateTestBlocks(0, 5));
+      await builder.push(client);
+      await builder.pull(client);
+      await builder.pull(other);
+      expect(await blockPositions(other)).toEqual([0, 1, 2, 3, 4]);
+
+      // The other client's push takes the lost slots, which displaces its copies of the client's
+      // blocks, and its replay pushes those back behind its own.
+      await server.dropBlocksFromPosition({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 2 });
+      const otherFeedId = EntityId.random();
+      await seedBlocks(other, generateTestBlocks(10, 3), otherFeedId);
+      await builder.push(other);
+      await syncUntilDone(builder, other);
+      expect(await blockPositions(server, otherFeedId)).toEqual([2, 3, 4]);
+      expect(await blockPositions(server, feedId)).toEqual([0, 1, 5, 6, 7]);
+
+      // The client's cursor is 4 and the server's mark is 7, so the pull only sees its own blocks
+      // arriving at 5..7 -- a move from 2..4, which is what makes it replay and pull 2..4 anew.
+      await syncUntilDone(builder, client);
+      expect(await blockPositions(client, otherFeedId)).toEqual([2, 3, 4]);
+      expect(await blockPositions(client, feedId)).toEqual([0, 1, 5, 6, 7]);
+      expect(await placements(client)).toEqual(await placements(server));
+    });
   });
 
   const syncUntilDone = async (builder: TestBuilder, client: TestPeer) => {

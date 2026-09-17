@@ -235,6 +235,10 @@ export class SyncClient {
       }
       // On a reset the server ignored the stale `position`, so the batch restarts the namespace.
       const basePosition = reconciliation === 'reset' ? -1 : lastPulledPosition;
+      // The high-water mark only shows a rollback while the server is still smaller than the
+      // cursor, and the first push after one regrows it; from then on only the block at the cursor
+      // gives it away, since a lost block shifts everything above it.
+      const cursorBlockDiffers = yield* self.#cursorBlockDiffers(opts, basePosition, response.cursorBlock);
       // Positions only come from the server, so a local one above its high-water mark is a row the
       // server lost; unpositioned, the block is pushed again rather than waiting for the server to
       // re-issue that slot to something else.
@@ -262,13 +266,14 @@ export class SyncClient {
           });
           return { done: false };
         }
-        if (cleared > 0) {
+        if (cleared > 0 || cursorBlockDiffers) {
           const rewound = yield* self.#replayNamespace(opts, response.serverToken, {
             requestId,
-            reason: 'positions above the server',
+            reason: cleared > 0 ? 'positions above the server' : 'another block at the cursor',
             lastPulledPosition: basePosition,
             maxPosition: response.maxPosition,
             cleared,
+            cursorBlock: response.cursorBlock,
           });
           if (rewound) {
             return { done: false };
@@ -282,22 +287,30 @@ export class SyncClient {
         });
         return { done: true };
       }
-      const { displaced } = yield* self.#feedStore.append({
+      const { displaced, moved } = yield* self.#feedStore.append({
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
         blocks: response.blocks,
       });
-      // The server handed out positions this replica had already given to other blocks, so the
-      // server lost them and re-issued them -- along with anything it wrote since, which sits below
-      // the cursor and would otherwise never be pulled.
-      if (displaced > 0 || cleared > 0) {
+      // The server handed out positions this replica had already given to other blocks, or moved
+      // blocks it already held, so the server lost rows and re-issued their positions -- along
+      // with anything it wrote since, which sits below the cursor and would otherwise never be
+      // pulled.
+      if (displaced > 0 || moved > 0 || cleared > 0 || cursorBlockDiffers) {
         const rewound = yield* self.#replayNamespace(opts, response.serverToken, {
           requestId,
-          reason: displaced > 0 ? 'positions re-issued' : 'positions above the server',
+          reason:
+            displaced > 0 || moved > 0
+              ? 'positions re-issued'
+              : cleared > 0
+                ? 'positions above the server'
+                : 'another block at the cursor',
           lastPulledPosition: basePosition,
           maxPosition: response.maxPosition,
           displaced,
+          moved,
           cleared,
+          cursorBlock: response.cursorBlock,
         });
         if (rewound) {
           return { done: false };
@@ -462,7 +475,7 @@ export class SyncClient {
         serverToken,
         response.serverToken,
       );
-      const { displaced } = yield* self.#feedStore.setPosition({
+      const { displaced, moved } = yield* self.#feedStore.setPosition({
         spaceId: opts.spaceId,
         blocks: Array.zipWith(response.positions, unpositioned.blocks, (position, block) => ({
           feedId: block.feedId,
@@ -478,19 +491,21 @@ export class SyncClient {
         feedNamespace: opts.feedNamespace,
         positionCount: response.positions.length,
         displaced,
+        moved,
       });
       // A block this replica had to push was not on the server, so a position for it at or below
       // the cursor is one the server issued after losing whatever the cursor was pulled from; the
       // same goes for a position another local block already held.
       const cursor = reconciliation === 'reset' ? -1 : lastPulledPosition;
       const lowestPosition = Math.min(...response.positions);
-      if (displaced > 0 || lowestPosition <= cursor) {
+      if (displaced > 0 || moved > 0 || lowestPosition <= cursor) {
         yield* self.#replayNamespace(opts, response.serverToken, {
           requestId,
-          reason: displaced > 0 ? 'positions re-issued' : 'position below the cursor',
+          reason: displaced > 0 || moved > 0 ? 'positions re-issued' : 'position below the cursor',
           lastPulledPosition: cursor,
           lowestPosition,
           displaced,
+          moved,
         });
       }
       return { done: false };
@@ -499,6 +514,34 @@ export class SyncClient {
 
   #namespaceKey(opts: { spaceId: SpaceId; feedNamespace: string }): string {
     return `${opts.spaceId}:${opts.feedNamespace}`;
+  }
+
+  /**
+   * Whether the server holds a different block at this replica's cursor than the replica does.
+   * Unknowable, so `false`, before anything was pulled or against a server that predates reporting
+   * it. Two local holders of the cursor slot count as a difference: the replica cannot be in step
+   * with an authority that has one block per position.
+   */
+  #cursorBlockDiffers(
+    opts: { spaceId: SpaceId; feedNamespace: string },
+    cursor: number,
+    cursorBlock: FeedProtocol.BlockKey | null | undefined,
+  ): Effect.Effect<boolean, unknown, SqlClient.SqlClient> {
+    if (cursor < 0 || cursorBlock === undefined) {
+      return Effect.succeed(false);
+    }
+    return this.#feedStore
+      .getPositionHolders({ ...opts, position: cursor })
+      .pipe(
+        Effect.map(
+          (holders) =>
+            cursorBlock === null ||
+            holders.length !== 1 ||
+            holders[0].feedId !== cursorBlock.feedId ||
+            holders[0].actorId !== cursorBlock.actorId ||
+            holders[0].sequence !== cursorBlock.sequence,
+        ),
+      );
   }
 
   /**

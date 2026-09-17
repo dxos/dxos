@@ -31,6 +31,17 @@ export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
 
 /**
+ * Natural key of a block: the tuple that names the same block in every store, whatever position
+ * each store holds it at.
+ */
+export const BlockKey = Schema.Struct({
+  feedId: Schema.String,
+  actorId: Schema.String,
+  sequence: Schema.Number,
+});
+export interface BlockKey extends Schema.Schema.Type<typeof BlockKey> {}
+
+/**
  * Replicated queue block payload and ordering metadata.
  */
 export const Block = Schema.Struct({
@@ -219,6 +230,17 @@ export const QueryResponse = Schema.Struct({
    * position authority; absent on responses from servers that predate the field.
    */
   maxPosition: Schema.optional(Schema.Number),
+
+  /**
+   * Key of the block the serving store holds at the requested `position`, or `null` when it holds
+   * none there.
+   *
+   * A client holding a different block at its cursor is caching an ordering the store has lost: its
+   * storage was rolled back and has since been written past the cursor, so neither `maxPosition`
+   * nor the blocks above the cursor reveal it. Only set by a position authority answering a
+   * `position` at or above 0; absent on responses from servers that predate the field.
+   */
+  cursorBlock: Schema.optional(Schema.NullOr(BlockKey)),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 

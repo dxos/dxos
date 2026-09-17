@@ -20,6 +20,7 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
 type Block = FeedProtocol.Block;
+type BlockKey = FeedProtocol.BlockKey;
 const FeedCursor = FeedProtocol.FeedCursor;
 type FeedCursor = FeedProtocol.FeedCursor;
 const isWellKnownNamespace = FeedProtocol.isWellKnownNamespace;
@@ -70,6 +71,12 @@ export type AppendResult = AppendResponse & {
    * a position authority's positions ever displaces anything; an authority assigns fresh ones.
    */
   displaced: number;
+  /**
+   * Appended blocks the store already held at a different position. Like a displacement it means
+   * the authority's ordering has diverged from this store's, and it is the only trace a re-issued
+   * position leaves when the slot it lands in was empty here.
+   */
+  moved: number;
 };
 
 /**
@@ -181,38 +188,67 @@ export class FeedStore {
     });
 
   /**
-   * Clears the position of any block other than `holder` that occupies `position` anywhere in the
-   * space/namespace, so the block the authority placed there can take the slot. Returns how many
-   * blocks were cleared.
+   * Makes room for `holder` at `position`: clears the position of every other block in the
+   * space/namespace holding that slot (`displaced`) and of the holder itself when it sits at a
+   * different one (`moved`), so the caller can write the position without tripping the unique
+   * index. One statement, since it runs once per pulled block.
    *
-   * A position only ever reaches a replica from its authority, so a different block already holding
-   * it means the replica cached an ordering the authority has since abandoned (its storage was
-   * rolled back and it re-issued the slot). The evicted block is unpositioned again, which is what
-   * gets it pushed once more and told where it really is. Namespace-wide, not per feed: the
-   * authority's counter is one per namespace, and a block left holding a position that another
-   * feed's block now owns would count as synced and never be pushed again.
+   * A position only ever reaches a replica from its authority, so either finding means the replica
+   * cached an ordering the authority has since abandoned (its storage was rolled back and it
+   * re-issued the slot). The evicted block is unpositioned again, which is what gets it pushed once
+   * more and told where it really is. Namespace-wide, not per feed: the authority's counter is one
+   * per namespace, and a block left holding a position that another feed's block now owns would
+   * count as synced and never be pushed again.
+   *
+   * With `requireHolder` the slot is left alone unless the holder exists, so a reply for a block
+   * deleted while its push was in flight evicts nothing.
    */
   #evictSlot = (
     spaceId: string,
     feedNamespace: string,
     position: number,
     holder: Pick<Block, 'actorId' | 'sequence'> & { feedPrivateId: number },
-  ): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    { requireHolder = false }: { requireHolder?: boolean } = {},
+  ): Effect.Effect<{ displaced: number; moved: number }, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // Feeds first so the (feedPrivateId, position) index answers this, rather than a scan on position.
-      const rows = yield* sql<{ insertionId: number }>`
+      const rows = yield* sql<{ feedPrivateId: number; actorId: string; sequence: number }>`
         UPDATE blocks SET position = NULL
         WHERE feedPrivateId IN (
             SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
           )
-          AND position = ${position}
-          AND NOT (
-            feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
+          ${
+            requireHolder
+              ? sql`AND EXISTS (
+                  SELECT 1 FROM blocks AS existing
+                  WHERE existing.feedPrivateId = ${holder.feedPrivateId}
+                    AND existing.actorId = ${holder.actorId}
+                    AND existing.sequence = ${holder.sequence}
+                )`
+              : sql``
+          }
+          AND (
+            (
+              position = ${position}
+              AND NOT (
+                feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
+              )
+            )
+            OR (
+              feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
+              AND position IS NOT NULL AND position != ${position}
+            )
           )
-        RETURNING insertionId
+        RETURNING feedPrivateId, actorId, sequence
       `;
-      return rows.length;
+      const moved = rows.filter(
+        (row) =>
+          row.feedPrivateId === holder.feedPrivateId &&
+          row.actorId === holder.actorId &&
+          row.sequence === holder.sequence,
+      ).length;
+      return { displaced: rows.length - moved, moved };
     });
 
   /**
@@ -343,6 +379,16 @@ export class FeedStore {
         // offset — recovering in the same round-trip the client already paid for.
         const serverChanged = request.expectedServerToken != null && request.expectedServerToken !== validCursorToken;
         const position = serverChanged ? -1 : (request.position ?? -1);
+        // The block at the cursor is how a client checks its ordering once this store has been
+        // written past the cursor again, where the high-water mark no longer tells it anything.
+        const cursorBlock =
+          this.#options.assignPositions && position >= 0
+            ? ((yield* this.getPositionHolders({
+                spaceId: request.spaceId,
+                feedNamespace: request.feedNamespace,
+                position,
+              }))[0] ?? null)
+            : undefined;
 
         // Resolve subscriptions or feed IDs.
         if (request.query && 'subscriptionId' in request.query) {
@@ -375,6 +421,7 @@ export class FeedStore {
             hasMore: false,
             serverToken,
             maxPosition,
+            cursorBlock,
           };
         }
 
@@ -441,6 +488,7 @@ export class FeedStore {
           hasMore,
           serverToken,
           maxPosition,
+          cursorBlock,
         } satisfies QueryResponse;
       }).pipe(Effect.withSpan('FeedStore.query'), SpanAttributes.annotateSpace(request.spaceId)),
   );
@@ -585,6 +633,30 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.clearPositionsAbove'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
+   * Keys of the blocks holding `position` in a space/namespace, in insertion order.
+   *
+   * A store that agrees with its authority holds at most one; a replica whose ordering diverged can
+   * hold two until the next pull evicts one, and a client comparing its cursor against the server's
+   * has to see both to know it disagrees.
+   */
+  getPositionHolders = (opts: {
+    spaceId: string;
+    feedNamespace: string;
+    position: number;
+  }): Effect.Effect<readonly BlockKey[], SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      return yield* sql<BlockKey>`
+        SELECT feeds.feedId, blocks.actorId, blocks.sequence
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${opts.spaceId} AND feeds.feedNamespace = ${opts.feedNamespace}
+          AND blocks.position = ${opts.position}
+        ORDER BY blocks.insertionId ASC
+      `;
+    }).pipe(Effect.withSpan('FeedStore.getPositionHolders'), SpanAttributes.annotateSpace(opts.spaceId));
+
+  /**
    * Returns the number of blocks pending push (no global position yet) in a space/namespace.
    */
   countUnpositionedBlocks = (opts: {
@@ -718,7 +790,7 @@ export class FeedStore {
 
       // Wrap in transaction to ensure atomicity when assigning positions.
       const sql = yield* SqlClient.SqlClient;
-      const { positions, displaced } = yield* sql.withTransaction(
+      const { positions, displaced, moved } = yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
           // 1. Collect unique feed IDs and batch #ensureFeed calls.
           const feedKeys = new Map<string, { feedId: string }>();
@@ -755,8 +827,9 @@ export class FeedStore {
           // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
           // On a replica, a pulled block the store already holds is the same block by
           // (actorId, sequence): adopt the server's position for it, even over a position the row
-          // already carries. The authority is the only source of positions, so a differing local
-          // one is stale -- kept, it would leave the replica's ordering out of step for good.
+          // already carried (cleared, and counted, by #evictSlot just before). The authority is the
+          // only source of positions, so a differing local one is stale -- kept, it would leave the
+          // replica's ordering out of step for good.
           // A position authority must keep DO NOTHING -- the assignment path below distinguishes a
           // fresh row from a duplicate by whether the insert wrote one.
           const onConflict = this.#options.assignPositions
@@ -766,6 +839,7 @@ export class FeedStore {
 
           const positions: number[] = [];
           let displaced = 0;
+          let moved = 0;
           for (const [blockIndex, block] of request.blocks.entries()) {
             const key = block.feedId!;
             const feedPrivateId = feedPrivateIds.get(key)!;
@@ -776,10 +850,12 @@ export class FeedStore {
               positionToInsert = maxPositions.get(request.feedNamespace)! + 1;
             } else if (block.position != null) {
               positionToInsert = block.position;
-              displaced += yield* this.#evictSlot(request.spaceId, request.feedNamespace, positionToInsert, {
+              const evicted = yield* this.#evictSlot(request.spaceId, request.feedNamespace, positionToInsert, {
                 ...block,
                 feedPrivateId,
               });
+              displaced += evicted.displaced;
+              moved += evicted.moved;
             }
 
             const inserted = yield* sql<{ position: number | null }>`
@@ -830,14 +906,14 @@ export class FeedStore {
             maxPositions.set(request.feedNamespace, positionToInsert!);
           }
 
-          return { positions, displaced };
+          return { positions, displaced, moved };
         }),
       );
 
       this.onNewBlocks.emit();
 
       const serverToken = this.#options.assignPositions ? yield* this.#ensureCursorToken(request.spaceId) : undefined;
-      return { requestId: request.requestId, positions, serverToken, displaced };
+      return { requestId: request.requestId, positions, serverToken, displaced, moved };
     }).pipe(Effect.withSpan('FeedStore.append'));
 
   /**
@@ -976,48 +1052,53 @@ export class FeedStore {
    * verbatim never resolves -- which is how a client wedged behind a server whose storage had been
    * rolled back.
    *
-   * @returns How many other blocks were cleared to make room.
+   * @returns How many other blocks were cleared to make room, and how many of the blocks themselves
+   * left a different position.
    */
   setPosition = (request: {
     spaceId: string;
     blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
-  }): Effect.Effect<{ displaced: number }, SqlError.SqlError, SqlClient.SqlClient> =>
+  }): Effect.Effect<{ displaced: number; moved: number }, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       return yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
+          // A push batch is almost always one feed, so resolve each feed once rather than per block.
+          const feedPrivateIds = new Map<string, number | undefined>();
           let displaced = 0;
+          let moved = 0;
           for (const block of request.blocks) {
             if (block.position == null) {
               continue;
             }
-            const feeds = yield* sql<{ feedPrivateId: number }>`
-              SELECT feedPrivateId FROM feeds
-              WHERE spaceId = ${request.spaceId} AND feedId = ${block.feedId} AND feedNamespace = ${block.feedNamespace}
-            `;
-            const feedPrivateId = feeds[0]?.feedPrivateId;
+            const feedKey = `${block.feedNamespace}|${block.feedId}`;
+            if (!feedPrivateIds.has(feedKey)) {
+              const feeds = yield* sql<{ feedPrivateId: number }>`
+                SELECT feedPrivateId FROM feeds
+                WHERE spaceId = ${request.spaceId} AND feedId = ${block.feedId} AND feedNamespace = ${block.feedNamespace}
+              `;
+              feedPrivateIds.set(feedKey, feeds[0]?.feedPrivateId);
+            }
+            const feedPrivateId = feedPrivateIds.get(feedKey);
             if (feedPrivateId == null) {
               continue;
             }
-            const targets = yield* sql<{ insertionId: number }>`
-              SELECT insertionId FROM blocks
-              WHERE feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence}
-            `;
-            if (targets.length === 0) {
-              // The block was deleted while its push was in flight; the slot's holder stays.
-              continue;
-            }
-            displaced += yield* this.#evictSlot(request.spaceId, block.feedNamespace, block.position, {
-              ...block,
-              feedPrivateId,
-            });
+            const evicted = yield* this.#evictSlot(
+              request.spaceId,
+              block.feedNamespace,
+              block.position,
+              { ...block, feedPrivateId },
+              { requireHolder: true },
+            );
+            displaced += evicted.displaced;
+            moved += evicted.moved;
             yield* sql`
               UPDATE blocks SET position = ${block.position}
               WHERE feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence}
                 AND position IS NOT ${block.position}
             `;
           }
-          return { displaced };
+          return { displaced, moved };
         }),
       );
     }).pipe(Effect.withSpan('FeedStore.setPosition'));
