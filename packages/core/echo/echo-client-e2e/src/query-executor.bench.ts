@@ -4,6 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 import { rmSync } from 'node:fs';
+import v8 from 'node:v8';
+import vm from 'node:vm';
 import { afterAll, bench, describe } from 'vitest';
 
 import { Filter, Obj, Order, Query, type QueryResult, Ref, Type } from '@dxos/echo';
@@ -20,28 +22,44 @@ import { blackhole, parseBenchCount } from './testing/bench-util.ts';
 // over the index tables and loads no documents. It is the only executor; the memory-vs-sql comparison
 // against the deleted in-memory executor is recorded in `BENCHMARKS.md`.
 //
-// One warm peer holds TASK_COUNT tasks (priority cycling 1..5, each assigned to one of PERSON_COUNT
-// persons) and answers the `run:` rows; the `reactive first result` row opens a reactive query and
-// waits for its first non-empty result, which is the host-side re-execution path. `afterAll` reads
-// the host's execution traces for each query shape and prints them.
+// One warm peer holds a mixed population: TASK_COUNT tasks (priority cycling 1..5, each assigned to
+// one of PERSON_COUNT persons), half as many notes with ~1 KB bodies, half as many events, a few
+// organizations and the persons. The `run:` rows query the tasks and events out of that pool; the
+// `reactive first result` row opens a reactive query and waits for its first non-empty result, which
+// is the host-side re-execution path. `afterAll` reads the host's execution traces for each query
+// shape and prints them.
 //
-// The cold rows reload a file-backed peer and time the first `run()` of the type+property
-// query; the reload is inside the timed body, since vitest's `bench()` has no per-iteration hooks,
-// so the query-only phase is also recorded from inside the row and reported from `afterAll`.
+// The cold row reloads a file-backed peer and times the first `run()` of the type+property query; the
+// reload is inside the timed body, since vitest's `bench()` has no per-iteration hooks, so the
+// query-only phase is also recorded from inside the row and reported from `afterAll`.
+//
+// Memory is measured from `afterAll`, outside tinybench: for each shape the heap is collected, the
+// query run a few times under a 1 ms sampler recording peak heap and RSS, and collected again for the
+// retained delta. The cold peer gets the same treatment across a reload, which is where a query's
+// document loads stay resident.
 //
 
 const TASK_COUNT = parseBenchCount('QUERY_EXECUTOR_BENCH_COUNT', 2_000);
+const NOTE_COUNT = Math.ceil(TASK_COUNT / 2);
+const EVENT_COUNT = Math.ceil(TASK_COUNT / 2);
+const ORG_COUNT = Math.max(10, Math.ceil(TASK_COUNT / 20));
 const PERSON_COUNT = 50;
 const PRIORITY_LEVELS = 5;
 const TARGET_PRIORITY = 3;
+const EVENT_KINDS = ['meeting', 'call', 'deadline'] as const;
+const TARGET_EVENT_KIND = 'deadline';
 const ORDER_LIMIT = 20;
 const SEED_BATCH_SIZE = 200;
 const FIRST_RESULT_TIMEOUT_MS = 30_000;
 const SHORT_RESULT_RETRIES = 10;
+const MEMORY_ITERATIONS = 3;
+const MEMORY_SAMPLE_INTERVAL_MS = 1;
 // tinybench warms up for 16 iterations by default; a short warm-up keeps the row bounded.
 const WARM_OPTIONS = { time: 1_000, warmupIterations: 3 };
 // Every cold sample reloads a peer; a small fixed sample count keeps the row bounded.
 const COLD_OPTIONS = { iterations: 3, time: 0, warmupIterations: 1, warmupTime: 0 };
+// Set only when the bench runs against a build that still carries the executor switch; labels the output.
+const EXECUTOR_LABEL = process.env.DX_ECHO_QUERY_EXECUTOR;
 
 // `TestSchema.Task` carries no numeric field to filter and order on, so the bench types its own task
 // with a `priority`; the assignee stays a `TestSchema.Person` so the reference row traverses a
@@ -57,19 +75,49 @@ class BenchTask extends Type.makeObject<BenchTask>(DXN.make('com.example.type.be
   }),
 ) {}
 
-const TYPES = [BenchTask, TestSchema.Person];
+/** Larger documents than a task, so document loads on a type the query does not select still cost. */
+class BenchNote extends Type.makeObject<BenchNote>(DXN.make('com.example.type.benchNote', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.optional(Schema.String),
+    body: Schema.optional(Schema.String),
+    tags: Schema.optional(Schema.Array(Schema.String)),
+  }),
+) {}
+
+/** A second queried type, filtered on a string property rather than a number. */
+class BenchEvent extends Type.makeObject<BenchEvent>(DXN.make('com.example.type.benchEvent', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    kind: Schema.optional(Schema.String),
+    day: Schema.optional(Schema.Number),
+    organizer: Schema.optional(Ref.Ref(TestSchema.Person)),
+  }),
+) {}
+
+const TYPES = [BenchTask, BenchNote, BenchEvent, TestSchema.Person, TestSchema.Organization];
+const TOTAL_OBJECTS = TASK_COUNT + NOTE_COUNT + EVENT_COUNT + ORG_COUNT + PERSON_COUNT;
+const NOTE_BODY = 'lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt. '.repeat(
+  11,
+);
+
 const taskIndices = Array.from({ length: TASK_COUNT }, (unusedValue, index) => index);
 const priorityOf = (index: number) => (index % PRIORITY_LEVELS) + 1;
 const assigneeOf = (index: number) => index % PERSON_COUNT;
+const eventKindOf = (index: number) => EVENT_KINDS[index % EVENT_KINDS.length];
 const matchingIndices = taskIndices.filter((index) => priorityOf(index) === TARGET_PRIORITY);
 const EXPECTED_MATCHES = matchingIndices.length;
 // Distinct assignees of the matching tasks: with 50 persons and 5 priorities that is 10, not 50.
 const EXPECTED_ASSIGNEES = new Set(matchingIndices.map(assigneeOf)).size;
+const EXPECTED_EVENT_MATCHES = Array.from({ length: EVENT_COUNT }, (unusedValue, index) => index).filter(
+  (index) => eventKindOf(index) === TARGET_EVENT_KIND,
+).length;
 
 type QueryShape = {
   label: string;
   query: Query.Any;
   expected: number;
+  /** The typename whose host trace the shape's reactive run leaves behind. */
+  traceType: string;
 };
 
 const typeQuery = Query.select(Filter.type(BenchTask));
@@ -78,12 +126,36 @@ const referenceQuery = Query.select(Filter.type(BenchTask, { priority: Filter.eq
   'assignee',
 );
 const orderQuery = Query.select(Filter.type(BenchTask)).orderBy(Order.property('priority', 'desc')).limit(ORDER_LIMIT);
+const eventKindQuery = Query.select(Filter.type(BenchEvent, { kind: Filter.eq(TARGET_EVENT_KIND) }));
+const unionQuery = Query.all(Query.select(Filter.type(BenchNote)), Query.select(Filter.type(TestSchema.Organization)));
 
 const SHAPES: QueryShape[] = [
-  { label: 'type', query: typeQuery, expected: TASK_COUNT },
-  { label: 'type + property', query: propertyQuery, expected: EXPECTED_MATCHES },
-  { label: 'reference traversal', query: referenceQuery, expected: EXPECTED_ASSIGNEES },
-  { label: 'order + limit', query: orderQuery, expected: ORDER_LIMIT },
+  { label: 'type', query: typeQuery, expected: TASK_COUNT, traceType: Type.getTypename(BenchTask) },
+  {
+    label: 'type + property',
+    query: propertyQuery,
+    expected: EXPECTED_MATCHES,
+    traceType: Type.getTypename(BenchTask),
+  },
+  {
+    label: 'reference traversal',
+    query: referenceQuery,
+    expected: EXPECTED_ASSIGNEES,
+    traceType: Type.getTypename(BenchTask),
+  },
+  { label: 'order + limit', query: orderQuery, expected: ORDER_LIMIT, traceType: Type.getTypename(BenchTask) },
+  {
+    label: 'type + string property',
+    query: eventKindQuery,
+    expected: EXPECTED_EVENT_MATCHES,
+    traceType: Type.getTypename(BenchEvent),
+  },
+  {
+    label: 'union of two types',
+    query: unionQuery,
+    expected: NOTE_COUNT + ORG_COUNT,
+    traceType: Type.getTypename(BenchNote),
+  },
 ];
 
 const coldStoragePath = createTmpPath();
@@ -94,6 +166,66 @@ process.once('exit', () => {
     // Best-effort: EchoTestBuilder.close() is async and can't run from a sync exit handler.
   }
 });
+
+// `--expose-gc` is a startup flag vitest's workers do not carry; setting it at runtime and pulling `gc`
+// out of a fresh context is the documented way to get it after startup.
+v8.setFlagsFromString('--expose_gc');
+const exposedGc: unknown = vm.runInNewContext('gc');
+const forceGc = (): void => {
+  if (typeof exposedGc !== 'function') {
+    throw new Error('gc() is not exposed');
+  }
+  exposedGc();
+};
+
+/** A macrotask turn, so finalization registry callbacks and freed handles settle before sampling. */
+const settle = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
+
+type MemoryRow = {
+  label: string;
+  /** Heap in use after a collection, before the measured work (bytes). */
+  baselineHeap: number;
+  /** Highest sampled heap during the work, over the baseline (bytes). */
+  peakHeapDelta: number;
+  /** Heap still in use after the work and a collection, over the baseline (bytes). */
+  retainedHeapDelta: number;
+  /** Same two deltas for the process RSS, which also carries SQLite's own memory and Automerge's WASM heap. */
+  peakRssDelta: number;
+  retainedRssDelta: number;
+};
+
+const measureMemory = async (label: string, work: () => Promise<void>): Promise<MemoryRow> => {
+  forceGc();
+  await settle();
+  const before = process.memoryUsage();
+  let peakHeap = before.heapUsed;
+  let peakRss = before.rss;
+  const sample = () => {
+    const usage = process.memoryUsage();
+    peakHeap = Math.max(peakHeap, usage.heapUsed);
+    peakRss = Math.max(peakRss, usage.rss);
+  };
+  const timer = setInterval(sample, MEMORY_SAMPLE_INTERVAL_MS);
+  try {
+    await work();
+  } finally {
+    clearInterval(timer);
+  }
+  sample();
+  forceGc();
+  await settle();
+  const after = process.memoryUsage();
+  return {
+    label,
+    baselineHeap: before.heapUsed,
+    peakHeapDelta: peakHeap - before.heapUsed,
+    retainedHeapDelta: after.heapUsed - before.heapUsed,
+    peakRssDelta: peakRss - before.rss,
+    retainedRssDelta: after.rss - before.rss,
+  };
+};
+
+const megabytes = (bytes: number): string => `${(bytes / 1_048_576).toFixed(1).padStart(8)} MB`;
 
 const builder = await new EchoTestBuilder().open();
 
@@ -108,8 +240,18 @@ const seed = async (storagePath?: string): Promise<Seeded> => {
   const persons = Array.from({ length: PERSON_COUNT }, (unusedValue, index) =>
     db.add(Obj.make(TestSchema.Person, { name: `person-${index}`, username: `user${index}` })),
   );
+  for (let index = 0; index < ORG_COUNT; index++) {
+    db.add(Obj.make(TestSchema.Organization, { name: `org-${index}`, properties: { region: `region-${index % 7}` } }));
+  }
+  let added = 0;
+  const addBatched = async (object: Obj.Any) => {
+    db.add(object);
+    if (++added % SEED_BATCH_SIZE === 0) {
+      await db.flush();
+    }
+  };
   for (let index = 0; index < TASK_COUNT; index++) {
-    db.add(
+    await addBatched(
       Obj.make(BenchTask, {
         title: `task-${index}`,
         description: `description of task ${index}`,
@@ -117,16 +259,37 @@ const seed = async (storagePath?: string): Promise<Seeded> => {
         assignee: Ref.make(persons[assigneeOf(index)]),
       }),
     );
-    if ((index + 1) % SEED_BATCH_SIZE === 0) {
-      await db.flush();
-    }
+  }
+  for (let index = 0; index < NOTE_COUNT; index++) {
+    await addBatched(
+      Obj.make(BenchNote, {
+        title: `note-${index}`,
+        body: NOTE_BODY,
+        tags: [`tag-${index % 13}`, `tag-${index % 29}`],
+      }),
+    );
+  }
+  for (let index = 0; index < EVENT_COUNT; index++) {
+    await addBatched(
+      Obj.make(BenchEvent, {
+        name: `event-${index}`,
+        kind: eventKindOf(index),
+        day: index % 30,
+        organizer: Ref.make(persons[index % PERSON_COUNT]),
+      }),
+    );
   }
   await db.flush({ indexes: true });
   return { peer, db };
 };
 
+const seedStart = performance.now();
 const warm = await seed();
 const cold = await seed(coldStoragePath);
+const seedTime = performance.now() - seedStart;
+forceGc();
+await settle();
+const afterSeed = process.memoryUsage();
 
 let checksum = 0;
 const phaseSamples: Record<string, number[]> = {};
@@ -195,6 +358,13 @@ type TraceRow = {
 const sumTrace = (trace: ExecutionTrace, field: 'documentsLoaded' | 'indexHits' | 'documentLoadTime'): number =>
   trace[field] + trace.children.reduce((sum, child) => sum + sumTrace(child, field), 0);
 
+// A root trace without a stamped start reads its duration from epoch zero; the step traces under it are
+// stamped, so their sum is the comparable figure.
+const executionTimeOf = (trace: ExecutionTrace): number =>
+  trace.beginTs === 0 && trace.children.length > 0
+    ? trace.children.reduce((sum, child) => sum + child.executionTime, 0)
+    : trace.executionTime;
+
 /**
  * Runs each query shape as a reactive query on the warm peer and reads the host's trace of that run
  * while the query is still registered (traces are kept only for active queries).
@@ -205,7 +375,7 @@ const collectTraces = async ({ peer, db }: Seeded): Promise<TraceRow[]> => {
     const { value: trace, unsubscribe } = await awaitFirstResult(db, shape.query, () =>
       peer.host.queryService
         .getQueryTraces()
-        .filter((candidate) => candidate.details.includes(Type.getTypename(BenchTask)))
+        .filter((candidate) => candidate.details.includes(shape.traceType))
         .sort((left, right) => right.endTs - left.endTs)
         .at(0),
     );
@@ -218,23 +388,64 @@ const collectTraces = async ({ peer, db }: Seeded): Promise<TraceRow[]> => {
       objectCount: trace.objectCount,
       documentsLoaded: sumTrace(trace, 'documentsLoaded'),
       indexHits: sumTrace(trace, 'indexHits'),
-      executionTime: trace.executionTime,
+      executionTime: executionTimeOf(trace),
       documentLoadTime: sumTrace(trace, 'documentLoadTime'),
     });
   }
   return rows;
 };
 
+const collectMemory = async (): Promise<MemoryRow[]> => {
+  const rows: MemoryRow[] = [];
+  for (const shape of SHAPES) {
+    rows.push(
+      await measureMemory(`warm: ${shape.label} x${MEMORY_ITERATIONS}`, async () => {
+        for (let iteration = 0; iteration < MEMORY_ITERATIONS; iteration++) {
+          checksum += (await runExpecting(warm.db, shape)).length;
+        }
+      }),
+    );
+  }
+  rows.push(
+    await measureMemory('cold: reload + open + run type + property', async () => {
+      await cold.peer.reload();
+      cold.db = await cold.peer.openLastDatabase();
+      let results = await cold.db.query(propertyQuery).run();
+      for (let retry = 0; results.length !== EXPECTED_MATCHES && retry < SHORT_RESULT_RETRIES; retry++) {
+        results = await cold.db.query(propertyQuery).run();
+      }
+      checksum += results.length;
+    }),
+  );
+  rows.push(
+    await measureMemory('cold: then run type (all tasks)', async () => {
+      checksum += (await runExpecting(cold.db, SHAPES[0])).length;
+    }),
+  );
+  return rows;
+};
+
 afterAll(async () => {
   blackhole(checksum);
+  const header = `N=${TASK_COUNT} tasks, ${TOTAL_OBJECTS} objects per peer${EXECUTOR_LABEL ? `, executor=${EXECUTOR_LABEL}` : ''}`;
 
   const traceRows = await collectTraces(warm);
   const traceLines = traceRows.map(
     (row) =>
-      `${row.label.padEnd(20)} objects ${String(row.objectCount).padStart(5)}   docsLoaded ${String(row.documentsLoaded).padStart(5)}   indexHits ${String(row.indexHits).padStart(5)}   exec ${row.executionTime.toFixed(1).padStart(7)} ms   docLoad ${row.documentLoadTime.toFixed(1).padStart(7)} ms`,
+      `${row.label.padEnd(24)} objects ${String(row.objectCount).padStart(6)}   docsLoaded ${String(row.documentsLoaded).padStart(6)}   indexHits ${String(row.indexHits).padStart(6)}   exec ${row.executionTime.toFixed(1).padStart(8)} ms   docLoad ${row.documentLoadTime.toFixed(1).padStart(8)} ms`,
   );
   // eslint-disable-next-line no-console
-  console.log(`\nHost traces (reactive query, first run; N=${TASK_COUNT}):\n${traceLines.join('\n')}\n`);
+  console.log(`\nHost traces (reactive query, first run; ${header}):\n${traceLines.join('\n')}\n`);
+
+  const memoryRows = await collectMemory();
+  const memoryLines = memoryRows.map(
+    (row) =>
+      `${row.label.padEnd(44)} baseline heap ${megabytes(row.baselineHeap)}   peak heap +${megabytes(row.peakHeapDelta)}   retained heap ${row.retainedHeapDelta < 0 ? '-' : '+'}${megabytes(Math.abs(row.retainedHeapDelta))}   peak rss +${megabytes(row.peakRssDelta)}   retained rss ${row.retainedRssDelta < 0 ? '-' : '+'}${megabytes(Math.abs(row.retainedRssDelta))}`,
+  );
+  // eslint-disable-next-line no-console
+  console.log(
+    `\nMemory (${header}; seed ${(seedTime / 1000).toFixed(1)} s, after seed + gc: heap ${megabytes(afterSeed.heapUsed)}, rss ${megabytes(afterSeed.rss)}, external ${megabytes(afterSeed.external)}):\n${memoryLines.join('\n')}\n`,
+  );
 
   const phaseLines = Object.entries(phaseSamples).map(([phase, samples]) => {
     const sorted = [...samples].sort((left, right) => left - right);
@@ -247,60 +458,64 @@ afterAll(async () => {
   }
 
   await builder.close();
-}, 300_000);
+}, 600_000);
 
-describe(`query executor (N=${TASK_COUNT})`, { tags: ['manual'], timeout: 600_000 }, () => {
-  for (const shape of SHAPES) {
+describe(
+  `query executor (N=${TASK_COUNT}${EXECUTOR_LABEL ? `, ${EXECUTOR_LABEL}` : ''})`,
+  { tags: ['manual'], timeout: 1_200_000 },
+  () => {
+    for (const shape of SHAPES) {
+      bench(
+        `run: ${shape.label}`,
+        async () => {
+          const results = await runExpecting(warm.db, shape);
+          checksum += results.length;
+        },
+        WARM_OPTIONS,
+      );
+    }
+
     bench(
-      `run: ${shape.label}`,
+      'reactive first result (type + property)',
       async () => {
-        const results = await runExpecting(warm.db, shape);
-        checksum += results.length;
+        const { value: count, unsubscribe } = await awaitFirstResult(
+          warm.db,
+          distinctPropertyQuery(),
+          (result) => result.results.length,
+        );
+        unsubscribe();
+        if (count !== EXPECTED_MATCHES) {
+          throw new Error(`reactive: expected ${EXPECTED_MATCHES} results, got ${count}`);
+        }
+        checksum += count;
       },
       WARM_OPTIONS,
     );
-  }
 
-  bench(
-    'reactive first result (type + property)',
-    async () => {
-      const { value: count, unsubscribe } = await awaitFirstResult(
-        warm.db,
-        distinctPropertyQuery(),
-        (result) => result.results.length,
-      );
-      unsubscribe();
-      if (count !== EXPECTED_MATCHES) {
-        throw new Error(`reactive: expected ${EXPECTED_MATCHES} results, got ${count}`);
-      }
-      checksum += count;
-    },
-    WARM_OPTIONS,
-  );
+    bench(
+      'cold: reload + open + run type + property',
+      async () => {
+        const reloadStart = performance.now();
+        await cold.peer.reload();
+        const db = await cold.peer.openLastDatabase();
+        cold.db = db;
+        record('reload + open', performance.now() - reloadStart);
 
-  bench(
-    'cold: reload + open + run type + property',
-    async () => {
-      const reloadStart = performance.now();
-      await cold.peer.reload();
-      const db = await cold.peer.openLastDatabase();
-      cold.db = db;
-      record('reload + open', performance.now() - reloadStart);
-
-      // A query straight after a reload can come back short if the index is not yet complete. A short
-      // result is re-run and counted so the row keeps its samples and the report shows how often it happened.
-      const queryStart = performance.now();
-      let results = await db.query(propertyQuery).run();
-      for (let retry = 0; results.length !== EXPECTED_MATCHES && retry < SHORT_RESULT_RETRIES; retry++) {
-        record('short cold result, re-ran (value = results returned)', results.length);
-        results = await db.query(propertyQuery).run();
-      }
-      record('cold run type + property (to a full result set)', performance.now() - queryStart);
-      if (results.length !== EXPECTED_MATCHES) {
-        throw new Error(`cold: expected ${EXPECTED_MATCHES} results, got ${results.length}`);
-      }
-      checksum += results.length;
-    },
-    COLD_OPTIONS,
-  );
-});
+        // A query straight after a reload can come back short if the index is not yet complete. A short
+        // result is re-run and counted so the row keeps its samples and the report shows how often it happened.
+        const queryStart = performance.now();
+        let results = await db.query(propertyQuery).run();
+        for (let retry = 0; results.length !== EXPECTED_MATCHES && retry < SHORT_RESULT_RETRIES; retry++) {
+          record('short cold result, re-ran (value = results returned)', results.length);
+          results = await db.query(propertyQuery).run();
+        }
+        record('cold run type + property (to a full result set)', performance.now() - queryStart);
+        if (results.length !== EXPECTED_MATCHES) {
+          throw new Error(`cold: expected ${EXPECTED_MATCHES} results, got ${results.length}`);
+        }
+        checksum += results.length;
+      },
+      COLD_OPTIONS,
+    );
+  },
+);
