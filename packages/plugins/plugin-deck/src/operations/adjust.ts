@@ -78,8 +78,8 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
             AppGraph.getNode(graph, input.id),
             Option.map((node) =>
               AppGraph.getConnections(graph, node.id, AppGraphNode.companionRelation()).toSorted((a, b) =>
-                  Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
-                ),
+                Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
+              ),
             ),
             Option.getOrElse(() => []),
           );

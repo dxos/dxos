@@ -552,10 +552,7 @@ describe('path-resolution', () => {
           ],
         }),
       );
-      const represented = PathResolution.representNode(
-        builder,
-        `${GraphNode.RootId}/${WORKSPACE_A}/docA/~comments`,
-      );
+      const represented = PathResolution.representNode(builder, `${GraphNode.RootId}/${WORKSPACE_A}/docA/~comments`);
       expect(Option.getOrThrow(represented)).toEqual({ key: 'companion', id: 'comments', workspace: WORKSPACE_A });
     });
 

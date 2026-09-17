@@ -32,9 +32,7 @@ export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
 
     const atom = graph.connections(id, AppGraphNode.companionRelation());
     const update = () => {
-      const next = registry
-        .get(atom)
-        .toSorted((a, b) => Position.compare(a.properties, b.properties));
+      const next = registry.get(atom).toSorted((a, b) => Position.compare(a.properties, b.properties));
       setCompanions((prev) =>
         prev && prev.length === next.length && prev.every((node, index) => node === next[index]) ? prev : next,
       );

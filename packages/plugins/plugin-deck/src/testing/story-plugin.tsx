@@ -334,11 +334,7 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
   const connections = useConnections(graph, id, 'child');
-  const items = useMemo(
-    () =>
-      connections.filter((node) => !AppGraphNode.isActionLike(node)),
-    [connections],
-  );
+  const items = useMemo(() => connections.filter((node) => !AppGraphNode.isActionLike(node)), [connections]);
 
   return (
     <Listbox.Root>
