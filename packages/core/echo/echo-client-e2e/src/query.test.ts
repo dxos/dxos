@@ -453,12 +453,17 @@ describe('Query', () => {
       expect(byKey.get('b')?.items).to.have.length(1);
     });
 
-    test('a count by type and hour is answered without members', async () => {
+    test('a count by type and hour is answered without members and agrees with the loaded rows', async () => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
       db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
       db.add(Obj.make(TestSchema.Task, { title: 'Ship it' }));
+      // Counted from index rows, a child still has to follow its deleted parent out of the result.
+      const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: parent, title: 'Orphaned' }));
+      db.remove(parent);
       await db.flush({ indexes: true });
+      const loaded = await db.query(Filter.everything()).run();
 
       const rows = await db
         .query(
@@ -477,6 +482,7 @@ describe('Query', () => {
       expect(countOf(Type.getTypename(TestSchema.Task))).to.equal(1);
       expect(rows.every((row) => row.hour === thisHour)).to.be.true;
       expect(rows.every((row) => !('items' in row))).to.be.true;
+      expect(rows.reduce((total, row) => total + row.count, 0)).to.equal(loaded.length);
     });
 
     test('a coalesce group key gives each member without the leading property its own group', async () => {

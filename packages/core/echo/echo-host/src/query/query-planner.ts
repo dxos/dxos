@@ -63,7 +63,51 @@ export class QueryPlanner {
     plan = this._optimizeSoloUnions(plan);
     plan = this._ensureOrderStep(plan);
     plan = this._optimizeLimits(plan);
+    plan = this._optimizeIndexOnlyAggregate(plan);
     return plan;
+  }
+
+  /**
+   * Marks the select of a plan that only counts objects by index fields as {@link QueryPlan.SelectStep.indexOnly},
+   * so the executor groups index rows instead of loading documents. Eligible shape: a space-scoped
+   * wildcard, type or timestamp select, then deleted handling, a plain typename re-check and natural
+   * ordering in any order, ending in an aggregate of `count`, `type` and `timestamp` only.
+   */
+  private _optimizeIndexOnlyAggregate(plan: QueryPlan.Plan): QueryPlan.Plan {
+    if (this._options.noIndexes) {
+      return plan;
+    }
+    const [select, ...rest] = plan.steps;
+    const aggregate = rest.at(-1);
+    if (
+      select?._tag !== 'SelectStep' ||
+      aggregate?._tag !== 'AggregateStep' ||
+      select.limit !== undefined ||
+      select.feedCursorRange !== undefined ||
+      !select.scope.every((scope) => scope._tag === 'space' && !scope.includeAllFeeds) ||
+      (select.selector._tag !== 'WildcardSelector' &&
+        select.selector._tag !== 'TimestampSelector' &&
+        (select.selector._tag !== 'TypeSelector' || select.selector.inverted)) ||
+      !aggregate.aggregates.every(
+        (entry) => entry.kind === 'count' || entry.kind === 'type' || entry.kind === 'timestamp',
+      )
+    ) {
+      return plan;
+    }
+    const readsOnlyIndexFields = rest
+      .slice(0, -1)
+      .every(
+        (step) =>
+          step._tag === 'FilterDeletedStep' ||
+          (step._tag === 'FilterStep' && isTrivialTypenameFilter(step.filter)) ||
+          (step._tag === 'OrderStep' &&
+            step.limit === undefined &&
+            step.order.every((order) => order.kind === 'natural')),
+      );
+    if (!readsOnlyIndexFields) {
+      return plan;
+    }
+    return QueryPlan.Plan.make([{ ...select, indexOnly: true }, ...rest]);
   }
 
   private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
