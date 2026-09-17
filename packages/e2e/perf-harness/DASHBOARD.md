@@ -81,6 +81,18 @@ scenarios and never a ten-by-four grid nobody can read.
 | 12  | Lag p95 — shared worker | `ciLagP95MsSharedWorker`      |
 | 13  | App code transferred    | `ciCodeBytes`                 |
 
+### The runs table
+
+The last tile is a table rather than a chart: one row per run, newest first, with when it ran, its
+branch, commit, trigger and Depot run id, and its totals. The charts aggregate by day and so cannot
+answer _which runs is this point made of_ — this is how a point that looks wrong gets traced back to
+a commit and a run.
+
+Its `stages` column is the integrity check, and worth reading before any other number on the page.
+The flow has **ten** stages and `writePosthogBatch` drops failed ones, so a row showing fewer than
+ten is a partial run whose totals are not comparable to a complete one — it will still be averaged
+into the charts above, where nothing marks it as short.
+
 ## Two things to know before reading a tile
 
 - **Tiles are dated by run, not by commit.** A nightly can run hours after the commit it measures,
