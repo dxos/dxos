@@ -17,7 +17,7 @@ on:
       modes:
         type: string
         description: 'DX_PERF_MODES to run (measure, diagnose)'
-        default: 'measure,diagnose'
+        default: 'measure'
 
 permissions:
   contents: read
@@ -85,7 +85,7 @@ jobs:
         id: flows
         continue-on-error: true
         env:
-          MODES: ${{ inputs.modes || 'measure,diagnose' }}
+          MODES: ${{ inputs.modes || 'measure' }}
           DX_PWA: 'false'
         run: |
           set -o pipefail

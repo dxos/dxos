@@ -270,6 +270,23 @@ realm, stage stills) that are never trended.
 
 The line between them is the screencast, not instrumentation in general.
 
+**`diagnose` is for an agent investigating a regression, run on demand and locally. CI never runs
+it.** Its output is evidence to read — a flame chart per realm per stage, a still of what the screen
+showed, a frame-gap figure — not a number to trend, and its timings are incomparable to the trend by
+construction. The nightly therefore runs `measure` only; reach for `diagnose` when a tile has moved
+and the question is _why_:
+
+```bash
+DX_PERF_MODES=diagnose moon run composer-app:e2e-perf
+# artifacts land in test-results/perf/artifacts/diagnose-<runId>/
+#   <stage>-<realm>.cpuprofile   import into Chrome DevTools -> Performance -> Load profile
+#   stages/<stage>.png           what the screen showed at the end of each stage
+```
+
+`DX_PERF_SCREENCAST=0` keeps the profiles but drops the screencast, which is the middle setting
+worth knowing: it removes the mode's dominant cost when the question is CPU rather than what the
+screen did.
+
 The separation is not fastidiousness, it is a measured effect:
 
 - An attached CDP client makes Blink **retain response bodies**, which reads as linear memory growth
