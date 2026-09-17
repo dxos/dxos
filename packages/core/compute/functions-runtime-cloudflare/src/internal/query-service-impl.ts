@@ -56,4 +56,10 @@ export class QueryServiceImpl implements QueryService.Handlers {
   ['QueryService.reindex'](): Effect.Effect<void, Error> {
     return Effect.fail(new NotImplementedError({ message: 'Reindex is not implemented.' }));
   }
+
+  ['QueryService.queryActivity'](
+    _request: QueryService.ActivityRequest,
+  ): EffectStream.Stream<QueryService.ActivityResponse, Error> {
+    return EffectStream.fail(new NotImplementedError({ message: 'QueryActivity is not implemented.' }));
+  }
 }

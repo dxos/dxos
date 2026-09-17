@@ -68,6 +68,7 @@ import {
 } from '../echo-handler/index.ts';
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
+import { ActivityQuery, type ActivityRange } from './activity.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -109,6 +110,11 @@ export interface EchoDatabase extends Database.Database {
    * Returns ids for all objects in the space (both loaded and unloaded).
    */
   getAllObjectIds(): string[];
+
+  /**
+   * The space's activity ledger (changes per UTC hour), kept live by the host; loads no object.
+   */
+  activity(range?: ActivityRange): ActivityQuery;
 
   /**
    * Returns the number of objects stored inline in the space root document.
@@ -299,6 +305,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
   readonly #runtime: EffectContext.Context<never>;
 
+  #queryService: QueryService.Client;
+
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
    * EDGE queue addressed by the feed object's URI; this map caches the per-feed client handle.
@@ -312,6 +320,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
     this._hypergraph = params.graph;
     this.#feedService = params.feedService;
+    this.#queryService = params.queryService;
     this.#runtime = params.runtime;
 
     this._entityManager = new EntityManager({
@@ -479,6 +488,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   // TODO(burdon): Type check.
   /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
+  activity(range: ActivityRange = {}): ActivityQuery {
+    return new ActivityQuery({ spaceId: this.spaceId, range, runtime: this.#runtime, service: this.#queryService });
+  }
+
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
     return this._entityManager.getEntityById(id, { deleted }) as T | undefined;
   }
@@ -1104,6 +1117,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     feedService?: FeedService.Client;
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
+    this.#queryService = queryService;
     if (feedService !== undefined) {
       this.#feedService = feedService;
     }

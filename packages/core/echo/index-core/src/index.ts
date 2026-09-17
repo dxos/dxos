@@ -11,7 +11,8 @@ export {
 } from './index-engine.ts';
 export { type IndexCursor, IndexTracker } from './index-tracker.ts';
 export { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
-export { type Index, type IndexerObject } from './indexes/interface.ts';
+export { ActivityIndex, type ActivityRow } from './indexes/activity-index.ts';
+export { type ChangeSummary, type Index, type IndexerObject } from './indexes/interface.ts';
 export { FtsIndex, type FtsQuery } from './indexes/fts-index.ts';
 export {
   type AggregateGroupBy,

@@ -377,6 +377,33 @@ describe('Query', () => {
     });
   });
 
+  describe('activity', () => {
+    test('the ledger reports this hour once the edits are indexed, and again after a new edit', async () => {
+      const { db } = await builder.createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush({ indexes: true });
+
+      let rows: readonly { hour: number; changes: number }[] = [];
+      const unsubscribe = db.activity().subscribe((next) => {
+        rows = next;
+      });
+      onTestFinished(unsubscribe);
+
+      const thisHour = Math.floor(Date.now() / 3_600_000);
+      await waitForCondition({ condition: () => rows.length > 0, timeout: 5000 });
+      expect(rows.map((row) => row.hour)).to.deep.equal([thisHour]);
+      const before = rows[0].changes;
+      expect(before).to.be.greaterThanOrEqual(1);
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+      await waitForCondition({ condition: () => rows[0]?.changes > before, timeout: 5000 });
+      expect(rows).to.have.length(1);
+    });
+  });
+
   describe('aggregate', () => {
     test('groups by a single property, with per-group counts', async () => {
       const { db } = await builder.createDatabase();

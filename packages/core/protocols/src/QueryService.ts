@@ -106,6 +106,31 @@ export const QueryResponse = Schema.Struct({
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
 /**
+ * A range of a space's activity ledger, unix ms; either bound may be omitted.
+ */
+export const ActivityRequest = Schema.Struct({
+  spaceId: Schema.String,
+  from: Schema.optional(Schema.Number),
+  to: Schema.optional(Schema.Number),
+});
+export interface ActivityRequest extends Schema.Schema.Type<typeof ActivityRequest> {}
+
+/**
+ * Changes counted in one UTC hour of a space. `hour` is `Math.floor(ms / 3_600_000)`.
+ */
+export const ActivityRow = Schema.Struct({
+  hour: Schema.Number,
+  changes: Schema.Number,
+  ops: Schema.Number,
+});
+export interface ActivityRow extends Schema.Schema.Type<typeof ActivityRow> {}
+
+export const ActivityResponse = Schema.Struct({
+  rows: mutableArray(ActivityRow),
+});
+export interface ActivityResponse extends Schema.Schema.Type<typeof ActivityResponse> {}
+
+/**
  * Effect RPC definitions for `dxos.echo.query.QueryService`.
  * Payloads use hand-authored Effect schemas (not protobuf) so large string fields survive the wire intact.
  */
@@ -122,6 +147,15 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('reindex', {
     error: serviceError,
+  }),
+  /**
+   * The activity ledger for a space, re-emitted whenever an index pass touches that space.
+   */
+  Rpc.make('queryActivity', {
+    payload: ActivityRequest,
+    success: ActivityResponse,
+    error: serviceError,
+    stream: true,
   }),
 ).prefix('QueryService.') {}
 

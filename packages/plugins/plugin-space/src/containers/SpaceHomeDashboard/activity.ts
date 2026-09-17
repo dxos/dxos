@@ -4,33 +4,27 @@
 
 import { type ActivityDatum } from '@dxos/react-ui-dashboard';
 
-/** One row of an hour-bucketed count: `Aggregate.bucket('updatedAt')` plus `Aggregate.count()`. */
-export type HourCount = {
-  readonly hour: number | null;
-  readonly count: number;
+/** One row of the space activity ledger: changes counted in a UTC hour. */
+export type HourlyChanges = {
+  readonly hour: number;
+  readonly changes: number;
 };
 
 const HOUR_MS = 3_600_000;
 
 /**
- * Sums UTC-hour counts into local calendar days, which is what the activity calendar draws.
- * A `null` hour (no timestamp recorded) has no day to land on and is dropped.
+ * Sums UTC-hour change counts into local calendar days, which is what the activity calendar draws.
  */
-export const toActivity = (...sources: readonly (readonly HourCount[])[]): ActivityDatum[] => {
+export const toActivity = (rows: readonly HourlyChanges[]): ActivityDatum[] => {
   const days = new Map<number, ActivityDatum>();
-  for (const rows of sources) {
-    for (const { hour, count } of rows) {
-      if (hour === null) {
-        continue;
-      }
-      const at = new Date(hour * HOUR_MS);
-      const date = new Date(at.getFullYear(), at.getMonth(), at.getDate());
-      const datum = days.get(date.getTime());
-      if (datum) {
-        datum.value += count;
-      } else {
-        days.set(date.getTime(), { date, value: count });
-      }
+  for (const { hour, changes } of rows) {
+    const at = new Date(hour * HOUR_MS);
+    const date = new Date(at.getFullYear(), at.getMonth(), at.getDate());
+    const datum = days.get(date.getTime());
+    if (datum) {
+      datum.value += changes;
+    } else {
+      days.set(date.getTime(), { date, value: changes });
     }
   }
   return [...days.values()];

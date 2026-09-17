@@ -14,8 +14,11 @@ import type { EntityId, SpaceId, URI } from '@dxos/keys';
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import {
+  ActivityIndex,
+  type ActivityRow,
   type AggregateQuery,
   type AggregateRow,
+  type ChangeSummary,
   type EntityMeta,
   EntityMetaIndex,
   FtsIndex,
@@ -127,11 +130,16 @@ export interface IndexDataSource {
   beginPass?(): void;
   endPass?(): void;
 
+  /**
+   * Objects changed since `cursors`, and, when `opts.changes` is set, a summary of every change
+   * behind them (the activity ledger's input). Both are relative to the same cursors, so a source
+   * reporting a change once per cursor advance reports it exactly once.
+   */
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
+    opts?: { limit?: number; changes?: boolean },
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; changes?: ChangeSummary[] }>;
 }
 
 export interface IndexEngineParams {
@@ -139,6 +147,7 @@ export interface IndexEngineParams {
   objectMetaIndex: EntityMetaIndex;
   ftsIndex: FtsIndex;
   reverseRefIndex: ReverseRefIndex;
+  activityIndex?: ActivityIndex;
 
   /** Defaults to a fresh store; injectable for tests. */
   convergenceKeyIntents?: ConvergenceKeyIntentStore;
@@ -149,6 +158,7 @@ export class IndexEngine {
   readonly #objectMetaIndex: EntityMetaIndex;
   readonly #ftsIndex: FtsIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
+  readonly #activityIndex: ActivityIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
 
   constructor(params?: IndexEngineParams) {
@@ -156,6 +166,7 @@ export class IndexEngine {
     this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
     this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
+    this.#activityIndex = params?.activityIndex ?? new ActivityIndex();
     this.#convergenceKeyIntents = params?.convergenceKeyIntents ?? new ConvergenceKeyIntentStore();
   }
 
@@ -165,6 +176,7 @@ export class IndexEngine {
       yield* this.#objectMetaIndex.migrate();
       yield* this.#ftsIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
+      yield* this.#activityIndex.migrate();
       yield* this.#convergenceKeyIntents.migrate();
     });
   }
@@ -181,6 +193,17 @@ export class IndexEngine {
   queryReverseRef(query: ReverseRefQuery) {
     // TODO(mykola): Join with metadata table here.
     return this.#reverseRefIndex.query(query);
+  }
+
+  /**
+   * Hour buckets of the activity ledger for one space (see {@link ActivityIndex.query}).
+   */
+  queryActivity(query: {
+    spaceId: string;
+    from?: number;
+    to?: number;
+  }): Effect.Effect<readonly ActivityRow[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#activityIndex.query(query);
   }
 
   /**
@@ -394,6 +417,19 @@ export class IndexEngine {
       result.done = result.done && doneReverseRefIndex;
       accumulateIndexingResult(result, reverseRefObjects);
 
+      const {
+        updated: updatedActivityIndex,
+        done: doneActivityIndex,
+        objects: activityObjects,
+      } = yield* this.#updateActivity(ctx, dataSource, {
+        spaceId: opts.spaceId,
+        limit: opts.limit,
+        cursors: cursorsByIndex.get('activity') ?? [],
+      });
+      result.updated += updatedActivityIndex;
+      result.done = result.done && doneActivityIndex;
+      accumulateIndexingResult(result, activityObjects);
+
       return result as IndexingResult;
     }).pipe(
       // The snapshot must be dropped even when a pass fails, or the next pass would diff against
@@ -479,5 +515,50 @@ export class IndexEngine {
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
+  }
+
+  /**
+   * Update the activity ledger from a source's change summaries. Simpler than {@link #update}:
+   * the ledger is keyed by `(spaceId, hour)` rather than by object, so it needs no recordId
+   * enrichment and no convergence-key bookkeeping.
+   */
+  #updateActivity(
+    ctx: Context,
+    source: IndexDataSource,
+    opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
+  ): Effect.Effect<
+    { updated: number; done: boolean; objects: readonly IndexerObject[] },
+    SqlError.SqlError,
+    SqlClient.SqlClient
+  > {
+    return Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+
+      const {
+        objects,
+        cursors: updatedCursors,
+        changes,
+      } = yield* source.getChangedObjects(ctx, opts.cursors, { limit: opts.limit, changes: true });
+
+      if (objects.length === 0 && (changes ?? []).length === 0) {
+        return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
+      }
+
+      return yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          yield* this.#activityIndex.record(changes ?? []);
+          yield* this.#tracker.updateCursors(
+            updatedCursors.map((_): IndexCursor => ({
+              indexName: 'activity',
+              spaceId: _.spaceId,
+              sourceName: source.sourceName,
+              resourceId: _.resourceId,
+              cursor: _.cursor,
+            })),
+          );
+          return { updated: objects.length, done: false, objects };
+        }),
+      );
+    }).pipe(Effect.withSpan('IndexEngine.#updateActivity'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 }

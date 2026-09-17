@@ -15,7 +15,14 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
-import { EntityMetaIndex, FtsIndex, type IndexerObject, ReverseRefIndex } from './indexes/index.ts';
+import {
+  ActivityIndex,
+  type ChangeSummary,
+  EntityMetaIndex,
+  FtsIndex,
+  type IndexerObject,
+  ReverseRefIndex,
+} from './indexes/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
@@ -85,6 +92,47 @@ class MockIndexDataSource implements IndexDataSource {
   }
 }
 
+/** Reports one document plus, when asked, its change summary; goes quiet once its cursor is seen. */
+class ActivityMockDataSource implements IndexDataSource {
+  readonly sourceName = 'activity-mock-source';
+
+  constructor(
+    private readonly spaceId: SpaceId,
+    private readonly documentId: string,
+    private readonly objectId: EntityId,
+  ) {}
+
+  getChangedObjects(
+    _ctx: Context,
+    cursors: IndexCursor[],
+    opts?: { limit?: number; changes?: boolean },
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; changes?: ChangeSummary[] }> {
+    return Effect.sync(() => {
+      const seen = cursors.some((cursor) => cursor.resourceId === this.documentId && cursor.cursor === 'v1');
+      if (seen) {
+        return { objects: [], cursors: [], changes: [] };
+      }
+
+      const object: IndexerObject = {
+        spaceId: this.spaceId,
+        documentId: this.documentId,
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: this.objectId, [ATTR_TYPE]: TYPE_DEFAULT, title: 'Activity' },
+      };
+      const newCursors: DataSourceCursor[] = [{ spaceId: this.spaceId, resourceId: this.documentId, cursor: 'v1' }];
+      const changes: ChangeSummary[] | undefined = opts?.changes
+        ? [{ spaceId: this.spaceId, time: Date.now(), ops: 1 }]
+        : undefined;
+
+      return { objects: [object], cursors: newCursors, changes };
+    });
+  }
+}
+
 describe('IndexEngine', () => {
   const setup = Effect.gen(function* () {
     const tracker = new IndexTracker();
@@ -128,8 +176,8 @@ describe('IndexEngine', () => {
 
       // First update.
       const { updated } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      // Updates objectMeta, FTS, and reverseRef indexes.
-      expect(updated).toBe(2);
+      // Updates objectMeta, FTS, reverseRef, and activity indexes.
+      expect(updated).toBe(3);
 
       // Verify using the SAME index instance.
       const results1 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
@@ -162,7 +210,7 @@ describe('IndexEngine', () => {
 
       // Second update.
       const { updated: updated2 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      expect(updated2).toBe(2);
+      expect(updated2).toBe(3);
 
       // Verify update.
       const results2 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
@@ -403,6 +451,43 @@ describe('IndexEngine', () => {
       expect(result.documents.size).toBe(0);
       expect(result.types.size).toBe(0);
       expect(result.objects.size).toBe(0);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'activity ledger accumulates change summaries and survives deleteObjects on another index',
+    Effect.fnUntraced(function* () {
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const activityIndex = new ActivityIndex();
+      yield* activityIndex.migrate();
+
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        reverseRefIndex,
+        activityIndex,
+      });
+      const spaceId = SpaceId.random();
+      const documentId = 'doc-activity';
+      const objectId = EntityId.random();
+      const dataSource = new ActivityMockDataSource(spaceId, documentId, objectId);
+
+      let done = false;
+      while (!done) {
+        const result = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+        done = result.done;
+      }
+
+      const rows = yield* engine.queryActivity({ spaceId });
+      expect(rows).toHaveLength(1);
+      expect(rows[0].changes).toBe(1);
+
+      // Another index's garbage collection must not touch the ledger.
+      yield* engine.deleteObjects({ spaceId, documentIds: [documentId], objects: [] });
+
+      const rowsAfterDelete = yield* engine.queryActivity({ spaceId });
+      expect(rowsAfterDelete).toHaveLength(1);
     }, Effect.provide(TestLayer)),
   );
 });
