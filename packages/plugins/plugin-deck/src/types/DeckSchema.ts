@@ -165,6 +165,14 @@ export const getCompanionSelection = (
 };
 
 // Transient/ephemeral plugin state (not persisted).
+export const ScrollIntoView = Schema.Struct({
+  /** The identifier of the component. */
+  id: Schema.String,
+  /** Whether the component takes focus once in view; unset means it does. */
+  focus: Schema.optional(Schema.Boolean),
+});
+export type ScrollIntoView = Schema.Schema.Type<typeof ScrollIntoView>;
+
 export const EphemeralDeckState = Schema.Struct({
   /** Item ID of the plank currently displayed fullscreen (headless); transient, never in the URL. */
   fullscreen: Schema.optional(Schema.String),
@@ -204,8 +212,8 @@ export const EphemeralDeckState = Schema.Struct({
   ),
   toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
-  /** The identifier of a component to scroll into view when it is mounted. */
-  scrollIntoView: Schema.optional(Schema.String),
+  /** A component to scroll into view when it is mounted. */
+  scrollIntoView: Schema.optional(ScrollIntoView),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 
