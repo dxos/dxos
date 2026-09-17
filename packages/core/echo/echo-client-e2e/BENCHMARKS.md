@@ -776,8 +776,8 @@ type` returns 2,000 objects and improves 295 → 178 ms: the host's ~90 ms savin
   rows are matched against 2,050 `objectMeta` rows on computed columns. Whether the planner can use the
   `(spaceId, objectId)` index against those expressions is what `EXPLAIN QUERY PLAN` would show; this run
   did not capture it (the executor's `DX_TRACE_QUERY_EXECUTION` switch is read from `import.meta.env`,
-  which vitest does not populate from `DX_` variables). The number is the finding; the cause is not
-  established here.
+  which vitest does not populate from `DX_` variables). The cause was established afterwards and fixed in
+  `c5294281`; see the re-run below.
 - **Cold, the sql path is 3× faster but still pays the client's loads**: 2.3 s against 7.1 s inclusive of
   the reload, 1.86 s against 7.1 s for the query alone. On the memory path the host loads all 2,000 documents
   from disk before filtering; on the sql path the host loads none, and the 1.7–2.0 s is the reload-heavy
@@ -792,3 +792,61 @@ type` returns 2,000 objects and improves 295 → 178 ms: the host's ~90 ms savin
   from the callback and unsubscribes from the awaiting code.
 - The memory-mode warm rows take ~300 ms per iteration; tinybench's default 16 warm-up iterations added
   ~5 s per row, so the rows cap warm-up at 3.
+
+## `c5294281` — 2026-09-17 — N = 2,000, re-run after the index pins
+
+Same harness, same Node 22.22.2, same N. The only code change between the runs is `c5294281`, which pins
+the index seeks the compiled statements depend on (`INDEXED BY` on the working-set and traversal joins,
+`NOT INDEXED` on the `objectMeta` metadata joins, children as a `UNION ALL` of two seeks, and the strong
+dependency recursion per union branch). The tree is clean at this commit apart from this file.
+
+| row                                         |                memory |                   sql | sql vs memory |
+| ------------------------------------------- | --------------------: | --------------------: | ------------: |
+| `run: type` (2,000 results)                 |   285.5 ms ±2.1% (10) |   168.4 ms ±2.5% (10) |         1.70× |
+| `run: type + property` (400)                |   163.9 ms ±0.9% (10) |    59.4 ms ±1.4% (17) |         2.76× |
+| `run: reference traversal` (10)             |   197.0 ms ±2.0% (10) |    41.8 ms ±1.4% (24) |         4.71× |
+| `run: order + limit` (20)                   |   120.0 ms ±1.6% (10) |    10.7 ms ±3.3% (95) |        11.26× |
+| `reactive first result` (400)               |   151.1 ms ±2.3% (10) |    41.0 ms ±4.5% (25) |         3.69× |
+| `cold: reload + open + run type + property` | 7,071.8 ms ±40.5% (3) | 2,300.8 ms ±39.7% (3) |         3.07× |
+
+Cold phases, timed inside the row (n = 4 including the warm-up; min in parentheses):
+
+| phase                            |           memory |              sql |
+| -------------------------------- | ---------------: | ---------------: |
+| reload + open                    |     756 ms (514) |     356 ms (294) |
+| run type + property, first, cold | 7,347 ms (5,229) | 2,108 ms (1,767) |
+
+### Host traces
+
+Same method as the first run.
+
+| mode   | query               | objects | docsLoaded | indexHits |     exec | of which doc load |
+| ------ | ------------------- | ------: | ---------: | --------: | -------: | ----------------: |
+| memory | type                |   2,000 |      2,000 |     2,000 | 114.5 ms |           73.0 ms |
+| memory | type + property     |     400 |      2,000 |     2,000 | 112.3 ms |           70.1 ms |
+| memory | reference traversal |     400 |      2,000 |     2,000 | 135.0 ms |           94.1 ms |
+| memory | order + limit       |      20 |      2,000 |     2,000 | 118.1 ms |           71.4 ms |
+| sql    | type                |   2,000 |          0 |     2,000 |  12.3 ms |                 0 |
+| sql    | type + property     |     400 |          0 |       400 |   7.1 ms |                 0 |
+| sql    | reference traversal |      10 |          0 |        10 |  15.0 ms |                 0 |
+| sql    | order + limit       |      20 |          0 |        20 |   7.7 ms |                 0 |
+
+### Reading
+
+- **The traversal regression is gone: 3,136 ms → 15 ms in the statement, 3.2 s → 42 ms end to end.**
+  `EXPLAIN QUERY PLAN` on the first run's statement (captured afterwards with a standalone script against
+  the bench database) showed two mis-picks by SQLite's planner, which has no `ANALYZE` statistics to work
+  from: the traversal target lookup ran `SEARCH t USING INDEX idx_object_index_queuePosition (queueId=?)`,
+  a scan of every non-queue row per source row, and the strong-dependency recursion seeded from a full
+  `objectMeta` scan. With the `(spaceId, queueId, objectId)` index pinned on the join and the working set
+  driving the recursion, the plan is one seek per source row. `explain.test.ts` now asserts this plan shape
+  so a planner regression fails a unit test rather than a benchmark.
+- **The other sql rows moved by a few percent, within the noise of a single run**, except `order + limit`,
+  which is 13.0 → 10.7 ms; the `NOT INDEXED` hint on the metadata joins removes an index probe per result
+  row there as well. The memory rows are unchanged within rme (the memory executor is not touched by
+  `c5294281`).
+- **Every sql row is now faster than its memory counterpart**, from 1.7× on the 2,000-result type query,
+  where the client's hydration of the result objects dominates and both modes pay it, to 11× on
+  `order + limit`, where the memory path still loads 2,000 documents to return 20. The sql host executes
+  every shape in 7–15 ms with no document loads; the memory host takes 112–135 ms, 70–94 ms of it loading
+  documents.
