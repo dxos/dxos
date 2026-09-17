@@ -67,7 +67,7 @@ export type IndexQueryProviderProps = {
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
 /** Per-index-hit object hydration budget (parallel across hits). */
-const INDEX_OBJECT_LOAD_TIMEOUT = 2_000;
+export const INDEX_OBJECT_LOAD_TIMEOUT = 2_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -620,7 +620,7 @@ export class IndexQuerySource implements QuerySource {
       );
     } catch (err) {
       if (err instanceof TimeoutError) {
-        log.warn('index object load timed out', { objectId: result.id, spaceId });
+        log.warn('index hit dropped: object load timed out', { objectId: result.id, spaceId });
         return undefined;
       }
       throw err;
