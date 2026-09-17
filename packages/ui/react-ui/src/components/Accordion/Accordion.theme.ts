@@ -26,7 +26,7 @@ const root: ComponentFunction<AccordionStyleProps> = ({ rounded }, ...etc) =>
 const item: ComponentFunction<AccordionStyleProps> = ({ rounded }, ...etc) =>
   mx('border-x border-separator overflow-hidden', rounded && 'first:rounded-t-md last:rounded-b-md', ...etc);
 
-const header: ComponentFunction<AccordionStyleProps> = ({}, ...etc) => mx('flex items-start', ...etc);
+const header: ComponentFunction<AccordionStyleProps> = (_props, ...etc) => mx('flex items-start', ...etc);
 
 /** Row trigger: spans the full width and pins the trailing caret to the inline-end edge. */
 const trigger: ComponentFunction<AccordionStyleProps> = ({ rounded, hover }, ...etc) =>
