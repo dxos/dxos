@@ -765,12 +765,12 @@ export class FeedSyncer extends Resource {
 
   readonly #pushTask = new AsyncTask(async () =>
     Effect.gen({ self: this }, function* () {
-      yield* Effect.forEach(
+      const outcomes = yield* Effect.forEach(
         this.#getSpaceIds(),
         (spaceId) =>
           Effect.gen({ self: this }, function* () {
-            let needsMorePush = false;
-            let hadPushFailure = false;
+            let needsMore = false;
+            let hadFailure = false;
             for (const feedNamespace of this.#syncNamespaces) {
               if (this.#deletedSpaces.has(spaceId)) {
                 break;
@@ -784,11 +784,6 @@ export class FeedSyncer extends Resource {
                     limit: this.#messageBlocksLimit,
                   })
                   .pipe(
-                    Effect.tap(() =>
-                      Effect.sync(() => {
-                        this.#pushFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
-                      }),
-                    ),
                     Effect.catch((cause) =>
                       Effect.sync(() => {
                         if (cause instanceof SyncSpaceDeletedError) {
@@ -796,7 +791,7 @@ export class FeedSyncer extends Resource {
                           return { done: true };
                         }
                         this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
-                        hadPushFailure = true;
+                        hadFailure = true;
                         return undefined;
                       }),
                     ),
@@ -807,13 +802,19 @@ export class FeedSyncer extends Resource {
                 done = pushed.done;
               }
               if (!done) {
-                needsMorePush = true;
+                needsMore = true;
               }
             }
-            this.#schedulePushRetry({ hadFailure: hadPushFailure, needsMore: needsMorePush });
+            return { hadFailure, needsMore };
           }),
         { concurrency: this.#syncConcurrency },
       );
+      // One decision per run: decided per space, a space that pushed fine reset the back-off a
+      // failing one was growing, so the failing one was retried at the minimum delay forever.
+      this.#schedulePushRetry({
+        hadFailure: outcomes.some((outcome) => outcome.hadFailure),
+        needsMore: outcomes.some((outcome) => outcome.needsMore),
+      });
     }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
   );
 }

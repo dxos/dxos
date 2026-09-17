@@ -227,19 +227,6 @@ const createFeedSyncHarness = async ({
   };
 };
 
-/** Appends `count` local blocks to one feed of a space, so a 150-block seed is three 50-block pages. */
-const seedBlocks = (feedStore: FeedStore, runtime: ReturnType<typeof createRuntime>, spaceId: SpaceId, count: number) =>
-  feedStore
-    .appendLocal(
-      Array.from({ length: count }, (_unused, index) => ({
-        spaceId,
-        feedId: EntityId.random(),
-        feedNamespace: syncNamespace,
-        data: new Uint8Array([index % 256]),
-      })),
-    )
-    .pipe(RuntimeProvider.runPromise(runtime.contextEffect));
-
 describe('FeedSyncer', () => {
   test('syncs mixed pull and push traffic', async () => {
     const spaceId = SpaceId.random();
@@ -719,6 +706,40 @@ describe('FeedSyncer', () => {
     );
   });
 
+  // The push back-off is one value for every space and namespace. Reset by any push that went
+  // through, it never grew while one namespace kept failing next to a healthy one, so the failing
+  // push was retried at the minimum delay for as long as the failure lasted.
+  test('backs off between push retries while a push keeps failing next to a healthy namespace', async () => {
+    const spaceId = SpaceId.random();
+    const failedAt: number[] = [];
+    const { clientRuntime, clientFeedStore, syncer } = await createFeedSyncHarness({
+      spaceId,
+      pollingInterval: 60_000,
+      syncNamespaces,
+      interceptRequest: (message) => {
+        if (message._tag !== 'AppendRequest' || message.feedNamespace !== FeedProtocol.WellKnownNamespaces.trace) {
+          return undefined;
+        }
+        failedAt.push(Date.now());
+        return {
+          _tag: 'Error',
+          requestId: message.requestId,
+          message: 'trace namespace unavailable',
+          senderPeerId: 'server',
+          recipientPeerId: 'client',
+        };
+      },
+    });
+    await seedBlocks(clientFeedStore, clientRuntime, spaceId, 1, FeedProtocol.WellKnownNamespaces.trace);
+
+    await syncer.open(new Context());
+    await vi.waitFor(() => expect(failedAt.length).toBeGreaterThanOrEqual(3), { timeout: 5_000, interval: 10 });
+
+    const [firstGap, secondGap] = [failedAt[1] - failedAt[0], failedAt[2] - failedAt[1]];
+    expect(firstGap).toBeGreaterThanOrEqual(250 - TIMER_SLACK_MS);
+    expect(secondGap).toBeGreaterThanOrEqual(500 - TIMER_SLACK_MS);
+  });
+
   // The server drops frames for a deleted space, so before this the client waited out its RPC timeout
   // on every request to it; with the reason named, the space costs nothing until the next connection.
   test('stops syncing a space the server reports deleted until the connection is re-established', async () => {
@@ -781,3 +802,22 @@ describe('FeedSyncer', () => {
     ).not.toThrow();
   });
 });
+
+/** Appends `count` local blocks to one feed of a space, so a 150-block seed is three 50-block pages. */
+const seedBlocks = (
+  feedStore: FeedStore,
+  runtime: ReturnType<typeof createRuntime>,
+  spaceId: SpaceId,
+  count: number,
+  feedNamespace: string = syncNamespace,
+) =>
+  feedStore
+    .appendLocal(
+      Array.from({ length: count }, (_unused, index) => ({
+        spaceId,
+        feedId: EntityId.random(),
+        feedNamespace,
+        data: new Uint8Array([index % 256]),
+      })),
+    )
+    .pipe(RuntimeProvider.runPromise(runtime.contextEffect));
