@@ -101,7 +101,7 @@ export interface RoutingService {
 }
 
 /** Thrown by a `RoutingService` when its credentials are not configured. */
-export class MissingApiKeyError extends BaseError.extend('MissingApiKeyError') {
+export class MissingApiKeyError extends BaseError.extend('RoutingMissingApiKeyError') {
   constructor(public readonly serviceId: string) {
     super({ message: `Missing API key for routing service: ${serviceId}` });
   }
