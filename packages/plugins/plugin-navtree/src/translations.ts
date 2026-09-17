@@ -17,7 +17,6 @@ export const translations = [
         'node-actions-menu-invoker.label': 'More options',
         'tree-item-actions.label': 'More actions',
         'button-back.button': 'Back to Space',
-        'pending-workspace.label': 'Loading workspaces',
         'loading-workspace.label': 'Loading workspace…',
         'workspace-unavailable.heading': 'Workspace unavailable',
         'workspace-unavailable.description':

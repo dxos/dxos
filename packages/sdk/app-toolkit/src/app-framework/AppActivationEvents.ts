@@ -31,9 +31,3 @@ export const createSettingsEvent = (specifier: string) =>
  * own meta.
  */
 export const AssistantStart = ActivationEvent$.pluginStart('org.dxos.plugin.assistant');
-
-/**
- * The client plugin's initialized event, named by key so UI plugins can observe it without a package
- * dependency on the client plugin. Must equal `ClientEvents.Initialized` in plugin-client.
- */
-export const ClientInitialized = ActivationEvent$.make('org.dxos.plugin.client.event.initialized');

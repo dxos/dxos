@@ -49,7 +49,7 @@ import { meta } from '#meta';
 import { l0ItemType } from '../../util.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { UserAccountAvatar } from '../UserAccountAvatar/index.ts';
-import { L0PendingAvatar, L0PendingItem } from './L0PendingItem.tsx';
+import { L0PendingAvatar } from './L0PendingAvatar.tsx';
 
 //
 // L0Item
@@ -286,7 +286,6 @@ export type L0MenuProps = {
   topLevelItems: AppGraphNode.Node[];
   pinnedItems: AppGraphNode.Node[];
   userAccountItem?: AppGraphNode.Node;
-  workspacesPending?: boolean;
   parent?: AppGraphNode.Node;
   path: string[];
   onItemHover?: (params: { item: AppGraphNode.Node }) => void;
@@ -297,7 +296,6 @@ export const L0Menu = ({
   topLevelItems,
   pinnedItems,
   userAccountItem,
-  workspacesPending = false,
   parent,
   path,
   onItemHover,
@@ -364,20 +362,16 @@ export const L0Menu = ({
       {/* Space list. */}
       <ScrollArea.Root centered thin orientation='vertical'>
         <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-          {topLevelItems.length > 0 ? (
-            topLevelItems.map((item) => (
-              <L0Item
-                key={item.id}
-                item={item}
-                parent={parent}
-                path={path}
-                onItemHover={onItemHover}
-                {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
-              />
-            ))
-          ) : workspacesPending ? (
-            <L0PendingItem />
-          ) : null}
+          {topLevelItems.map((item) => (
+            <L0Item
+              key={item.id}
+              item={item}
+              parent={parent}
+              path={path}
+              onItemHover={onItemHover}
+              {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
+            />
+          ))}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 

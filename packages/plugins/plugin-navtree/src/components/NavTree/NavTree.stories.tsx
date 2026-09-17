@@ -294,6 +294,7 @@ export const NoWorkspacesYet: Story = {
   decorators: navTreeDecorators({ spaces: 'none' }),
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('navtree.workspace.pending', {}, { timeout: 15000 });
+    await canvas.findByTestId('treeView.userAccount.placeholder', {}, { timeout: 15000 });
+    await expect(canvas.queryAllByTestId(/^spacePlugin\.space/)).toHaveLength(0);
   },
 };
