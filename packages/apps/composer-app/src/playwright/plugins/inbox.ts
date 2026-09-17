@@ -60,7 +60,7 @@ export const Inbox = {
 // only sees browser-originated requests, which is exactly the inbox sync/send path today (sync runs
 // client-side). See the `inbox-e2e-sync-in-browser-dependency` note: when sync moves to the edge,
 // this interception stops applying and an in-browser flag will be needed.
-// The provider hosts are cross-origin to the app (localhost:4173), so fulfilled responses need CORS
+// The provider hosts are cross-origin to the app, so fulfilled responses need CORS
 // headers, and the JMAP POST (Authorization + JSON body) triggers a preflight OPTIONS. Handle both
 // here in the transport layer so the mock stays a pure request→response data function.
 const CORS_HEADERS = {
