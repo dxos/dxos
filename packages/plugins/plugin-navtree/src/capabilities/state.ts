@@ -130,6 +130,8 @@ export default Capability.makeModule(
 
     yield* Effect.gen(function* () {
       const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
+      // A workspace the deck left is released, so entering one re-expands it and the items the tree
+      // still remembers as open.
       const reexpandWorkspace = (workspace: string | undefined) => {
         if (!workspace) {
           return;

@@ -45,6 +45,7 @@ import {
   updateActiveDeck,
 } from '../util/index.ts';
 
+/** Retains the workspaces of subjects that are not in the graph yet, for as long as the open runs. */
 const holdOpening = (ids: readonly string[]) =>
   ids.length === 0
     ? Effect.void

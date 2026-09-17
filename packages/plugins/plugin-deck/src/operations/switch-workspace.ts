@@ -66,6 +66,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
 
       const seeds = remembered.length === 0 && platform !== 'mobile';
       if (seeds) {
+        // A workspace entered after release has no children until its connectors run again.
         AppGraph.expandSync(graph, input.subject, 'child');
       }
       const seeded = seeds ? openableChildren(graph, input.subject).slice(0, 1) : [];

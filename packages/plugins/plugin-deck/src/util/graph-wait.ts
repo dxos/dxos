@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 
 import { openableChildren } from './openable-children.ts';
 
+/** Waits out the re-expansion of `ids` that a retention change released, so callers resolve the rebuilt nodes. */
 export const awaitReleaseSettled = (
   registry: Registry.AtomRegistry,
   builder: AppGraphBuilder.GraphBuilder,

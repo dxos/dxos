@@ -40,6 +40,7 @@ export type UnretainedProps = {
   readonly connectors: Iterable<ConnectorState>;
 };
 
+/** The root keeps its children whatever the asks, so a retention naming nothing still leaves the app its top level. */
 const ROOT_CHILDREN_DEPTH = 1;
 
 export const unretained = ({ asked, outgoing, structural, connectors }: UnretainedProps): Set<string> => {
@@ -72,6 +73,7 @@ const walkBudgets = (
   return budgets;
 };
 
+/** Inline descendants live with the connector that emitted them; sparing one can spare another connector, hence the fixpoint. */
 const keepInlineOfSurvivingConnectors = (released: Set<string>, states: readonly ConnectorState[]): void => {
   let kept = true;
   while (kept) {
@@ -86,6 +88,7 @@ const keepInlineOfSurvivingConnectors = (released: Set<string>, states: readonly
   }
 };
 
+/** Released ids keyed by the connector that emitted them, so a re-flush or a removed source forgets them. */
 export class Released {
   readonly #connectorOf = new Map<string, string>();
   readonly #byConnector = new Map<string, { source: string; ids: Set<string> }>();
