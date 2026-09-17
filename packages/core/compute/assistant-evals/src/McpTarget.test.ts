@@ -27,19 +27,23 @@ describe('McpTarget', () => {
     expect(() => McpTarget.fromEnv('staging')).to.throw(/Unknown MCP eval target/);
   });
 
-  test('only dev provisions its own identity; a hand-minted token wins wherever it is set', ({ expect }) => {
+  test('the open-hatch targets provision their own identity; a hand-minted token wins wherever it is set', ({
+    expect,
+  }) => {
     const token = process.env.DX_EVAL_MCP_TOKEN;
     try {
       delete process.env.DX_EVAL_MCP_TOKEN;
       expect(McpTarget.mode('local')).to.equal('local');
+      // Both environments edge's `isTestAccountEnvironment` admits a `test+*@dxos.org` bind on.
       expect(McpTarget.mode('dev')).to.equal('provisioned');
       expect(McpTarget.edgeUrl('dev')).to.equal('https://dev.dxos.network');
-      // No EDGE a throwaway identity may be registered against, and no form to mint a grant through.
-      expect(McpTarget.mode('main')).to.equal('token');
+      expect(McpTarget.mode('main')).to.equal('provisioned');
+      expect(McpTarget.edgeUrl('main')).to.equal('https://preview.dxos.network');
+      // Production's hatch is closed by design, so no throwaway identity can be bound there.
       expect(McpTarget.mode('prod')).to.equal('token');
       expect(McpTarget.edgeUrl('prod')).to.be.undefined;
 
-      // Not even under the override: the grant these targets would need does not exist.
+      // Not even under the override: the grant a closed-hatch target would need does not exist.
       process.env.DX_EVAL_EDGE_URL = 'https://edge.example';
       try {
         expect(McpTarget.edgeUrl('prod')).to.be.undefined;
