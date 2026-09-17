@@ -34,8 +34,8 @@ import { getSpaceDisplayName } from '../../../util/index.ts';
 import {
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
-  LOADING_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
+  PENDING_SPACE_LABEL,
   RENAME_SPACE_LABEL,
   checkPendingMigration,
   spaceActionsCache,
@@ -298,8 +298,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 }),
               )
               .map((space) =>
-                isSpacePlaceholder({ state: spaceStates.get(space.id), orderResolved })
-                  ? constructSpacePlaceholderNode({ id: space.id, namesCache: state.spaceNames })
+                isPendingSpaceNode({ state: spaceStates.get(space.id), orderResolved })
+                  ? constructPendingSpaceNode({ id: space.id, namesCache: state.spaceNames })
                   : constructSpaceNode({
                       space,
                       navigable: ephemeralState.navigableCollections,
@@ -400,7 +400,7 @@ export const isOrderResolved = ({
   return !waiting || timedOut();
 };
 
-export const isSpacePlaceholder = ({
+export const isPendingSpaceNode = ({
   state,
   orderResolved,
 }: {
@@ -422,7 +422,7 @@ type SpaceNodeProperties = {
   canDrop: typeof CAN_DROP_SPACE | undefined;
 };
 
-export const constructSpacePlaceholderNode = ({
+export const constructPendingSpaceNode = ({
   id,
   namesCache,
 }: {
@@ -434,7 +434,7 @@ export const constructSpacePlaceholderNode = ({
     type: SpaceSchema.SPACE_TYPE,
     data: null,
     properties: {
-      label: namesCache?.[id] ?? LOADING_SPACE_LABEL,
+      label: namesCache?.[id] ?? PENDING_SPACE_LABEL,
       description: undefined,
       hue: undefined,
       icon: undefined,

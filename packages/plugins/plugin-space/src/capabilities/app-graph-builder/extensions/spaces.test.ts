@@ -9,10 +9,10 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { SpaceState } from '@dxos/client/echo';
 
 import {
-  constructSpacePlaceholderNode,
+  constructPendingSpaceNode,
   isOrderResolved,
   isPendingSpace,
-  isSpacePlaceholder,
+  isPendingSpaceNode,
   shouldListSpace,
 } from './spaces.ts';
 
@@ -68,17 +68,17 @@ describe('isOrderResolved', () => {
   });
 });
 
-describe('isSpacePlaceholder', () => {
+describe('isPendingSpaceNode', () => {
   test('a space renders as itself only once it is ready and the ordering has resolved', ({ expect }) => {
-    expect(isSpacePlaceholder({ state: SpaceState.SPACE_READY, orderResolved: true })).toBe(false);
-    expect(isSpacePlaceholder({ state: SpaceState.SPACE_READY, orderResolved: false })).toBe(true);
-    expect(isSpacePlaceholder({ state: SpaceState.SPACE_INITIALIZING, orderResolved: true })).toBe(true);
+    expect(isPendingSpaceNode({ state: SpaceState.SPACE_READY, orderResolved: true })).toBe(false);
+    expect(isPendingSpaceNode({ state: SpaceState.SPACE_READY, orderResolved: false })).toBe(true);
+    expect(isPendingSpaceNode({ state: SpaceState.SPACE_INITIALIZING, orderResolved: true })).toBe(true);
   });
 });
 
-describe('constructSpacePlaceholderNode', () => {
+describe('constructPendingSpaceNode', () => {
   test('is a pending workspace that space-scoped connectors cannot match', ({ expect }) => {
-    const { id, type, data, properties } = constructSpacePlaceholderNode({ id: 'space-1' });
+    const { id, type, data, properties } = constructPendingSpaceNode({ id: 'space-1' });
     expect(properties?.pending).toBe(true);
     expect(Option.isNone(AppNodeMatcher.whenSpace({ id, type, data, properties: properties ?? {} }))).toBe(true);
   });

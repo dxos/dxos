@@ -35,7 +35,7 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAcco
             {...(resolved && { status: status ?? 'active' })}
             hue={hue || fallbackValue?.hue}
             fallback={emoji || fallbackValue?.emoji || ''}
-            data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.placeholder'}
+            data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
           />
         </Avatar.Root>
       </div>

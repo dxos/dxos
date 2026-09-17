@@ -84,7 +84,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
       {shouldRenderContent &&
         (pending ? (
           <Empty
-            label={t('loading-workspace.label')}
+            label={t('pending-workspace.label')}
             icon='ph--circle-notch--regular'
             classNames='row-start-2 self-start animate-fade-in [&_svg]:animate-spin'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
