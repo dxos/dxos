@@ -125,4 +125,28 @@ describe('SpaceOperation.QueryObjects', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'an unfiltered query lists every object, and the default limit does not silently truncate',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        // More objects than the handler's default limit, so a truncating default is visible.
+        const count = 24;
+        for (let index = 0; index < count; index++) {
+          yield* Database.add(Obj.make(TestObject, { name: `unfiltered-${index}` }));
+        }
+        yield* Database.flush();
+
+        // "Omit both to list everything" is the documented contract of the no-argument form.
+        const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {});
+        expect(results.length).toBeGreaterThanOrEqual(count);
+
+        // An explicit limit still bounds the result.
+        const { results: bounded } = yield* Operation.invoke(SpaceOperation.QueryObjects, { limit: 5 });
+        expect(bounded).toHaveLength(5);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
