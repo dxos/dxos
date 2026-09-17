@@ -9,18 +9,19 @@ import { type SpaceStats } from './types.ts';
 
 const FEED_TYPENAME = Type.getTypename(Feed.Feed);
 
-/** One row of {@link SPACE_STATS_QUERY}: how many live objects carry a given type URI. */
+/** How many live objects carry a given type URI; {@link SPACE_STATS_QUERY} rows also carry an hour. */
 export type TypeCount = {
   readonly type: string | null;
   readonly count: number;
 };
 
 /**
- * Counts every live object in a space by type. The host counts in the worker and sends one row per
- * type, so the tab loads no objects.
+ * Counts every live object in a space by type and by the UTC hour it was last updated. The host
+ * answers from index rows and sends one row per type and hour, so no document is loaded.
  */
 export const SPACE_STATS_QUERY = Query.select(Filter.everything()).aggregate({
   type: Aggregate.type(),
+  hour: Aggregate.updated('hour'),
   count: Aggregate.count(),
 });
 
