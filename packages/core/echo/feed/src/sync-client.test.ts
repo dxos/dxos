@@ -224,6 +224,92 @@ describe('SyncClient', () => {
     await runtime.dispose();
   });
 
+  // The guard that keeps one replay from restarting on every page must not hide a second rollback.
+  // Within a replay the block at the cursor is the one the previous page wrote, so a different block
+  // there means the server changed again underneath it, and the positions it re-issued below the
+  // cursor are only reached by starting over.
+  test('a replay restarts when the block at the cursor changes underneath it', async () => {
+    const runtime = ManagedRuntime.make(TestLayer);
+    const spaceId = SpaceId.random();
+    const feedStore = new FeedStore({ localActorId: 'alice', assignPositions: false });
+    await runtime.runPromise(feedStore.migrate());
+    await runtime.runPromise(
+      feedStore.setSyncState({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        lastPulledPosition: 10,
+        serverToken: 'token',
+      }),
+    );
+
+    const block = (actorId: string, position: number): FeedProtocol.Block => ({
+      feedId: 'feed-1',
+      actorId,
+      sequence: position,
+      prevActorId: null,
+      prevSequence: null,
+      position,
+      timestamp: 0,
+      data: new Uint8Array([position]),
+    });
+    const requests: FeedProtocol.QueryRequest[] = [];
+    const syncClient: SyncClient = new SyncClient({
+      peerId: 'client-peer',
+      feedStore,
+      sendMessage: (_ctx, message) => {
+        if (message._tag !== 'QueryRequest') {
+          return Effect.void;
+        }
+        requests.push(message);
+        const reply = (fields: Partial<FeedProtocol.QueryResponse>) =>
+          syncClient.handleMessage({
+            _tag: 'QueryResponse',
+            requestId: message.requestId,
+            nextCursor: FeedProtocol.FeedCursor.make('token|-1'),
+            hasMore: false,
+            blocks: [],
+            serverToken: 'token',
+            senderPeerId: 'server-peer',
+            recipientPeerId: 'client-peer',
+            ...fields,
+          });
+        switch (requests.length) {
+          // The server lost everything above 3: the cursor is beyond it, so the replay starts.
+          case 1:
+            return reply({ maxPosition: 3 });
+          // The first page of the replay.
+          case 2:
+            return reply({ blocks: [block('bob', 0), block('bob', 1)], maxPosition: 3 });
+          // Rolled back again and regrown past the cursor: another block sits at 1 now.
+          default:
+            return reply({
+              blocks: [block('carol', 2)],
+              maxPosition: 2,
+              cursorBlock: { feedId: 'feed-1', actorId: 'carol', sequence: 1 },
+            });
+        }
+      },
+    });
+
+    const ctx = new Context();
+    onTestFinished(() => void ctx.dispose());
+    const pull = () => runtime.runPromise(syncClient.pull(ctx, { spaceId, feedNamespace: WellKnownNamespaces.data }));
+    const syncState = () =>
+      runtime.runPromise(feedStore.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data }));
+
+    expect(await pull()).toEqual({ done: false });
+    expect(await syncState()).toEqual({ lastPulledPosition: -1, serverToken: 'token' });
+    expect(await pull()).toEqual({ done: false });
+    expect(await syncState()).toEqual({ lastPulledPosition: 1, serverToken: 'token' });
+
+    // Advancing from 1 instead would leave carol's block at 1 unpulled for good.
+    expect(await pull()).toEqual({ done: false });
+    expect(requests[2].position).toBe(1);
+    expect(await syncState()).toEqual({ lastPulledPosition: -1, serverToken: 'token' });
+
+    await runtime.dispose();
+  });
+
   // The server names the reason so the syncer can stop asking; a plain error would only be retried.
   test('an Error reply coded space_deleted fails the request with SyncSpaceDeletedError', async () => {
     const runtime = ManagedRuntime.make(TestLayer);

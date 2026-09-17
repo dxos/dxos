@@ -265,10 +265,11 @@ export class SyncClient {
             })
           : { displaced: 0, moved: 0 };
       // A cursor above the server's high-water mark was pulled from rows the server has lost, so
-      // nothing above it will ever arrive. Replayed even mid-replay: the server shrank again
-      // underneath this one.
+      // nothing above it will ever arrive. Both it and a different block at the cursor restart a
+      // replay already running: within a replay the block at the cursor is the one the previous
+      // page wrote, so either means the server changed again underneath it.
       const beyondServer = response.maxPosition != null && basePosition > response.maxPosition;
-      if (beyondServer) {
+      if (beyondServer || cursorBlockDiffers) {
         self.#replaying.delete(self.#namespaceKey(opts));
       }
       // Each of these means the server lost rows and re-issued their positions, along with whatever
