@@ -747,6 +747,10 @@ export class Client {
     invariant(this._services, 'Client not initialized.');
     await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
+    }).catch((err) => {
+      if (!isHostShutDownByReset(err)) {
+        throw err;
+      }
     });
     await this._close();
 
@@ -757,3 +761,5 @@ export class Client {
     log('reset complete');
   }
 }
+
+const isHostShutDownByReset = (err: unknown): boolean => err instanceof RpcClosedError;
