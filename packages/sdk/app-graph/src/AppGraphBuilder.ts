@@ -273,7 +273,6 @@ const makeStore = (
   return {
     graph,
     node: (id) => graph.node(id),
-    nodeOrThrow: (id) => graph.nodeOrThrow(id),
     addNodes: (nodes) => void Graph.addNodes(graph, [...nodes]),
     removeNodes: (ids, edges) => void Graph.removeNodes(graph, [...ids], edges),
     addEdges: (edges) => void Graph.addEdges(graph, edges.map(decode)),
@@ -304,6 +303,7 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 };
 
 // The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.
+// Named (not namespace) re-export: this module already exports its own `GraphBuilder` class above.
 export { addExtension, destroy, explore, flush, release, removeExtension } from '@dxos/graph/GraphBuilder';
 
 /**

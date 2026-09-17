@@ -4,11 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format, type Registry, Type } from '@dxos/echo';
+import { Format, JsonSchema, Obj, type Registry, Type } from '@dxos/echo';
 import { FormatAnnotation, type SelectOption, TypeEnum, formatToType } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
-import { type Mutable } from '@dxos/echo/Obj';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { DXN, PublicKey, type URI } from '@dxos/keys';
 
@@ -100,7 +98,7 @@ export const getSchemaFromPropertyDefinitions = (
   // them through the parameter: the `schema` bound above is read-only.
   Type.update(schema, (schema) => {
     for (const prop of properties) {
-      const jsonProp = schema.jsonSchema.properties![prop.name] as Mutable<JsonSchemaType>;
+      const jsonProp = schema.jsonSchema.properties![prop.name] as Obj.Mutable<JsonSchema.JsonSchema>;
       if (prop.config?.options) {
         if (prop.format === Format.TypeFormat.SingleSelect) {
           makeSingleSelectAnnotations(jsonProp, [...prop.config.options]);
@@ -125,8 +123,8 @@ export const getSchemaFromPropertyDefinitions = (
  * Build an in-memory, mutable `Type.Type` entity from a JSON schema. A typename is required to
  * identify the entity; if the JSON schema does not carry one, `typename` (or a generated typename) is stamped.
  */
-export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType, typename?: string): Type.Type => {
-  const withTypename: JsonSchemaType = jsonSchema.typename
+export const getSchemaFromJsonSchema = (jsonSchema: JsonSchema.JsonSchema, typename?: string): Type.Type => {
+  const withTypename: JsonSchema.JsonSchema = jsonSchema.typename
     ? jsonSchema
     : {
         ...jsonSchema,
@@ -134,7 +132,7 @@ export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType, typename?: s
         version: jsonSchema.version ?? '0.1.0',
       };
 
-  return createEchoSchema(toEffectSchema(withTypename));
+  return createEchoSchema(JsonSchema.toEffectSchema(withTypename));
 };
 
 /**
@@ -142,9 +140,9 @@ export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType, typename?: s
  */
 // TODO(burdon): Factor out (dxos/echo)
 export const makeSingleSelectAnnotations = (
-  jsonProperty: Mutable<JsonSchemaType>,
+  jsonProperty: Obj.Mutable<JsonSchema.JsonSchema>,
   options: Array<{ id: string; title?: string; color?: string }>,
-): Mutable<JsonSchemaType> => {
+): Obj.Mutable<JsonSchema.JsonSchema> => {
   jsonProperty.enum = options.map(({ id }) => id);
   jsonProperty.format = Format.TypeFormat.SingleSelect;
   jsonProperty.annotations = {
@@ -163,9 +161,9 @@ export const makeSingleSelectAnnotations = (
  */
 // TODO(burdon): Factor out (dxos/echo)
 export const makeMultiSelectAnnotations = (
-  jsonProperty: Mutable<JsonSchemaType>,
+  jsonProperty: Obj.Mutable<JsonSchema.JsonSchema>,
   options: Array<{ id: string; title?: string; color?: string }>,
-): Mutable<JsonSchemaType> => {
+): Obj.Mutable<JsonSchema.JsonSchema> => {
   // TODO(ZaymonFC): Is this how do we encode an array of enums?
   jsonProperty.type = 'object';
   jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };

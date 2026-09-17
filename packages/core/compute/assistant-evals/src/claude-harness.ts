@@ -376,8 +376,8 @@ const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
   const transcript: unknown[] = [{ role: 'user', content: prompt }];
   const calls: Usage.Call[] = [];
   for (const event of turn.events) {
-    const message = event?.message;
-    if (event?.type === 'assistant' && message) {
+    if (event.type === 'assistant') {
+      const { message } = event;
       calls.push({
         model: typeof message.model === 'string' ? message.model : 'claude',
         provider: 'anthropic',
@@ -392,8 +392,8 @@ const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
         end: turn.end,
       });
       transcript.push({ role: 'assistant', content: message.content });
-    } else if (event?.type === 'user' && message) {
-      transcript.push({ role: 'user', content: message.content });
+    } else if (event.type === 'user') {
+      transcript.push({ role: 'user', content: event.message.content });
     }
   }
   return calls;

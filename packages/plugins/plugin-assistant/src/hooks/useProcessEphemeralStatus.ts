@@ -16,8 +16,7 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
-
-import { resolveEphemeralStatusUpdate } from '#execution-graph';
+import { resolveEphemeralStatusUpdate } from '@dxos/react-ui-trace';
 
 const atomEmpty = Atom.make(() => [] as const);
 

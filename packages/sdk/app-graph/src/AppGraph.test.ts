@@ -88,6 +88,11 @@ describe('Graph', () => {
     expect(count).toEqual(2);
   });
 
+  test('getNodeOrThrow throws NotFoundError for a missing node', () => {
+    const graph = Graph.make({ registry: Registry.make() });
+    expect(() => Graph.getNodeOrThrow(graph, EXAMPLE_ID)).toThrow(GraphNode.NotFoundError);
+  });
+
   test('remove node', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
@@ -477,6 +482,17 @@ describe('Graph', () => {
         { id: 'test3', type: 'test' },
       ],
     });
+  });
+
+  test('json skips a node removed without its edges', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: GraphNode.RootId, type: Node.RootType, nodes: [{ id: 'test1', type: 'test' }] });
+    const cancel = registry.subscribe(graph.json(), () => {});
+    onTestFinished(() => cancel());
+
+    Graph.removeNode(graph, 'test1');
+    expect(registry.get(graph.json())).to.deep.equal({ id: GraphNode.RootId, type: Node.RootType });
   });
 
   test('get path', () => {

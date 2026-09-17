@@ -6,7 +6,7 @@
 
 import * as Trace from '@dxos/compute/Trace';
 
-export interface SwarmTraceSinkOptions {
+export interface Options {
   /**
    * Publish an encoded ephemeral trace message to the swarm for `space`, tagged for subscriber
    * matching (DX-1125). Fire-and-forget. The caller owns the space → swarm-key mapping and transport:
@@ -24,7 +24,7 @@ export interface SwarmTraceSinkOptions {
  * subscribed clients can project them into live progress UI. Messages with no space cannot be
  * addressed to a swarm and are dropped.
  */
-export const createSwarmTraceSink = ({ publish }: SwarmTraceSinkOptions): Trace.Sink => ({
+export const createSwarmTraceSink = ({ publish }: Options): Trace.Sink => ({
   write: (message) => {
     if (!message.isEphemeral) {
       return;

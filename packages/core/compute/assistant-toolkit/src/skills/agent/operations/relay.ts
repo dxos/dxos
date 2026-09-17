@@ -10,7 +10,7 @@ import * as Prompt from 'effect/unstable/ai/Prompt';
 import { AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { getSession } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -54,7 +54,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
 
         // The durable session is bound to the chat, so it recovers its steering (and its queue)
         // from the chat itself on every rehydration.
-        const session = yield* getSession(chat, { location: chat.remote ? 'edge' : 'local' });
+        const session = yield* AgentService.getSession(chat, { location: chat.remote ? 'edge' : 'local' });
         const content = prompt ?? JSON.stringify(event);
         yield* session.submitPrompt([{ _tag: 'text', text: content, disposition: 'synthetic' }]);
       },
