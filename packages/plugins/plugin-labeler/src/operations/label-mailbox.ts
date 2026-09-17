@@ -105,6 +105,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
           : DecisionModel.generate({ context, schema: TriageQuestions });
 
         const verdict = toVerdict(decisions, threshold);
+        log.info('label: verdict', { subject: context.subject, decisions, verdict });
         const labelUri = verdict.label ? byLabel.get(verdict.label) : undefined;
         if (labelUri) {
           Tagging.set(message, labelUri, { index });

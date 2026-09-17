@@ -35,6 +35,22 @@ layer would take the slice with it and surface as `ServiceNotAvailable` far from
 **Space affinity.** Credentials are per space, so the model is too. An application-affinity model
 would have to choose a space's key arbitrarily.
 
+## The browser cannot call the vendor directly
+
+`api.typesafe.ai` returns no `access-control-allow-origin` for any origin and answers the CORS
+preflight with a 400, so a fetch from Composer fails before it leaves the tab — verified against
+every origin tried, including `null`. This is not a sandbox artefact: the vendor simply does not
+support browser callers.
+
+Two consequences:
+
+- **The endpoint is a setting**, defaulting to the vendor. A deployment points it at whatever
+  proxies for it, and a self-hosted or regional endpoint costs no code either way.
+- **The production fix is a server-side route** (EDGE), like the AI providers already have. Until
+  that exists, a browser deployment needs a proxy that adds the CORS headers — and, when the proxy
+  is on localhost, `access-control-allow-private-network: true` as well, or Chrome's Private
+  Network Access check blocks the request before it is sent.
+
 ## Not in scope
 
 No UI. The connector dialog is plugin-connector's, and there is nothing else to show — a decision

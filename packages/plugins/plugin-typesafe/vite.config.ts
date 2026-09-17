@@ -11,6 +11,9 @@ export default defineConfig({
     TypeSafePlugin: 'src/TypeSafePlugin.ts',
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
+    types: 'src/types/index.ts',
+    TypeSafeCapabilities: 'src/types/TypeSafeCapabilities.ts',
+    TypeSafeSettings: 'src/types/TypeSafeSettings.ts',
   },
   test: { node: true },
 });

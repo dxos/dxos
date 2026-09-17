@@ -13,4 +13,8 @@ Two contributions, no UI:
 The key is resolved per call, so connecting takes effect on the next question rather than after a
 restart, and disconnecting surfaces as a failed decision rather than a stale client.
 
+**The endpoint is configurable** (plugin settings), because the vendor's API sends no CORS headers:
+a browser cannot call `api.typesafe.ai` directly, so a deployment points this at a proxy until the
+call is routed through EDGE. See [docs/DESIGN.md](./docs/DESIGN.md).
+
 See [docs/DESIGN.md](./docs/DESIGN.md); the model itself lives in `@dxos/ai-typesafe`.

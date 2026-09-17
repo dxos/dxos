@@ -83,6 +83,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -91,6 +92,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
+    "@effect/vitest": "catalog:",
     "vitest": "catalog:"
   },
   "publishConfig": {
