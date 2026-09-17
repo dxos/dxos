@@ -46,9 +46,11 @@ The protocol supports partial replication:
 
 Positions reach a replica only from the position authority, and the replica treats them as final:
 
-- **Server swap.** Every response carries the serving store's `serverToken`. A token the client did not
-  record means the store was replaced or wiped, so the client drops every position in the namespace
-  and replays it from the start; local blocks are re-pushed and de-duplicated by `(actorId, sequence)`.
+- **Server swap.** Every response carries the serving store's `serverToken`. A token that differs from
+  the one the client recorded means the store was replaced or wiped, so the client drops every position
+  in the namespace and replays it from the start; local blocks are re-pushed and de-duplicated by
+  `(actorId, sequence)`. The first token a client sees over progress it already holds is only recorded:
+  whether that progress came from this store is settled by the rollback checks below.
 - **Server rollback.** A store that lost acknowledged rows keeps its token but re-issues their
   positions. The client notices when a position it is handed is already held by another local block,
   when a pushed block is placed at or below its pull cursor, or when its cursor is above the store's
