@@ -11,24 +11,24 @@ import type * as Skill from '@dxos/compute/Skill';
 import { invariant } from '@dxos/invariant';
 import { isTruthy } from '@dxos/util';
 
-export type CreateToolkitProps = {
-  toolkit?: OpaqueToolkit.Any;
+export type CreateToolkitProps<E = never, R = never> = {
+  toolkit?: OpaqueToolkit.Any<E, R>;
   skills?: readonly Skill.Skill[];
   /**
    * Self-contained with handlers toolkits.
    */
-  opaqueToolkits?: readonly OpaqueToolkit.Any[];
+  opaqueToolkits?: readonly OpaqueToolkit.Any<E, R>[];
 };
 
 /**
  * Build a combined toolkit from the skill tools and the provided toolkit.
  */
-export const createToolkit = ({
+export const createToolkit = <E = never, R = never>({
   toolkit: toolkitProp,
   skills = [],
   opaqueToolkits = [],
-}: CreateToolkitProps): Effect.Effect<
-  OpaqueToolkit.OpaqueToolkit,
+}: CreateToolkitProps<E, R>): Effect.Effect<
+  OpaqueToolkit.OpaqueToolkit<never, E, R>,
   AiToolNotFoundError,
   ToolResolverService | ToolExecutionService
 > =>
@@ -46,15 +46,9 @@ export const createToolkit = ({
     const duplicates = toolNames.filter((name, index) => toolNames.indexOf(name) !== index);
     invariant(duplicates.length === 0, `Duplicate tool names in session toolkit: ${duplicates.join(', ')}`);
     const mergedToolkit = Toolkit.merge(...toolkitDefs);
-    // The three handler layers are independent peers, but `OpaqueToolkit.Any` has to declare `any`
-    // requirements to be a constraint, so `mergeAll` cannot show the rule they do not feed each
-    // other. `provideMerge` yields the same merged context and additionally satisfies a dependency
-    // if one ever appears, so it is the safe reading of the same intent.
     const combinedHandlerLayer = Layer.succeedContext(skillToolHandler).pipe(
       Layer.provideMerge(toolkitProp?.layer ?? OpaqueToolkit.empty.layer),
       Layer.provideMerge(opaqueToolkit.layer),
     );
     return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer);
-    // `OpaqueToolkit.Any` carries `any` for E and R, so the merge widens them; the declared type is
-    // the narrower truth for every caller. TODO(wittjosiah): Thread E/R through instead.
-  }) as Effect.Effect<OpaqueToolkit.OpaqueToolkit, AiToolNotFoundError, ToolResolverService | ToolExecutionService>;
+  });

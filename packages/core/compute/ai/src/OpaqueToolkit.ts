@@ -23,10 +23,8 @@ export type TypeId = typeof TypeId;
 /**
  * What an opaque toolkit's layer provides, with the individual tool names erased.
  *
- * `Tool.Handler<any>` rather than `unknown`: the toolkit cannot name its tools statically, but it
- * only ever provides tool handlers. `unknown` is the top type, so it discharged every requirement
- * a consumer had, not just the handler ones, which is what made independent handler layers read
- * as though each fed the next.
+ * `Tool.Handler<any>` rather than `unknown`: as the top type, `unknown` discharges every
+ * requirement a consumer has, not just the handler ones.
  */
 export type Handlers = Tool.Handler<any>;
 
@@ -64,11 +62,11 @@ export interface OpaqueToolkit<TR = never, E = never, R = never> extends Pipeabl
  *
  * NOTE: Only use in place of `T extends OpaqueToolkit.Any`. Not suitable for standalone use.
  */
-export interface Any {
+export interface Any<E = any, R = any> {
   readonly [TypeId]: TypeId;
   readonly toolkit: Toolkit.Toolkit<any>;
-  readonly layer: Layer.Layer<Handlers, any, any>;
-  readonly handlers: Effect.Effect<Toolkit.WithHandler<any>, any, any>;
+  readonly layer: Layer.Layer<Handlers, E, R>;
+  readonly handlers: Effect.Effect<Toolkit.WithHandler<any>, E, R>;
 }
 
 export type InvocationRequirements<T extends Any> = T extends OpaqueToolkit<infer TR, infer _E, infer _R> ? TR : never;
