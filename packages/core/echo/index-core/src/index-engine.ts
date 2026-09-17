@@ -97,6 +97,20 @@ const convergenceKeyOf = (obj: IndexerObject): string | undefined => {
   return typeof convergenceKey === 'string' && convergenceKey.length > 0 ? convergenceKey : undefined;
 };
 
+/** A dependent index and the cursor name it tracks its progress under. */
+type DependentIndex = { indexName: string; index: Index };
+
+/** Whether two cursor sets describe the same position for every resource, whichever order they list them in. */
+const cursorsEqual = (a: readonly IndexCursor[], b: readonly IndexCursor[]): boolean => {
+  if (a.length !== b.length) {
+    return false;
+  }
+  const key = (cursor: IndexCursor) => JSON.stringify([cursor.spaceId, cursor.resourceId, cursor.cursor]);
+  const keysA = a.map(key).sort();
+  const keysB = b.map(key).sort();
+  return keysA.every((value, index) => value === keysB[index]);
+};
+
 /**
  * Cursor into indexable data-source.
  */
@@ -397,49 +411,33 @@ export class IndexEngine {
       });
 
       // Bodies first: a fresh cursor set (`objectData1`) is what backfills them on an upgraded
-      // database, and the same pass fills `objectMeta`'s normalized id columns.
-      const {
-        updated: updatedObjectData,
-        done: doneObjectData,
-        objects: objectDataObjects,
-      } = yield* this.#update(ctx, this.#objectDataIndex, dataSource, {
-        indexName: 'objectData1',
-        spaceId: opts.spaceId,
-        limit: opts.limit,
-        cursors: cursorsByIndex.get('objectData1') ?? [],
-      });
-      result.updated += updatedObjectData;
-      result.done = result.done && doneObjectData;
-      accumulateIndexingResult(result, objectDataObjects);
+      // database, and the same pass fills `objectMeta`'s normalized id columns. The reverse-reference
+      // name was bumped from `reverseRef2` so every object is re-presented and `propPathNormalized`
+      // filled.
+      const indexes: DependentIndex[] = [
+        { indexName: 'objectData1', index: this.#objectDataIndex },
+        { indexName: 'fts6', index: this.#ftsIndex },
+        { indexName: 'reverseRef3', index: this.#reverseRefIndex },
+      ];
+      const cursorSets = indexes.map((dependent) => cursorsByIndex.get(dependent.indexName) ?? []);
 
-      const {
-        updated: updatedFtsIndex,
-        done: doneFtsIndex,
-        objects: ftsObjects,
-      } = yield* this.#update(ctx, this.#ftsIndex, dataSource, {
-        indexName: 'fts6',
-        spaceId: opts.spaceId,
-        limit: opts.limit,
-        cursors: cursorsByIndex.get('fts6') ?? [],
-      });
-      result.updated += updatedFtsIndex;
-      result.done = result.done && doneFtsIndex;
-      accumulateIndexingResult(result, ftsObjects);
+      // In steady state every index has seen the same documents, so one read of the source and one
+      // metadata write serve all of them. During a backfill (one index behind the others) each index
+      // diffs against its own cursors and pays for its own pass.
+      const groups = cursorSets.every((cursors) => cursorsEqual(cursors, cursorSets[0]))
+        ? [{ indexes, cursors: cursorSets[0] }]
+        : indexes.map((dependent, position) => ({ indexes: [dependent], cursors: cursorSets[position] }));
 
-      const {
-        updated: updatedReverseRefIndex,
-        done: doneReverseRefIndex,
-        objects: reverseRefObjects,
-      } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
-        // Bumped from `reverseRef2` so every object is re-presented and `propPathNormalized` filled.
-        indexName: 'reverseRef3',
-        spaceId: opts.spaceId,
-        limit: opts.limit,
-        cursors: cursorsByIndex.get('reverseRef3') ?? [],
-      });
-      result.updated += updatedReverseRefIndex;
-      result.done = result.done && doneReverseRefIndex;
-      accumulateIndexingResult(result, reverseRefObjects);
+      for (const group of groups) {
+        const { updated, done, objects } = yield* this.#update(ctx, group.indexes, dataSource, {
+          spaceId: opts.spaceId,
+          limit: opts.limit,
+          cursors: group.cursors,
+        });
+        result.updated += updated;
+        result.done = result.done && done;
+        accumulateIndexingResult(result, objects);
+      }
 
       return result as IndexingResult;
     }).pipe(
@@ -452,7 +450,7 @@ export class IndexEngine {
   }
 
   /**
-   * Update a dependent index that requires recordId enrichment.
+   * Update dependent indexes that share one cursor set, with recordId enrichment.
    * This method:
    * 1. Gets changed objects from the source.
    * 2. Ensures those objects exist in EntityMetaIndex.
@@ -462,9 +460,9 @@ export class IndexEngine {
    */
   #update(
     ctx: Context,
-    index: Index,
+    indexes: readonly DependentIndex[],
     source: IndexDataSource,
-    opts: { indexName: string; spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
+    opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
   ): Effect.Effect<
     { updated: number; done: boolean; objects: readonly IndexerObject[] },
     SqlError.SqlError,
@@ -512,15 +510,19 @@ export class IndexEngine {
 
           yield* this.#convergenceKeyIntents.record(intents);
 
-          yield* index.update(objects);
+          for (const dependent of indexes) {
+            yield* dependent.index.update(objects);
+          }
           yield* this.#tracker.updateCursors(
-            updatedCursors.map((_): IndexCursor => ({
-              indexName: opts.indexName,
-              spaceId: _.spaceId,
-              sourceName: source.sourceName,
-              resourceId: _.resourceId,
-              cursor: _.cursor,
-            })),
+            indexes.flatMap((dependent) =>
+              updatedCursors.map((_): IndexCursor => ({
+                indexName: dependent.indexName,
+                spaceId: _.spaceId,
+                sourceName: source.sourceName,
+                resourceId: _.resourceId,
+                cursor: _.cursor,
+              })),
+            ),
           );
           return { updated: objects.length, done: false, objects };
         }),

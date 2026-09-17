@@ -504,9 +504,9 @@ What landed, and where it departs from the proposal above.
   cursors are empty, so every document and feed block is re-presented through it and
   `objectMeta`'s normalized id columns fill in the same pass. The reverse-reference index name
   bumped `reverseRef2` to `reverseRef3` for `propPathNormalized`, with tracker migration 0004
-  dropping the orphaned rows. Cost: `IndexEngine.#update` runs `EntityMetaIndex.update` once per
-  dependent index, so an object is now written to `objectMeta` three times per pass instead of
-  two. Sharing one batch across indexes with identical cursors is the obvious follow-up.
+  dropping the orphaned rows. `IndexEngine.update` reads the source once and writes `objectMeta`
+  once for all three dependent indexes when their cursor sets agree (the steady state); only while
+  one index lags, as during this backfill, does each diff against its own cursors in its own pass.
 - **The query gate** is `QueryServiceProps.hasCompleteBodies`; `QueryServiceImpl` awaits
   `updateIndexes()` before a query's first execution while it is false and caches `true` once seen.
 - **The executor keeps both paths for this release.** `QueryExecutorMode` is `sql` (default) or

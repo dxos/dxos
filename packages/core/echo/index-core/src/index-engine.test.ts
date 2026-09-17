@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
@@ -142,8 +143,8 @@ describe('IndexEngine', () => {
 
       // First update.
       const { updated } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      // One count per dependent pass: objectData, FTS and reverseRef.
-      expect(updated).toBe(3);
+      // The three dependent indexes share one pass when their cursors agree, so an object counts once.
+      expect(updated).toBe(1);
 
       // Verify using the SAME index instance.
       const results1 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
@@ -176,7 +177,7 @@ describe('IndexEngine', () => {
 
       // Second update.
       const { updated: updated2 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      expect(updated2).toBe(3);
+      expect(updated2).toBe(1);
 
       // Verify update.
       const results2 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
@@ -473,6 +474,50 @@ describe('IndexEngine', () => {
       const cursors = yield* tracker.queryCursors({ indexName: 'objectData1' });
       expect(cursors.map((cursor) => cursor.resourceId)).toEqual(['doc-1']);
       expect(yield* indexEngine.hasCompleteBodies()).toBe(true);
+    }, Effect.provide(TestLayer)),
+  );
+
+  // An upgraded database: the text and reverse-reference indexes have seen every document, the body
+  // store has seen none. The lagging index must be backfilled without re-presenting the documents
+  // to the indexes that are current, and the three converge on one shared pass afterwards.
+  it.effect(
+    'backfills a lagging index from its own cursors and then shares one pass',
+    Effect.fnUntraced(function* () {
+      const { indexEngine, tracker } = yield* setup;
+      const dataSource = new MockIndexDataSource();
+      const spaceId = SpaceId.random();
+      dataSource.push([
+        {
+          spaceId,
+          documentId: 'doc-1',
+          queueId: null,
+          queueNamespace: null,
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Hello' },
+        },
+      ]);
+      // Bring every index current, then forget the body store's progress, as an upgrade leaves it.
+      yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM indexCursor WHERE indexName = 'objectData1'`;
+      yield* sql`DELETE FROM objectData`;
+      expect(yield* indexEngine.hasCompleteBodies()).toBe(false);
+
+      const ftsRowsBefore = yield* sql<{ n: number }>`SELECT count(*) AS n FROM ftsIndex`;
+      const backfill = yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+      expect(backfill.updated).toBe(1);
+      expect(yield* indexEngine.hasCompleteBodies()).toBe(true);
+      // The current indexes were not touched by the backfill pass.
+      const ftsRowsAfter = yield* sql<{ n: number }>`SELECT count(*) AS n FROM ftsIndex`;
+      expect(ftsRowsAfter[0].n).toBe(ftsRowsBefore[0].n);
+
+      const cursors = yield* tracker.queryCursorsBySource({ sourceName: dataSource.sourceName });
+      expect([...cursors.keys()].sort()).toEqual(['fts6', 'objectData1', 'reverseRef3']);
+      const converged = yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+      expect(converged.updated).toBe(0);
+      expect(converged.done).toBe(true);
     }, Effect.provide(TestLayer)),
   );
 
