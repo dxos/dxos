@@ -96,7 +96,7 @@ export const closeLineReader = (): void => {
  */
 export const multilinePrompt = (
   options: MultilinePromptOptions = {},
-): Effect.Effect<MultilinePromptResult, Error, never> => {
+): Effect.Effect<MultilinePromptResult, CliError, never> => {
   const { primaryPrompt = '> ', continuationPrompt = '  ', exitCommands = ['quit', 'exit', 'q'] } = options;
 
   return Effect.gen(function* () {
