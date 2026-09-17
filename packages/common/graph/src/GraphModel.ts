@@ -588,43 +588,23 @@ export abstract class AbstractGraphModel<
   }
 
   /**
-   * Ids below `roots` that nothing outside the roots and the result still points at, so releasing them
-   * cannot empty a view held elsewhere; the roots themselves are excluded.
+   * Ids reachable from `id` along `type` edges, excluding `id` itself — the subgraph a caller
+   * unloading a branch wants to hand to {@link AbstractGraphModel.release}.
    */
-  subgraph(roots: Iterable<string>): string[] {
-    const excluded = new Set(roots);
-    const collected = new Set<string>();
-    const queue = [...excluded];
-    for (let index = 0; index < queue.length; index++) {
-      for (const { target } of this.outgoing(queue[index])) {
-        if (!excluded.has(target) && !collected.has(target)) {
-          collected.add(target);
-          queue.push(target);
+  descendants(id: string, type?: string): string[] {
+    const seen = new Set<string>();
+    const queue = [id];
+    while (queue.length > 0) {
+      for (const node of this.neighbors(queue.shift()!, type)) {
+        if (!seen.has(node.id)) {
+          seen.add(node.id);
+          queue.push(node.id);
         }
       }
     }
 
-    this.#dropHeldFromOutside(collected, excluded);
-    return [...collected];
-  }
-
-  #dropHeldFromOutside(collected: Set<string>, excluded: ReadonlySet<string>): void {
-    const pending = [...collected];
-    while (pending.length > 0) {
-      const candidate = pending.pop();
-      if (
-        candidate !== undefined &&
-        collected.has(candidate) &&
-        this.incoming(candidate).some(({ source }) => !excluded.has(source) && !collected.has(source))
-      ) {
-        collected.delete(candidate);
-        for (const { target } of this.outgoing(candidate)) {
-          if (collected.has(target)) {
-            pending.push(target);
-          }
-        }
-      }
-    }
+    seen.delete(id);
+    return [...seen];
   }
 
   removeNodes(ids: string[], options?: { detachEdges?: boolean }): Model {

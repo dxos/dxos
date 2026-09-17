@@ -52,9 +52,16 @@ export type NodeLike = { readonly id: string };
 
 /**
  * The minimum a connector-produced node argument must expose: an id (qualified against the node it was
- * produced from) and the open properties record the builder reads `position` from when ordering siblings.
+ * produced from) and the open properties record the builder reads `position` from when ordering siblings,
+ * and {@link RetainDepthProperty} from when collecting.
  */
 export type NodeArgLike = { readonly id: string; readonly properties?: Record<string, any> };
+
+/**
+ * The property a node declares its default retention depth in: how many structural levels below it stay
+ * loaded when no {@link Retention} asks for more. A node that declares none keeps everything below it.
+ */
+export const RetainDepthProperty = 'retainDepth';
 
 /**
  * Produces the nodes to attach to `node`, reactively — the atom is re-read whenever anything it depends
@@ -131,14 +138,17 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
    * unloading a subgraph it expects to rebuild from source.
    */
   release(ids: readonly string[]): void;
-  /** Ids below `roots` that nothing outside them holds, which {@link Store.release} can drop without emptying another view. */
-  subgraph(roots: Iterable<string>): readonly string[];
+  /** The edges leaving `id`, read without subscribing. */
+  outgoing(id: string): readonly Edge[];
 }
 
-/** Names the subgraphs the builder may unload; the implementor derives it from state it already keeps. */
+/** A node to keep loaded with its structural descendants to `depth` levels, or all of them when absent. */
+export type Region = { readonly id: string; readonly depth?: number };
+
+/** Names nodes the builder must keep loaded; the implementor derives it from state it already keeps. */
 export interface Retention {
-  /** Roots whose subgraphs may be unloaded, collected whenever this changes; the roots themselves stay. */
-  readonly evictable: Atom.Atom<readonly string[]>;
+  /** Collected whenever this changes; across every installed retention the deepest ask for a node wins. */
+  readonly retained: Atom.Atom<readonly Region[]>;
 }
 
 /**
@@ -199,6 +209,11 @@ export type Props<
    * Defaults to treating every re-read as a change, which is correct but does redundant work.
    */
   unchanged?: (prev: readonly Arg[], next: readonly Arg[]) => boolean;
+  /**
+   * Whether an edge of this relation key places its target a level below its source. Targets of other
+   * relations stay loaded exactly as long as their source. Defaults to every relation.
+   */
+  structural?: (relation: string) => boolean;
 };
 
 export type TraverseOptions<Node extends NodeLike, Rel> = {
@@ -258,9 +273,12 @@ export class GraphBuilder<
   readonly _connectorPreviousArgs = new Map<string, Arg[]>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
-  _retention?: Retention;
+  _retentions: readonly Retention[] = [];
   _unsubscribeRetention?: CleanupFn;
-  _evicted: ReadonlySet<string> = new Set();
+  /** The regions the last collection ran for, normalized; collection is skipped while they hold. */
+  _collectedRegions?: string;
+  /** Node id -> the depth it declared in {@link RetainDepthProperty}. */
+  readonly _retainDepths = new Map<string, number>();
   readonly _released = new Set<string>();
   _collectScheduled = false;
   _collectPromise: Promise<void> = Promise.resolve();
@@ -283,13 +301,23 @@ export class GraphBuilder<
   readonly _relationKey: (relation: Rel | undefined) => string;
   readonly _decorateNode: (node: Arg, extension?: Extension<Node, Arg, Rel, Meta>) => Arg;
   readonly _unchanged: (prev: readonly Arg[], next: readonly Arg[]) => boolean;
+  readonly _structural: (relation: string) => boolean;
 
-  constructor({ registry, store, relationKey, inline, decorateNode, unchanged }: Props<Node, Arg, Rel, Meta, G>) {
+  constructor({
+    registry,
+    store,
+    relationKey,
+    inline,
+    decorateNode,
+    unchanged,
+    structural,
+  }: Props<Node, Arg, Rel, Meta, G>) {
     this._registry = registry ?? Registry.make();
     this._relationKey = relationKey;
     this._inline = inline ?? defaultInline;
     this._decorateNode = decorateNode ?? ((node) => node);
     this._unchanged = unchanged ?? (() => false);
+    this._structural = structural ?? (() => true);
     this._store = store(
       {
         onExpand: (id, relation) => this._onExpand(id, relation),
@@ -364,8 +392,12 @@ export class GraphBuilder<
       true,
     );
     this._store.addNodes(nodes);
-    for (const nodeId of [...ids, ...currentInlineIds]) {
-      this._released.delete(nodeId);
+    for (const node of [...nodes, ...nodes.flatMap((node) => this._allInline(node))]) {
+      this._released.delete(node.id);
+      const depth = node.properties?.[RetainDepthProperty];
+      if (typeof depth === 'number') {
+        this._retainDepths.set(node.id, depth);
+      }
     }
     this._store.addEdges(nodes.map((node) => ({ source: id, target: node.id, relation })));
     if (ids.length > 0) {
@@ -408,32 +440,71 @@ export class GraphBuilder<
   }
 
   _collect(): void {
-    if (!this._retention) {
+    const asked = new Map<string, number>();
+    for (const retention of this._retentions) {
+      for (const { id, depth = Infinity } of this._registry.get(retention.retained)) {
+        asked.set(id, Math.max(asked.get(id) ?? -1, depth));
+      }
+    }
+    const regions = [...asked]
+      .map(([id, depth]) => primaryKey(id, String(depth)))
+      .sort()
+      .join(PRIMARY);
+    if (regions === this._collectedRegions) {
       return;
     }
+    this._collectedRegions = regions;
 
-    const roots = new Set(this._registry.get(this._retention.evictable).filter((id) => id !== GraphNode.RootId));
-    const previous = this._evicted;
-    if (roots.size === previous.size && [...roots].every((id) => previous.has(id))) {
-      return;
-    }
-
-    const released = new Set(this._store.subgraph(roots));
-    this._keepInlineOfRetainedProducers(released, roots);
-
+    const released = this._unretained(asked);
     if (released.size > 0) {
       release(this, [...released]);
     }
-    this._evicted = roots;
   }
 
-  _keepInlineOfRetainedProducers(released: Set<string>, roots: ReadonlySet<string>): void {
+  /**
+   * Walks the graph from the root carrying two budgets per node: what declarations leave it, and what a
+   * retention granted it, which declarations below cannot cut. A node with neither left is unretained,
+   * and so is everything it alone leads to.
+   */
+  _unretained(asked: ReadonlyMap<string, number>): Set<string> {
+    const budgets = new Map<string, { own: number; granted: number }>([
+      [GraphNode.RootId, { own: Infinity, granted: -1 }],
+    ]);
+    const pending = [GraphNode.RootId];
+    while (pending.length > 0) {
+      const id = pending.pop()!;
+      const { own, granted } = budgets.get(id)!;
+      const retained = Math.max(own, granted) >= 0;
+      for (const { target, relation } of this._store.outgoing(id)) {
+        const step = this._structural(relation) ? 1 : 0;
+        const next = retained
+          ? {
+              own: Math.max(-1, Math.min(own - step, this._retainDepths.get(target) ?? Infinity)),
+              granted: Math.max(-1, granted - step, asked.get(target) ?? -1),
+            }
+          : { own: -1, granted: -1 };
+        const current = budgets.get(target);
+        if (!current || next.own > current.own || next.granted > current.granted) {
+          budgets.set(target, {
+            own: Math.max(next.own, current?.own ?? -1),
+            granted: Math.max(next.granted, current?.granted ?? -1),
+          });
+          pending.push(target);
+        }
+      }
+    }
+
+    const released = new Set(
+      [...budgets].filter(([, { own, granted }]) => Math.max(own, granted) < 0).map(([id]) => id),
+    );
+    // A retained connector whose own outputs all stay would never re-emit inline children released from under it.
     for (const [key, inline] of this._connectorPreviousInlineIds) {
-      const producer = relationFromConnectorKey(key).id;
-      if (!roots.has(producer) && !released.has(producer)) {
+      const outputs = this._connectorPrevious.get(key) ?? [];
+      if (!released.has(relationFromConnectorKey(key).id) && outputs.every((id) => !released.has(id))) {
         inline.forEach((id) => released.delete(id));
       }
     }
+    return released;
   }
 
   /**
@@ -548,6 +619,7 @@ export class GraphBuilder<
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
       this._nodeExtensions.delete(id);
+      this._retainDepths.delete(id);
       const forNode = this._subscriptions.get(id);
       if (forNode) {
         this._subscriptions.delete(id);
@@ -583,7 +655,7 @@ export const makeModel = (options?: GraphModel.Options<ModelNode, ModelEdge>): M
 
 export type ModelProps<Meta = unknown> = Pick<
   Props<ModelNode, ModelNodeArg, string, Meta, Model>,
-  'registry' | 'decorateNode' | 'unchanged'
+  'registry' | 'decorateNode' | 'unchanged' | 'structural'
 > & {
   /** The graph to build into; a fresh one holding only the root by default. */
   model?: Model;
@@ -742,7 +814,8 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     constructNode: ({ nodes: _, ...node }) => Option.some(node),
     batch: (fn) => model.batch(fn),
     release: (ids) => model.release(ids),
-    subgraph: (roots) => model.subgraph(roots),
+    outgoing: (id) =>
+      model.outgoing(id).map((edge) => ({ source: edge.source, target: edge.target, relation: edge.type ?? 'child' })),
   };
 };
 
@@ -841,14 +914,18 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   builder._store.release(ids);
 };
 
-/** Installs the retention port, or removes it with `undefined`. */
-export const setRetention = (builder: Any, retention: Retention | undefined): void => {
+/**
+ * Replaces the installed retentions. With none installed nothing is collected, since a host that keeps no
+ * record of what is on screen cannot say what must stay.
+ */
+export const setRetention = (builder: Any, retentions: readonly Retention[]): void => {
   builder._unsubscribeRetention?.();
-  builder._retention = retention;
-  builder._evicted = new Set();
-  builder._unsubscribeRetention = retention
-    ? builder._registry.subscribe(retention.evictable, () => builder._collectOnOwnTask(), { immediate: true })
-    : undefined;
+  builder._retentions = retentions;
+  builder._collectedRegions = undefined;
+  const unsubscribes = retentions.map((retention) =>
+    builder._registry.subscribe(retention.retained, () => builder._collectOnOwnTask(), { immediate: true }),
+  );
+  builder._unsubscribeRetention = () => unsubscribes.forEach((unsubscribe) => unsubscribe());
 };
 
 /**

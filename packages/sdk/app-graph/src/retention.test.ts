@@ -122,7 +122,8 @@ describe('retention', () => {
     expect(registry.getNodes().has(graph.node(child))).to.be.true;
 
     // Releasing the subgraph cancels the mounts; the registry drops the atoms.
-    GraphBuilder.release(builder, [root, ...Graph.subgraph(graph, [root])]);
+    const internal = Graph.getInternal(graph);
+    GraphBuilder.release(builder, [root, ...internal._model.descendants(root, Graph.relationKey('child'))]);
     await settle();
     expect(registry.getNodes().has(graph.node(child))).to.be.false;
     expect(registry.getNodes().size).to.be.lessThan(pinned);
@@ -155,9 +156,10 @@ describe('retention', () => {
     }
     expect(counts(harness).modelNodes).to.equal(baseline.modelNodes + WORKSPACES * CHILDREN);
 
+    const internal = Graph.getInternal(graph);
     for (const id of workspaceIds()) {
       const root = `${GraphNode.RootId}/${id}`;
-      GraphBuilder.release(builder, Graph.subgraph(graph, [root]));
+      GraphBuilder.release(builder, internal._model.descendants(root, Graph.relationKey('child')));
     }
     await settle();
 
@@ -178,7 +180,8 @@ describe('retention', () => {
     const before = registry.get(graph.connections(root, 'child')).map(({ id }) => id);
     expect(before).to.have.length(CHILDREN);
 
-    GraphBuilder.release(builder, [root, ...Graph.subgraph(graph, [root])]);
+    const internal = Graph.getInternal(graph);
+    GraphBuilder.release(builder, [root, ...internal._model.descendants(root, Graph.relationKey('child'))]);
     await settle();
     expect(registry.get(graph.connections(root, 'child'))).to.deep.equal([]);
 
@@ -204,8 +207,9 @@ describe('retention', () => {
     registry.get(graph.connections(retained, 'child'));
     notifications = 0;
 
+    const internal = Graph.getInternal(graph);
     const released = `${GraphNode.RootId}/w0`;
-    GraphBuilder.release(builder, [released, ...Graph.subgraph(graph, [released])]);
+    GraphBuilder.release(builder, [released, ...internal._model.descendants(released, Graph.relationKey('child'))]);
     await settle();
 
     expect(notifications).to.equal(0);
