@@ -1586,6 +1586,9 @@ export class EntityManager implements IDatabaseBinding {
           newDoc.links[objectId] = new A.RawString(url);
         });
       })
+      .catch((error: unknown) => {
+        log('object not bound: the database closed before its document was created', { objectId, err: error });
+      })
       .finally(() => {
         this._pendingDocumentCreations.delete(objectId);
       });
@@ -1595,7 +1598,9 @@ export class EntityManager implements IDatabaseBinding {
     return spaceDocHandle;
   }
 
+  /** Throws if a document could not be created, since its object would otherwise never reach the host. */
   private async _waitForPendingCreations(): Promise<void> {
+    await this._repoProxy.flushCreations();
     await Promise.all([...this._pendingDocumentCreations.values()]);
   }
 
