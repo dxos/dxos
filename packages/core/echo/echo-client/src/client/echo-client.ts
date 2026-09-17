@@ -17,6 +17,9 @@ import { HypergraphImpl } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
 
+/** How long an index hit waits for this client's space root to link it before it is dropped. */
+const ROOT_LINK_WAIT_TIMEOUT = 1_000;
+
 export type EchoClientProps = {};
 
 export type ConnectToServiceProps = {
@@ -249,7 +252,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db.getObjectDocumentId(objectId);
+    const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
     if (objectDocId !== documentId) {
       log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
       return undefined;
@@ -260,6 +263,29 @@ export class EchoClient extends Resource {
     return db._loadObjectById(objectId, {
       allowDeleted: true,
       diskOnly: true,
+    });
+  }
+
+  /**
+   * The document the space root routes `objectId` to, once this client's replica of the root links it.
+   * The index can learn of an object from the host's replica one sync batch before this one does.
+   */
+  private _waitForObjectLink(db: DatabaseImpl, objectId: string): Promise<string | undefined> {
+    return new Promise((resolve) => {
+      const settle = () => {
+        clearTimeout(timeout);
+        unsubscribe();
+        resolve(db.getObjectDocumentId(objectId));
+      };
+      const rootHandle = db._entityManager.getSpaceRootDocHandle();
+      const onChange = () => {
+        if (db.getObjectDocumentId(objectId) !== undefined) {
+          settle();
+        }
+      };
+      const unsubscribe = () => rootHandle.off('change', onChange);
+      const timeout = setTimeout(settle, ROOT_LINK_WAIT_TIMEOUT);
+      rootHandle.on('change', onChange);
     });
   }
 }
