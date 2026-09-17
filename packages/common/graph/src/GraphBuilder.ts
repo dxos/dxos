@@ -52,16 +52,9 @@ export type NodeLike = { readonly id: string };
 
 /**
  * The minimum a connector-produced node argument must expose: an id (qualified against the node it was
- * produced from) and the open properties record the builder reads `position` from when ordering siblings,
- * and {@link RetainDepthProperty} from when collecting.
+ * produced from) and the open properties record the builder reads `position` from when ordering siblings.
  */
 export type NodeArgLike = { readonly id: string; readonly properties?: Record<string, any> };
-
-/**
- * The property a node declares its default retention depth in: how many structural levels below it stay
- * loaded when no {@link Retention} asks for more. A node that declares none adds no limit of its own.
- */
-export const RetainDepthProperty = 'retainDepth';
 
 /**
  * Produces the nodes to attach to `node`, reactively — the atom is re-read whenever anything it depends
@@ -144,7 +137,10 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
 /** A node to keep loaded with its structural descendants to `depth` levels, or all of them when absent. */
 export type Region = { readonly id: string; readonly depth?: number };
 
-/** Names nodes the builder must keep loaded; the implementor derives it from state it already keeps. */
+/**
+ * Names nodes the builder must keep loaded; the implementor derives it from state it already keeps. Once any
+ * retention is installed, whatever none of them reaches is released.
+ */
 export interface Retention {
   /** Collected whenever this changes; across every installed retention the deepest ask for a node wins. */
   readonly retained: Atom.Atom<readonly Region[]>;
@@ -276,8 +272,6 @@ export class GraphBuilder<
   _unsubscribeRetention?: CleanupFn;
   /** The regions the last collection ran for, normalized; collection is skipped while they hold. */
   _collectedRegions?: string;
-  /** Node id -> the depth it declared in {@link RetainDepthProperty}. */
-  readonly _retainDepths = new Map<string, number>();
   readonly _released = new Set<string>();
   _collectScheduled = false;
   _collectPromise: Promise<void> = Promise.resolve();
@@ -391,12 +385,8 @@ export class GraphBuilder<
       true,
     );
     this._store.addNodes(nodes);
-    for (const node of [...nodes, ...nodes.flatMap((node) => this._allInline(node))]) {
-      this._released.delete(node.id);
-      const depth = node.properties?.[RetainDepthProperty];
-      if (typeof depth === 'number') {
-        this._retainDepths.set(node.id, depth);
-      }
+    for (const nodeId of [...ids, ...currentInlineIds]) {
+      this._released.delete(nodeId);
     }
     this._store.addEdges(nodes.map((node) => ({ source: id, target: node.id, relation })));
     if (ids.length > 0) {
@@ -461,41 +451,28 @@ export class GraphBuilder<
   }
 
   /**
-   * Walks the graph from the root carrying two budgets per node: what declarations leave it, and what a
-   * retention granted it, which declarations below cannot cut. A node with neither left is unretained,
-   * and so is everything it alone leads to.
+   * Walks the graph from the root, which always stays, carrying how many structural levels each node's
+   * retention leaves below it. A node reached with none left is unretained, and so is everything it alone
+   * leads to.
    */
   _unretained(asked: ReadonlyMap<string, number>): Set<string> {
-    const budgets = new Map<string, { own: number; granted: number }>([
-      [GraphNode.RootId, { own: Infinity, granted: asked.get(GraphNode.RootId) ?? -1 }],
-    ]);
+    const budgets = new Map([[GraphNode.RootId, Math.max(0, asked.get(GraphNode.RootId) ?? 0)]]);
     const pending = [GraphNode.RootId];
     while (pending.length > 0) {
       const id = pending.pop()!;
-      const { own, granted } = budgets.get(id)!;
-      const retained = Math.max(own, granted) >= 0;
+      const budget = budgets.get(id)!;
       for (const { target, relation } of this._store.outgoing(id)) {
         const step = this._structural(relation) ? 1 : 0;
-        const next = retained
-          ? {
-              own: Math.max(-1, Math.min(own - step, this._retainDepths.get(target) ?? Infinity)),
-              granted: Math.max(-1, granted - step, asked.get(target) ?? -1),
-            }
-          : { own: -1, granted: -1 };
+        const next = budget < 0 ? -1 : Math.max(-1, budget - step, asked.get(target) ?? -1);
         const current = budgets.get(target);
-        if (!current || next.own > current.own || next.granted > current.granted) {
-          budgets.set(target, {
-            own: Math.max(next.own, current?.own ?? -1),
-            granted: Math.max(next.granted, current?.granted ?? -1),
-          });
+        if (current === undefined || next > current) {
+          budgets.set(target, next);
           pending.push(target);
         }
       }
     }
 
-    const released = new Set(
-      [...budgets].filter(([, { own, granted }]) => Math.max(own, granted) < 0).map(([id]) => id),
-    );
+    const released = new Set([...budgets].filter(([, budget]) => budget < 0).map(([id]) => id));
     // A retained connector whose own outputs all stay would never re-emit inline children released from under it.
     let kept = true;
     while (kept) {
@@ -624,7 +601,6 @@ export class GraphBuilder<
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
       this._nodeExtensions.delete(id);
-      this._retainDepths.delete(id);
       const forNode = this._subscriptions.get(id);
       if (forNode) {
         this._subscriptions.delete(id);

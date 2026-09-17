@@ -304,7 +304,6 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 // Named (not namespace) re-export: this module already exports its own `GraphBuilder` class above.
 export {
   type Region,
-  RetainDepthProperty,
   type Retention,
   addExtension,
   destroy,

@@ -777,14 +777,7 @@ describe('GraphBuilder', () => {
             GraphBuilder.createExtension({
               id: 'workspaces',
               match: GraphNodeMatcher.whenNodeType(Node.RootType),
-              connector: () =>
-                Effect.succeed(
-                  ['w0', 'w1'].map((id) => ({
-                    id,
-                    type: EXAMPLE_TYPE,
-                    properties: { [GraphBuilder.RetainDepthProperty]: 0 },
-                  })),
-                ),
+              connector: () => Effect.succeed(['w0', 'w1'].map((id) => ({ id, type: EXAMPLE_TYPE }))),
             }),
           ),
           ...Effect.runSync(
@@ -809,7 +802,14 @@ describe('GraphBuilder', () => {
           await GraphBuilder.flush(builder);
         }
 
-        GraphBuilder.setRetention(builder, [{ retained: Atom.make([{ id: 'root/w0', depth: 1 }]) }]);
+        GraphBuilder.setRetention(builder, [
+          {
+            retained: Atom.make([
+              { id: GraphNode.RootId, depth: 1 },
+              { id: 'root/w0', depth: 1 },
+            ]),
+          },
+        ]);
         await GraphBuilder.flush(builder);
 
         const present = (id: string) => Option.isSome(Graph.getNode(graph, id));

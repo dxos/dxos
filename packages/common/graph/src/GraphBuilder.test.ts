@@ -349,8 +349,8 @@ const scheduleOnMacrotasks = (builder: GraphBuilder.Any) => {
 };
 
 describe('retention', () => {
-  // root → w0, w1 (each declaring `workspaceDepth`) → c0, c1 → g; each workspace has action `a`, each `c0` companion `k`.
-  const tree = ({ workspaceDepth, nested }: { workspaceDepth?: number; nested?: number } = {}) => {
+  // root (action `ra`, companion `rk`) → w0, w1 (action `a`) → c0 (companion `k`), c1 → g.
+  const tree = () => {
     const harness = setup({ structural: (relation) => relation === 'child' });
     const produce = (relation: string, nodes: (id: string) => GraphBuilder.ModelNodeArg[]) =>
       GraphBuilder.addExtension(harness.builder, {
@@ -359,23 +359,12 @@ describe('retention', () => {
         connector: (node) =>
           Atom.make((get) => Option.match(get(node), { onNone: () => [], onSome: (source) => nodes(source.id) })),
       });
-    const depth = (value?: number) =>
-      value === undefined ? {} : { properties: { [GraphBuilder.RetainDepthProperty]: value } };
-    const segments = (id: string) => id.split('/').length;
+    const depth = (id: string) => id.split('/').length;
     produce('child', (id) =>
-      id === GraphNode.RootId
-        ? [
-            { id: 'w0', ...depth(workspaceDepth) },
-            { id: 'w1', ...depth(workspaceDepth) },
-          ]
-        : segments(id) === 2
-          ? [{ id: 'c0', ...depth(nested) }, { id: 'c1' }]
-          : segments(id) === 3
-            ? [{ id: 'g' }]
-            : [],
+      depth(id) === 1 ? [{ id: 'w0' }, { id: 'w1' }] : depth(id) < 4 ? [{ id: 'c0' }, { id: 'c1' }] : [],
     );
-    produce('action', (id) => (segments(id) === 2 ? [{ id: 'a' }] : []));
-    produce('companion', (id) => (id.endsWith('/c0') ? [{ id: 'k' }] : []));
+    produce('action', (id) => (depth(id) === 1 ? [{ id: 'ra' }] : depth(id) === 2 ? [{ id: 'a' }] : []));
+    produce('companion', (id) => (depth(id) === 1 ? [{ id: 'rk' }] : id.endsWith('/c0') ? [{ id: 'k' }] : []));
     return harness;
   };
 
@@ -388,8 +377,8 @@ describe('retention', () => {
     }
   };
 
-  const loaded = async (options?: Parameters<typeof tree>[0]) => {
-    const harness = tree(options);
+  const loaded = async () => {
+    const harness = tree();
     await expand(harness, [
       GraphNode.RootId,
       'root/w0',
@@ -412,88 +401,76 @@ describe('retention', () => {
     return { ...harness, retain, present };
   };
 
-  test('a node that declares no depth keeps everything below it', async () => {
-    const { retain, present } = await loaded();
-    await retain([]);
-    expect(present('root/w0/c0/g')).to.be.true;
-    expect(present('root/w1/c1/g')).to.be.true;
-  });
-
   test('nothing is collected while no retention is installed', async () => {
-    const { builder, present } = await loaded({ workspaceDepth: 0 });
+    const { builder, present } = await loaded();
     GraphBuilder.setRetention(builder, []);
     await GraphBuilder.flush(builder);
-    expect(present('root/w0/c0')).to.be.true;
+    expect(present('root/w1/c0/c0')).to.be.true;
   });
 
-  test('a declared depth releases below it and keeps the declaring node and its actions', async () => {
-    const { builder, retain, present, children } = await loaded({ workspaceDepth: 0 });
-    await retain([{ id: 'root/w0' }]);
+  test('what no retention reaches is released, and the root keeps its actions and companions', async () => {
+    const { builder, retain, present } = await loaded();
+    await retain([]);
 
-    expect(children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
-    expect(present('root/w1')).to.be.true;
-    expect(present('root/w1/a')).to.be.true;
-    expect(present('root/w1/c0')).to.be.false;
-    expect(present('root/w1/c0/k')).to.be.false;
-    expect(GraphBuilder.wasReleased(builder, 'root/w1/c0')).to.be.true;
-    expect(GraphBuilder.wasReleased(builder, 'root/w0/c0')).to.be.false;
+    expect(present('root/ra')).to.be.true;
+    expect(present('root/rk')).to.be.true;
+    expect(present('root/w0')).to.be.false;
+    expect(GraphBuilder.wasReleased(builder, 'root/w0/c0')).to.be.true;
   });
 
   test('depth counts structural levels, and targets of other relations go with their source', async () => {
-    const { retain, present } = await loaded({ workspaceDepth: 0 });
-    await retain([{ id: 'root/w1', depth: 1 }]);
+    const { retain, present } = await loaded();
+    await retain([
+      { id: GraphNode.RootId, depth: 1 },
+      { id: 'root/w1', depth: 1 },
+    ]);
 
-    expect(present('root/w1/c0')).to.be.true;
+    expect(present('root/w0')).to.be.true;
+    expect(present('root/w0/a')).to.be.true;
+    expect(present('root/w0/c0')).to.be.false;
     expect(present('root/w1/c0/k')).to.be.true;
-    expect(present('root/w1/c0/g')).to.be.false;
+    expect(present('root/w1/c0/c0')).to.be.false;
   });
 
   test('the deepest ask across retentions wins', async () => {
-    const { retain, present } = await loaded({ workspaceDepth: 0 });
-    await retain([{ id: 'root/w1', depth: 1 }], [{ id: 'root/w1' }], [{ id: 'root/w1', depth: 0 }]);
-    expect(present('root/w1/c0/g')).to.be.true;
-  });
-
-  test('a declaration below a retained node does not cut what the retention asked for', async () => {
-    const { retain, present } = await loaded({ workspaceDepth: 0, nested: 0 });
-    await retain([{ id: 'root/w0' }]);
-    expect(present('root/w0/c0/g')).to.be.true;
-    expect(present('root/w1/c0')).to.be.false;
-  });
-
-  test('a retention may ask for the root like any other node', async () => {
-    const { retain, present } = await loaded({ workspaceDepth: 0 });
-    await retain([{ id: GraphNode.RootId, depth: 2 }]);
-    expect(present('root/w1/c0')).to.be.true;
-    expect(present('root/w1/c0/g')).to.be.false;
+    const { retain, present } = await loaded();
+    await retain(
+      [{ id: 'root/w1' }],
+      [
+        { id: GraphNode.RootId, depth: 1 },
+        { id: 'root/w1', depth: 1 },
+      ],
+    );
+    expect(present('root/w1/c0/c0')).to.be.true;
+    expect(present('root/w0/c0')).to.be.false;
   });
 
   test('a node asked for below a released node goes with it', async () => {
-    const { retain, present } = await loaded({ workspaceDepth: 0 });
-    await retain([{ id: 'root/w1/c0/g' }]);
-    expect(present('root/w1/c0/g')).to.be.false;
+    const { retain, present } = await loaded();
+    await retain([{ id: GraphNode.RootId, depth: 1 }, { id: 'root/w1/c0/c0' }]);
+    expect(present('root/w1/c0/c0')).to.be.false;
   });
 
   test('a node a retained parent also holds stays', async () => {
-    const harness = await loaded({ workspaceDepth: 0 });
+    const harness = await loaded();
     harness.model.addEdge({ id: 'shared', type: 'child', source: 'root/w0', target: 'root/w1/c0', data: { order: 0 } });
     await harness.retain([{ id: 'root/w0' }]);
     expect(harness.present('root/w1/c0')).to.be.true;
-    expect(harness.present('root/w1/c1')).to.be.false;
+    expect(harness.present('root/w1')).to.be.false;
   });
 
   test('a node expanded again under the same answer stays loaded until the answer changes', async () => {
-    const harness = await loaded({ workspaceDepth: 0 });
+    const harness = await loaded();
     const { registry, retain, children } = harness;
-    const [answer] = await retain([{ id: 'root/w0' }]);
+    const [answer] = await retain([{ id: GraphNode.RootId, depth: 1 }, { id: 'root/w0' }]);
     expect(children('root/w1')).to.deep.equal([]);
 
     await expand(harness, ['root/w1']);
-    registry.set(answer, [{ id: 'root/w0' }]);
+    registry.set(answer, [{ id: GraphNode.RootId, depth: 1 }, { id: 'root/w0' }]);
     await GraphBuilder.flush(harness.builder);
     expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
 
-    registry.set(answer, []);
+    registry.set(answer, [{ id: GraphNode.RootId, depth: 1 }]);
     await GraphBuilder.flush(harness.builder);
     expect(children('root/w0')).to.deep.equal([]);
     expect(children('root/w1')).to.deep.equal([]);
@@ -510,10 +487,7 @@ describe('retention', () => {
         Atom.make((get) =>
           Option.match(get(node), {
             onNone: (): GraphBuilder.ModelNodeArg[] => [],
-            onSome: (source) =>
-              source.id === GraphNode.RootId
-                ? get(ids).map((id) => ({ id, properties: { [GraphBuilder.RetainDepthProperty]: 0 } }))
-                : [{ id: 'c0' }],
+            onSome: (source) => (source.id === GraphNode.RootId ? get(ids).map((id) => ({ id })) : [{ id: 'c0' }]),
           }),
         ),
     });
@@ -521,9 +495,10 @@ describe('retention', () => {
 
     GraphBuilder.setRetention(builder, [
       {
-        retained: Atom.make((get) =>
-          get(builder.children(GraphNode.RootId)).some(({ id }) => id === 'root/w2') ? [] : [{ id: 'root/w0' }],
-        ),
+        retained: Atom.make((get) => [
+          { id: GraphNode.RootId, depth: 1 },
+          ...(get(builder.children(GraphNode.RootId)).some(({ id }) => id === 'root/w2') ? [] : [{ id: 'root/w0' }]),
+        ]),
       },
     ]);
     await GraphBuilder.flush(builder);
@@ -546,11 +521,7 @@ describe('retention', () => {
             onNone: (): GraphBuilder.ModelNodeArg[] => [],
             onSome: (source) =>
               source.id === GraphNode.RootId
-                ? get(ids).map((id) => ({
-                    id,
-                    properties: { [GraphBuilder.RetainDepthProperty]: 0 },
-                    nodes: [{ id: 'x' }],
-                  }))
+                ? get(ids).map((id) => ({ id, nodes: [{ id: 'x' }] }))
                 : source.id === 'root/w/x'
                   ? [{ id: 'y' }]
                   : [],
@@ -560,7 +531,7 @@ describe('retention', () => {
     await expand(harness, [GraphNode.RootId, 'root/w/x']);
     expect(children('root/w/x')).to.deep.equal(['root/w/x/y']);
 
-    GraphBuilder.setRetention(builder, [{ retained: Atom.make([]) }]);
+    GraphBuilder.setRetention(builder, [{ retained: Atom.make([{ id: GraphNode.RootId, depth: 1 }]) }]);
     await GraphBuilder.flush(builder);
     expect(children('root/w')).to.deep.equal(['root/w/x']);
     expect(children('root/w/x')).to.deep.equal([]);
