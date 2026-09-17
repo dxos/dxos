@@ -71,8 +71,8 @@ const WorkingSetItem = Object.freeze({
         case 'type':
           key[aggregate.name] = EntityStructure.getTypeReference(item.core.getObjectStructure())?.['/'] ?? null;
           break;
-        case 'bucket':
-          // A core carries no index timestamps; `tryExecute` already declines plans that bucket.
+        case 'timestamp':
+          // A core carries no index timestamps; `tryExecute` already declines these plans.
           key[aggregate.name] = null;
           break;
       }
