@@ -3,7 +3,13 @@
 //
 
 import * as A from '@automerge/automerge';
-import { type DocumentId, type Heads, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import {
+  type DocumentId,
+  type Heads,
+  type PeerId,
+  generateAutomergeUrl,
+  parseAutomergeUrl,
+} from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
@@ -299,6 +305,52 @@ describe('AutomergeHost', () => {
     await host1.close();
     await host2.close();
     await network.close();
+  });
+
+  // A document that is `ready` locally but whose heads disagree with a peer's is the one case
+  // neither Subduction retry path covers: `findWithProgress` resolves from the existing query, and
+  // `shareConfigChanged()` skips entries whose last sync succeeded. `_handleCollectionSync` is the
+  // only place that sees the divergence, so it has to be the place that acts on it.
+  test('a diverged ready document is resynced once per head pair', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+
+    const resynced: DocumentId[] = [];
+    const resyncDocument = host.resyncDocument.bind(host);
+    host.resyncDocument = (id) => {
+      resynced.push(id);
+      resyncDocument(id);
+    };
+
+    // A head the local document cannot overlap, so the diff reports `different` rather than
+    // `missingOnLocal`/`missingOnRemote` — the shape that used to fall through to nothing.
+    const peerId = 'test-peer' as PeerId;
+    const remoteState = { documents: { [documentId]: ['0'.repeat(64)] } };
+    const synchronizer = (host as any)._collectionSynchronizer;
+
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(1);
+
+    // A peer repeating an unchanged-but-still-diverged state is deliberately not deduped by
+    // `onRemoteStateReceived` (that is what keeps the diff loop alive), so the guard against
+    // re-arming the heal backoff has to live on this side.
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await sleep(500);
+    expect(resynced).toEqual([documentId]);
   });
 });
 

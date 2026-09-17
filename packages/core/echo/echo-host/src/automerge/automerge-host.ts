@@ -33,7 +33,7 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
+import { DeferredTask, Event, asyncTimeout, sleep } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -146,6 +146,35 @@ const NON_CONVERGENCE_WARN_THRESHOLD = 6;
 const NON_CONVERGENCE_WARN_INTERVAL = 30;
 
 /**
+ * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
+ *
+ * `Repo.shareConfigChanged()` takes no document argument — it walks every entry and re-probes each
+ * against every connection — so its cost scales with the corpus, and there is no cheaper scoped
+ * variant to reach for ({@link resyncDocument} is the per-document lever). Measured in a browser
+ * trace of a ~800-document profile: one kick fanned out to ~7.6k probes over ~12s of worker time,
+ * i.e. ~15ms per resident document once the per-connection fan-out is amortised in.
+ *
+ * Used as the *minimum interval between kicks*, so a new fan-out does not start before the previous
+ * one has plausibly drained (a ~50% duty cycle in the worst case). Deliberately not a larger
+ * multiple: the kick is also the recovery path for a denied-then-allowed share policy, and delaying
+ * it past the fan-out itself would trade a real stall for a bound nobody is hitting.
+ */
+const SHARE_POLICY_KICK_MS_PER_DOCUMENT = 15;
+
+/**
+ * Floor for the share-policy throttle. Below this the kick is cheap enough that throttling only
+ * adds recovery latency — a small repo should stay as responsive as it was before the throttle.
+ */
+const SHARE_POLICY_KICK_MIN_INTERVAL_MS = 1_000;
+
+/**
+ * Ceiling for the share-policy throttle. A corpus large enough to exceed this is past the point
+ * where the repo-wide kick is a sensible recovery mechanism at all; capping keeps a pathological
+ * profile from stalling recovery outright.
+ */
+const SHARE_POLICY_KICK_MAX_INTERVAL_MS = 30_000;
+
+/**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
  * shutdowns finish in single-digit ms; see the comment in
  * {@link AutomergeHost._close} for why the cap is still here.
@@ -246,6 +275,20 @@ export class AutomergeHost extends Resource {
    * making no progress is otherwise indistinguishable from idle polling in the logs.
    */
   private _nonConvergingSyncPasses = new Map<string, number>();
+
+  /**
+   * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
+   *
+   * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
+   * backoff — so one call per observed head pair is the whole retry budget, and calling it again
+   * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
+   * rather than a plain "already tried" flag so that a genuine change on either side (the peer
+   * advanced, or we committed again) re-opens the retry.
+   */
+  private _divergedResyncHeads = new Map<string, string>();
+
+  /** Earliest time the repo-wide share-policy kick may fan out again. See {@link SHARE_POLICY_KICK_MS_PER_DOCUMENT}. */
+  private _sharePolicyKickNextAllowedAt = 0;
 
   /**
    * Documents requested by remote peers.
@@ -451,6 +494,24 @@ export class AutomergeHost extends Resource {
     });
 
     this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
+      // Throttled rather than gated: `DeferredTask` already collapses concurrent `schedule()`
+      // calls into one run, so waiting out the remainder of the interval here coalesces a burst of
+      // kicks into a single fan-out instead of dropping any. Leading edge is immediate — a kick
+      // after a quiet period pays nothing, which keeps the deny→allow recovery path prompt.
+      const waitMs = this._sharePolicyKickNextAllowedAt - Date.now();
+      if (waitMs > 0) {
+        log('share policy kick throttled', { waitMs, loadedDocs: this.loadedDocsCount });
+        await sleep(waitMs);
+        if (this._ctx.disposed) {
+          return;
+        }
+      }
+      this._sharePolicyKickNextAllowedAt =
+        Date.now() +
+        Math.min(
+          SHARE_POLICY_KICK_MAX_INTERVAL_MS,
+          Math.max(SHARE_POLICY_KICK_MIN_INTERVAL_MS, this.loadedDocsCount * SHARE_POLICY_KICK_MS_PER_DOCUMENT),
+        );
       log('share policy changed');
       this._repo.shareConfigChanged();
     });
@@ -1367,6 +1428,13 @@ export class AutomergeHost extends Resource {
         this._nonConvergingSyncPasses.delete(syncKey);
       }
     }
+    // A reconnect is a fresh chance for the push that did not land, so the resync budget resets
+    // with the connection. The key carries the peer in the middle, not at the end.
+    for (const resyncKey of this._divergedResyncHeads.keys()) {
+      if (resyncKey.includes(`:${peerId}:`)) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
+    }
     this._collectionSynchronizer.onConnectionClosed(peerId);
   }
 
@@ -1390,6 +1458,11 @@ export class AutomergeHost extends Resource {
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       this._nonConvergingSyncPasses.delete(syncKey);
+      for (const resyncKey of this._divergedResyncHeads.keys()) {
+        if (resyncKey.startsWith(`${syncKey}:`)) {
+          this._divergedResyncHeads.delete(resyncKey);
+        }
+      }
       return;
     }
 
@@ -1441,24 +1514,63 @@ export class AutomergeHost extends Resource {
     // sync this triggers automerge-repo's doc-synchronizer; under Subduction it registers a
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
+
+    // Whether this pass has anything left for the classical share policy to act on. Only a pass
+    // consisting entirely of diverged documents whose resync is already spent has nothing: for
+    // those the policy is provably a no-op (`shareConfigChanged` revives only `all-failed` /
+    // `no-peers` entries, and a diverged-but-settled entry is neither), while re-arming it
+    // re-probes every document against every connection — and since Subduction keys its
+    // `remote-heads` records by an ephemeral per-connection peer id, each probe persists a fresh
+    // record. That is the storage growth this branch used to drive, once per diff pass, forever.
+    //
+    // A pass that *issues* a resync still schedules it, so first-pass behaviour is unchanged and
+    // only the repeating tail is dropped.
+    let sharePolicyCanHelp = false;
+
     for (const documentId of toReplicate) {
       // `findWithProgress` resolves from the existing query for an already-`ready` document and
-      // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
-      // document reaching here gets no retry from either — the diff simply repeats next pass.
+      // `_documentsToSync` feeds a share policy Subduction does not consult, so neither moves a
+      // diverged document. `resyncDocument` is the one lever that does: it clears the heal state
+      // and marks the entry never-synced, so Subduction opens a fresh bidirectional round
+      // (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`) — which is what
+      // delivers a local commit the peer never received.
       if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
-        // Verbose: this fires on every diff pass for docs that are in practice fully synced,
-        // so at warn level it floods the console without indicating a real fault.
-        log.verbose('diverged document has no subduction retry path', {
-          collectionId,
-          peerId,
-          documentId,
-          sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-        });
+        const resyncKey = `${syncKey}:${documentId}`;
+        // Both sides' heads: a round already spent against this exact pair cannot do better, but
+        // either side advancing means the situation changed and is worth another.
+        const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
+        if (this._divergedResyncHeads.get(resyncKey) !== heads) {
+          this._divergedResyncHeads.set(resyncKey, heads);
+          log('resyncing diverged document', {
+            collectionId,
+            peerId,
+            documentId,
+            sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+            localHeads: localState.documents[documentId],
+            remoteHeads: remoteState.documents[documentId],
+          });
+          this.resyncDocument(documentId as DocumentId);
+          sharePolicyCanHelp = true;
+        } else {
+          // Verbose: this fires on every diff pass for docs that are in practice fully synced,
+          // so at warn level it floods the console without indicating a real fault.
+          log.verbose('diverged document already resynced at these heads', {
+            collectionId,
+            peerId,
+            documentId,
+            sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+          });
+        }
+      } else {
+        sharePolicyCanHelp = true;
       }
       this._documentsToSync.add(documentId);
       this._leaseUntilSettled(documentId as DocumentId);
     }
-    this._sharePolicyChangedTask!.schedule();
+
+    if (sharePolicyCanHelp) {
+      this._sharePolicyChangedTask!.schedule();
+    }
   }
 
   /**
