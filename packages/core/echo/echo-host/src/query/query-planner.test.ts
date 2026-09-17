@@ -1653,18 +1653,19 @@ describe('QueryPlanner', () => {
         },
       ]);
 
+      const rowSteps = ['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'AggregateStep'];
       const withMembers = Query.select(Filter.type(TestSchema.Task)).aggregate({
         type: Aggregate.type(),
         items: Aggregate.items(),
       });
-      const rowPlan = planner.createPlan(withSpaceIdOptions(withMembers.ast));
-      expect(rowPlan.steps.map((step) => step._tag)).toEqual([
-        'SelectStep',
-        'FilterDeletedStep',
-        'FilterStep',
-        'OrderStep',
-        'AggregateStep',
+      expect(planner.createPlan(withSpaceIdOptions(withMembers.ast)).steps.map((step) => step._tag)).toEqual(rowSteps);
+
+      // A record carries one spaceId, so a count spanning two spaces stays on the row plan.
+      const twoSpaces = counted.from([
+        { _tag: 'space', spaceId: SPACE_ID },
+        { _tag: 'space', spaceId: SpaceId.random() },
       ]);
+      expect(planner.createPlan(twoSpaces.ast).steps.map((step) => step._tag)).toEqual(rowSteps);
     });
 
     test('an explicit orderBy before aggregate is preserved (no natural order inserted)', () => {
