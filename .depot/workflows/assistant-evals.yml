@@ -2,8 +2,8 @@ name: Assistant evals
 
 # `DX_ANTHROPIC_API_KEY` is read from Depot's secret settings; restrict its variant to this workflow
 # file on `main` there, since any workflow that names it can read an unscoped variant. The same goes
-# for `DX_EVAL_MCP_TOKEN` and `DX_EVAL_SPACE_ID`, which the deployed-MCP job below needs: the token
-# is minted by hand and grants access to the space it names.
+# for the optional `DX_EVAL_MCP_TOKEN` and `DX_EVAL_SPACE_ID`, which only a closed-hatch target such
+# as `prod` needs: the token is minted by hand and grants access to the space it names.
 
 # TODO(wittjosiah): Once a few weeks of nightly baseline exist, add an advisory `pull_request` job
 # that runs the cheap, deterministically graded scenarios (smoke, basic, database, markdown) on
@@ -138,9 +138,10 @@ jobs:
   # The MCP server eval against the DEPLOYED surface, which the `evals` job above never exercises:
   # it runs `local`, so a regression that only exists in a deployed worker is invisible to it.
   #
-  # `preview` has no EDGE the harness can provision against, so this is a token-mode run: the write
-  # stages drop and only `operations-discovered` and `tool-latency` are scored. That still covers the
-  # failure this job exists for — a worker whose operation registry comes up short or slow.
+  # `preview`'s test-account hatch is open (edge's `isTestAccountEnvironment`), so the harness binds
+  # its own `test+*@dxos.org` account, replicates the space it seeds and mints its own grant: the run
+  # is graded from the database like a local one, write stages and upload round trip included. Each
+  # run leaves a throwaway identity, account and space behind on preview.
   mcp-deployed:
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -186,20 +187,16 @@ jobs:
         env:
           DX_ANTHROPIC_API_KEY: ${{ secrets.DX_ANTHROPIC_API_KEY }}
           DX_EVAL_MCP_TARGET: ${{ inputs.mcp_target || 'preview' }}
+          # Only for a closed-hatch target such as `prod`; setting either on `dev`/`preview` would
+          # demote the run to token mode and drop the write stages it exists to score.
           DX_EVAL_MCP_TOKEN: ${{ secrets.DX_EVAL_MCP_TOKEN }}
           DX_EVAL_SPACE_ID: ${{ secrets.DX_EVAL_SPACE_ID }}
           DX_EVAL_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-mcp
           DX_EVAL_RUN_NAME: ${{ github.ref_name }}-mcp-${{ inputs.mcp_target || 'preview' }}
           DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
-          # Checked up front rather than left to the 401 and the space-not-in-context error the run
-          # would otherwise die on, which read as a broken worker rather than as missing secrets.
-          missing=''
-          [ -z "$DX_ANTHROPIC_API_KEY" ] && missing="$missing DX_ANTHROPIC_API_KEY"
-          [ -z "$DX_EVAL_MCP_TOKEN" ] && missing="$missing DX_EVAL_MCP_TOKEN"
-          [ -z "$DX_EVAL_SPACE_ID" ] && missing="$missing DX_EVAL_SPACE_ID"
-          if [ -n "$missing" ]; then
-            echo "::error::Not available to this run:$missing. Check the variant scoping in Depot's secret settings."
+          if [ -z "$DX_ANTHROPIC_API_KEY" ]; then
+            echo "::error::DX_ANTHROPIC_API_KEY is not available to this run. Check its variant scoping in Depot's secret settings."
             exit 1
           fi
           moon run assistant-evals:evals -- src/evals/mcp-server.eval.ts
