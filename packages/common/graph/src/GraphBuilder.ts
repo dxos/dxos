@@ -226,8 +226,6 @@ export type TypeId = typeof TypeId;
  * Subclass to layer a vocabulary on top (see `@dxos/app-graph`'s `AppGraphBuilder`); the generic engine
  * is unaware of what the nodes mean.
  */
-// TODO(wittjosiah): Add api for setting subscription set and/or radius.
-//   Should unsubscribe from nodes that are not in the set/radius.
 export class GraphBuilder<
   Node extends NodeLike = NodeLike,
   Arg extends NodeArgLike = NodeArgLike,
