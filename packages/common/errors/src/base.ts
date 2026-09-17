@@ -51,11 +51,8 @@ export class BaseError<Name extends string = string> extends Error {
           if (options?.ifTypeDiffers === true && (this.is(error) || error instanceof this)) {
             return error as ExtendedError;
           }
-          const { ifTypeDiffers: _ignored, ...rest } = options ?? {};
           const newError: ExtendedError = new this({
-            ...rest,
-            // A wrapper types the failure channel but must not hide what went wrong, so an
-            // explicit message wins, then the wrapped error's, then this class's default.
+            context: options?.context,
             message: options?.message ?? messageOf(error) ?? message,
             cause: error,
           });
@@ -66,10 +63,7 @@ export class BaseError<Name extends string = string> extends Error {
       }
 
       constructor(options?: BaseErrorOptions) {
-        // `message` is resolved before the spread: a caller passing it through from an unknown
-        // value supplies the key with `undefined`, which a trailing spread would use to clobber
-        // the default.
-        super(name, { ...options, message: options?.message ?? message });
+        super(name, { cause: options?.cause, context: options?.context, message: options?.message ?? message });
       }
     };
   }
