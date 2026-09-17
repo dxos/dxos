@@ -504,8 +504,8 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
  *   input stream / the resulting groups, not this aggregate's member selection).
  * - `count` yields the member count. Opt-in — a row carries no count otherwise.
  * - `type` partitions members by their type URI; the field carries the URI string.
- * - `timestamp` partitions members by the UTC hour of a system timestamp; the field carries the
- *   start of that hour in unix ms.
+ * - `timestamp` partitions members by the hour or calendar day a system timestamp falls in; the field
+ *   carries the start of that interval in unix ms. Days are local to `timeZone` (UTC when absent).
  */
 const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
@@ -528,12 +528,13 @@ const GroupAggregateItems_ = Schema.Struct({
 });
 const GroupAggregateCount_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('count') });
 const GroupAggregateType_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('type') });
-// No `unit` field while hours are the only unit: a one-value literal would be a second discriminator,
-// which ECHO's union validation rejects for the query AST a View stores.
 const GroupAggregateTimestamp_ = Schema.Struct({
   name: Schema.String,
   kind: Schema.Literal('timestamp'),
   field: Schema.Literals(['createdAt', 'updatedAt']),
+  unit: Schema.Literals(['hour', 'day']),
+  /** IANA time zone that `day` boundaries follow. */
+  timeZone: Schema.optional(Schema.String),
 });
 
 const GroupAggregate_ = Schema.Union([
@@ -551,12 +552,6 @@ export const isGroupKeyAggregate = (
   aggregate: GroupAggregate,
 ): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'timestamp' }> =>
   aggregate.kind === 'group' || aggregate.kind === 'type' || aggregate.kind === 'timestamp';
-
-const HOUR_MS = 3_600_000;
-
-/** The `timestamp` key component: the start of the timestamp's UTC hour in unix ms, or `null` when unknown. */
-export const startOfHour = (timestamp: number | null | undefined): number | null =>
-  timestamp == null ? null : Math.floor(timestamp / HOUR_MS) * HOUR_MS;
 
 export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
 export const GroupAggregate: Schema.Codec<GroupAggregate> = GroupAggregate_;

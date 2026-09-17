@@ -9,21 +9,31 @@ import { type SpaceStats } from './types.ts';
 
 const FEED_TYPENAME = Type.getTypename(Feed.Feed);
 
-/** How many live objects carry a given type URI; {@link SPACE_STATS_QUERY} rows also carry an hour. */
+/** How many live objects carry a given type URI. */
 export type TypeCount = {
   readonly type: string | null;
   readonly count: number;
 };
 
 /**
- * Counts every live object in a space by type and by the UTC hour it was last updated. The host
- * answers from index rows and sends one row per type and hour, so no document is loaded.
+ * Counts every live object in a space by type. The host answers from index rows and sends one row
+ * per type, so no document is loaded.
  */
 export const SPACE_STATS_QUERY = Query.select(Filter.everything()).aggregate({
   type: Aggregate.type(),
-  hour: Aggregate.updated('hour'),
   count: Aggregate.count(),
 });
+
+/**
+ * {@link SPACE_STATS_QUERY} also split by the local day in `timeZone` each object was last updated,
+ * so one result gives both per-type totals and per-day activity.
+ */
+export const spaceActivityQuery = (timeZone: string) =>
+  Query.select(Filter.everything()).aggregate({
+    type: Aggregate.type(),
+    day: Aggregate.updated('day', { timeZone }),
+    count: Aggregate.count(),
+  });
 
 /** The versionless typename a stored type URI names, or the URI itself when it is not a DXN. */
 export const typenameOf = (type: string): string => {
