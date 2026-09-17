@@ -37,7 +37,7 @@ import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 import type { AutomergeHost } from '../automerge/index.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
-import { filterMatchDoc, filterMatchObjectJSON } from '../filter/index.ts';
+import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
@@ -80,6 +80,9 @@ type QueryItem = {
   // For objects from queues.
   data: Obj.JSON | null;
 
+  /** For objects selected from the index without loading, when both `doc` and `data` are null. */
+  meta?: EntityMeta;
+
   /**
    * Relevance rank for this item.
    * Higher values indicate better matches for FTS/vector searches.
@@ -114,6 +117,24 @@ type QueryItem = {
 };
 
 const QueryItem = Object.freeze({
+  /** An item for an index row, carrying no document; `null` for a row that is not document-backed. */
+  fromIndexRow: (meta: EntityMeta): QueryItem | null =>
+    meta.documentId
+      ? {
+          objectId: meta.objectId,
+          documentId: meta.documentId as DocumentId,
+          spaceId: meta.spaceId,
+          queueId: null,
+          queueNamespace: null,
+          doc: null,
+          data: null,
+          meta,
+          rank: 1,
+          createdAt: meta.createdAt,
+          updatedAt: meta.updatedAt,
+        }
+      : null,
+
   /**
    * Checks if the item is deleted.
    * Only applies to this item, not its parents.
@@ -123,6 +144,8 @@ const QueryItem = Object.freeze({
       return EntityStructure.isDeleted(item.doc);
     } else if (item.data) {
       return item.data['@deleted'] === true;
+    } else if (item.meta) {
+      return item.meta.deleted;
     } else {
       throw new Error('Invalid query item');
     }
@@ -178,6 +201,8 @@ const QueryItem = Object.freeze({
     } else if (item.data) {
       const type = item.data[ATTR_TYPE];
       return typeof type === 'string' ? type : null;
+    } else if (item.meta) {
+      return getEntityMetaTypeURI(item.meta) ?? null;
     } else {
       throw new Error('Invalid query item');
     }
@@ -189,6 +214,8 @@ const QueryItem = Object.freeze({
       raw = EntityStructure.getParent(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_PARENT];
+    } else if (item.meta) {
+      raw = item.meta.parent ?? undefined;
     } else {
       throw new Error('Invalid query item');
     }
@@ -201,6 +228,8 @@ const QueryItem = Object.freeze({
       raw = EntityStructure.getRelationSource(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_RELATION_SOURCE];
+    } else if (item.meta) {
+      raw = item.meta.source ?? undefined;
     } else {
       throw new Error('Invalid query item');
     }
@@ -213,6 +242,8 @@ const QueryItem = Object.freeze({
       raw = EntityStructure.getRelationTarget(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_RELATION_TARGET];
+    } else if (item.meta) {
+      raw = item.meta.target ?? undefined;
     } else {
       throw new Error('Invalid query item');
     }
@@ -226,6 +257,14 @@ const QueryItem = Object.freeze({
    * snapshots and don't gate on dependency loads, so they report no strong deps.
    */
   getStrongDependencies: (item: QueryItem): EID.EID[] => {
+    if (!item.doc && item.meta) {
+      const { typeDXN, entityKind, source, target, parent } = item.meta;
+      const endpoints = entityKind === 'relation' ? [source, target] : [];
+      return [typeDXN, ...endpoints, parent].flatMap((raw) => {
+        const uri = raw ? EID.tryParse(raw) : undefined;
+        return uri ? [uri] : [];
+      });
+    }
     if (!item.doc) {
       return [];
     }
@@ -835,8 +874,10 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += results.length;
+        const results = step.indexOnly
+          ? metas.map(QueryItem.fromIndexRow)
+          : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.indexOnly ? 0 : results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
         workingSet.push(...results.filter(isNonNullable));
@@ -905,8 +946,10 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += results.length;
+        const results = step.indexOnly
+          ? metas.map(QueryItem.fromIndexRow)
+          : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.indexOnly ? 0 : results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
         workingSet.push(...results.filter(isNonNullable));
@@ -937,8 +980,10 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += results.length;
+        const results = step.indexOnly
+          ? metas.map(QueryItem.fromIndexRow)
+          : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.indexOnly ? 0 : results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
         workingSet.push(...results.filter(isNonNullable));
@@ -1124,6 +1169,8 @@ export class QueryExecutor extends Resource {
         });
       } else if (item.data) {
         return filterMatchObjectJSON(filter, item.data);
+      } else if (item.meta) {
+        return filterMatchEntityMeta(filter, item.meta);
       } else {
         return false;
       }
@@ -2184,7 +2231,7 @@ export class QueryExecutor extends Resource {
         }
         seen.add(key);
 
-        const depItem = await this._loadFromDXN(dep, { sourceSpaceId: item.spaceId });
+        const depItem = await this._loadDependency(item, dep);
         const verdict =
           depItem != null && (await this._areStrongDepsResolvable(depItem, remainingDepth - 1, verdicts, seen));
         verdicts.set(key, verdict);
@@ -2192,6 +2239,27 @@ export class QueryExecutor extends Resource {
       }),
     );
     return results.every(Boolean);
+  }
+
+  /**
+   * Resolves an object `item` depends on, in the same form as `item`: an item selected from the index
+   * resolves its dependencies from the index too, so checking them loads no documents either.
+   */
+  private async _loadDependency(item: QueryItem, dxn: URI.URI): Promise<QueryItem | null> {
+    if (item.doc || item.data || !item.meta) {
+      return this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId });
+    }
+    const echoUri = EID.tryParse(dxn);
+    const objectId = echoUri ? EID.getEntityId(echoUri) : undefined;
+    if (!echoUri || !objectId) {
+      return null;
+    }
+    const spaceId = EID.getSpaceId(echoUri) ?? item.spaceId;
+    const metas = await this._runInRuntime(
+      this._indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }),
+    );
+    const meta = metas.find((candidate) => candidate.documentId);
+    return meta ? QueryItem.fromIndexRow(meta) : null;
   }
 
   private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
@@ -2208,7 +2276,7 @@ export class QueryExecutor extends Resource {
     // TODO(dmaretskyi): This could be optimized to bail early if any of the dependencies are deleted.
     const strongDepStates = await Promise.all(
       strongDeps.map(async (dxn) => {
-        const dep = await this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId });
+        const dep = await this._loadDependency(item, dxn);
         if (!dep) {
           return false;
         }

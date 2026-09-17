@@ -1618,6 +1618,26 @@ describe('QueryPlanner', () => {
   });
 
   describe('aggregate', () => {
+    test('a count by index fields selects from the index only; a property key loads documents', () => {
+      const selectOf = (query: Query.Any) =>
+        planner.createPlan(withSpaceIdOptions(query.ast)).steps.find((step) => step._tag === 'SelectStep');
+
+      const everything = Query.select(Filter.everything()).aggregate({
+        type: Aggregate.type(),
+        hour: Aggregate.updated('hour'),
+        count: Aggregate.count(),
+      });
+      const tasks = Query.select(Filter.type(TestSchema.Task)).aggregate({ count: Aggregate.count() });
+      const byTitle = Query.select(Filter.type(TestSchema.Task)).aggregate({
+        title: Aggregate.group('title'),
+        count: Aggregate.count(),
+      });
+
+      expect(selectOf(everything)).toMatchObject({ indexOnly: true });
+      expect(selectOf(tasks)).toMatchObject({ indexOnly: true });
+      expect(selectOf(byTitle)).not.toHaveProperty('indexOnly');
+    });
+
     test('group by single property inserts a natural OrderStep before AggregateStep', () => {
       const query = Query.select(Filter.type(TestSchema.Task)).aggregate({ title: Aggregate.group('title') });
 
