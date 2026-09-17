@@ -35,10 +35,18 @@ export const typenameOf = (type: string): string => {
  * query per statistic — a peripheral display is a glance, not a report.
  */
 export const toSpaceStats = (rows: readonly TypeCount[], plugins: number): SpaceStats => ({
-  objects: rows.reduce((total, row) => total + row.count, 0),
-  feeds: rows
-    .filter((row) => row.type !== null && typenameOf(row.type) === FEED_TYPENAME)
-    .reduce((total, row) => total + row.count, 0),
-  types: rows.filter((row) => row.type !== null).length,
+  objects: countObjects(rows),
+  feeds: countObjects(rows, FEED_TYPENAME),
+  types: countTypenames(rows),
   plugins,
 });
+
+/** Live objects across `rows`, or only those of one versionless typename. */
+export const countObjects = (rows: readonly TypeCount[], typename?: string): number =>
+  rows
+    .filter((row) => typename === undefined || (row.type !== null && typenameOf(row.type) === typename))
+    .reduce((total, row) => total + row.count, 0);
+
+/** Distinct versionless typenames across `rows`; two schema versions of one type count once. */
+export const countTypenames = (rows: readonly TypeCount[]): number =>
+  new Set(rows.flatMap((row) => (row.type !== null ? [typenameOf(row.type)] : []))).size;

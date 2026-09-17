@@ -12,7 +12,7 @@ import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Dashboard } from '@dxos/react-ui-dashboard';
 
-import { SPACE_STATS_QUERY, typenameOf } from '#dashboard';
+import { SPACE_STATS_QUERY, countObjects, countTypenames } from '#dashboard';
 import { meta } from '#meta';
 
 import { toActivity } from './activity.ts';
@@ -65,11 +65,9 @@ const SpaceDashboard = ({
   const activity = useMemo(() => toActivity(hours), [hours]);
 
   const values: Record<SpaceStatId, number> = {
-    'objects': counts.reduce((total, row) => total + row.count, 0),
-    'types': counts.filter((row) => row.type !== null).length,
-    'collections': counts
-      .filter((row) => row.type !== null && typenameOf(row.type) === COLLECTION_TYPENAME)
-      .reduce((total, row) => total + row.count, 0),
+    'objects': countObjects(counts),
+    'types': countTypenames(counts),
+    'collections': countObjects(counts, COLLECTION_TYPENAME),
     'members': members.length,
     'active-days': activity.length,
     'plugins': plugins,
