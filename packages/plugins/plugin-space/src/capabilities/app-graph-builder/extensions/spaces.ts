@@ -51,30 +51,24 @@ import {
 const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }] as const;
 
 /**
- * How long a listed space may stay unopened before it is dropped from the rail. Well beyond any
- * plausible open, so reaching it means the space is broken rather than slow; hiding it restores the
- * pre-placeholder behaviour instead of leaving a placeholder nothing can act on.
+ * How long a space may take to open. Well beyond any plausible open, so reaching it means the space
+ * is broken rather than slow: a listed space is dropped from the rail, and the settings space stops
+ * holding the others back for its ordering.
  */
-// TODO(wittjosiah): Surface it as a deletable node once space nodes carry actions.
+// TODO(wittjosiah): Surface a timed-out space as a deletable node once space nodes carry actions.
 const SPACE_OPEN_TIMEOUT = 60_000;
 
-/** Spaces that exhausted {@link SPACE_OPEN_TIMEOUT}; held outside the atom so a drop cannot undo itself. */
-const openTimedOutSpaces = new Set<string>();
-
 /**
- * Fires once per space at its open deadline. A stuck space produces no state change of its own, so
- * without this the connector would never re-run to drop it.
+ * Flips to true once {@link SPACE_OPEN_TIMEOUT} elapses after it is first read, and stays true while
+ * it is read. A stuck space produces no state change of its own, so without this the connector would
+ * never re-run.
  */
-const openDeadlineFamily = Atom.family((spaceId: string) =>
+const makeOpenDeadline = () =>
   Atom.make((get) => {
-    const timeout = setTimeout(() => {
-      openTimedOutSpaces.add(spaceId);
-      get.setSelf(true);
-    }, SPACE_OPEN_TIMEOUT);
+    const timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
     get.addFinalizer(() => clearTimeout(timeout));
     return false;
-  }),
-);
+  });
 
 /** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {
@@ -86,6 +80,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+  // Read only while waiting, so a space that opens releases its deadline and gets a fresh one if it
+  // ever starts opening again.
+  const openDeadlineFamily = Atom.family((_spaceId: string) => makeOpenDeadline());
+  // Once the rail has rendered for real, a lost ordering may re-sort it but never turn it back into
+  // placeholders.
+  let orderSettled = false;
 
   return yield* Effect.all([
     AppGraphBuilder.createExtension({
@@ -247,10 +247,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
-        // Cross-space ordering lives in the settings space; until it exists and opens (or before
-        // the migration has run) spaces simply render in their natural order. `spacesAtom` covers
-        // the space appearing; its state is read through an atom so the ordering also appears when
-        // an already-listed settings space finishes opening.
+        // Cross-space ordering lives in the settings space. `spacesAtom` covers the space appearing;
+        // its state is read through an atom so the ordering also appears when an already-listed
+        // settings space finishes opening.
         const settingsSpace = AppSpace.getSettingsSpace(client);
         const settingsSpaceState = settingsSpace ? get(CreateAtom.fromObservable(settingsSpace.state)) : undefined;
         const orderingSpace = settingsSpaceState === SpaceState.SPACE_READY ? settingsSpace : undefined;
@@ -276,9 +275,16 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           const spacesOrderSnapshot = spacesOrder ? get(Obj.atom(spacesOrder)) : undefined;
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
-          // The ordering object is created for every profile as the first step of the settings-space
-          // migration, so its absence means not-yet-loaded rather than never-coming.
-          const orderResolved = !!spacesOrder;
+          const lazySpaceOpen = !!client.config.values.runtime?.client?.lazySpaceOpen;
+          const orderResolved =
+            orderSettled ||
+            isOrderResolved({
+              found: !!spacesOrder,
+              settingsSpaceState,
+              lazySpaceOpen,
+              timedOut: () => !!settingsSpace && get(openDeadlineFamily(settingsSpace.id)),
+            });
+          orderSettled = orderResolved && spaces.length > 0;
 
           // Keyed by id rather than position: the array below is re-sorted by `orderMap`, so a
           // positional lookup would test one space's readiness against another's state.
@@ -286,12 +292,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
           spaces.forEach((space) => {
             if (space.state.get() === SpaceState.SPACE_READY) {
-              openTimedOutSpaces.delete(space.id);
               get(Obj.atom(space.properties));
             }
           });
-
-          const lazySpaceOpen = !!client.config.values.runtime?.client?.lazySpaceOpen;
 
           return Effect.succeed(
             [
@@ -300,16 +303,16 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
+              .filter((space) => AppSpace.isVisibleSpace(space))
               // A space that is listed but still opening gets a node too, so the rail shows how
               // many workspaces are arriving instead of filling in from nothing.
               .filter((space) =>
                 shouldListSpace({
                   state: spaceStates.get(space.id),
-                  timedOut: openTimedOutSpaces.has(space.id) || get(openDeadlineFamily(space.id)),
+                  timedOut: () => get(openDeadlineFamily(space.id)),
                   lazySpaceOpen,
                 }),
               )
-              .filter((space) => AppSpace.isVisibleSpace(space))
               .map((space) =>
                 !isSpacePlaceholder({ state: spaceStates.get(space.id), orderResolved })
                   ? constructSpaceNode({
@@ -383,14 +386,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
 /**
  * Whether a listed space is on its way to `SPACE_READY` and should hold a place in the rail.
- * `SPACE_CLOSED` is the proxy's initial state and opens on its own, except under `lazySpaceOpen`,
- * where nothing would ever open it and the placeholder would never resolve. Deliberately excludes
- * the states a space can rest in (inactive, error, awaiting migration), which are not loading.
+ * `SpaceList` opens every space through `SPACE_CLOSED` and `SPACE_CONTROL_ONLY`, except under
+ * `lazySpaceOpen`, where a space can rest in either. Excludes the states a space can rest in
+ * (inactive, error, awaiting migration), which are not loading.
  */
 export const isPendingSpace = (state: SpaceState | undefined, lazySpaceOpen = false): boolean =>
   state === SpaceState.SPACE_INITIALIZING ||
-  state === SpaceState.SPACE_ACTIVE ||
-  (state === SpaceState.SPACE_CLOSED && !lazySpaceOpen);
+  (!lazySpaceOpen && (state === SpaceState.SPACE_CLOSED || state === SpaceState.SPACE_CONTROL_ONLY));
 
 /**
  * Whether a listed space appears in the rail at all. A space that never opened is dropped once it
@@ -403,9 +405,34 @@ export const shouldListSpace = ({
   lazySpaceOpen = false,
 }: {
   state: SpaceState | undefined;
-  timedOut: boolean;
+  /** Only called for a pending space, so a ready one holds no deadline. */
+  timedOut: () => boolean;
   lazySpaceOpen?: boolean;
-}): boolean => state === SpaceState.SPACE_READY || (isPendingSpace(state, lazySpaceOpen) && !timedOut);
+}): boolean => state === SpaceState.SPACE_READY || (isPendingSpace(state, lazySpaceOpen) && !timedOut());
+
+/**
+ * Whether spaces can stop waiting for the cross-space ordering. It is worth waiting for only while
+ * the settings space is opening or open with the query outstanding. An unlisted settings space, one
+ * resting short of ready, or one that exceeds its open deadline falls back to natural order.
+ */
+export const isOrderResolved = ({
+  found,
+  settingsSpaceState,
+  lazySpaceOpen = false,
+  timedOut,
+}: {
+  found: boolean;
+  settingsSpaceState: SpaceState | undefined;
+  lazySpaceOpen?: boolean;
+  /** Only called while waiting, so the deadline is released once the ordering resolves. */
+  timedOut: () => boolean;
+}): boolean => {
+  if (found) {
+    return true;
+  }
+  const waiting = settingsSpaceState === SpaceState.SPACE_READY || isPendingSpace(settingsSpaceState, lazySpaceOpen);
+  return !waiting || timedOut();
+};
 
 /**
  * Whether a listed space renders as a placeholder rather than itself: it has not opened, or the
@@ -472,20 +499,14 @@ export const constructSpaceNode = ({
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
 
-  let onRearrange: ((nextOrder: Space[]) => void) | undefined;
+  let onRearrange: ((nextOrder: string[]) => void) | undefined;
   if (graph && spacesOrder) {
     onRearrange = spaceRearrangeCache.get(space.id);
     if (!onRearrange) {
-      onRearrange = (nextOrder: Space[]) => {
-        AppGraph.sortEdges(
-          graph,
-          GraphNode.RootId,
-          'outbound',
-          nextOrder.map(({ id }) => id),
-        );
-
+      onRearrange = (nextOrder: string[]) => {
+        AppGraph.sortEdges(graph, GraphNode.RootId, 'outbound', nextOrder);
         Obj.update(spacesOrder, (spacesOrder: any) => {
-          spacesOrder.order = nextOrder.map(({ id }) => id);
+          spacesOrder.order = nextOrder;
         });
       };
       spaceRearrangeCache.set(space.id, onRearrange);

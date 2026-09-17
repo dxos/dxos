@@ -328,10 +328,8 @@ export const L0Menu = ({
           : targetIndex +
             (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
       const nextOrder = arrayMove([...topLevelItems], sourceIndex, insertIndex);
-      // A pending workspace carries no space to order, and takes its place once it opens.
-      return sourceItem.properties.onRearrange(
-        nextOrder.filter((item) => item.properties.pending !== true).map((item) => item.data),
-      );
+      // Ids rather than data, so a pending workspace keeps its slot although it has no data.
+      return sourceItem.properties.onRearrange(nextOrder.map((item) => item.id));
     },
     [topLevelItems],
   );
@@ -380,11 +378,11 @@ export const L0Menu = ({
                 {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
               />
             ))
-          ) : (
-            // Spaces reach the graph only once the client has initialised, and every identity ends
-            // up with at least one, so an empty rail means the list is still on its way.
+          ) : !userAccountItem ? (
+            // Workspaces and the account node both arrive once the client has initialised, so an
+            // empty rail is loading only until then.
             <L0PendingItem />
-          )}
+          ) : null}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 

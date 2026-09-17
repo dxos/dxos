@@ -15,7 +15,7 @@ import { random } from '@dxos/random';
 export type StorybookGraphOptions = {
   /**
    * How the rail's workspaces are published. `growing` (the default) starts at three and adds one
-   * every few seconds; `none` withholds them, as before the client has initialised; `pending` emits
+   * every few seconds; `none` withholds them and the account node, as before the client has initialised; `pending` emits
    * them as spaces that are listed but have not opened.
    */
   spaces?: 'growing' | 'none' | 'pending';
@@ -59,47 +59,51 @@ export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOpt
         id: 'userAccount',
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
-          Effect.succeed([
-            AppGraphNode.make({
-              id: 'user-account',
-              type: 'user-account',
-              properties: {
-                label: 'User profile',
-                icon: 'ph--user--regular',
-                disposition: 'user-account',
-                userId: '1234567890ABCDEF',
-                hue: random.properties.hue(),
-                emoji: random.properties.emoji(),
-                status: 'active',
-              },
-              nodes: [
-                AppGraphNode.make({
-                  id: 'profile',
-                  type: 'profile',
-                  properties: {
-                    label: 'Profile',
-                    icon: 'ph--user--regular',
-                  },
-                }),
-                AppGraphNode.make({
-                  id: 'devices',
-                  type: 'devices',
-                  properties: {
-                    label: 'Devices',
-                    icon: 'ph--devices--regular',
-                  },
-                }),
-                AppGraphNode.make({
-                  id: 'security',
-                  type: 'security',
-                  properties: {
-                    label: 'Security',
-                    icon: 'ph--key--regular',
-                  },
-                }),
-              ],
-            }),
-          ]),
+          Effect.succeed(
+            spaces === 'none'
+              ? []
+              : [
+                  AppGraphNode.make({
+                    id: 'user-account',
+                    type: 'user-account',
+                    properties: {
+                      label: 'User profile',
+                      icon: 'ph--user--regular',
+                      disposition: 'user-account',
+                      userId: '1234567890ABCDEF',
+                      hue: random.properties.hue(),
+                      emoji: random.properties.emoji(),
+                      status: 'active',
+                    },
+                    nodes: [
+                      AppGraphNode.make({
+                        id: 'profile',
+                        type: 'profile',
+                        properties: {
+                          label: 'Profile',
+                          icon: 'ph--user--regular',
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: 'devices',
+                        type: 'devices',
+                        properties: {
+                          label: 'Devices',
+                          icon: 'ph--devices--regular',
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: 'security',
+                        type: 'security',
+                        properties: {
+                          label: 'Security',
+                          icon: 'ph--key--regular',
+                        },
+                      }),
+                    ],
+                  }),
+                ],
+          ),
       }),
       // Create space (workspace) nodes directly under root.
       AppGraphBuilder.createExtension({

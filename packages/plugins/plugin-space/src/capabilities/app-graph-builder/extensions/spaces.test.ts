@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import { describe, test } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -13,6 +13,7 @@ import { Entity, Obj } from '@dxos/echo';
 import {
   constructPendingSpaceNode,
   constructSpaceNode,
+  isOrderResolved,
   isPendingSpace,
   isSpacePlaceholder,
   shouldListSpace,
@@ -20,10 +21,10 @@ import {
 
 describe('isPendingSpace', () => {
   test('a space on its way to ready is pending', ({ expect }) => {
-    expect(isPendingSpace(SpaceState.SPACE_INITIALIZING)).toBe(true);
-    expect(isPendingSpace(SpaceState.SPACE_ACTIVE)).toBe(true);
-    // The proxy's initial state, which opens on its own.
+    // The states `SpaceList` opens every space through, in order.
     expect(isPendingSpace(SpaceState.SPACE_CLOSED)).toBe(true);
+    expect(isPendingSpace(SpaceState.SPACE_CONTROL_ONLY)).toBe(true);
+    expect(isPendingSpace(SpaceState.SPACE_INITIALIZING)).toBe(true);
   });
 
   test('a ready space is not pending, since it has a node of its own', ({ expect }) => {
@@ -34,7 +35,6 @@ describe('isPendingSpace', () => {
     expect(isPendingSpace(SpaceState.SPACE_INACTIVE)).toBe(false);
     expect(isPendingSpace(SpaceState.SPACE_ERROR)).toBe(false);
     expect(isPendingSpace(SpaceState.SPACE_REQUIRES_MIGRATION)).toBe(false);
-    expect(isPendingSpace(SpaceState.SPACE_CONTROL_ONLY)).toBe(false);
     expect(isPendingSpace(SpaceState.SPACE_DELETED)).toBe(false);
     expect(isPendingSpace(SpaceState.INVALID)).toBe(false);
     expect(isPendingSpace(undefined)).toBe(false);
@@ -42,6 +42,7 @@ describe('isPendingSpace', () => {
 
   test('a closed space is not pending under lazySpaceOpen, where nothing would open it', ({ expect }) => {
     expect(isPendingSpace(SpaceState.SPACE_CLOSED, true)).toBe(false);
+    expect(isPendingSpace(SpaceState.SPACE_CONTROL_ONLY, true)).toBe(false);
     // Spaces already opening are unaffected by the setting.
     expect(isPendingSpace(SpaceState.SPACE_INITIALIZING, true)).toBe(true);
   });
@@ -154,25 +155,72 @@ describe('isSpacePlaceholder', () => {
 });
 
 describe('shouldListSpace', () => {
-  test('an opened space is listed, timed out or not', ({ expect }) => {
+  const never = () => false;
+  const elapsed = () => true;
+
+  test('an opened space is listed without consulting its deadline', ({ expect }) => {
     // Every space is held as a placeholder until the ordering resolves, so an opened space must
-    // survive the timeout — otherwise a slow settings space would empty the whole rail.
-    expect(shouldListSpace({ state: SpaceState.SPACE_READY, timedOut: false })).toBe(true);
-    expect(shouldListSpace({ state: SpaceState.SPACE_READY, timedOut: true })).toBe(true);
+    // survive the timeout; otherwise a slow settings space would empty the whole rail.
+    const timedOut = vi.fn(elapsed);
+    expect(shouldListSpace({ state: SpaceState.SPACE_READY, timedOut })).toBe(true);
+    expect(timedOut).not.toHaveBeenCalled();
   });
 
   test('a space still opening is listed', ({ expect }) => {
-    expect(shouldListSpace({ state: SpaceState.SPACE_INITIALIZING, timedOut: false })).toBe(true);
+    expect(shouldListSpace({ state: SpaceState.SPACE_INITIALIZING, timedOut: never })).toBe(true);
+    expect(shouldListSpace({ state: SpaceState.SPACE_CONTROL_ONLY, timedOut: never })).toBe(true);
   });
 
   test('a space that never opened is dropped once it times out', ({ expect }) => {
-    expect(shouldListSpace({ state: SpaceState.SPACE_INITIALIZING, timedOut: true })).toBe(false);
-    expect(shouldListSpace({ state: SpaceState.SPACE_CLOSED, timedOut: true })).toBe(false);
+    expect(shouldListSpace({ state: SpaceState.SPACE_INITIALIZING, timedOut: elapsed })).toBe(false);
+    expect(shouldListSpace({ state: SpaceState.SPACE_CLOSED, timedOut: elapsed })).toBe(false);
   });
 
-  test('states a space rests in are never listed', ({ expect }) => {
-    expect(shouldListSpace({ state: SpaceState.SPACE_INACTIVE, timedOut: false })).toBe(false);
-    expect(shouldListSpace({ state: SpaceState.SPACE_ERROR, timedOut: false })).toBe(false);
-    expect(shouldListSpace({ state: SpaceState.SPACE_CLOSED, timedOut: false, lazySpaceOpen: true })).toBe(false);
+  test('states a space rests in are never listed, and hold no deadline', ({ expect }) => {
+    const timedOut = vi.fn(never);
+    expect(shouldListSpace({ state: SpaceState.SPACE_INACTIVE, timedOut })).toBe(false);
+    expect(shouldListSpace({ state: SpaceState.SPACE_ERROR, timedOut })).toBe(false);
+    expect(shouldListSpace({ state: SpaceState.SPACE_CLOSED, timedOut, lazySpaceOpen: true })).toBe(false);
+    expect(timedOut).not.toHaveBeenCalled();
+  });
+});
+
+describe('isOrderResolved', () => {
+  const never = () => false;
+
+  test('resolves once the ordering is found, without consulting the deadline', ({ expect }) => {
+    const timedOut = vi.fn(never);
+    expect(isOrderResolved({ found: true, settingsSpaceState: SpaceState.SPACE_READY, timedOut })).toBe(true);
+    expect(timedOut).not.toHaveBeenCalled();
+  });
+
+  test('waits while the settings space is opening or open with the query outstanding', ({ expect }) => {
+    expect(isOrderResolved({ found: false, settingsSpaceState: SpaceState.SPACE_CLOSED, timedOut: never })).toBe(false);
+    expect(isOrderResolved({ found: false, settingsSpaceState: SpaceState.SPACE_READY, timedOut: never })).toBe(false);
+  });
+
+  test('stops waiting once the settings space exceeds its deadline', ({ expect }) => {
+    expect(
+      isOrderResolved({ found: false, settingsSpaceState: SpaceState.SPACE_INITIALIZING, timedOut: () => true }),
+    ).toBe(true);
+  });
+
+  test('does not wait on a settings space that is unlisted or resting short of ready', ({ expect }) => {
+    // A profile that never gets a settings space would otherwise hold open spaces back on every boot.
+    expect(isOrderResolved({ found: false, settingsSpaceState: undefined, timedOut: never })).toBe(true);
+    // Otherwise every workspace, however ready, would stay a placeholder for good.
+    expect(isOrderResolved({ found: false, settingsSpaceState: SpaceState.SPACE_ERROR, timedOut: never })).toBe(true);
+    expect(
+      isOrderResolved({ found: false, settingsSpaceState: SpaceState.SPACE_REQUIRES_MIGRATION, timedOut: never }),
+    ).toBe(true);
+    // Nothing opens the settings space under lazySpaceOpen.
+    expect(
+      isOrderResolved({
+        found: false,
+        settingsSpaceState: SpaceState.SPACE_CLOSED,
+        lazySpaceOpen: true,
+        timedOut: never,
+      }),
+    ).toBe(true);
   });
 });

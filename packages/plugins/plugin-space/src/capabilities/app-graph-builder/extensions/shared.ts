@@ -52,7 +52,7 @@ export const spaceActionsCache = new Map<
     actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service>>[];
   }
 >();
-export const spaceRearrangeCache = new Map<string, (nextOrder: Space[]) => void>();
+export const spaceRearrangeCache = new Map<string, (nextOrder: string[]) => void>();
 
 //
 // Static Labels
