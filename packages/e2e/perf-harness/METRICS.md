@@ -60,8 +60,11 @@ _dedicated_ worker runs as a thread inside the renderer process, so its CPU is f
 `{ kind, name, cpuMs, samples, idleSamples }` per realm, from the sampling profiler:
 `cpuMs = (samples - idleSamples) x samplingInterval`.
 
-**Present in both modes and trended**, as `pageCpuMs`, `workerCpuMs` and a `cpuMs_<realm>` series
-per realm. The profiler runs always, and both modes keep the profiles — a whole run's artifacts are
+**Present in both modes and trended**, as `cpuMsTab`, `cpuMsWorkers` and one fixed column per realm
+kind (`cpuMsTab`, `cpuMsWorker`, `cpuMsSharedWorker`, `cpuMsServiceWorker`). The columns are keyed
+by KIND, not by the target's script name: a name-keyed column minted a new series on every bundle
+rename and left the old one flat. All four are always present, `0` meaning the realm was absent or
+idle, so a chart series never gaps. The profiler runs always, and both modes keep the profiles — a whole run's artifacts are
 ~19 MB (see [Instrument cost](#instrument-cost-measured)). `boot` is the exception: no profiler
 target exists before the page, so that row carries no `cpuMsByRealm` at all.
 

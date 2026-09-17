@@ -5,7 +5,7 @@
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { type StageRow } from './types.ts';
+import { type StageRow, type TargetKind } from './types.ts';
 
 /** Repo-root-relative, alongside the startup harness's rows. */
 export const reportDir = (workspaceRoot: string): string => path.join(workspaceRoot, 'test-results', 'perf');
@@ -56,6 +56,61 @@ export type PosthogEvent = {
 export const EVENT_NAME = 'ci.perf-stage';
 
 /**
+ * Fixed per-realm property suffixes, keyed by target kind.
+ *
+ * A closed set rather than the target's own name, because a property name is a permanent schema
+ * entry in the analytics project: keying on `targetName` minted a column per script filename
+ * (`cpuMs_shared_worker_client_js`), so a bundle rename or a second dedicated worker silently
+ * started a new series and left the old one flat. The kinds are stable and there are four of them,
+ * so a chart can name its series in advance.
+ */
+const REALM_SUFFIX: Record<TargetKind, string> = {
+  page: 'Tab',
+  shared_worker: 'SharedWorker',
+  worker: 'Worker',
+  service_worker: 'ServiceWorker',
+};
+
+/** Every realm column, so a series never gaps; `0` means the realm was absent or idle. */
+const zeroByRealm = (prefix: string): Record<string, number> =>
+  Object.fromEntries(Object.values(REALM_SUFFIX).map((suffix) => [`${prefix}${suffix}`, 0]));
+
+/**
+ * Sums a per-realm reading into the fixed columns.
+ *
+ * Summed rather than one column per target: several dedicated workers run at once, and "how much
+ * did the workers cost" is the question a trend answers. The individual targets stay in the NDJSON
+ * row for whoever needs to attribute further.
+ */
+const byRealm = <T>(
+  prefix: string,
+  readings: T[],
+  kindOf: (reading: T) => TargetKind,
+  valueOf: (reading: T) => number,
+) => {
+  const columns = zeroByRealm(prefix);
+  for (const reading of readings) {
+    columns[`${prefix}${REALM_SUFFIX[kindOf(reading)]}`] += valueOf(reading);
+  }
+  return columns;
+};
+
+/** The same reading reduced to a max, for a percentile or a peak that must not be added up. */
+const maxByRealm = <T>(
+  prefix: string,
+  readings: T[],
+  kindOf: (reading: T) => TargetKind,
+  valueOf: (reading: T) => number,
+) => {
+  const columns = zeroByRealm(prefix);
+  for (const reading of readings) {
+    const key = `${prefix}${REALM_SUFFIX[kindOf(reading)]}`;
+    columns[key] = Math.max(columns[key], valueOf(reading));
+  }
+  return columns;
+};
+
+/**
  * Maps one stage row to its PostHog event, refusing the rows that must not be trended.
  *
  * Throws rather than returning undefined: both refusals are caller errors, and a silent skip here
@@ -71,26 +126,36 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
     throw new Error(`refusing to trend a failed stage (${row.stage}): its timings are its timeouts`);
   }
 
-  // Per-target heap as flat keys, so the shared worker's heap is its own queryable series — the
-  // column that actually moves when a space gets large.
-  const heapByTarget: Record<string, number> = {};
-  for (const reading of row.heap) {
-    heapByTarget[`heapUsed_${reading.name.replace(/[^a-z0-9]+/gi, '_')}`] = reading.usedBytes;
-  }
+  const heapByRealm = byRealm(
+    'heapUsedBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => reading.usedBytes,
+  );
+  const cpuByRealm = byRealm(
+    'cpuMs',
+    row.cpuMsByRealm ?? [],
+    (realm) => realm.kind,
+    (realm) => realm.cpuMs,
+  );
+  const lagP95ByRealm = maxByRealm(
+    'lagP95Ms',
+    row.responsiveness.lagByRealm,
+    (realm) => realm.kind,
+    (realm) => realm.p95Ms,
+  );
+  const lagMaxByRealm = maxByRealm(
+    'lagMaxMs',
+    row.responsiveness.lagByRealm,
+    (realm) => realm.kind,
+    (realm) => realm.maxMs,
+  );
 
-  // Per-realm CPU as flat keys alongside a page/worker split, so "did the workers get busier"
-  // is one series rather than a question needing the raw rows.
-  const cpuByRealm: Record<string, number> = {};
-  let workerCpuMs = 0;
-  let pageCpuMs = 0;
-  for (const realm of row.cpuMsByRealm ?? []) {
-    cpuByRealm[`cpuMs_${realm.name.replace(/[^a-z0-9]+/gi, '_')}`] = realm.cpuMs;
-    if (realm.kind === 'page') {
-      pageCpuMs += realm.cpuMs;
-    } else {
-      workerCpuMs += realm.cpuMs;
-    }
-  }
+  // The workers rollup, so the headline "did the workers get busier" is one series rather than a
+  // sum computed in every query that asks. The tab needs none: `cpuMsTab` is already a column.
+  const cpuMsWorkers = (row.cpuMsByRealm ?? [])
+    .filter((realm) => realm.kind !== 'page')
+    .reduce((total, realm) => total + realm.cpuMs, 0);
 
   return {
     event: EVENT_NAME,
@@ -112,11 +177,11 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       layoutMs: row.thread.layoutMs,
       recalcStyleMs: row.thread.recalcStyleMs,
 
-      ...(row.cpuMsByRealm ? { pageCpuMs, workerCpuMs, ...cpuByRealm } : {}),
+      ...(row.cpuMsByRealm ? { cpuMsWorkers, ...cpuByRealm } : {}),
 
       peakRssBytes: row.peakRssBytes,
       heapUsedTotalBytes: row.heapUsedTotalBytes,
-      ...heapByTarget,
+      ...heapByRealm,
       domNodes: row.domNodes,
       domListeners: row.domListeners,
 
@@ -128,6 +193,9 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       tbtMs: row.responsiveness.tbtMs,
       lagP95Ms: row.responsiveness.lagP95Ms,
       lagMaxMs: row.responsiveness.lagMaxMs,
+      ...lagP95ByRealm,
+      ...lagMaxByRealm,
+      realms: row.heap.length,
 
       servingMode: row.comparability.servingMode,
       pluginSet: row.comparability.pluginSet,

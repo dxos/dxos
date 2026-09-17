@@ -42,12 +42,15 @@ describe('toPosthogEvent', () => {
     expect(event.properties.domNodes).toBe(24_000);
   });
 
-  test('breaks heap out per target', ({ expect }) => {
+  test('breaks heap out per realm, into fixed columns', ({ expect }) => {
     const event = toPosthogEvent(row());
     // The shared worker's heap is its own series: it is the column that moves when a space grows,
-    // and a single total would hide it behind the page's.
-    expect(event.properties.heapUsed_page).toBe(50_000_000);
-    expect(event.properties.heapUsed_shared_worker_worker_js).toBe(120_000_000);
+    // and a single total would hide it behind the tab's.
+    expect(event.properties.heapUsedBytesTab).toBe(50_000_000);
+    expect(event.properties.heapUsedBytesSharedWorker).toBe(120_000_000);
+    // Present and zero rather than absent, so a chart's series never gaps on a realm that a
+    // particular run did not create.
+    expect(event.properties.heapUsedBytesServiceWorker).toBe(0);
   });
 
   test('carries the comparability axes', ({ expect }) => {
