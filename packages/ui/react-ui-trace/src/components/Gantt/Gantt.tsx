@@ -38,25 +38,27 @@ export type GanttMarker = {
   level?: 'info' | 'warn' | 'error';
 };
 
-const ROW_HEIGHT = 28;
+const PAD_X = 16;
+const ROW_HEIGHT = 24;
 const HEADER_HEIGHT = 20;
-const PAD_X = 12;
-const NODE_RADIUS = 5;
 /** Upper bound on axis ticks; the count shrinks with the width so `HH:mm:ss` labels never overlap. */
 const MAX_TICKS = 5;
 const TICK_MIN_WIDTH = 72;
 
+const NODE_RADIUS = 6;
 const BAR_HEIGHT = 15;
 /**
  * A bar reaches half its height past its first and last instant, so a node sitting on either one is
  * as far from the bar's end as it is from its top and bottom.
  */
 const BAR_OVERHANG = BAR_HEIGHT / 2;
+
 /** Gap between adjacent session rectangles, halved on each. */
 const GROUP_INSET = 2;
 /** The rectangle's clearance around its bars, the same on every side, so its corners stay concentric with theirs. */
 const GROUP_PAD = ROW_HEIGHT / 2 - BAR_HEIGHT / 2 - GROUP_INSET;
 const GROUP_RADIUS = BAR_HEIGHT / 2 + GROUP_PAD;
+
 /** Radius of the delegation connector's bend from the drop into the child bar. */
 const BEND_RADIUS = BAR_HEIGHT / 2;
 
@@ -102,6 +104,8 @@ const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; node: string; thread
     text: 'text-red-500',
   },
 };
+
+const DEPENDENCY_CLASSNAME = 'stroke-fuchsia-500';
 
 type Row = {
   lane: GanttLane;
@@ -305,7 +309,7 @@ const GanttMeta = composable<HTMLDivElement, GanttMetaProps>((props, forwardedRe
       {rows.map(({ lane }) => (
         <div
           key={lane.id}
-          className='flex items-center justify-end gap-2 px-2 text-subdued whitespace-nowrap'
+          className='flex items-center justify-end gap-2 px-2 text-description whitespace-nowrap'
           style={{ height: ROW_HEIGHT }}
         >
           {lane.tokens && (
@@ -330,7 +334,6 @@ type GanttChartProps = ThemedClassName<{}>;
  * The drawing: every lane is a rounded bar with its markers threaded through it as nodes, a session's
  * rectangle encloses the tasks it works, and connectors draw dependencies and delegations.
  */
-// `forwardRef` rather than `composable`: the drawing is an `svg`, which the HTML-element helpers do not type.
 const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, forwardedRef) => {
   const { rows, groups, rowById, markers, markerById, range, now, showNow, onLaneSelect, onMarkerSelect } =
     useGanttContext('Gantt.Chart');
@@ -493,7 +496,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
             key={`delegation:${lane.id}`}
             d={`M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${targetX}`}
             fill='none'
-            className='stroke-fuchsia-500'
+            className={DEPENDENCY_CLASSNAME}
           />,
         ];
       })}

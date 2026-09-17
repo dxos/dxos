@@ -10,6 +10,7 @@ import type * as Trace from '@dxos/compute/Trace';
  *
  * Bucketed from the inherited {@link Process.Environment}, so filtering keeps whole subtrees together.
  */
+// TODO(burdon): Factor out.
 export const ProcessEnvironment = {
   /** Not scoped to a space: layout, navigation, identity, settings, space lifecycle. */
   App: 'app',
