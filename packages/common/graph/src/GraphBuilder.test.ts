@@ -408,22 +408,29 @@ describe('retention', () => {
     expect(present('root/w1/c0/c0')).to.be.true;
   });
 
-  test('what no retention reaches is released, and the root keeps its actions and companions', async () => {
+  test('what no retention reaches is released, and the root keeps its children, actions and companions', async () => {
     const { builder, retain, present } = await loaded();
     await retain([]);
 
     expect(present('root/ra')).to.be.true;
     expect(present('root/rk')).to.be.true;
-    expect(present('root/w0')).to.be.false;
+    expect(present('root/w0/a')).to.be.true;
+    expect(present('root/w0/c0')).to.be.false;
     expect(GraphBuilder.wasReleased(builder, 'root/w0/c0')).to.be.true;
+  });
+
+  test('a collection pending when the retentions are removed releases nothing', async () => {
+    const { builder, retain, registry, present } = await loaded();
+    const [answer] = await retain([{ id: 'root/w0' }]);
+    registry.set(answer, []);
+    GraphBuilder.setRetention(builder, []);
+    await GraphBuilder.flush(builder);
+    expect(present('root/w0/c0')).to.be.true;
   });
 
   test('depth counts structural levels, and targets of other relations go with their source', async () => {
     const { retain, present } = await loaded();
-    await retain([
-      { id: GraphNode.RootId, depth: 1 },
-      { id: 'root/w1', depth: 1 },
-    ]);
+    await retain([{ id: 'root/w1', depth: 1 }]);
 
     expect(present('root/w0')).to.be.true;
     expect(present('root/w0/a')).to.be.true;
@@ -447,7 +454,7 @@ describe('retention', () => {
 
   test('a node asked for below a released node goes with it', async () => {
     const { retain, present } = await loaded();
-    await retain([{ id: GraphNode.RootId, depth: 1 }, { id: 'root/w1/c0/c0' }]);
+    await retain([{ id: 'root/w1/c0/c0' }]);
     expect(present('root/w1/c0/c0')).to.be.false;
   });
 
@@ -456,21 +463,21 @@ describe('retention', () => {
     harness.model.addEdge({ id: 'shared', type: 'child', source: 'root/w0', target: 'root/w1/c0', data: { order: 0 } });
     await harness.retain([{ id: 'root/w0' }]);
     expect(harness.present('root/w1/c0')).to.be.true;
-    expect(harness.present('root/w1')).to.be.false;
+    expect(harness.present('root/w1/c1')).to.be.false;
   });
 
   test('a node expanded again under the same answer stays loaded until the answer changes', async () => {
     const harness = await loaded();
     const { registry, retain, children } = harness;
-    const [answer] = await retain([{ id: GraphNode.RootId, depth: 1 }, { id: 'root/w0' }]);
+    const [answer] = await retain([{ id: 'root/w0' }]);
     expect(children('root/w1')).to.deep.equal([]);
 
     await expand(harness, ['root/w1']);
-    registry.set(answer, [{ id: GraphNode.RootId, depth: 1 }, { id: 'root/w0' }]);
+    registry.set(answer, [{ id: 'root/w0' }]);
     await GraphBuilder.flush(harness.builder);
     expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
 
-    registry.set(answer, [{ id: GraphNode.RootId, depth: 1 }]);
+    registry.set(answer, []);
     await GraphBuilder.flush(harness.builder);
     expect(children('root/w0')).to.deep.equal([]);
     expect(children('root/w1')).to.deep.equal([]);
@@ -495,10 +502,9 @@ describe('retention', () => {
 
     GraphBuilder.setRetention(builder, [
       {
-        retained: Atom.make((get) => [
-          { id: GraphNode.RootId, depth: 1 },
-          ...(get(builder.children(GraphNode.RootId)).some(({ id }) => id === 'root/w2') ? [] : [{ id: 'root/w0' }]),
-        ]),
+        retained: Atom.make((get) =>
+          get(builder.children(GraphNode.RootId)).some(({ id }) => id === 'root/w2') ? [] : [{ id: 'root/w0' }],
+        ),
       },
     ]);
     await GraphBuilder.flush(builder);
@@ -531,7 +537,7 @@ describe('retention', () => {
     await expand(harness, [GraphNode.RootId, 'root/w/x']);
     expect(children('root/w/x')).to.deep.equal(['root/w/x/y']);
 
-    GraphBuilder.setRetention(builder, [{ retained: Atom.make([{ id: GraphNode.RootId, depth: 1 }]) }]);
+    GraphBuilder.setRetention(builder, [{ retained: Atom.make([]) }]);
     await GraphBuilder.flush(builder);
     expect(children('root/w')).to.deep.equal(['root/w/x']);
     expect(children('root/w/x')).to.deep.equal([]);

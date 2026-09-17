@@ -139,7 +139,7 @@ export type Region = { readonly id: string; readonly depth?: number };
 
 /**
  * Names nodes the builder must keep loaded; the implementor derives it from state it already keeps. Once any
- * retention is installed, whatever none of them reaches is released.
+ * retention is installed, whatever none of them reaches below the root's children is released.
  */
 export interface Retention {
   /** Collected whenever this changes; across every installed retention the deepest ask for a node wins. */
@@ -429,6 +429,10 @@ export class GraphBuilder<
   }
 
   _collect(): void {
+    if (this._retentions.length === 0) {
+      return;
+    }
+
     const asked = new Map<string, number>();
     for (const retention of this._retentions) {
       for (const { id, depth = Infinity } of this._registry.get(retention.retained)) {
@@ -451,12 +455,12 @@ export class GraphBuilder<
   }
 
   /**
-   * Walks the graph from the root, which always stays, carrying how many structural levels each node's
-   * retention leaves below it. A node reached with none left is unretained, and so is everything it alone
+   * Walks the graph from the root, which always stays with its children, carrying how many structural levels
+   * each node's retention leaves below it. A node reached with none left is unretained, and so is everything it alone
    * leads to.
    */
   _unretained(asked: ReadonlyMap<string, number>): Set<string> {
-    const budgets = new Map([[GraphNode.RootId, Math.max(0, asked.get(GraphNode.RootId) ?? 0)]]);
+    const budgets = new Map([[GraphNode.RootId, Math.max(1, asked.get(GraphNode.RootId) ?? 1)]]);
     const pending = [GraphNode.RootId];
     while (pending.length > 0) {
       const id = pending.pop()!;

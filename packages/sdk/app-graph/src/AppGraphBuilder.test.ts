@@ -804,10 +804,7 @@ describe('GraphBuilder', () => {
 
         GraphBuilder.setRetention(builder, [
           {
-            retained: Atom.make([
-              { id: GraphNode.RootId, depth: 1 },
-              { id: 'root/w0', depth: 1 },
-            ]),
+            retained: Atom.make([{ id: 'root/w0', depth: 1 }]),
           },
         ]);
         await GraphBuilder.flush(builder);

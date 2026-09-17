@@ -16,17 +16,12 @@ export type WorkspaceRetention = {
   retainedPlanks: readonly string[];
 };
 
-/**
- * Every node on the root, so the rail keeps its workspaces, plus the whole of each workspace the deck shows or
- * is about to. The root itself is only ever kept to depth 1, since naming it whole would keep everything.
- */
+/** The workspaces the deck shows or is about to, kept whole; the graph root is never named, since that would keep everything. */
 export const retainedWorkspaces = ({
   activeDeck,
   previousDeck,
   retainedPlanks,
-}: WorkspaceRetention): AppGraphBuilder.Region[] => [
-  { id: GraphNode.RootId, depth: 1 },
-  ...[...new Set([activeDeck, previousDeck, ...retainedPlanks.map(GraphPath.getWorkspaceFromPath)])]
+}: WorkspaceRetention): AppGraphBuilder.Region[] =>
+  [...new Set([activeDeck, previousDeck, ...retainedPlanks.map(GraphPath.getWorkspaceFromPath)])]
     .filter((id) => id !== GraphNode.RootId)
-    .map((id) => ({ id })),
-];
+    .map((id) => ({ id }));
