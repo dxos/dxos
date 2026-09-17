@@ -2,6 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+// These tests assert on a plain `Error`'s stack frames, so the `catch` returns the thrown value
+// untouched; narrowing it would buy nothing (`failWith` takes `unknown`) and re-wrapping it would
+// replace the stack under test. Dropping the `catch` does not work either: `Effect.try(thunk)`
+// wraps the throw in `UnknownError` and `causeToError` then reports the wrapper's stack.
+/** @effect-diagnostics unknownInEffectCatch:skip-file globalErrorInEffectCatch:skip-file */
+
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -40,14 +46,11 @@ describe('causeToError', () => {
       Effect.sync(() => {
         throw new Error('defect');
       }),
-      // The subject of this test is a plain `Error`'s stack, so the thrown error is returned as
-      // it is; a tagged wrapper would carry the catch's stack instead of the thunk's.
-      // @effect-diagnostics-next-line globalErrorInEffectCatch:off
       Effect.try({
         try: () => {
           throw new Error('failure');
         },
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        catch: (error) => error,
       }),
       // `map` calls the thunk through an anonymous runtime callback, which carries no `~effect/` name and stays.
       Effect.succeed(1).pipe(
