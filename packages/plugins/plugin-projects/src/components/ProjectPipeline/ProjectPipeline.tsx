@@ -9,7 +9,7 @@ import type * as Project from '@dxos/compute/Project';
 import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Gantt, type GanttLane } from '@dxos/react-ui-components';
+import { Gantt, type GanttLane } from '@dxos/react-ui-trace';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -39,7 +39,7 @@ export const ProjectPipeline = ({ space, project, tasks, onSelectChat }: Project
   // id does, so the pick is resolved through it.
   const handleLaneSelect = useCallback(
     (lane: GanttLane) => {
-      const chatId = timeline.lanes.find((candidate) => candidate.id === lane.id)?.chatId;
+      const chatId = timeline.lanes.find((candidate) => candidate.id === lane.id)?.sessionId;
       const chat = chatId && chats.find((candidate) => candidate.id === chatId);
       if (chat) {
         onSelectChat?.(chat);

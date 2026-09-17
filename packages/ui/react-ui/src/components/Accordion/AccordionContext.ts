@@ -12,6 +12,7 @@ export const ACCORDION_NAME = 'Accordion';
 export const ACCORDION_ITEM_NAME = 'AccordionItem';
 
 type AccordionContext<T extends AccordionItemRecord> = {
+  rounded?: boolean;
   getId(item: T): string;
 };
 
@@ -23,5 +24,6 @@ type AccordionItemContext<T extends AccordionItemRecord> = {
 // components, so a context exported beside one forces a full page reload on every edit.
 export const [AccordionProvider, useAccordionContext] =
   createContext<AccordionContext<AccordionItemRecord>>(ACCORDION_NAME);
+
 export const [AccordionItemProvider, useAccordionItemContext] =
   createContext<AccordionItemContext<AccordionItemRecord>>(ACCORDION_ITEM_NAME);

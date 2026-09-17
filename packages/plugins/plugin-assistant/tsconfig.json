@@ -160,6 +160,9 @@
       "path": "../../ui/react-ui-task"
     },
     {
+      "path": "../../ui/react-ui-trace"
+    },
+    {
       "path": "../../ui/react-ui-transcription"
     },
     {

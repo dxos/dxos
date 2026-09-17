@@ -32,7 +32,6 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
 import { ToolExecutionServices } from '../tool-runtime/index.ts';
-import { McpServerError, emitRequestPhase } from '../util/index.ts';
 import * as AiContext from './AiContext.ts';
 import * as Harness from './Harness.ts';
 import { SessionStore } from './SessionStore.ts';
@@ -206,7 +205,7 @@ export class Session extends Resource {
         serializePrompt(params.prompt),
       );
 
-      yield* emitRequestPhase('loading-history');
+      yield* Trace.emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -246,7 +245,7 @@ export class Session extends Resource {
         yield* Effect.promise(() => this.context.sync());
         const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
-        yield* emitRequestPhase('building-toolkit');
+        yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
           skills: currentSkills,
@@ -345,7 +344,7 @@ const connectMcpServers = (
               protocol: error.protocol,
               message: error.message,
             });
-            yield* Trace.write(McpServerError, {
+            yield* Trace.write(Trace.McpServerError, {
               url: error.url,
               protocol: error.protocol,
               message: error.message,
@@ -358,7 +357,7 @@ const connectMcpServers = (
           Effect.gen(function* () {
             const message = defect instanceof Error ? defect.message : String(defect);
             log.warn('Unexpected MCP defect', { url: options.url, message });
-            yield* Trace.write(McpServerError, {
+            yield* Trace.write(Trace.McpServerError, {
               url: options.url,
               protocol: options.protocol,
               message: `Unexpected MCP failure: ${message}`,
@@ -380,7 +379,7 @@ const connectMcpServers = (
 
   return Effect.gen(function* () {
     // Reported before the connections are opened, since opening them is the wait being reported.
-    yield* emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
+    yield* Trace.emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
     return yield* connect;
   });
 };

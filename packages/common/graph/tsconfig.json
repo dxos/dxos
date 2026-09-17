@@ -25,6 +25,9 @@
       "path": "../debug"
     },
     {
+      "path": "../errors"
+    },
+    {
       "path": "../invariant"
     },
     {
