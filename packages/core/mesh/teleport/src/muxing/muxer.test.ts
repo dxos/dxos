@@ -25,14 +25,10 @@ const setupPeers = () => {
   const peer1 = new Muxer();
   const peer2 = new Muxer();
 
-  connectDuplexStreams(peer1.stream, peer2.stream);
+  const unpipe = connectDuplexStreams(peer1.stream, peer2.stream);
 
-  const unpipe = () => {
-    void peer1.stream.readable.cancel().catch(() => {});
-    void peer2.stream.readable.cancel().catch(() => {});
-  };
   onTestFinished(async () => {
-    unpipe();
+    await unpipe();
     await peer1.destroy();
     await peer2.destroy();
   });

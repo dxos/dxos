@@ -53,6 +53,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     const streamEntry: TestStream = {
       networkStream,
+      abort: new AbortController(),
       bytesSent: 0,
       bytesReceived: 0,
       sendErrors: 0,
@@ -91,9 +92,13 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     this._streams.set(streamTag, streamEntry);
 
-    void readAll(networkStream.readable, (data) => {
-      streamEntry.bytesReceived += data.length;
-    }).catch(() => {
+    void readAll(
+      networkStream.readable,
+      (data) => {
+        streamEntry.bytesReceived += data.length;
+      },
+      { signal: streamEntry.abort.signal },
+    ).catch(() => {
       streamEntry.receiveErrors += 1;
     });
 
@@ -266,6 +271,7 @@ export type TestStreamStats = {
 
 type TestStream = {
   networkStream: DuplexStream;
+  abort: AbortController;
   writer?: WritableStreamDefaultWriter<Uint8Array>;
   bytesSent: number;
   bytesReceived: number;
@@ -284,5 +290,6 @@ const destroyTestStream = (stream: TestStream): void => {
   clearTimeout(stream.timer);
   clearInterval(stream.reportingTimer);
   void stream.writer?.close().catch(() => {});
-  void stream.networkStream.readable.cancel().catch(() => {});
+  // Through the read loop's own reader: `readable.cancel()` fails while `readAll` holds the lock.
+  stream.abort.abort();
 };

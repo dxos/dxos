@@ -90,6 +90,15 @@ export class Balancer {
     if (this._sendBuffers.size !== 0) {
       log.info('destroying balancer with pending calls');
     }
+
+    // Fail what is still queued: dropping the buffers alone leaves every caller awaiting a trigger
+    // that nothing will ever wake.
+    const error = new Error('Balancer destroyed.');
+    for (const sendBuffer of this._sendBuffers.values()) {
+      for (const { trigger } of sendBuffer) {
+        trigger?.throw(error);
+      }
+    }
     this._sendBuffers.clear();
     this._framer.destroy();
   }
