@@ -750,12 +750,6 @@ export const sortEdges = <T extends ExpandableGraph | WritableGraph>(
  */
 export const batch = <T extends WritableGraph, A>(graph: T, fn: () => A): A => getInternal(graph)._model.batch(fn);
 
-/** The edges leaving `id` in their stored outbound form, read without subscribing. */
-export const outgoing = (graph: BaseGraph, id: string): { source: string; target: string; relation: string }[] =>
-  getInternal(graph)
-    ._model.outgoing(id)
-    .map(({ source, target, type }) => ({ source, target, relation: type }));
-
 /**
  * Unloads the nodes: they leave the model outright, along with the expansion bookkeeping that would
  * otherwise keep the graph remembering ids it will never be asked about again.

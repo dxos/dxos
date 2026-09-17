@@ -280,7 +280,10 @@ const makeStore = (
     setNode: (id, node) => graph._setNode(id, node),
     batch: (fn) => Graph.batch(graph, fn),
     release: (ids) => void Graph.release(graph, ids),
-    outgoing: (id) => Graph.outgoing(graph, id),
+    outgoing: (id) =>
+      Graph.getInternal(graph)
+        ._model.outgoing(id)
+        .map(({ source, target, type }) => ({ source, target, relation: type })),
     constructNode: (node) => graph._constructNode(node),
   };
 };
