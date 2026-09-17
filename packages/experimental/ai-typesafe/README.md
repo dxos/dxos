@@ -38,6 +38,13 @@ const decisions = DecisionModel.generate({
 
 ## Tests
 
-`src/DecisionModel.test.ts` covers compilation and decoding against a stub layer. The last test hits
-the real endpoint and is tagged `manual`: run it with `DX_RUN_MANUAL_TESTS=1` and `TYPESAFE_API_KEY`
-set.
+`src/DecisionModel.test.ts` asks the real System One endpoint — a routing/urgency/frustration ticket
+answered through every primitive. Those tests are tagged `manual` because CI has no key:
+
+```bash
+DX_RUN_MANUAL_TESTS=1 TYPESAFE_API_KEY=... moon run ai-typesafe:test
+```
+
+The two suites that need no key run everywhere: schema compilation (a field that cannot be asked is
+rejected before any request) and the `EvaluateResponse` wire contract (decoded against the payload
+shapes the endpoint produces).
