@@ -18,12 +18,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Placeholder: Story = {};
-
-export const Identity: Story = {
-  args: { userId: '9f8e7d6c5b4a39281706f5e4d3c2b1a0' },
-};
-
-export const ChosenIdentity: Story = {
-  args: { userId: '9f8e7d6c5b4a39281706f5e4d3c2b1a0', emoji: '☀️', hue: 'cyan' },
-};
+export const Default: Story = {};
