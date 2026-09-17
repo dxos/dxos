@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CompleteBlock } from '@dxos/assistant';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Query, type Type } from '@dxos/echo';
@@ -56,7 +55,7 @@ export const completedBlocks = (): Effect.Effect<
     const blocks: { role: string; block: ContentBlock.Any; timestamp: number }[] = [];
     for (const message of messages) {
       for (const event of message.events) {
-        if (Trace.isOfType(CompleteBlock, event)) {
+        if (Trace.isOfType(Trace.CompleteBlock, event)) {
           blocks.push({ role: event.data.role, block: event.data.block, timestamp: event.timestamp });
         }
       }

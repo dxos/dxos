@@ -112,7 +112,6 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   /** The graph being built; surfaced unchanged as {@link GraphBuilder.graph}. */
   readonly graph: G;
   node(id: string): Atom.Atom<Option.Option<Node>>;
-  nodeOrThrow(id: string): Atom.Atom<Node>;
   addNodes(nodes: readonly Arg[]): void;
   removeNodes(ids: readonly string[], edges?: boolean): void;
   addEdges(edges: readonly Edge[]): void;
@@ -766,7 +765,6 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
   return {
     graph: model,
     node: (id) => nodes(id),
-    nodeOrThrow: (id) => Atom.make((get) => Option.getOrThrowWith(get(nodes(id)), () => new Error(`No node: ${id}`))),
     addNodes: (args) => model.batch(() => args.forEach(addNode)),
     removeNodes: (ids, edges) =>
       model.batch(() => {
@@ -954,7 +952,10 @@ export const explore = async <B extends Any>(
 
   await builder._yield();
 
-  const node = registry.get(builder._store.nodeOrThrow(source));
+  const node = Option.getOrThrowWith(
+    registry.get(builder._store.node(source)),
+    () => new GraphNode.NotFoundError(source),
+  );
   const shouldContinue = await visitor(node, [...path, node.id]);
   if (shouldContinue === false) {
     return;

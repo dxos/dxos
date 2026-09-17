@@ -325,6 +325,9 @@
       "path": "packages/core/compute/operation/tsconfig.json"
     },
     {
+      "path": "packages/e2e/perf-harness/tsconfig.json"
+    },
+    {
       "path": "packages/common/phoenix/tsconfig.json"
     },
     {
@@ -821,6 +824,9 @@
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-trace/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-transcription/tsconfig.json"

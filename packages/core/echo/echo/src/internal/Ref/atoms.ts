@@ -27,14 +27,12 @@ export const refSimpleFamily = Atom.family(<T>(ref: Ref<T>): Atom.Atom<T | undef
         const deleted = !!(target as any)[ObjectDeletedId];
         get.setSelf(deleted ? undefined : target);
       });
+      // Runs at once when the node was disposed while the target loaded.
+      get.addFinalizer(unsubscribeTarget);
       const deleted = !!(target as any)[ObjectDeletedId];
       return deleted ? undefined : target;
     };
 
-    get.addFinalizer(() => {
-      unsubscribeTarget?.();
-    });
-
     return loadRefTarget(ref, get, setupSubscription);
-  }).pipe(Atom.keepAlive);
+  });
 });

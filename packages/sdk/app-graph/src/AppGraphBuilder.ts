@@ -270,7 +270,6 @@ const makeStore = (
   return {
     graph,
     node: (id) => graph.node(id),
-    nodeOrThrow: (id) => graph.nodeOrThrow(id),
     addNodes: (nodes) => void Graph.addNodes(graph, [...nodes]),
     removeNodes: (ids, edges) => void Graph.removeNodes(graph, [...ids], edges),
     addEdges: (edges) => void Graph.addEdges(graph, edges.map(decode)),
