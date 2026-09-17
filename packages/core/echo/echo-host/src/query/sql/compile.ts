@@ -38,6 +38,23 @@ const MAX_DEPTH_FOR_STRONG_DEP_TRACING = 10;
 /** Keeps union branches ordered after one another without renumbering their rows. */
 const UNION_BRANCH_STRIDE = 1_000_000_000;
 
+/**
+ * A working-set row's own metadata is a rowid lookup. `NOT INDEXED` keeps it one: given a `WHERE`
+ * on `queueId` the planner would otherwise drive from `objectMeta` through the queue-position index
+ * and probe the working set, a scan of every document instead of one seek per row.
+ *
+ * `objectMeta` indexes the joins below name explicitly. Without `ANALYZE` statistics SQLite rates an
+ * equality on `queueId` (the leading column of the queue-position index, true of every document
+ * row) as cheap as a seek on `(spaceId, objectId)`, and picks it; the traversal then scans every
+ * document per reference. The names are fixed by the entity-meta migrations.
+ */
+const INDEX_SPACE_OBJECT = 'idx_object_index_objectId';
+const INDEX_SPACE_TYPE = 'idx_object_index_typeDXN';
+const INDEX_SPACE_QUEUE_OBJECT = 'idx_object_index_queueObjectId';
+const INDEX_SPACE_PARENT = 'idx_object_index_parentId';
+const INDEX_SPACE_SOURCE = 'idx_object_index_sourceId';
+const INDEX_SPACE_TARGET = 'idx_object_index_targetId';
+
 /** One row of a compiled query's final projection. */
 export type CompiledRow = {
   recordId: number;
@@ -199,9 +216,11 @@ export class SqlPlanCompiler {
           break;
         }
         const typeCondition = buildTypeDxnCondition(sql, step.selector.typename);
+        // Pinned: the planner otherwise seeks `(spaceId, queueId)` and scans the space's documents
+        // for the type. An inverted select cannot seek the type index, so it is left free.
         base = step.selector.inverted
           ? sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m WHERE ${scope} AND NOT (${typeCondition})${window}`
-          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m WHERE ${scope} AND (${typeCondition})${window}`;
+          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m INDEXED BY ${sql.literal(INDEX_SPACE_TYPE)} WHERE ${scope} AND (${typeCondition})${window}`;
         break;
       }
       case 'IdSelector': {
@@ -310,7 +329,7 @@ export class SqlPlanCompiler {
     const predicate = this.#compileRootPredicate(step.filter);
     return this.#define(
       'ws',
-      sql`SELECT w.* FROM ${this.#ref(ws)} w JOIN objectMeta m ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId WHERE ${predicate}`,
+      sql`SELECT w.* FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId WHERE ${predicate}`,
       ws.grouped,
     );
   }
@@ -578,24 +597,24 @@ export class SqlPlanCompiler {
     const dep = this.#define(
       'dep',
       sql`
-      SELECT w.recordId, m.spaceId, m.parentId AS depId, 1 AS depth FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId WHERE m.parentId IS NOT NULL
+      SELECT w.recordId, m.spaceId, m.parentId AS depId, 1 AS depth FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE m.parentId IS NOT NULL
       UNION ALL
-      SELECT w.recordId, m.spaceId, m.sourceId, 1 FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId WHERE m.entityKind = 'relation' AND m.sourceId IS NOT NULL
+      SELECT w.recordId, m.spaceId, m.sourceId, 1 FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE m.entityKind = 'relation' AND m.sourceId IS NOT NULL
       UNION ALL
-      SELECT w.recordId, m.spaceId, m.targetId, 1 FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId WHERE m.entityKind = 'relation' AND m.targetId IS NOT NULL
+      SELECT w.recordId, m.spaceId, m.targetId, 1 FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE m.entityKind = 'relation' AND m.targetId IS NOT NULL
       UNION ALL
       SELECT x.recordId, x.spaceId, p.parentId, x.depth + 1
-        FROM ${sql.literal(this.#peekName('dep'))} x JOIN objectMeta p ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+        FROM ${sql.literal(this.#peekName('dep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
         WHERE x.depth < ${MAX_DEPTH_FOR_DELETION_TRACING} AND p.deleted = 0 AND p.parentId IS NOT NULL`,
     );
     const deletedByDependency = sql`EXISTS (
-      SELECT 1 FROM ${this.#ref(dep)} x JOIN objectMeta p ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+      SELECT 1 FROM ${this.#ref(dep)} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
       WHERE x.recordId = w.recordId AND p.deleted = 1)`;
     const isDeleted = sql`(m.deleted = 1 OR ${deletedByDependency})`;
     const condition = step.mode === 'only-deleted' ? isDeleted : sql`NOT ${isDeleted}`;
     return this.#define(
       'ws',
-      sql`SELECT w.* FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId WHERE ${condition}`,
+      sql`SELECT w.* FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE ${condition}`,
       ws.grouped,
     );
   }
@@ -622,10 +641,10 @@ export class SqlPlanCompiler {
       'anc',
       sql`
       SELECT w.recordId, m.spaceId, COALESCE(m.parentId, CASE WHEN m.parentId IS NULL AND m.parent IS NULL AND m.queueId != '' THEN m.queueId END) AS ancestorId, 1 AS depth
-        FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId
+        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
       UNION ALL
       SELECT x.recordId, x.spaceId, p.parentId, x.depth + 1
-        FROM ${sql.literal(this.#peekName('anc'))} x JOIN objectMeta p ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.ancestorId
+        FROM ${sql.literal(this.#peekName('anc'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.ancestorId
         WHERE x.depth < ${maxDepth} AND p.parentId IS NOT NULL`,
     );
     return this.#define(
@@ -646,33 +665,36 @@ export class SqlPlanCompiler {
     const sql = this.#sql;
     const wsRef = this.#ref(ws);
     const typeId = (table: Fragment) => localIdOfLocalUri(sql, sql`${table}.typeDXN`);
+    const seedFrom = (depId: Fragment, extra: Fragment) =>
+      sql`SELECT w.recordId, m.spaceId, ${depId} AS depId, 1 AS depth FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE m.queueId = '' AND ${extra} ${depId} IS NOT NULL`;
+    // Each recursive branch seeks the dependency row by (space, object) and emits one of its own
+    // dependencies; a derived table over the whole of `objectMeta` here would rescan it per level.
+    const recurseWith = (depId: Fragment, extra: Fragment) =>
+      sql`SELECT x.recordId, x.spaceId, ${depId} AS depId, x.depth + 1
+        FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${extra} ${depId} IS NOT NULL`;
+    const relation = (row: Fragment) => sql`${row}.entityKind = 'relation' AND`;
     const sdep = this.#define(
       'sdep',
-      sql`
-      SELECT w.recordId, m.spaceId, ${typeId(sql`m`)} AS depId, 1 AS depth FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId WHERE m.queueId = '' AND ${typeId(sql`m`)} IS NOT NULL
-      UNION ALL
-      SELECT w.recordId, m.spaceId, m.parentId, 1 FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId WHERE m.queueId = '' AND m.parentId IS NOT NULL
-      UNION ALL
-      SELECT w.recordId, m.spaceId, m.sourceId, 1 FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId WHERE m.queueId = '' AND m.entityKind = 'relation' AND m.sourceId IS NOT NULL
-      UNION ALL
-      SELECT w.recordId, m.spaceId, m.targetId, 1 FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId WHERE m.queueId = '' AND m.entityKind = 'relation' AND m.targetId IS NOT NULL
-      UNION ALL
-      SELECT x.recordId, x.spaceId, n.depId, x.depth + 1
-        FROM ${sql.literal(this.#peekName('sdep'))} x
-        JOIN objectMeta p ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
-        JOIN (
-          SELECT recordId, ${typeId(sql`q`)} AS depId FROM objectMeta q
-          UNION ALL SELECT recordId, parentId FROM objectMeta
-          UNION ALL SELECT recordId, sourceId FROM objectMeta WHERE entityKind = 'relation'
-          UNION ALL SELECT recordId, targetId FROM objectMeta WHERE entityKind = 'relation'
-        ) n ON n.recordId = p.recordId AND n.depId IS NOT NULL
-        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING}`,
+      sql.join(
+        ' UNION ALL ',
+        false,
+      )([
+        seedFrom(typeId(sql`m`), sql``),
+        seedFrom(sql`m.parentId`, sql``),
+        seedFrom(sql`m.sourceId`, relation(sql`m`)),
+        seedFrom(sql`m.targetId`, relation(sql`m`)),
+        recurseWith(typeId(sql`p`), sql``),
+        recurseWith(sql`p.parentId`, sql``),
+        recurseWith(sql`p.sourceId`, relation(sql`p`)),
+        recurseWith(sql`p.targetId`, relation(sql`p`)),
+      ]),
     );
     return this.#define(
       'ws',
       sql`SELECT w.* FROM ${wsRef} w WHERE NOT EXISTS (
         SELECT 1 FROM ${this.#ref(sdep)} x WHERE x.recordId = w.recordId
-          AND NOT EXISTS (SELECT 1 FROM objectMeta p WHERE p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId))`,
+          AND NOT EXISTS (SELECT 1 FROM ${docRow(sql, 'p')} WHERE p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId))`,
       ws.grouped,
     );
   }
@@ -698,14 +720,17 @@ export class SqlPlanCompiler {
           const refs = sql`json_each(CASE json_type(d.body, ${at}) WHEN 'array' THEN json_extract(d.body, ${at}) ELSE json_array(json_extract(d.body, ${at})) END)`;
           const uri = sql`json_extract(ref.value, '$."/"')`;
           // A target in a feed is reachable only when the plan scopes the space with its feeds.
+          const target = this.#includeAllFeeds
+            ? sql`objectMeta t INDEXED BY ${sql.literal(INDEX_SPACE_OBJECT)}`
+            : docRow(sql, 't');
           const targetKind = this.#includeAllFeeds ? sql`1 = 1` : sql`t.queueId = ''`;
           return this.#define(
             'ws',
             sql`${project(sql`t`)} FROM ${wsRef} w
-              JOIN objectMeta m ON m.recordId = w.recordId
+              JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
               JOIN objectData d ON d.recordId = w.recordId
               JOIN ${refs} ref
-              JOIN objectMeta t ON t.spaceId = COALESCE(${spaceIdOfUri(sql, uri)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, uri)} AND ${targetKind}
+              JOIN ${target} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, uri)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, uri)} AND ${targetKind}
               WHERE ${uri} LIKE 'echo:%'
               GROUP BY t.recordId`,
           );
@@ -730,19 +755,21 @@ export class SqlPlanCompiler {
             return this.#define(
               'ws',
               sql`${project(sql`t`)} FROM ${wsRef} w
-                JOIN objectMeta m ON m.recordId = w.recordId
-                JOIN objectMeta t ON t.spaceId = COALESCE(${spaceIdOfUri(sql, column)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, column)} AND t.queueId = ''
+                JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
+                JOIN ${docRow(sql, 't')} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, column)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, column)} AND t.queueId = ''
                 WHERE ${column} IS NOT NULL
                 GROUP BY t.recordId`,
             );
           }
           case 'source-to-relation':
           case 'target-to-relation': {
-            const column = step.traversal.direction === 'source-to-relation' ? sql`t.sourceId` : sql`t.targetId`;
+            const bySource = step.traversal.direction === 'source-to-relation';
+            const column = bySource ? sql`t.sourceId` : sql`t.targetId`;
+            const index = sql.literal(bySource ? INDEX_SPACE_SOURCE : INDEX_SPACE_TARGET);
             return this.#define(
               'ws',
               sql`${project(sql`t`)} FROM ${wsRef} w
-                JOIN objectMeta t ON t.spaceId = w.spaceId AND t.entityKind = 'relation' AND ${column} = w.objectId
+                JOIN objectMeta t INDEXED BY ${index} ON t.spaceId = w.spaceId AND ${column} = w.objectId AND t.entityKind = 'relation'
                 GROUP BY t.recordId`,
             );
           }
@@ -754,18 +781,25 @@ export class SqlPlanCompiler {
           return this.#define(
             'ws',
             sql`${project(sql`t`)} FROM ${wsRef} w
-              JOIN objectMeta m ON m.recordId = w.recordId
-              JOIN objectMeta t ON t.spaceId = COALESCE(${spaceIdOfUri(sql, sql`m.parent`)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, sql`m.parent`)} AND t.queueId = ''
+              JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
+              JOIN ${docRow(sql, 't')} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, sql`m.parent`)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, sql`m.parent`)} AND t.queueId = ''
               WHERE m.queueId = '' AND m.parent IS NOT NULL
               GROUP BY t.recordId`,
           );
         }
         // Children by parent, and a feed's items by queue id (a feed's queue id is its object id).
+        // Two seeks rather than one `OR`, which SQLite answers by scanning the space.
         return this.#define(
           'ws',
-          sql`${project(sql`t`)} FROM ${wsRef} w
-            JOIN objectMeta t ON t.spaceId = w.spaceId AND (t.parentId = w.objectId OR t.queueId = w.objectId)
-            GROUP BY t.recordId`,
+          sql`SELECT recordId, objectId, spaceId, MIN(rank) AS rank, MIN(ord) AS ord FROM (
+            ${project(sql`t`)} FROM ${wsRef} w
+              JOIN objectMeta t INDEXED BY ${sql.literal(INDEX_SPACE_PARENT)} ON t.spaceId = w.spaceId AND t.parentId = w.objectId
+              GROUP BY t.recordId
+            UNION ALL
+            ${project(sql`t`)} FROM ${wsRef} w
+              JOIN objectMeta t INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)} ON t.spaceId = w.spaceId AND t.queueId = w.objectId
+              GROUP BY t.recordId
+          ) GROUP BY recordId`,
         );
       }
     }
@@ -818,7 +852,7 @@ export class SqlPlanCompiler {
       const regrouped = this.#define(
         'grp',
         sql`SELECT w.*, DENSE_RANK() OVER (ORDER BY ${orderBy}, w.groupOrd) AS newGroupOrd
-          FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId
+          FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId
           WHERE w.ord = (SELECT MIN(ord) FROM ${wsRef} f WHERE f.groupKey = w.groupKey)`,
       );
       const reordered = this.#define(
@@ -837,7 +871,7 @@ export class SqlPlanCompiler {
     const ordered = this.#define(
       'ws',
       sql`SELECT w.recordId, w.objectId, w.spaceId, w.rank, ROW_NUMBER() OVER (ORDER BY ${orderBy}) AS ord
-        FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
+        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
     );
     return step.limit === undefined ? ordered : this.#compileLimitSkip(ordered, { limit: step.limit });
   }
@@ -928,7 +962,7 @@ export class SqlPlanCompiler {
     const keyed = this.#define(
       'keyed',
       sql`SELECT w.*, ${keyJson} AS groupKey${keyColumns.length > 0 ? sql`, ${sql.csv(keyColumns)}` : sql``}
-        FROM ${wsRef} w JOIN objectMeta m ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
+        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
     );
 
     const aggregateColumns = scalarAggregates.map((aggregate) => {
@@ -951,7 +985,7 @@ export class SqlPlanCompiler {
       sql`SELECT k.recordId, k.objectId, k.spaceId, k.rank, k.ord, k.groupKey,
         MIN(k.ord) OVER (PARTITION BY k.groupKey) AS firstOrd,
         COUNT(*) OVER (PARTITION BY k.groupKey) AS groupCount${aggregateColumns.length > 0 ? sql`, ${sql.csv(aggregateColumns)}` : sql``}
-        FROM ${this.#ref(keyed)} k JOIN objectMeta m ON m.recordId = k.recordId JOIN objectData d ON d.recordId = k.recordId`,
+        FROM ${this.#ref(keyed)} k JOIN objectMeta m NOT INDEXED ON m.recordId = k.recordId JOIN objectData d ON d.recordId = k.recordId`,
     );
     const shape: GroupedShape = { aggregateNames: scalarAggregates.map((aggregate) => aggregate.name) };
     // Groups take the order of their first member; members keep their order, or the `items`
@@ -960,7 +994,7 @@ export class SqlPlanCompiler {
     return this.#define(
       'ws',
       sql`SELECT ${this.#groupedColumns(shape, sql`w`, sql`DENSE_RANK() OVER (ORDER BY w.firstOrd)`, sql`ROW_NUMBER() OVER (ORDER BY w.firstOrd, ${memberOrder})`)}
-        FROM ${this.#ref(stamped)} w JOIN objectMeta m ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
+        FROM ${this.#ref(stamped)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
       shape,
     );
   }
@@ -1018,7 +1052,7 @@ export class SqlPlanCompiler {
       m.createdAt, m.updatedAt,
       CASE WHEN m.queueId != '' THEN json(d.body) END AS documentJson,
       ${groupColumns}
-      FROM ${this.#ref(ws)} w JOIN objectMeta m ON m.recordId = w.recordId LEFT JOIN objectData d ON d.recordId = w.recordId
+      FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectData d ON d.recordId = w.recordId
       ORDER BY w.ord`;
   }
 }
@@ -1207,6 +1241,10 @@ const structuralMatch = (sql: SqlClient.SqlClient, element: Fragment, operand: R
   }
   return sql`(${sql.and(conditions)})`;
 };
+
+/** `objectMeta` aliased for a document-row point lookup by (space, queue, object), with the index pinned. */
+const docRow = (sql: SqlClient.SqlClient, alias: string): Fragment =>
+  sql`objectMeta ${sql.literal(alias)} INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)}`;
 
 /** The entity id of an `echo:` URI (the text after its last slash), `NULL` for any other text. */
 const localIdOfUri = (sql: SqlClient.SqlClient, uri: Fragment): Fragment =>

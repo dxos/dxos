@@ -731,7 +731,11 @@ export class QueryExecutor extends Resource {
     this.#inQuerySetCache = new Map();
     this.#inQueryTracesAttached = new Set();
 
+    const begin = performance.now();
     const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
+    // `_execPlan` stamps only the end, so the root's duration would otherwise read from epoch zero.
+    trace.beginTs = begin;
+    trace.executionTime = trace.endTs - begin;
     // Omit objects whose strong deps cannot be resolved from local state so they
     // never reach the client, where hydration would fail or stall on them.
     const workingSet = await this._filterUnresolvableStrongDeps(rawWorkingSet);
