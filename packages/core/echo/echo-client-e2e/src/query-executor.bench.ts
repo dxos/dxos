@@ -62,8 +62,13 @@ class BenchTask extends Type.makeObject<BenchTask>(DXN.make('com.example.type.be
 ) {}
 
 const TYPES = [BenchTask, TestSchema.Person];
-const EXPECTED_MATCHES =
-  Math.floor(TASK_COUNT / PRIORITY_LEVELS) + (TASK_COUNT % PRIORITY_LEVELS >= TARGET_PRIORITY ? 1 : 0);
+const taskIndices = Array.from({ length: TASK_COUNT }, (unusedValue, index) => index);
+const priorityOf = (index: number) => (index % PRIORITY_LEVELS) + 1;
+const assigneeOf = (index: number) => index % PERSON_COUNT;
+const matchingIndices = taskIndices.filter((index) => priorityOf(index) === TARGET_PRIORITY);
+const EXPECTED_MATCHES = matchingIndices.length;
+// Distinct assignees of the matching tasks: with 50 persons and 5 priorities that is 10, not 50.
+const EXPECTED_ASSIGNEES = new Set(matchingIndices.map(assigneeOf)).size;
 
 type QueryShape = {
   label: string;
@@ -81,7 +86,7 @@ const orderQuery = Query.select(Filter.type(BenchTask)).orderBy(Order.property('
 const SHAPES: QueryShape[] = [
   { label: 'type', query: typeQuery, expected: TASK_COUNT },
   { label: 'type + property', query: propertyQuery, expected: EXPECTED_MATCHES },
-  { label: 'reference traversal', query: referenceQuery, expected: PERSON_COUNT },
+  { label: 'reference traversal', query: referenceQuery, expected: EXPECTED_ASSIGNEES },
   { label: 'order + limit', query: orderQuery, expected: ORDER_LIMIT },
 ];
 
@@ -115,8 +120,8 @@ const seed = async (mode: QueryExecutorMode, storagePath?: string): Promise<Seed
       Obj.make(BenchTask, {
         title: `task-${index}`,
         description: `description of task ${index}`,
-        priority: (index % PRIORITY_LEVELS) + 1,
-        assignee: Ref.make(persons[index % PERSON_COUNT]),
+        priority: priorityOf(index),
+        assignee: Ref.make(persons[assigneeOf(index)]),
       }),
     );
     if ((index + 1) % SEED_BATCH_SIZE === 0) {
@@ -210,6 +215,12 @@ type TraceRow = {
 const sumTrace = (trace: ExecutionTrace, field: 'documentsLoaded' | 'indexHits' | 'documentLoadTime'): number =>
   trace[field] + trace.children.reduce((sum, child) => sum + sumTrace(child, field), 0);
 
+// The memory path's root trace is created with `beginTs: 0`, so its `executionTime` is the process
+// uptime; its step traces are stamped correctly, so their sum is the figure comparable to the sql
+// path's single root trace.
+const executionTimeOf = (trace: ExecutionTrace): number =>
+  trace.children.length > 0 ? trace.children.reduce((sum, child) => sum + child.executionTime, 0) : trace.executionTime;
+
 /**
  * Runs each query shape as a reactive query on the mode's warm peer and reads the host's trace of that
  * run while the query is still registered (traces are kept only for active queries).
@@ -234,7 +245,7 @@ const collectTraces = async ({ mode, peer, db }: Seeded): Promise<TraceRow[]> =>
       objectCount: trace.objectCount,
       documentsLoaded: sumTrace(trace, 'documentsLoaded'),
       indexHits: sumTrace(trace, 'indexHits'),
-      executionTime: trace.executionTime,
+      executionTime: executionTimeOf(trace),
       documentLoadTime: sumTrace(trace, 'documentLoadTime'),
     });
   }
