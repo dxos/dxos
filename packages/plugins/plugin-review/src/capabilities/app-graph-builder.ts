@@ -21,12 +21,14 @@ import { meta } from '#meta';
 import { CommentOperation } from '#types';
 
 // Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
-import { getCommentConfig } from '../util/commentable.ts';
+import { findCommentConfig, getCommentConfig } from '../util/commentable.ts';
 import { getAnchor } from '../util/message.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
+    // Read through the atom: a config contributed after the relation expands has to reach the matcher.
+    const commentConfigsAtom = yield* Capability.atom(AppCapabilities.CommentConfig);
 
     const getAnchorResolver = (typename: string) =>
       capabilities.getAll(AppCapabilities.AnchorResolver).find(({ key }) => key === typename);
@@ -35,7 +37,8 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'commentsCompanion',
         relation: AppNode.companion,
-        match: (node) => (getCommentConfig(capabilities, node.data) ? Option.some(node) : Option.none()),
+        match: (node, get) =>
+          findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -49,7 +52,8 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'commentToolbar',
-        match: (node) => (getCommentConfig(capabilities, node.data) ? Option.some(node) : Option.none()),
+        match: (node, get) =>
+          findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
         actions: (matched) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);

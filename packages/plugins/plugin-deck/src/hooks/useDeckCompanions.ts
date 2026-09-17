@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useEffect } from 'react';
+
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
@@ -31,6 +34,10 @@ const isDeckCompanion = (node: AppGraphNode.Node): node is DeckCompanion =>
 
 export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
+  useEffect(() => {
+    AppGraph.expandSync(graph, GraphNode.RootId, AppNode.companion);
+  }, [graph]);
+
   return useConnections(graph, GraphNode.RootId, AppNode.companion)
     .filter(isDeckCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));

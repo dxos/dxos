@@ -735,11 +735,9 @@ describe('GraphBuilder', () => {
         expect(connections[0].id).to.equal('parent/child');
       });
 
-      test('relations configured to expand with children do, and stay out of the child relation', async ({
-        expect,
-      }) => {
+      test('a node attached through another relation stays out of the child relation', async ({ expect }) => {
         const registry = Registry.make();
-        const builder = GraphBuilder.make({ registry, expandWithChildren: [ATTACHED] });
+        const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
         GraphBuilder.addExtension(builder, [
           ...Effect.runSync(
@@ -761,6 +759,7 @@ describe('GraphBuilder', () => {
 
         Graph.addNode(graph as Graph.WritableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
         Graph.expandSync(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', ATTACHED);
         await GraphBuilder.flush(builder);
 
         expect(registry.get(graph.connections('parent', 'child')).map(({ id }) => id)).to.deep.equal(['parent/child']);
@@ -771,7 +770,7 @@ describe('GraphBuilder', () => {
 
       test('retention counts child edges as levels and keeps attached nodes with their owner', async ({ expect }) => {
         const registry = Registry.make();
-        const builder = GraphBuilder.make({ registry, expandWithChildren: [ATTACHED] });
+        const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
         GraphBuilder.addExtension(builder, [
           ...Effect.runSync(
@@ -800,6 +799,7 @@ describe('GraphBuilder', () => {
         ]);
         for (const id of [GraphNode.RootId, 'root/w0', 'root/w1', 'root/w0/item', 'root/w1/item']) {
           Graph.expandSync(graph, id, 'child');
+          Graph.expandSync(graph, id, ATTACHED);
           await GraphBuilder.flush(builder);
         }
 

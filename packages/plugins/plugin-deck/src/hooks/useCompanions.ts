@@ -5,6 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { useContext, useEffect, useState } from 'react';
 
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
@@ -33,6 +34,7 @@ export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
       return;
     }
 
+    AppGraph.expandSync(graph, id, AppNode.companion);
     const atom = graph.connections(id, AppNode.companion);
     const update = () => {
       const next = registry

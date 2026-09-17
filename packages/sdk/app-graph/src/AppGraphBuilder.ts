@@ -171,8 +171,6 @@ export type GraphBuilderTraverseOptions = Builder.TraverseOptions<Node.Node, Nod
 /** Construction params: the backing graph's props plus the URL grammar's fixed keys. */
 export type GraphBuilderProps = Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'> & {
   urlGrammar?: UrlGrammarProps;
-  /** Relations expanded whenever a node's children are, beside its actions. */
-  expandWithChildren?: readonly Node.RelationInput[];
   /**
    * Applied to each connector-produced node before it enters the graph. Defaults to stamping the
    * URL segment implied by the producing extension's binding.
@@ -194,9 +192,8 @@ export class GraphBuilder extends Builder.GraphBuilder<
 > {
   /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
   readonly urlGrammar: UrlGrammar;
-  readonly _expandWithChildren: readonly Node.RelationInput[];
 
-  constructor({ registry, urlGrammar, expandWithChildren = [], decorateNode, ...graphProps }: GraphBuilderProps = {}) {
+  constructor({ registry, urlGrammar, decorateNode, ...graphProps }: GraphBuilderProps = {}) {
     const grammar: UrlGrammar = {
       tailSeparator: DEFAULT_TAIL_SEPARATOR,
       ...urlGrammar,
@@ -211,7 +208,6 @@ export class GraphBuilder extends Builder.GraphBuilder<
       store: (hooks, resolvedRegistry) => makeStore(graphProps, hooks, resolvedRegistry),
     });
     this.urlGrammar = grammar;
-    this._expandWithChildren = [Node.actionRelation(), ...expandWithChildren];
   }
 
   /** Hand flushes to the scheduler so a large expansion yields to the main thread. */
@@ -231,8 +227,9 @@ export class GraphBuilder extends Builder.GraphBuilder<
   override _onExpand(id: string, relation: string): void {
     super._onExpand(id, relation);
 
+    // TODO(wittjosiah): Remove. This is for backwards compatibility.
     if (relation === CHILD_RELATION) {
-      this._expandWithChildren.forEach((attached) => Graph.expandSync(this.graph, id, attached));
+      Graph.expandSync(this.graph, id, Node.actionRelation());
     }
   }
 }
@@ -296,17 +293,13 @@ export const make = (params?: GraphBuilderProps): GraphBuilder => new GraphBuild
 /**
  * Creates a GraphBuilder from a serialized pickle string.
  */
-export const from = (
-  pickle?: string,
-  registry?: Registry.AtomRegistry,
-  props?: Pick<GraphBuilderProps, 'urlGrammar' | 'expandWithChildren'>,
-): GraphBuilder => {
+export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGrammar?: UrlGrammarProps): GraphBuilder => {
   if (!pickle) {
-    return make({ registry, ...props });
+    return make({ registry, urlGrammar });
   }
 
   const { nodes, edges } = JSON.parse(pickle);
-  return make({ nodes, edges, registry, ...props });
+  return make({ nodes, edges, registry, urlGrammar });
 };
 
 // The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.

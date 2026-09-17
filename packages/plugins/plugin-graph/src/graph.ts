@@ -30,12 +30,9 @@ export default Capability.makeModule(
     // The grammar's fixed tiers, configured here rather than declared by an extension: no connector
     // produces their nodes (see `AppGraphBuilder.UrlGrammar`).
     const builder = AppGraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
-      urlGrammar: {
-        anchorKey: UrlPath.WORKSPACE_KEY,
-        linkedKey: UrlPath.COMPANION_KEY,
-        linkedRelation: AppNode.companion,
-      },
-      expandWithChildren: [AppNode.companion],
+      anchorKey: UrlPath.WORKSPACE_KEY,
+      linkedKey: UrlPath.COMPANION_KEY,
+      linkedRelation: AppNode.companion,
     });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());

@@ -60,7 +60,7 @@ describe('SearchPlugin', () => {
 
     const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
     const registry = harness.get(Capabilities.AtomRegistry);
-    AppGraph.expandSync(builder.graph, GraphNode.RootId, 'child');
+    AppGraph.expandSync(builder.graph, GraphNode.RootId, AppNode.companion);
     await AppGraphBuilder.flush(builder);
 
     expect(client.initialized).toBe(false);

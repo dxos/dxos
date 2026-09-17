@@ -48,7 +48,6 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const builder = GraphBuilder.make({
     registry,
     urlGrammar: { anchorKey: 'w', linkedKey: 'companion', linkedRelation: COMPANION },
-    expandWithChildren: [COMPANION],
   });
 
   const workspaces = Effect.runSync(

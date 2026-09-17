@@ -146,6 +146,7 @@ export default Capability.makeModule(
           // Already provisioned — no need to watch connections.
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
+          AppGraph.expandSync(graph, plankId, AppNode.companion);
           plankSubs.set(
             plankId,
             registry.subscribe(graph.connections(plankId, AppNode.companion), () => {
