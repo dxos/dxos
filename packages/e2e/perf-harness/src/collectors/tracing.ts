@@ -52,11 +52,16 @@ type TraceEvent = {
 };
 
 /**
- * One browser-wide trace for the whole run, sliced into stages by user-timing marks.
+ * One browser-wide trace covering BOOT, sliced by user-timing marks.
  *
  * Why a trace rather than the `Profiler` domain: tracing starts BEFORE the first navigation and is
  * browser-wide, so it covers `boot` and every worker that boot creates — the window the profiler
  * structurally cannot reach, since there is no target to attach to until the page exists.
+ *
+ * Why boot ONLY: at `toplevel` granularity boot alone emits ~35,000 tasks and fills Chrome's trace
+ * buffer, after which recording silently stops. A whole-run trace measured 806 MB uncompressed and
+ * contained the boot marks and not one mark from the nine stages that followed, so the caller ends
+ * the trace as soon as boot closes. Every later stage is the profiler's to attribute.
  *
  * Started once and read once: a trace cannot be rotated per stage the way a profile can, which is
  * why stage attribution is post-processing rather than a boundary read.
@@ -133,8 +138,7 @@ export const startTracing = async (
     await once(sink, 'finish');
     await browserCdp.send('IO.close', { handle: streamHandle }).catch(() => undefined);
 
-    const index = await scanTrace(file);
-    const byStage = await sumTaskTime(file, index);
+    const byStage = await readTrace(file);
 
     if (options.mode === 'measure') {
       // The numbers are the deliverable in `measure`; the trace itself is a diagnose artifact.
@@ -147,55 +151,118 @@ export const startTracing = async (
   return { finish };
 };
 
-/** Reads the gzipped trace line-agnostically, handing each complete event object to `onEvent`. */
-const streamEvents = async (file: string, onEvent: (event: TraceEvent) => void): Promise<void> => {
-  const source = createReadStream(file).pipe(createGunzip());
-  // A hand-rolled object splitter rather than a JSON parser: the file is one huge array and the
-  // only structure needed is "where does this object end", which depth counting answers without
-  // materializing anything larger than a single event.
-  let buffer = '';
+/**
+ * Per-stage, per-realm task time from a trace file on disk.
+ *
+ * Exported so a saved `trace.json.gz` artifact can be re-read after the fact — the numbers are
+ * two streaming passes over the file and need no browser, so a regression can be re-examined from
+ * the uploaded artifact rather than by reproducing the run.
+ */
+export const readTrace = async (file: string): Promise<Map<string, RealmCpu[]>> => {
+  // Two passes rather than one: bucketing a task needs the thread names and the stage windows,
+  // and both are scattered through the file, so nothing can be bucketed until it has been read
+  // once. Both passes are streaming, so the cost is bytes read, not memory.
+  const index = await scanTrace(file);
+  return sumTaskTime(file, index);
+};
+
+/** Byte patterns a pass cares about, so only the matching events are ever parsed. */
+const TRACE_EVENTS_KEY = Buffer.from('"traceEvents"');
+const ARRAY_OPEN = 0x5b;
+const QUOTE = 0x22;
+const BACKSLASH = 0x5c;
+const BRACE_OPEN = 0x7b;
+const BRACE_CLOSE = 0x7d;
+
+/**
+ * Reads the gzipped trace, handing each complete event object to `onEvent`.
+ *
+ * Operates on BYTES rather than a string: indexing a string per character allocates a
+ * single-character string per byte, which on an 806 MB trace is ~800M allocations.
+ *
+ * `needles` is a byte-level prefilter — an event whose bytes contain none of them is skipped
+ * without being parsed, which matters because only ~2.7M of the objects are of interest and
+ * `JSON.parse` is the expensive part.
+ */
+const streamEvents = async (file: string, onEvent: (event: TraceEvent) => void, needles: Buffer[]): Promise<void> => {
+  const source = createReadStream(file, { highWaterMark: 1 << 22 }).pipe(createGunzip({ chunkSize: 1 << 22 }));
+  // A hand-rolled object splitter rather than a JSON parser: the only structure needed is "where
+  // does this object end", which depth counting answers without materializing anything larger
+  // than a single event.
+  let tail = Buffer.alloc(0);
   let depth = 0;
   let start = -1;
   let inString = false;
   let escaped = false;
+  // Chrome emits `{"traceEvents":[...],"metadata":{...}}`, NOT a bare array. Without skipping past
+  // that opening `[`, the document's own `{` opens an object that only closes at EOF, so the whole
+  // file is buffered and exactly one "event" is ever yielded — which is why this collector
+  // produced no numbers at all.
+  let entered = false;
 
   for await (const chunk of source) {
-    buffer += chunk.toString('utf8');
+    // Concatenates the straddling remainder only, never the whole file.
+    let buffer = tail.length ? Buffer.concat([tail, chunk]) : chunk;
+    if (!entered) {
+      const key = buffer.indexOf(TRACE_EVENTS_KEY);
+      const open = key < 0 ? -1 : buffer.indexOf(ARRAY_OPEN, key);
+      if (open < 0) {
+        tail = buffer;
+        continue;
+      }
+      buffer = buffer.subarray(open + 1);
+      entered = true;
+    }
+
     for (let index = 0; index < buffer.length; index++) {
-      const char = buffer[index];
+      const byte = buffer[index];
       if (inString) {
         if (escaped) {
           escaped = false;
-        } else if (char === '\\') {
+        } else if (byte === BACKSLASH) {
           escaped = true;
-        } else if (char === '"') {
+        } else if (byte === QUOTE) {
           inString = false;
         }
         continue;
       }
-      if (char === '"') {
+      if (byte === QUOTE) {
         inString = true;
-      } else if (char === '{') {
+      } else if (byte === BRACE_OPEN) {
         if (depth === 0) {
           start = index;
         }
         depth += 1;
-      } else if (char === '}') {
+      } else if (byte === BRACE_CLOSE) {
         depth -= 1;
         if (depth === 0 && start >= 0) {
-          try {
-            onEvent(JSON.parse(buffer.slice(start, index + 1)));
-          } catch {
-            // A truncated trace's last object is not a measurement failure.
+          // Bounded to this object: `buffer.indexOf(needle, start)` would scan on to the end of the
+          // chunk for every event that does not match, which is quadratic in chunk size.
+          const event = buffer.subarray(start, index + 1);
+          if (needles.some((needle) => event.indexOf(needle) >= 0)) {
+            try {
+              onEvent(JSON.parse(event.toString('utf8')));
+            } catch {
+              // A truncated trace's last object is not a measurement failure.
+            }
           }
           start = -1;
         }
       }
     }
-    // Keep only the partial object straddling the chunk boundary.
-    buffer = start >= 0 ? buffer.slice(start) : '';
+
+    // Keep only the partial object straddling the chunk boundary. The retained bytes are
+    // re-scanned from 0 next chunk, so the scanner state must be reset to what it was AT `start`
+    // — depth 0, outside a string, by construction of a depth-0 `{`. Carrying the running state
+    // instead double-counted every brace in the tail, so depth drifted up and never returned to
+    // 0: the tail never drained, giving unbounded memory and quadratic work (measured at 5m44s
+    // and 1.5 GB, while silently dropping 98% of the events).
+    tail = start >= 0 ? buffer.subarray(start) : Buffer.alloc(0);
     if (start >= 0) {
       start = 0;
+      depth = 0;
+      inString = false;
+      escaped = false;
     }
   }
 };
@@ -211,27 +278,33 @@ const scanTrace = async (file: string): Promise<TraceIndex> => {
   const open = new Map<string, number>();
   const windows: Array<{ stage: string; from: number; to: number }> = [];
 
-  await streamEvents(file, (event) => {
-    if (event.name === 'thread_name' && event.args?.name) {
-      threads.set(`${event.pid}/${event.tid}`, event.args.name);
-      return;
-    }
-    if (typeof event.name !== 'string' || !event.name.startsWith(STAGE_MARK_PREFIX) || event.ts === undefined) {
-      return;
-    }
-    const rest = event.name.slice(STAGE_MARK_PREFIX.length);
-    const edge = rest.slice(rest.lastIndexOf(':') + 1);
-    const stage = rest.slice(0, rest.lastIndexOf(':'));
-    if (edge === 'begin') {
-      open.set(stage, event.ts);
-    } else if (edge === 'end') {
-      const from = open.get(stage);
-      if (from !== undefined) {
-        windows.push({ stage, from, to: event.ts });
-        open.delete(stage);
+  // Pass one needs only the thread-name metadata and the stage marks — a few hundred objects out
+  // of millions — so everything else is rejected on bytes and never parsed.
+  await streamEvents(
+    file,
+    (event) => {
+      if (event.name === 'thread_name' && event.args?.name) {
+        threads.set(`${event.pid}/${event.tid}`, event.args.name);
+        return;
       }
-    }
-  });
+      if (typeof event.name !== 'string' || !event.name.startsWith(STAGE_MARK_PREFIX) || event.ts === undefined) {
+        return;
+      }
+      const rest = event.name.slice(STAGE_MARK_PREFIX.length);
+      const edge = rest.slice(rest.lastIndexOf(':') + 1);
+      const stage = rest.slice(0, rest.lastIndexOf(':'));
+      if (edge === 'begin') {
+        open.set(stage, event.ts);
+      } else if (edge === 'end') {
+        const from = open.get(stage);
+        if (from !== undefined) {
+          windows.push({ stage, from, to: event.ts });
+          open.delete(stage);
+        }
+      }
+    },
+    [Buffer.from('"thread_name"'), Buffer.from(STAGE_MARK_PREFIX)],
+  );
 
   return { threads, windows };
 };
@@ -250,32 +323,37 @@ const sumTaskTime = async (file: string, index: TraceIndex): Promise<Map<string,
     totals.set(window.stage, new Map());
   }
 
-  await streamEvents(file, (event) => {
-    if (event.ph !== 'X' || event.ts === undefined || !event.dur) {
-      return;
-    }
-    const threadName = index.threads.get(`${event.pid}/${event.tid}`);
-    const realm = threadName ? realmOf(threadName) : undefined;
-    if (!realm) {
-      return;
-    }
-    for (const window of index.windows) {
-      if (event.ts < window.from || event.ts > window.to) {
-        continue;
+  // Only complete-duration events carry task time, so the rest never reach `JSON.parse`.
+  await streamEvents(
+    file,
+    (event) => {
+      if (event.ph !== 'X' || event.ts === undefined || !event.dur) {
+        return;
       }
-      const perRealm = totals.get(window.stage);
-      if (!perRealm) {
-        continue;
+      const threadName = index.threads.get(`${event.pid}/${event.tid}`);
+      const realm = threadName ? realmOf(threadName) : undefined;
+      if (!realm) {
+        return;
       }
-      // Keyed by pid/tid: several dedicated workers run at once and each is its own realm, as the
-      // per-target readings also treat them.
-      const key = `${event.pid}/${event.tid}`;
-      const entry = perRealm.get(key) ?? { kind: realm.kind, name: `${realm.name}:${key}`, us: 0, tasks: 0 };
-      entry.us += event.dur;
-      entry.tasks += 1;
-      perRealm.set(key, entry);
-    }
-  });
+      for (const window of index.windows) {
+        if (event.ts < window.from || event.ts > window.to) {
+          continue;
+        }
+        const perRealm = totals.get(window.stage);
+        if (!perRealm) {
+          continue;
+        }
+        // Keyed by pid/tid: several dedicated workers run at once and each is its own realm, as
+        // the per-target readings also treat them.
+        const key = `${event.pid}/${event.tid}`;
+        const entry = perRealm.get(key) ?? { kind: realm.kind, name: `${realm.name}:${key}`, us: 0, tasks: 0 };
+        entry.us += event.dur;
+        entry.tasks += 1;
+        perRealm.set(key, entry);
+      }
+    },
+    [Buffer.from('"ph":"X"')],
+  );
 
   const byStage = new Map<string, RealmCpu[]>();
   for (const [stage, perRealm] of totals) {

@@ -192,6 +192,30 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await waitForReady(page);
     });
 
+    // Ended HERE rather than after the flow, because boot is the only window a trace can actually
+    // deliver: at `toplevel` granularity boot alone emits ~35,000 tasks and fills Chrome's trace
+    // buffer, after which it silently stops recording. A whole-run trace measured 806 MB and
+    // contained the boot marks and NOT ONE mark from the other nine stages — so reading it later
+    // bought nothing and cost the run. The profiler covers every stage from here on; boot is the
+    // one stage it cannot reach, since no target exists to attach to before the page.
+    const traced = await tracing.finish().catch((error) => {
+      log.warn('trace could not be read', { error });
+      return undefined;
+    });
+    if (traced) {
+      log.info('trace read', {
+        compressedBytes: traced.bytes,
+        stages: traced.byStage.size,
+        file: traced.file,
+        inlineEvents: traced.inlineEvents,
+      });
+      const bootRow = runner.rows.find((row) => row.stage === 'boot');
+      const perRealm = traced.byStage.get('boot');
+      if (bootRow && perRealm) {
+        bootRow.tracedCpuMsByRealm = perRealm;
+      }
+    }
+
     await page.waitForTimeout(SETTLE_MS);
 
     // Fixture generation is deliberately OUTSIDE any stage: it is setup, and its cost is not a
@@ -303,44 +327,16 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
     const rows = runner.rows;
     const name = `${FLOW}-${mode}`;
-    // One timestamp for both writes below, so the re-write after the trace resolves onto the same
-    // PostHog uuid rather than duplicating every stage.
     const capturedAt = new Date().toISOString();
 
-    // Written BEFORE the trace is read, and `appendRows` deliberately only here: reading the trace
-    // is post-processing over an ~800 MB stream, and a slow read must not be able to lose stages
-    // that already completed — a run whose ten stages all succeeded lost every row that way.
-    // `tracedCpuMsByRealm` is a comparison field, so the durable record is complete without it.
+    // Written after the flow, with nothing between the last stage and the write: the trace is
+    // already read and backfilled by now (right after boot), so no post-processing sits between
+    // completed stages and the durable record — a run whose ten stages all succeeded once lost
+    // every row to a slow trace read here.
     appendRows(WORKSPACE_ROOT, name, rows);
     writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
     if (mode === 'measure') {
       writePosthogBatch(WORKSPACE_ROOT, name, rows, capturedAt);
-    }
-
-    // After the flow, because a trace cannot be rotated per stage: the marks the runner emitted
-    // are what attribute it, so the numbers only exist once the whole trace has been read.
-    const traced = await tracing.finish().catch((error) => {
-      log.warn('trace could not be read', { error });
-      return undefined;
-    });
-    if (traced) {
-      log.info('trace read', {
-        compressedBytes: traced.bytes,
-        stages: traced.byStage.size,
-        file: traced.file,
-        inlineEvents: traced.inlineEvents,
-      });
-      for (const row of rows) {
-        const perRealm = traced.byStage.get(row.stage);
-        if (perRealm) {
-          row.tracedCpuMsByRealm = perRealm;
-        }
-      }
-      // Overwrites rather than appends, which is why the NDJSON is not rewritten here.
-      writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
-      if (mode === 'measure') {
-        writePosthogBatch(WORKSPACE_ROOT, name, rows, capturedAt);
-      }
     }
 
     runner.dispose();

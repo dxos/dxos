@@ -83,6 +83,30 @@ about worker cost generally, which is a mistake this field exists to prevent.
 
 `boot` reads 0 for every realm: the profiler cannot attach before the page exists.
 
+### `tracedCpuMsByRealm` — boot only
+
+Per-realm TASK TIME for the `boot` stage, from a browser-wide CDP trace rather than the profiler.
+It exists because `boot` is the one stage `cpuMsByRealm` cannot cover: there is no target to attach
+a profiler to until the page exists, so boot-time worker cost is otherwise unattributed.
+
+Note the semantics differ from `cpuMsByRealm`: this is time spent INSIDE tasks on a thread (what
+`Performance.getMetrics` calls `TaskDuration`), not sampled CPU. A thread parked inside a task
+waiting on I/O counts as busy here and idle there, so the two agree for a JS-bound realm and
+diverge for one that blocks.
+
+**Boot only, because that is all a trace can deliver.** At `toplevel` granularity boot alone emits
+~35,000 tasks and fills Chrome's trace buffer, after which recording stops silently. A whole-run
+trace measured 53.6 MB gzipped / 806 MB uncompressed and contained `perf-stage:boot:begin|end` and
+**not one mark** from the nine stages that followed. The trace is therefore ended as soon as `boot`
+closes, and every later stage belongs to the profiler.
+
+Reading it is two streaming passes over the gzipped file — 18 s and ~190 MB of RSS for that 806 MB
+trace. `readTrace(file)` is exported, so a saved `trace.json.gz` artifact can be re-read offline
+without reproducing the run.
+
+A measured boot, for scale: page 4,408 ms across 34,919 tasks, three dedicated workers at 2,773 /
+362 / 175 ms, shared worker 58 ms.
+
 ### `thread.*`
 
 Blink's own attribution for the **page main thread**, from `Performance.getMetrics`.
