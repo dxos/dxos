@@ -4,6 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Ref } from '@dxos/echo';
@@ -23,15 +25,13 @@ const AnthropicTokenForm = ConnectorSpec.TokenForm({
  * are tolerated so the form still works in environments where the direct browser call is blocked.
  */
 const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise(() =>
-    fetch('https://api.anthropic.com/v1/models', {
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-    }),
-  ).pipe(
+  HttpClient.get('https://api.anthropic.com/v1/models', {
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+  }).pipe(
     Effect.matchEffect({
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
@@ -41,6 +41,7 @@ const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
           : Effect.void,
       onFailure: () => Effect.void,
     }),
+    Effect.provide(FetchHttpClient.layer),
   );
 
 /** API-key form for the DeepSeek BYOK provider; key is best-effort validated against `/models`. */
@@ -51,9 +52,7 @@ const DeepSeekTokenForm = ConnectorSpec.TokenForm({
 
 /** Best-effort validation, on the same terms as {@link validateAnthropicKey}. */
 const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise(() =>
-    fetch('https://api.deepseek.com/models', { headers: { Authorization: `Bearer ${apiKey}` } }),
-  ).pipe(
+  HttpClient.get('https://api.deepseek.com/models', { headers: { Authorization: `Bearer ${apiKey}` } }).pipe(
     Effect.matchEffect({
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
@@ -61,6 +60,7 @@ const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, Error> =>
           : Effect.void,
       onFailure: () => Effect.void,
     }),
+    Effect.provide(FetchHttpClient.layer),
   );
 
 type TokenValues = { readonly token: string };
