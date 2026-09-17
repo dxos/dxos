@@ -4,6 +4,7 @@
 
 export * from './companion-anchor.ts';
 export * from './companion-mount.ts';
+export * from './focus-pane.ts';
 export * from './graph-wait.ts';
 export * from './layout.ts';
 export * from './layoutAppliesTopbar.ts';

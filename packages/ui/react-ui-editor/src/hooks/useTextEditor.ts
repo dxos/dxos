@@ -137,7 +137,8 @@ export const useTextEditor = (
   }, [view, scrollTo, scrollOffset, selection]);
 
   useEffect(() => {
-    if (view && autoFocus) {
+    // Focus in an open menu or listbox is the user's, and taking it would dismiss that popup.
+    if (view && autoFocus && !view.dom.ownerDocument.activeElement?.closest('[role="menu"], [role="listbox"]')) {
       view.focus();
     }
   }, [autoFocus, view]);
