@@ -209,6 +209,16 @@ export const QueryResponse = Schema.Struct({
    * assign positions, and on responses from servers that predate the token.
    */
   serverToken: Schema.optional(Schema.String),
+
+  /**
+   * Highest position the serving store holds in the queried namespace, or -1 when it holds none.
+   *
+   * A client whose pull cursor is above this is caching an ordering the store has lost -- its
+   * storage was rolled back, and it will re-issue those positions to other blocks -- so nothing
+   * above the cursor will ever arrive and everything written since sits below it. Only set by a
+   * position authority; absent on responses from servers that predate the field.
+   */
+  maxPosition: Schema.optional(Schema.Number),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
@@ -350,6 +360,12 @@ export const ProtocolMessage = Schema.Union([
   Schema.TaggedStruct('AppendResponse', AppendResponse.fields),
   Schema.TaggedStruct('FeedAdvanced', FeedAdvanced.fields),
   Schema.TaggedStruct('Error', {
+    /**
+     * Correlation identifier of the request that failed, so the caller can fail that request at
+     * once instead of waiting out its timeout. Absent from servers that predate the field.
+     */
+    requestId: Schema.optional(Schema.String),
+
     /**
      * Human-readable error message.
      */

@@ -56,6 +56,11 @@ export class SyncClient {
   readonly #sendMessage: SyncClientOptions['sendMessage'];
   readonly #rpcTimeoutMs: number;
   readonly #handlers = new Map<string, Deferred.Deferred<ProtocolMessage, Error>>();
+  /**
+   * Namespaces whose pull cursor was rewound to the start and have not yet pulled through to the
+   * end. Keyed `spaceId:feedNamespace`; see {@link #replayNamespace}.
+   */
+  readonly #replaying = new Set<string>();
 
   constructor(options: SyncClientOptions) {
     this.#peerId = options.peerId;
@@ -225,7 +230,46 @@ export class SyncClient {
       }
       // On a reset the server ignored the stale `position`, so the batch restarts the namespace.
       const basePosition = reconciliation === 'reset' ? -1 : lastPulledPosition;
+      // Positions only come from the server, so a local one above its high-water mark is a row the
+      // server lost; unpositioned, the block is pushed again rather than waiting for the server to
+      // re-issue that slot to something else.
+      const cleared =
+        response.maxPosition != null
+          ? yield* self.#feedStore.clearPositionsAbove({
+              spaceId: opts.spaceId,
+              feedNamespace: opts.feedNamespace,
+              position: response.maxPosition,
+            })
+          : 0;
       if (response.blocks.length === 0) {
+        // Nothing above the cursor and the server's high-water mark below it: the server lost what
+        // this cursor was pulled from, so it will never serve anything above it, and everything it
+        // has written since sits below it.
+        if (response.maxPosition != null && basePosition > response.maxPosition) {
+          // Unconditional, even mid-replay: the server shrank again underneath this one.
+          self.#replaying.delete(self.#namespaceKey(opts));
+          yield* self.#replayNamespace(opts, response.serverToken, {
+            requestId,
+            reason: 'cursor beyond the server',
+            lastPulledPosition: basePosition,
+            maxPosition: response.maxPosition,
+            cleared,
+          });
+          return { done: false };
+        }
+        if (cleared > 0) {
+          const rewound = yield* self.#replayNamespace(opts, response.serverToken, {
+            requestId,
+            reason: 'positions above the server',
+            lastPulledPosition: basePosition,
+            maxPosition: response.maxPosition,
+            cleared,
+          });
+          if (rewound) {
+            return { done: false };
+          }
+        }
+        self.#replaying.delete(self.#namespaceKey(opts));
         log.trace('feed sync client pull done (empty batch)', {
           requestId,
           spaceId: opts.spaceId,
@@ -233,11 +277,27 @@ export class SyncClient {
         });
         return { done: true };
       }
-      yield* self.#feedStore.append({
+      const { displaced } = yield* self.#feedStore.append({
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
         blocks: response.blocks,
       });
+      // The server handed out positions this replica had already given to other blocks, so the
+      // server lost them and re-issued them -- along with anything it wrote since, which sits below
+      // the cursor and would otherwise never be pulled.
+      if (displaced > 0 || cleared > 0) {
+        const rewound = yield* self.#replayNamespace(opts, response.serverToken, {
+          requestId,
+          reason: displaced > 0 ? 'positions re-issued' : 'positions above the server',
+          lastPulledPosition: basePosition,
+          maxPosition: response.maxPosition,
+          displaced,
+          cleared,
+        });
+        if (rewound) {
+          return { done: false };
+        }
+      }
 
       // Update sync state with the max position from the pulled batch.
       const maxPulledPosition = response.blocks.reduce(
@@ -379,8 +439,12 @@ export class SyncClient {
       // Reconciling here too means a client that only ever writes still notices the next swap:
       // a first observation with nothing pulled records the token, and a mismatch drops the stale
       // positions before the response's -- which belong to the responding server -- are applied.
-      yield* self.#reconcileServerToken({ ...opts, lastPulledPosition }, serverToken, response.serverToken);
-      yield* self.#feedStore.setPosition({
+      const reconciliation = yield* self.#reconcileServerToken(
+        { ...opts, lastPulledPosition },
+        serverToken,
+        response.serverToken,
+      );
+      const { displaced } = yield* self.#feedStore.setPosition({
         spaceId: opts.spaceId,
         blocks: Array.zipWith(response.positions, unpositioned.blocks, (position, block) => ({
           feedId: block.feedId,
@@ -395,9 +459,65 @@ export class SyncClient {
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
         positionCount: response.positions.length,
+        displaced,
       });
+      // A block this replica had to push was not on the server, so a position for it at or below
+      // the cursor is one the server issued after losing whatever the cursor was pulled from; the
+      // same goes for a position another local block already held.
+      const cursor = reconciliation === 'unchanged' ? lastPulledPosition : -1;
+      const lowestPosition = Math.min(...response.positions);
+      if (displaced > 0 || lowestPosition <= cursor) {
+        yield* self.#replayNamespace(opts, response.serverToken, {
+          requestId,
+          reason: displaced > 0 ? 'positions re-issued' : 'position below the cursor',
+          lastPulledPosition: cursor,
+          lowestPosition,
+          displaced,
+        });
+      }
       return { done: false };
     });
+  }
+
+  #namespaceKey(opts: { spaceId: SpaceId; feedNamespace: string }): string {
+    return `${opts.spaceId}:${opts.feedNamespace}`;
+  }
+
+  /**
+   * Rewinds the pull cursor to the start so the namespace is pulled through again, keeping the
+   * positions already held: a re-pulled block the replica has at the same position is a no-op, one
+   * held elsewhere adopts the server's position, and a block found squatting on a re-issued slot is
+   * cleared and pushed again. This is the recovery for a server whose storage was rolled back after
+   * it had handed out positions -- unlike a swapped server it keeps its token, so the token check
+   * never fires, and without it a replica keeps colliding with the server's re-issued positions
+   * forever.
+   *
+   * Idempotent while the replay runs: every page of a replay can surface another re-issued slot,
+   * and restarting on each would pull the namespace once per page.
+   */
+  #replayNamespace(
+    opts: { spaceId: SpaceId; feedNamespace: string },
+    serverToken: string | undefined,
+    details: Record<string, unknown>,
+  ): Effect.Effect<boolean, unknown, SqlClient.SqlClient> {
+    const key = this.#namespaceKey(opts);
+    if (this.#replaying.has(key)) {
+      return Effect.succeed(false);
+    }
+    this.#replaying.add(key);
+    log.warn('feed sync replica ordering is out of step with the serving store, replaying namespace', {
+      spaceId: opts.spaceId,
+      feedNamespace: opts.feedNamespace,
+      ...details,
+    });
+    return this.#feedStore
+      .setSyncState({
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        lastPulledPosition: -1,
+        serverToken,
+      })
+      .pipe(Effect.as(true));
   }
 
   /**

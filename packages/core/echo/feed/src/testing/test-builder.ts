@@ -222,6 +222,31 @@ export class TestPeer extends Resource {
   }
 
   /**
+   * Deletes every block of a space/namespace at or above `position`, so the store hands those
+   * positions out again to whatever is appended next. Reproduces a server whose storage was rolled
+   * back after it had acknowledged appends; no production path writes this shape.
+   */
+  dropBlocksFromPosition({
+    spaceId,
+    feedNamespace,
+    position,
+  }: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    position: number;
+  }) {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+        DELETE FROM blocks
+        WHERE position >= ${position} AND feedPrivateId IN (
+          SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
+        )
+      `;
+    }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  /**
    * Strips the recorded server token while leaving pull progress intact, reproducing sync state
    * written before servers reported one. No production path writes this shape.
    */

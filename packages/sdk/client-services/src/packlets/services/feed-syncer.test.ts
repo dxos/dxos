@@ -46,13 +46,26 @@ const createEdgeConnection = ({
   serverRuntime,
   messageListeners,
   sentMessages,
+  interceptRequest,
 }: {
   syncServer: SyncServer;
   serverRuntime: ReturnType<typeof createRuntime>;
   messageListeners: Set<(message: RouterMessage) => void>;
   sentMessages: ProtocolMessage[];
+  /** Answers a request in place of the server when it returns a message. */
+  interceptRequest?: (message: ProtocolMessage) => ProtocolMessage | undefined;
 }): EdgeConnection => {
   const reconnectListeners = new Set<ReconnectListener>();
+  const deliver = (message: ProtocolMessage) => {
+    const routerMessage = createBuf(MessageSchema, {
+      source: { identityKey: 'server-identity', peerKey: 'server-peer' },
+      serviceId: `${EdgeService.QUEUE_REPLICATOR}:test`,
+      payload: { value: bufferToArray(encoder.encode(message)) },
+    });
+    for (const listener of messageListeners) {
+      listener(routerMessage);
+    }
+  };
 
   return {
     statusChanged: new Event<any>(),
@@ -81,6 +94,11 @@ const createEdgeConnection = ({
       if (decoded._tag === 'SubscribeRequest') {
         return;
       }
+      const intercepted = interceptRequest?.(decoded);
+      if (intercepted) {
+        deliver(intercepted);
+        return;
+      }
       await syncServer.handleMessage(ctx, decoded).pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
     },
     onMessage: (listener: (message: RouterMessage) => void) => {
@@ -99,11 +117,13 @@ const createFeedSyncHarness = async ({
   pollingInterval,
   syncNamespaces: namespaces = [syncNamespace],
   reconcilePollingInterval,
+  interceptRequest,
 }: {
   spaceId: SpaceId;
   pollingInterval?: number;
   syncNamespaces?: string[];
   reconcilePollingInterval?: number;
+  interceptRequest?: (message: ProtocolMessage) => ProtocolMessage | undefined;
 }) => {
   const serverRuntime = createRuntime();
   const clientRuntime = createRuntime();
@@ -135,7 +155,13 @@ const createFeedSyncHarness = async ({
       }),
   });
 
-  const edgeClient = createEdgeConnection({ syncServer, serverRuntime, messageListeners, sentMessages });
+  const edgeClient = createEdgeConnection({
+    syncServer,
+    serverRuntime,
+    messageListeners,
+    sentMessages,
+    interceptRequest,
+  });
 
   /** Deliver a server-initiated frame the client did not ask for. */
   const pushToClient = (message: ProtocolMessage) => {
@@ -502,6 +528,38 @@ describe('FeedSyncer', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect((await queryClient()).blocks).toHaveLength(1);
+  });
+
+  // A space that is not done is polled again at once, which is right for paging and a tight loop
+  // against the server for a pull that fails the same way every time.
+  test('backs off between polls while a pull keeps failing', async () => {
+    const spaceId = SpaceId.random();
+    const { syncer, sentMessages } = await createFeedSyncHarness({
+      spaceId,
+      pollingInterval: 60_000,
+      syncNamespaces,
+      interceptRequest: (message) =>
+        message._tag === 'QueryRequest' && message.feedNamespace === FeedProtocol.WellKnownNamespaces.trace
+          ? {
+              _tag: 'Error',
+              requestId: message.requestId,
+              message: 'trace namespace unavailable',
+              senderPeerId: 'server',
+              recipientPeerId: 'client',
+            }
+          : undefined,
+    });
+
+    await syncer.open(new Context());
+    await new Promise((resolve) => setTimeout(resolve, 900));
+
+    // Retries at 250ms and 500ms after the failing rounds fit in the window; an immediate re-poll
+    // would have sent them by the dozen.
+    const tracePulls = sentMessages.filter(
+      (message) => message._tag === 'QueryRequest' && message.feedNamespace === FeedProtocol.WellKnownNamespaces.trace,
+    );
+    expect(tracePulls.length).toBeGreaterThanOrEqual(2);
+    expect(tracePulls.length).toBeLessThanOrEqual(5);
   });
 
   test('a hint for an unknown space id is ignored rather than throwing', async () => {

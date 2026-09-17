@@ -271,6 +271,85 @@ describe('Sync', () => {
     });
   });
 
+  // A server whose storage was rolled back keeps its token, so the token check never fires; what
+  // gives it away is that it re-issues positions this client already holds.
+  describe('server rollback', () => {
+    test('recovers when the server drops acknowledged blocks and re-issues their positions', async () => {
+      await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
+      const [server, client] = builder.peers;
+
+      await seedBlocks(client, generateTestBlocks(0, 5));
+      await builder.push(client);
+      await builder.pull(client);
+      expect(await blockPositions(client)).toEqual([0, 1, 2, 3, 4]);
+
+      await server.dropBlocksFromPosition({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 2 });
+      const serverFeedId = EntityId.random();
+      await seedBlocks(server, generateTestBlocks(10, 1), serverFeedId);
+      await seedBlocks(client, generateTestBlocks(20, 1));
+
+      // Before the fix the push's position collided with the client's stale block at the same
+      // position and failed the same way on every retry.
+      await syncUntilDone(builder, client);
+
+      const serverBlocks = await placements(server);
+      expect(serverBlocks).toHaveLength(7);
+      expect(await placements(client)).toEqual(serverBlocks);
+      expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: 6,
+        serverToken: await server.getServerToken(spaceId),
+      });
+    });
+
+    test('a reader whose cursor is beyond the server replays and sees what the server wrote since', async () => {
+      await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
+      const [server, client] = builder.peers;
+
+      await seedBlocks(server, generateTestBlocks(0, 5));
+      await builder.pull(client);
+      expect(await blockPositions(client)).toEqual([0, 1, 2, 3, 4]);
+
+      await server.dropBlocksFromPosition({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 2 });
+      const laterFeedId = EntityId.random();
+      await seedBlocks(server, generateTestBlocks(10, 2), laterFeedId);
+
+      // The cursor sits at 4 while the server's high-water mark is 3: nothing above the cursor will
+      // ever arrive, and the two later blocks sit below it.
+      let done = false;
+      while (!done) {
+        ({ done } = await builder.pull(client));
+      }
+
+      expect(await blockPositions(client, laterFeedId)).toEqual([2, 3]);
+      // The dropped blocks are unpositioned again: two lost their slots to the later blocks, the
+      // third sat above the server's high-water mark.
+      expect(await blockPositions(client, feedId)).toEqual([0, 1, null, null, null]);
+      expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: 3,
+        serverToken: await server.getServerToken(spaceId),
+      });
+    });
+  });
+
+  const syncUntilDone = async (builder: TestBuilder, client: TestPeer) => {
+    for (let round = 0; round < 20; round++) {
+      const pulled = await builder.pull(client);
+      const pushed = await builder.push(client);
+      if (pulled.done && pushed.done) {
+        return;
+      }
+    }
+    throw new Error('sync did not converge');
+  };
+
+  /** Every positioned block as `[actorId, sequence, position]`, in position order. */
+  const placements = async (peer: TestPeer) => {
+    const { blocks } = await peer.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+    return blocks
+      .filter((block) => block.position != null)
+      .map((block) => [block.actorId, block.sequence, block.position]);
+  };
+
   const seedBlocks = (peer: TestPeer, blocks: Uint8Array[], feed = feedId) =>
     peer.appendLocal(blocks.map((data) => ({ spaceId, feedId: feed, feedNamespace: WellKnownNamespaces.data, data })));
 

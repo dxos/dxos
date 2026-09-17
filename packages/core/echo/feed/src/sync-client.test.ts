@@ -55,6 +55,83 @@ describe('SyncClient', () => {
     await runtime.dispose();
   });
 
+  // A cursor above the server's high-water mark was pulled from rows the server has since lost;
+  // the token is unchanged, so only the mark reveals it.
+  test('rewinds a cursor the server reports as beyond its high-water mark', async () => {
+    const runtime = ManagedRuntime.make(TestLayer);
+    const spaceId = SpaceId.random();
+    const feedStore = new FeedStore({ localActorId: 'alice', assignPositions: false });
+    await runtime.runPromise(feedStore.migrate());
+    await runtime.runPromise(
+      feedStore.setSyncState({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        lastPulledPosition: 10,
+        serverToken: 'token',
+      }),
+    );
+
+    // Pulled from the server before it lost everything above 3.
+    await runtime.runPromise(
+      feedStore.append({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [3, 7].map((position) => ({
+          feedId: 'feed-1',
+          actorId: 'bob',
+          sequence: position,
+          prevActorId: null,
+          prevSequence: null,
+          position,
+          timestamp: 0,
+          data: new Uint8Array([position]),
+        })),
+      }),
+    );
+
+    const requests: FeedProtocol.QueryRequest[] = [];
+    const syncClient: SyncClient = new SyncClient({
+      peerId: 'client-peer',
+      feedStore,
+      sendMessage: (_ctx, message) => {
+        if (message._tag !== 'QueryRequest') {
+          return Effect.void;
+        }
+        requests.push(message);
+        return syncClient.handleMessage({
+          _tag: 'QueryResponse',
+          requestId: message.requestId,
+          nextCursor: FeedProtocol.FeedCursor.make('token|-1'),
+          hasMore: false,
+          blocks: [],
+          serverToken: 'token',
+          maxPosition: 3,
+          senderPeerId: 'server-peer',
+          recipientPeerId: 'client-peer',
+        });
+      },
+    });
+
+    const ctx = new Context();
+    onTestFinished(() => void ctx.dispose());
+
+    const pull = () => runtime.runPromise(syncClient.pull(ctx, { spaceId, feedNamespace: WellKnownNamespaces.data }));
+    expect(await pull()).toEqual({ done: false });
+    expect(requests[0].position).toEqual(10);
+    expect(
+      await runtime.runPromise(feedStore.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })),
+    ).toEqual({ lastPulledPosition: -1, serverToken: 'token' });
+    // The block above the mark is a row the server lost; unpositioned, it is pushed again.
+    const { blocks } = await runtime.runPromise(feedStore.query({ spaceId, feedNamespace: WellKnownNamespaces.data }));
+    expect(blocks.map((block) => block.position)).toEqual([3, null]);
+
+    // Replaying from the start against the same mark is simply caught up.
+    expect(await pull()).toEqual({ done: true });
+    expect(requests[1].position).toEqual(-1);
+
+    await runtime.dispose();
+  });
+
   // A server that predates the token reports none; treating that as a change would wipe positions
   // on every pull.
   test('keeps pulling incrementally from a server that reports no token', async () => {

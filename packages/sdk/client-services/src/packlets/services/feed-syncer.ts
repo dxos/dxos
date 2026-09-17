@@ -41,8 +41,8 @@ const DEFAULT_RECONCILE_POLLING_INTERVAL = 30_000;
 /** Re-subscribe this long before the server's stated expiry, so a refresh never races the lapse. */
 const SUBSCRIPTION_REFRESH_MARGIN_MS = 5 * 60_000;
 const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
-const DEFAULT_PUSH_FAILURE_BACKOFF_MS = 250;
-const MAX_PUSH_FAILURE_BACKOFF_MS = 30_000;
+const DEFAULT_FAILURE_BACKOFF_MS = 250;
+const MAX_FAILURE_BACKOFF_MS = 30_000;
 const MAX_BLOCKING_SYNC_ITERATIONS = 100;
 
 export type FeedSyncerOptions = {
@@ -132,7 +132,8 @@ export class FeedSyncer extends Resource {
   #throttledPollScheduled = false;
   #lastRequestedPollAt: number | null = null;
   readonly #feedStoreMutex = new Mutex();
-  #pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+  #pushFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
+  #pullFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
 
   /**
    * True once the server answered a `SubscribeRequest` on the current connection, which is the only
@@ -559,18 +560,30 @@ export class FeedSyncer extends Resource {
 
   #schedulePushRetry({ hadFailure, needsMore }: { hadFailure: boolean; needsMore: boolean }): void {
     if (!needsMore) {
-      this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+      this.#pushFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
       return;
     }
     if (hadFailure) {
       const delayMs = this.#pushFailureBackoffMs;
-      this.#pushFailureBackoffMs = Math.min(this.#pushFailureBackoffMs * 2, MAX_PUSH_FAILURE_BACKOFF_MS);
+      this.#pushFailureBackoffMs = Math.min(this.#pushFailureBackoffMs * 2, MAX_FAILURE_BACKOFF_MS);
       log('feed sync push retry scheduled with backoff', { delayMs });
       scheduleTask(this._ctx, () => this.#pushTask.schedule(), delayMs);
       return;
     }
-    this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+    this.#pushFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
     this.#pushTask.schedule();
+  }
+
+  /**
+   * Delays the next poll after a failed pull. A pull that fails the same way on every attempt
+   * would otherwise re-run the moment it returns, since a space that is not done is polled again
+   * immediately -- a tight loop of requests against the very server that is failing them.
+   */
+  #schedulePollRetry(): void {
+    const delayMs = this.#pullFailureBackoffMs;
+    this.#pullFailureBackoffMs = Math.min(this.#pullFailureBackoffMs * 2, MAX_FAILURE_BACKOFF_MS);
+    log('feed sync poll retry scheduled with backoff', { delayMs });
+    scheduleTask(this._ctx, () => this.#pollTask.schedule(), delayMs);
   }
 
   #resetSpacesToPoll(): void {
@@ -645,6 +658,7 @@ export class FeedSyncer extends Resource {
 
   readonly #pollTask = new AsyncTask(async () =>
     Effect.gen({ self: this }, function* () {
+      let hadPullFailure = false;
       yield* Effect.forEach(
         this.#spacesToPoll,
         (spaceId) =>
@@ -661,6 +675,7 @@ export class FeedSyncer extends Resource {
                   Effect.catch((cause) =>
                     Effect.gen({ self: this }, function* () {
                       this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
+                      hadPullFailure = true;
                       return { done: false };
                     }),
                   ),
@@ -675,6 +690,12 @@ export class FeedSyncer extends Resource {
           }),
         { concurrency: this.#syncConcurrency },
       );
+
+      if (hadPullFailure) {
+        this.#schedulePollRetry();
+        return;
+      }
+      this.#pullFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
 
       // If its time to do a full poll, reset the spaces to poll and schedule the next poll immediately.
       if (this.#lastFullPoll == null || Date.now() - this.#lastFullPoll > this.#currentPollingInterval) {
@@ -713,7 +734,7 @@ export class FeedSyncer extends Resource {
                 .pipe(
                   Effect.tap(() =>
                     Effect.sync(() => {
-                      this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+                      this.#pushFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
                     }),
                   ),
                   Effect.catch((cause) =>
