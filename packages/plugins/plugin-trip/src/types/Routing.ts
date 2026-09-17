@@ -124,6 +124,9 @@ export class RouteError extends BaseError.extend('RouteError') {
 /** Any failure a `RoutingService` raises. */
 export type Failure = MissingApiKeyError | GeocodeError | RouteError;
 
-/** `instanceof` across every routing failure, for a boundary that passes them through. */
+/**
+ * Every routing failure, for a boundary that passes them through. Matched by name rather than
+ * `instanceof`, for the reason given at {@link BookingSearch.isFailure}.
+ */
 export const isFailure = (error: unknown): error is Failure =>
-  error instanceof MissingApiKeyError || error instanceof GeocodeError || error instanceof RouteError;
+  MissingApiKeyError.is(error) || GeocodeError.is(error) || RouteError.is(error);
