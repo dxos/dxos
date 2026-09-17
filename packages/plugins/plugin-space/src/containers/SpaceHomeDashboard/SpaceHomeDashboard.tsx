@@ -3,16 +3,22 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useMemo } from 'react';
+import * as Effect from 'effect/Effect';
+import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import React, { useDeferredValue, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
-import { Collection, Filter, Obj, Query } from '@dxos/echo';
+import { Aggregate, Collection, Filter, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { type ActivityDatum, Dashboard } from '@dxos/react-ui-dashboard';
+import { Dashboard } from '@dxos/react-ui-dashboard';
 
+import { SPACE_STATS_QUERY, typenameOf } from '#dashboard';
 import { meta } from '#meta';
+
+import { type HourCount, toActivity } from './activity.ts';
 
 const STAT_IDS = ['objects', 'types', 'collections', 'members', 'active-days', 'plugins'] as const;
 
@@ -25,69 +31,83 @@ type SpaceHomeDashboardProps = {
   onClose?: () => void;
 };
 
+const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
+
+const hourly = (filter: Filter.Any) =>
+  Query.select(filter).aggregate({ hour: Aggregate.bucket('updatedAt'), count: Aggregate.count() });
+
 /**
- * Space stats and activity matrix for the Home article. Stats are derived from the object graph
- * (counts of objects, distinct types, collections, members); the matrix buckets objects by the
- * day they were last touched (`updatedAt`, falling back to `createdAt`).
- *
- * NOTE: per-object `updatedAt` only reflects the latest change, so the matrix undercounts busy
- * days in the past.
- * TODO(burdon): Richer stats need sources beyond the object graph:
- *  - Edits per day: automerge change graph (echo-pipeline) aggregated into a daily histogram.
- *  - Storage size / sync state: client diagnostics (`client.diagnostics()`) or SpaceSyncState.
- *  - Relations count: needs a relations query (Query.select over relation types).
- *  - Member activity / presence history: EDGE presence feed (only live viewers are exposed today).
+ * Activity before the start of today, read once per space for the session. The snapshot is never
+ * recomputed: an object touched on an earlier day keeps that day even after it is edited again,
+ * which the per-object `updatedAt` it is built from could not tell us. The live window from
+ * `cutoff` onward is a separate reactive query.
+ */
+const activityHistory = Atom.family((space: Space) => {
+  const today = new Date();
+  const cutoff = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const history = Atom.make(() =>
+    Effect.promise((): Promise<readonly HourCount[]> =>
+      space.db.query(hourly(Filter.updated({ before: cutoff - 1 }))).run(),
+    ),
+  ).pipe(Atom.keepAlive);
+  return { cutoff, history };
+});
+
+const NO_HOURS: readonly HourCount[] = [];
+
+/**
+ * Space stats and activity matrix for the Home article. Every number comes from host-side counts
+ * (`Aggregate.type()`, `Aggregate.bucket()`), so no object is loaded into the tab to draw it.
  */
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  if (!space) {
+    return null;
+  }
 
-  const query = useMemo(() => Query.select(Filter.everything()), []);
-  const members = useMembers(space?.key);
+  return <SpaceDashboard space={space} stats={stats} onClose={onClose} />;
+};
+
+SpaceHomeDashboard.displayName = 'SpaceHomeDashboard';
+
+const SpaceDashboard = ({
+  space,
+  stats,
+  onClose,
+}: Required<Pick<SpaceHomeDashboardProps, 'space' | 'stats'>> & Pick<SpaceHomeDashboardProps, 'onClose'>) => {
+  const { t } = useTranslation(meta.profile.key);
+  const members = useMembers(space.key);
 
   const manager = usePluginManager();
   const core = useAtomValue(manager.core);
   const enabled = useAtomValue(manager.enabled);
   const plugins = useMemo(() => enabled.filter((id) => !core.includes(id)).length, [core, enabled]);
 
-  // TODO(burdon): Can we caches this?
-  const objects = useQuery(space ? space.db : undefined, query);
-  const { activity, values } = useMemo(() => {
-    const typenames = new Set<string>();
-    const days = new Set<string>();
-    let collections = 0;
-    const activity: ActivityDatum[] = [];
-    for (const object of objects) {
-      const typename = Obj.getTypename(object);
-      if (typename) {
-        typenames.add(typename);
-      }
-      if (Obj.instanceOf(Collection.Collection, object)) {
-        collections++;
-      }
-      const objectMeta = Obj.getMeta(object);
-      const timestamp = objectMeta.updatedAt ?? objectMeta.createdAt;
-      if (timestamp) {
-        const date = new Date(timestamp);
-        days.add(date.toDateString());
-        activity.push({ date, value: 1 });
-      }
-    }
+  // Deferred so a burst of index passes (a freshly opened space) never competes with input.
+  const counts = useDeferredValue(useQuery(space.db, SPACE_STATS_QUERY));
+  const { cutoff, history } = activityHistory(space);
+  const historyResult = useAtomValue(history);
+  const liveQuery = useMemo(() => hourly(Filter.updated({ after: cutoff })), [cutoff]);
+  const live = useDeferredValue(useQuery(space.db, liveQuery));
 
-    const values: Record<SpaceStatId, number> = {
-      'objects': objects.length,
-      'types': typenames.size,
-      'collections': collections,
-      'members': members.length,
-      'active-days': days.size,
-      'plugins': plugins,
-    };
+  const activity = useMemo(
+    () =>
+      toActivity(
+        AsyncResult.getOrElse(historyResult, () => NO_HOURS),
+        live,
+      ),
+    [historyResult, live],
+  );
 
-    return { activity, values };
-  }, [objects, members, plugins]);
-
-  if (!space) {
-    return null;
-  }
+  const values: Record<SpaceStatId, number> = {
+    'objects': counts.reduce((total, row) => total + row.count, 0),
+    'types': counts.filter((row) => row.type !== null).length,
+    'collections': counts
+      .filter((row) => row.type !== null && typenameOf(row.type) === COLLECTION_TYPENAME)
+      .reduce((total, row) => total + row.count, 0),
+    'members': members.length,
+    'active-days': activity.length,
+    'plugins': plugins,
+  };
 
   return (
     <HomeSection.Root>
@@ -105,5 +125,3 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
     </HomeSection.Root>
   );
 };
-
-SpaceHomeDashboard.displayName = 'SpaceHomeDashboard';
