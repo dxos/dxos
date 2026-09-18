@@ -23,6 +23,7 @@ import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
 import type { ObjectCore } from '../core-db/index.ts';
+import { aggregateNeedsIndex } from './util.ts';
 
 export type WorkingSetItem = {
   objectId: EntityId;
@@ -61,10 +62,19 @@ const WorkingSetItem = Object.freeze({
   getGroupKey(item: WorkingSetItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue {
     const key: GroupKeyValue = {};
     for (const aggregate of aggregates) {
-      if (aggregate.kind === 'group') {
-        key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
-          WorkingSetItem.getAggregateProperty(item, property),
-        );
+      switch (aggregate.kind) {
+        case 'group':
+          key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
+            WorkingSetItem.getAggregateProperty(item, property),
+          );
+          break;
+        case 'type':
+          key[aggregate.name] = EntityStructure.getTypeReference(item.core.getObjectStructure())?.['/'] ?? null;
+          break;
+        case 'timestamp':
+          // A core carries no index timestamps; `tryExecute` already declines these plans.
+          key[aggregate.name] = null;
+          break;
       }
     }
     return key;
@@ -134,7 +144,7 @@ export class WorkingSetQueryExecutor {
           ? GroupBy.dropGroups(ws, step.skip, _serializeItemGroupKey)
           : ws.slice(step.skip);
       case 'AggregateStep':
-        return this._execAggregateStep(step, ws);
+        return aggregateNeedsIndex(step.aggregates) ? null : this._execAggregateStep(step, ws);
       default:
         return null;
     }

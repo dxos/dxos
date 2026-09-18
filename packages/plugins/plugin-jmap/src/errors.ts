@@ -36,3 +36,9 @@ export class JmapSendIdentityNotFoundError extends BaseError.extend(
     super({ context: { account }, ...options });
   }
 }
+
+/** A JMAP credential form was submitted with a field missing or empty. */
+export class JmapCredentialInvalidError extends BaseError.extend(
+  'JmapCredentialInvalidError',
+  'JMAP credentials are incomplete.',
+) {}
