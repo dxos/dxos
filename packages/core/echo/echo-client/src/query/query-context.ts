@@ -39,10 +39,10 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
   isSynchronous(): boolean;
 
   /**
-   * The status of each source serving the current query; {@link getResults} is the whole result once
-   * none is `pending`.
+   * Whether a source serving the current query has yet to answer, so {@link getResults} is only the
+   * part of the result the sources that have answered know about.
    */
-  getSourceStatuses(): QueryResult.SourceStatus[];
+  hasPendingSources(): boolean;
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;

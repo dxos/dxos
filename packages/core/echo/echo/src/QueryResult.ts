@@ -51,17 +51,6 @@ export type Entry<T> = {
 export type Source = 'remote' | 'local' | 'index' | 'registry';
 
 /**
- * Whether a source has answered the current query: `pending` until its first answer, `failed` when
- * it stopped without one.
- */
-export type SourceState = 'pending' | 'ready' | 'failed';
-
-export type SourceStatus = {
-  source: Source;
-  state: SourceState;
-};
-
-/**
  * Invidual query result entry for a database Entity.
  */
 export type EntityEntry<T extends Entity.Unknown = Entity.Unknown> = Entry<T>;
@@ -88,14 +77,6 @@ export interface QueryResult<T> {
    * Currently available results.
    */
   readonly results: T[];
-
-  /**
-   * One entry per source serving the query. While any is `pending`, {@link results}, {@link runSync}
-   * and {@link runSyncEntries} hold only what the sources that have answered know: for a database
-   * query before the index responds, objects created or updated locally and index hits already
-   * hydrated.
-   */
-  readonly sources: readonly SourceStatus[];
 
   /**
    * Returns all known results.

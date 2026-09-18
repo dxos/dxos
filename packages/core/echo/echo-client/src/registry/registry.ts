@@ -286,11 +286,6 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
     return this.runSync();
   }
 
-  /** The registry is in memory, so every read is the whole answer. */
-  get sources(): readonly QueryResult.SourceStatus[] {
-    return [{ source: 'registry', state: 'ready' }];
-  }
-
   run(): Promise<T[]> {
     return Promise.resolve(this.runSync());
   }

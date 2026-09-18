@@ -9,6 +9,7 @@ import { describe, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Aggregate, Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
 
@@ -59,12 +60,12 @@ describe('QueryResultImpl', () => {
       const result = db.query(Filter.type(TestSchema.Person));
       const unsubscribe = result.subscribe();
       try {
-        expect(result.sources).toEqual(INDEX_PENDING);
         const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+        // In the same turn as the write, so the index cannot have answered.
         expect(result.runSync()).toEqual([alice]);
 
-        await expect.poll(() => result.sources).toEqual(INDEX_READY);
-        expect(result.runSync()).toEqual([alice]);
+        await db.flush({ indexes: true });
+        await expect.poll(() => result.runSync()).toEqual([alice]);
       } finally {
         unsubscribe();
       }
@@ -85,7 +86,8 @@ describe('QueryResultImpl', () => {
         const db = await peer.createDatabase(spaceKey);
         range(3).forEach((index) => db.add(Obj.make(TestSchema.Person, { name: `person-${index}` })));
         await db.flush({ indexes: true });
-        rootUrl = db.rootUrl!;
+        invariant(db.rootUrl);
+        rootUrl = db.rootUrl;
         await peer.close();
       }
 
@@ -94,11 +96,10 @@ describe('QueryResultImpl', () => {
       const result = db.query(Filter.type(TestSchema.Person));
       const unsubscribe = result.subscribe();
       try {
-        expect(result.sources).toEqual(INDEX_PENDING);
+        // Nothing is loaded yet, so the working set answers with nothing.
         expect(result.runSync()).toEqual([]);
 
-        await expect.poll(() => result.sources).toEqual(INDEX_READY);
-        expect(result.runSync()).toHaveLength(3);
+        await expect.poll(() => result.runSync()).toHaveLength(3);
       } finally {
         unsubscribe();
       }
@@ -144,19 +145,10 @@ describe('QueryResultImpl', () => {
   });
 });
 
-const INDEX_PENDING = [
-  { source: 'local', state: 'ready' },
-  { source: 'index', state: 'pending' },
-];
-const INDEX_READY = [
-  { source: 'local', state: 'ready' },
-  { source: 'index', state: 'ready' },
-];
-
 const makeQueryContext = (results: SourceEntry[] = []): QueryContext => ({
   getResults: () => results,
   isSynchronous: () => true,
-  getSourceStatuses: () => [],
+  hasPendingSources: () => false,
   changed: new Event<void>(),
   run: async () => [],
   update: () => {},

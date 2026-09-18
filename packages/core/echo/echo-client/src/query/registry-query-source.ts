@@ -49,10 +49,9 @@ export class RegistryQuerySource implements QuerySource {
     return this.#match(simple.filter);
   }
 
-  getStatus(): QueryResult.SourceStatus | undefined {
-    return this.#query !== undefined && this.#isValidSourceForQuery(this.#query)
-      ? { source: 'registry', state: 'ready' }
-      : undefined;
+  /** The in-process registry is matched on read, so this source never has an answer outstanding. */
+  isPending(): boolean {
+    return false;
   }
 
   /** The in-process registry is matched synchronously. */

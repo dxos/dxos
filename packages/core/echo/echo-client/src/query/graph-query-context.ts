@@ -57,10 +57,10 @@ export interface QuerySource {
   isSynchronous(): boolean;
 
   /**
-   * Whether this source has answered its current query, or undefined when the query does not
-   * target it. An asynchronous source is `ready` once its first answer has been integrated.
+   * Whether this source serves the current query and has yet to answer it. An asynchronous source
+   * stops pending once its first answer has been integrated, or once it fails.
    */
-  getStatus(): QueryResult.SourceStatus | undefined;
+  isPending(): boolean;
 
   /**
    * One-shot query.
@@ -134,13 +134,11 @@ export class GraphQueryContext implements QueryContext {
     return Array.from(this._sources).some((source) => source.isSynchronous());
   }
 
-  getSourceStatuses(): QueryResult.SourceStatus[] {
+  hasPendingSources(): boolean {
     if (!this._query) {
-      return [];
+      return true;
     }
-    return Array.from(this._sources)
-      .map((source) => source.getStatus())
-      .filter(isNonNullable);
+    return Array.from(this._sources).some((source) => source.isPending());
   }
 
   async run(
@@ -314,10 +312,8 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   /** The working set is scanned on read, so this source never has an answer outstanding. */
-  getStatus(): QueryResult.SourceStatus | undefined {
-    return this._query !== undefined && this._servesSpaceScope(this._query)
-      ? { source: 'local', state: 'ready' }
-      : undefined;
+  isPending(): boolean {
+    return false;
   }
 
   getResults(): SourceEntry<Obj.Unknown>[] {

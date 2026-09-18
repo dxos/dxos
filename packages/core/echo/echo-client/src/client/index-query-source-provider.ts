@@ -129,7 +129,7 @@ export class IndexQuerySource implements QuerySource {
   private _hydrating = false;
 
   /** Whether the reactive stream has answered: its first response hydrated, or the stream failed. */
-  private _state: QueryResult.SourceState = 'pending';
+  private _answered = false;
 
   /** Set when a new trigger arrives mid-pass, causing {@link _hydrateLoop} to run one more iteration. */
   private _hydratePending = false;
@@ -146,7 +146,7 @@ export class IndexQuerySource implements QuerySource {
 
   close(): void {
     this._open = false;
-    this._state = 'pending';
+    this._answered = false;
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
@@ -167,11 +167,12 @@ export class IndexQuerySource implements QuerySource {
     return false;
   }
 
-  getStatus(): QueryResult.SourceStatus | undefined {
+  isPending(): boolean {
+    // A query the index does not serve has nothing outstanding here.
     if (this._query === undefined || !queryTargetsSpacesOrFeeds(this._query)) {
-      return undefined;
+      return false;
     }
-    return { source: 'index', state: this._state };
+    return !this._answered;
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
@@ -199,7 +200,7 @@ export class IndexQuerySource implements QuerySource {
     void this._hydrationCtx?.dispose().catch(() => {});
     this._hydrationCtx = undefined;
     this._results = [];
-    this._state = 'pending';
+    this._answered = false;
     this.changed.emit();
 
     // Don't start a reactive remote query until the query context is started (calls `open()`).
@@ -281,7 +282,7 @@ export class IndexQuerySource implements QuerySource {
     if (queryId === undefined || this._reactiveQueryId !== queryId) {
       return;
     }
-    this._state = 'failed';
+    this._answered = true;
     this.changed.emit();
   }
 
@@ -394,7 +395,7 @@ export class IndexQuerySource implements QuerySource {
         }
 
         this._results = results;
-        this._state = 'ready';
+        this._answered = true;
         this.changed.emit();
       } while (this._hydratePending);
     } catch (err: any) {

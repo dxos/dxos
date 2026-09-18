@@ -461,8 +461,7 @@ describe('feeds', () => {
 
       // Nothing is loaded and the index has not answered, so an empty snapshot would be a guess.
       expect(observed).toEqual([]);
-      await expect.poll(() => query.sources.every(({ state }) => state === 'ready')).toBe(true);
-      expect(observed).toEqual([0]);
+      await expect.poll(() => observed).toEqual([0]);
       sub();
     });
   });

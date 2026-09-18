@@ -72,10 +72,6 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return this._query;
   }
 
-  get sources(): readonly QueryResult.SourceStatus[] {
-    return this._queryContext.getSourceStatuses();
-  }
-
   get entries(): QueryResult.EntityEntry<T>[] {
     this._checkQueryIsRunning();
     this._ensureCachePresent();
@@ -173,7 +169,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     if (
       callback &&
       opts?.fire &&
-      (this._queryContext.getSourceStatuses().every(({ state }) => state !== 'pending') ||
+      (!this._queryContext.hasPendingSources() ||
         this._objectCache !== undefined ||
         (this._queryContext.isSynchronous() && this._queryContext.getResults().length > 0))
     ) {
