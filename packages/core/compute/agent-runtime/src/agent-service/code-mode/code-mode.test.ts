@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
@@ -19,8 +20,12 @@ import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../../testing/index.ts';
 import * as AgentService from '../AgentService.ts';
+import { EffectDialect } from './dialect-effect.ts';
+import { PlainDialect } from './dialect-plain.ts';
+import type { Dialect, Operation as SandboxOperation } from './Dialect.ts';
+import { EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
-import { EVAL_TOOL_NAME, makeEvalToolkit } from './sandbox.ts';
+import * as Sandbox from './Sandbox.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -90,19 +95,22 @@ const feedText = Effect.fnUntraced(function* (feed: Feed.Feed) {
   return messages.map(Message.extractText).join('\n');
 });
 
+/** The one operation the sandbox tests expose, standing in for a skill-bound tool. */
+const ScoreOperation: SandboxOperation = {
+  name: 'score',
+  description: 'Scores a title',
+  parameters: {},
+  invoke: (input: unknown) => Effect.succeed((input as { title: string }).title.length),
+};
+
 /** Runs `code` through the eval tool exactly as a turn would, returning what it printed. */
-const runEval = Effect.fnUntraced(function* (code: string) {
+const runEval = Effect.fnUntraced(function* (code: string, dialect: Dialect = PlainDialect) {
   const runtime = yield* Effect.context<Database.Service>();
   const toolkit = makeEvalToolkit({
+    dialect,
+    sandbox: Sandbox.inProcess,
     runtime,
-    operations: [
-      {
-        name: 'score',
-        description: 'Scores a title',
-        parameters: {},
-        invoke: (input) => Effect.succeed((input as { title: string }).title.length),
-      },
-    ],
+    operations: [ScoreOperation],
   });
   const result = yield* callTool(yield* toolkit.handlers, {
     _tag: 'toolCall',
@@ -163,6 +171,65 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
     ),
   );
 
+  it.effect(
+    'the effect dialect reads, writes and invokes operations through the ECHO API',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* seedTasks();
+
+        const output = yield* runEval(
+          `
+          const tasks = yield* Database.query(Filter.type(types['${TASK_TYPENAME}'], { status: 'open' })).run;
+          yield* print('open', tasks.length);
+          for (const task of tasks) {
+            Obj.update(task, (task) => { task.priority = task.title.length; });
+          }
+          const created = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Review the PR', status: 'open' }));
+          yield* Database.flush();
+          yield* print('created', created.title);
+          yield* print('scored', yield* ops.score({ title: created.title }));
+        `,
+          EffectDialect,
+        );
+
+        expect(output).toEqual('open 2\ncreated Review the PR\nscored 13');
+        const tasks = yield* Database.query(Filter.type(Task)).run;
+        expect(tasks.find((task) => task.title === 'Write the docs')?.priority).toEqual('Write the docs'.length);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a failing effect in the effect dialect is reported as output',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval("yield* Effect.fail(new Error('nope'));", EffectDialect);
+        expect(output).toContain('Error:');
+        expect(output).toContain('nope');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'the sandbox abandons an evaluation that outruns its timeout',
+    Effect.fnUntraced(function* (_) {
+      const result = yield* Sandbox.inProcess
+        .evaluate({
+          code: 'await new Promise(() => {});',
+          bindings: {},
+          timeout: '20 millis',
+        })
+        .pipe(Effect.result);
+
+      expect(Result.isFailure(result)).toBe(true);
+      expect(Result.isFailure(result) && result.failure.message).toContain('abandoned');
+    }, TestHelpers.provideTestContext),
+  );
+
   //
   // The agent, running in code mode.
   //
@@ -205,9 +272,11 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
         );
         yield* session.waitForCompletion();
 
-        // Which tasks were scored, not how many times: a model that re-runs its code to check the
-        // result scores each one again, which is not the behaviour under test.
-        expect([...new Set(scored)].toSorted()).toEqual(['Fix the build', 'Write the docs']);
+        // That each open task was scored, not that nothing else was: the model is free to re-run
+        // its code, or to probe the operation with inputs of its own (this fixture's does, with an
+        // empty title), neither of which is the behaviour under test.
+        expect(scored).toContain('Write the docs');
+        expect(scored).toContain('Fix the build');
         const tasks = yield* Database.query(Filter.type(Task)).run;
         const priorities = new Map(tasks.map((task) => [task.title, task.priority]));
         expect(priorities.get('Write the docs')).toEqual('Write the docs'.length);
