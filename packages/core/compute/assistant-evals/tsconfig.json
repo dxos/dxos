@@ -105,6 +105,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../agent-runtime"
+    },
+    {
       "path": "../ai"
     },
     {

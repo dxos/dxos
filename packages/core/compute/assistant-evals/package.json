@@ -24,6 +24,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/keys": "workspace:*"

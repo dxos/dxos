@@ -4250,6 +4250,9 @@ importers:
 
   packages/core/compute/assistant-evals:
     dependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../agent-runtime
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../../sdk/app-toolkit

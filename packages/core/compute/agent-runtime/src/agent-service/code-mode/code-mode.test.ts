@@ -46,7 +46,11 @@ const Score = Operation.make({
   meta: {
     key: DXN.make('com.example.operation.score'),
     name: 'Score',
-    description: 'Scores a task title for urgency, returning a number between 0 and 10.',
+    // Says exactly what the handler does. An earlier version promised "a number between 0 and 10"
+    // while returning the title's length, and both dialects spent their whole turn budget proving
+    // the contradiction rather than writing data they had reason to distrust — correct of them, and
+    // a bad fixture.
+    description: "Scores a task title for urgency. Returns the title's length as the score.",
   },
   input: Schema.Struct({
     title: Schema.String.annotate({ description: 'The title to score' }),
@@ -72,12 +76,31 @@ const ScoreSkill = Skill.make({
   tools: Skill.toolDefinitions({ operations: [Score] }),
 });
 
-const TestLayer = AssistantTestLayer({
+const testLayerOptions = {
   types: [Task, Feed.Feed, Skill.Skill],
   operationHandlers: [handlers],
   skills: [ScoreSkill],
+};
+
+const TestLayer = AssistantTestLayer({
+  ...testLayerOptions,
   agent: { makeTurnProducer: makeCodeModeTurnProducer() },
 });
+
+/**
+ * The agent scenarios run on every dialect: the turn loop is shared, so what differs between the
+ * columns is only what the model made of the API it was given — which is the thing worth watching.
+ */
+const DIALECTS: { name: string; dialect: Dialect }[] = [
+  { name: 'plain', dialect: PlainDialect },
+  { name: 'effect', dialect: EffectDialect },
+];
+
+const agentTestLayer = (dialect: Dialect) =>
+  AssistantTestLayer({
+    ...testLayerOptions,
+    agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect }) },
+  });
 
 const seedTasks = Effect.fnUntraced(function* () {
   const tasks = [
@@ -231,61 +254,63 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   //
-  // The agent, running in code mode.
+  // The agent, running in code mode — every dialect, same scenarios, same assertions.
   //
 
-  it.effect(
-    'queries and changes objects by writing code',
-    Effect.fnUntraced(
-      function* (_) {
-        yield* seedTasks();
-        const session = yield* AgentService.createSession();
-        yield* session.submitPrompt(
-          `Every task of type ${TASK_TYPENAME} whose title mentions docs must be closed: set its status to "done". ` +
-            'Then tell me how many tasks are done in total.',
-        );
-        yield* session.waitForCompletion();
+  describe.each(DIALECTS)('$name dialect', ({ dialect }) => {
+    it.effect(
+      'queries and changes objects by writing code',
+      Effect.fnUntraced(
+        function* (_) {
+          yield* seedTasks();
+          const session = yield* AgentService.createSession();
+          yield* session.submitPrompt(
+            `Every task of type ${TASK_TYPENAME} whose title mentions docs must be closed: set its status to "done". ` +
+              'Then tell me how many tasks are done in total.',
+          );
+          yield* session.waitForCompletion();
 
-        const tasks = yield* Database.query(Filter.type(Task)).run;
-        const byTitle = new Map(tasks.map((task) => [task.title, task.status]));
-        expect(byTitle.get('Write the docs')).toEqual('done');
-        // The agent was asked to close one task, not to touch the rest.
-        expect(byTitle.get('Fix the build')).toEqual('open');
-        expect(yield* feedText(session.feed)).toContain('2');
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
-  );
+          const tasks = yield* Database.query(Filter.type(Task)).run;
+          const byTitle = new Map(tasks.map((task) => [task.title, task.status]));
+          expect(byTitle.get('Write the docs')).toEqual('done');
+          // The agent was asked to close one task, not to touch the rest.
+          expect(byTitle.get('Fix the build')).toEqual('open');
+          expect(yield* feedText(session.feed)).toContain('2');
+        },
+        Effect.provide(agentTestLayer(dialect)),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
+    );
 
-  it.effect(
-    'invokes a skill operation from inside the sandbox',
-    Effect.fnUntraced(
-      function* (_) {
-        scored.length = 0;
-        yield* seedTasks();
-        const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
-        yield* session.submitPrompt(
-          `Score every open task of type ${TASK_TYPENAME} and store each score on the task's priority field. ` +
-            'Then tell me which task scored highest.',
-        );
-        yield* session.waitForCompletion();
+    it.effect(
+      'invokes a skill operation from inside the sandbox',
+      Effect.fnUntraced(
+        function* (_) {
+          scored.length = 0;
+          yield* seedTasks();
+          const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
+          yield* session.submitPrompt(
+            `Score every open task of type ${TASK_TYPENAME} and store each score on the task's priority field. ` +
+              'Then tell me which task scored highest.',
+          );
+          yield* session.waitForCompletion();
 
-        // That each open task was scored, not that nothing else was: the model is free to re-run
-        // its code, or to probe the operation with inputs of its own (this fixture's does, with an
-        // empty title), neither of which is the behaviour under test.
-        expect(scored).toContain('Write the docs');
-        expect(scored).toContain('Fix the build');
-        const tasks = yield* Database.query(Filter.type(Task)).run;
-        const priorities = new Map(tasks.map((task) => [task.title, task.priority]));
-        expect(priorities.get('Write the docs')).toEqual('Write the docs'.length);
-        expect(priorities.get('Fix the build')).toEqual('Fix the build'.length);
-        expect(yield* feedText(session.feed)).toContain('Write the docs');
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
-  );
+          // That each open task was scored, not that nothing else was: the model is free to re-run
+          // its code, or to probe the operation with inputs of its own, neither of which is the
+          // behaviour under test.
+          expect(scored).toContain('Write the docs');
+          expect(scored).toContain('Fix the build');
+          const tasks = yield* Database.query(Filter.type(Task)).run;
+          const priorities = new Map(tasks.map((task) => [task.title, task.priority]));
+          expect(priorities.get('Write the docs')).toEqual('Write the docs'.length);
+          expect(priorities.get('Fix the build')).toEqual('Fix the build'.length);
+          expect(yield* feedText(session.feed)).toContain('Write the docs');
+        },
+        Effect.provide(agentTestLayer(dialect)),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
+    );
+  });
 });
