@@ -35,22 +35,8 @@ const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
  * local last-updated day, both answered by the host from index rows, so no object is loaded to draw them.
  */
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
-  if (!space) {
-    return null;
-  }
-
-  return <SpaceDashboard space={space} stats={stats} onClose={onClose} />;
-};
-
-SpaceHomeDashboard.displayName = 'SpaceHomeDashboard';
-
-const SpaceDashboard = ({
-  space,
-  stats,
-  onClose,
-}: Required<Pick<SpaceHomeDashboardProps, 'space' | 'stats'>> & Pick<SpaceHomeDashboardProps, 'onClose'>) => {
   const { t } = useTranslation(meta.profile.key);
-  const members = useMembers(space.key);
+  const members = useMembers(space?.key);
 
   const manager = usePluginManager();
   const core = useAtomValue(manager.core);
@@ -59,8 +45,8 @@ const SpaceDashboard = ({
 
   const dailyQuery = useMemo(() => dailyActivityQuery(Intl.DateTimeFormat().resolvedOptions().timeZone), []);
   // Deferred so a burst of index passes (a freshly opened space) never competes with input.
-  const counts = useDeferredValue(useQuery(space.db, SPACE_STATS_QUERY));
-  const days = useDeferredValue(useQuery(space.db, dailyQuery));
+  const counts = useDeferredValue(useQuery(space?.db, SPACE_STATS_QUERY));
+  const days = useDeferredValue(useQuery(space?.db, dailyQuery));
   const activity = useMemo(() => toActivity(days), [days]);
 
   const values: Record<SpaceStatId, number> = {
@@ -71,6 +57,10 @@ const SpaceDashboard = ({
     'active-days': activity.length,
     'plugins': plugins,
   };
+
+  if (!space) {
+    return null;
+  }
 
   return (
     <HomeSection.Root>
@@ -88,3 +78,5 @@ const SpaceDashboard = ({
     </HomeSection.Root>
   );
 };
+
+SpaceHomeDashboard.displayName = 'SpaceHomeDashboard';
