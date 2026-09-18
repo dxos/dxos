@@ -98,6 +98,7 @@ export const translations: Resource[] = [
       [meta.profile.key]: {
         'delete-task.label': 'Delete task',
         'execute-task.label': 'Execute task',
+        'execute-task.prompt': 'Implement task #{{ordinal}}',
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
