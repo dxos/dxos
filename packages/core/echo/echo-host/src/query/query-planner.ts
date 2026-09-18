@@ -63,17 +63,17 @@ export class QueryPlanner {
     plan = this._optimizeSoloUnions(plan);
     plan = this._ensureOrderStep(plan);
     plan = this._optimizeLimits(plan);
-    plan = this._optimizeIndexOnlyAggregate(plan);
+    plan = this._optimizeBareAggregate(plan);
     return plan;
   }
 
   /**
-   * Marks the select of a plan that only counts objects by index fields as {@link QueryPlan.SelectStep.indexOnly},
+   * Marks the select of a plan that only counts objects by index fields as {@link QueryPlan.SelectStep.bare},
    * so the executor groups index rows instead of loading documents. Eligible shape: a space-scoped
    * wildcard, type or timestamp select, then deleted handling, a plain typename re-check and natural
    * ordering in any order, ending in an aggregate of `count`, `type` and `timestamp` only.
    */
-  private _optimizeIndexOnlyAggregate(plan: QueryPlan.Plan): QueryPlan.Plan {
+  private _optimizeBareAggregate(plan: QueryPlan.Plan): QueryPlan.Plan {
     if (this._options.noIndexes) {
       return plan;
     }
@@ -94,20 +94,22 @@ export class QueryPlanner {
     ) {
       return plan;
     }
-    const readsOnlyIndexFields = rest
-      .slice(0, -1)
-      .every(
-        (step) =>
-          step._tag === 'FilterDeletedStep' ||
-          (step._tag === 'FilterStep' && isTrivialTypenameFilter(step.filter)) ||
-          (step._tag === 'OrderStep' &&
-            step.limit === undefined &&
-            step.order.every((order) => order.kind === 'natural')),
-      );
+    const readsOnlyIndexFields = rest.slice(0, -1).every(
+      (step) =>
+        step._tag === 'FilterDeletedStep' ||
+        // A metadata predicate reads keys an index row does not carry, so it has to load documents.
+        (step._tag === 'FilterStep' &&
+          isTrivialTypenameFilter(step.filter) &&
+          step.filter.type === 'object' &&
+          step.filter.metaKey === undefined) ||
+        (step._tag === 'OrderStep' &&
+          step.limit === undefined &&
+          step.order.every((order) => order.kind === 'natural')),
+    );
     if (!readsOnlyIndexFields) {
       return plan;
     }
-    return QueryPlan.Plan.make([{ ...select, indexOnly: true }, ...rest]);
+    return QueryPlan.Plan.make([{ ...select, bare: true }, ...rest]);
   }
 
   private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
