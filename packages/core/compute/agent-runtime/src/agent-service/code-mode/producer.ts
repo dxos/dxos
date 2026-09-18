@@ -136,15 +136,17 @@ const runCodeModeTurn = ({
       if (done) {
         break;
       }
-      // A paused server-tool turn resumes with another request and no local tool execution.
-      if (finishReason === 'pause') {
-        continue;
-      }
+      // Checked before the pause branch below: a provider that keeps pausing would otherwise
+      // re-issue the request forever, since a paused turn skips the rest of the loop.
       if (turn + 1 >= maxTurns) {
         yield* request.submitNotice(
           `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
         );
         break;
+      }
+      // A paused server-tool turn resumes with another request and no local tool execution.
+      if (finishReason === 'pause') {
+        continue;
       }
       yield* request.runTools({ toolkit });
     }

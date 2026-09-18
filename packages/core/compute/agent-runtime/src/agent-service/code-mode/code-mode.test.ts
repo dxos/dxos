@@ -118,6 +118,11 @@ const feedText = Effect.fnUntraced(function* (feed: Feed.Feed) {
   return messages.map(Message.extractText).join('\n');
 });
 
+/** A typed failure for the effect dialect's error path — an Effect channel never carries a bare `Error`. */
+class ProbeError extends Schema.TaggedError<ProbeError>('ProbeError')('ProbeError', {
+  detail: Schema.String,
+}) {}
+
 /** The one operation the sandbox tests expose, standing in for a skill-bound tool. */
 const ScoreOperation: SandboxOperation = {
   name: 'score',
@@ -130,7 +135,7 @@ const ScoreOperation: SandboxOperation = {
 const runEval = Effect.fnUntraced(function* (code: string, dialect: Dialect = PlainDialect) {
   const runtime = yield* Effect.context<Database.Service>();
   const toolkit = makeEvalToolkit({
-    dialect,
+    dialect: { ...dialect, bindings: (context) => ({ ...dialect.bindings(context), ProbeError }) },
     sandbox: Sandbox.inProcess,
     runtime,
     operations: [ScoreOperation],
@@ -228,7 +233,7 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
     'a failing effect in the effect dialect is reported as output',
     Effect.fnUntraced(
       function* (_) {
-        const output = yield* runEval("yield* Effect.fail(new Error('nope'));", EffectDialect);
+        const output = yield* runEval("yield* Effect.fail(new ProbeError({ detail: 'nope' }));", EffectDialect);
         expect(output).toContain('Error:');
         expect(output).toContain('nope');
       },

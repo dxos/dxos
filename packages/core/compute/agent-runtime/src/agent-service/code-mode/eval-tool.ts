@@ -94,16 +94,23 @@ export const makeEvalToolkit = ({
 const makePrinter = (maxOutput: number) => {
   const lines: string[] = [];
   let printed = 0;
+  let truncated = false;
   return {
     print: (...values: unknown[]): void => {
-      if (printed >= maxOutput) {
+      if (truncated) {
         return;
       }
       const line = values.map(format).join(' ');
-      printed += line.length;
-      lines.push(
-        printed > maxOutput ? `${line.slice(0, line.length - (printed - maxOutput))}\n[output truncated]` : line,
-      );
+      // The joining newline counts against the budget: a loop printing nothing at all is all
+      // separators, which would otherwise grow the buffer without ever spending it.
+      const separator = lines.length > 0 ? 1 : 0;
+      if (printed + separator + line.length > maxOutput) {
+        lines.push(`${line.slice(0, Math.max(0, maxOutput - printed - separator))}\n[output truncated]`);
+        truncated = true;
+        return;
+      }
+      printed += separator + line.length;
+      lines.push(line);
     },
     isEmpty: () => lines.length === 0,
     output: () => lines.join('\n'),

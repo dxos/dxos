@@ -104,9 +104,12 @@ const renderPlainOperations = (operations: readonly Operation[]): string => trim
 
   The skills above describe their capabilities as tools; in code mode they are NOT tools. Each one
   is an async function on \`ops\`, taking one argument matching its parameter schema. A failed
-  operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`.
+  operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
+  so they are indexed rather than dotted.
 
-  ${operations.map((operation) => renderOperation(operation, (name) => `await ops.${name}(input)`)).join('\n')}
+  ${operations
+    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
+    .join('\n')}
 `;
 
 const camelCase = (name: string): string => name.replace(/[-_]([a-z0-9])/g, (_, char: string) => char.toUpperCase());

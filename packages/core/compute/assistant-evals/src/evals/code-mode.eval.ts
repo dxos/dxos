@@ -60,6 +60,18 @@ const seedOrganizations = () =>
 
 const organizations = Query.select(Filter.type(Organization.Organization));
 
+/** Whether the seeded organizations are present and unchanged — the check a read-only task has to pass. */
+const matchesSeed = (results: readonly Organization.Organization[]): boolean =>
+  results.length === SEEDED.length &&
+  SEEDED.every((seeded) =>
+    results.some(
+      (organization) =>
+        organization.name === seeded.name &&
+        organization.status === seeded.status &&
+        organization.website === undefined,
+    ),
+  );
+
 /** The assistant's own words this run, which is where a reported count has to appear. */
 const assistantText = Scorer.shared(
   completedBlocks().pipe(
@@ -109,6 +121,12 @@ const defineTask = ({
 // 1. Writing: several objects from one instruction.
 //
 
+const CREATED = [
+  { name: 'Stark Industries', status: 'active' },
+  { name: 'Wayne Enterprises', status: 'prospect' },
+  { name: 'Oscorp', status: 'reject' },
+];
+
 defineTask({
   title: 'creates several objects from one instruction',
   instructions: trim`
@@ -122,16 +140,19 @@ defineTask({
       description: 'All three organizations exist with the requested status.',
       query: organizations,
       score: (results) => {
-        const expected = [
-          { name: 'Stark Industries', status: 'active' },
-          { name: 'Wayne Enterprises', status: 'prospect' },
-          { name: 'Oscorp', status: 'reject' },
-        ];
-        const matched = expected.filter((want) =>
+        const matched = CREATED.filter((want) =>
           results.some((organization) => organization.name === want.name && organization.status === want.status),
         );
-        return matched.length / expected.length;
+        return matched.length / CREATED.length;
       },
+    }),
+    Scorer.database({
+      name: 'nothing-extra-created',
+      description: 'Exactly the three requested organizations exist — no duplicates, no extras.',
+      query: organizations,
+      // Graded apart from the names above: a run that creates all three AND three more has done the
+      // task and then some, which is a different failure from having missed one.
+      score: (results) => results.length === CREATED.length,
     }),
   ],
 });
@@ -199,12 +220,23 @@ defineTask({
     }),
     Scorer.database({
       name: 'others-untouched',
-      description: 'No organization outside the filter was given a website.',
+      description: 'Every organization outside the filter is exactly as it was seeded.',
       query: organizations,
-      score: (results) =>
-        results
-          .filter((organization) => !organization.name?.startsWith('Acme'))
-          .every((organization) => organization.website === undefined),
+      score: (results) => {
+        const others = results.filter((organization) => !organization.name?.startsWith('Acme'));
+        const seededOthers = SEEDED.filter((seeded) => !seeded.name.startsWith('Acme'));
+        return (
+          others.length === seededOthers.length &&
+          seededOthers.every((seeded) =>
+            others.some(
+              (organization) =>
+                organization.name === seeded.name &&
+                organization.status === seeded.status &&
+                organization.website === undefined,
+            ),
+          )
+        );
+      },
     }),
   ],
 });
