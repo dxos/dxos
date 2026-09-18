@@ -81,6 +81,18 @@ const awaitSubjects = Effect.fnUntraced(function* (builder: AppCapabilities.AppG
   return subjects.filter(isMissing);
 });
 
+/**
+ * Puts the not-found plank where the unavailable subjects would have been. It has no URL, so it goes onto
+ * the deck the URL produced rather than into the URL.
+ */
+const applyNotFound = Effect.fnUntraced(function* (active: readonly string[], unavailable: ReadonlySet<string>) {
+  const { segments } = yield* DeckCapabilities.getDeck();
+  const planks = active.map((id): Navigation.Plank =>
+    unavailable.has(id) ? { id: NotFound.NOT_FOUND_PATH } : { id, segment: Navigation.segmentOf(segments, id) },
+  );
+  yield* applyActive(Array.dedupeWith(planks, (a, b) => a.id === b.id));
+});
+
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -240,18 +252,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
-        yield* navigateDeck({
-          workspace,
-          active: deckUpdates.active.filter((id) => !unavailable.has(id)),
-          companionPlanks,
-        });
-        if (deckUpdates.active.some((id) => unavailable.has(id))) {
-          // Not-found has no URL, so it goes onto the deck the URL just produced, where the subjects would have been.
-          const { segments } = yield* DeckCapabilities.getDeck();
-          const planks = deckUpdates.active.map((id) =>
-            unavailable.has(id) ? { id: NotFound.NOT_FOUND_PATH } : { id, segment: Navigation.segmentOf(segments, id) },
-          );
-          yield* applyActive(Array.dedupeWith(planks, (a, b) => a.id === b.id));
+        const available = deckUpdates.active.filter((id) => !unavailable.has(id));
+        yield* navigateDeck({ workspace, active: available, companionPlanks });
+        if (available.length < deckUpdates.active.length) {
+          yield* applyNotFound(deckUpdates.active, unavailable);
         }
       }
 
