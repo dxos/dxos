@@ -94,38 +94,42 @@ const handler = LabelerOperation.LabelMailbox.pipe(
       });
       reportStatus(0);
 
+      // Each message's questions are independent, so the calls overlap; the tally is folded from the
+      // results rather than mutated in the loop, which no longer runs in order.
       let processed = 0;
-      let labelled = 0;
-      let needsReply = 0;
-      let urgent = 0;
+      const verdicts = yield* Effect.forEach(
+        pending,
+        Effect.fnUntraced(function* (message) {
+          const context = messageState(message);
+          // With no user tags there is nothing to choose between, so the label question is not asked.
+          const decisions = yield* tags.length > 0
+            ? DecisionModel.generate({ context, schema: labelQuestions(criteria) })
+            : DecisionModel.generate({ context, schema: TriageQuestions });
 
-      for (const message of pending) {
-        const context = messageState(message);
-        // With no user tags there is nothing to choose between, so the label question is not asked.
-        const decisions = yield* tags.length > 0
-          ? DecisionModel.generate({ context, schema: labelQuestions(criteria) })
-          : DecisionModel.generate({ context, schema: TriageQuestions });
+          const verdict = toVerdict(decisions, threshold);
+          log.info('label: verdict', { subject: context.subject, decisions, verdict });
+          // The choice key IS the tag's URI, so a confident answer resolves without a lookup by label.
+          const labelUri = verdict.label && tagUris.includes(verdict.label) ? verdict.label : undefined;
+          if (labelUri) {
+            Tagging.set(message, labelUri, { index });
+          }
+          if (verdict.needsReply) {
+            Tagging.set(message, needsReplyUri, { index });
+          }
+          if (verdict.urgent) {
+            Tagging.set(message, urgentUri, { index });
+          }
 
-        const verdict = toVerdict(decisions, threshold);
-        log.info('label: verdict', { subject: context.subject, decisions, verdict });
-        // The choice key IS the tag's URI, so a confident answer resolves without a lookup by label.
-        const labelUri = verdict.label && tagUris.includes(verdict.label) ? verdict.label : undefined;
-        if (labelUri) {
-          Tagging.set(message, labelUri, { index });
-          labelled += 1;
-        }
-        if (verdict.needsReply) {
-          Tagging.set(message, needsReplyUri, { index });
-          needsReply += 1;
-        }
-        if (verdict.urgent) {
-          Tagging.set(message, urgentUri, { index });
-          urgent += 1;
-        }
+          reportStatus((processed += 1), context.subject);
+          return { labelled: labelUri !== undefined, needsReply: verdict.needsReply, urgent: verdict.urgent };
+        }),
+        { concurrency: LabelerOperation.LABEL_MAILBOX_CONCURRENCY },
+      );
 
-        processed += 1;
-        reportStatus(processed, context.subject);
-      }
+      const count = (predicate: (verdict: (typeof verdicts)[number]) => boolean) => verdicts.filter(predicate).length;
+      const labelled = count((result) => result.labelled);
+      const needsReply = count((result) => result.needsReply);
+      const urgent = count((result) => result.urgent);
 
       yield* Database.flush();
       log.info('label: done', { processed, labelled, needsReply, urgent, skipped });

@@ -19,6 +19,9 @@ export const MAX_LABEL_MAILBOX_BATCH_LIMIT = 200;
 /** Default number of messages labelled per run. */
 export const DEFAULT_LABEL_MAILBOX_BATCH_LIMIT = 50;
 
+/** Decision calls in flight at once; the questions for one message do not depend on another's. */
+export const LABEL_MAILBOX_CONCURRENCY = 10;
+
 /** Progress-registry key for a mailbox's labelling monitor. */
 export const createLabelProgressKey = (mailbox: Mailbox.Mailbox) => `${Obj.getURI(mailbox).toString()}#label`;
 
