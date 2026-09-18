@@ -615,8 +615,8 @@ describe('AutomergeHost with Subduction', () => {
 
     test(
       'deny→allow flip auto-recovers via AutomergeHost machinery (no manual kick)',
-      // 3s deny window + up to 10s convergence poll + teardown — give CI headroom.
-      { timeout: 25_000 },
+      // 3s deny window + up to 20s convergence poll + teardown.
+      { timeout: 40_000 },
       async ({ expect }) => {
         const rt1 = createRuntime();
         onTestFinished(() => rt1.dispose());
@@ -639,7 +639,10 @@ describe('AutomergeHost with Subduction', () => {
 
           allowOnHost1 = true;
 
-          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 10_000 }).toBe(true);
+          // Sized to the heal ladder, not guessed: recovery rides the next heal attempt, and
+          // `AutomergeHost` passes no `subductionTimeouts`, so the default 2s initial delay doubles
+          // to rungs at 2/6/14/30s. A 10s window sits between two rungs and misses the 14s one.
+          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 20_000 }).toBe(true);
         } finally {
           await host1.close();
           await host2.close();
