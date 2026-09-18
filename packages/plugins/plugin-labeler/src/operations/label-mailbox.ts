@@ -50,7 +50,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
       // and feed messages are immutable snapshots that can only be tagged through the index.
       let index = mailbox.tags?.target;
       if (!index) {
-        index = db.add(Obj.make(TagIndex.TagIndex, { index: {}, [Obj.Parent]: mailbox }));
+        index = yield* Database.add(Obj.make(TagIndex.TagIndex, { index: {}, [Obj.Parent]: mailbox }));
         Obj.update(mailbox, (mailbox) => {
           mailbox.tags = Ref.make(index!);
         });
