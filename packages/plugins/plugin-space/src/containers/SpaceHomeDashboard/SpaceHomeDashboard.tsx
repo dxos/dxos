@@ -68,7 +68,7 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
         {stats.map((id) => (
           <Dashboard.Stat key={id}>
             <Dashboard.StatLabel>{t(`space-home.dashboard.${id}.label`)}</Dashboard.StatLabel>
-            <Dashboard.StatValue value={values[id]} />
+            <Dashboard.StatValue value={values[id]} data-testid={`space-home-dashboard.${id}`} />
           </Dashboard.Stat>
         ))}
       </Dashboard.Stats>
