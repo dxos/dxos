@@ -469,57 +469,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
-  # Bundles once and publishes to the moon remote cache, so the cells hydrate the artifacts instead of
-  # each rebuilding the graph. Concurrent cells cannot hit each other's cache writes, which is why this
-  # has to be a job they all depend on.
-  e2e-bundle:
-    if: >-
-      startsWith(github.ref, 'refs/heads/main') ||
-      startsWith(github.ref, 'refs/heads/changeset-release/') ||
-      startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 30
-    env:
-      # Must stay IDENTICAL to the `e2e` job's: moon hashes the AMBIENT value of any env var a task
-      # lists in `inputs`, so jobs that disagree hash `bundle-e2e` differently and never share the
-      # warmed entry. The edge/telemetry/PWA vars live in the task `env`s instead (`tag-e2e.yml`,
-      # `bundle-e2e`), where consistent absence from the ambient environment keeps hashes agreeing
-      # with nothing to keep in sync. Scoped per job because at workflow level it would also move
-      # the hashes of `test`, `storybook`, `workerd` and `cli`.
-      DX_ENVIRONMENT: ci
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          filter: blob:none
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.depot/actions/setup
-
-      - name: Resolve affected scope
-        uses: ./.depot/actions/affected
-        with:
-          all: ${{ inputs.e2e }}
-
-      # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
-      # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
-      # set that needs warming and stays correct as suites are added — the other e2e suites serve from
-      # source (`vite dev` / `storybook dev`) and need library builds, not bundles. `:bundle` by contrast
-      # built all eleven apps, so every e2e runner also hydrated the docs, cli, storybook-react,
-      # testbench-app, composer-crx, devtools-extension, examples and tasks closures — including docs'
-      # typedoc tasks, which cost more to download than composer's bundle costs to build. Warming
-      # `bundle` instead would warm a hash the e2e closure never waits on.
-      - name: Bundle
-        run: moon run :bundle-e2e
-
   # Sharded browser × cell, three cells per browser: a cell costs ~160s of fixed setup against
   # ~450-590s of test work, so more cells buy less than they cost. Cells are `moon exec --job`, so moon
   # packs whichever targets it assigns and no target list is hand-maintained. `--on-failure continue`
@@ -530,7 +479,6 @@ jobs:
     # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
     # github.ref is refs/pull/N/merge so we also check github.head_ref (the source branch name, set only
     # on pull_request events) to catch the changesets/action PR branch (changeset-release/<base>).
-    needs: e2e-bundle
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
@@ -554,7 +502,8 @@ jobs:
     # cancels the job and proves nothing.
     timeout-minutes: 50
     env:
-      # Must stay IDENTICAL to `e2e-bundle`'s block above, which explains why.
+      # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
+      # `workerd` and `cli`.
       DX_ENVIRONMENT: ci
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
@@ -581,9 +530,9 @@ jobs:
         with:
           all: ${{ inputs.e2e }}
 
-      # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
-      # cache `e2e-bundle` warmed. Step `id`s and outputs survive the block (Depot merges each unit's env
-      # and outputs back on join); were the shard output ever lost, the Test step's interpolation leaves
+      # No bundle step: the e2e targets declare `bundle-e2e` as a dep, and composer's is local-cache
+      # only because rebuilding it beats downloading it. Step `id`s and outputs survive the block
+      # (Depot merges each unit's env and outputs back on join); were the shard output ever lost, the Test step's interpolation leaves
       # `moon exec` with no targets, which exits 1 in a non-TTY rather than running nothing green.
       - parallel:
           # Only this cell's browser — the other two engines' downloads are dead weight here.
@@ -599,17 +548,17 @@ jobs:
           - name: Clean stale test results
             run: rm -rf test-results
 
-          # The pool list is computed, not globbed: `:e2e` would match composer-app too, and only
-          # `moon query` honours MQL negation (`moon exec --query` ignores it). Empty is fatal — a bad
-          # query would otherwise run nothing and report green.
+          # The pool list is computed, not globbed: `:e2e` would match composer-app too. composer-app is
+          # dropped in node because moon ignores MQL negation in `moon query tasks` as well as
+          # `moon exec --query`. Empty is fatal — a bad query would otherwise run nothing and report green.
           - name: Select shard targets
             id: shard
             run: |
               if [ "${{ matrix.shard }}" = "composer" ]; then
                 targets=composer-app:e2e
               else
-                targets=$(moon query tasks "task=e2e && project!=composer-app" |
-                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).sort().map((project)=>project+':e2e').join(' ')))")
+                targets=$(moon query tasks "task=e2e" |
+                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-app').sort().map((project)=>project+':e2e').join(' ')))")
               fi
               [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
@@ -629,7 +578,6 @@ jobs:
           quarantine: true
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
-            --concurrency=1
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7

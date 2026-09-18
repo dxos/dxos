@@ -31,6 +31,9 @@ tasks:
       DX_EDGE_BASE_URL: 'https://dxos.network'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: 'false'
+    options:
+      # ~320 MB with sourcemaps: minutes through the remote cache against ~25s to rebuild.
+      cache: local
   # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
   # than a step inside `bundle`: a perf budget must not fail the local build you are running in
   # order to measure the very thing it is budgeting. `check-boot-budget` runs in the `check` job, so
