@@ -1796,6 +1796,7 @@ export const DeckPlanks = () => {
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
                 ref={viewportRef}
+                data-testid='deck.viewport'
                 // Scroll anchoring off: the deck owns its scroll position, and the browser's anchor
                 // compensation turns any tile growing (a companion opening) into a silent scroll no
                 // code commanded — measured as the deck shifting by exactly the width delta.

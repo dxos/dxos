@@ -198,13 +198,7 @@ const TestRevealControls = () => {
   );
 };
 
-const NEW_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-3`;
-
-/**
- * Opens the third story item as a new plank alongside whatever is already seeded (`disposition: 'add'`,
- * so the seeded planks stay mounted rather than being replaced) — the path the flash-of-unattended
- * regression test below drives.
- */
+/** Opens one more plank beside the seeded ones (`disposition: 'add'`), the path the test below drives. */
 const TestOpenNextControls = ({ targetId }: { targetId?: string }) => {
   const { invokePromise } = useOperationInvoker();
   const handleClick = useCallback(() => {
@@ -764,6 +758,21 @@ export const CompanionPerPlank: Story = {
 // Regression: a stacked deck (`flatten` unset here) that has never had its companion touched must start
 // with every plank's companion closed — the old `isCompanionOpen` returned `true` for every plank when
 // `companionPlanks` was `undefined`, opening a companion beside each one before the reader ever asked.
+/**
+ * Runs `interaction` with a workspace URL the deck can parse, restoring whatever Storybook had there.
+ * These stories seed their planks directly, so nothing has written a URL, and the deck's operations read
+ * one to resolve which workspace to navigate within.
+ */
+const withWorkspaceUrl = async (interaction: () => Promise<void>) => {
+  const previous = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  window.history.replaceState(null, '', `/${UrlPath.WORKSPACE_KEY}/${DeckSchema.DEFAULT_DECK_ID}`);
+  try {
+    await interaction();
+  } finally {
+    window.history.replaceState(null, '', previous);
+  }
+};
+
 export const CompanionsClosedUntilOpened: Story = {
   tags: ['test'],
   args: { count: 3, uninitializedCompanions: true },
@@ -784,19 +793,13 @@ export const CompanionsClosedUntilOpened: Story = {
       );
     await waitFor(() => expect(findCompanionButton(), 'no companion control for the first plank').not.toBeNull());
 
-    // `UpdateCompanion`'s handler resolves the active workspace from the URL (see the priming comment
-    // on `OpenFocusesBeforePaint`); the seeded planks bypass it, so it has to be primed here too.
-    const previousUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    window.history.replaceState(null, '', `/${UrlPath.WORKSPACE_KEY}/${DeckSchema.DEFAULT_DECK_ID}`);
-    try {
-      // The companion anchors to the attended plank, so the plank whose control is being clicked has
-      // to hold attention, else the companion opens beside whichever plank attention falls back to.
+    await withWorkspaceUrl(async () => {
+      // The companion anchors to the attended plank, so the one whose control is clicked has to hold
+      // attention, else it opens beside whichever plank attention falls back to.
       await attendPlank(canvasElement, 1);
       findCompanionButton()?.click();
       await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview']));
-    } finally {
-      window.history.replaceState(null, '', previousUrl);
-    }
+    });
   },
 };
 
@@ -836,51 +839,46 @@ export const SidebarClosedAtDesktop: Story = {
   },
 };
 
-const DISPLACED_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-1`;
+const NEW_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-7`;
+const ATTENDED_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-1`;
+
+const plankTitle = (canvasElement: HTMLElement, id: string) =>
+  canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${id}"] h1[data-attention]`);
 
 /**
- * A newly opened plank's heading must never paint unattended: `LayoutOperation.Open` has to land its
- * focus in the same commit that inserts the plank, not a later one.
+ * Opening a plank lands attention on it and on nothing else: its heading never paints unattended, and no
+ * other plank takes focus on the way while the new one is still off screen.
  *
- * A `MutationObserver` callback fires as a microtask at the end of the task that mutated the DOM — the
- * same boundary the browser paints against — so one callback invocation ("batch") is exactly what the
- * viewer would have seen painted after that task. Under the old code (a passive focus effect, plus a
- * `ScrollIntoView` operation scheduled as a detached followup) the plank's insertion and its focus landed
- * in two separate tasks: the insertion batch read the heading present but unattended, and a later batch
- * flipped it — the flash this fix removes. This asserts no batch is ever caught in that state.
+ * Both are asserted over the whole interaction rather than its outcome, since each fault corrects itself
+ * a moment later. A `MutationObserver` batch is what the browser would have painted after one task, and
+ * `focusin` catches a focus move that reverts within a commit, which the attention attribute never shows.
  */
-export const OpenFocusesBeforePaint: Story = {
+export const OpenAttendsTheNewPlank: Story = {
   tags: ['test'],
-  args: { count: 2, openNextControl: true },
+  // Enough narrow planks that the deck overflows with several unfolded: with one plank on screen there is
+  // nothing for the fold hysteresis to mis-pick, and the bug hides.
+  args: { count: 6, openNextControl: true, plankSizeRem: 20 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
 
-    // Something has to hold attention before the navigation for "the displaced plank ends up
-    // unattended" to be a meaningful assertion.
+    // Something has to hold attention first, for losing it to mean anything.
     await attendPlank(canvasElement, 1);
-    const displacedTitle = () =>
-      canvasElement.querySelector<HTMLElement>(
-        `[data-testid="deck.plank"][data-attendable-id="${DISPLACED_PLANK_ID}"] h1[data-attention]`,
-      );
-    await waitFor(() => expect(displacedTitle()).toHaveAttribute('data-attention', 'true'));
+    await waitFor(() => expect(plankTitle(canvasElement, ATTENDED_PLANK_ID)).toHaveAttribute('data-attention', 'true'));
 
-    const findNewPlank = () =>
+    const viewport = await canvas.findByTestId('deck.viewport');
+    await expect(viewport.scrollWidth).toBeGreaterThan(viewport.clientWidth);
+
+    const newPlank = () =>
       canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${NEW_PLANK_ID}"]`);
 
-    type Snapshot = { present: boolean; attended: boolean; focused: boolean };
-    const snapshot = (): Snapshot => {
-      const plank = findNewPlank();
-      const title = plank?.querySelector<HTMLElement>('h1[data-attention]');
-      return {
-        present: !!plank,
-        attended: title?.getAttribute('data-attention') === 'true',
-        focused: !!plank && plank.contains(document.activeElement),
-      };
-    };
-
-    const batches: Snapshot[] = [];
-    const observer = new MutationObserver(() => batches.push(snapshot()));
+    const unattended: string[] = [];
+    const observer = new MutationObserver(() => {
+      const plank = newPlank();
+      if (plank && plank.querySelector('h1[data-attention]')?.getAttribute('data-attention') !== 'true') {
+        unattended.push(NEW_PLANK_ID);
+      }
+    });
     observer.observe(canvasElement, {
       childList: true,
       subtree: true,
@@ -888,122 +886,31 @@ export const OpenFocusesBeforePaint: Story = {
       attributeFilter: ['data-attention', 'data-w-attention-source'],
     });
 
-    // The seeded planks bypassed the URL (see the seeding effect's comment), so the address bar is
-    // still wherever Storybook left it. `LayoutOperation.Open` reads the *current* URL to learn which
-    // workspace to navigate within, falling back to the deck's `activeDeck` token only when that URL
-    // fails to parse — and `activeDeck` here is the bare token `'default'` with no `root/` prefix, which
-    // fails that fallback (`GraphPath.getWorkspaceToken` expects a qualified path) and drops the
-    // navigation silently. Priming a parseable URL first lets `Open` round-trip for real, through
-    // `Navigation.push` and back through `projectUrl`, rather than only exercising the seeding path.
-    const previousUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    window.history.replaceState(null, '', `/${UrlPath.WORKSPACE_KEY}/${DeckSchema.DEFAULT_DECK_ID}`);
-    try {
-      const openNext = await canvas.findByTestId('story.open-next');
-      openNext.click();
-
-      await waitFor(async () => {
-        const plank = findNewPlank();
-        await expect(plank).not.toBeNull();
-        await expect(plank?.querySelector('h1[data-attention]')).toHaveAttribute('data-attention', 'true');
-        await expect(plank?.contains(document.activeElement)).toBe(true);
-      });
-
-      observer.disconnect();
-
-      await expect(batches.some((batch) => batch.present && !batch.attended)).toBe(false);
-
-      // The plank that lost attention to the new one stays mounted (`disposition: 'add'`) but unattended.
-      await expect(displacedTitle()).toHaveAttribute('data-attention', 'false');
-    } finally {
-      // Undoes the priming above so a later story in the same browser session does not inherit this
-      // story's URL.
-      window.history.replaceState(null, '', previousUrl);
-    }
-  },
-};
-
-const OVERFLOW_NEW_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-7`;
-
-/**
- * The deck's own horizontal scroller: `ScrollArea.Viewport` wraps `Mosaic.Stack`, whose direct children
- * are the tiles `usePlankTiles` scopes to — so a tile's grandparent is the element whose `scrollWidth`
- * says whether the deck overflows.
- */
-const getScrollViewport = (canvasElement: HTMLElement): HTMLElement => {
-  const tile = canvasElement.querySelector<HTMLElement>('[role="listitem"]');
-  const viewport = tile?.parentElement?.parentElement;
-  invariant(viewport, 'no scroll viewport');
-  return viewport;
-};
-
-/**
- * Regression: once the deck already scrolls, opening one more plank must never hand attention to another
- * plank on the way, even transiently. The fold hysteresis reads "attended but not visible" for a plank
- * that has focused itself off screen and hands focus to the nearest unfolded one, which is why the deck
- * has to record its scroll intent before that pass runs. Asserted across the whole interaction rather
- * than the final state, since the deliberate scroll that follows can land back on the right plank.
- */
-export const OpenAttendsPastOverflow: Story = {
-  tags: ['test'],
-  // Narrow planks, so several stay unfolded at once in the test viewport: with one visible plank the
-  // hysteresis has nothing to mis-pick and the bug hides.
-  args: { count: 6, openNextControl: true, plankSizeRem: 20 },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
-
-    await attendPlank(canvasElement, 1);
-    const attendedTitle = () =>
-      canvasElement.querySelector<HTMLElement>(
-        `[data-testid="deck.plank"][data-attendable-id="${STORY_WORKSPACE_ID}/story-item-1"] h1[data-attention]`,
-      );
-    await waitFor(() => expect(attendedTitle()).toHaveAttribute('data-attention', 'true'));
-
-    // The bug only matters once the deck actually overflows — with few planks nothing is off-screen for
-    // the hysteresis to mis-attend to.
-    const viewport = getScrollViewport(canvasElement);
-    await expect(viewport.scrollWidth).toBeGreaterThan(viewport.clientWidth);
-
-    const newPlank = () =>
-      canvasElement.querySelector<HTMLElement>(
-        `[data-testid="deck.plank"][data-attendable-id="${OVERFLOW_NEW_PLANK_ID}"]`,
-      );
-    // Every element that ever receives real DOM focus once the new plank exists, besides the new plank
-    // itself. `focusin` is a genuine, unbatched browser dispatch — unlike the `data-attention` attribute,
-    // which is React state and can settle straight to its final value without ever painting an
-    // intermediate one, masking a focus move that happened and reverted inside a single commit.
     const misfocused: string[] = [];
     const onFocusIn = (event: FocusEvent) => {
-      if (!newPlank()) {
-        return;
-      }
       const id = (event.target as HTMLElement | null)?.closest('[data-object-id]')?.getAttribute('data-object-id');
-      if (id && id !== OVERFLOW_NEW_PLANK_ID) {
+      if (newPlank() && id && id !== NEW_PLANK_ID) {
         misfocused.push(id);
       }
     };
     canvasElement.addEventListener('focusin', onFocusIn, { capture: true });
 
-    // Priming a parseable URL — see the comment on `OpenFocusesBeforePaint` for why `Open` needs it.
-    const previousUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    window.history.replaceState(null, '', `/${UrlPath.WORKSPACE_KEY}/${DeckSchema.DEFAULT_DECK_ID}`);
     try {
-      const openNext = await canvas.findByTestId('story.open-next');
-      openNext.click();
-
-      await waitFor(async () => {
-        const plank = newPlank();
-        await expect(plank).not.toBeNull();
-        await expect(plank?.querySelector('h1[data-attention]')).toHaveAttribute('data-attention', 'true');
-        await expect(plank?.contains(document.activeElement)).toBe(true);
+      await withWorkspaceUrl(async () => {
+        (await canvas.findByTestId('story.open-next')).click();
+        await waitFor(async () => {
+          const plank = newPlank();
+          await expect(plank?.querySelector('h1[data-attention]')).toHaveAttribute('data-attention', 'true');
+          await expect(plank?.contains(document.activeElement)).toBe(true);
+        });
       });
-
-      await expect(misfocused).toEqual([]);
     } finally {
+      observer.disconnect();
       canvasElement.removeEventListener('focusin', onFocusIn, { capture: true });
-      // Undoes the priming above so a later story in the same browser session does not inherit this
-      // story's URL.
-      window.history.replaceState(null, '', previousUrl);
     }
+
+    await expect(unattended).toEqual([]);
+    await expect(misfocused).toEqual([]);
+    await expect(plankTitle(canvasElement, ATTENDED_PLANK_ID)).toHaveAttribute('data-attention', 'false');
   },
 };
