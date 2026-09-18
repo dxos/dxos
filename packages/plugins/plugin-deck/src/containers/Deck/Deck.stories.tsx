@@ -59,6 +59,9 @@ const STORY_ITEMS: StoryItem[] = [
   { id: 'story-item-4', title: 'Tasks', icon: 'ph--check-square--regular' },
   { id: 'story-item-5', title: 'References', icon: 'ph--bookmarks--regular' },
   { id: 'story-item-6', title: 'Archive', icon: 'ph--archive--regular' },
+  // A 7th item, past every seeded `count` this file uses, so "open next" always has an unopened target
+  // even once the deck already overflows the viewport.
+  { id: 'story-item-7', title: 'Backlog', icon: 'ph--tray--regular' },
 ];
 
 // Seeded, so every plank's content is the same on each run — a plank that regenerated its text would
@@ -480,6 +483,13 @@ type StoryArgs = {
    * seeds them into the settings atom the deck actually reads.
    */
   settings?: Partial<Pick<Settings.Settings, 'flatten' | 'overscroll'>>;
+  /**
+   * Stored width (rem) seeded for every plank opened on mount. Narrower than `DEFAULT_PLANK_SIZE` lets a
+   * story fit several unfolded planks inside the (fixed, narrow) test viewport at once — the geometry the
+   * fold hysteresis's "nearest to centre" pick actually has to choose between, rather than the trivial
+   * single-visible-plank case a full-width deck reduces to once scrolled to its end.
+   */
+  plankSizeRem?: number;
 };
 
 /** Stable identity, for the same reason as `NO_COMPANIONS`. */
@@ -497,6 +507,7 @@ const DefaultStory = ({
   revealControls = false,
   openNextControl = false,
   settings: settingsOverrides = NO_SETTINGS,
+  plankSizeRem,
 }: StoryArgs) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
 
@@ -536,6 +547,8 @@ const DefaultStory = ({
       ...items.slice(0, count).map((item) => item.id),
     ];
     const open = companionPlanks.map((position) => active[position - 1]).filter((id): id is string => !!id);
+    const plankSizing =
+      plankSizeRem === undefined ? undefined : Object.fromEntries(active.map((id) => [id, plankSizeRem]));
     updateState((current) => ({
       ...current,
       sidebarState,
@@ -546,6 +559,7 @@ const DefaultStory = ({
           // Omitting the key altogether (rather than writing `[]`) is what exercises the "reader has
           // never decided" state `isCompanionOpen` special-cases.
           ...(uninitializedCompanions ? {} : { companionPlanks: open }),
+          ...(plankSizing && { plankSizing: { ...current.decks[current.activeDeck].plankSizing, ...plankSizing } }),
         },
       },
     }));
@@ -563,6 +577,7 @@ const DefaultStory = ({
     uninitializedCompanions,
     launcher,
     launcherNode,
+    plankSizeRem,
     updateState,
     updateEphemeral,
   ]);
@@ -570,7 +585,10 @@ const DefaultStory = ({
   return (
     <>
       {revealControls && <TestRevealControls />}
-      {openNextControl && <TestOpenNextControls targetId={items[2]?.id} />}
+      {/* The first item past the seeded `count` — the one plank still unopened whatever `count` a story
+          picks — so "open next" keeps working once a story seeds more planks than `OpenFocusesBeforePaint`
+          did. */}
+      {openNextControl && <TestOpenNextControls targetId={items[count]?.id} />}
       <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
         <Deck.Content>
           <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
@@ -897,6 +915,92 @@ export const OpenFocusesBeforePaint: Story = {
       // The plank that lost attention to the new one stays mounted (`disposition: 'add'`) but unattended.
       await expect(displacedTitle()).toHaveAttribute('data-attention', 'false');
     } finally {
+      // Undoes the priming above so a later story in the same browser session does not inherit this
+      // story's URL.
+      window.history.replaceState(null, '', previousUrl);
+    }
+  },
+};
+
+const OVERFLOW_NEW_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-7`;
+
+/**
+ * The deck's own horizontal scroller: `ScrollArea.Viewport` wraps `Mosaic.Stack`, whose direct children
+ * are the tiles `usePlankTiles` scopes to — so a tile's grandparent is the element whose `scrollWidth`
+ * says whether the deck overflows.
+ */
+const getScrollViewport = (canvasElement: HTMLElement): HTMLElement => {
+  const tile = canvasElement.querySelector<HTMLElement>('[role="listitem"]');
+  const viewport = tile?.parentElement?.parentElement;
+  invariant(viewport, 'no scroll viewport');
+  return viewport;
+};
+
+/**
+ * Regression: once the deck already scrolls, opening one more plank must never hand attention to another
+ * plank on the way, even transiently. The fold hysteresis reads "attended but not visible" for a plank
+ * that has focused itself off screen and hands focus to the nearest unfolded one, which is why the deck
+ * has to record its scroll intent before that pass runs. Asserted across the whole interaction rather
+ * than the final state, since the deliberate scroll that follows can land back on the right plank.
+ */
+export const OpenAttendsPastOverflow: Story = {
+  tags: ['test'],
+  // Narrow planks, so several stay unfolded at once in the test viewport: with one visible plank the
+  // hysteresis has nothing to mis-pick and the bug hides.
+  args: { count: 6, openNextControl: true, plankSizeRem: 20 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+
+    await attendPlank(canvasElement, 1);
+    const attendedTitle = () =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-testid="deck.plank"][data-attendable-id="${STORY_WORKSPACE_ID}/story-item-1"] h1[data-attention]`,
+      );
+    await waitFor(() => expect(attendedTitle()).toHaveAttribute('data-attention', 'true'));
+
+    // The bug only matters once the deck actually overflows — with few planks nothing is off-screen for
+    // the hysteresis to mis-attend to.
+    const viewport = getScrollViewport(canvasElement);
+    await expect(viewport.scrollWidth).toBeGreaterThan(viewport.clientWidth);
+
+    const newPlank = () =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-testid="deck.plank"][data-attendable-id="${OVERFLOW_NEW_PLANK_ID}"]`,
+      );
+    // Every element that ever receives real DOM focus once the new plank exists, besides the new plank
+    // itself. `focusin` is a genuine, unbatched browser dispatch — unlike the `data-attention` attribute,
+    // which is React state and can settle straight to its final value without ever painting an
+    // intermediate one, masking a focus move that happened and reverted inside a single commit.
+    const misfocused: string[] = [];
+    const onFocusIn = (event: FocusEvent) => {
+      if (!newPlank()) {
+        return;
+      }
+      const id = (event.target as HTMLElement | null)?.closest('[data-object-id]')?.getAttribute('data-object-id');
+      if (id && id !== OVERFLOW_NEW_PLANK_ID) {
+        misfocused.push(id);
+      }
+    };
+    canvasElement.addEventListener('focusin', onFocusIn, { capture: true });
+
+    // Priming a parseable URL — see the comment on `OpenFocusesBeforePaint` for why `Open` needs it.
+    const previousUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.history.replaceState(null, '', `/${UrlPath.WORKSPACE_KEY}/${DeckSchema.DEFAULT_DECK_ID}`);
+    try {
+      const openNext = await canvas.findByTestId('story.open-next');
+      openNext.click();
+
+      await waitFor(async () => {
+        const plank = newPlank();
+        await expect(plank).not.toBeNull();
+        await expect(plank?.querySelector('h1[data-attention]')).toHaveAttribute('data-attention', 'true');
+        await expect(plank?.contains(document.activeElement)).toBe(true);
+      });
+
+      await expect(misfocused).toEqual([]);
+    } finally {
+      canvasElement.removeEventListener('focusin', onFocusIn, { capture: true });
       // Undoes the priming above so a later story in the same browser session does not inherit this
       // story's URL.
       window.history.replaceState(null, '', previousUrl);

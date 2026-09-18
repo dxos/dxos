@@ -966,12 +966,15 @@ const useScrollIntoView = ({
   viewportRef,
   stackRef,
   getPlankTiles,
+  planks,
   scrollIntoViewId,
   scrollIntentRef,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
+  /** The rendered plank ids, so the intent can be recorded without waiting on the DOM (see below). */
+  planks: readonly string[];
   scrollIntoViewId: string | undefined;
   scrollIntentRef: RefObject<string | undefined>;
 }) => {
@@ -981,6 +984,14 @@ const useScrollIntoView = ({
   const watchdogRef = useRef<number | undefined>(undefined);
 
   useEffect(() => () => cancelAnimationFrame(watchdogRef.current ?? 0), []);
+
+  // Recorded during render, since every effect is too late: `useFoldedPlanks` is declared first and runs
+  // its `update()` from a layout effect, by which point the plank has already focused itself and that
+  // pass would hand attention to whichever plank is on screen. Membership in `planks` rather than a DOM
+  // lookup, so this holds before the tile mounts.
+  if (scrollIntoViewId && planks.includes(scrollIntoViewId)) {
+    scrollIntentRef.current = scrollIntoViewId;
+  }
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -1414,6 +1425,7 @@ export const DeckPlanks = () => {
     viewportRef,
     stackRef,
     getPlankTiles,
+    planks,
     scrollIntoViewId: state.scrollIntoView?.id,
     scrollIntentRef,
   });
