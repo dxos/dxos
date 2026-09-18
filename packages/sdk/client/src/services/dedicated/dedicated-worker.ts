@@ -11,6 +11,7 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type ClientServicesStackContext, makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as Worker from '@dxos/worker-framework/Worker';
@@ -27,6 +28,8 @@ export type RunDedicatedWorkerOptions = {
 };
 
 const OPFS_PROBE_FILE = '.dxos-opfs-probe';
+
+class OpfsUnavailableError extends BaseError.extend('OpfsUnavailableError', 'OPFS storage is unusable.') {}
 
 /** Only the WebWorker lib declares this method, and this package compiles against DOM. */
 type SyncAccessFileHandle = FileSystemFileHandle & { createSyncAccessHandle(): Promise<{ close(): void }> };
@@ -50,9 +53,8 @@ const probeOpfs = Effect.tryPromise({
     handle.close();
     await root.removeEntry(OPFS_PROBE_FILE).catch((err) => log.warn('OPFS probe file not removed', { err }));
   },
-  // Kept as thrown, so the reason reaches the failure below rather than Effect's wrapper.
-  catch: (err) => err,
-}).pipe(Effect.catch((err) => Effect.die(new Error(`OPFS storage is unusable: ${err}`))));
+  catch: OpfsUnavailableError.wrap(),
+}).pipe(Effect.orDie);
 
 /** Runs the dedicated worker loop. Exported so apps can use a custom worker entrypoint and inject setup (e.g. observability). */
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
