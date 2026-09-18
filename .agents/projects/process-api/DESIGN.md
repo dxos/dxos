@@ -650,7 +650,7 @@ yield * Operation.deploy(op); // clears it.
 - **`addOperation` persists the body with it.** `Text.make` only constructs the object, but
   `db.add` already saves unsaved ref targets recursively — `saveRefs` → `createRef` calls
   `database.add(otherEchoObj)` for a target with no database
-  (`echo-handler/echo-handler.ts:710-713`). `addOperation` keeps that contract, so the
+  (`echo-client/src/echo-handler/echo-handler.ts:710-713`). `addOperation` keeps that contract, so the
   script body is persisted by the same call and resolves through the ref after reload; no
   separate `db.add(text)` is needed.
 - The handler payload is `{ source: Ref<Text.Text>, changed?: boolean }`; the deployed
