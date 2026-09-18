@@ -206,6 +206,8 @@ export const HostLoadedStats = Schema.Struct({
   documentsTotal: Schema.Number,
   /** Active reactive queries registered with the host, across every space. */
   queriesTotal: Schema.Number,
+  /** Documents something on the host is using right now, across every space; the rest of `documentsTotal` is idle cache. */
+  leases: Schema.Number,
 });
 export interface HostLoadedStats extends Schema.Schema.Type<typeof HostLoadedStats> {}
 

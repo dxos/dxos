@@ -366,6 +366,56 @@ describe('AutomergeHost', () => {
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
   });
 
+  // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
+  // so an evicted diverged document must not re-arm it on every diff pass.
+  test('a diverged evicted document does not kick the share policy', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({
+      runtime,
+      useSubduction: true,
+      residency: { evictionDelay: 0, minResidentDocuments: 0 },
+    });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    handle[Symbol.dispose]();
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).not.toContain(documentId);
+
+    const task = (host as any)._sharePolicyChangedTask;
+    const schedule = task.schedule.bind(task);
+    let kicks = 0;
+    task.schedule = () => {
+      kicks++;
+      schedule();
+    };
+
+    // The pass faults the document back in after deciding on the kick.
+    const leaseUntilSettled = (host as any)._leaseUntilSettled.bind(host);
+    const leased: DocumentId[] = [];
+    (host as any)._leaseUntilSettled = (id: DocumentId) => {
+      leased.push(id);
+      leaseUntilSettled(id);
+    };
+
+    const synchronizer = (host as any)._collectionSynchronizer;
+    synchronizer.onRemoteStateReceived(collectionId, 'test-peer' as PeerId, {
+      documents: { [documentId]: ['0'.repeat(64)] },
+    });
+    await expect.poll(() => leased, { timeout: 2_000 }).toContain(documentId);
+    expect(kicks).toBe(0);
+  });
+
   // `DeferredTask` clears its scheduled flag before running the callback, so a throttle that waited
   // inside the callback queued a second run for kicks it had already covered — and that run fanned
   // out again a full interval later.
