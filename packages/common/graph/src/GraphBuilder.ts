@@ -267,12 +267,11 @@ export class GraphBuilder<
     withLabel('graph-builder:extensions'),
   );
   /**
-   * Node id -> id of the extension whose connector produced it. Non-reactive, and kept through a release
-   * so a released node can still be named; only removal forgets it.
+   * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly as
+   * connectors materialize/remove nodes, so a reverse mapping from a node back to its producer does not
+   * need a reactive read.
    */
   readonly _nodeExtensions = new Map<string, string>();
-  /** Released ids whose provenance is kept; a removal of their own never comes, so an ancestor's prunes them. */
-  readonly _unloaded = new Set<string>();
   readonly _registry: Registry.AtomRegistry;
   readonly _store: Store<Node, Arg, G>;
   readonly _inline: Inline<Arg>;
@@ -308,7 +307,10 @@ export class GraphBuilder<
     return this._registry.get(this._extensions);
   }
 
-  /** The id of the extension whose connector produced the given node, released or not. */
+  /**
+   * The id of the extension whose connector produced the given node, if known. Populated as connectors
+   * materialize nodes and cleared on removal.
+   */
   getNodeExtensionId(nodeId: string): string | undefined {
     return this._nodeExtensions.get(nodeId);
   }
@@ -328,7 +330,6 @@ export class GraphBuilder<
   /** Record `extensionId` as the producer of a node and of the inline descendants that inherit it. */
   _recordProvenance(node: Arg, extensionId: string): void {
     this._nodeExtensions.set(node.id, extensionId);
-    this._unloaded.delete(node.id);
     const owned = this._inline.owned ?? this._inline.children;
     for (const child of owned(node)) {
       this._recordProvenance(child, extensionId);
@@ -539,19 +540,12 @@ export class GraphBuilder<
   }
 
   _onRemoveNode(id: string): void {
-    this._nodeExtensions.delete(id);
-    const below = `${id}${GraphNode.PathSeparator}`;
-    for (const unloaded of this._unloaded) {
-      if (unloaded.startsWith(below)) {
-        this._unloaded.delete(unloaded);
-        this._nodeExtensions.delete(unloaded);
-      }
-    }
     this._onRemoveNodes([id]);
   }
 
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
+      this._nodeExtensions.delete(id);
       const forNode = this._subscriptions.get(id);
       if (forNode) {
         this._subscriptions.delete(id);
@@ -794,9 +788,9 @@ export const flush = async (builder: Any): Promise<void> => {
 };
 
 /**
- * Unloads the nodes and their expansion subscriptions and per-connector diff state, keeping only which
- * extension produced each. The nodes leave the store outright rather than being tombstoned, so reading
- * a released relation again re-expands it from its connectors.
+ * Unloads the nodes and everything the builder remembers about them: expansion subscriptions, the
+ * per-connector diff state, and provenance. The nodes leave the store outright rather than being
+ * tombstoned, so reading a released relation again re-expands it from its connectors.
  *
  * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
  * as a releasable unit (a workspace, a collection, one node) is a policy the builder has no view of.
@@ -804,7 +798,6 @@ export const flush = async (builder: Any): Promise<void> => {
  */
 export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
-  ids.filter((id) => builder._nodeExtensions.has(id)).forEach((id) => builder._unloaded.add(id));
   for (const state of [...builder._connectorStates()]) {
     if (Retention.tornDown(released, state)) {
       builder._connectorPrevious.delete(state.key);

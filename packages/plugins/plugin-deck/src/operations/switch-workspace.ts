@@ -3,11 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -17,7 +19,7 @@ import { log } from '@dxos/log';
 
 import { DeckCapabilities } from '#types';
 
-import { RESOLVE_TIMEOUT_MS, applyWorkspace, navigateDeck } from '../url/index.ts';
+import { Navigation, RESOLVE_TIMEOUT_MS, applyWorkspace, navigate, navigateDeck } from '../url/index.ts';
 import { firstOpenableChild, openableChildren } from '../util/index.ts';
 
 const replaceEmptyDeck = (params: Omit<Parameters<typeof navigateDeck>[0], 'method'>) =>
@@ -62,15 +64,29 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         return;
       }
 
-      const seeds = remembered.length === 0 && platform !== 'mobile';
+      // Returning restores the workspace's last URL through the projection a reload uses, which shows its
+      // planks while they rebuild and turns any that no longer exist into not-found.
+      const restored = Option.fromNullishOr(open[input.subject]?.url).pipe(
+        Option.flatMap((url) => Navigation.parse(url, PathResolution.buildUrlKeyTable(builder))),
+        Option.filter(({ pairs }) => pairs.length > 0),
+      );
+      if (Option.isSome(restored)) {
+        yield* navigate(restored.value);
+        const [first] = remembered;
+        if (first) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
+        }
+        return;
+      }
+
+      const seeds = platform !== 'mobile';
       if (seeds) {
         // Connector output lands on a flush, so the switch waits for it and seeds in one navigation.
         AppGraph.expandSync(graph, input.subject, 'child');
         yield* Effect.promise(() => AppGraphBuilder.flush(builder));
       }
       const seeded = seeds ? openableChildren(graph, input.subject).slice(0, 1) : [];
-      const active = remembered.length > 0 ? remembered : seeded;
-      yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
+      yield* navigateDeck({ workspace, active: seeded, companionPlanks: deck.companionPlanks });
 
       // Only a workspace whose children are still loading reaches here; its seed replaces the empty URL.
       if (seeds && seeded.length === 0) {
@@ -82,7 +98,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         );
       }
 
-      const first = active[0];
+      const [first] = seeded;
       if (first) {
         yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
       }

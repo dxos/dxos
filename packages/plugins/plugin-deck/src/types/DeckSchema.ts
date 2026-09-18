@@ -43,6 +43,8 @@ export const OpenDeck = Schema.Struct({
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   /** Each open plank's URL segment, by plank id; the key its per-plank preferences hang off. */
   segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
+  /** The pathname the workspace was last projected from; a return restores it as a reload would. */
+  url: Schema.optional(Schema.String),
 });
 export type OpenDeck = Schema.Schema.Type<typeof OpenDeck>;
 

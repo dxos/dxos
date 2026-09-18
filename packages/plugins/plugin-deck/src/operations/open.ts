@@ -14,6 +14,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -27,6 +28,7 @@ import {
   computeActiveUpdates,
   currentNavigation,
   navigateDeck,
+  targetVerdict,
 } from '../url/index.ts';
 import {
   addSubjectsToActiveDeck,
@@ -65,17 +67,30 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           yield* applyWorkspace(input.workspace);
         }
       }
-      // A released subject still names its producer, so it is coming back; the reads below need it back.
-      const returning = input.subject.filter(
-        (id) => builder.getNodeExtensionId(id) !== undefined && Option.isNone(AppGraph.getNode(graph, id)),
-      );
-      yield* Effect.forEach(returning, (id) => AppGraph.waitFor(graph, id), {
-        concurrency: 'unbounded',
-        discard: true,
-      }).pipe(
+      // A subject missing after the expansion is rebuilding or gone; the reads below need it, and the
+      // loaders can say it is gone well before the deadline would.
+      const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
+      const gone = (id: string) => {
+        const spaceId = GraphPath.getWorkspaceToken(id);
+        const entityIds = Navigation.getCandidateEntityIds(GraphNode.segmentId(id), builder.urlGrammar.tailSeparator);
+        return spaceId && entityIds.length > 0
+          ? targetVerdict(loaders, spaceId, entityIds).pipe(
+              Effect.flatMap((verdict) => (verdict === 'absent' ? Effect.void : Effect.never)),
+            )
+          : Effect.never;
+      };
+      const missing = input.subject.filter((id) => Option.isNone(AppGraph.getNode(graph, id)));
+      yield* Effect.forEach(
+        missing,
+        (id) => Effect.raceFirst(AppGraph.waitFor(graph, id).pipe(Effect.asVoid), gone(id)),
+        {
+          concurrency: 'unbounded',
+          discard: true,
+        },
+      ).pipe(
         Effect.timeoutOrElse({
           duration: `${RESOLVE_TIMEOUT_MS} millis`,
-          orElse: () => Effect.sync(() => log.warn('released subjects did not return', { ids: returning })),
+          orElse: () => Effect.sync(() => log.warn('subjects did not arrive', { ids: missing })),
         }),
       );
 

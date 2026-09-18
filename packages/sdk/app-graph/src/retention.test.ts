@@ -166,8 +166,7 @@ describe('retention', () => {
     const after = counts(harness);
     expect(after.modelNodes).to.equal(baseline.modelNodes);
     expect(after.modelEdges).to.equal(baseline.modelEdges);
-    // Provenance outlives the release — one entry per node — so a released node can still be named.
-    expect(after.provenance).to.equal(baseline.provenance + WORKSPACES * CHILDREN);
+    expect(after.provenance).to.equal(baseline.provenance);
     expect(after.relations).to.equal(baseline.relations);
   });
 
