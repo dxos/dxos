@@ -250,4 +250,76 @@ describe('Reconciler', () => {
     expect(AppSettings.getEnabledPlugins(here.get()).sort()).toEqual([markdown, sketch]);
     expect(AppSettings.getEnabledPlugins(there.get()).sort()).toEqual([chess, markdown, sketch]);
   });
+
+  test('a local notification arriving before the write lands does not republish the pre-write value', async ({
+    expect,
+  }) => {
+    const stack = 'org.dxos.plugin.stack';
+    const shared: AppSettings.Namespaces = { [NS]: { [stack]: false } };
+    const local = AppSettings.makeDeviceSettings();
+    const store: Store = {
+      read: () => ({ shared, local }),
+      update: (fn) => fn({ shared, local }),
+    };
+
+    // Stands in for the plugin manager: `write` enables the plugin, but `getEnabled` reports the old
+    // set until the plugin's import resolves, so `read` lags the write by a turn.
+    let value: AppSettings.Values = { [stack]: false };
+    const reconciler = new Reconciler(store, {
+      namespace: NS,
+      sparse: true,
+      read: () => value,
+      write: (next) =>
+        Promise.resolve().then(() => {
+          value = { ...next };
+        }),
+    });
+
+    // Another device turns the plugin on...
+    shared[NS][stack] = true;
+    reconciler.pull();
+    // ...and the manager notifies (a plugin registering) before the enable has landed.
+    reconciler.push();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(shared[NS][stack]).toBe(true);
+  });
+
+  test('a push does not adopt a shared value it has not put into effect', ({ expect }) => {
+    const stack = 'org.dxos.plugin.stack';
+    const shared: AppSettings.Namespaces = { [NS]: { [stack]: false } };
+    const local = AppSettings.makeDeviceSettings();
+    const store: Store = {
+      read: () => ({ shared, local }),
+      update: (fn) => fn({ shared, local }),
+    };
+
+    // Stands in for the plugin manager, which reports a decision for every registered plugin.
+    let value: AppSettings.Values = { [stack]: false };
+    const reconciler = new Reconciler(store, {
+      namespace: NS,
+      sparse: true,
+      read: () => value,
+      write: (next) => {
+        value = { ...next };
+      },
+    });
+
+    // Another device turns the plugin on, and a plugin registers here before that is applied. The
+    // registration is the local edit; the account's decision is not this device's to republish.
+    shared[NS][stack] = true;
+    value = { ...value, 'org.dxos.plugin.other': false };
+    reconciler.push();
+
+    // The account's decision still reaches this device...
+    reconciler.pull();
+    expect(value[stack]).toBe(true);
+
+    // ...and the next registration does not carry the pre-decision value back to the account.
+    value = { ...value, 'org.dxos.plugin.third': false };
+    reconciler.push();
+    expect(shared[NS][stack]).toBe(true);
+  });
 });
