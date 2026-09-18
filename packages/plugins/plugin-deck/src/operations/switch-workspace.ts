@@ -40,14 +40,18 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const active = remembered.length > 0 ? remembered : seeded;
 
       const workspace = GraphPath.getWorkspaceToken(input.subject);
-      // The first plank takes its focus intent in the same write, so it never paints unattended.
-      if (workspace) {
-        yield* navigateDeck({
+      // The first plank takes its focus intent in the same write, so it never paints unattended. A
+      // workspace the URL already names writes nothing, and one it cannot name never gets there.
+      const switched =
+        !!workspace &&
+        (yield* navigateDeck({
           workspace,
           active,
           companionPlanks: deck.companionPlanks,
           intent: { scrollIntoView: active[0] },
-        });
+        }));
+      if (!switched && active[0]) {
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: active[0] });
       }
     }),
   ),

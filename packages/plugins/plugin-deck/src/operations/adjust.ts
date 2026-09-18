@@ -34,13 +34,17 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         const next = incrementPlank(deck.active, input);
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         const { workspace } = yield* currentNavigation();
-        // The moved plank takes its focus intent in the same write, so it never paints unattended.
-        yield* navigateDeck({
+        // The moved plank takes its focus intent in the same write, so it never paints unattended. A
+        // plank already at the edge moves nowhere, leaving the URL unchanged and the intent undelivered.
+        const moved = yield* navigateDeck({
           workspace,
           active: deckUpdates.active,
           companionPlanks: deckUpdates.companionPlanks,
           intent: { scrollIntoView: input.id },
         });
+        if (!moved) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
+        }
       }
 
       if (input.type === 'expand') {

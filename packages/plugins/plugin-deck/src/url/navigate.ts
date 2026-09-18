@@ -34,8 +34,8 @@ export const currentNavigation = Effect.fnUntraced(function* () {
 });
 
 /**
- * Change what is open: push the URL, then project it. Returns the plank attention has to move to
- * because the one holding it is no longer open.
+ * Change what is open: push the URL, then project it. Answers whether the intent reached a write, which
+ * a navigation the URL already describes never does, so the caller can land it another way.
  */
 export const navigate = Effect.fnUntraced(function* (
   next: Navigation.Navigation,
@@ -43,11 +43,14 @@ export const navigate = Effect.fnUntraced(function* (
 ) {
   if (!next.workspace) {
     log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
-    return undefined;
+    return false;
   }
-  return Navigation.push(next, options?.method)
-    ? yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds, intent: options?.intent })
-    : undefined;
+  if (!Navigation.push(next, options?.method)) {
+    return false;
+  }
+
+  yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds, intent: options?.intent });
+  return true;
 });
 
 /**
