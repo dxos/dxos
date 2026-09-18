@@ -3,10 +3,12 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useDeferredValue, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { Collection, Type } from '@dxos/echo';
+import { type ActivityRow } from '@dxos/echo-client';
 import { useQuery } from '@dxos/echo-react';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -30,28 +32,16 @@ type SpaceHomeDashboardProps = {
 
 const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 
+const NO_ACTIVITY: Atom.Atom<readonly ActivityRow[]> = Atom.make<readonly ActivityRow[]>([]);
+
 /**
  * Space stats and activity matrix for the Home article. The counts come from a host-side type
  * aggregate and the matrix from the space's activity ledger (changes per hour, kept by the
  * indexer), so no object is loaded into the tab to draw either.
  */
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
-  if (!space) {
-    return null;
-  }
-
-  return <SpaceDashboard space={space} stats={stats} onClose={onClose} />;
-};
-
-SpaceHomeDashboard.displayName = 'SpaceHomeDashboard';
-
-const SpaceDashboard = ({
-  space,
-  stats,
-  onClose,
-}: Required<Pick<SpaceHomeDashboardProps, 'space' | 'stats'>> & Pick<SpaceHomeDashboardProps, 'onClose'>) => {
   const { t } = useTranslation(meta.profile.key);
-  const members = useMembers(space.key);
+  const members = useMembers(space?.key);
 
   const manager = usePluginManager();
   const core = useAtomValue(manager.core);
@@ -59,9 +49,9 @@ const SpaceDashboard = ({
   const plugins = useMemo(() => enabled.filter((id) => !core.includes(id)).length, [core, enabled]);
 
   // Deferred so a burst of index passes (a freshly opened space) never competes with input.
-  const counts = useDeferredValue(useQuery(space.db, SPACE_STATS_QUERY));
-  const ledger = useMemo(() => space.db.activity(), [space]);
-  const hours = useDeferredValue(useAtomValue(ledger.atom));
+  const counts = useDeferredValue(useQuery(space?.db, SPACE_STATS_QUERY));
+  const ledger = useMemo(() => space?.db.activity().atom ?? NO_ACTIVITY, [space]);
+  const hours = useDeferredValue(useAtomValue(ledger));
   const activity = useMemo(() => toActivity(hours), [hours]);
 
   const values: Record<SpaceStatId, number> = {
@@ -72,6 +62,10 @@ const SpaceDashboard = ({
     'active-days': activity.length,
     'plugins': plugins,
   };
+
+  if (!space) {
+    return null;
+  }
 
   return (
     <HomeSection.Root>
@@ -89,3 +83,5 @@ const SpaceDashboard = ({
     </HomeSection.Root>
   );
 };
+
+SpaceHomeDashboard.displayName = 'SpaceHomeDashboard';
