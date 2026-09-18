@@ -10,6 +10,7 @@ export * from './dxos-globals.ts';
 export * from './import-sqlite.ts';
 export * from './opfs-export.ts';
 export * from './opfs-import-verify.ts';
+export * from './repair.ts';
 export * from './reset-storage.ts';
 export * from './sql-storage-diagnostics.ts';
 export * from './ui.ts';

@@ -268,7 +268,7 @@ const SEPARATOR_UPPER_BOUND = String.fromCharCode(SEPARATOR.charCodeAt(0) + 1);
  * Excludes `prefix` itself, which callers select separately — {@link loadRange} must still return a
  * key stored at exactly the queried prefix (the `subduction-ids-<sid>` shape does this).
  */
-const descendantRange = (prefix: string): { lower: string; upper: string } => ({
+export const descendantRange = (prefix: string): { lower: string; upper: string } => ({
   lower: prefix + SEPARATOR,
   upper: prefix + SEPARATOR_UPPER_BOUND,
 });
