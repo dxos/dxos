@@ -43,6 +43,7 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as IrohBeaconPlugin from '@dxos/plugin-iroh-beacon/IrohBeaconPlugin';
 import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
+import * as LabelerPlugin from '@dxos/plugin-labeler/LabelerPlugin';
 import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
@@ -81,6 +82,7 @@ import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPl
 import * as TrelloPlugin from '@dxos/plugin-trello/TrelloPlugin';
 import * as TripPlugin from '@dxos/plugin-trip/TripPlugin';
 import * as TypefullyPlugin from '@dxos/plugin-typefully/TypefullyPlugin';
+import * as TypeSafePlugin from '@dxos/plugin-typesafe/TypeSafePlugin';
 import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
 import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
@@ -146,7 +148,9 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
+      LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
+      TypeSafePlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
       LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
@@ -210,6 +214,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     InboxPlugin.make(),
     JmapPlugin.make(),
     KanbanPlugin.make(),
+    LabelerPlugin.make(),
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
@@ -233,6 +238,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     SheetPlugin.make(),
     StackPlugin.make(),
     TablePlugin.make(),
+    TypeSafePlugin.make(),
     TasksPlugin.make(),
     ThreadPlugin.make(),
     TldrawPlugin.make(),

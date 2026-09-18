@@ -10,7 +10,9 @@ import { setupPage } from '@dxos/test-utils/playwright';
 
 import { type FILTER } from '../constants.ts';
 
-export const INITIAL_URL = 'http://localhost:9006/';
+// 127.0.0.1, not localhost: localhost resolves to ::1 first, and Firefox fails ICE outright on a page
+// served over IPv6 loopback, which strands every invitation.
+export const INITIAL_URL = 'http://127.0.0.1:9006/';
 
 export class AppManager {
   page!: Page;

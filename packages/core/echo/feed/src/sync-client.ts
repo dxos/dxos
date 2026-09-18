@@ -5,6 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Semaphore from 'effect/Semaphore';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context, ContextDisposedError } from '@dxos/context';
@@ -13,7 +14,12 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { SyncAppendPositionMismatchError, SyncRpcTimeoutError, SyncSpaceDeletedError } from './errors.ts';
+import {
+  FeedOperationError,
+  SyncAppendPositionMismatchError,
+  SyncRpcTimeoutError,
+  SyncSpaceDeletedError,
+} from './errors.ts';
 import type { FeedStore } from './feed-store.ts';
 
 /** Default timeout for feed sync RPCs awaiting an edge response. */
@@ -57,6 +63,9 @@ export class SyncClient {
   readonly #sendMessage: SyncClientOptions['sendMessage'];
   readonly #rpcTimeoutMs: number;
   readonly #handlers = new Map<string, Deferred.Deferred<ProtocolMessage, Error>>();
+  /** One lock per `spaceId:feedNamespace`, created on first use and never evicted: an entry is a few bytes. */
+  readonly #locks = new Map<string, Semaphore.Semaphore>();
+
   /**
    * Namespaces whose pull cursor was rewound to the start and have not yet pulled through to the
    * end. Keyed `spaceId:feedNamespace`; see {@link #replayNamespace}.
@@ -84,6 +93,23 @@ export class SyncClient {
       senderPeerId: this.#peerId,
       recipientPeerId: this.#serverPeerId,
     };
+  }
+
+  /**
+   * Runs `effect` exclusively per space and namespace, since pull and push rewrite the same sync state
+   * and positions. {@link SyncClient.handleMessage} stays unlocked: a locked request awaits its response.
+   */
+  #serialized<A, E, R>(
+    opts: { spaceId: SpaceId; feedNamespace: string },
+    effect: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, R> {
+    const key = `${opts.spaceId}:${opts.feedNamespace}`;
+    let lock = this.#locks.get(key);
+    if (!lock) {
+      lock = Semaphore.makeUnsafe(1);
+      this.#locks.set(key, lock);
+    }
+    return Semaphore.withPermit(lock)(effect);
   }
 
   /**
@@ -183,158 +209,171 @@ export class SyncClient {
     },
   ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient> {
     const self = this;
-    return Effect.gen(function* () {
-      const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-      });
-      const requestId = crypto.randomUUID();
-      const deferred = yield* Deferred.make<ProtocolMessage, Error>();
-      self.#handlers.set(requestId, deferred);
-      const cleanupDispose = ctx.disposed
-        ? () => {}
-        : ctx.onDispose(() => {
-            Effect.runFork(Deferred.fail(deferred, new ContextDisposedError()));
+    return self.#serialized(
+      opts,
+      Effect.gen(function* () {
+        const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+        });
+        const requestId = crypto.randomUUID();
+        const deferred = yield* Deferred.make<ProtocolMessage, Error>();
+        self.#handlers.set(requestId, deferred);
+        const cleanupDispose = ctx.disposed
+          ? () => {}
+          : ctx.onDispose(() => {
+              Effect.runFork(Deferred.fail(deferred, new ContextDisposedError()));
+            });
+        if (ctx.disposed) {
+          yield* Deferred.fail(deferred, new ContextDisposedError());
+        }
+        const request: RequestPayload = {
+          _tag: 'QueryRequest',
+          requestId,
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          position: lastPulledPosition,
+          limit: opts.limit,
+          expectedServerToken: serverToken,
+        };
+        log('feed sync client pull rpc sending', {
+          requestId,
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          afterPosition: lastPulledPosition,
+          limit: opts.limit,
+        });
+        yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
+          Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+        );
+        const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          rpcTag: 'QueryRequest',
+        });
+        const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
+        const reconciliation = yield* self.#reconcileServerToken(
+          { ...opts, lastPulledPosition },
+          serverToken,
+          response.serverToken,
+        );
+        if (reconciliation === 'verify') {
+          // Served from a cursor whose ordering is unproven; the next pull, from one slot back, settles it.
+          log('feed sync client pull deferred until the first server token is verified', {
+            requestId,
+            spaceId: opts.spaceId,
+            feedNamespace: opts.feedNamespace,
+            lastPulledPosition,
           });
-      if (ctx.disposed) {
-        yield* Deferred.fail(deferred, new ContextDisposedError());
-      }
-      const request: RequestPayload = {
-        _tag: 'QueryRequest',
-        requestId,
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        position: lastPulledPosition,
-        limit: opts.limit,
-        expectedServerToken: serverToken,
-      };
-      log('feed sync client pull rpc sending', {
-        requestId,
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        afterPosition: lastPulledPosition,
-        limit: opts.limit,
-      });
-      yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
-        Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
-      );
-      const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        rpcTag: 'QueryRequest',
-      });
-      const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
-      const reconciliation = yield* self.#reconcileServerToken(
-        { ...opts, lastPulledPosition },
-        serverToken,
-        response.serverToken,
-      );
-      if (reconciliation === 'verify') {
-        // Served from a cursor whose ordering is unproven; the next pull, from one slot back, settles it.
-        log('feed sync client pull deferred until the first server token is verified', {
+          return { done: false };
+        }
+        // On a reset the server ignored the stale `position`, so the batch restarts the namespace.
+        const basePosition = reconciliation === 'reset' ? -1 : lastPulledPosition;
+        // The high-water mark only shows a rollback while the server is still smaller than the
+        // cursor, and the first push after one regrows it; from then on only the block at the cursor
+        // gives it away, since a lost block shifts everything above it.
+        const cursorBlockDiffers = yield* self.#cursorBlockDiffers(opts, basePosition, response.cursorBlock);
+        // Positions only come from the server, so a local one above its high-water mark is a row the
+        // server lost; unpositioned, the block is pushed again rather than waiting for the server to
+        // re-issue that slot to something else.
+        const cleared =
+          response.maxPosition != null
+            ? yield* self.#feedStore.clearPositionsAbove({
+                spaceId: opts.spaceId,
+                feedNamespace: opts.feedNamespace,
+                position: response.maxPosition,
+              })
+            : 0;
+        const { displaced, moved } =
+          response.blocks.length > 0
+            ? yield* self.#feedStore.append({
+                spaceId: opts.spaceId,
+                feedNamespace: opts.feedNamespace,
+                blocks: response.blocks,
+              })
+            : { displaced: 0, moved: 0 };
+        // A cursor above the server's high-water mark was pulled from rows the server has lost, so
+        // nothing above it will ever arrive. Both it and a different block at the cursor restart a
+        // replay already running: within a replay the block at the cursor is the one the previous
+        // page wrote, so either means the server changed again underneath it.
+        const beyondServer = response.maxPosition != null && basePosition > response.maxPosition;
+        if (beyondServer || cursorBlockDiffers) {
+          self.#replaying.delete(self.#namespaceKey(opts));
+        }
+        // Each of these means the server lost rows and re-issued their positions, along with whatever
+        // it wrote since, which sits below the cursor and would otherwise never be pulled.
+        const reason = beyondServer
+          ? 'cursor beyond the server'
+          : displaced > 0 || moved > 0
+            ? 'positions re-issued'
+            : cleared > 0
+              ? 'positions above the server'
+              : cursorBlockDiffers
+                ? 'another block at the cursor'
+                : undefined;
+        if (
+          reason != null &&
+          (yield* self.#replayNamespace(opts, response.serverToken, {
+            requestId,
+            reason,
+            lastPulledPosition: basePosition,
+            maxPosition: response.maxPosition,
+            displaced,
+            moved,
+            cleared,
+            cursorBlock: response.cursorBlock,
+          }))
+        ) {
+          return { done: false };
+        }
+        if (response.blocks.length === 0) {
+          self.#replaying.delete(self.#namespaceKey(opts));
+          yield* self.#feedStore.recordPullProgress({
+            spaceId: opts.spaceId,
+            feedNamespace: opts.feedNamespace,
+            lastPulledPosition: basePosition,
+            blocksToPull: 0,
+          });
+          log.trace('feed sync client pull done (empty batch)', {
+            requestId,
+            spaceId: opts.spaceId,
+            feedNamespace: opts.feedNamespace,
+          });
+          return { done: true };
+        }
+
+        const maxPulledPosition = response.blocks.reduce(
+          (max, block) => (block.position != null && block.position > max ? block.position : max),
+          basePosition,
+        );
+        yield* self.#feedStore.setSyncState({
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          lastPulledPosition: maxPulledPosition,
+          serverToken: response.serverToken,
+          // The server reports only whether more remains, so a batch's size stands in for the next one.
+          blocksToPull: response.hasMore ? response.blocks.length : 0,
+        });
+
+        log('feed sync client pull applied batch', {
           requestId,
           spaceId: opts.spaceId,
           feedNamespace: opts.feedNamespace,
-          lastPulledPosition,
+          batchSize: response.blocks.length,
+          hasMore: response.hasMore,
+          maxPulledPosition,
         });
         return { done: false };
-      }
-      // On a reset the server ignored the stale `position`, so the batch restarts the namespace.
-      const basePosition = reconciliation === 'reset' ? -1 : lastPulledPosition;
-      // The high-water mark only shows a rollback while the server is still smaller than the
-      // cursor, and the first push after one regrows it; from then on only the block at the cursor
-      // gives it away, since a lost block shifts everything above it.
-      const cursorBlockDiffers = yield* self.#cursorBlockDiffers(opts, basePosition, response.cursorBlock);
-      // Positions only come from the server, so a local one above its high-water mark is a row the
-      // server lost; unpositioned, the block is pushed again rather than waiting for the server to
-      // re-issue that slot to something else.
-      const cleared =
-        response.maxPosition != null
-          ? yield* self.#feedStore.clearPositionsAbove({
-              spaceId: opts.spaceId,
-              feedNamespace: opts.feedNamespace,
-              position: response.maxPosition,
-            })
-          : 0;
-      const { displaced, moved } =
-        response.blocks.length > 0
-          ? yield* self.#feedStore.append({
-              spaceId: opts.spaceId,
-              feedNamespace: opts.feedNamespace,
-              blocks: response.blocks,
-            })
-          : { displaced: 0, moved: 0 };
-      // A cursor above the server's high-water mark was pulled from rows the server has lost, so
-      // nothing above it will ever arrive. Both it and a different block at the cursor restart a
-      // replay already running: within a replay the block at the cursor is the one the previous
-      // page wrote, so either means the server changed again underneath it.
-      const beyondServer = response.maxPosition != null && basePosition > response.maxPosition;
-      if (beyondServer || cursorBlockDiffers) {
-        self.#replaying.delete(self.#namespaceKey(opts));
-      }
-      // Each of these means the server lost rows and re-issued their positions, along with whatever
-      // it wrote since, which sits below the cursor and would otherwise never be pulled.
-      const reason = beyondServer
-        ? 'cursor beyond the server'
-        : displaced > 0 || moved > 0
-          ? 'positions re-issued'
-          : cleared > 0
-            ? 'positions above the server'
-            : cursorBlockDiffers
-              ? 'another block at the cursor'
-              : undefined;
-      if (
-        reason != null &&
-        (yield* self.#replayNamespace(opts, response.serverToken, {
-          requestId,
-          reason,
-          lastPulledPosition: basePosition,
-          maxPosition: response.maxPosition,
-          displaced,
-          moved,
-          cleared,
-          cursorBlock: response.cursorBlock,
-        }))
-      ) {
-        return { done: false };
-      }
-      if (response.blocks.length === 0) {
-        self.#replaying.delete(self.#namespaceKey(opts));
-        log.trace('feed sync client pull done (empty batch)', {
-          requestId,
-          spaceId: opts.spaceId,
-          feedNamespace: opts.feedNamespace,
-        });
-        return { done: true };
-      }
-
-      // Update sync state with the max position from the pulled batch.
-      const maxPulledPosition = response.blocks.reduce(
-        (max, block) => (block.position != null && block.position > max ? block.position : max),
-        basePosition,
-      );
-      yield* self.#feedStore.setSyncState({
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        lastPulledPosition: maxPulledPosition,
-        serverToken: response.serverToken,
-      });
-
-      log('feed sync client pull applied batch', {
-        requestId,
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        batchSize: response.blocks.length,
-        hasMore: response.hasMore,
-        maxPulledPosition,
-      });
-      return { done: false };
-    });
+      }),
+    );
   }
 
   /**
    * Probes remote for blocks after the last pulled position without mutating local storage.
    * Returns the number of blocks in the first batch (0 when caught up with remote).
+   *
+   * @deprecated `pull` records the remote backlog in {@link FeedStore.getSyncState}.
+   * TODO(wittjosiah): Remove?
    */
   peekPull(
     ctx: Context,
@@ -392,118 +431,121 @@ export class SyncClient {
     },
   ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient> {
     const self = this;
-    return Effect.gen(function* () {
-      const unpositioned = yield* self.#feedStore.query({
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        unpositionedOnly: true,
-        limit: opts.limit,
-      });
-      if (unpositioned.blocks.length === 0) {
-        log.trace('feed sync client push skipped (nothing to send)', {
+    return self.#serialized(
+      opts,
+      Effect.gen(function* () {
+        const unpositioned = yield* self.#feedStore.query({
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          unpositionedOnly: true,
+          limit: opts.limit,
+        });
+        if (unpositioned.blocks.length === 0) {
+          log.trace('feed sync client push skipped (nothing to send)', {
+            spaceId: opts.spaceId,
+            feedNamespace: opts.feedNamespace,
+          });
+          return { done: true };
+        }
+        const requestId = crypto.randomUUID();
+        const deferred = yield* Deferred.make<ProtocolMessage, Error>();
+        self.#handlers.set(requestId, deferred);
+        const cleanupDispose = ctx.disposed
+          ? () => {}
+          : ctx.onDispose(() => {
+              Effect.runFork(Deferred.fail(deferred, new ContextDisposedError()));
+            });
+        if (ctx.disposed) {
+          yield* Deferred.fail(deferred, new ContextDisposedError());
+        }
+        const request: RequestPayload = {
+          _tag: 'AppendRequest',
+          requestId,
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          blocks: unpositioned.blocks,
+        };
+        log('feed sync client push rpc sending', {
+          requestId,
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          blockCount: unpositioned.blocks.length,
+        });
+        yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
+          Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+        );
+        const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          rpcTag: 'AppendRequest',
+        });
+        const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
+        // Pairing a short reply with the batch would leave the tail unpositioned and the push looping
+        // without a diagnostic; a responder that assigns no positions is not a position authority.
+        if (response.positions.length !== unpositioned.blocks.length) {
+          return yield* Effect.fail(
+            new SyncAppendPositionMismatchError({
+              requestId,
+              spaceId: opts.spaceId,
+              feedNamespace: opts.feedNamespace,
+              blocks: unpositioned.blocks.length,
+              positions: response.positions.length,
+            }),
+          );
+        }
+        // Positions in the response belong to the responding server, so any stale local ones have to
+        // go before they are applied.
+        const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
           spaceId: opts.spaceId,
           feedNamespace: opts.feedNamespace,
         });
-        return { done: true };
-      }
-      const requestId = crypto.randomUUID();
-      const deferred = yield* Deferred.make<ProtocolMessage, Error>();
-      self.#handlers.set(requestId, deferred);
-      const cleanupDispose = ctx.disposed
-        ? () => {}
-        : ctx.onDispose(() => {
-            Effect.runFork(Deferred.fail(deferred, new ContextDisposedError()));
-          });
-      if (ctx.disposed) {
-        yield* Deferred.fail(deferred, new ContextDisposedError());
-      }
-      const request: RequestPayload = {
-        _tag: 'AppendRequest',
-        requestId,
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        blocks: unpositioned.blocks,
-      };
-      log('feed sync client push rpc sending', {
-        requestId,
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        blockCount: unpositioned.blocks.length,
-      });
-      yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
-        Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
-      );
-      const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        rpcTag: 'AppendRequest',
-      });
-      const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
-      // Pairing a short reply with the batch would leave the tail unpositioned and the push looping
-      // without a diagnostic; a responder that assigns no positions is not a position authority.
-      if (response.positions.length !== unpositioned.blocks.length) {
-        return yield* Effect.fail(
-          new SyncAppendPositionMismatchError({
-            requestId,
-            spaceId: opts.spaceId,
-            feedNamespace: opts.feedNamespace,
-            blocks: unpositioned.blocks.length,
-            positions: response.positions.length,
-          }),
+        // Reconciling here too means a client that only ever writes still notices the next swap:
+        // a first observation with nothing pulled records the token, and a mismatch drops the stale
+        // positions before the response's -- which belong to the responding server -- are applied.
+        const reconciliation = yield* self.#reconcileServerToken(
+          { ...opts, lastPulledPosition },
+          serverToken,
+          response.serverToken,
         );
-      }
-      // Positions in the response belong to the responding server, so any stale local ones have to
-      // go before they are applied.
-      const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-      });
-      // Reconciling here too means a client that only ever writes still notices the next swap:
-      // a first observation with nothing pulled records the token, and a mismatch drops the stale
-      // positions before the response's -- which belong to the responding server -- are applied.
-      const reconciliation = yield* self.#reconcileServerToken(
-        { ...opts, lastPulledPosition },
-        serverToken,
-        response.serverToken,
-      );
-      const { displaced, moved } = yield* self.#feedStore.setPosition({
-        spaceId: opts.spaceId,
-        blocks: Array.zipWith(response.positions, unpositioned.blocks, (position, block) => {
-          invariant(block.feedId != null, 'queried block carries no feed id');
-          return {
-            feedId: block.feedId,
-            feedNamespace: opts.feedNamespace,
-            actorId: block.actorId,
-            sequence: block.sequence,
-            position,
-          };
-        }),
-      });
-      log('feed sync client push positions applied', {
-        requestId,
-        spaceId: opts.spaceId,
-        feedNamespace: opts.feedNamespace,
-        positionCount: response.positions.length,
-        displaced,
-        moved,
-      });
-      // A block this replica had to push was not on the server, so a position for it at or below
-      // the cursor is one the server issued after losing whatever the cursor was pulled from; the
-      // same goes for a position another local block already held.
-      const cursor = reconciliation === 'reset' ? -1 : lastPulledPosition;
-      const lowestPosition = Math.min(...response.positions);
-      if (displaced > 0 || moved > 0 || lowestPosition <= cursor) {
-        yield* self.#replayNamespace(opts, response.serverToken, {
+        const { displaced, moved } = yield* self.#feedStore.setPosition({
+          spaceId: opts.spaceId,
+          blocks: Array.zipWith(response.positions, unpositioned.blocks, (position, block) => {
+            invariant(block.feedId != null, 'queried block carries no feed id');
+            return {
+              feedId: block.feedId,
+              feedNamespace: opts.feedNamespace,
+              actorId: block.actorId,
+              sequence: block.sequence,
+              position,
+            };
+          }),
+        });
+        log('feed sync client push positions applied', {
           requestId,
-          reason: displaced > 0 || moved > 0 ? 'positions re-issued' : 'position below the cursor',
-          lastPulledPosition: cursor,
-          lowestPosition,
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          positionCount: response.positions.length,
           displaced,
           moved,
         });
-      }
-      return { done: false };
-    });
+        // A block this replica had to push was not on the server, so a position for it at or below
+        // the cursor is one the server issued after losing whatever the cursor was pulled from; the
+        // same goes for a position another local block already held.
+        const cursor = reconciliation === 'reset' ? -1 : lastPulledPosition;
+        const lowestPosition = Math.min(...response.positions);
+        if (displaced > 0 || moved > 0 || lowestPosition <= cursor) {
+          yield* self.#replayNamespace(opts, response.serverToken, {
+            requestId,
+            reason: displaced > 0 || moved > 0 ? 'positions re-issued' : 'position below the cursor',
+            lastPulledPosition: cursor,
+            lowestPosition,
+            displaced,
+            moved,
+          });
+        }
+        return { done: false };
+      }),
+    );
   }
 
   #namespaceKey(opts: { spaceId: SpaceId; feedNamespace: string }): string {
@@ -634,11 +676,13 @@ export class SyncClient {
 
   #expectResponse<T>(requestId: string, message: ProtocolMessage, expectedTag: string): Effect.Effect<T, Error, never> {
     if (message._tag === 'Error') {
-      return Effect.fail(new Error(message.message));
+      return Effect.fail(new FeedOperationError({ message: message.message }));
     }
     const requestIdMsg = 'requestId' in message ? String(message.requestId) : undefined;
     if (message._tag !== expectedTag || requestIdMsg !== requestId) {
-      return Effect.fail(new Error(`Unexpected message: expected ${expectedTag} with requestId ${requestId}`));
+      return Effect.fail(
+        new FeedOperationError({ message: `Unexpected message: expected ${expectedTag} with requestId ${requestId}` }),
+      );
     }
     return Effect.succeed(message as T);
   }

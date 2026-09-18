@@ -429,8 +429,7 @@ describe('ManagerImpl', () => {
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
         expect(recordedSpans.map(({ name }) => name)).toContain('Handler.span');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -447,8 +446,7 @@ describe('ManagerImpl', () => {
         const span = spaceSpans.find(({ name }) => name === 'Handler.span');
         expect(span?.attributes.get('spaceId')).toEqual('B7777777777777777777777777');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans)))),
     ),
   );
 
@@ -473,8 +471,7 @@ describe('ManagerImpl', () => {
         expect(span).toBeUndefined();
         expect(ancestry).toEqual(['Alarm.handler', 'Process.alarm']);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans)))),
     ),
   );
 
@@ -489,8 +486,7 @@ describe('ManagerImpl', () => {
 
         expect(recordedSpans.map(({ name }) => name)).toContain('Alarm.handler');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -515,8 +511,7 @@ describe('ManagerImpl', () => {
         );
         expect(handler).toBeDefined();
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -544,8 +539,7 @@ describe('ManagerImpl', () => {
         expect(recordedSpans.map(({ name }) => name)).toContain('ChildEvent.handler');
         yield* parent.terminate();
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -564,8 +558,7 @@ describe('ManagerImpl', () => {
           'ProcessOperationInvoker.invoke',
         ]);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans)))),
     ),
   );
 
@@ -587,8 +580,9 @@ describe('ManagerImpl', () => {
         ]);
         expect(unusedRuntimeSpans).toEqual([]);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
+      Effect.provide(
+        Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
+      ),
     ),
   );
 
@@ -1878,8 +1872,9 @@ describe('durability', () => {
 
         expect(rearmSpans.map(({ name }) => name)).toContain('Alarm.handler');
       },
-      Effect.provide(DurabilityTestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
+      Effect.provide(
+        Layer.provideMerge(DurabilityTestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
+      ),
     ),
   );
 

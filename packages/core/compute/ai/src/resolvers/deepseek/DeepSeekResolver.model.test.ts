@@ -101,8 +101,7 @@ describe('DeepSeek parallel tool calls', { tags: ['model-fixture', 'manual'] }, 
         }
         expect(open.size).toBe(0);
       },
-      Effect.provide(WeatherLayer),
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.provideMerge(WeatherLayer, TestLayer)),
       TestHelpers.provideTestContext,
     ),
     { timeout: 120_000 },
@@ -124,8 +123,7 @@ describe('DeepSeek parallel tool calls', { tags: ['model-fixture', 'manual'] }, 
           expect(() => JSON.parse(call.input)).not.toThrow();
         }
       },
-      Effect.provide(WeatherLayer),
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.provideMerge(WeatherLayer, TestLayer)),
       TestHelpers.provideTestContext,
     ),
     { timeout: 120_000 },

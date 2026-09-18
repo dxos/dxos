@@ -166,8 +166,4 @@ export class MissingCredentialError extends BaseError.extend(
 }
 
 /** Generation failed. */
-export class GenerationError extends BaseError.extend('GenerationError', 'Generation failed') {
-  constructor(message: string) {
-    super({ message });
-  }
-}
+export class GenerationError extends BaseError.extend('GenerationError', 'Generation failed.') {}

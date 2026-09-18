@@ -84,7 +84,6 @@ export default Capability.makeModule(
           key: 'publication',
           kind: 'item',
           path: [GraphPath.GroupSegments.content, getPublicationsSectionId()],
-          depth: { min: 1 },
         },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;

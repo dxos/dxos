@@ -12,7 +12,11 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
-export const storybookGraphBuilders = (): BuilderExtensions => {
+export type StorybookGraphOptions = {
+  spaces?: 'growing' | 'none' | 'pending';
+};
+
+export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOptions = {}): BuilderExtensions => {
   const propertiesCache = new Map<string, Record<string, unknown>>();
   const getProperties = (id: string, defaults: Record<string, unknown>) => {
     const cached = propertiesCache.get(id);
@@ -50,47 +54,51 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         id: 'userAccount',
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
-          Effect.succeed([
-            AppGraphNode.make({
-              id: 'user-account',
-              type: 'user-account',
-              properties: {
-                label: 'User profile',
-                icon: 'ph--user--regular',
-                disposition: 'user-account',
-                userId: '1234567890ABCDEF',
-                hue: random.properties.hue(),
-                emoji: random.properties.emoji(),
-                status: 'active',
-              },
-              nodes: [
-                AppGraphNode.make({
-                  id: 'profile',
-                  type: 'profile',
-                  properties: {
-                    label: 'Profile',
-                    icon: 'ph--user--regular',
-                  },
-                }),
-                AppGraphNode.make({
-                  id: 'devices',
-                  type: 'devices',
-                  properties: {
-                    label: 'Devices',
-                    icon: 'ph--devices--regular',
-                  },
-                }),
-                AppGraphNode.make({
-                  id: 'security',
-                  type: 'security',
-                  properties: {
-                    label: 'Security',
-                    icon: 'ph--key--regular',
-                  },
-                }),
-              ],
-            }),
-          ]),
+          Effect.succeed(
+            spaces === 'none'
+              ? []
+              : [
+                  AppGraphNode.make({
+                    id: 'user-account',
+                    type: 'user-account',
+                    properties: {
+                      label: 'User profile',
+                      icon: 'ph--user--regular',
+                      disposition: 'user-account',
+                      userId: '1234567890ABCDEF',
+                      hue: random.properties.hue(),
+                      emoji: random.properties.emoji(),
+                      status: 'active',
+                    },
+                    nodes: [
+                      AppGraphNode.make({
+                        id: 'profile',
+                        type: 'profile',
+                        properties: {
+                          label: 'Profile',
+                          icon: 'ph--user--regular',
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: 'devices',
+                        type: 'devices',
+                        properties: {
+                          label: 'Devices',
+                          icon: 'ph--devices--regular',
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: 'security',
+                        type: 'security',
+                        properties: {
+                          label: 'Security',
+                          icon: 'ph--key--regular',
+                        },
+                      }),
+                    ],
+                  }),
+                ],
+          ),
       }),
       // Create space (workspace) nodes directly under root.
       AppGraphBuilder.createExtension({
@@ -98,6 +106,10 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         match: GraphNodeMatcher.whenRoot,
         connector: (_, get) =>
           Effect.sync(() => {
+            if (spaces === 'none') {
+              return [];
+            }
+
             const count = Atom.make((get) => {
               let value = 3;
               const interval = setInterval(() => {
@@ -113,16 +125,25 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               return value;
             });
 
-            return Array.from({ length: get(count) }, (_, i) =>
+            return Array.from({ length: spaces === 'pending' ? 3 : get(count) }, (_, i) =>
               AppGraphNode.make({
                 id: `space-${i}`,
                 type: 'space',
-                properties: getProperties(`space-${i}`, {
-                  label: `Space ${i}`,
-                  icon: random.properties.icon(),
-                  hue: random.properties.hue(),
-                  disposition: 'workspace',
-                }),
+                properties:
+                  spaces === 'pending'
+                    ? getProperties(`space-pending-${i}`, {
+                        label: `Space ${i}`,
+                        disabled: true,
+                        pending: true,
+                        disposition: 'workspace',
+                        testId: 'spacePlugin.space.pending',
+                      })
+                    : getProperties(`space-${i}`, {
+                        label: `Space ${i}`,
+                        icon: random.properties.icon(),
+                        hue: random.properties.hue(),
+                        disposition: 'workspace',
+                      }),
               }),
             );
           }),

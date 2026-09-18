@@ -60,9 +60,10 @@ export type BuilderExtensions = Builder.Extensions<BuilderExtension>;
  * How an extension's nodes map to (and from) the URL pair chain. The `kind` is the resolution tier:
  *
  * - `'item'`      — Addressed by an id under the workspace (`doc/<id>`). May itself have children.
- * - `'singleton'` — A single fixed node per workspace, addressed by the key alone (`settings`).
+ * - `'singleton'` — A single fixed node per workspace, addressed by the key alone (`settings`); its own
+ *                   segment is the key, below `path`.
  *
- * The binding's shape (`workspace`, `path`, `depth`, `accepts`) decides which node ids it addresses, and
+ * The binding's shape (`workspace`, `path`, `minDepth`) decides which node ids it addresses, and
  * a node's URL comes from the one binding its id fits. A node therefore has a URL whether or not it is
  * loaded, and bindings of different keys must not claim the same ids.
  *
@@ -74,15 +75,11 @@ export type UrlBinding = {
   kind: 'item' | 'singleton';
   /** Node-id segments between the workspace and the node's own. */
   path: readonly string[];
-  /** A singleton's own segment; defaults to the key. */
-  segment?: string;
   /**
-   * How many segments an item's id spans after `path`, joined by the grammar's tail separator: exactly
-   * `n`, or at least `min`. Defaults to exactly one; ignored with `resolve`.
+   * The fewest segments an item's id spans after `path`, joined by the grammar's tail separator; defaults
+   * to 1. Of two bindings sharing a path, the larger minimum claims the deeper ids. Ignored with `resolve`.
    */
-  depth?: number | { min: number };
-  /** Narrows the tails an item claims, where its shape alone would overlap another binding's. */
-  accepts?: (tail: readonly string[]) => boolean;
+  minDepth?: number;
   /** Narrows the workspaces the binding applies to; defaults to every workspace. */
   workspace?: (workspace: string) => boolean;
   /**
@@ -98,9 +95,8 @@ export type UrlBinding = {
  * The two keys are fixed tiers no extension declares (no connector produces their nodes): `anchorKey`
  * establishes the base that following pairs resolve against and is consumed as a rebase
  * (`w/<workspace>`); `linked` addresses a node attached to the preceding item through its relation
- * (`<key>/<variant>`, its segment `<prefix><variant>`). `tailSeparator` joins the
- * fixed-depth node-id segments between a key's static `path` and the object id into one URL id
- * (`db/<slug>+<id>`) so a fixed-depth nested shape needs no resolver.
+ * (`<key>/<variant>`, its segment `<prefix><variant>`). `tailSeparator` joins the node-id segments
+ * after a key's static `path` into one URL id (`db/<slug>+<id>`), so a nested shape needs no resolver.
  */
 export type UrlGrammar = {
   anchorKey?: string;
@@ -138,10 +134,6 @@ export type PathResolveParams = {
  */
 export type PathResolver = (params: PathResolveParams) => Effect.Effect<string | null>;
 
-/** Whether a binding's `depth` admits a tail of `length` segments. */
-const fitsDepth = (length: number, depth: UrlBinding['depth'] = 1): boolean =>
-  typeof depth === 'number' ? length === depth : length >= depth.min;
-
 const startsWith = (segments: readonly string[], prefix: readonly string[]): boolean =>
   prefix.length <= segments.length && prefix.every((segment, index) => segments[index] === segment);
 
@@ -161,18 +153,15 @@ export const urlRepresentation = (
   }
   const tail = segments.slice(url.path.length);
   if (url.kind === 'singleton') {
-    return tail.length === 1 && tail[0] === (url.segment ?? url.key) ? Option.some({ key: url.key }) : Option.none();
+    return tail.length === 1 && tail[0] === url.key ? Option.some({ key: url.key }) : Option.none();
   }
   if (tail.length === 0) {
-    return Option.none();
-  }
-  if (!(url.accepts?.(tail) ?? true)) {
     return Option.none();
   }
   if (url.resolve) {
     return Option.some({ key: url.key, id: tail[tail.length - 1] });
   }
-  return fitsDepth(tail.length, url.depth)
+  return tail.length >= (url.minDepth ?? 1)
     ? Option.some({ key: url.key, id: tail.join(tailSeparator) })
     : Option.none();
 };
@@ -192,12 +181,10 @@ export const urlCandidate = (
   }
   const base = [GraphNode.RootId, workspace, ...url.path];
   if (url.kind === 'singleton') {
-    return id === undefined
-      ? Option.some([...base, url.segment ?? url.key].join(GraphNode.PathSeparator))
-      : Option.none();
+    return id === undefined ? Option.some([...base, url.key].join(GraphNode.PathSeparator)) : Option.none();
   }
   const tail = id?.split(tailSeparator) ?? [];
-  return tail.length > 0 && fitsDepth(tail.length, url.depth) && (url.accepts?.(tail) ?? true)
+  return tail.length > 0 && tail.length >= (url.minDepth ?? 1)
     ? Option.some([...base, ...tail].join(GraphNode.PathSeparator))
     : Option.none();
 };
@@ -263,6 +250,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
     });
     // An empty prefix would make every segment read as linked.
     invariant(grammar.linked.prefix.length > 0, 'UrlGrammar.linked.prefix must not be empty');
+    invariant(grammar.tailSeparator.length > 0, 'UrlGrammar.tailSeparator must not be empty');
     this.urlGrammar = grammar;
   }
 

@@ -12,6 +12,8 @@ import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Invitation_AuthMethod, Invitation_State, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
 
+import { CommandError } from '../../errors.ts';
+
 export const handler = Effect.fn(function* ({
   lifetime,
   open,
@@ -28,7 +30,7 @@ export const handler = Effect.fn(function* ({
   // is already hosted, without printing the codes.
   yield* Effect.try({
     try: () => new URL(host),
-    catch: () => new Error(`--host must be an absolute URL: ${host}`),
+    catch: () => new CommandError({ message: '--host must be an absolute URL.', context: { host } }),
   });
 
   // Always use persistent and delegated (auth required) due to P2P limitations

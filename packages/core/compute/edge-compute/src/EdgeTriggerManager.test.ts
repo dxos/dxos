@@ -95,7 +95,11 @@ const forkInvoke = (edgeClient: EdgeHttpClient) =>
     const trigger = Trigger.make({ enabled: true, remote: true, spec: Trigger.specTimer('*/5 * * * *') });
     yield* manager.invokeTrigger({ trigger, event: { tick: 0 } });
   }).pipe(
-    Effect.provide(EdgeTriggerManager.fromEdgeClient(edgeClient, SPACE_ID)),
-    Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+    Effect.provide(
+      Layer.provideMerge(
+        EdgeTriggerManager.fromEdgeClient(edgeClient, SPACE_ID),
+        Layer.succeed(Registry.AtomRegistry, Registry.make()),
+      ),
+    ),
     Effect.forkChild,
   );
