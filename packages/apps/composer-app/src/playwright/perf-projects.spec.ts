@@ -27,6 +27,7 @@ import {
 
 import { INITIAL_URL } from './app-manager.ts';
 import { SCALE, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
+import { describeReplication, waitForReplication } from './perf/replication.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
@@ -77,6 +78,15 @@ const documentEditor = (page: Page): Locator => page.getByTestId('composer.markd
  * is recorded on every row so nobody compares across a change to it.
  */
 const SETTLE_MS = 20_000;
+
+/**
+ * Ceiling on the wait for the fixture to reach EDGE.
+ *
+ * Generous on purpose: overshooting costs a slower nightly, while undershooting publishes the
+ * measured stages with setup's replication still running through them — which is the spread this
+ * stage exists to remove. Overridable for a run against a slow or local backend.
+ */
+const REPLICATION_TIMEOUT_MS = Number.parseInt(process.env.DX_PERF_REPLICATION_TIMEOUT_MS ?? '', 10) || 180_000;
 
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
@@ -133,7 +143,8 @@ const FIXTURE_MS_PER_TASK = 700;
 /** Boot, settle and the stages, generously — `diagnose` stages run an order slower. */
 const STAGE_BUDGET_MS = 600_000;
 
-const testBudget = (scale: Scale): number => scale.tasks * FIXTURE_MS_PER_TASK + STAGE_BUDGET_MS;
+const testBudget = (scale: Scale): number =>
+  scale.tasks * FIXTURE_MS_PER_TASK + REPLICATION_TIMEOUT_MS + STAGE_BUDGET_MS;
 
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
@@ -283,6 +294,25 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     runner.attachInstruments({
       profiler: startProfiling(artifactDir),
       ...(screencast ? { screencast: await startScreencast(pageTarget.cdp, artifactDir) } : {}),
+    });
+
+    // FIRST after the fixture, because the fixture's writes keep replicating long after the last
+    // `tasks.create` resolves and whichever stage ran next absorbed their SQLite writes and socket
+    // traffic — the spread the stages' own disk and network columns were reporting. A stage rather
+    // than a silent wait in setup, so the cost it soaks up shows as its own row.
+    await stage('await-replication', async () => {
+      const result = await waitForReplication(page, fixture.spaceId, { timeoutMs: REPLICATION_TIMEOUT_MS });
+      const described = describeReplication(result);
+      if (result.outcome === 'timeout') {
+        // The trail at `warn`, the summary in the throw: a row's `error` is one line, and the
+        // question a timeout has to answer — was replication moving at all — is only in the trail.
+        log.warn('replication did not settle', { ...result.final, transitions: result.transitions });
+        // Thrown, so the stage records `ok: false` and is never trended. The flow continues and the
+        // remaining stages still publish, but their I/O columns carry setup's replication and the
+        // run says so rather than presenting them as a measurement.
+        throw new Error(described);
+      }
+      log.info('replication settled', { ...result.final, outcome: result.outcome, summary: described });
     });
 
     await stage('open-space', async () => {
