@@ -506,6 +506,16 @@ describe('path-resolution', () => {
       expect(Option.getOrThrow(represented)).toEqual({ key: 'inline', id: 'inlineDocA', workspace: WORKSPACE_A });
     });
 
+    test("maps a linked node by the grammar's prefix, and defaults it", ({ expect }) => {
+      const custom = GraphBuilder.make({ urlGrammar: { linked: { prefix: '^' } } });
+      expect(Option.getOrThrow(PathResolution.representNode(custom, `root/${WORKSPACE_A}/docA/^notes`))).toEqual({
+        key: 'linked',
+        id: 'notes',
+        workspace: WORKSPACE_A,
+      });
+      expect(Option.isNone(PathResolution.representNode(custom, `root/${WORKSPACE_A}/docA/~notes`))).toBe(true);
+    });
+
     test('returns none for a node with no key-declaring producer', async ({ expect }) => {
       const builder = buildTestBuilder();
       const represented = PathResolution.representNode(builder, GraphNode.RootId);

@@ -137,9 +137,7 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   if (anchorKey) {
     table.set(anchorKey, { key: anchorKey, hasId: true, anchor: true });
   }
-  if (linked) {
-    table.set(linked.key, { key: linked.key, hasId: true, anchor: false });
-  }
+  table.set(linked.key, { key: linked.key, hasId: true, anchor: false });
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.meta.key;
     // The tokenizer's flat lookup is derived from `kind`: a singleton has no id.
@@ -260,26 +258,21 @@ const resolveLinked = async (
   precedingNodeId: string,
   variant: string,
 ): Promise<string | null> => {
-  const relation = builder.urlGrammar.linked?.relation;
-  if (!relation) {
-    return null;
-  }
+  const { relation, prefix } = builder.urlGrammar.linked;
   Graph.expandSync(builder.graph, precedingNodeId, relation);
   await GraphBuilder.flush(builder);
 
   const match = Graph.getConnections(builder.graph, precedingNodeId, relation).find(
-    (companion) => companionVariant(companion.id) === variant,
+    (node) => linkedVariant(prefix, node.id) === variant,
   );
   return match?.id ?? null;
 };
 
-const LINKED_PREFIX = '~';
+const isLinkedId = (prefix: string, id: string): boolean => GraphNode.segmentId(id).startsWith(prefix);
 
-const isCompanionId = (id: string): boolean => GraphNode.segmentId(id).startsWith(LINKED_PREFIX);
-
-const companionVariant = (id: string): string => {
+const linkedVariant = (prefix: string, id: string): string => {
   const segment = GraphNode.segmentId(id);
-  return segment.startsWith(LINKED_PREFIX) ? segment.slice(LINKED_PREFIX.length) : segment;
+  return segment.startsWith(prefix) ? segment.slice(prefix.length) : segment;
 };
 
 const resolveUrlAsync = async (
@@ -298,7 +291,7 @@ const resolveUrlAsync = async (
   // module activation timeout, which disables the plugin rather than degrading to not-found.
   const groups: Array<number[]> = [];
   parsed.pairs.forEach((pair, pairIndex) => {
-    if (pair.key === builder.urlGrammar.linked?.key && groups.length > 0) {
+    if (pair.key === builder.urlGrammar.linked.key && groups.length > 0) {
       groups[groups.length - 1].push(pairIndex);
     } else {
       groups.push([pairIndex]);
@@ -339,7 +332,7 @@ const resolveUrlAsync = async (
       const headPair = parsed.pairs[headIndex];
       // A leading linked pair has no item to attach to (groups only start with one when the chain
       // opens with it), so it resolves to nothing rather than against a stale base.
-      const head = headPair.key === builder.urlGrammar.linked?.key ? null : await resolveItem(headIndex);
+      const head = headPair.key === builder.urlGrammar.linked.key ? null : await resolveItem(headIndex);
       const headNodeId = head?.nodeId;
       results[headIndex] = head?.nodeId
         ? { pairIndex: headIndex, nodeId: head.nodeId }
@@ -387,7 +380,7 @@ export const resolveUrl = (
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of
- * `resolveUrl`. A companion (a `~<variant>` segment) maps to the declared `linked` key
+ * `resolveUrl`. A linked node (a `<prefix><variant>` segment) maps to the grammar's `linked` key
  * with the variant as its id — independent of the producing extension, so every linked node is
  * addressable. Any other node maps via its producing extension's `urlKey` (`getNodeExtensionId`);
  * a node with no key-declaring producer returns `Option.none()` (unmapped — serialization skips it
@@ -401,9 +394,9 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
     return Option.none();
   }
 
-  const linked = builder.urlGrammar.linked;
-  if (linked && isCompanionId(nodeId)) {
-    return Option.some({ key: linked.key, id: companionVariant(nodeId), workspace });
+  const { linked } = builder.urlGrammar;
+  if (isLinkedId(linked.prefix, nodeId)) {
+    return Option.some({ key: linked.key, id: linkedVariant(linked.prefix, nodeId), workspace });
   }
 
   const extensionId = builder.getNodeExtensionId(nodeId);

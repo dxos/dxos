@@ -87,18 +87,24 @@ export type UrlBinding = { key: string; kind: 'item' | 'singleton'; path: string
  * The two keys are fixed tiers no extension declares (no connector produces their nodes): `anchorKey`
  * establishes the base that following pairs resolve against and is consumed as a rebase
  * (`w/<workspace>`); `linked` addresses a node attached to the preceding item through its relation
- * (`companion/<variant>`). `tailSeparator` joins the
+ * (`<key>/<variant>`, its segment `<prefix><variant>`). `tailSeparator` joins the
  * fixed-depth node-id segments between a key's static `path` and the object id into one URL id
  * (`db/<slug>+<id>`) so a fixed-depth nested shape needs no resolver.
  */
 export type UrlGrammar = {
   anchorKey?: string;
-  linked?: { key: string; relation: Node.RelationInput };
+  linked: LinkedGrammar;
   tailSeparator: string;
 };
 
-/** {@link UrlGrammar} as supplied at construction: the separators fall back to their defaults. */
-export type UrlGrammarProps = Partial<UrlGrammar>;
+/** How a node attached to the preceding item is addressed: its URL key, its relation, its segment prefix. */
+export type LinkedGrammar = { key: string; relation: Node.RelationInput; prefix: string };
+
+/** {@link UrlGrammar} as supplied at construction; anything omitted falls back to its default. */
+export type UrlGrammarProps = Partial<Omit<UrlGrammar, 'linked'>> & { linked?: Partial<LinkedGrammar> };
+
+/** Default linked grammar; the prefix mirrors `@dxos/react-ui-attention`'s `linkedSegment`. */
+const DEFAULT_LINKED: LinkedGrammar = { key: 'linked', relation: 'linked', prefix: '~' };
 
 /** Default tail separator; never appears in an entity id or a type slug. Internal, as above. */
 const DEFAULT_TAIL_SEPARATOR = '+';
@@ -197,6 +203,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
     const grammar: UrlGrammar = {
       tailSeparator: DEFAULT_TAIL_SEPARATOR,
       ...urlGrammar,
+      linked: { ...DEFAULT_LINKED, ...urlGrammar?.linked },
     };
     super({
       registry,
