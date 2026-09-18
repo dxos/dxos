@@ -18,36 +18,6 @@ type FakeDocument = {
   callback: () => UpdateCallback;
 };
 
-const installDocument = (
-  options: { api?: boolean; reducedMotion?: boolean; visibility?: DocumentVisibilityState } = {},
-): FakeDocument => {
-  const fake: FakeDocument = {
-    callbacks: [],
-    callback: () => {
-      const [callback] = fake.callbacks;
-      if (!callback || fake.callbacks.length !== 1) {
-        throw new Error(`expected one update callback, got ${fake.callbacks.length}`);
-      }
-      return callback;
-    },
-  };
-  vi.stubGlobal('document', {
-    visibilityState: options.visibility ?? 'visible',
-    ...(options.api !== false && {
-      startViewTransition: (callback: UpdateCallback) => {
-        fake.callbacks.push(callback);
-        return {};
-      },
-    }),
-  });
-  vi.stubGlobal('window', {
-    matchMedia: () => ({ matches: options.reducedMotion ?? false }),
-  });
-  return fake;
-};
-
-const flush = () => new Promise<void>((resolve) => setTimeout(resolve));
-
 describe('withViewTransition', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -104,3 +74,33 @@ describe('withViewTransition', () => {
     await expect(callback()).resolves.toBeUndefined();
   });
 });
+
+const installDocument = (
+  options: { api?: boolean; reducedMotion?: boolean; visibility?: DocumentVisibilityState } = {},
+): FakeDocument => {
+  const fake: FakeDocument = {
+    callbacks: [],
+    callback: () => {
+      const [callback] = fake.callbacks;
+      if (!callback || fake.callbacks.length !== 1) {
+        throw new Error(`expected one update callback, got ${fake.callbacks.length}`);
+      }
+      return callback;
+    },
+  };
+  vi.stubGlobal('document', {
+    visibilityState: options.visibility ?? 'visible',
+    ...(options.api !== false && {
+      startViewTransition: (callback: UpdateCallback) => {
+        fake.callbacks.push(callback);
+        return {};
+      },
+    }),
+  });
+  vi.stubGlobal('window', {
+    matchMedia: () => ({ matches: options.reducedMotion ?? false }),
+  });
+  return fake;
+};
+
+const flush = () => new Promise<void>((resolve) => setTimeout(resolve));
