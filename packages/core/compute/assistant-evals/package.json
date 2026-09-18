@@ -44,6 +44,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@dxos/mcp-server": "workspace:*",

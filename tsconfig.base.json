@@ -59,9 +59,6 @@
         // across the repo would bury everything else.
         "includeSuggestionsInTsc": false,
         "diagnosticSeverity": {
-          // TODO(wittjosiah): Re-enable once cleared. Untagged errors in the failure
-          // channel.
-          "globalErrorInEffectFailure": "off",
           // TODO(wittjosiah): Re-enable once cleared. Fires on the generic capability
           // factories, always naming the MultiTag arm of AnyTag. Ruled out by experiment:
           // a minimal generic Effect parameter does not fire, nor does the type

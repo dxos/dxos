@@ -5,8 +5,9 @@
 // These tests assert on a plain `Error`'s stack frames, so the `catch` returns the thrown value
 // untouched; narrowing it would buy nothing (`failWith` takes `unknown`) and re-wrapping it would
 // replace the stack under test. Dropping the `catch` does not work either: `Effect.try(thunk)`
-// wraps the throw in `UnknownError` and `causeToError` then reports the wrapper's stack.
-/** @effect-diagnostics unknownInEffectCatch:skip-file globalErrorInEffectCatch:skip-file */
+// wraps the throw in `UnknownError` and `causeToError` then reports the wrapper's stack. All three
+// rules fire here, at three anchors across nine lines, so the directive covers the file.
+/** @effect-diagnostics unknownInEffectCatch:skip-file globalErrorInEffectCatch:skip-file globalErrorInEffectFailure:skip-file */
 
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';

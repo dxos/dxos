@@ -22,6 +22,7 @@ import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
+import { RegistryCommandError } from './errors.ts';
 import { PublishError } from './errors.ts';
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
 
@@ -113,7 +114,9 @@ export const publish = Command.make(
             }),
           );
           if (exitCode !== 0) {
-            return yield* Effect.fail(new Error(`Build failed (exit ${exitCode}): ${buildCommand}`));
+            return yield* Effect.fail(
+              new RegistryCommandError({ message: `Build failed (exit ${exitCode}): ${buildCommand}` }),
+            );
           }
         }
 
@@ -121,7 +124,9 @@ export const publish = Command.make(
         const outdir = path.join(dir, config.publish?.outputDirectory ?? 'dist');
         const manifestPath = path.join(outdir, 'manifest.json');
         if (!(yield* fs.exists(manifestPath))) {
-          return yield* Effect.fail(new Error(`manifest.json not found in ${outdir}. Did the build run?`));
+          return yield* Effect.fail(
+            new RegistryCommandError({ message: `manifest.json not found in ${outdir}. Did the build run?` }),
+          );
         }
         const manifestRaw = yield* fs.readFileString(manifestPath);
         const manifest: Manifest = yield* Schema.decodeUnknownEffect(ManifestSchema)(JSON.parse(manifestRaw));

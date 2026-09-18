@@ -10,6 +10,7 @@ import * as EffectStream from 'effect/Stream';
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { toServiceError } from '@dxos/protocols';
@@ -46,7 +47,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
   ['IdentityService.createIdentity'](
     request: IdentityService.CreateIdentityRequest,
-  ): Effect.Effect<IdentityProto, Error> {
+  ): Effect.Effect<IdentityProto, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -78,7 +79,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 
-  ['IdentityService.updateProfile'](profile: ProfileDocument): Effect.Effect<IdentityProto, Error> {
+  ['IdentityService.updateProfile'](profile: ProfileDocument): Effect.Effect<IdentityProto, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         invariant(this._identityManager.identity, 'Identity not initialized.');
@@ -92,7 +93,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
   ['IdentityService.createRecoveryCredential'](
     request: IdentityService.CreateRecoveryCredentialRequest,
-  ): Effect.Effect<IdentityService.CreateRecoveryCredentialResponse, Error> {
+  ): Effect.Effect<IdentityService.CreateRecoveryCredentialResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.createRecoveryCredential(request),
       catch: toServiceError,
@@ -101,7 +102,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
   ['IdentityService.revokeRecoveryCredential'](
     request: IdentityService.RevokeRecoveryCredentialRequest,
-  ): Effect.Effect<void, Error> {
+  ): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.revokeRecoveryCredential(request),
       catch: toServiceError,
@@ -118,7 +119,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 
-  ['IdentityService.recoverIdentity'](request: RecoverIdentityRequest): Effect.Effect<IdentityProto, Error> {
+  ['IdentityService.recoverIdentity'](request: RecoverIdentityRequest): Effect.Effect<IdentityProto, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -149,7 +150,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   // TODO(burdon): Rename createPresentation?
   ['IdentityService.signPresentation'](
     request: IdentityService.SignPresentationRequest,
-  ): Effect.Effect<Presentation, Error> {
+  ): Effect.Effect<Presentation, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const { presentation, nonce } = request;
@@ -167,7 +168,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 
-  ['IdentityService.createAuthCredential'](): Effect.Effect<Credential, Error> {
+  ['IdentityService.createAuthCredential'](): Effect.Effect<Credential, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const identity = this._identityManager.identity;

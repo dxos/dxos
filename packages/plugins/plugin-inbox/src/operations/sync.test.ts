@@ -21,6 +21,7 @@ import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 import { Mailbox } from '#types';
 
 import { seedMailboxBinding } from '../testing/sync-fixture.ts';
+import { InboxOperationError } from './errors.ts';
 
 const TEST_SOURCE = 'test.mail';
 
@@ -115,7 +116,7 @@ describe('sync pipeline harness', () => {
     let count = 0;
     return Stage.map('fault', (unit: Cursor.CommitUnit) => {
       count += 1;
-      return count > n ? Effect.fail(new Error('injected fault')) : Effect.succeed(unit);
+      return count > n ? Effect.fail(new InboxOperationError({ message: 'injected fault' })) : Effect.succeed(unit);
     });
   };
 

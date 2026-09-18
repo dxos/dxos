@@ -13,6 +13,7 @@ import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE, DEEPSEEK_PROVIDER_ID, DEEPSEEK_SOURCE } from '../constants.ts';
+import { ConnectorKeyInvalidError } from '../operations/errors.ts';
 
 /** API-key form for the Anthropic BYOK provider; key is best-effort validated against `/v1/models`. */
 const AnthropicTokenForm = ConnectorSpec.TokenForm({
@@ -24,7 +25,7 @@ const AnthropicTokenForm = ConnectorSpec.TokenForm({
  * Best-effort validation: 401/403 from Anthropic blocks the save; CORS/network failures
  * are tolerated so the form still works in environments where the direct browser call is blocked.
  */
-const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
+const validateAnthropicKey = (apiKey: string): Effect.Effect<void, ConnectorKeyInvalidError> =>
   HttpClient.get('https://api.anthropic.com/v1/models', {
     headers: {
       'x-api-key': apiKey,
@@ -36,7 +37,9 @@ const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
           ? Effect.fail(
-              new Error('Invalid Anthropic API key. Check it at https://console.anthropic.com/settings/keys.'),
+              new ConnectorKeyInvalidError({
+                message: 'Invalid Anthropic API key. Check it at https://console.anthropic.com/settings/keys.',
+              }),
             )
           : Effect.void,
       onFailure: () => Effect.void,
@@ -51,12 +54,16 @@ const DeepSeekTokenForm = ConnectorSpec.TokenForm({
 });
 
 /** Best-effort validation, on the same terms as {@link validateAnthropicKey}. */
-const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, Error> =>
+const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, ConnectorKeyInvalidError> =>
   HttpClient.get('https://api.deepseek.com/models', { headers: { Authorization: `Bearer ${apiKey}` } }).pipe(
     Effect.matchEffect({
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
-          ? Effect.fail(new Error('Invalid DeepSeek API key. Check it at https://platform.deepseek.com/api_keys.'))
+          ? Effect.fail(
+              new ConnectorKeyInvalidError({
+                message: 'Invalid DeepSeek API key. Check it at https://platform.deepseek.com/api_keys.',
+              }),
+            )
           : Effect.void,
       onFailure: () => Effect.void,
     }),
@@ -75,7 +82,7 @@ const makeCredentialForm = ({
   schema: Schema.Codec<TokenValues, any>;
   source: string;
   label: string;
-  validate: (apiKey: string) => Effect.Effect<void, Error>;
+  validate: (apiKey: string) => Effect.Effect<void, ConnectorKeyInvalidError>;
 }): ConnectorSpec.CredentialForm<TokenValues> => ({
   schema,
   defaultValues: { token: '' },

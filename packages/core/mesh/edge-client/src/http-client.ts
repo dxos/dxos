@@ -14,6 +14,8 @@ import type * as HttpClientResponse from 'effect/unstable/http/HttpClientRespons
 import { log } from '@dxos/log';
 import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
 
+import { EdgeClientError } from './errors.ts';
+
 // TODO(burdon): Factor out.
 
 export type RetryOptions = {
@@ -41,9 +43,11 @@ export const withRetry = (
   }: Partial<RetryOptions> = {},
 ) => {
   return effect.pipe(
-    Effect.flatMap((res) =>
+    // Annotated: the branches are two different errors now that the 500 case is tagged, and
+    // `flatMap` would otherwise infer the channel from the first branch alone.
+    Effect.flatMap((res): Effect.Effect<unknown, EdgeClientError | HttpClientError.HttpClientError> =>
       // Treat 500 errors as retryable?
-      res.status === 500 ? Effect.fail(new Error(res.status.toString())) : res.json,
+      res.status === 500 ? Effect.fail(new EdgeClientError({ message: res.status.toString() })) : res.json,
     ),
     Effect.timeout(timeout),
     Effect.retry({
