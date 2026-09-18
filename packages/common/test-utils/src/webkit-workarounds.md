@@ -41,5 +41,5 @@ too. Then delete `errno-shim.ts`, its test, the `JSC_useWasmIPInt` line, the per
 branch in `setupPage` and this file.
 
 A CI sample is broader but needs a way to pass the variable to the e2e job: add it to the `Test`
-step's `env` in `.depot/workflows/check.yml` on a throwaway branch, dispatch Check with `e2e=true`,
+step's `env` in `.depot/workflows/check.yml` on a throwaway branch, dispatch Check with `only=e2e`,
 and drop the branch afterwards.
