@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -12,26 +11,15 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import * as GraphNode from '@dxos/graph/GraphNode';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { DeckCapabilities } from '#types';
 
-import {
-  Navigation,
-  RESOLVE_TIMEOUT_MS,
-  applyActive,
-  applyWorkspace,
-  computeActiveUpdates,
-  currentNavigation,
-  navigateDeck,
-  targetVerdict,
-} from '../url/index.ts';
+import { Navigation, applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
 import {
   addSubjectsToActiveDeck,
   plankIdForName,
@@ -47,51 +35,6 @@ import {
   resolveDeckSpec,
   updateActiveDeck,
 } from '../util/index.ts';
-
-/**
- * Waits for the subjects the graph has not built yet, returning those that never arrive: the loaders
- * found them absent, or the deadline passed first.
- */
-const awaitSubjects = Effect.fnUntraced(function* (builder: AppCapabilities.AppGraph, subjects: readonly string[]) {
-  const { graph } = builder;
-  const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
-  const isMissing = (id: string) => Option.isNone(AppGraph.getNode(graph, id));
-
-  // Completes only on an `absent` verdict; `exists` and `unknown` leave the node's arrival to decide.
-  const confirmedAbsent = (id: string) => {
-    const spaceId = GraphPath.getWorkspaceToken(id);
-    const entityIds = Navigation.getCandidateEntityIds(GraphNode.segmentId(id), builder.urlGrammar.tailSeparator);
-    return spaceId && entityIds.length > 0
-      ? targetVerdict(loaders, spaceId, entityIds).pipe(
-          Effect.flatMap((verdict) => (verdict === 'absent' ? Effect.void : Effect.never)),
-        )
-      : Effect.never;
-  };
-
-  const missing = subjects.filter(isMissing);
-  yield* Effect.forEach(missing, (id) => Effect.raceFirst(AppGraph.waitFor(graph, id), confirmedAbsent(id)), {
-    concurrency: 'unbounded',
-    discard: true,
-  }).pipe(
-    Effect.timeoutOrElse({
-      duration: `${RESOLVE_TIMEOUT_MS} millis`,
-      orElse: () => Effect.sync(() => log.warn('subjects did not arrive', { ids: missing.filter(isMissing) })),
-    }),
-  );
-  return subjects.filter(isMissing);
-});
-
-/**
- * Puts the not-found plank where the unavailable subjects would have been. It has no URL, so it goes onto
- * the deck the URL produced rather than into the URL.
- */
-const applyNotFound = Effect.fnUntraced(function* (active: readonly string[], unavailable: ReadonlySet<string>) {
-  const { segments } = yield* DeckCapabilities.getDeck();
-  const planks = active.map((id): Navigation.Plank =>
-    unavailable.has(id) ? { id: NotFound.NOT_FOUND_PATH } : { id, segment: Navigation.segmentOf(segments, id) },
-  );
-  yield* applyActive(Array.dedupeWith(planks, (a, b) => a.id === b.id));
-});
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
@@ -114,7 +57,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           yield* applyWorkspace(input.workspace);
         }
       }
-      const unavailable = new Set(yield* awaitSubjects(builder, input.subject));
 
       // Dedup subjects against the active deck using EID identity.
       // The same object can appear under different graph paths (e.g., via collections vs types).
@@ -252,11 +194,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
-        const available = deckUpdates.active.filter((id) => !unavailable.has(id));
-        yield* navigateDeck({ workspace, active: available, companionPlanks });
-        if (available.length < deckUpdates.active.length) {
-          yield* applyNotFound(deckUpdates.active, unavailable);
-        }
+        // Subjects the graph has not built yet open at once: the URL projection shows them while they
+        // load and turns any that do not exist into not-found.
+        yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });
       }
 
       // Schedule side-effects for the newly opened items: scroll into view, expose in

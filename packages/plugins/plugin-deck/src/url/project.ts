@@ -40,7 +40,7 @@ const RESOLVE_TIMEOUT = `${RESOLVE_TIMEOUT_MS} millis`;
 const LOADER_TIMEOUT = '5 seconds';
 
 /** What the navigation target loaders say about an object; `absent` only when every answer is `absent`. */
-export const targetVerdict = (
+const targetVerdict = (
   loaders: readonly AppCapabilities.NavigationTargetLoader[],
   spaceId: string,
   entityIds: readonly string[],
