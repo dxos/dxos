@@ -266,11 +266,11 @@ defineTask({
     Scorer.make({
       name: 'organization-linked',
       description: "The person's organization ref points at the seeded Initech organization.",
-      // Matched on the object id appearing in the ref's URI, because the URI's shape is not ours
-      // to predict: an agent writes whichever form it writes (`echo:<id>` here), `Database.load`
+      // Matched on the ref URI's last path segment, because the URI's shape is not ours to
+      // predict: an agent writes whichever form it writes (`echo:<id>` here), `Database.load`
       // rejects that one as an unsupported URI kind, `Ref.hasEntityId` accepts only the local
-      // `echo:///<id>` form, and `EID.tryParse` returns nothing for it. An id is a ULID, so its
-      // presence in the URI is unambiguous.
+      // `echo:///<id>` form, and `EID.tryParse` returns nothing for it. Comparing the segment
+      // rather than searching the whole string keeps a space id from standing in for an object's.
       score: Effect.gen(function* () {
         const [people, organizations] = [
           yield* Database.query(Filter.type(Person.Person)).run,
@@ -281,7 +281,8 @@ defineTask({
         if (ada?.organization === undefined || initech === undefined) {
           return false;
         }
-        return String(ada.organization.uri).includes(initech.id);
+        const target = String(ada.organization.uri).split(/[:/]/).filter(Boolean).at(-1);
+        return target === initech.id;
       }),
     }),
     Scorer.database({

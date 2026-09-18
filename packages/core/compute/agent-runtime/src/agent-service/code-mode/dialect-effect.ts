@@ -128,7 +128,7 @@ const renderEffectOperations = (operations: readonly SandboxOperation[]): string
   holds the operation definitions themselves, which you invoke the way any other DXOS code does:
 
   \`\`\`js
-  const result = yield* Operation.invoke(ops['tool-name'], { ...input });
+  const result = yield* Operation.invoke(ops['dxn:com.example.operation.example'], { ...input });
   \`\`\`
 
   A failed operation fails the effect, so wrap a call you expect to fail in \`Effect.result\`.
