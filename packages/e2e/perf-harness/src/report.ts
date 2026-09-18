@@ -229,6 +229,10 @@ export const writePosthogBatch = (
   mkdirSync(dir, { recursive: true });
   const file = path.join(dir, `${name}.events.ndjson`);
   const events = rows.filter((row) => row.mode === 'measure' && row.ok).map((row) => toPosthogEvent(row, timestamp));
-  writeFileSync(file, events.map((event) => JSON.stringify(event)).join('\n') + '\n');
+  // APPENDS, like `appendRows`, because the name carries the flow and mode but not the iteration:
+  // a truncating write let each of the nightly's ten iterations overwrite the last, and a run that
+  // measured 100 stages published the 10 of whichever iteration finished last. The workflow clears
+  // `test-results/perf` before the run, so accumulation cannot pick up a previous attempt's rows.
+  appendFileSync(file, events.map((event) => JSON.stringify(event)).join('\n') + '\n');
   return file;
 };

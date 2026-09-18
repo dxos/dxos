@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { describe, test } from 'vitest';
 
-import { EVENT_NAME, toPosthogEvent } from './report.ts';
+import { EVENT_NAME, toPosthogEvent, writePosthogBatch } from './report.ts';
 import { type Comparability, type StageRow } from './types.ts';
 
 /** Zeroed so a row fixture states only the fields its assertion is about. */
@@ -149,4 +152,30 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
   },
   comparability,
   ...overrides,
+});
+
+describe('writePosthogBatch', () => {
+  test('accumulates across iterations rather than truncating', ({ expect }) => {
+    // The regression this exists for: the batch name carries the flow and mode but NOT the
+    // iteration, so a truncating write made each of the nightly's ten iterations overwrite the
+    // last. A run that measured 100 stages published 10 — the iteration that happened to finish
+    // last — and the loss was invisible, because the log still read "captured 10 event(s)".
+    const workspaceRoot = mkdtempSync(path.join(tmpdir(), 'perf-batch-'));
+
+    const file = writePosthogBatch(workspaceRoot, 'flow-measure', [row({ stage: 'boot', iteration: 0 })]);
+    writePosthogBatch(workspaceRoot, 'flow-measure', [row({ stage: 'boot', iteration: 1 })]);
+
+    const lines = readFileSync(file, 'utf8').split('\n').filter(Boolean);
+    expect(lines).toHaveLength(2);
+    expect(lines.map((line) => JSON.parse(line).properties.iteration)).toEqual([0, 1]);
+  });
+
+  test('a diagnose or failed row still writes nothing', ({ expect }) => {
+    // Appending must not weaken the two guards: an empty batch appends only its newline.
+    const workspaceRoot = mkdtempSync(path.join(tmpdir(), 'perf-batch-'));
+
+    const file = writePosthogBatch(workspaceRoot, 'flow-measure', [row({ mode: 'diagnose' }), row({ ok: false })]);
+
+    expect(readFileSync(file, 'utf8').split('\n').filter(Boolean)).toHaveLength(0);
+  });
 });
