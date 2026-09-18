@@ -129,7 +129,7 @@ export const translations = [
         'empty-tree.message': 'No spaces',
         'unnamed-space.label': 'New space',
         'closed-space.label': 'Closed',
-        'loading-space.label': 'Loading space…',
+        'pending-space.label': 'Loading space…',
         'lock-space.label': 'Lock space',
         'unlock-space.label': 'Unlock space',
         'rename-space.label': 'Rename space',
