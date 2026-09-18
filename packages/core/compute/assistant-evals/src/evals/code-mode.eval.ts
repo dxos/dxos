@@ -192,11 +192,7 @@ defineTask({
       name: 'nothing-written',
       description: 'A read-only task wrote nothing: the seeded organizations are untouched.',
       query: organizations,
-      score: (results) =>
-        results.length === SEEDED.length &&
-        SEEDED.every((seeded) =>
-          results.some((organization) => organization.name === seeded.name && organization.status === seeded.status),
-        ),
+      score: matchesSeed,
     }),
   ],
 });
