@@ -15,7 +15,6 @@ import {
   getUnresolvedPlankId,
   initialPlanks,
   parse,
-  plankPair,
   toSegment,
 } from './navigation.ts';
 
@@ -141,22 +140,5 @@ describe('initialPlanks', () => {
       { segment: 'object/01JXYZ', id: 'resolved' },
       { segment: 'object/01JABC', id: getUnresolvedPlankId(other) },
     ]);
-  });
-});
-
-describe('plankPair', () => {
-  const OTHER = 'BB25QRC2FEWCSAMRP4RZL65LWJ7352CKE';
-
-  test('takes the workspace from the plank id, not the deck the plank is open in', ({ expect }) => {
-    const segment = toSegment({ key: 'object', id: '01JXYZ', workspace: OTHER });
-    expect(plankPair(segment, `root/${OTHER}/types/doc/01JXYZ`)).toEqual({
-      key: 'object',
-      id: '01JXYZ',
-      workspace: OTHER,
-    });
-  });
-
-  test('gives up on an id that names no workspace', ({ expect }) => {
-    expect(plankPair(toSegment({ key: 'home', workspace: WORKSPACE }), 'root')).toBeUndefined();
   });
 });

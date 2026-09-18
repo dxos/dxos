@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as GraphNode from './GraphNode.ts';
 
@@ -98,70 +97,3 @@ const keepInlineOfSurvivingConnectors = (released: Set<string>, states: readonly
     }
   }
 };
-
-/** The released ids, keyed by the connector that emitted them so a re-flush or a removed source forgets them. */
-export class Ledger {
-  readonly #connectorOf = new Map<string, string>();
-  readonly #byConnector = new Map<string, { source: string; ids: Set<string> }>();
-  readonly #version = Atom.make(0).pipe(Atom.keepAlive);
-
-  constructor(private readonly _registry: Registry.AtomRegistry) {}
-
-  get version(): Atom.Atom<number> {
-    return this.#version;
-  }
-
-  has(id: string): boolean {
-    return this.#connectorOf.has(id);
-  }
-
-  recordEmitted(released: ReadonlySet<string>, connectors: Iterable<ConnectorState>): void {
-    for (const { key, source, outputs, inline } of connectors) {
-      for (const id of [...outputs, ...inline]) {
-        if (released.has(id)) {
-          this.#forget(id);
-          this.#connectorOf.set(id, key);
-          const entry = this.#byConnector.get(key) ?? { source, ids: new Set<string>() };
-          entry.ids.add(id);
-          this.#byConnector.set(key, entry);
-        }
-      }
-    }
-    this.#bump();
-  }
-
-  flushed(key: string, emitted: readonly string[]): void {
-    const entry = this.#byConnector.get(key);
-    const stale = [...(entry?.ids ?? []), ...emitted.filter((id) => this.#connectorOf.has(id))];
-    if (stale.length === 0) {
-      return;
-    }
-    stale.forEach((id) => this.#forget(id));
-    this.#bump();
-  }
-
-  removed(id: string): void {
-    for (const { source, ids } of [...this.#byConnector.values()]) {
-      if (source === id || source.startsWith(`${id}${GraphNode.PathSeparator}`)) {
-        [...ids].forEach((released) => this.#forget(released));
-      }
-    }
-  }
-
-  #forget(id: string): void {
-    const key = this.#connectorOf.get(id);
-    if (key === undefined) {
-      return;
-    }
-    this.#connectorOf.delete(id);
-    const entry = this.#byConnector.get(key);
-    entry?.ids.delete(id);
-    if (entry?.ids.size === 0) {
-      this.#byConnector.delete(key);
-    }
-  }
-
-  #bump(): void {
-    this._registry.update(this.#version, (version) => version + 1);
-  }
-}

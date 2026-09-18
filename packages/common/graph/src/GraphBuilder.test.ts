@@ -417,7 +417,7 @@ describe('retention', () => {
     expect(present('root/rk')).to.be.true;
     expect(present('root/w0/a')).to.be.true;
     expect(present('root/w0/c0')).to.be.false;
-    expect(GraphBuilder.wasReleased(builder, 'root/w0/c0')).to.be.true;
+    expect(builder.getNodeExtensionId('root/w0/c0')).to.equal('child');
   });
 
   test('a collection pending when the retentions are removed releases nothing', async () => {
@@ -515,27 +515,25 @@ describe('retention', () => {
     await expand(harness, [GraphNode.RootId, 'root/w']);
     GraphBuilder.setRetention(builder, [{ retained: Atom.make([]) }]);
     await GraphBuilder.flush(builder);
-    return { ...harness, workspaces, items, version: () => registry.get(GraphBuilder.releasedVersion(builder)) };
+    return { ...harness, workspaces, items };
   };
 
-  test('a released node its connector no longer emits stops reporting as released', async () => {
+  test('a released node keeps its provenance until it is produced again', async () => {
     const harness = await changing();
-    const { builder, registry, items, version } = harness;
-    expect(GraphBuilder.wasReleased(builder, 'root/w/a')).to.be.true;
+    const { builder } = harness;
+    expect(builder.getNodeExtensionId('root/w/a')).to.equal('children');
 
-    const before = version();
-    registry.set(items, ['b']);
     await expand(harness, ['root/w']);
-    expect(GraphBuilder.wasReleased(builder, 'root/w/a')).to.be.false;
-    expect(GraphBuilder.wasReleased(builder, 'root/w/b')).to.be.false;
-    expect(version()).to.be.greaterThan(before);
+    expect(builder._unloaded.has('root/w/a')).to.be.false;
+    expect(builder.getNodeExtensionId('root/w/a')).to.equal('children');
   });
 
-  test('released nodes below a removed node stop reporting as released', async () => {
+  test('released nodes below a removed node forget their provenance', async () => {
     const { builder, registry, workspaces } = await changing();
     registry.set(workspaces, []);
     await GraphBuilder.flush(builder);
-    expect(GraphBuilder.wasReleased(builder, 'root/w/a')).to.be.false;
+    expect(builder.getNodeExtensionId('root/w/a')).to.be.undefined;
+    expect(builder._unloaded.size).to.equal(0);
   });
 
   test('flush waits for a collection the flush itself triggers', async () => {

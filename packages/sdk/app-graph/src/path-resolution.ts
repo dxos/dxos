@@ -275,7 +275,7 @@ const resolveLinked = async (
 
 const LINKED_PREFIX = '~';
 
-const isCompanionIdEvenIfReleased = (id: string): boolean => GraphNode.segmentId(id).startsWith(LINKED_PREFIX);
+const isCompanionId = (id: string): boolean => GraphNode.segmentId(id).startsWith(LINKED_PREFIX);
 
 const companionVariant = (id: string): string => {
   const segment = GraphNode.segmentId(id);
@@ -402,7 +402,7 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
   }
 
   const linked = builder.urlGrammar.linked;
-  if (linked && isCompanionIdEvenIfReleased(nodeId)) {
+  if (linked && isCompanionId(nodeId)) {
     return Option.some({ key: linked.key, id: companionVariant(nodeId), workspace });
   }
 

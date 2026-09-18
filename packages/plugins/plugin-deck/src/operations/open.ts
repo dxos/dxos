@@ -37,7 +37,6 @@ import {
   updatePlankNames,
 } from '../util/index.ts';
 import {
-  awaitReleaseSettled,
   isCompanionOpen,
   openableChildren,
   openCompanionPlank,
@@ -56,7 +55,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      const registry = yield* Capability.get(Capabilities.AtomRegistry);
       for (const subjectId of input.subject) {
         NotFound.expandPath(graph, subjectId);
       }
@@ -67,8 +65,19 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           yield* applyWorkspace(input.workspace);
         }
       }
-      // The reads below resolve nothing for a subject the expansion above is still rebuilding.
-      yield* awaitReleaseSettled(registry, builder, input.subject, RESOLVE_TIMEOUT_MS);
+      // A released subject still names its producer, so it is coming back; the reads below need it back.
+      const returning = input.subject.filter(
+        (id) => builder.getNodeExtensionId(id) !== undefined && Option.isNone(AppGraph.getNode(graph, id)),
+      );
+      yield* Effect.forEach(returning, (id) => AppGraph.waitFor(graph, id), {
+        concurrency: 'unbounded',
+        discard: true,
+      }).pipe(
+        Effect.timeoutOrElse({
+          duration: `${RESOLVE_TIMEOUT_MS} millis`,
+          orElse: () => Effect.sync(() => log.warn('released subjects did not return', { ids: returning })),
+        }),
+      );
 
       // Dedup subjects against the active deck using EID identity.
       // The same object can appear under different graph paths (e.g., via collections vs types).
@@ -186,7 +195,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
         const boundName = levelOpen?.name ?? input.name;
         const segmentOfId = (id: string) =>
-          Navigation.recordedOrGraphSegment(builder, segments, id) ?? Navigation.segmentOf(undefined, id);
+          segments?.[id] ?? Navigation.segmentForNode(builder, id) ?? Navigation.segmentOf(undefined, id);
         const nextSegments = next.map(segmentOfId);
         const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
         const plankNames = updatePlankNames(

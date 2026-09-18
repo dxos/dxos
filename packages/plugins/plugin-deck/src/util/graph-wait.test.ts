@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { awaitReleaseSettled, firstOpenableChild } from './graph-wait.ts';
+import { firstOpenableChild } from './graph-wait.ts';
 
 const setup = () => {
   const registry = Registry.make();
@@ -22,63 +22,6 @@ const setup = () => {
   AppGraph.addNode(graph, { id: 'root/w', type: 'test' });
   return { registry, graph };
 };
-
-const workspaceWithReleasedItems = async () => {
-  const registry = Registry.make();
-  const builder = AppGraphBuilder.make({ registry });
-  const items = Atom.make(['a']).pipe(Atom.keepAlive);
-  AppGraphBuilder.addExtension(builder, [
-    ...Effect.runSync(
-      AppGraphBuilder.createExtension({
-        id: 'workspace',
-        match: GraphNodeMatcher.whenRoot,
-        connector: () => Effect.succeed([{ id: 'w', type: 'workspace' }]),
-      }),
-    ),
-    ...Effect.runSync(
-      AppGraphBuilder.createExtension({
-        id: 'items',
-        match: GraphNodeMatcher.whenNodeType('workspace'),
-        connector: (_node, get) => Effect.succeed(get(items).map((id) => ({ id, type: 'item' }))),
-      }),
-    ),
-  ]);
-  for (const id of [GraphNode.RootId, 'root/w']) {
-    AppGraph.expandSync(builder.graph, id, 'child');
-    await AppGraphBuilder.flush(builder);
-  }
-  AppGraphBuilder.setRetention(builder, [{ retained: Atom.make([]) }]);
-  await AppGraphBuilder.flush(builder);
-  return { registry, builder, items };
-};
-
-describe('awaitReleaseSettled', () => {
-  test('resolves at once for subjects that were never released', async ({ expect }) => {
-    const { registry, builder } = await workspaceWithReleasedItems();
-    const started = Date.now();
-    await EffectEx.runPromise(awaitReleaseSettled(registry, builder, ['root/w/never'], 1_000));
-    expect(Date.now() - started).toBeLessThan(500);
-  });
-
-  test('resolves once a released subject is produced again', async ({ expect }) => {
-    const { registry, builder } = await workspaceWithReleasedItems();
-    expect(AppGraphBuilder.wasReleased(builder, 'root/w/a')).toBe(true);
-    const waiting = EffectEx.runPromise(awaitReleaseSettled(registry, builder, ['root/w/a'], 1_000));
-    AppGraph.expandSync(builder.graph, 'root/w', 'child');
-    await waiting;
-    expect(Option.isSome(AppGraph.getNode(builder.graph, 'root/w/a'))).toBe(true);
-  });
-
-  test('resolves without the subject once its workspace no longer produces it', async ({ expect }) => {
-    const { registry, builder, items } = await workspaceWithReleasedItems();
-    registry.set(items, []);
-    const started = Date.now();
-    const waiting = EffectEx.runPromise(awaitReleaseSettled(registry, builder, ['root/w/a'], 5_000));
-    AppGraph.expandSync(builder.graph, 'root/w', 'child');
-    await waiting;
-    expect(Date.now() - started).toBeLessThan(2_000);
-  });
-});
 
 describe('firstOpenableChild', () => {
   test('resolves with the first child once one arrives', async ({ expect }) => {

@@ -95,22 +95,6 @@ export const segmentForNode = (builder: AppGraphBuilder.GraphBuilder, nodeId: st
   Option.match(PathResolution.representNode(builder, nodeId), { onNone: () => undefined, onSome: toSegment });
 
 /**
- * The segment a plank occupies: what the URL recorded when it opened, falling back to the graph. A
- * released node has no binding, so deriving from the graph alone drops the plank from the URL.
- */
-export const recordedOrGraphSegment = (
-  builder: AppGraphBuilder.GraphBuilder,
-  segments: PlankSegments | undefined,
-  id: string,
-): PlankSegment | undefined => (segments?.[id] === undefined ? segmentForNode(builder, id) : segmentOf(segments, id));
-
-/** The pair a plank's segment makes, in the workspace its id names — which may not be the deck's. */
-export const plankPair = (segment: PlankSegment, id: string): UrlPath.Pair | undefined => {
-  const workspace = GraphPath.getWorkspaceToken(id);
-  return workspace === undefined ? undefined : fromSegment(segment, workspace);
-};
-
-/**
  * Every ECHO object id a URL pair's `id` field could be referring to, in the order they appear.
  *
  * Which `+`-joined segment holds the object id is extension-specific — `<objectId>+<view>` for a

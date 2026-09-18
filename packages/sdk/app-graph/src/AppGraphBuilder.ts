@@ -309,10 +309,8 @@ export {
   explore,
   flush,
   release,
-  releasedVersion,
   removeExtension,
   setRetention,
-  wasReleased,
 } from '@dxos/graph/GraphBuilder';
 
 export type Region = GraphRetention.Region;
