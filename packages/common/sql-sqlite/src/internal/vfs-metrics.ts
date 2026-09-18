@@ -50,6 +50,7 @@ export const SQLITE_IO_GLOBAL = '__dxosSqliteIo';
 /** A copy, so a caller cannot mutate the running totals by holding the object. */
 export const getSqliteIoStats = (): SqliteIoStats => ({ ...stats });
 
+/** Zeroes the module-level running counters. For tests; nothing in the app resets them. */
 export const resetSqliteIoStats = (): void => {
   Object.assign(stats, ZERO);
 };

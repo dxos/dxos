@@ -189,15 +189,27 @@ From `Memory.getDOMCounters`, for the renderer.
 `network.*`, from Playwright `response` events. Content-length where the header is present, body
 length otherwise — the resource-timing buffer caps out on a graph this size.
 
-| Field                     | Meaning                                                                                         |
-| ------------------------- | ----------------------------------------------------------------------------------------------- |
-| `codeBytes`               | JS/CSS/wasm module loads. Boot pulls 27 MB over 871 requests on a cold profile.                 |
-| `apiBytes`                | Application traffic — the ECHO/edge calls.                                                      |
-| `otherBytes`              | Everything else (images, fonts).                                                                |
-| `requests`, `apiRequests` | Counts, so a stage making many small calls is distinguishable from one making a few large ones. |
+| Field                     | Meaning                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `codeBytes`               | JS/CSS/wasm module loads. Boot pulls 27 MB over 871 requests on a cold profile.                  |
+| `apiBytes`                | Application traffic — the ECHO/edge calls.                                                       |
+| `otherBytes`              | Everything else (images, fonts).                                                                 |
+| `requests`, `apiRequests` | Counts, so a stage making many small calls is distinguishable from one making a few large ones.  |
+| `edgeApiBytes`            | `fetch`/`xhr` bytes to the EDGE hosts alone — `apiBytes` counts analytics and third parties too. |
+| `edgeApiRequests`         | Same population as `edgeApiBytes`: `fetch`/`xhr` only, so a socket handshake is not a call.      |
+| `edgeSocketBytes`         | WebSocket FRAME bytes to the edge, both directions. Most of the backend traffic lives here.      |
+| `edgeSocketFrames`        | Frame count, so a chatty sync is distinguishable from a bulky one.                               |
+| `edgeBytes`               | `edgeApiBytes + edgeSocketBytes` — what the app costs its own backend. The trended figure.       |
+| `analyticsBytes`          | Telemetry, recorded separately so the edge columns are auditable rather than merely asserted.    |
 
 Classified by URL and resource type in `collectors/network.ts`. The split exists because "the stage
 got slower" has very different answers depending on whether it moved code or data.
+
+`apiBytes` and `apiRequests` are kept for continuity and are the WIDER measure: any host, analytics
+included, and a socket handshake counted as a request. The `edge*` fields are the narrow ones, and
+they are what the dashboard trends. The socket half exists at all because a WebSocket emits exactly
+one `response` — the 101, with an empty body — so before `page.on('websocket')` the four
+data-syncing stages of the flow recorded zero bytes and zero requests.
 
 ## Responsiveness
 

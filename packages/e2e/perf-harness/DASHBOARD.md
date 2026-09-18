@@ -89,10 +89,10 @@ elsewhere. See "The two stacked tiles" below.
 
 ### The two reducers, and why a tile has the one it has
 
-| reducer               | tiles                                        | why                                                                                                                                                   |
-| --------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sum` over the phases | wall time, CPU (all three), TBT, code bytes  | Additive: the run cost what its phases cost.                                                                                                          |
-| `max` over the phases | peak RSS, peak heap, peak DOM nodes, lag p95 | A **level**, not a quantity. Summing ten peaks reports memory never simultaneously resident, and summing ten p95s is a number with no interpretation. |
+| reducer               | tiles                                       | why                                                                                                                                                   |
+| --------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sum` over the phases | wall time, CPU (all three), TBT, code bytes | Additive: the run cost what its phases cost.                                                                                                          |
+| `max` over the phases | peak RSS, peak heap, lag p95                | A **level**, not a quantity. Summing ten peaks reports memory never simultaneously resident, and summing ten p95s is a number with no interpretation. |
 
 | #   | tile                                  | measure              | reducer |
 | --- | ------------------------------------- | -------------------- | ------- |
@@ -100,15 +100,14 @@ elsewhere. See "The two stacked tiles" below.
 | 2   | Total CPU per run — all processes     | `ciCpuMsTotal`       | sum     |
 | 3   | Total CPU per run — tab               | `ciCpuMsTab`         | sum     |
 | 4   | Total CPU per run — dedicated workers | `ciCpuMsWorker`      | sum     |
-| 5   | Peak DOM nodes per run                | `ciDomNodes`         | max     |
-| 6   | Peak RSS per run                      | `ciPeakRssBytes`     | max     |
-| 7   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`      | max     |
-| 8   | Peak heap per run — tab               | `ciHeapUsedBytesTab` | max     |
-| 9   | Total app code transferred per run    | `ciCodeBytes`        | sum     |
-| 10  | Total blocking time per run           | `ciTbtMs`            | sum     |
-| 11  | Total edge traffic per run            | `ciEdgeBytes`        | sum     |
-| 12  | Total SQLite read bytes per run       | `ciSqliteReadBytes`  | sum     |
-| 13  | Total SQLite write bytes per run      | `ciSqliteWriteBytes` | sum     |
+| 5   | Peak RSS per run                      | `ciPeakRssBytes`     | max     |
+| 6   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`      | max     |
+| 7   | Peak heap per run — tab               | `ciHeapUsedBytesTab` | max     |
+| 8   | Total app code transferred per run    | `ciCodeBytes`        | sum     |
+| 9   | Total blocking time per run           | `ciTbtMs`            | sum     |
+| 10  | Total edge traffic per run            | `ciEdgeBytes`        | sum     |
+| 11  | Total SQLite read bytes per run       | `ciSqliteReadBytes`  | sum     |
+| 12  | Total SQLite write bytes per run      | `ciSqliteWriteBytes` | sum     |
 
 ### `open-space` is not yet trustworthy
 
@@ -179,6 +178,25 @@ excluded. Each half needed fixing before the tile meant anything:
 Origin accumulates alongside the code/API split rather than partitioning it: a deployed build
 serves the bundle from the same host as the API, so `codeBytes` has to keep meaning the whole
 bundle.
+
+### Peak DOM nodes is off the page
+
+The insight still exists (`UXeKiR4q`) and `ciDomNodes` is still on every row — it is simply not a
+tile. Earlier revisions of this file called it "the only machine-independent measure, read this one
+for regressions"; that claim is gone rather than the tile being restored, because a dashboard is
+not obliged to carry every field the harness records.
+
+### Every aggregate tile requires a COMPLETE iteration
+
+`writePosthogBatch` drops a failed stage, so an iteration that lost one publishes nine rows rather
+than ten. A run total summed over nine phases is smaller than one summed over ten, and nothing
+about the number says so — a partial iteration would enter the distribution looking like a fast
+one and drag the whole box down.
+
+Each distribution and stacked query therefore reduces an iteration only if it has all ten stages
+(`HAVING count() = 10` on the per-iteration group). The partial rows stay in the store and in the
+runs table, where the `stages` column is what makes them legible; they are excluded from the
+aggregates alone.
 
 ### Shared-worker panels are deliberately absent
 
