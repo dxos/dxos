@@ -8,3 +8,4 @@ export * as AgentService from './AgentService.ts';
 export { AGENT_PROCESS_KEY, AgentProcess, type AgentProcessOptions } from './agent-process.ts';
 export { type Delegation, type DelegationStrategy } from './delegation-strategy.ts';
 export * from './turn-producer.ts';
+export * as CodeMode from './code-mode/index.ts';
