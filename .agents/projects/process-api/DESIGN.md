@@ -10,18 +10,18 @@ Four changes, specified independently but landing as one API break:
 2. Process implementations move into operations: `Operation.durableHandler` is a new
    **handler kind** that carries every semantic currently in `Process.make` +
    `ProcessHandleImpl`.
-3. A process has a **parent**, which may be another process *or an ECHO object*.
+3. A process has a **parent**, which may be another process _or an ECHO object_.
 4. Processes are exposed to the **ECHO query API**.
 
 ## 1. Before
 
 Today three distinct things are called "process":
 
-| Concern | Type | Location |
-| --- | --- | --- |
-| Definition (factory + callbacks) | `Process.Process<I, O, R, Rpcs>`, `Process.Callbacks` | `compute/src/Process.ts` |
-| Live instance (runtime-internal) | `ProcessManager.Handle`, `ProcessHandleImpl` | `compute-runtime/src/ProcessHandle.ts` |
-| Read-only projection | `Process.Info` + `Process.Monitor` | `compute/src/Process.ts`, `compute-runtime/src/ProcessMonitor.ts` |
+| Concern                          | Type                                                  | Location                                                          |
+| -------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------- |
+| Definition (factory + callbacks) | `Process.Process<I, O, R, Rpcs>`, `Process.Callbacks` | `compute/src/Process.ts`                                          |
+| Live instance (runtime-internal) | `ProcessManager.Handle`, `ProcessHandleImpl`          | `compute-runtime/src/ProcessHandle.ts`                            |
+| Read-only projection             | `Process.Info` + `Process.Monitor`                    | `compute/src/Process.ts`, `compute-runtime/src/ProcessMonitor.ts` |
 
 Consequences we are removing:
 
@@ -38,7 +38,7 @@ Consequences we are removing:
 
 ## 2. After — `Process` is the live handle
 
-`Process.Process` becomes the *instance*, not the factory. It is public API: it is what
+`Process.Process` becomes the _instance_, not the factory. It is public API: it is what
 `spawn` returns, what a query result item is, and what `Monitor` used to describe.
 
 ```ts
@@ -58,9 +58,9 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = ne
   readonly parent: Ref.Ref<Process | Obj.Any> | null;
 
   // --- observation -------------------------------------------------------
-  readonly status: Status;                     // { state, exit, startedAt, completedAt }
+  readonly status: Status; // { state, exit, startedAt, completedAt }
   readonly statusAtom: Atom.Atom<Status>;
-  readonly metrics: Metrics;                   // wallTime / inputCount / outputCount
+  readonly metrics: Metrics; // wallTime / inputCount / outputCount
   readonly error: SerializedError | null;
   subscribeOutputs(): Stream.Stream<_Output>;
   subscribeEphemeral(): Stream.Stream<Trace.Message>;
@@ -100,7 +100,7 @@ Notes on the shape:
 /** Canonical wire/query form; also the ECHO projection (§5). */
 export const Process: Schema.Schema<Process, Process.Encoded>;
 
-export const Uri: Schema.Schema<URI.URI>;          // process:// | echo://
+export const Uri: Schema.Schema<URI.URI>; // process:// | echo://
 export const isProcess: (value: unknown) => value is Process.Any;
 ```
 
@@ -153,10 +153,10 @@ export const durableHandler: {
 Every operation invocation is a process. The distinction between the two handler kinds
 is only how the body is written:
 
-| Handler | Written as | Runtime behavior |
-| --- | --- | --- |
-| `Operation.withHandler` | `(input) => Effect<O>` | Wrapped in the **default durable adapter** — the current body of `Process.fromOperation`: idempotency marker, `Trace.OperationStart/Input/Output/End`, `submitOutput` + `succeed` on return, `OperationEnd(failure)` + die on defect. |
-| `Operation.durableHandler` | callbacks over a context | Runs as-is; the adapter's trace events are emitted by the runtime around `onSpawn`/`onInput` instead of inside the handler. |
+| Handler                    | Written as               | Runtime behavior                                                                                                                                                                                                                      |
+| -------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Operation.withHandler`    | `(input) => Effect<O>`   | Wrapped in the **default durable adapter** — the current body of `Process.fromOperation`: idempotency marker, `Trace.OperationStart/Input/Output/End`, `submitOutput` + `succeed` on return, `OperationEnd(failure)` + die on defect. |
+| `Operation.durableHandler` | callbacks over a context | Runs as-is; the adapter's trace events are emitted by the runtime around `onSpawn`/`onInput` instead of inside the handler.                                                                                                           |
 
 `executionMode: 'sync'` remains a hint that the caller may await inline; it does not
 bypass the process runtime.
@@ -198,7 +198,7 @@ interface SpawnOptions {
 - **Process parent** keeps today's semantics exactly: trace-context inheritance,
   `onChildEvent` delivery to the parent, hibernation while a child runs, and the
   parent's terminal state cascading termination to children.
-- **ECHO object parent** is new and is *not* a supervision relationship: no
+- **ECHO object parent** is new and is _not_ a supervision relationship: no
   `onChildEvent`, no cascade. It records ownership — "this process is running for that
   document/conversation/queue" — and makes the process discoverable from the object
   (`Process.list({ parent: obj })`, or a query, §5). It subsumes `TargetAnnotation`,
@@ -215,9 +215,9 @@ resolving `parent` on a deleted object yields a tombstone ref like any other.
 Processes are projected as queryable entities under a system type:
 
 ```ts
-Query.select(Filter.type(Process, { key: '…', state: Process.State.RUNNING }))
-Query.select(Filter.ids(processUri))
-obj.pipe(Query.incoming(Process, 'parent'))   // processes running for this object
+Query.select(Filter.type(Process, { key: '…', state: Process.State.RUNNING }));
+Query.select(Filter.ids(processUri));
+obj.pipe(Query.incoming(Process, 'parent')); // processes running for this object
 ```
 
 Mechanics:
@@ -241,17 +241,17 @@ Mechanics:
 
 ## 6. Migration map
 
-| Removed | Replacement |
-| --- | --- |
-| `Process.make`, `MakeProcessOpts` | `Operation.make` + `Operation.durableHandler` |
-| `Process.Callbacks`, `ProcessContext` | `Operation.DurableCallbacks`, `Operation.DurableContext` |
-| `Process.fromOperation` | implicit (default durable adapter, §3.1) |
-| `Process.Info` | `Process` (§2) |
+| Removed                                                            | Replacement                                                      |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `Process.make`, `MakeProcessOpts`                                  | `Operation.make` + `Operation.durableHandler`                    |
+| `Process.Callbacks`, `ProcessContext`                              | `Operation.DurableCallbacks`, `Operation.DurableContext`         |
+| `Process.fromOperation`                                            | implicit (default durable adapter, §3.1)                         |
+| `Process.Info`                                                     | `Process` (§2)                                                   |
 | `Process.Monitor`, `ProcessMonitorService`, `ProcessMonitor.layer` | ECHO query (§5) + `Trace.Monitor` for `subscribeToTraceMessages` |
-| `Process.MonitorFilter`, `matchesFilter`, `listFromTree` | `Filter` / `Query` |
-| `ProcessManager.Handle`, `Handle.hydrate` | `Process`, lazy hydration |
-| `SpawnOptions.parentProcessId`, `SpawnOptions.target` | `SpawnOptions.parent` |
-| `Info.parentPid` | `Process.parent` |
+| `Process.MonitorFilter`, `matchesFilter`, `listFromTree`           | `Filter` / `Query`                                               |
+| `ProcessManager.Handle`, `Handle.hydrate`                          | `Process`, lazy hydration                                        |
+| `SpawnOptions.parentProcessId`, `SpawnOptions.target`              | `SpawnOptions.parent`                                            |
+| `Info.parentPid`                                                   | `Process.parent`                                                 |
 
 Call sites to update (non-exhaustive): `ProcessOperationInvoker`, `RemoteProcessManager`,
 `RemoteProcessHandle`, `EdgeProcessManager`, `TriggerMonitor`, `process-store`,
