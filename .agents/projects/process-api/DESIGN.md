@@ -1,72 +1,153 @@
-# Process API redesign
+# Process & Operation API redesign
 
 Status: spec (no implementation yet).
 
-Scope: the public shape of processes in `@dxos/compute` / `@dxos/compute-runtime`.
-Four changes, specified independently but landing as one API break:
+Scope: the public shape of operations and processes in `@dxos/compute` /
+`@dxos/compute-runtime`, and the ECHO entity kinds they need.
 
-1. `Process` stops being a callback bag and becomes a **live handle** — a first-class
-   public value with a URI, referenceable by `Ref`, observable.
-2. Process implementations move into operations: `Operation.durableHandler` is a new
-   **handler kind** that carries every semantic currently in `Process.make` +
-   `ProcessHandleImpl`.
-3. A process has a **parent**, which may be another process _or an ECHO object_.
-4. Processes are exposed to the **ECHO query API**.
+Five changes, specified independently but landing as one API break:
+
+1. **Two new entity kinds**, `operation` and `process`, alongside `object` / `relation` /
+   `type`. Neither is an object type, and neither is bound to automerge.
+2. `Operation.Definition` becomes the operation-kind entity, **replacing**
+   `Operation.PersistentOperation` and its lossy serialize/deserialize bridge.
+3. `Process` stops being a callback bag and becomes the process-kind entity — a **live
+   handle** with a URI, referenceable by `Ref`, observable.
+4. Process implementations move into operations: `Operation.durableHandler` is a new
+   **handler kind** carrying every semantic currently in `Process.make`.
+5. A process has a **parent**, which may be another process or an ECHO object.
 
 ## 1. Before
 
-Today three distinct things are called "process":
+Today three distinct things are called "process", and operations are modelled twice:
 
-| Concern                          | Type                                                  | Location                                                          |
-| -------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------- |
-| Definition (factory + callbacks) | `Process.Process<I, O, R, Rpcs>`, `Process.Callbacks` | `compute/src/Process.ts`                                          |
-| Live instance (runtime-internal) | `ProcessManager.Handle`, `ProcessHandleImpl`          | `compute-runtime/src/ProcessHandle.ts`                            |
-| Read-only projection             | `Process.Info` + `Process.Monitor`                    | `compute/src/Process.ts`, `compute-runtime/src/ProcessMonitor.ts` |
+| Concern                          | Type                                                  | Location                               |
+| -------------------------------- | ----------------------------------------------------- | -------------------------------------- |
+| Process definition               | `Process.Process`, `Process.Callbacks`                | `compute/src/Process.ts`               |
+| Process live instance (internal) | `ProcessManager.Handle`, `ProcessHandleImpl`          | `compute-runtime/src/ProcessHandle.ts` |
+| Process read-only projection     | `Process.Info` + `Process.Monitor`                    | `Process.ts`, `ProcessMonitor.ts`      |
+| Operation definition             | `Operation.Definition` (a plain value)                | `compute/src/Operation.ts`             |
+| Operation database record        | `Operation.PersistentOperation` (an object-kind type) | `compute/src/Operation.ts:426`         |
 
 Consequences we are removing:
 
-- **Two vocabularies for one thing.** A caller that spawns gets a `Handle`; a caller
-  that observes gets an `Info` from `Monitor.list()`. The two are not convertible, so
-  UI code that lists processes cannot act on one without going back to a manager.
-- **`Process.make` is a second way to write a unit of work.** Every process in the repo
-  is either `Process.fromOperation(op, handlers)` or a hand-written `Process.make` that
-  duplicates operation metadata (`key`, `input`, `output`, `services`, `types`).
-- **Parentage is a bare `parentPid`.** A process spawned on behalf of an ECHO object
-  records that object only as the loose `TargetAnnotation` URI, which nothing resolves.
-- **Processes are invisible to ECHO.** `Monitor.list(filter)` is a bespoke query
-  language (`key`/`target`/`state`/`space`/`parentPid`) parallel to `Filter`/`Query`.
+- **Two vocabularies for one process.** A caller that spawns gets a `Handle`; a caller
+  that observes gets an `Info`. The two are not convertible, so UI listing processes
+  cannot act on one without going back to a manager.
+- **Two models for one operation.** `serialize` / `deserialize` / `setFrom`
+  (`Operation.ts:478-560`) convert between them on every registry sync, dropping the
+  handler, narrowing `services: Context.Key[]` to `string[]`, and rendering the
+  input/output codecs as JSON Schema.
+- **`Process.make` is a second way to write a unit of work**, duplicating the operation
+  metadata (`key`, `input`, `output`, `services`, `types`) its definition already has.
+- **Processes are invisible to ECHO.** `Monitor.list(filter)` is a bespoke query language
+  parallel to `Filter` / `Query`.
 
-## 2. After — `Process` is the live handle
+## 2. Entity kinds
 
-`Process.Process` becomes the _instance_, not the factory. It is public API: it is what
-`spawn` returns, what a query result item is, and what `Monitor` used to describe.
+A kind is not decoration. It fixes identity/addressing, which APIs accept the value, and
+what a persisted projection looks like — but **not** where instances are stored. Storage
+is orthogonal and per-entity.
+
+```ts
+export enum EntityKind {
+  Object = 'object',
+  Relation = 'relation',
+  Type = 'type',
+  Operation = 'operation', // a definition of behavior
+  Process = 'process', // a running instance of behavior
+}
+```
+
+|                      | Type                             | **Operation**                                         | **Process**                            |
+| -------------------- | -------------------------------- | ----------------------------------------------------- | -------------------------------------- |
+| Is a                 | definition of _shape_            | definition of _behavior_                              | _instance_ of behavior                 |
+| Created by           | `Type.makeObject(dxn)(schema)`   | `Operation.make({ key, input, output, services, … })` | `manager.spawn(op, input, options)`    |
+| Identity             | typename DXN, or EID when stored | key DXN (`dxn:<key>` and `dxn:<key>:<version>`)       | pid → `process://<runtime>/<pid>`      |
+| Backing store        | registry, or a space (`addType`) | registry, **or** a space (`addOperation`)             | the compute runtime — **never stored** |
+| Hidden slots         | source Effect Schema             | input/output codecs, `services`, `types`, handler     | scope, output queue, status atom, RPC  |
+| Persisted projection | `jsonSchema`                     | `inputSchema`/`outputSchema`, `services: string[]`    | none                                   |
+| `db.add()`           | rejected (`RejectTypeEntity`)    | rejected — persist deliberately via `addOperation`    | rejected — never a document            |
+
+Mechanically, each kind needs what `type` needed when it was added as the third:
+
+1. `internal/common/types/entity.ts:124` — the enum (`EntityKindSchema` follows).
+2. `internal/Entity/operation-kind.ts`, `process-kind.ts` — pipeables modelled on
+   `type-kind.ts`, stamping `[SchemaKindId]` and `TypeAnnotation.kind`.
+3. `Entity.ts` / `Type.ts` — `isOperationKind` / `isProcessKind` and `AnyEntity` widening.
+4. `Ref.ts:56-70` — one overload arm each, exactly where `Type.Type` got its arm.
+5. `registry.ts` `getEntityUris` — the operation-key case, plus a bare-EID fallback (it
+   returns `getEntityKeyDXNs` for non-type kinds, which is empty for an unkeyed entity).
+6. `Database.ts:83` — `RejectOperationEntity` / `RejectProcessEntity` beside
+   `RejectTypeEntity`, and `db.addOperation()` beside `db.addType()`.
+7. `internal/Obj/create-object.ts:106-110` — the three-way kind-inference ladder becomes a
+   lookup off `annotation.kind`.
+
+Naming assumption: the kinds are named for the concepts (`operation`, `process`), not for
+the variables (`definition`, `process`). Open — see §9.
+
+## 3. Operation — the definition is the entity
+
+`Operation.PersistentOperation` is deleted. `Operation.Definition` becomes the
+operation-kind entity, keeping the same DXN so no data migration is required:
+
+```ts
+export class Definition extends Operation.makeDefinition<Definition>(
+  DXN.make('org.dxos.type.function', '0.2.0'), // unchanged
+)(Schema.Struct({ name, description, icon, inputSchema, outputSchema, services, binding, … })) {}
+```
+
+The live-only parts ride on hidden slots, as `Type` already does with its source schema:
+
+| Slot                                   | Holds                          | Persisted projection         |
+| -------------------------------------- | ------------------------------ | ---------------------------- |
+| `InputSchemaSlot` / `OutputSchemaSlot` | the Effect `Schema.Codec`      | `inputSchema`/`outputSchema` |
+| `ServicesSlot`                         | `readonly Context.Key[]`       | `services: string[]`         |
+| `TypesSlot`                            | `readonly Type.AnyEntity[]`    | refs, or omitted             |
+| `HandlerSlot`                          | plain / lazy / durable handler | never persisted              |
+
+- `Operation.make(props)` yields the entity directly; meta already carries `key` and
+  `version`, so it is addressable as `dxn:<key>` and `dxn:<key>:<version>`.
+- **Registry or automerge, one entity either way.** A definition sourced from code lives
+  in the registry; one persisted into a space lives in a document. `createRefResolver`
+  already normalizes both to the same registered entity for types
+  (`hypergraph.ts:214-218`); operations take the same path.
+- `serialize` / `serializable` / `deserialize` / `setFrom` disappear. A record read from a
+  space _is_ a Definition; its codecs rebuild lazily from `inputSchema`/`outputSchema` on
+  first access (the `Type.getSchema` rebuild path), and an absent handler slot is the
+  signal to invoke remotely — what `deserialize` encoded by omission.
+- `Ref.Ref(Operation.Definition)` becomes usable: `Skill.tools` (bare `ToolId` strings
+  today) and triggers stop round-tripping keys by hand.
+
+**Instance ids must be derived from `key` + `version`, not random.** `Operation.make` is
+called at module scope in hundreds of files, and module-scope RNG is forbidden under
+workerd — the constraint `Type.makeObject` already documents. Deriving the id also makes
+the in-process and persisted forms one entity rather than two.
+
+## 4. Process — the live handle
+
+`Process.Process` becomes the process-kind entity: the _instance_, not a factory. It is
+what `spawn` returns, what a query result item is, and what `Monitor` used to describe.
 
 ```ts
 export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = never> {
-  readonly [ProcessTypeId]: Process.Variance<_Input, _Output, _Rpcs>;
-
-  /** Stable identity. `process://<runtimeId>/<pid>`, or `echo://<spaceId>/<pid>` when space-scoped. */
-  readonly uri: URI.URI;
+  readonly uri: URI.URI; // process://<runtimeId>/<pid>
   readonly pid: ID;
-
-  /** Operation key this process runs ({@link Operation.Definition.meta.key}). */
-  readonly key: DXN.DXN;
+  readonly operation: Ref.Ref<Operation.Definition>;
   readonly params: Params;
   readonly environment: Environment;
+  readonly parent: Ref.Ref<Process | Obj.Any> | null; // §6
 
-  /** @see §4. */
-  readonly parent: Ref.Ref<Process | Obj.Any> | null;
-
-  // --- observation -------------------------------------------------------
+  // Observation.
   readonly status: Status; // { state, exit, startedAt, completedAt }
   readonly statusAtom: Atom.Atom<Status>;
-  readonly metrics: Metrics; // wallTime / inputCount / outputCount
+  readonly metrics: Metrics;
   readonly error: SerializedError | null;
   subscribeOutputs(): Stream.Stream<_Output>;
   subscribeEphemeral(): Stream.Stream<Trace.Message>;
   children(): Effect.Effect<readonly Process[]>;
 
-  // --- control -----------------------------------------------------------
+  // Control.
   submitInput(input: _Input): Effect.Effect<void>;
   terminate(): Effect.Effect<void>;
   runToCompletion(): Effect.Effect<void>;
@@ -76,198 +157,186 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = ne
 }
 ```
 
-Notes on the shape:
+- **`Info` is deleted.** Everything it carried is a field or a `status` field here.
+- **Dormant vs live is a state, not a type.** `Handle.hydrate()` goes away; a process
+  restored from the durable mailbox fails control calls with `ProcessNotLiveError` until
+  the runtime hydrates it lazily on first use, which it can now do from the operation ref.
+- **`Process.Monitor` / `ProcessMonitorService` are removed** (§7).
+  `subscribeToTraceMessages` moves to `Trace.Monitor`, keeping its aggregate layer.
+- `Status`, `State`, `Params`, `Environment`, `ChildEvent`, the annotations and the trace
+  event types keep their current definitions.
 
-- **`Info` is deleted.** Everything it carried (`pid`, `key`, `params`, `environment`,
-  `state`, `error`, `startedAt`, `completedAt`, `metrics`) is a field or a `status`
-  field on `Process`. A serialized process crossing a boundary is
-  `Process.Encoded` — the `Schema` below — and is rehydrated into a `Process` by the
-  receiving runtime, so remote and local processes have one type at the call site.
-- **Dormant vs live is a state, not a type.** `ProcessManager.Handle.hydrate()` is
-  removed; a process read out of durable storage is a `Process` whose control methods
-  fail with `ProcessNotLiveError` until the runtime hydrates it, which it now does
-  lazily on first `submitInput`/`rpc` using the operation registry (it can: a process
-  is identified by an operation key, §3).
-- **`Process.Monitor` / `ProcessMonitorService` are removed**, replaced by §5.
-  `subscribeToTraceMessages(filter)` moves to `Trace.Monitor` (it is a trace concern,
-  not a process-tree concern) and keeps its current aggregate local+remote layer.
-- `Status`, `State`, `Params`, `Environment`, `ChildEvent`, the annotations and the
-  trace event types keep their current definitions and names.
+## 5. Handler kinds
 
-### 2.1 Schema and Ref
+An operation declares _what_ it does (key, input, output, services, types). _How_ it is
+implemented is a **handler kind** attached to the definition. `Operation.withHandler` —
+an ordinary `(input) => Effect<O>` — is the baseline. Three declarative kinds sit beside
+it:
+
+| Kind             | Attached with                   | Body is                                             | Runs as                                        |
+| ---------------- | ------------------------------- | --------------------------------------------------- | ---------------------------------------------- |
+| **prompt**       | `Operation.promptHandler`       | a `Template.Template` rendered from the input       | one model call, output parsed to `output`      |
+| **durable**      | `Operation.durableHandler`      | callbacks over a process context (§5.1)             | a long-lived process, suspend/resume capable   |
+| **instructions** | `Operation.instructionsHandler` | natural-language instructions plus the tools to use | an agent turn that works until `output` is met |
+
+Properties they share, and why they are kinds rather than three unrelated APIs:
+
+- All four produce a **process** (§5.2). Only the durable kind writes its own lifecycle;
+  the others are wrapped by an adapter that spawns, runs, submits output and succeeds.
+- All four are addressed and invoked identically — by operation key, through
+  `OperationHandlerSet`. A caller does not know or care which kind backs a definition,
+  which is what lets an operation be reimplemented from code to instructions without
+  touching its callers.
+- Only the **kind marker** is part of the persisted projection; handler bodies are never
+  persisted, with one exception worth deciding (§9): a prompt template and an
+  instructions body are _data_, so an operation of those kinds could be fully defined in a
+  space with no code at all.
+
+`OperationHandlerSet` resolves kinds uniformly: `getHandlerFor(key)` returns the
+definition with whichever handler slot is populated, and the runtime dispatches on the
+marker. `Operation.lazyHandler` composes with each of them.
+
+### 5.1 The durable kind
+
+`Process.make`, `MakeProcessOpts`, `Process.Callbacks`, `ProcessContext` and
+`Process.fromOperation` are removed. Their semantics become the durable handler:
 
 ```ts
-/** Canonical wire/query form; also the ECHO projection (§5). */
-export const Process: Schema.Schema<Process, Process.Encoded>;
-
-export const Uri: Schema.Schema<URI.URI>; // process:// | echo://
-export const isProcess: (value: unknown) => value is Process.Any;
-```
-
-A `Ref.Ref<Process>` is resolvable because the runtime contributes a `RefResolver` for
-the `process://` authority and for `echo://` URIs whose entity id is a live pid. That
-resolver is what makes `parent` (§4) and any user-held reference work; an ECHO object
-may therefore store `Ref<Process>` in a field and dereference it like any other ref.
-Resolution of a terminated process yields the last persisted snapshot (a `Process` in a
-terminal state), never a dangling ref.
-
-## 3. After — the implementation is an operation's durable handler
-
-`Process.make`, `Process.MakeProcessOpts`, `Process.Callbacks`, `Process.ProcessContext`
-and `Process.fromOperation` are removed from the public surface. Their semantics move to
-a second handler kind on `Operation`:
-
-```ts
-export const DurableHandlerTypeId = '~@dxos/operation/DurableHandler';
-
-export interface WithDurableHandler<Def extends Definition.Any> extends Def {
-  readonly [DurableHandlerTypeId]: {
-    readonly create: (ctx: DurableContext<Definition.Input<Def>, Definition.Output<Def>>) =>
-      Effect.Effect<Partial<DurableCallbacks<…>>, never, Definition.Services<Def> | BaseServices | Scope.Scope>;
-  };
-}
-
 export const durableHandler: {
   <Def extends Definition.Any>(create: Create<Def>): (op: Def) => WithDurableHandler<Def>;
   <Def extends Definition.Any>(op: Def, create: Create<Def>): WithDurableHandler<Def>;
 };
 ```
 
-- `DurableCallbacks` is today's `Process.Callbacks` verbatim: `onSpawn`, `onInput`,
-  `onAlarm`, `onChildEvent`, `rpcHandlers`, all defaulted to no-ops by the combinator.
-- `DurableContext` is today's `ProcessContext` with one change: `ctx.process` replaces
-  `ctx.id`/`ctx.params` and is the live `Process` handle for self (§2), so a handler can
-  hand its own URI to something it spawns or writes.
-- Everything `MakeProcessOpts` declared is already on `Definition`: `key`, `input`,
-  `output`, `services`, `types`. The one addition is `rpcs`:
+- `DurableCallbacks` is today's `Process.Callbacks` verbatim — `onSpawn`, `onInput`,
+  `onAlarm`, `onChildEvent`, `rpcHandlers`, defaulted to no-ops by the combinator.
+- `DurableContext` is today's `ProcessContext` with `ctx.process` (the live `Process`)
+  replacing `ctx.id` / `ctx.params`.
+- Everything `MakeProcessOpts` declared already lives on `Definition`; the one addition is
+  `rpcs`, which `Definition.Rpcs<Def>` feeds to `rpcHandlers` and `Process.rpc`.
 
-  ```ts
-  Operation.make({ …, rpcs?: RpcGroup.RpcGroup<any> })
-  ```
+### 5.2 One execution model
 
-  which is what `Definition.Rpcs<Def>` extracts for `DurableCallbacks.rpcHandlers` and
-  for `Process<I, O, Rpcs>.rpc`.
+Every operation invocation is a process. The kinds differ only in who writes the
+lifecycle:
 
-### 3.1 One execution model
+| Handler kind                 | Runtime behavior                                                                                                                                            |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| code / prompt / instructions | Wrapped in the **default adapter** — today's `Process.fromOperation` body: idempotency marker, the four trace events, `submitOutput` + `succeed` on return. |
+| durable                      | Runs as-is; the adapter's trace events are emitted by the runtime around `onSpawn`/`onInput`.                                                               |
 
-Every operation invocation is a process. The distinction between the two handler kinds
-is only how the body is written:
+`executionMode: 'sync'` stays a hint that the caller may await inline; it does not bypass
+the process runtime.
 
-| Handler                    | Written as               | Runtime behavior                                                                                                                                                                                                                      |
-| -------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Operation.withHandler`    | `(input) => Effect<O>`   | Wrapped in the **default durable adapter** — the current body of `Process.fromOperation`: idempotency marker, `Trace.OperationStart/Input/Output/End`, `submitOutput` + `succeed` on return, `OperationEnd(failure)` + die on defect. |
-| `Operation.durableHandler` | callbacks over a context | Runs as-is; the adapter's trace events are emitted by the runtime around `onSpawn`/`onInput` instead of inside the handler.                                                                                                           |
-
-`executionMode: 'sync'` remains a hint that the caller may await inline; it does not
-bypass the process runtime.
-
-`OperationHandlerSet` gains `getDurableHandlerFor(key)` alongside `getHandlerFor`, and
-`Operation.isDurable(op)` selects the path. `Operation.lazyHandler` accepts a module
-whose default is `WithDurableHandler<Def>` under the same typed pairing.
-
-### 3.2 Spawning
-
-`ProcessManager.Manager.spawn` takes an operation, not a process definition:
+### 5.3 Spawning
 
 ```ts
 spawn<Def extends Operation.Definition.Any>(
   op: Def,
-  input?: Operation.Definition.Input<Def>,      // spawn-and-submit in one step
+  input?: Operation.Definition.Input<Def>,
   options?: SpawnOptions,
 ): Effect.Effect<Process<Input<Def>, Output<Def>, Rpcs<Def>>>;
 
 attach(uri: URI.URI): Effect.Effect<Process.Any, ProcessNotFoundError>;
 ```
 
-`SpawnOptions.parentProcessId` is replaced by `parent` (§4); everything else
-(`name`, `target`, `traceMeta`, `environment`, `notify`, `annotations`) is unchanged.
-`ProcessOperationInvoker` keeps its shape but returns `Process` from `invokeFiber`
-rather than an `OperationFiber` wrapper over a hidden handle.
+`SpawnOptions.parentProcessId` is replaced by `parent` (§6); `name`, `target`, `traceMeta`,
+`environment`, `notify` and `annotations` are unchanged.
 
-## 4. Parentage
+## 6. Parentage
 
 ```ts
 readonly parent: Ref.Ref<Process | Obj.Any> | null;
 
 interface SpawnOptions {
-  /** Parent process, or the ECHO object this process runs on behalf of. */
   readonly parent?: Process.Any | Obj.Any | Ref.Ref<Process.Any | Obj.Any> | URI.URI;
 }
 ```
 
-- **Process parent** keeps today's semantics exactly: trace-context inheritance,
-  `onChildEvent` delivery to the parent, hibernation while a child runs, and the
-  parent's terminal state cascading termination to children.
-- **ECHO object parent** is new and is _not_ a supervision relationship: no
-  `onChildEvent`, no cascade. It records ownership — "this process is running for that
-  document/conversation/queue" — and makes the process discoverable from the object
-  (`Process.list({ parent: obj })`, or a query, §5). It subsumes `TargetAnnotation`,
-  which is deprecated: `spawn({ target })` folds into `parent` and the annotation is
-  kept for one release as a read-only alias.
-- The parent's space, when it has one, seeds `Environment.space` if the caller did not
-  set it.
+- **Process parent** keeps today's semantics: trace-context inheritance, `onChildEvent`
+  delivery, hibernation while a child runs, terminal-state cascade.
+- **ECHO object parent** is ownership, not supervision: no `onChildEvent`, no cascade. It
+  records what the process runs for and makes it discoverable from the object. It subsumes
+  `TargetAnnotation`, kept for one release as a read-only alias.
+- The parent's space seeds `Environment.space` when the caller did not set it.
 
-An object-parented process does not keep the object alive and is not deleted with it;
-resolving `parent` on a deleted object yields a tombstone ref like any other.
+A process holding `Ref<Process | Obj.Any>` is safe because the process is never persisted.
+**The reverse is not**: an object must not persist a `Ref<Process>` — see §7.
 
-## 5. Processes in the ECHO query API
+## 7. Entity sources, queries and refs
 
-Processes are projected as queryable entities under a system type:
+The graph resolves and queries entities through two sources today: the registry
+(`RegistryQuerySource` + the `dxn:` ref backend) and spaces (`SpaceQuerySource` + the
+`echo://` backends). Generalize that into an **`EntitySource`** — query, resolve-by-URI,
+change event — and the compute runtime registers as a third:
 
 ```ts
-Query.select(Filter.type(Process, { key: '…', state: Process.State.RUNNING }));
-Query.select(Filter.ids(processUri));
+Query.select(Filter.type(Process, { state: Process.State.RUNNING }));
+Query.select(Filter.type(Operation.Definition, { key: '…' }));
 obj.pipe(Query.incoming(Process, 'parent')); // processes running for this object
 ```
 
-Mechanics:
+- The ProcessManager is the authority for process entities; `RemoteProcessManager`
+  registers as a second source under the same URI authority, so remote processes answer
+  the same query rather than a parallel API. Results are live, driven by the same signal
+  that feeds `statusAtom`.
+- Results are `Process` values, directly controllable, subject to `ProcessNotLiveError`.
+- `MonitorFilter`, `matchesFilter` and `listFromTree` are deleted. `Manager.list(options)`
+  survives only as the runtime-local, non-reactive read.
+- **A `Ref<Process>` resolves only where that runtime is reachable**, so it must never be
+  written into a document — it would dangle on every other peer. Process refs are
+  in-memory values; persisted schemas must not declare them.
 
-- The runtime registers a **`ProcessQuerySource`** with each space's query engine (the
-  same extension point remote/agent sources already use). It answers over the union of
-  live processes in this runtime and non-terminal durable records, and it is **live**:
-  results update on every state transition, driven by the same signal that feeds
-  `statusAtom` today.
-- Results are `Process` values (§2), not snapshots — a query result item is directly
-  controllable (`terminate()`, `submitInput`) subject to `ProcessNotLiveError`.
-- Remote processes participate through the existing `RemoteProcessManager`, which
-  becomes a second source behind the same query rather than a second list API.
-- Processes are **not** stored as ECHO documents. They are a virtual source: no
-  Automerge doc, no replication, no history. Terminal processes fall out of query
-  results once their durable record is reaped.
-- Filterable fields: `key`, `state`, `parent`, `space`, `params.name`, and annotations.
-  That is a superset of `MonitorFilter`, which is deleted along with
-  `matchesFilter`/`listFromTree`; `Manager.list(options)` survives only as the
-  runtime-local, non-reactive read.
+## 8. Migration map
 
-## 6. Migration map
-
-| Removed                                                            | Replacement                                                      |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| `Process.make`, `MakeProcessOpts`                                  | `Operation.make` + `Operation.durableHandler`                    |
-| `Process.Callbacks`, `ProcessContext`                              | `Operation.DurableCallbacks`, `Operation.DurableContext`         |
-| `Process.fromOperation`                                            | implicit (default durable adapter, §3.1)                         |
-| `Process.Info`                                                     | `Process` (§2)                                                   |
-| `Process.Monitor`, `ProcessMonitorService`, `ProcessMonitor.layer` | ECHO query (§5) + `Trace.Monitor` for `subscribeToTraceMessages` |
-| `Process.MonitorFilter`, `matchesFilter`, `listFromTree`           | `Filter` / `Query`                                               |
-| `ProcessManager.Handle`, `Handle.hydrate`                          | `Process`, lazy hydration                                        |
-| `SpawnOptions.parentProcessId`, `SpawnOptions.target`              | `SpawnOptions.parent`                                            |
-| `Info.parentPid`                                                   | `Process.parent`                                                 |
+| Removed                                                            | Replacement                                             |
+| ------------------------------------------------------------------ | ------------------------------------------------------- |
+| `Operation.PersistentOperation`                                    | `Operation.Definition` (operation-kind entity)          |
+| `Operation.serialize` / `serializable` / `deserialize` / `setFrom` | nothing — the definition is the entity                  |
+| `Process.make`, `MakeProcessOpts`                                  | `Operation.make` + `Operation.durableHandler`           |
+| `Process.Callbacks`, `ProcessContext`                              | `Operation.DurableCallbacks`, `DurableContext`          |
+| `Process.fromOperation`                                            | implicit (default adapter, §5.2)                        |
+| `Process.Info`                                                     | `Process` (§4)                                          |
+| `Process.Monitor`, `ProcessMonitorService`, `ProcessMonitor.layer` | `EntitySource` + query (§7); `Trace.Monitor` for traces |
+| `Process.MonitorFilter`, `matchesFilter`, `listFromTree`           | `Filter` / `Query`                                      |
+| `ProcessManager.Handle`, `Handle.hydrate`                          | `Process`, lazy hydration                               |
+| `SpawnOptions.parentProcessId`, `SpawnOptions.target`              | `SpawnOptions.parent`                                   |
+| `Info.parentPid`                                                   | `Process.parent`                                        |
 
 Call sites to update (non-exhaustive): `ProcessOperationInvoker`, `RemoteProcessManager`,
 `RemoteProcessHandle`, `EdgeProcessManager`, `TriggerMonitor`, `process-store`,
+`McpServer.ts:754`, `assistant-evals/mcp-host.ts:109`, `devtools/cli/util/runtime.ts:89`,
+`plugin-routine/{layer-specs,registry-sync}.ts`,
 `app-framework/plugin-process-manager`, `plugin-deck/notification-tracker`,
 `plugin-client/trace-progress`, `plugin-assistant` hooks (`useSessionTimeline`,
 `useProcessEphemeralStatus`), `assistant-test-layer`.
 
-## 7. Open questions
+### 8.1 Reading existing operation records
 
-1. URI authority for non-space processes — `process://<runtimeId>/<pid>` requires a
-   stable runtime id that survives restart for durable processes; alternative is
-   `process:///<pid>` (local) with the runtime id carried in `Environment`.
-2. Whether `Ref<Process>` stored on an ECHO object should be allowed to persist at all,
-   given a process is not replicated — a ref that only ever resolves on the runtime that
-   owns the process may be better modeled as a plain URI field.
-3. Reaping policy for terminal processes, which decides how long a query can still see a
-   finished process and how long a stored ref resolves.
-4. Whether `rpcs` belongs on `Operation.Definition` (serialized into the registry) or
-   only on the durable handler.
+Objects already stored under `org.dxos.type.function` carry `kind: 'object'` in their
+document (`core-db/object-core.ts:568` defaults unknown kinds to `Object`). They load
+without error but as the _wrong kind_, so the loader must derive the kind from the
+typename rather than trusting the stored value. Nothing needs rewriting on disk.
+
+`entityKind` also reaches stored JSON Schema and is decoded strictly
+(`JsonSchema/json-schema.ts:585`), so a peer on an older build fails to decode a
+_persisted_ operation-kind entity. This does not affect processes (never stored) or
+registry-only operations. Either make `EntityKindSchema` decode unknown values to a
+sentinel before persisted operations ship, or keep them registry-only until it lands.
+
+## 9. Open questions
+
+1. Kind naming — `operation` / `process` as written, or `definition` / `process`.
+2. URI authority for processes: `process://<runtimeId>/<pid>` needs a runtime id stable
+   across restart for durable processes; the alternative is `process:///<pid>` with the
+   runtime carried in `Environment`.
+3. Reaping policy for terminal processes — how long a query still sees a finished process.
+4. Whether `rpcs` belongs on `Definition` (and so in its persisted projection) or only on
+   the durable handler.
+5. Whether `Type.AnyEntity` widening should explicitly forbid naming an operation or
+   process in `Definition.types`.
+6. Whether the plain code handler counts as a fourth handler kind or as the baseline the
+   other three are declared against (§5).
+7. Whether a prompt template or an instructions body belongs in the persisted projection.
+   If it does, an operation of those kinds is fully defined by data — authored in a space,
+   with no code deployed — which is a larger claim than the rest of this spec makes.
