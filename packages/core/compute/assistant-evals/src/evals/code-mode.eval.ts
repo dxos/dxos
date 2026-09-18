@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { CodeMode, type MakeTurnProducer } from '@dxos/agent-runtime';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -264,8 +264,11 @@ defineTask({
     Scorer.make({
       name: 'organization-linked',
       description: "The person's organization ref points at the seeded Initech organization.",
-      // Compared by entity id rather than by loading the ref: an agent writes it as a bare
-      // `echo:<id>`, which resolves only inside the space, and the scorer runs outside it.
+      // Matched on the object id appearing in the ref's URI, because the URI's shape is not ours
+      // to predict: an agent writes whichever form it writes (`echo:<id>` here), `Database.load`
+      // rejects that one as an unsupported URI kind, `Ref.hasEntityId` accepts only the local
+      // `echo:///<id>` form, and `EID.tryParse` returns nothing for it. An id is a ULID, so its
+      // presence in the URI is unambiguous.
       score: Effect.gen(function* () {
         const [people, organizations] = [
           yield* Database.query(Filter.type(Person.Person)).run,
@@ -276,7 +279,7 @@ defineTask({
         if (ada?.organization === undefined || initech === undefined) {
           return false;
         }
-        return Ref.hasEntityId(initech.id)(ada.organization);
+        return String(ada.organization.uri).includes(initech.id);
       }),
     }),
     Scorer.database({

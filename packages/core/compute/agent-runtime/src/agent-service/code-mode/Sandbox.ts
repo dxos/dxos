@@ -73,10 +73,16 @@ export const inProcess: Sandbox = {
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
         const fn = new AsyncFunction(...names, `'use strict';\n${code}`);
         const evaluation: Promise<unknown> = fn(...names.map((name) => bindings[name]));
+        if (timeout === undefined) {
+          return evaluation;
+        }
         // Raced rather than interrupted: `Effect.timeout` would have to interrupt a fiber blocked
         // in an uninterruptible `tryPromise`, so the call would hang for exactly as long as the
         // evaluation it was meant to bound.
-        return timeout === undefined ? evaluation : Promise.race([evaluation, rejectAfter(timeout)]);
+        const deadline = rejectAfter(timeout);
+        // The timer holds the event loop open until it fires, so an evaluation that finished in
+        // milliseconds would otherwise keep the process alive for the rest of its budget.
+        return Promise.race([evaluation, deadline.promise]).finally(deadline.cancel);
       },
       catch: (error) => new EvaluationError({ message: describeFailure(error) }),
     }),
@@ -109,14 +115,17 @@ const fields = (error: unknown): string | undefined => {
   }
 };
 
-const rejectAfter = (timeout: Duration.Input): Promise<never> => {
+/** The deadline half of the race, with the handle to clear once the race is decided. */
+const rejectAfter = (timeout: Duration.Input): { promise: Promise<never>; cancel: () => void } => {
   const duration = Duration.fromInputUnsafe(timeout);
-  return new Promise((_, reject) =>
-    setTimeout(
+  let handle: ReturnType<typeof setTimeout> | undefined;
+  const promise = new Promise<never>((_, reject) => {
+    handle = setTimeout(
       () => reject(new Error(`Evaluation did not finish within ${Duration.format(duration)}; it was abandoned.`)),
       Duration.toMillis(duration),
-    ),
-  );
+    );
+  });
+  return { promise, cancel: () => clearTimeout(handle) };
 };
 
 /** Installs {@link inProcess} as the ambient sandbox. */
