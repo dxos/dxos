@@ -90,10 +90,10 @@ index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e0
  export { WorkerWebSocketError, type WorkerPortLike, type WorkerPortSource, type WorkerWebSocketErrorCode, } from "./subduction/worker-websocket/protocol.js";
  export { WorkerWebSocketTransport, type WorkerWebSocketConnectOptions, } from "./subduction/worker-websocket/transport.js";
 diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
-index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..36417e57b19b32e69b2720e03caadf25185889d3 100644
+index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..826676a1b2ea406a000f874d429b11e3ff0caa98 100644
 --- a/dist/subduction/AdapterConnections.d.ts
 +++ b/dist/subduction/AdapterConnections.d.ts
-@@ -1,14 +1,23 @@
+@@ -1,10 +1,17 @@
 -import { Subduction } from "@automerge/automerge-subduction/slim";
 +import { PeerId as SubductionPeerId, Subduction } from "@automerge/automerge-subduction/slim";
  import { NetworkAdapterInterface } from "../network/NetworkAdapterInterface.js";
@@ -113,15 +113,8 @@ index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..36417e57b19b32e69b2720e03caadf25
      isConnecting(): boolean;
      isConnected(): boolean;
      generation(): number;
--    onChange(callback: () => void): void;
-+    onChange(callback: (change?: {
-+        connectionLost?: boolean;
-+    }) => void): void;
-     shutdown(): void;
-     addAdapter(adapter: NetworkAdapterInterface, serviceName: string, role: "connect" | "accept"): void;
- }
 diff --git a/dist/subduction/AdapterConnections.js b/dist/subduction/AdapterConnections.js
-index 40f525a6be944be10dd5e707c73f6af48d7ffde1..d1d12a6c6cc89d94c0a4aa665798271936fd77b0 100644
+index 40f525a6be944be10dd5e707c73f6af48d7ffde1..873e9e29828867d7c6263cc8c714f52750a0d9bb 100644
 --- a/dist/subduction/AdapterConnections.js
 +++ b/dist/subduction/AdapterConnections.js
 @@ -1,15 +1,19 @@
@@ -145,7 +138,7 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..d1d12a6c6cc89d94c0a4aa6657982719
      }
      // ── ConnectionManager interface ─────────────────────────────────────
      isConnecting() {
-@@ -32,17 +36,26 @@ export class AdapterConnections {
+@@ -32,17 +36,44 @@ export class AdapterConnections {
      shutdown() {
          this.#isShutdown = true;
          this.#onChangeCallback = null;
@@ -154,7 +147,8 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..d1d12a6c6cc89d94c0a4aa6657982719
      // ── Adapter management ──────────────────────────────────────────────
      addAdapter(adapter, serviceName, role) {
          this.#adapters.push(adapter);
-+        const boundPeers = new Set();
++        // DXOS patch: the current connection attempt per repo peer, dropped once it is released.
++        const attempts = new Map();
          adapter.on("peer-candidate", ({ peerId }) => {
              if (this.#isShutdown)
                  return;
@@ -162,25 +156,58 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..d1d12a6c6cc89d94c0a4aa6657982719
              // before the async handshake begins.
              this.#pendingTransports++;
 -            void this.#startTransport(adapter, serviceName, peerId, role);
-+            void this.#startTransport(adapter, serviceName, peerId, role, boundPeers);
++            const previous = attempts.get(peerId);
++            const attempt = {
++                lost: false,
++                subductionPeerId: null,
++                disconnecting: undefined,
++                // A reconnecting peer binds the same subduction PeerId, so the lost connection goes first.
++                after: previous?.lost ? previous.handshake.then(() => previous.disconnecting) : undefined,
++            };
++            attempts.set(peerId, attempt);
++            attempt.handshake = this.#startTransport(adapter, serviceName, peerId, role, attempt, attempts);
++            void attempt.handshake.then(() => {
++                if (attempt.subductionPeerId === null)
++                    this.#release(attempts, peerId, attempt);
++            });
 +        });
-+        // DXOS patch: report a bound peer's loss. subduction_core never settles requests pending on a
-+        // removed connection, so rounds in flight to that peer need this signal to stop waiting.
++        // DXOS patch: the transport's disconnect callback leaves the connection registered in
++        // subduction_core with its requests pending until they time out; `disconnectFromPeer` removes it
++        // and settles them, so a round in flight to a lost peer finishes against the others.
 +        adapter.on("peer-disconnected", ({ peerId }) => {
-+            if (this.#isShutdown || !boundPeers.delete(peerId))
++            const attempt = attempts.get(peerId);
++            if (this.#isShutdown || attempt === undefined || attempt.lost)
 +                return;
-+            this.#onChangeCallback?.({ connectionLost: true });
++            attempt.lost = true;
++            if (attempt.subductionPeerId !== null)
++                this.#disconnect(attempts, peerId, attempt);
          });
          void this.#watchAdapter(adapter);
          adapter.connect(this.#localPeerId);
-@@ -53,16 +66,16 @@ export class AdapterConnections {
+@@ -53,15 +84,36 @@ export class AdapterConnections {
              this.#onChangeCallback?.();
          }
      }
 -    async #startTransport(adapter, serviceName, peerId, role) {
-+    async #startTransport(adapter, serviceName, peerId, role, boundPeers) {
++    #disconnect(attempts, peerId, attempt) {
++        attempt.disconnecting = (async () => {
++            try {
++                await (await this.#subduction).disconnectFromPeer(attempt.subductionPeerId);
++            }
++            catch (e) {
++                this.#log("disconnectFromPeer failed for %s: %O", peerId, e);
++            }
++            this.#release(attempts, peerId, attempt);
++        })();
++    }
++    #release(attempts, peerId, attempt) {
++        if (attempts.get(peerId) === attempt)
++            attempts.delete(peerId);
++    }
++    async #startTransport(adapter, serviceName, peerId, role, attempt, attempts) {
 +        let subductionPeerId = null;
          try {
++            await attempt.after;
              const subduction = await this.#subduction;
              const transport = new NetworkAdapterTransport(adapter, this.#localPeerId, peerId);
 -            if (role === "accept") {
@@ -188,16 +215,19 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..d1d12a6c6cc89d94c0a4aa6657982719
 -            }
 -            else {
 -                await subduction.connectTransport(transport, serviceName);
--            }
 +            subductionPeerId =
 +                role === "accept"
 +                    ? await subduction.acceptTransport(transport, serviceName)
 +                    : await subduction.connectTransport(transport, serviceName);
-+            boundPeers.add(peerId);
++            attempt.subductionPeerId = subductionPeerId;
++            if (attempt.lost) {
++                // The peer left while the handshake was in flight.
++                this.#disconnect(attempts, peerId, attempt);
++                subductionPeerId = null;
+             }
          }
          catch {
-             // Transport connection failed (e.g. peer disconnected during handshake)
-@@ -72,6 +85,23 @@ export class AdapterConnections {
+@@ -72,6 +124,23 @@ export class AdapterConnections {
              this.#generation++;
              this.#onChangeCallback?.();
          }
@@ -222,25 +252,6 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..d1d12a6c6cc89d94c0a4aa6657982719
  }
  //# sourceMappingURL=AdapterConnections.js.map
 \ No newline at end of file
-diff --git a/dist/subduction/ConnectionManager.d.ts b/dist/subduction/ConnectionManager.d.ts
-index e94106a6feda4ad76c4be74c678fa1665e702d35..23ee8a588ae9555bb29d130b18ccc602536aa3f5 100644
---- a/dist/subduction/ConnectionManager.d.ts
-+++ b/dist/subduction/ConnectionManager.d.ts
-@@ -29,9 +29,12 @@ export interface ConnectionManager {
-     generation(): number;
-     /**
-      * Register a callback that fires on any state change. The caller should
--     * use this to schedule a recompute.
-+     * use this to schedule a recompute. `connectionLost` marks the loss of an
-+     * established connection (DXOS patch).
-      */
--    onChange(callback: () => void): void;
-+    onChange(callback: (change?: {
-+        connectionLost?: boolean;
-+    }) => void): void;
-     /**
-      * Stop managing connections. Breaks reconnect loops and prevents new
-      * transports from being established.
 diff --git a/dist/subduction/SubductionConnections.d.ts b/dist/subduction/SubductionConnections.d.ts
 index 7128dd6c9407ed5bd76bf19597cd30805835b135..cbaed9393b9a67f2478a242b648f152550987a36 100644
 --- a/dist/subduction/SubductionConnections.d.ts
@@ -423,7 +434,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c
      /** Check whether a sedimentree is currently in heal-backoff. */
      isHealing(sedimentreeId: SedimentreeId): boolean;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a01e3b90c 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e97549889 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -447,7 +458,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a
      #entries = new Map();
      #log;
      #connectionManagers = [];
-+    /** Resolvers fired when a connection is lost; used to abort in-flight syncs early (DXOS patch). */
++    /** Resolvers fired when aggregate connectivity drops to fully-disconnected; used to abort in-flight syncs early (DXOS patch). */
 +    #disconnectAbortWaiters = new Set();
 +    // Bounds concurrent `#doSync` rounds; see MAX_IN_FLIGHT_DOC_SYNCS.
 +    #syncGate = semaphore(MAX_IN_FLIGHT_DOC_SYNCS);
@@ -463,7 +474,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a
          this.#blobInterceptor = blobInterceptor;
          this.#onConnectionChanged = onConnectionChanged;
          this.priority = priority;
-@@ -133,20 +148,40 @@ export class SubductionSource {
+@@ -133,12 +148,23 @@ export class SubductionSource {
          // the shared manager owns the reconnect/backoff loop. Plain URL
          // strings are shorthand for in-thread endpoints.
          this.#websocketEndpoints = websocketEndpoints.map(endpoint => typeof endpoint === "string" ? new WebSocketEndpoint(endpoint) : endpoint);
@@ -489,17 +500,15 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
-         this.#connectionManagers.push(adapterConnections);
-         for (const mgr of this.#connectionManagers) {
--            mgr.onChange(() => {
-+            mgr.onChange((change) => {
+@@ -147,6 +173,15 @@ export class SubductionSource {
+             mgr.onChange(() => {
                  this.#scheduleRecompute();
                  this.#notifyConnectionChange();
-+                // DXOS patch: when a connection is lost, wake sync races so in-flight
++                // DXOS patch: on full disconnect, wake sync races so in-flight
 +                // syncWithAllPeers calls settle immediately instead of waiting out
 +                // the WASM per-request timeout (subduction_core does not reject
 +                // pending RequestIds on disconnect).
-+                if (change?.connectionLost || !this.isConnected()) {
++                if (!this.isConnected()) {
 +                    for (const wake of this.#disconnectAbortWaiters)
 +                        wake();
 +                    this.#disconnectAbortWaiters.clear();
@@ -619,7 +628,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a
              const subduction = await this.#subduction;
              // Flush any pending throttled save and wait for in-progress saves
              // to complete. This ensures that all locally-known commits have
-@@ -662,7 +741,33 @@ export class SubductionSource {
+@@ -662,7 +741,28 @@ export class SubductionSource {
              entry.flushSave.flush();
              await entry.saveSettled;
              this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
@@ -639,14 +648,9 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a
 +                disconnected,
 +            ]);
 +            if (racedResult === disconnectedSentinel) {
-+                entry.needsResync = true;
-+                if (this.isConnected()) {
-+                    // The round's remaining peers are still reachable; the re-sync in `finally` runs against them.
-+                    this.#log.debug(`doSync ${sid}: a peer in the round disconnected; re-syncing`);
-+                    return;
-+                }
 +                this.#log.debug(`doSync ${sid}: aborted by disconnect; settling as all-failed`);
 +                entry.lastSyncResult = "all-failed";
++                entry.needsResync = true;
 +                this.#scheduler.scheduleHealSync(sedimentreeId);
 +                return;
 +            }
@@ -654,7 +658,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a
              const results = peerResultMap.entries();
              const anySuccess = results.some(r => r.success);
              this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
-@@ -702,6 +807,7 @@ export class SubductionSource {
+@@ -702,6 +802,7 @@ export class SubductionSource {
                  entry.lastSyncResult = "succeeded";
                  this.#scheduler.resetHealState(sedimentreeId.toString());
              }
@@ -662,7 +666,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..3aad04a26fa86e949c08a1571faf088a
          }
          catch (e) {
              this.#log.error(`doSync THREW for ${sid}:`, e);
-@@ -709,6 +815,10 @@ export class SubductionSource {
+@@ -709,6 +810,10 @@ export class SubductionSource {
              this.#scheduler.scheduleHealSync(sedimentreeId);
          }
          finally {
