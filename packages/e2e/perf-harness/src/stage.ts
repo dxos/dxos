@@ -211,19 +211,23 @@ export class StageRunner {
       ? diffThreadMetrics(before.thread, await readThreadMetrics(pageTarget))
       : { ...EMPTY_THREAD };
     const networkDelta = diffNetwork(before.network, network());
-    // Same realm set as the thread metrics below and for the same reason: SQLite's counters live in
-    // the dedicated worker, so a worker that appeared mid-stage is reported whole by the refresh
-    // rather than diffed against a realm that did not exist at the opening boundary.
-    const diskDelta = diffDisk(before.disk, await readDisk(this.#targets));
-    // Read before the target refresh below, so a realm is diffed against the same realm set the
-    // opening boundary saw; one that appeared mid-stage is picked up by the refresh and reported
-    // whole, which is correct — it did all its work inside this stage.
+    // Read BEFORE the refresh, so a realm is diffed against the same realm set the opening boundary
+    // saw; one that appeared mid-stage is picked up by the refresh and reported whole, which is
+    // correct — it did all its work inside this stage.
     const threadByRealm = diffRealmThreadMetrics(before.threadByRealm, await readRealmThreadMetrics(this.#targets));
 
-    // Refreshed again before the per-realm readings: a stage can BRING a realm into existence —
-    // `boot` is where the shared worker running ECHO first appears — and a set captured only at
-    // the opening boundary would report that stage's heap as the page's alone.
+    // Refreshed before the per-realm readings: a stage can BRING a realm into existence — `boot` is
+    // where the shared worker running ECHO first appears — and a set captured only at the opening
+    // boundary would report that stage's heap as the page's alone.
     this.#targets = await refreshTargets(debugPort, this.#targets);
+
+    // AFTER the refresh, unlike the readings above, and the difference is load-bearing. SQLite runs
+    // in the dedicated worker, and `boot` is the stage that creates it: read against the opening
+    // set, boot found no instrumented realm at either boundary and reported `realms: 0` with no
+    // I/O, so opening the database and running migrations — the largest disk event in the flow —
+    // was missing from every run. A realm that appeared during the stage contributes its whole
+    // counters, which is right: it did that work inside this stage.
+    const diskDelta = diffDisk(before.disk, await readDisk(this.#targets));
 
     const responsiveness = await readResponsiveness(page, this.#targets);
     const domCounters = await readDomCounters(this.#targets.find((target) => target.kind === 'page'));
