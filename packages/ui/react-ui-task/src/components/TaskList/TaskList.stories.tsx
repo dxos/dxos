@@ -762,6 +762,9 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
     const first = rows()[0];
     first.click();
     await waitFor(async () => expect(title().value).not.toEqual(''));
+    // The row's own state, not just the pane's: the pane follows the selection a commit earlier, and
+    // `Escape` is answered by the list, so pressing it before the row reports selected does nothing.
+    await waitFor(async () => expect(first.getAttribute('aria-selected')).toEqual('true'));
     first.focus();
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await waitFor(async () => expect(title().value).toEqual(''));
