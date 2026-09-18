@@ -3,6 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
@@ -15,6 +17,10 @@ import { GitHubApi } from '../services/index.ts';
 import { fetchPullRequestWithFallback } from './import-pull-request.ts';
 
 const reference = { owner: 'dxos', repo: 'dxos', number: 13188 };
+
+/** The stubs answer without a request, but the fetch signature still carries the client the real one needs. */
+const run = <T>(effect: Effect.Effect<T, never, HttpClient.HttpClient>) =>
+  EffectEx.runAndForwardErrors(effect.pipe(Effect.provide(FetchHttpClient.layer)));
 
 const pull: GitHubApi.GitHubPull = { id: 1, number: reference.number, title: 'Walkthroughs', state: 'open' };
 
@@ -43,9 +49,7 @@ const fetchRejectingToken = (status: number, tokens: string[]) => (_owner: strin
 describe('import — token fallback', () => {
   test('a token GitHub rejects is retried anonymously', async ({ expect }) => {
     const tokens: string[] = [];
-    const result = await EffectEx.runAndForwardErrors(
-      fetchPullRequestWithFallback(reference, 'dead-token', fetchRejectingToken(401, tokens)),
-    );
+    const result = await run(fetchPullRequestWithFallback(reference, 'dead-token', fetchRejectingToken(401, tokens)));
 
     expect(result).toEqual(pull);
     expect(tokens).toEqual(['dead-token', '']);
@@ -53,7 +57,7 @@ describe('import — token fallback', () => {
 
   test('a token that works is not retried', async ({ expect }) => {
     const tokens: string[] = [];
-    const result = await EffectEx.runAndForwardErrors(
+    const result = await run(
       fetchPullRequestWithFallback(reference, 'live-token', (_owner, _repo, _number) =>
         Effect.gen(function* () {
           tokens.push((yield* GitHubApi.GitHubCredentials).token);
@@ -68,7 +72,7 @@ describe('import — token fallback', () => {
 
   test('unauthorized anonymously too reports the repository as inaccessible', async ({ expect }) => {
     const tokens: string[] = [];
-    const error = await EffectEx.runAndForwardErrors(
+    const error = await run(
       fetchPullRequestWithFallback(reference, 'dead-token', (_owner, _repo, _number) =>
         Effect.gen(function* () {
           tokens.push((yield* GitHubApi.GitHubCredentials).token);
