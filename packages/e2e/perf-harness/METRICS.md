@@ -354,17 +354,32 @@ Recorded here so nobody rediscovers them as bugs.
    `edit-document`, `toggle-task`, `scroll-tasks` and `reopen-project` all read as zero network on
    a real CI run, which is impossible for a flow that replicates through ECHO. Frames are counted
    in both directions, since an upload regression is as real as a download one.
-3. **No disk I/O.** Nothing in CDP reports read/write bytes; `Storage.getUsageAndQuota` gives a
-   stored-bytes _level_, not operations. `/proc/<pid>/io` exists on Linux but counts the browser's
-   own traffic alongside ours, so an attributable measurement has to come from the storage layer.
-   The OPFS VFS is `AccessHandlePoolVFS` from `@dxos/wa-sqlite` — vendored, not ours — but it is
-   registered in one place we own (`sql-sqlite/src/internal/opfs-client.ts`, `AccessHandlePoolVFS.create`
-   then `vfs_register`), and its `jRead`/`jWrite`/`jTruncate`/`jSync` carry the byte count and
-   offset, so a wrapper there would give bytes and ops attributable to SQLite rather than to Chrome.
-   It runs in the DEDICATED worker (`worker-runtime.ts`'s `LocalSqliteOpfsLayer`), not the shared
-   one, and node uses native SQLite with no JS VFS, so the instrument is browser-only. Nothing
-   counts VFS operations today — the existing instrumentation there is per-SQL-statement
-   (`recordSqliteQueryMetrics`, plus a slow-query log above 20 ms), a different granularity.
+3. ~~No disk I/O.~~ Done, and it needed a change outside this package. Nothing in CDP reports
+   read/write bytes, `Storage.getUsageAndQuota` gives a stored LEVEL rather than operations, and
+   `/proc/<pid>/io` counts Chrome's own traffic alongside ours — so the only layer where a byte
+   count is attributable to SQLite is its VFS. `instrumentVfs` in
+   `sql-sqlite/src/internal/vfs-metrics.ts` wraps `jRead`/`jWrite`/`jTruncate`/`jSync` on the
+   `AccessHandlePoolVFS` before `vfs_register` hands it to wasm, and the harness reads the counters
+   per realm over CDP (`collectors/disk.ts`).
+
+   Three things worth knowing about the numbers:
+
+   - **`sqliteRealms` is the integrity column.** A zero byte count means either that SQLite did no
+     I/O or that nothing was instrumented, and those are different facts the byte columns cannot
+     separate. `0` realms is a broken harness; `1` realm and zero bytes is a real result.
+   - **Read bytes are REQUESTED, not delivered.** SQLite asks for a whole page past end-of-file
+     during recovery and the VFS zero-fills the remainder, so `readBytes` is the I/O SQLite asked
+     storage for and `shortReads` counts how often that differed. A rejected write contributes no
+     bytes, since a short write is an error rather than a partial success.
+   - **Browser only.** Node uses native SQLite with no JS VFS, so a node run reports zeroes with
+     `realms: 0` — correctly indistinguishable from an uninstrumented run, because that is what it
+     is. The database also lives in the DEDICATED worker, not the shared one.
+
+   The counters are unconditional rather than flag-gated. Two integer increments beside a
+   synchronous `FileSystemSyncAccessHandle` call are not measurable, and a build-time flag would
+   mean the measured bundle is not the shipped one — the comparability problem this harness exists
+   to avoid.
+
 4. ~~Lag is pooled across realms.~~ Done: `lagByRealm` reports p95, max and sample count per realm.
    The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
 5. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory

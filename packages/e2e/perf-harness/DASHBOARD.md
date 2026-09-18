@@ -53,6 +53,9 @@ regression. Filter on them rather than trusting them to be constant.
 | `ciEdgeApiBytes`, `ciEdgeSocketBytes`, `ciEdgeBytes`      | bytes         | the app's own backend only; `ciEdgeBytes` is the two summed                     |
 | `ciEdgeApiRequests`, `ciEdgeSocketFrames`                 | count         | frames are counted in both directions                                           |
 | `ciAnalyticsBytes`                                        | bytes         | telemetry, kept out of the edge columns and recorded so the split is auditable  |
+| `ciSqliteReadBytes`, `ciSqliteWriteBytes`                 | bytes         | SQLite's own VFS I/O, browser only                                              |
+| `ciSqliteReads`, `ciSqliteWrites`, `ciSqliteSyncs`        | count         | `syncs` is where write amplification shows up                                   |
+| `ciSqliteRealms`                                          | count         | **read this first**: `0` means nothing was instrumented, not that I/O was zero  |
 | `ciRealms`                                                | count         | how many realms the row read, so a `0` column is readable as absent             |
 
 **The realm columns are keyed by KIND, not by script name.** A name-keyed column
@@ -96,6 +99,7 @@ night's ten iterations.
 | 9   | Total app code transferred per run    | `ciCodeBytes`        | sum     |
 | 10  | Total blocking time per run           | `ciTbtMs`            | sum     |
 | 11  | Total edge traffic per run            | `ciEdgeBytes`        | sum     |
+| 12  | Total SQLite disk I/O per run         | `ciSqliteWriteBytes` | sum     |
 
 ### The two stacked tiles
 

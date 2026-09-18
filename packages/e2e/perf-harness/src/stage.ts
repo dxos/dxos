@@ -16,6 +16,7 @@ import {
   readRealmThreadMetrics,
   readThreadMetrics,
 } from './collectors/cpu.ts';
+import { diffDisk, readDisk } from './collectors/disk.ts';
 import { type Screencast } from './collectors/frames.ts';
 import { readDomCounters, readHeap, sumHeapUsed, trackPeakRss } from './collectors/memory.ts';
 import { diffNetwork } from './collectors/network.ts';
@@ -24,6 +25,7 @@ import { installWorkerProbe, readResponsiveness } from './collectors/responsiven
 import { STAGE_MARK_PREFIX } from './collectors/tracing.ts';
 import {
   type Comparability,
+  type DiskMetrics,
   type Mode,
   type NetworkMetrics,
   type RealmThreadMetrics,
@@ -80,6 +82,7 @@ type Boundary = {
   thread: ThreadMetrics;
   threadByRealm: RealmThreadMetrics[];
   network: NetworkMetrics;
+  disk: DiskMetrics;
 };
 
 /**
@@ -184,6 +187,7 @@ export class StageRunner {
       thread: pageTarget ? await readThreadMetrics(pageTarget) : { ...EMPTY_THREAD },
       threadByRealm: await readRealmThreadMetrics(this.#targets),
       network: network(),
+      disk: await readDisk(this.#targets),
     };
     const stopRss = trackPeakRss(browserPid);
 
@@ -207,6 +211,10 @@ export class StageRunner {
       ? diffThreadMetrics(before.thread, await readThreadMetrics(pageTarget))
       : { ...EMPTY_THREAD };
     const networkDelta = diffNetwork(before.network, network());
+    // Same realm set as the thread metrics below and for the same reason: SQLite's counters live in
+    // the dedicated worker, so a worker that appeared mid-stage is reported whole by the refresh
+    // rather than diffed against a realm that did not exist at the opening boundary.
+    const diskDelta = diffDisk(before.disk, await readDisk(this.#targets));
     // Read before the target refresh below, so a realm is diffed against the same realm set the
     // opening boundary saw; one that appeared mid-stage is picked up by the refresh and reported
     // whole, which is correct — it did all its work inside this stage.
@@ -256,6 +264,7 @@ export class StageRunner {
       domListeners: domCounters.listeners,
       domDocuments: domCounters.documents,
       network: networkDelta,
+      disk: diskDelta,
       responsiveness: {
         ...responsiveness,
         ...(stills ? { stillFrameMaxMs: stills.maxMs, stillFrameCount: stills.count } : {}),

@@ -194,6 +194,13 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       edgeSocketFrames: row.network.edgeSocketFrames,
       edgeBytes: row.network.edgeApiBytes + row.network.edgeSocketBytes,
       analyticsBytes: row.network.analyticsBytes,
+      sqliteReadBytes: row.disk.readBytes,
+      sqliteWriteBytes: row.disk.writeBytes,
+      sqliteReads: row.disk.reads,
+      sqliteWrites: row.disk.writes,
+      sqliteSyncs: row.disk.syncs,
+      // Published so a zero byte count is readable as "nothing instrumented" rather than "no I/O".
+      sqliteRealms: row.disk.realms,
 
       longTaskMaxMs: row.responsiveness.longTaskMaxMs,
       tbtMs: row.responsiveness.tbtMs,

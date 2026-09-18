@@ -139,6 +139,7 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
     edgeSocketFrames: 210,
     analyticsBytes: 500,
   },
+  disk: { readBytes: 2_400_000, writeBytes: 900_000, reads: 600, writes: 210, syncs: 18, realms: 1 },
   responsiveness: {
     longTaskCount: 5,
     longTaskMaxMs: 400,
@@ -177,5 +178,24 @@ describe('writePosthogBatch', () => {
     const file = writePosthogBatch(workspaceRoot, 'flow-measure', [row({ mode: 'diagnose' }), row({ ok: false })]);
 
     expect(readFileSync(file, 'utf8').split('\n').filter(Boolean)).toHaveLength(0);
+  });
+});
+
+describe('disk columns', () => {
+  test('an uninstrumented run is distinguishable from one that did no I/O', ({ expect }) => {
+    // Both report zero bytes, and they are different facts: the first means the VFS wrapper never
+    // published its counters (a broken harness), the second means SQLite genuinely touched
+    // nothing (a real, interesting result). `sqliteRealms` is the only thing that separates them.
+    const uninstrumented = toPosthogEvent(
+      row({ disk: { readBytes: 0, writeBytes: 0, reads: 0, writes: 0, syncs: 0, realms: 0 } }),
+    );
+    const idle = toPosthogEvent(
+      row({ disk: { readBytes: 0, writeBytes: 0, reads: 0, writes: 0, syncs: 0, realms: 1 } }),
+    );
+
+    expect(uninstrumented.properties.sqliteReadBytes).toBe(0);
+    expect(idle.properties.sqliteReadBytes).toBe(0);
+    expect(uninstrumented.properties.sqliteRealms).toBe(0);
+    expect(idle.properties.sqliteRealms).toBe(1);
   });
 });

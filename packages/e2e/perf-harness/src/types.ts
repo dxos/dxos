@@ -123,6 +123,32 @@ export type RealmLag = {
   count: number;
 };
 
+/**
+ * SQLite's own disk I/O, from the OPFS VFS.
+ *
+ * The only instrument that reports this: nothing in CDP gives read/write bytes,
+ * `Storage.getUsageAndQuota` gives a stored LEVEL rather than operations, and `/proc/<pid>/io`
+ * counts Chrome's own traffic alongside ours. The VFS is the one layer where a byte count is
+ * attributable to SQLite.
+ *
+ * Browser-only: node uses native SQLite with no JS VFS, so a node run reports zeroes.
+ */
+export type DiskMetrics = {
+  readBytes: number;
+  writeBytes: number;
+  reads: number;
+  writes: number;
+  /** `jSync` calls — an fsync is the expensive operation a write amplification shows up as. */
+  syncs: number;
+  /**
+   * How many realms published counters.
+   *
+   * The integrity column: `0` means nothing was instrumented, which is a different fact from
+   * SQLite having done no I/O, and the two are indistinguishable from the byte columns alone.
+   */
+  realms: number;
+};
+
 /** Bytes split by what the request was for. The code/API split is the point. */
 export type NetworkMetrics = {
   /** Scripts, stylesheets, wasm, fonts, the document itself — the cost of loading the app. */
@@ -228,6 +254,8 @@ export type StageRow = {
   domDocuments: number;
 
   network: NetworkMetrics;
+  /** SQLite's VFS-level disk I/O for this stage. Zeroes on node, which has no JS VFS. */
+  disk: DiskMetrics;
   responsiveness: ResponsivenessMetrics;
 
   comparability: Comparability;
