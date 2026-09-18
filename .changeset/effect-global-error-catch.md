@@ -1,5 +1,5 @@
 ---
-'@dxos/errors': patch
+'@dxos/errors': minor
 ---
 
 `BaseError.extend(...).wrap()` carries the wrapped error's message instead of substituting the class default, so a wrapper no longer hides what went wrong; an explicit `message` still wins. `messageOf` duck-types `message` rather than testing `instanceof Error`, so a cross-realm or error-shaped value reads the same as a local `Error`.
