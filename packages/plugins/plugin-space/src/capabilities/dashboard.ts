@@ -12,7 +12,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { type SpaceDashboard, findFavoriteTag, toShortcuts, toSpaceStats } from '#dashboard';
+import { SPACE_STATS_QUERY, type SpaceDashboard, findFavoriteTag, toShortcuts, toSpaceStats } from '#dashboard';
 import { SpaceCapabilities } from '#types';
 
 /** Enough favorites for any peripheral we drive; each device takes the prefix it can show. */
@@ -38,12 +38,12 @@ export default Capability.makeModule(
         return { stats: toSpaceStats([], plugins), tasks, favorites: [] };
       }
 
-      const objects = get(space.db.query(Filter.everything()).atom);
+      const counts = get(space.db.query(SPACE_STATS_QUERY).atom);
       const tag = findFavoriteTag(get(space.db.query(Filter.type(Tag.Tag)).atom));
       const uri = tag && Obj.getURI(tag);
       const favorites = uri ? get(space.db.query(Filter.tag(uri)).atom) : [];
       return {
-        stats: toSpaceStats(objects, plugins),
+        stats: toSpaceStats(counts, plugins),
         tasks,
         favorites: toShortcuts(favorites, MAX_SHORTCUTS).filter((entry) => entry !== null),
       };
