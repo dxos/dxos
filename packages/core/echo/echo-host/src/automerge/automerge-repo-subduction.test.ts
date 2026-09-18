@@ -391,6 +391,44 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
       await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
     });
 
+    test('a peer lost before its handshake completes does not hold back edits', { timeout: 30_000 }, async () => {
+      let server1Reachable: 'on' | 'off' = 'on';
+      const { repos, adapters } = await createStarTopology({
+        connectionStateProviderByConnection: { 0: () => server1Reachable },
+        subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
+      });
+      const [client, server1, server2] = repos;
+      const [clientSide, server1Side] = adapters[0];
+      await connectAdapters([adapters[1]]);
+      await clientSide.onConnect.wait();
+      await server1Side.onConnect.wait();
+
+      const server1Bound = new Promise<void>((resolve) => server1.once('subduction-peer-bound', () => resolve()));
+      server1Side.peerCandidate(clientSide.peerId!);
+      clientSide.peerCandidate(server1Side.peerId!);
+      clientSide.peerDisconnected(server1Side.peerId!);
+      await server1Bound;
+
+      const handle = client.create<{ text?: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'first';
+      });
+      await waitForSubductionSave();
+      const observed = await findInStates<{ text?: string }>(server2, handle.url, FIND_STATES);
+      await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      server1Reachable = 'off';
+      handle.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await waitForSubductionSave();
+      handle.change((doc: any) => {
+        doc.text = 'third';
+      });
+      await waitForSubductionSave();
+      await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
+    });
+
     // Mirrored from `automerge-repo.test.ts:'replicate document after request'`,
     // adapted for subduction:
     //   - Classical version asserts the query reaches `'unavailable'` before
