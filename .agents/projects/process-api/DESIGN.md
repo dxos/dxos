@@ -220,18 +220,35 @@ const ops = yield * db.query(Filter.type(Operation.Definition)).from(Scope.regis
 The parts a database cannot hold live on hidden slots, as `Type` already does with its
 source Effect Schema:
 
-| Slot                                   | Holds                          | Persisted projection         |
-| -------------------------------------- | ------------------------------ | ---------------------------- |
-| `InputSchemaSlot` / `OutputSchemaSlot` | the Effect `Schema.Codec`      | `inputSchema`/`outputSchema` |
-| `ServicesSlot`                         | `readonly Context.Key[]`       | `services: string[]`         |
-| `TypesSlot`                            | `readonly Type.AnyEntity[]`    | refs, or omitted             |
-| `HandlerSlot`                          | plain / lazy / durable handler | never persisted              |
+| Slot                                   | Holds                       | Persisted projection                 |
+| -------------------------------------- | --------------------------- | ------------------------------------ |
+| `InputSchemaSlot` / `OutputSchemaSlot` | the Effect `Schema.Codec`   | `inputSchema`/`outputSchema`         |
+| `ServicesSlot`                         | `readonly Context.Key[]`    | `services: string[]`                 |
+| `TypesSlot`                            | `readonly Type.AnyEntity[]` | refs, or omitted                     |
+| `HandlerSlot`                          | the attached handler        | `handlerKind`, plus a data body (§5) |
 
 So `serialize` / `serializable` / `deserialize` / `setFrom` (`Operation.ts:478-560`)
-disappear. A definition read back from a space _is_ a `Definition`; its codecs rebuild
-lazily from `inputSchema`/`outputSchema` on first access (the `Type.getSchema` rebuild
-path), and an absent handler slot is the signal to invoke remotely — exactly what
-`deserialize` encoded by omission.
+disappear. A definition read back from a space _is_ a `Definition`, rehydrated by these
+rules:
+
+- **Codecs** rebuild lazily from `inputSchema`/`outputSchema` on first access — the
+  `Type.getSchema` rebuild path.
+- **Services** rebuild from their keys, `services.map(Context.Service)`, exactly as
+  `deserialize` does today (`Operation.ts:529`). The key string _is_ the tag identity, so
+  a handler's declared requirements survive the round trip; a service absent from the
+  resolving runtime fails at invocation, not at read.
+- **The handler** rehydrates per kind. `handlerKind` always persists, so a peer can tell
+  what backs a definition without having its code:
+
+  | Kind              | Persisted body                          | Rehydrates to                                                                 |
+  | ----------------- | --------------------------------------- | ----------------------------------------------------------------------------- |
+  | `script`          | `source: Ref<Text.Text>`, `changed`     | the body itself — invoke by deployment                                        |
+  | `prompt`          | the `Template.Template` (pending §9.8)  | the body itself                                                               |
+  | `instructions`    | the template + tool keys (pending §9.8) | the body itself                                                               |
+  | `code`, `durable` | nothing — the body is compiled code     | nothing; resolved from the local `OperationHandlerSet`, else invoked remotely |
+
+  A definition whose kind is `code` or `durable` and which the local handler set cannot
+  resolve is invoked remotely — but only under the deployment invariant in §5.1.
 
 **Instance ids must be derived from `key` + `version`, not random.** `Operation.make` is
 called at module scope in hundreds of files, and module-scope RNG is forbidden under
@@ -272,9 +289,14 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = ne
 ```
 
 - **`Info` is deleted.** Everything it carried is a field or a `status` field here.
-- **Dormant vs live is a state, not a type.** `Handle.hydrate()` goes away; a process
-  restored from the durable mailbox fails control calls with `ProcessNotLiveError` until
-  the runtime hydrates it lazily on first use, which it can now do from the operation ref.
+- **Dormant vs live is a state, not a type.** `Handle.hydrate()` goes away. A control call
+  on a process restored from the durable mailbox **hydrates and then proceeds** — the
+  caller never retries, and `submitInput` delivers to the hydrated process rather than
+  bouncing. The runtime resolves the definition through the process's `operation` ref,
+  which is why the ref is on the entity. `ProcessNotLiveError` is reserved for the case
+  where that resolution fails: the operation is not in this runtime's handler set and has
+  no remote destination. Observation (`status`, `subscribeOutputs`, queries) never
+  hydrates — reading a dormant process must stay cheap.
 - **`Process.Monitor` / `ProcessMonitorService` are removed** (§7).
   `subscribeToTraceMessages` moves to `Trace.Monitor`, keeping its aggregate layer.
 - `Status`, `State`, `Params`, `Environment`, `ChildEvent`, the annotations and the trace
@@ -384,9 +406,16 @@ yield * Operation.deploy(op); // bundles, uploads, stamps the deployed id on the
   `binding` field (`Operation.ts:452`).
 - `changed` (source edited since last deploy) moves from `Script.changed` onto the script
   handler, where it describes exactly one thing: this body is ahead of its deployment.
-- Invocation needs no new mechanism. "Handler body absent locally ⇒ invoke remotely by
-  deployed id" is what `deserialize` already encodes by omission (§3.4); the script kind
-  makes it explicit rather than inferred.
+- **Invocation requires an explicit deployment.** Today `makeOperationServiceLayer`
+  asserts `op.meta.deployedId` before calling `FunctionsService`
+  (`compute-runtime/src/protocol.ts:386`), and `schedule` drops an undeployed followup
+  with a warning rather than failing its caller. The redesign keeps that invariant and
+  states it: an absent local handler is _not_ on its own a licence to dispatch remotely.
+  A definition stored but never deployed — the normal state between `db.addOperation` and
+  `Operation.deploy` — fails invocation with `OperationNotDeployedError` naming the key,
+  and `changed` (below) tells a caller the deployment is stale rather than missing. The
+  omission-based behavior `deserialize` encodes today is thus narrowed to "no local
+  handler **and** a deployed id".
 - `Script` the type is deleted. Its `source`/`description`/`name` fold into the operation;
   the `source: Ref.Ref(Obj.Unknown)` field on today's record (`Operation.ts:439`) becomes
   the typed `Ref<Text.Text>` on the handler.
@@ -453,8 +482,11 @@ spawn<Def extends Operation.Definition.Any>(
 attach(uri: URI.URI): Effect.Effect<Process.Any, ProcessNotFoundError>;
 ```
 
-`SpawnOptions.parentProcessId` is replaced by `parent` (§6); `name`, `target`, `traceMeta`,
-`environment`, `notify` and `annotations` are unchanged.
+`SpawnOptions.parentProcessId` **and** `target` are both replaced by `parent` (§6) — a
+process parent for the former, an object parent for the latter. `name`, `traceMeta`,
+`environment`, `notify` and `annotations` are unchanged. `target` is accepted for one
+release as a deprecated alias that folds into `parent`, alongside the read-only
+`TargetAnnotation`.
 
 ## 6. Parentage
 
@@ -484,10 +516,14 @@ The graph resolves and queries entities through two sources today: the registry
 change event — and the compute runtime registers as a third:
 
 ```ts
-Query.select(Filter.type(Process, { state: Process.State.RUNNING }));
-Query.select(Filter.type(Operation.Definition, { key: '…' }));
+Query.select(Filter.type(Process, { status: { state: Process.State.RUNNING } }));
+Query.select(Filter.type(Operation.Definition, { meta: { key: '…' } }));
 obj.pipe(Query.incoming(Process, 'parent')); // processes running for this object
 ```
+
+Predicate keys follow the entity's declared shape — `status.state` on a process,
+`meta.key` on a definition — since `Filter.type` matches properties as declared and
+defines no flattened projection.
 
 - The ProcessManager is the authority for process entities; `RemoteProcessManager`
   registers as a second source under the same URI authority, so remote processes answer
