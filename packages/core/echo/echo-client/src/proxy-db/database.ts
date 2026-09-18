@@ -306,6 +306,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly #runtime: EffectContext.Context<never>;
 
   #queryService: QueryService.Client;
+  readonly #queryServiceChanged = new Event();
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -502,7 +503,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   activity(range: ActivityRange = {}): ActivityQuery {
-    return new ActivityQuery({ spaceId: this.spaceId, range, runtime: this.#runtime, service: this.#queryService });
+    return new ActivityQuery({
+      spaceId: this.spaceId,
+      range,
+      runtime: this.#runtime,
+      service: () => this.#queryService,
+      serviceChanged: this.#queryServiceChanged,
+    });
   }
 
   // TODO(burdon): Type check.
@@ -1136,6 +1143,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
     this.#queryService = queryService;
+    this.#queryServiceChanged.emit();
     if (feedService !== undefined && feedService !== this.#feedService) {
       const stale = [...this.#feeds.values()];
       this.#feeds.clear();

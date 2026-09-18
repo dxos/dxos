@@ -83,6 +83,9 @@ export class ActivityIndex {
     }): Effect.Effect<readonly ActivityRow[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        if (from !== undefined && to !== undefined && from >= to) {
+          return [];
+        }
         const fromHour = from === undefined ? null : Math.floor(from / HOUR_MS);
         const toHour = to === undefined ? null : Math.ceil(to / HOUR_MS);
 

@@ -379,7 +379,11 @@ describe('Query', () => {
 
   describe('activity', () => {
     test('the ledger reports this hour once the edits are indexed, and again after a new edit', async () => {
+      const hourNow = () => Math.floor(Date.now() / 3_600_000);
+      const total = (rows: readonly { changes: number }[]) => rows.reduce((sum, row) => sum + row.changes, 0);
+
       const { db } = await builder.createDatabase();
+      const firstHour = hourNow();
       const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
       await db.flush({ indexes: true });
 
@@ -389,18 +393,19 @@ describe('Query', () => {
       });
       onTestFinished(unsubscribe);
 
-      const thisHour = Math.floor(Date.now() / 3_600_000);
       await waitForCondition({ condition: () => rows.length > 0, timeout: 5000 });
-      expect(rows.map((row) => row.hour)).to.deep.equal([thisHour]);
-      const before = rows[0].changes;
+      const before = total(rows);
       expect(before).to.be.greaterThanOrEqual(1);
 
       Obj.update(object, (object) => {
         object.value = 2;
       });
       await db.flush({ indexes: true });
-      await waitForCondition({ condition: () => rows[0]?.changes > before, timeout: 5000 });
-      expect(rows).to.have.length(1);
+      await waitForCondition({ condition: () => total(rows) > before, timeout: 5000 });
+      const lastHour = hourNow();
+      for (const row of rows) {
+        expect(row.hour).to.be.within(firstHour, lastHour);
+      }
     });
   });
 

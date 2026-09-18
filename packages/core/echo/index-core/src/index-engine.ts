@@ -498,13 +498,15 @@ export class IndexEngine {
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(
-            updatedCursors.map((_): IndexCursor => ({
-              indexName: opts.indexName,
-              spaceId: _.spaceId,
-              sourceName: source.sourceName,
-              resourceId: _.resourceId,
-              cursor: _.cursor,
-            })),
+            updatedCursors.map(
+              (_): IndexCursor => ({
+                indexName: opts.indexName,
+                spaceId: _.spaceId,
+                sourceName: source.sourceName,
+                resourceId: _.resourceId,
+                cursor: _.cursor,
+              }),
+            ),
           );
           return { updated: objects.length, done: false, objects };
         }),
@@ -545,18 +547,28 @@ export class IndexEngine {
         Effect.gen({ self: this }, function* () {
           yield* this.#activityIndex.record(changes);
           yield* this.#tracker.updateCursors(
-            updatedCursors.map((_): IndexCursor => ({
-              indexName: 'activity',
-              spaceId: _.spaceId,
-              sourceName: source.sourceName,
-              resourceId: _.resourceId,
-              cursor: _.cursor,
-            })),
+            updatedCursors.map(
+              (_): IndexCursor => ({
+                indexName: 'activity',
+                spaceId: _.spaceId,
+                sourceName: source.sourceName,
+                resourceId: _.resourceId,
+                cursor: _.cursor,
+              }),
+            ),
           );
-          // A document with no countable change (an empty one, whose heads never settle a cursor)
-          // is not progress: reporting it would keep the host re-running passes for nothing.
+          // Progress is a cursor that moved, even when the batch held no countable change (branch documents,
+          // clockless changes); sources that hand back an unchanged cursor would otherwise keep the host re-running passes.
+          const previous = new Map(
+            opts.cursors
+              .filter((cursor) => cursor.sourceName === source.sourceName)
+              .map((cursor) => [`${cursor.spaceId}/${cursor.resourceId}`, cursor.cursor]),
+          );
+          const advanced = updatedCursors.some(
+            (cursor) => previous.get(`${cursor.spaceId}/${cursor.resourceId}`) !== cursor.cursor,
+          );
           const spaces = new Set(changes.map((change) => change.spaceId));
-          return { updated: changes.length, done: changes.length === 0, spaces: [...spaces] };
+          return { updated: changes.length, done: !advanced, spaces: [...spaces] };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#updateActivity'), SpanAttributes.annotateSpace(opts.spaceId));

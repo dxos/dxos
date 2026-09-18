@@ -35,6 +35,7 @@ describe('ActivityIndex', () => {
 
       const ranged = yield* index.query({ spaceId, from: time + 3_600_000 });
       expect(ranged).toEqual([{ hour: Math.floor(time / 3_600_000) + 1, changes: 1, ops: 1 }]);
+      expect(yield* index.query({ spaceId, from: time, to: time })).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

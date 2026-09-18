@@ -5,7 +5,7 @@
 import type * as EffectContext from 'effect/Context';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { type CleanupFn } from '@dxos/async';
+import { type CleanupFn, type ReadOnlyEvent } from '@dxos/async';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, subscribeStream } from '@dxos/protocols';
@@ -33,20 +33,34 @@ export class ActivityQuery {
       spaceId: SpaceId;
       range: ActivityRange;
       runtime: EffectContext.Context<never>;
-      service: QueryService.Client;
+      service: () => QueryService.Client;
+      /** Fires when the service is replaced (e.g. a worker leader change); open subscriptions move to the new one. */
+      serviceChanged: ReadOnlyEvent;
     },
   ) {}
 
+  /** Calls `callback` with the full row set on every host update until the returned cleanup runs. */
   subscribe(callback: (rows: readonly ActivityRow[]) => void): CleanupFn {
-    const { spaceId, range, runtime, service } = this._params;
-    return subscribeStream(runtime, service['QueryService.activity']({ spaceId, from: range.from, to: range.to }), {
-      onData: (response) => callback(response.rows),
-      onError: (error) => {
-        if (error != null && !(error instanceof RpcClosedError)) {
-          log.catch(error);
-        }
-      },
+    const { spaceId, range, runtime, service, serviceChanged } = this._params;
+    const open = () =>
+      subscribeStream(runtime, service()['QueryService.activity']({ spaceId, from: range.from, to: range.to }), {
+        onData: (response) => callback(response.rows),
+        onError: (error) => {
+          if (error != null && !(error instanceof RpcClosedError)) {
+            log.catch(error);
+          }
+        },
+      });
+
+    let close = open();
+    const unsubscribe = serviceChanged.on(() => {
+      close();
+      close = open();
     });
+    return () => {
+      unsubscribe();
+      close();
+    };
   }
 
   get atom(): Atom.Atom<readonly ActivityRow[]> {
