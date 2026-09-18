@@ -2,6 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// These tests assert on a plain `Error`'s stack frames, so the `catch` returns the thrown value
+// untouched; narrowing it would buy nothing (`failWith` takes `unknown`) and re-wrapping it would
+// replace the stack under test.
+/** @effect-diagnostics unknownInEffectCatch:skip-file */
+
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
