@@ -10,7 +10,7 @@ import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Task } from '@dxos/types';
 
 import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
@@ -165,19 +165,10 @@ export const LensedGtdPanel = ({ task }: { task: Obj.Unknown }) => {
   );
 };
 
-/**
- * A labelled JSON block.
- *
- * `Syntax` rather than a bare `JsonHighlighter`: the highlighter is documented as inline and
- * non-scrolling, so a long property value ran off the pane instead of scrolling.
- */
+/** A labelled JSON block, capped so a long value scrolls inside the pane. */
 const JsonSection = ({ title, data, testId }: { title: string; data: unknown; testId: string }) => (
   <Card.Section title={title}>
-    <Syntax.Root data={data}>
-      <Syntax.Viewport classNames='max-h-64'>
-        <Syntax.Code testId={testId} />
-      </Syntax.Viewport>
-    </Syntax.Root>
+    <JsonHighlighter data={data} classNames='max-h-64' testId={testId} />
   </Card.Section>
 );
 

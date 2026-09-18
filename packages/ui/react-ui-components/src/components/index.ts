@@ -3,7 +3,6 @@
 //
 
 export * from './AnimatedBorder/index.ts';
-export * from './Gantt/index.ts';
 export * from './HtmlViewer/index.ts';
 export * from './Matrix/index.ts';
 export * from './NumericTabs/index.ts';
@@ -13,6 +12,5 @@ export * from './QueryForm/index.ts';
 export * from './Shimmer/index.ts';
 export * from './Spinner/index.ts';
 export * from './TextBlock/index.ts';
-export * from './Timeline/index.ts';
 export * from './TogglePanel/index.ts';
 export * from './Waveform/index.ts';

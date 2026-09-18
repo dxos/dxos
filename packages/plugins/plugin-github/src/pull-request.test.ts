@@ -9,14 +9,6 @@ import { type GitHubApi } from './services/index.ts';
 
 const reference = { owner: 'dxos', repo: 'dxos', number: 13031 };
 
-const pull = (overrides: Partial<GitHubApi.GitHubPull> = {}): GitHubApi.GitHubPull => ({
-  id: 1,
-  number: reference.number,
-  title: 'Walkthroughs',
-  state: 'open',
-  ...overrides,
-});
-
 describe('toPullRequestProps', () => {
   test('a reference with no URL of its own gets the canonical one', () => {
     expect(toPullRequestProps(reference, pull()).url).toEqual('https://github.com/dxos/dxos/pull/13031');
@@ -34,4 +26,12 @@ describe('toPullRequestProps', () => {
       'merged',
     );
   });
+});
+
+const pull = (overrides: Partial<GitHubApi.GitHubPull> = {}): GitHubApi.GitHubPull => ({
+  id: 1,
+  number: reference.number,
+  title: 'Walkthroughs',
+  state: 'open',
+  ...overrides,
 });

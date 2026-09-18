@@ -4,6 +4,27 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-09-17 — plugin-typesafe + plugin-labeler (new plugins)
+
+- `AppCapability.layerSpec(loader, { name })` takes a NAME, not `provides` — unlike the other makers (`plugin-assistant/src/capabilities/index.ts`).
+- A service whose method must run without the caller providing its dependency: capture `yield* Effect.context<Dep>()` in the `Layer.effect` body and `Effect.provide(context)` inside the method; `Effect.Effect.Success<typeof Tag>` does NOT exist in v4.
+- Resolve a provider API key per call via `Credential.getApiKeyValue({ service })` + `Effect.catchCause` → typed error; its error channel is `never`, so absence arrives as a DEFECT, not a failure.
+- Contribute an inbox toolbar button with `InboxCapabilities.MailboxAction` and a cascade pass with `InboxCapabilities.MailboxProcessor`, both gated `activatesOn: InboxEvents.Start` (`plugin-crm/src/capabilities/index.ts` is the reference); neither requires touching plugin-inbox.
+- Feed messages are immutable snapshots: tag them through the mailbox's `TagIndex` (`Tagging.set(message, uri, { index })`), provisioning `mailbox.tags` lazily as `SystemTags.toggleTag` does.
+- Per-message tag chips render ONLY with Inbox's `Group by conversation` off: `MailboxArticle` passes `tagsAtom` for message items and never for conversation items, so a plugin writing to a mailbox `TagIndex` looks like a no-op in the default view.
+- A mailbox query filters by tag (`#Label` → `QueryBuilder` → `matchesFilter`) against the same `TagIndex`, so a tag written there is queryable even where it is not rendered.
+- `Tag.isUserTag` is the filter for "the user's own vocabulary" — canonical (`Tag.CANONICAL_ORIGIN`) and provider tags are owned by DXOS/sync and must not be offered as model choices.
+- Operation keys are verb-first against a curated allowlist in `packages/common/eslint-plugin-rules/rules/operation-key-shape.js`; a legitimate missing verb is added there rather than renaming the operation.
+- Every `exports` subpath needs a matching namespace re-export from `src/index.ts` (`dxos-subpath-exports`), including the `./<Name>Plugin` entry composer-app imports.
+
+## 2026-09-16 — plugin-devtools + plugin-debug + @dxos/devtools (articles and cards)
+
+- `Surface.makeFilter(token, guard)` types its data by the TOKEN, not the guard, so a type-guard on a `Role<Record<string, unknown>>` role does not narrow `props`. Build the binding directly — `const filter: Surface.Filter<T> = { bindings: [{ role: token.role, guard }] }` — as `AppSurface.subject` does (`plugin-devtools/src/capabilities/DevtoolsCards.tsx`).
+- A story `args` fixture must not be an ECHO object (`Obj.make`): Storybook's args pipeline writes to it and trips `MutationOutsideChangeContextError`. Type the prop by the wire shape (`Pick<Trace.MessageData, …>`) and pass a plain literal.
+- The `devtools` package's `test` task runs the storybook vitest project too (`test: { storybook: true }` in vite.config); `moon run devtools:test-storybook`/`typetest` do not exist — the type-test task is `test-types`.
+- `moon run <pkg>:test` reports a cached pass with no vitest summary; grep the earlier run or `pnpm exec vitest run --project=storybook` for the per-story lines.
+- Bare `npx tsc --noEmit` in a plugin resolves `@dxos/*` via `dist`, so new exports from a sibling package show as "no exported member" until `moon run <sibling>:build`; typecheck through moon, not tsc, after changing a dependency's exports.
+
 ## 2026-09-15 — plugin-github + plugin-deck (card menu contributions)
 
 - Add items to a card header's ⋮ menu by contributing a `AppSurface.CardMenu` surface filtered to the type; the component calls `useMenuContribution(menu, { id, mode: 'additive', items })` and returns `null`. Hosts render `CardMenuSlot` and pass `useMenuItems(menu, undefined, baseItems)` to decide `disabled` (`plugin-deck/src/containers/Overlays/Popover.tsx`).

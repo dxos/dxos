@@ -72,6 +72,8 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'registry',
         match: GraphNodeMatcher.whenRoot,
+        // Breaks the `Position.first` tie with the settings node so the registry pins above it.
+        position: Position.first,
         // REGISTRY_ID is a pinned workspace (the URL's workspace anchor), so it carries no key of its
         // own; its category and plugin children are the addressable planks (see `categories`/`plugins`).
         connector: () =>

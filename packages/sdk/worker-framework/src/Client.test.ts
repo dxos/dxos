@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 
 import * as Client from './Client.ts';
 import { WorkerConnectionError } from './errors.ts';
@@ -58,27 +60,55 @@ const createHub = () => {
 };
 
 /**
- * Minimal MessagePort-backed dedicated worker running the real {@link Worker.run} loop with a no-op
- * runtime — exercises leader election and port exchange without a service runtime.
+ * Minimal MessagePort-backed dedicated worker running the real {@link Worker.run} loop, with a no-op
+ * runtime unless one is given — exercises leader election and port exchange without a service runtime.
  */
-const createWorkerFactory = (storageLockKey: string) => () => {
-  const channel = new MessageChannel();
-  channel.port1.start();
-  Worker.run({
-    endpoint: {
-      postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
-      addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
-      removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
-      close: () => channel.port1.close(),
-    },
-    storageLockKey,
-    createRuntime: () =>
-      Effect.succeed({
-        createSession: () => Effect.never,
-      }),
-  });
-  return channel.port2 as WorkerProtocol.WorkerOrPort;
-};
+const createWorkerFactory =
+  (
+    storageLockKey: string,
+    {
+      started = Promise.resolve(),
+      onClose,
+      createRuntime = () => Effect.succeed({ createSession: () => Effect.never }),
+    }: { started?: Promise<void>; onClose?: () => void; createRuntime?: Worker.Options['createRuntime'] } = {},
+  ) =>
+  () => {
+    const channel = new MessageChannel();
+    channel.port1.start();
+    // A worker closed before it starts never runs, as a terminated one would not.
+    let closed = false;
+    const markClosed = () => {
+      if (!closed) {
+        closed = true;
+        onClose?.();
+      }
+    };
+    // Recorded from both ends' `close` calls: browsers do not reliably fire a port's `close` event.
+    const closeClientEnd = channel.port2.close.bind(channel.port2);
+    channel.port2.close = () => {
+      closeClientEnd();
+      markClosed();
+    };
+    void started.then(() => {
+      if (closed) {
+        return;
+      }
+      Worker.run({
+        endpoint: {
+          postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
+          addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
+          removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
+          close: () => {
+            channel.port1.close();
+            markClosed();
+          },
+        },
+        storageLockKey,
+        createRuntime,
+      });
+    });
+    return channel.port2 as WorkerProtocol.WorkerOrPort;
+  };
 
 /** Reads the diagnostics the connection merges into a failure. */
 const diagnosticsOf = (error: unknown): Record<string, unknown> =>
@@ -101,7 +131,7 @@ type Connected = { clientToWorker: MessagePort; workerToClient: MessagePort; isO
 const makeConnection = (
   hub: ReturnType<typeof createHub>,
   keys: { leaderLockKey: string; storageLockKey: string },
-  leaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
+  leaderTimeouts: Client.LeaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
   options: {
     maxLeaderFailures?: number;
     createWorker?: () => WorkerProtocol.WorkerOrPort;
@@ -332,6 +362,181 @@ describe('Connection multi-client', () => {
     expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
   }, 30_000);
 
+  test.each(['MigrationError', 'AbortError'])(
+    'a worker runtime that fails to start with %s rejects every tab still booting, and nothing retries',
+    async (name) => {
+      const hub = createHub();
+      const keys = uniqueKeys();
+
+      const startError = new BaseError(name, {
+        message: 'TEST: migration failed',
+        cause: new Error('TEST: wasm trap'),
+      });
+      let workersCreated = 0;
+      let workersClosed = 0;
+      const createWorker = createWorkerFactory(keys.storageLockKey, {
+        onClose: () => workersClosed++,
+        createRuntime: () => Effect.fail(startError),
+      });
+      let portRequests = 0;
+      const portTimeout = 200;
+      const tabs = [0, 1].map(() =>
+        makeConnection(
+          hub,
+          keys,
+          { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout, retryBackoff: 10 },
+          {
+            createWorker: () => {
+              workersCreated++;
+              return createWorker();
+            },
+            createCoordinator: () => {
+              const coordinator = hub.connect();
+              return {
+                onMessage: coordinator.onMessage,
+                sendMessage: (message) => {
+                  if (message.type === 'request-port') {
+                    portRequests++;
+                  }
+                  coordinator.sendMessage(message);
+                },
+              };
+            },
+          },
+        ),
+      );
+      onTestFinished(async () => {
+        await Promise.all(tabs.map(({ connection }) => connection.close()));
+      });
+
+      const errors = await asyncTimeout(
+        Promise.all(
+          tabs.map(({ connection }) =>
+            connection.open().then(
+              () => {
+                throw new Error('open() must not resolve: the worker runtime never starts.');
+              },
+              (err: unknown) => err,
+            ),
+          ),
+        ),
+        5_000,
+      );
+
+      for (const error of errors) {
+        invariant(error instanceof Error);
+        expect(error.name).toBe(name);
+        expect(error.message).toBe('TEST: migration failed');
+        invariant(error.cause instanceof Error);
+        expect(error.cause.message).toBe('TEST: wasm trap');
+      }
+      // The follower led once the failed leader let the lock go, and its own worker failed the same way.
+      expect(workersCreated).toBe(2);
+
+      // Each worker exits and gives up its storage and liveness locks instead of serving sessions.
+      await waitForCondition({ condition: () => workersClosed === 2, timeout: 2_000 });
+      await waitForCondition({
+        condition: async () => {
+          const { held } = await navigator.locks.query();
+          return !(held ?? []).some(({ name }) => name?.startsWith(keys.storageLockKey));
+        },
+        timeout: 2_000,
+      });
+
+      // Several port timeouts later, neither the election nor either connect task has gone round again.
+      const portRequestsAtFailure = portRequests;
+      await sleep(portTimeout * 3);
+      expect(portRequests).toBe(portRequestsAtFailure);
+      expect(workersCreated).toBe(2);
+    },
+  );
+
+  test('a start failure after a failed connect attempt rejects open with the start failure', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const startError = new BaseError('StartError', { message: 'TEST: migration failed' });
+    let shutdownFirstWorker: (() => void) | undefined;
+    let workersCreated = 0;
+    const createWorker = createWorkerFactory(keys.storageLockKey, {
+      createRuntime: ({ requestShutdown }) => {
+        if (workersCreated > 1) {
+          return Effect.fail(startError);
+        }
+        shutdownFirstWorker = requestShutdown;
+        return Effect.succeed({ createSession: () => Effect.never });
+      },
+    });
+    const connection = new Client.Connection({
+      createWorker: () => {
+        workersCreated++;
+        return createWorker();
+      },
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 10_000, retryBackoff: 10 },
+      // The first worker hands out a port, then dies as the tab fails to connect to it.
+      onConnect: async () => {
+        invariant(shutdownFirstWorker);
+        shutdownFirstWorker();
+        throw new Error('TEST: connect failed');
+      },
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await asyncTimeout(
+      connection.open().then(
+        () => {
+          throw new Error('open() must not resolve: no worker ever connects.');
+        },
+        (err: unknown) => err,
+      ),
+      5_000,
+    );
+
+    invariant(error instanceof Error);
+    expect(error.message).toBe('TEST: migration failed');
+    expect(workersCreated).toBe(2);
+  });
+
+  test(
+    'a leader session that times out closes its worker, so the retry starts one that works',
+    async () => {
+      const hub = createHub();
+      const keys = uniqueKeys();
+
+      // The first worker starts only once its session has given up on it, like a worker stalled past the budget.
+      const lateStart = new Trigger();
+      const lateClosed = new Trigger();
+      const late = createWorkerFactory(keys.storageLockKey, {
+        started: lateStart.wait(),
+        onClose: () => lateClosed.wake(),
+      });
+      const healthy = createWorkerFactory(keys.storageLockKey);
+      let workersCreated = 0;
+      const { connection, connected } = makeConnection(
+        hub,
+        keys,
+        { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 10_000 },
+        { createWorker: () => (++workersCreated === 1 ? late() : healthy()) },
+      );
+      onTestFinished(async () => {
+        await connection.close();
+      });
+      const opened = connection.open();
+
+      await asyncTimeout(lateClosed.wait(), LOCK_OR_RPC_WAIT_TIMEOUT + 2_000);
+      lateStart.wake();
+
+      await asyncTimeout(opened, 10_000);
+      await asyncTimeout(connected, 5_000);
+      expect(workersCreated).toBe(2);
+    },
+    LOCK_OR_RPC_WAIT_TIMEOUT + 30_000,
+  );
+
   test('a tab that never receives a port reports the port timeouts it accrued', async () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -445,6 +650,52 @@ describe('Connection multi-client', () => {
     const { held } = await navigator.locks.query();
     expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
   }, 30_000);
+
+  test('a connection closed while its leader session opens closes that session and does not lead again', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const first = makeConnection(hub, keys);
+    onTestFinished(async () => {
+      await first.connection.close();
+    });
+    await first.connection.open();
+
+    const workerStarted = new Trigger();
+    const workerClosed = new Trigger();
+    let workersCreated = 0;
+    const createWorker = createWorkerFactory(uniqueKeys().storageLockKey, {
+      started: workerStarted.wait(),
+      onClose: () => workerClosed.wake(),
+    });
+    const second = makeConnection(hub, keys, undefined, {
+      maxLeaderFailures: 1,
+      createWorker: () => {
+        workersCreated++;
+        return createWorker();
+      },
+    });
+    onTestFinished(async () => {
+      await second.connection.close();
+    });
+    await second.connection.open();
+
+    // The follower wins the election once the leader leaves; its worker is held back from starting.
+    await first.connection.close();
+    await waitForCondition({ condition: () => workersCreated === 1, timeout: 5_000 });
+
+    const closing = second.connection.close();
+    await sleep(50);
+    workerStarted.wake();
+    await closing;
+
+    await asyncTimeout(workerClosed.wait(), 2_000);
+    await sleep(200);
+    const { held } = await navigator.locks.query();
+    expect(held?.map((lock) => lock.name)).not.toContain(keys.leaderLockKey);
+    expect(workersCreated).toBe(1);
+    expect(second.failures).toEqual([]);
+  });
 
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();

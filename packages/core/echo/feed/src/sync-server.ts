@@ -12,6 +12,7 @@ import { type FeedProtocol } from '@dxos/protocols';
 import type { FeedStore } from './feed-store.ts';
 
 type AppendRequest = FeedProtocol.AppendRequest;
+type AppendResponse = FeedProtocol.AppendResponse;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 type QueryRequest = FeedProtocol.QueryRequest;
 type QueryResponse = FeedProtocol.QueryResponse;
@@ -96,6 +97,7 @@ export class SyncServer {
               ctx,
               withPeerIds({
                 _tag: 'Error',
+                requestId: req.requestId,
                 message: err instanceof Error ? err.message : String(err),
               } as Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>),
             );
@@ -105,7 +107,13 @@ export class SyncServer {
       case 'AppendRequest': {
         const req = message as AppendRequest;
         return Effect.gen(function* () {
-          const response = yield* self.#feedStore.append(req);
+          const result = yield* self.#feedStore.append(req);
+          // The wire message carries the protocol fields only, not the store's bookkeeping.
+          const response: AppendResponse = {
+            requestId: result.requestId,
+            positions: result.positions,
+            serverToken: result.serverToken,
+          };
           log('feed sync server append completed', {
             peerId: self.#peerId,
             recipientPeerId,
@@ -131,6 +139,7 @@ export class SyncServer {
               ctx,
               withPeerIds({
                 _tag: 'Error',
+                requestId: req.requestId,
                 message: err instanceof Error ? err.message : String(err),
               } as Omit<ProtocolMessage, 'senderPeerId' | 'recipientPeerId'>),
             );

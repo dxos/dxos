@@ -16,6 +16,7 @@ import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
+import { focusPane } from '../../util/index.ts';
 import { CompanionPlank } from './CompanionPlank.tsx';
 import { PlankControls } from './PlankControls.tsx';
 import { PlankErrorFallback } from './PlankFallback.tsx';
@@ -85,12 +86,14 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   );
 
   // Newly opened/navigated planks (and a folded plank returned to view by its spine) are flagged via
-  // `scrollIntoView`; focus the pane so it gains attention, then clear the one-shot flag. Scrolling is
-  // owned by the deck viewport, which positions the plank past the pile of spines, so this focus must
-  // not scroll on its own.
+  // `scrollIntoView`; unless the reveal leaves focus where it is, focus the pane so it gains attention, then
+  // clear the one-shot flag. Scrolling is owned by the deck viewport, which positions the plank past the
+  // pile of spines, so this focus must not scroll on its own.
   useEffect(() => {
-    if (scrollIntoView === id) {
-      rootRef.current?.focus({ preventScroll: true });
+    if (scrollIntoView?.id === id) {
+      if (scrollIntoView.focus !== false) {
+        focusPane(rootRef.current);
+      }
       onScrollIntoView(undefined);
     }
   }, [scrollIntoView, id, onScrollIntoView]);
@@ -120,6 +123,11 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   // The plank the URL names, before anything has resolved: an id and nothing else.
   const loadingNode = useMemo(() => ({ id }), [id]);
 
+  // Memoized so the navbar and footer surfaces see one data reference per node: an inline literal
+  // would hand them a fresh object every render, which the surface metrics flag as unstable data.
+  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
+  const shellData = useMemo(() => ({ subject: shellNode?.data }), [shellNode?.data]);
+
   const controls = (
     <PlankControls
       capabilities={capabilities}
@@ -132,7 +140,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
 
   const headless = fullscreen;
 
-  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
   if (!shellNode) {
     return (
       <Plank
@@ -151,17 +158,11 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
 
   const navbarEnd =
     part !== 'complementary' ? (
-      <Surface.Surface
-        type={AppSurface.NavbarEnd}
-        data={{ subject: shellNode.data } satisfies AppSurface.NavbarEndData}
-      />
+      <Surface.Surface type={AppSurface.NavbarEnd} data={shellData satisfies AppSurface.NavbarEndData} />
     ) : undefined;
 
   const sigilFooter = (
-    <Surface.Surface
-      type={AppSurface.MenuFooter}
-      data={{ subject: shellNode.data } satisfies AppSurface.MenuFooterData}
-    />
+    <Surface.Surface type={AppSurface.MenuFooter} data={shellData satisfies AppSurface.MenuFooterData} />
   );
 
   return (

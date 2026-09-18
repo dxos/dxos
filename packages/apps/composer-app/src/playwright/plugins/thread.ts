@@ -11,20 +11,15 @@ export const Thread = {
     // The button's disabled state is driven by aspect, which updates via a
     // debounce after a CodeMirror selection dispatch. Wait until it is enabled.
     await expect(addButton).toBeEnabled();
+    // The previous thread stays current until the new draft renders, so match only a thread that did not exist.
+    // Object ids, not element ids: a thread's element id changes spelling when its draft persists.
+    const existing = await Thread.getThreads(page).evaluateAll((elements) =>
+      elements.map((element) => element.id.split('/').pop()),
+    );
     await addButton.click();
-    const currentThread = Thread.getCurrentThread(page);
-    // Wait for the newly-created draft thread to appear with aria-current="location". After the
-    // click, there is a brief window where React has not yet re-rendered the new draft thread into
-    // the DOM, so the locator resolves to nothing.
-    try {
-      await currentThread.waitFor({ state: 'visible' });
-    } catch (err) {
-      // No current thread means the marker landed on nothing or on a DIFFERENT thread, which a bare
-      // locator timeout cannot separate; report every thread's marker state instead.
-      throw new Error(`no thread is current after creating a comment; threads: ${await Thread.describeThreads(page)}`, {
-        cause: err,
-      });
-    }
+    const notExisting = existing.map((objectId) => `:not([id$="/${objectId}"])`).join('');
+    const currentThread = page.locator(`[data-testid=thread][aria-current="location"]${notExisting}`);
+    await expect(currentThread, 'a new thread is current after creating a comment').toHaveCount(1);
     const input = Thread.getReplyInput(currentThread);
     await input.fill(comment);
     await input.press('Enter');

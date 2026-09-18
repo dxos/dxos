@@ -10,8 +10,6 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'no-commits.message': 'No events yet',
-
         'query-editor.placeholder': 'Enter query (e.g., "#tag", "type")',
 
         'picker-select.label': 'Select',

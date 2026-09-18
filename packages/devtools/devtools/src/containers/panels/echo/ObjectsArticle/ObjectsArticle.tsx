@@ -1,0 +1,232 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+import type { State as AmState } from '@automerge/automerge';
+import React, { useCallback, useMemo, useState } from 'react';
+
+import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
+import { checkoutVersion, getEditHistory } from '@dxos/echo-client';
+import { EID, type URI } from '@dxos/keys';
+import { type Space, useQuery } from '@dxos/react-client/echo';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
+import { mx } from '@dxos/ui-theme';
+
+import { ObjectViewer, Placeholder, Searchbar } from '../../../../components/index.ts';
+import { DataSpaceSelector } from '../../../../containers/index.ts';
+import { useDevtoolsState } from '../../../../hooks/index.ts';
+import { type ArticleProps } from '../../types.ts';
+
+const textFilter = (text?: string) => {
+  if (!text) {
+    return () => true;
+  }
+
+  // TODO(burdon): Structured query (e.g., "type:Text").
+  const matcher = new RegExp(text, 'i');
+  return (item: Obj.Any) => {
+    let match = false;
+    match ||= !!Obj.getTypename(item)?.match(matcher);
+    match ||= !!String((item as any).title ?? '').match(matcher);
+    return match;
+  };
+};
+
+type HistoryRow = {
+  hash: string;
+  actor: string;
+  time: number;
+  message: string | null;
+};
+
+const mapHistoryRow = (item: AmState<any>): HistoryRow => {
+  return {
+    hash: item.change.hash,
+    actor: item.change.actor,
+    time: item.change.time,
+    message: item.change.message,
+  };
+};
+
+export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
+  // TODO(burdon): Sort by type?
+  const items = useQuery(space?.db, Query.select(Filter.everything()).options({ deleted: 'include' }));
+  const [filter, setFilter] = useState('');
+  const [selected, setSelected] = useState<Obj.Any>();
+  const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);
+  const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
+
+  const onNavigate = (dxn: URI.URI) => {
+    const echoUri = EID.tryParse(dxn);
+    if (echoUri && EID.isLocal(echoUri)) {
+      const id = EID.getEntityId(echoUri);
+      const object = id ? items.find((item) => item.id === id) : undefined;
+      if (object) {
+        setSelectedVersionObject(null);
+        setSelected(object);
+      }
+    }
+  };
+
+  const objectSelect = (object: Obj.Any) => {
+    setSelectedVersionObject(null);
+    setSelected(object);
+  };
+
+  const history = useMemo(() => {
+    // It's better for performance to materialize all changes here in one loop.
+    return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
+  }, [selected]);
+
+  const dataProperties = useMemo(
+    () => [
+      { name: 'id', format: Format.TypeFormat.DID },
+      { name: 'type', format: Format.TypeFormat.String },
+      { name: 'version', format: Format.TypeFormat.String, size: 100 },
+      {
+        name: 'deleted',
+        format: Format.TypeFormat.SingleSelect,
+        size: 100,
+        config: {
+          options: [{ id: 'DELETED', title: 'DELETED', color: 'red' }],
+        },
+      },
+      {
+        name: 'schemaAvailable',
+        format: Format.TypeFormat.SingleSelect,
+        size: 180,
+        config: {
+          options: [
+            { id: 'YES', title: 'YES', color: 'green' },
+            { id: 'NO', title: 'NO', color: 'red' },
+          ],
+        },
+      },
+    ],
+    [],
+  );
+
+  const dataRows = useMemo(() => {
+    return items.filter(textFilter(filter)).map((item) => ({
+      id: item.id,
+      type: Obj.getTypename(item),
+      version: Obj.getType(item) ? Type.getVersion(Obj.getType(item)!) : undefined,
+      deleted: Obj.isDeleted(item) ? 'DELETED' : ' ',
+      schemaAvailable: Obj.getType(item) ? 'YES' : 'NO',
+      _original: item, // Store the original item for selection
+    }));
+  }, [items, filter]);
+
+  const handleObjectRowClicked = useCallback((row: any) => {
+    if (!row) {
+      setSelected(undefined);
+      setSelectedVersion(null);
+      setSelectedVersionObject(null);
+      return;
+    }
+
+    objectSelect(row._original);
+  }, []);
+
+  const historyProperties = useMemo(
+    () => [
+      { name: 'hash', format: Format.TypeFormat.JSON },
+      { name: 'actor', format: Format.TypeFormat.JSON, size: 380 },
+      // Uncomment when time and message are used
+      // { name: 'time', format: Format.TypeFormat.Number },
+      // { name: 'message', format: Format.TypeFormat.String },
+    ],
+    [],
+  );
+
+  const historyRows = useMemo(() => {
+    return history.map((item) => ({
+      id: item.hash,
+      hash: item.hash.slice(0, 8),
+      actor: item.actor,
+    }));
+  }, [history, selectedVersion]);
+
+  const handleVersionClick = useCallback(
+    (version: HistoryRow) => {
+      setSelectedVersion(version);
+      setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
+    },
+    [selected],
+  );
+
+  const handleHistoryRowClicked = useCallback(
+    (row: any) => {
+      if (!row || !selected) {
+        setSelectedVersion(null);
+        setSelectedVersionObject(null);
+        return;
+      }
+
+      const versionItem = history.find((item) => item.hash === row.id);
+
+      if (versionItem) {
+        handleVersionClick(versionItem);
+      }
+    },
+    [history, handleVersionClick, selected],
+  );
+
+  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+
+  return (
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          {!props.space && <DataSpaceSelector />}
+          <Searchbar placeholder='Filter...' onChange={setFilter} />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
+          <div className='flex flex-col w-full overflow-hidden'>
+            <DynamicTable
+              properties={dataProperties}
+              rows={dataRows}
+              features={features}
+              onRowClick={handleObjectRowClicked}
+            />
+            <div
+              className={mx(
+                'h-(--dx-statusbar-size)',
+                'flex shrink-0 justify-end items-center gap-2',
+                'dx-base-surface text-description',
+              )}
+            >
+              <div className='text-sm pe-2'>Objects: {items.length}</div>
+            </div>
+          </div>
+
+          <div className='dx-expand grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
+            <div className='p-1 overflow-auto'>
+              {selected ? (
+                <ObjectViewer
+                  object={selectedVersionObject ?? selected}
+                  id={Obj.getURI(selected)}
+                  onNavigate={onNavigate}
+                />
+              ) : (
+                <Placeholder label='Data' />
+              )}
+            </div>
+            <div className={mx(!selected && 'p-1 border-t border-separator')}>
+              {selected ? (
+                <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
+              ) : (
+                <Placeholder label='History' />
+              )}
+            </div>
+          </div>
+        </div>
+      </Panel.Content>
+    </Panel.Root>
+  );
+};

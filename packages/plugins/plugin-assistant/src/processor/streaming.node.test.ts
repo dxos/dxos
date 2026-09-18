@@ -18,7 +18,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
-import { AiSession, PartialBlock, RequestPhase, type RequestPhaseName } from '@dxos/assistant';
+import { AiSession } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -320,16 +320,16 @@ describe('AiChatProcessor streaming', () => {
 //
 
 /** Builds a trace event carrying a request setup phase (the payload the activity atom consumes). */
-const requestPhaseEvent = (phase: RequestPhaseName, attempt?: number): Trace.Event => ({
+const requestPhaseEvent = (phase: Trace.RequestPhaseName, attempt?: number): Trace.Event => ({
   timestamp: 0,
-  type: RequestPhase.key,
+  type: Trace.RequestPhase.key,
   data: { phase, ...(attempt !== undefined ? { attempt } : {}) },
 });
 
 /** Builds a trace event carrying an assistant text block (the payload `#handleEphemeralMessage` consumes). */
 const partialBlockEvent = (messageId: string, text: string, pending: boolean): Trace.Event => ({
   timestamp: 0,
-  type: PartialBlock.key,
+  type: Trace.PartialBlock.key,
   data: {
     messageId,
     role: 'assistant',

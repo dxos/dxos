@@ -19,7 +19,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
-import { type HarnessControlRpcs, PartialBlock, SessionLink } from '@dxos/assistant';
+import { type HarnessControlRpcs, SessionLink } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
@@ -430,7 +430,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
           Stream.runForEach((msg) =>
             Effect.gen(function* () {
               for (const event of msg.events) {
-                if (Trace.isOfType(PartialBlock, event)) {
+                if (Trace.isOfType(Trace.PartialBlock, event)) {
                   ephemeralEventCount++;
                 }
               }

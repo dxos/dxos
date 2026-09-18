@@ -312,6 +312,10 @@ const DefaultStory = ({
   );
 };
 
+/** The row's title cell: the grid track that the mnemonic chip and the title text share. */
+const titleCell = (row: Element): HTMLElement =>
+  row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!.parentElement!;
+
 const meta = {
   title: 'ui/react-ui-task/TaskList',
   render: DefaultStory,
@@ -988,15 +992,13 @@ export const TestHierarchy: Story = {
       }
     }
 
-    // A description lines up under its own title, not under the column — it is indented with the
-    // row and clears the disclosure toggle.
+    // A description lines up under its own title cell (the mnemonic chip leads the title in it), not
+    // under the column — it is indented with the row and clears the disclosure toggle.
     const described = rows().find(({ row }) => row.querySelector('.line-clamp-3'))!;
     const description = described.row.querySelector<HTMLElement>('.line-clamp-3')!;
     const textStart = (element: HTMLElement) =>
       Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
-    await expect(textStart(description)).toEqual(
-      Math.round(described.row.querySelector('.truncate')!.getBoundingClientRect().left),
-    );
+    await expect(textStart(description)).toEqual(Math.round(titleCell(described.row).getBoundingClientRect().left));
   },
 };
 
@@ -1027,7 +1029,8 @@ export const Test: Story = {
     // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
     // child — the same column a row's status toggle occupies.
     const createIcon = firstCell(create);
-    const rowLabel = row.querySelector<HTMLElement>('.truncate');
+    // The title cell, not the title text: the mnemonic chip leads the text within the cell.
+    const rowLabel = titleCell(row);
     // The title input itself: its field root takes no box, so a positional pick would measure nothing.
     const createLabel = create.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]');
     // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading
