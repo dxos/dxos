@@ -6267,6 +6267,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7895,6 +7898,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -8195,6 +8201,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9032,6 +9041,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10180,6 +10192,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -10499,6 +10514,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -12328,6 +12346,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13280,6 +13301,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -14809,6 +14833,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/halo-react':
         specifier: workspace:*
         version: link:../../core/halo/halo-react
@@ -17325,6 +17352,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
@@ -17550,6 +17580,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

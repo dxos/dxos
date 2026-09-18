@@ -26,6 +26,7 @@ import { requirePublicKey } from '@dxos/protocols/buf';
 
 import { ClientOperation } from '#operations';
 
+import { CommandError } from '../../errors.ts';
 import { printIdentity, waitForState } from '../../halo/util.ts';
 import {
   ATMOSPHERE_INPUT_PROMPT,
@@ -170,17 +171,18 @@ const loginWithPasskey = (client: Client) =>
 
       const { token } = yield* server.waitForResult();
       if (!token) {
-        return yield* Effect.fail(new Error('The sign-in completed without returning a token.'));
+        return yield* Effect.fail(new CommandError({ message: 'The sign-in completed without returning a token.' }));
       }
 
       return yield* Effect.tryPromise({
         try: () => client.halo.recoverIdentity({ token }),
         catch: (cause) =>
-          new Error(
-            `Passkey login failed (${cause instanceof Error ? cause.message : String(cause)}). ` +
-              'EDGE admits a passkey only when it is registered as a recovery credential; add one from Composer ' +
-              'before logging in here.',
-          ),
+          new CommandError({
+            message:
+              'Passkey login failed. EDGE admits a passkey only when it is registered as a recovery credential; ' +
+              'add one from Composer before logging in here.',
+            cause,
+          }),
       });
     }).pipe(Effect.ensuring(server.stop()));
   });
@@ -253,9 +255,7 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
               identityKey: requirePublicKey(identity.identityKey).toHex(),
             }),
           catch: (cause) =>
-            new Error(
-              `Login request for ${email} failed (${cause instanceof Error ? cause.message : String(cause)}). ${recovery}`,
-            ),
+            new CommandError({ message: `Login request failed. ${recovery}`, context: { email }, cause }),
         });
         if (!retry.admitted) {
           return yield* Effect.fail(

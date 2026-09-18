@@ -13,6 +13,8 @@ import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context as DxContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
+import { CommandError } from '../../../errors.ts';
+
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
@@ -28,10 +30,12 @@ export const handler = Effect.fn(function* () {
   const { code } = yield* Effect.tryPromise({
     try: () => hub.issueAccountInvitation(DxContext.default()),
     catch: (cause) =>
-      new Error(
-        `Could not issue an invitation code (${cause instanceof Error ? cause.message : String(cause)}). ` +
-          'Each account may issue a limited number of invitations, so an exhausted quota fails here too.',
-      ),
+      new CommandError({
+        message:
+          'Could not issue an invitation code. Each account may issue a limited number of invitations, ' +
+          'so an exhausted quota fails here too.',
+        cause,
+      }),
   });
 
   if (json) {

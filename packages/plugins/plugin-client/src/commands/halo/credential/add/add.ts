@@ -15,6 +15,8 @@ import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { CommandError } from '../../../errors.ts';
+
 export const handler = Effect.fn(function* ({ credential }: { credential: Option.Option<string> }) {
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
@@ -39,17 +41,17 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
   yield* Effect.gen(function* () {
     const credentialBytes = yield* Effect.try({
       try: () => Buffer.from(credentialHex, 'hex'),
-      catch: (error) => new Error(`Failed to parse hex string: ${error}`),
+      catch: (error) => new CommandError({ message: 'Failed to parse hex string.', cause: error }),
     });
 
     const credentialObj = yield* Effect.try({
       try: () => fromBinary(CredentialSchema, credentialBytes),
-      catch: (error) => new Error(`Failed to decode credential: ${error}`),
+      catch: (error) => new CommandError({ message: 'Failed to decode credential.', cause: error }),
     });
 
     yield* Effect.tryPromise({
       try: () => client.halo.writeCredentials([credentialObj]),
-      catch: (error) => new Error(`Failed to write credential: ${error}`),
+      catch: (error) => new CommandError({ message: 'Failed to write credential.', cause: error }),
     });
 
     if (json) {

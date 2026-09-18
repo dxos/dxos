@@ -17,6 +17,8 @@ import { ConfigService } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type Runtime_Client_Storage, Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
+import { CommandError } from '../errors.ts';
+
 export const handler = Effect.fn(function* ({
   file,
   dataDir,
@@ -78,7 +80,7 @@ export const handler = Effect.fn(function* ({
   yield* Console.log('Beginning profile import...');
   yield* Effect.tryPromise({
     try: () => importProfileData({ storage }, archive),
-    catch: (error) => new Error(`Failed to import profile data: ${error}`),
+    catch: (error) => new CommandError({ message: 'Failed to import profile data.', cause: error }),
   });
   yield* Console.log('Profile import complete');
 

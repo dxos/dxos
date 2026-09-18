@@ -12,6 +12,7 @@ import { type Config, ConfigService } from '@dxos/config';
 import { EffectEx, Hook } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
+import { toServiceError } from '@dxos/protocols';
 import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { SystemService } from '@dxos/protocols/rpc';
@@ -90,7 +91,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
     return Effect.tryPromise({
       try: async () => (await this.#options.config?.())?.values ?? create(ConfigSchema, {}),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -117,14 +118,14 @@ export class SystemServiceImpl implements SystemService.Handlers {
           ),
         };
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
   ['SystemService.getPlatform'](): Effect.Effect<Platform, Error> {
     return Effect.tryPromise({
       try: async () => getPlatform(),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

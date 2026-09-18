@@ -12,6 +12,7 @@ import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { type SignalManager, SignalManagerService, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
+import { toServiceError } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -56,7 +57,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
       try: async () => {
         await this.networkManager.setConnectionState(request.swarm);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -65,7 +66,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
       try: async () => {
         await this.signalManager.join(Context.default(), request);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -74,7 +75,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
       try: async () => {
         await this.signalManager.leave(Context.default(), request);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -83,7 +84,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
       try: async () => {
         return this.signalManager.query(Context.default(), request);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -107,7 +108,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
       try: async () => {
         await this.signalManager.sendMessage(Context.default(), message);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

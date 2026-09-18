@@ -34,6 +34,7 @@ import {
   SpaceNotFoundError,
   encodeError,
   makeInProcessClient,
+  toServiceError,
 } from '@dxos/protocols';
 import { buf, fromPublicKey, fromTimeframe, requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -96,7 +97,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         await this._updateMetrics();
         return this._serializeSpace(space);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -134,7 +135,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           await dataSpaceManager.setSpaceEdgeReplicationSetting(ctx, spaceKey, edgeReplication);
         }
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -170,7 +171,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         );
         await writeMessages(space.controlPipeline.writer, credentials);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -252,7 +253,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         invariant(message, 'Post carries no message.');
         await space.postMessage(getChannelId(channel), message);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -329,7 +330,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           }
         }
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -348,7 +349,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           controlTimeframe: result?.timeframe && fromTimeframe(result.timeframe),
         });
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -362,7 +363,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           role: request.role,
         });
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -376,7 +377,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const credential = await dataSpaceManager.requestSpaceAdmissionCredential(ctx, spaceKey);
         return this._joinByAdmission(ctx, create(ContactAdmissionSchema, { credential }));
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -423,7 +424,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const archive = await writer.finish();
         return { archive };
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -454,7 +455,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         await this._updateMetrics();
         return { newSpaceId: space.id };
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

@@ -194,6 +194,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/invariant": "workspace:*",

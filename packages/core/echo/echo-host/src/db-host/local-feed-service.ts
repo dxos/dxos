@@ -15,7 +15,7 @@ import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
-import { FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol, toServiceError } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
 /**
@@ -41,7 +41,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   ['FeedService.queryFeed'](request: FeedService.QueryFeedRequest): Effect.Effect<FeedService.FeedQueryResult, Error> {
     return Effect.tryPromise({
       try: () => this.#queryFeedImpl(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -115,7 +115,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           }),
         );
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -142,7 +142,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           }),
         );
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -151,7 +151,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
       try: async () => {
         await this.#syncFeed?.(Context.default(), request);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -160,7 +160,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   ): Effect.Effect<FeedService.GetSyncStateResponse, Error> {
     return Effect.tryPromise({
       try: () => this.#getSyncStateImpl(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

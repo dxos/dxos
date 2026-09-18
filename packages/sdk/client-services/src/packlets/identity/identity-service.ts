@@ -12,6 +12,7 @@ import { createCredential, signPresentation } from '@dxos/credentials';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
+import { toServiceError } from '@dxos/protocols';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
   type Identity as IdentityProto,
@@ -58,7 +59,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         );
         return this._getIdentity()!;
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -85,7 +86,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
         return this._getIdentity()!;
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -94,7 +95,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   ): Effect.Effect<IdentityService.CreateRecoveryCredentialResponse, Error> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.createRecoveryCredential(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -103,7 +104,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   ): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.revokeRecoveryCredential(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -113,7 +114,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   > {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.requestRecoveryChallenge(Context.default()),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -141,7 +142,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
         return this._getIdentity()!;
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -162,7 +163,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
           nonce,
         });
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -182,7 +183,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
           signer: this._keyring,
         });
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

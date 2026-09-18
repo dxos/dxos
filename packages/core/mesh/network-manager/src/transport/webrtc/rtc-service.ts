@@ -10,6 +10,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { toServiceError } from '@dxos/protocols';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import {
   type CloseRequest,
@@ -117,7 +118,7 @@ export class RtcService implements RTCService.Handlers {
         invariant(signal, 'Signal request carries no signal.');
         await connection.channel.onSignal(signal);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -129,21 +130,21 @@ export class RtcService implements RTCService.Handlers {
           await this.#closeConnection(connection);
         }
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
   ['RTCService.getDetails']({ proxyId }: DetailsRequest): Effect.Effect<DetailsResponse, Error> {
     return Effect.tryPromise({
       try: async () => create(DetailsResponseSchema, { details: await this.#require(proxyId).channel.getDetails() }),
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
   ['RTCService.getStats']({ proxyId }: StatsRequest): Effect.Effect<StatsResponse, Error> {
     return Effect.tryPromise({
       try: async () => create(StatsResponseSchema, { stats: await this.#require(proxyId).channel.getStats() }),
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -167,5 +168,3 @@ export class RtcService implements RTCService.Handlers {
     log('closed');
   }
 }
-
-const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));

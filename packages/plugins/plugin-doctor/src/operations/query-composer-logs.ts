@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 
 import { DoctorOperation } from '#types';
 
+import { LogQueryError } from './errors.ts';
 import { HARD_LIMIT_ENTRIES, type LogRecord, type QueryInput, runQuery } from './internal/log-query.ts';
 import { readLogRows } from './internal/log-reader.ts';
 
@@ -76,7 +77,7 @@ export default DoctorOperation.QueryComposerLogs.pipe(
 
       const result = yield* Effect.try({
         try: () => runQuery(records, queryInput),
-        catch: (err) => new Error(`Query failed: ${err instanceof Error ? err.message : String(err)}`),
+        catch: LogQueryError.wrap(),
       });
       return { ...result, total: result.total + malformed };
     }),

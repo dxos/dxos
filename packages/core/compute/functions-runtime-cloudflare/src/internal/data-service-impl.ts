@@ -11,7 +11,7 @@ import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EdgeFunctionEnv } from '@dxos/protocols';
+import { type EdgeFunctionEnv, toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { copyUint8Array } from './utils.ts';
@@ -69,7 +69,7 @@ export class DataServiceImpl implements DataService.Handlers {
       log.verbose('request documents', { count: addIds.length });
       const loaded = yield* Effect.tryPromise({
         try: () => self._loadDocuments(sub.spaceId, addIds),
-        catch: (error) => error as Error,
+        catch: toServiceError,
       }).pipe(
         // The Durable Object round trip, span-separated from the fan-out below it, because only
         // one of the two is a network cost and the two are optimized differently.
@@ -129,7 +129,7 @@ export class DataServiceImpl implements DataService.Handlers {
         );
         return { documentId: response.documentId };
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     }).pipe(Effect.withSpan('DataService.createDocument', { attributes: { spaceId: request.spaceId } }));
   }
 
@@ -167,7 +167,7 @@ export class DataServiceImpl implements DataService.Handlers {
           })(error);
         }
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     }).pipe(
       // Serial per-document round trips, so the span's count is what explains its duration.
       Effect.withSpan('DataService.update', { attributes: { documentCount: request.updates?.length ?? 0 } }),

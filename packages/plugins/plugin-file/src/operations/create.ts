@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { File } from '@dxos/types';
 
 import { FileCapabilities, FileLimits, FileOperation, Settings } from '#types';
@@ -36,13 +37,7 @@ export class NoBackendError extends Error {
   }
 }
 
-export class FileReadError extends Error {
-  constructor(cause: unknown) {
-    super('Failed to read file contents.');
-    this.name = 'FileReadError';
-    this.cause = cause;
-  }
-}
+export class FileReadError extends BaseError.extend('FileReadError', 'Failed to read file contents.') {}
 
 /**
  * Resolves the storage name to force for an upload:
@@ -88,7 +83,7 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
       const bytes = new Uint8Array(
         yield* Effect.tryPromise({
           try: () => file.arrayBuffer(),
-          catch: (error) => new FileReadError(error),
+          catch: FileReadError.wrap(),
         }),
       );
       // The size cap only applies to `inline` storage — `Blob.fromBytes` enforces it internally;

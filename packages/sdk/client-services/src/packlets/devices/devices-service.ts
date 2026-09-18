@@ -11,6 +11,7 @@ import { SubscriptionList } from '@dxos/async';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { toServiceError } from '@dxos/protocols';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
   type Device,
@@ -33,7 +34,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
   ['DevicesService.updateDevice'](request: DeviceProfileDocument): Effect.Effect<Device, Error> {
     return Effect.tryPromise({
       try: async () => await this._identityManager.updateDeviceProfile(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
