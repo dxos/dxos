@@ -161,11 +161,18 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       this._handleQueryLifecycle();
     };
 
-    // Fire the initial event synchronously when authoritative results are already available: either
-    // a source can produce them synchronously, or this (cached/reused) result already computed them
-    // during a prior subscription. Only defer when an async-only query has no results yet (e.g. a
-    // fresh feed query served by the index), so subscribers don't observe a spurious empty snapshot.
-    if (callback && opts?.fire && (this._queryContext.isSynchronous() || this._objectCache !== undefined)) {
+    // Fire the initial event synchronously when there is something true to report: every source has
+    // answered, this (cached/reused) result was already computed during a prior subscription, or the
+    // working set already holds matches. An empty snapshot from a query the index has not answered
+    // yet is deferred: a subscriber that creates a default object when it sees none would otherwise
+    // act on an answer that was never given.
+    if (
+      callback &&
+      opts?.fire &&
+      (!this._queryContext.hasPendingSources() ||
+        this._objectCache !== undefined ||
+        (this._queryContext.isSynchronous() && this._queryContext.getResults().length > 0))
+    ) {
       try {
         callback(this);
       } catch (err) {
@@ -366,6 +373,7 @@ const _assembleGroups = (
   const keys = new Map<string, Record<string, unknown>>();
   const members = new Map<string, unknown[]>();
   const counts = new Map<string, number>();
+  const sourceAggregates = new Map<string, Record<string, AggregateValue>>();
 
   for (const entry of entries) {
     if (!entry.group) {
@@ -386,6 +394,9 @@ const _assembleGroups = (
       keys.set(serializedKey, entry.group.key);
       counts.set(serializedKey, entry.group.count);
       order.push(serializedKey);
+    }
+    if (entry.group.aggregates !== undefined) {
+      sourceAggregates.set(serializedKey, entry.group.aggregates);
     }
     if (entry.result != null) {
       members.get(serializedKey)!.push(entry.result);
@@ -415,11 +426,16 @@ const _assembleGroups = (
     const groupMembers = members.get(serializedKey)!;
     // Group-key fields are already keyed by their result-field name; spread them flat.
     const record: GroupResult = { ...keys.get(serializedKey)! };
+    const computed = sourceAggregates.get(serializedKey);
     for (const aggregate of aggregates) {
-      if (aggregate.kind === 'group') {
+      if (QueryAST.isGroupKeyAggregate(aggregate)) {
         continue; // Group-key fields come from the spread above.
       }
-      record[aggregate.name] = _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
+      // A collapsed group has no members to reduce; the source's value is the only one there is.
+      record[aggregate.name] =
+        computed !== undefined && aggregate.kind !== 'items'
+          ? computed[aggregate.name]
+          : _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
     }
     return record;
   });
@@ -431,6 +447,8 @@ const _assembleGroups = (
 const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly unknown[], count: number): unknown => {
   switch (aggregate.kind) {
     case 'group':
+    case 'type':
+    case 'timestamp':
       return undefined; // Group-key fields are assembled from the source key, not here.
     case 'items':
       return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;

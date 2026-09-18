@@ -53,6 +53,13 @@ const STRING_CRDT_LIMIT = 300_000;
 export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
+/**
+ * Per-document `getUpdatedAt` cache, keyed by heads: inline objects that share a document
+ * (e.g. everything nested under the space root) would otherwise repeat the same backend
+ * lookup for every object on every call.
+ */
+const updatedAtCache = new WeakMap<AutomergeDoc<unknown>, { heads: string; updatedAt: number | undefined }>();
+
 export type ObjectCoreOptions = {
   type?: EncodedReference;
   meta?: EntityMeta;
@@ -745,23 +752,33 @@ export class ObjectCore {
    * Returns the Unix ms timestamp of the last automerge change on this document,
    * or undefined when no change history is available.
    * Note: second-level precision (automerge change timestamps are Unix seconds).
-   * Only inspects the current head changes (O(heads)), not all history.
+   * Reads change metadata for the current heads (one backend lookup per head), not the
+   * decoded change contents.
    */
   getUpdatedAt(): number | undefined {
-    const doc = this.doc ?? this.docHandle?.doc();
+    const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
     if (!doc) {
       return undefined;
     }
+
+    const heads = A.getHeads(doc);
+    const headsKey = heads.join(',');
+    const cached = updatedAtCache.get(doc);
+    if (cached && cached.heads === headsKey) {
+      return cached.updatedAt;
+    }
+
+    const backend = A.getBackend(doc);
     let maxTime = 0;
-    // Inspect only the current frontier (heads) — O(number of heads) ≈ O(1).
-    // `doc` union type doesn't affect getHeads/inspectChange; cast at the boundary.
-    for (const hash of A.getHeads(doc as any)) {
-      const decoded = A.inspectChange(doc as any, hash);
-      if (decoded && decoded.time > maxTime) {
-        maxTime = decoded.time;
+    for (const hash of heads) {
+      const meta = backend.getChangeMetaByHash(hash);
+      if (meta && meta.time > maxTime) {
+        maxTime = meta.time;
       }
     }
-    return maxTime > 0 ? maxTime * 1000 : undefined;
+    const updatedAt = maxTime > 0 ? maxTime * 1000 : undefined;
+    updatedAtCache.set(doc, { heads: headsKey, updatedAt });
+    return updatedAt;
   }
 
   getMeta(): EntityMeta {

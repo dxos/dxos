@@ -13,6 +13,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { Client, ClientService, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
 
@@ -22,6 +23,9 @@ type ClientCapabilityOptions = Omit<
   ClientOptions.ClientPluginOptions,
   'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam' | 'onReset'
 >;
+
+/** The client did not finish initializing inside the configured timeout. */
+export class ClientInitError extends BaseError.extend('ClientInitError', 'Client failed to initialize.') {}
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({
@@ -161,7 +165,7 @@ export default Capability.makeModule(
           ClientService,
           Effect.tryPromise({
             try: () => client.waitUntilInitialized({ timeout: initializeTimeout }),
-            catch: (error) => new Error(`Client failed to initialize within ${initializeTimeout}ms: ${String(error)}`),
+            catch: (error) => new ClientInitError({ context: { initializeTimeout }, cause: error }),
           }).pipe(Effect.as(client)),
         )
       : fromClient(client);

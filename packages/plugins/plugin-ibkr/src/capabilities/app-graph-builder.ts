@@ -36,6 +36,7 @@ export default Capability.makeModule(
 
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'portfolioReport',
+      relation: AppNode.companion,
       match: (node) =>
         Ibkr.isPortfolio(node.data) ? Option.some({ portfolio: node.data, nodeId: node.id }) : Option.none(),
       connector: ({ portfolio, nodeId }, get) => {

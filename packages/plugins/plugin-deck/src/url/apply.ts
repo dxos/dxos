@@ -15,13 +15,13 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
 
-import { updatePlankNames } from '../util/index.ts';
 import {
   closeCompanionPlank,
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
   updateActiveDeck,
+  updatePlankNames,
   withViewTransition,
 } from '../util/index.ts';
 import * as Navigation from './navigation.ts';
@@ -84,7 +84,7 @@ export const applyActive = Effect.fnUntraced(function* (
     if (changed || scrollIntoView !== undefined) {
       registry.set(ephemeralAtom, {
         ...ephemeral,
-        open: { ...ephemeral.open, [workspace]: { active, inactive, segments } },
+        open: { ...ephemeral.open, [workspace]: { ...open, active, inactive, segments } },
         ...(scrollIntoView !== undefined ? { scrollIntoView: { id: scrollIntoView } } : {}),
       });
     }

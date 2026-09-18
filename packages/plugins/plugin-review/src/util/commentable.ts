@@ -11,11 +11,18 @@ import { Channel } from '@dxos/types';
 export const getCommentConfig = (
   capabilities: CapabilityManager.CapabilityManager,
   data: unknown,
+): AppCapabilities.CommentConfig | undefined =>
+  findCommentConfig(capabilities.getAll(AppCapabilities.CommentConfig), data);
+
+/** {@link getCommentConfig} over configs read from an atom, so a config contributed later is picked up. */
+export const findCommentConfig = (
+  configs: readonly AppCapabilities.CommentConfig[],
+  data: unknown,
 ): AppCapabilities.CommentConfig | undefined => {
   if (!Obj.isObject(data) || Entity.instanceOf(Channel.Channel, data)) {
     return undefined;
   }
 
   const typename = Obj.getTypename(data);
-  return capabilities.getAll(AppCapabilities.CommentConfig).find(({ id }) => id === typename);
+  return configs.find(({ id }) => id === typename);
 };

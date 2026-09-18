@@ -106,7 +106,6 @@ const makeStubLayoutPlugin = (onOpen: (handle: ObjectFormHandle) => void): Plugi
 
 const ephemeralState = () =>
   Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    awaiting: undefined,
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},

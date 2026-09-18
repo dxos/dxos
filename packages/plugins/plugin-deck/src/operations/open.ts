@@ -11,7 +11,6 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -49,7 +48,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       );
 
       for (const subjectId of input.subject) {
-        NotFound.expandPath(graph, subjectId);
+        AppGraph.expandPath(graph, subjectId);
       }
 
       {
@@ -197,8 +196,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
-        // The focus intent rides on the write that mounts the plank, so its first painted frame is
-        // already attended.
+        // Subjects the graph has not built yet open at once: the URL projection shows them while they
+        // load and turns any that do not exist into not-found. The focus intent rides on the write that
+        // mounts the plank, so its first painted frame is already attended.
         scrolled =
           input.scrollIntoView === false ? undefined : deckUpdates.active.find((id) => !previouslyOpenIds.has(id));
         yield* navigateDeck({

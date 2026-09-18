@@ -9,7 +9,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -45,6 +45,7 @@ export default Capability.makeModule(
 
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
+      relation: AppNode.companion,
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {

@@ -7,6 +7,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AppGraphBuilder,
   DebugSettings,
+  GraphRetention,
   LogRecording,
   MarkdownMenu,
   OperationHandler,
@@ -23,6 +24,7 @@ import { Debug } from '#types';
 export const DebugPlugin = Plugin.define<Debug.DebugPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(DebugSettings),
+  Plugin.addModule(GraphRetention),
   Plugin.addModule(LogRecording),
   Plugin.addModule(MarkdownMenu),
   Plugin.addModule(OperationHandler),

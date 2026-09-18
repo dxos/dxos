@@ -17,6 +17,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DXN } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
+import { DebugSurface } from '#types';
+
 export const STUB_TOOLS_BRANCH = 'tools';
 
 const STUB_TOOLS_TYPE = 'stub-tools';
@@ -75,7 +77,7 @@ const stubSurfaces = Capability.inlineModule('stub-tools-surfaces', { provides: 
       STUB_TOOL_PAGES.map((page) =>
         Surface.create({
           id: `stubTool.${page.id}`,
-          filter: AppSurface.literal(AppSurface.Article, page.data),
+          filter: AppSurface.literal(DebugSurface.Page, page.data),
           component: () => <div data-testid={`stubTool.${page.id}`}>{page.label}</div>,
         }),
       ),
