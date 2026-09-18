@@ -50,33 +50,56 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
-    return Effect.tryPromise({
-      try: async () => {
-        const sub =
-          this.dataSubscriptions.get(request.subscriptionId) ??
-          raise(
-            new RuntimeServiceError({
-              message: 'Subscription not found.',
-              context: { subscriptionId: request.subscriptionId },
-            }),
-          );
+    const addIds = request.addIds ?? [];
+    const self = this;
+    return Effect.gen(function* () {
+      const sub = self.dataSubscriptions.get(request.subscriptionId);
+      if (!sub) {
+        // Failed, not raised: the promise this method used to be turned a throw into a typed
+        // Error, and an Effect defect here would bypass every caller's error channel instead.
+        return yield* Effect.fail(
+          new RuntimeServiceError({
+            message: 'Subscription not found.',
+            context: { subscriptionId: request.subscriptionId },
+          }),
+        );
+      }
 
-        if (request.addIds?.length) {
-          log.verbose('request documents', { count: request.addIds.length });
-          const loaded = await this._loadDocuments(sub.spaceId, request.addIds);
-          for (const documentId of request.addIds) {
-            const mutation = loaded.get(documentId);
-            log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!mutation });
-            if (!mutation) {
-              log.warn('not found', { documentId });
-              continue;
-            }
-            sub.next({ updates: [{ documentId, mutation }] });
-          }
+      if (addIds.length === 0) {
+        return;
+      }
+
+      log.verbose('request documents', { count: addIds.length });
+      const loaded = yield* Effect.tryPromise({
+        try: () => self._loadDocuments(sub.spaceId, addIds),
+        catch: (error) => error as Error,
+      }).pipe(
+        // The Durable Object round trip, span-separated from the fan-out below it, because only
+        // one of the two is a network cost and the two are optimized differently.
+        Effect.withSpan('DataService.getDocuments', {
+          attributes: { spaceId: sub.spaceId, documentCount: addIds.length },
+        }),
+      );
+
+      let missing = 0;
+      for (const documentId of addIds) {
+        const mutation = loaded.get(documentId);
+        log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!mutation });
+        if (!mutation) {
+          missing++;
+          log.warn('not found', { documentId });
+          continue;
         }
-      },
-      catch: (error) => error as Error,
-    });
+        sub.next({ updates: [{ documentId, mutation }] });
+      }
+      // A document the host cannot produce is dropped here and the caller is told nothing, so the
+      // count is the only place a partial hydration becomes visible in a trace.
+      yield* Effect.annotateCurrentSpan('missingCount', missing);
+    }).pipe(
+      // Hydration is where an operation invoked over MCP spends most of its wall clock; without
+      // this span all of it sat inside `operation.handler` with no children to attribute it to.
+      Effect.withSpan('DataService.updateSubscription', { attributes: { documentCount: addIds.length } }),
+    );
   }
 
   /**
@@ -110,7 +133,7 @@ export class DataServiceImpl implements DataService.Handlers {
         return { documentId: response.documentId };
       },
       catch: (error) => error as Error,
-    });
+    }).pipe(Effect.withSpan('DataService.createDocument', { attributes: { spaceId: request.spaceId } }));
   }
 
   ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
@@ -148,7 +171,10 @@ export class DataServiceImpl implements DataService.Handlers {
         }
       },
       catch: (error) => error as Error,
-    });
+    }).pipe(
+      // Serial per-document round trips, so the span's count is what explains its duration.
+      Effect.withSpan('DataService.update', { attributes: { documentCount: request.updates?.length ?? 0 } }),
+    );
   }
 
   ['DataService.flush'](_request: DataService.FlushRequest): Effect.Effect<void, Error> {
