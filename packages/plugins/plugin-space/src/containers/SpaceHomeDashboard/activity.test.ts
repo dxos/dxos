@@ -6,8 +6,6 @@ import { describe, test } from 'vitest';
 
 import { toActivity } from './activity.ts';
 
-const hourOf = (date: Date): number => Math.floor(date.getTime() / 3_600_000);
-
 describe('toActivity', () => {
   test('sums hours into local days', ({ expect }) => {
     const rows = [
@@ -22,3 +20,5 @@ describe('toActivity', () => {
     ]);
   });
 });
+
+const hourOf = (date: Date): number => Math.floor(date.getTime() / 3_600_000);
