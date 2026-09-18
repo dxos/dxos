@@ -522,8 +522,9 @@ describe('path-resolution', () => {
       expect(Option.isNone(PathResolution.representNode(custom, `root/${WORKSPACE_A}/docA/~notes`))).toBe(true);
     });
 
-    test('rejects an empty linked prefix', ({ expect }) => {
+    test('rejects an empty linked prefix or tail separator', ({ expect }) => {
       expect(() => GraphBuilder.make({ urlGrammar: { linked: { prefix: '' } } })).toThrow();
+      expect(() => GraphBuilder.make({ urlGrammar: { tailSeparator: '' } })).toThrow();
     });
 
     test('returns none for a node with no key-declaring producer', async ({ expect }) => {
@@ -672,6 +673,7 @@ describe('path-resolution', () => {
       GraphBuilder.addExtension(builder, [
         url({ key: 'entry', kind: 'item', path: [], workspace: (workspace) => workspace === 'fixed' }),
         url({ key: 'library', kind: 'singleton', path: ['content'] }),
+        url({ key: 'linked', kind: 'item', path: ['bound'] }),
         url({ key: 'thread', kind: 'item', path: ['threads'] }),
         url({ key: 'type', kind: 'item', path: ['database'] }),
         url({ key: 'db', kind: 'item', path: ['database'], minDepth: 2 }),
@@ -692,6 +694,10 @@ describe('path-resolution', () => {
         workspace: 'fixed',
       });
       expect(represent('space/org.dxos.plugin.deck')).toBeUndefined();
+    });
+
+    test('a binding keyed by the grammar addresses nothing', ({ expect }) => {
+      expect(represent('space/bound/docA')).toBeUndefined();
     });
 
     test('a singleton is its key below its path', ({ expect }) => {

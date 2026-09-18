@@ -68,8 +68,8 @@ const isReservedUrlKey = (key: string): boolean =>
 
 /**
  * Ordered `urlKey`-declaring extensions: sorted by Position then insertion order (matching
- * connector-ordering semantics elsewhere in this package), with reserved-word keys dropped (each with
- * a `log.warn`). A single key may legitimately be shared by more than one extension (e.g. plugin-space
+ * connector-ordering semantics elsewhere in this package), with reserved-word and grammar keys dropped
+ * (each with a `log.warn`). A single key may legitimately be shared by more than one extension (e.g. plugin-space
  * declares `collection` on both the root-collection children connector and the nested-collection
  * children connector, which together address any object reachable through a space's collection tree),
  * so keys are NOT deduped here — {@link buildKeyTable} groups the sharers under one key and forward
@@ -83,6 +83,7 @@ const isUrlKeyed = (extension: GraphBuilder.BuilderExtension): extension is UrlK
 
 const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtension[] => {
   const extensions = Function.pipe(Record.values(builder.getExtensions()), Array.sortBy(Position.compare));
+  const { anchorKey, linked } = builder.urlGrammar;
 
   const keyed: UrlKeyedExtension[] = [];
   for (const extension of extensions) {
@@ -91,6 +92,11 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtensi
     }
     if (isReservedUrlKey(extension.meta.key)) {
       log.warn('reserved URL prefix key', { key: extension.meta.key, extension: extension.id });
+      continue;
+    }
+    if (extension.meta.key === linked.key || extension.meta.key === anchorKey) {
+      // The grammar's keys are read before any item lookup, so an extension bound to one could never resolve.
+      log.warn('URL prefix key is reserved by the grammar', { key: extension.meta.key, extension: extension.id });
       continue;
     }
     keyed.push(extension);
@@ -141,11 +147,6 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   table.set(linked.key, { key: linked.key, hasId: true, anchor: false });
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.meta.key;
-    if (key === linked.key || key === anchorKey) {
-      // The grammar's keys are read before any item lookup, so an extension bound to one could never resolve.
-      log.warn('URL prefix key is reserved by the grammar', { key, extension: extension.id });
-      continue;
-    }
     // The tokenizer's flat lookup is derived from `kind`: a singleton has no id.
     const hasId = extension.meta.kind !== 'singleton';
     const anchor = false;

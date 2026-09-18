@@ -250,6 +250,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
     });
     // An empty prefix would make every segment read as linked.
     invariant(grammar.linked.prefix.length > 0, 'UrlGrammar.linked.prefix must not be empty');
+    invariant(grammar.tailSeparator.length > 0, 'UrlGrammar.tailSeparator must not be empty');
     this.urlGrammar = grammar;
   }
 
