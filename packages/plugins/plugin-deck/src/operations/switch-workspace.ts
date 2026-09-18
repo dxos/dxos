@@ -22,9 +22,17 @@ import { DeckCapabilities } from '#types';
 import { Navigation, RESOLVE_TIMEOUT_MS, applyWorkspace, navigate, navigateDeck } from '../url/index.ts';
 import { firstOpenableChild, openableChildren } from '../util/index.ts';
 
-const replaceEmptyDeck = (params: Omit<Parameters<typeof navigateDeck>[0], 'method'>) =>
-  navigateDeck({ ...params, method: 'replace' });
+/**
+ * The workspace's last URL, if it had planks. It is remembered for the session but never persisted, so a
+ * first visit or a reload finds none.
+ */
+const lastUrl = (builder: AppCapabilities.AppGraph, url: string | undefined): Option.Option<Navigation.Navigation> =>
+  Option.fromNullishOr(url).pipe(
+    Option.flatMap((pathname) => Navigation.parse(pathname, PathResolution.buildUrlKeyTable(builder))),
+    Option.filter(({ pairs }) => pairs.length > 0),
+  );
 
+/** Opens the workspace's first child once its children arrive, unless the deck has moved on by then. */
 const seedWhenLoaded = Effect.fnUntraced(function* (
   graph: AppGraph.ExpandableGraph,
   subject: string,
@@ -35,70 +43,69 @@ const seedWhenLoaded = Effect.fnUntraced(function* (
   const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
   const deck = yield* DeckCapabilities.getDeck();
   if (first && state.activeDeck === subject && deck.active.length === 0) {
-    yield* replaceEmptyDeck({ workspace, active: [first], companionPlanks: deck.companionPlanks });
+    // Replaces the empty entry, so Back does not land on a workspace showing nothing.
+    yield* navigateDeck({ workspace, active: [first], companionPlanks: deck.companionPlanks, method: 'replace' });
     yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
   }
+});
+
+/**
+ * Opens the workspace's first openable child, returning it. Connector output lands on a flush, so waiting
+ * for one seeds a workspace whose children are ready in a single navigation; the rest seed once they load.
+ */
+const seedWorkspace = Effect.fnUntraced(function* (
+  builder: AppCapabilities.AppGraph,
+  subject: string,
+  workspace: string,
+  companionPlanks: readonly string[] | undefined,
+) {
+  AppGraph.expandSync(builder.graph, subject, 'child');
+  yield* Effect.promise(() => AppGraphBuilder.flush(builder));
+  const [first] = openableChildren(builder.graph, subject);
+  yield* navigateDeck({ workspace, active: first ? [first] : [], companionPlanks });
+  if (!first) {
+    // Detached: a later switch leaves this one to find the deck already moved on.
+    yield* Effect.forkDetach(
+      seedWhenLoaded(builder.graph, subject, workspace).pipe(
+        Effect.catchCause((cause) => Effect.sync(() => log.warn('seeding the workspace failed', { cause }))),
+      ),
+    );
+  }
+  return first;
 });
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const builder = yield* Capability.get(AppCapabilities.AppGraph);
-      const { graph } = builder;
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
       yield* applyWorkspace(input.subject);
-
-      const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-      const deck = state.decks[input.subject];
-      invariant(deck, `Deck not found: ${input.subject}`);
-      // What a workspace had open is remembered for the session but never persisted, so a reload
-      // arrives here with nothing and the workspace seeds itself again.
-      const { open } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
-      const remembered = open[input.subject]?.active ?? [];
-
       const workspace = GraphPath.getWorkspaceToken(input.subject);
       if (!workspace) {
         return;
       }
 
-      // Returning restores the workspace's last URL through the projection a reload uses, which shows its
-      // planks while they rebuild and turns any that no longer exist into not-found.
-      const restored = Option.fromNullishOr(open[input.subject]?.url).pipe(
-        Option.flatMap((url) => Navigation.parse(url, PathResolution.buildUrlKeyTable(builder))),
-        Option.filter(({ pairs }) => pairs.length > 0),
-      );
+      const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+      const deck = state.decks[input.subject];
+      invariant(deck, `Deck not found: ${input.subject}`);
+      const { open } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+      const restored = lastUrl(builder, open[input.subject]?.url);
+
+      let first: string | undefined;
       if (Option.isSome(restored)) {
+        // Through the projection a reload uses, which shows the planks while they rebuild and turns any
+        // that no longer exist into not-found.
         yield* navigate(restored.value);
-        const [first] = remembered;
-        if (first) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
-        }
-        return;
+        first = open[input.subject]?.active[0];
+      } else if (platform === 'mobile') {
+        yield* navigateDeck({ workspace, active: [], companionPlanks: deck.companionPlanks });
+      } else {
+        first = yield* seedWorkspace(builder, input.subject, workspace, deck.companionPlanks);
       }
 
-      const seeds = platform !== 'mobile';
-      if (seeds) {
-        // Connector output lands on a flush, so the switch waits for it and seeds in one navigation.
-        AppGraph.expandSync(graph, input.subject, 'child');
-        yield* Effect.promise(() => AppGraphBuilder.flush(builder));
-      }
-      const seeded = seeds ? openableChildren(graph, input.subject).slice(0, 1) : [];
-      yield* navigateDeck({ workspace, active: seeded, companionPlanks: deck.companionPlanks });
-
-      // Only a workspace whose children are still loading reaches here; its seed replaces the empty URL.
-      if (seeds && seeded.length === 0) {
-        // Detached: a later switch leaves this one to find the deck already moved on.
-        yield* Effect.forkDetach(
-          seedWhenLoaded(graph, input.subject, workspace).pipe(
-            Effect.catchCause((cause) => Effect.sync(() => log.warn('seeding the workspace failed', { cause }))),
-          ),
-        );
-      }
-
-      const [first] = seeded;
       if (first) {
         yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
       }
