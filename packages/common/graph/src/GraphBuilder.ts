@@ -135,8 +135,6 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   outgoing(id: string): readonly Edge[];
 }
 
-export type { Region, Retention } from './Retention.ts';
-
 /**
  * Callbacks the store drives the builder through: `onExpand` when a relation of a node is first read,
  * `onRemoveNode` when a node leaves the graph.

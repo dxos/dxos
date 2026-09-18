@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
+import type * as Retention from '@dxos/graph/Retention';
 
 export type WorkspaceRetention = {
   activeDeck: string;
@@ -20,7 +20,7 @@ export const retainedWorkspaces = ({
   activeDeck,
   previousDeck,
   retainedPlanks,
-}: WorkspaceRetention): AppGraphBuilder.Region[] =>
+}: WorkspaceRetention): Retention.Region[] =>
   [...new Set([activeDeck, previousDeck, ...retainedPlanks.map(GraphPath.getWorkspaceFromPath)])]
     .filter((id) => !wouldKeepWholeGraph(id))
     .map((id) => ({ id }));

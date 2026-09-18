@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -20,7 +19,7 @@ export default Capability.makeModule(
     const stateAtom = yield* DeckCapabilities.State;
     const layoutAtom = yield* AppCapabilities.Layout;
 
-    const retention: AppGraphBuilder.Retention = {
+    const retention: AppCapabilities.AppGraphRetention = {
       // Actions and companions are facets of the node they hang off, so their edges span no distance.
       attached: [AppGraphNode.action, AppNode.companion],
       retained: Atom.make((get) => {

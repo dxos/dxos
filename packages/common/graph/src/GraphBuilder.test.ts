@@ -9,6 +9,7 @@ import { describe, expect, test } from 'vitest';
 
 import * as GraphBuilder from './GraphBuilder.ts';
 import * as GraphNode from './GraphNode.ts';
+import * as Retention from './Retention.ts';
 
 const setup = (props: GraphBuilder.ModelProps<string> = {}) => {
   // The caller's registry when one is supplied — reads must go through the registry the builder
@@ -388,7 +389,7 @@ describe('retention', () => {
       'root/w1/c0',
       'root/w1/c1',
     ]);
-    const retain = async (...answers: (readonly GraphBuilder.Region[])[]) => {
+    const retain = async (...answers: (readonly Retention.Region[])[]) => {
       const atoms = answers.map((regions) => Atom.make(regions).pipe(Atom.keepAlive));
       GraphBuilder.setRetention(
         harness.builder,
@@ -440,7 +441,7 @@ describe('retention', () => {
 
   test('a relation no retention names as attached costs a level like any other', async () => {
     const harness = await loaded();
-    const answer = Atom.make<readonly GraphBuilder.Region[]>([{ id: 'root/w1', depth: 1 }]).pipe(Atom.keepAlive);
+    const answer = Atom.make<readonly Retention.Region[]>([{ id: 'root/w1', depth: 1 }]).pipe(Atom.keepAlive);
     GraphBuilder.setRetention(harness.builder, [{ retained: answer, attached: ['companion'] }]);
     await GraphBuilder.flush(harness.builder);
 

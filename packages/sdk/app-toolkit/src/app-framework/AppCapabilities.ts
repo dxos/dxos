@@ -15,12 +15,14 @@ import type { OpaqueToolkit } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
+import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
 import type { Client } from '@dxos/client';
 import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Type } from '@dxos/echo';
+import type * as Retention$ from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
@@ -163,7 +165,7 @@ export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
 );
 
 /** Nodes the graph must keep loaded, contributed by each plugin that knows what it is showing. */
-export type AppGraphRetention = AppGraphBuilder$.Retention;
+export type AppGraphRetention = Retention$.Retention<AppGraphNode$.RelationInput>;
 
 /**
  * @category Capability

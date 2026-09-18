@@ -12,7 +12,6 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { Entity, type Type } from '@dxos/echo';
 import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import * as GraphRetention from '@dxos/graph/Retention';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position, isNonNullable } from '@dxos/util';
@@ -319,11 +318,6 @@ export {
   removeExtension,
   setRetention,
 } from '@dxos/graph/GraphBuilder';
-
-export type Region = GraphRetention.Region;
-
-/** A retention policy over app relations. */
-export type Retention = GraphRetention.Retention<Node.RelationInput>;
 
 /**
  * Flatten arbitrarily nested extension groups into a single list. Pinned to the app extension type,
