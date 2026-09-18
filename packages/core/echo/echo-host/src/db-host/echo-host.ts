@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
+import { UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -73,6 +73,30 @@ const AUTOMATIC_GARBAGE_COLLECTION = false;
  * data-driven pass and a self-sustaining invalidation cycle.
  */
 export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
+
+/**
+ * Ceiling on index runs driven by a document save, in runs per second.
+ *
+ * A save-driven run re-indexes every object the document changed, and an object's FTS row holds its
+ * whole JSON snapshot — so one keystroke in a 110KB markdown document rewrites 110KB of index. The
+ * saves arrive per keystroke, which without a ceiling makes that the per-keystroke cost: typing 19
+ * characters into the perf fixture's document wrote 4.95MB and spent 3.6s of worker CPU inside
+ * SQLite. The first save after an idle period still indexes immediately (the scheduler throttles
+ * from the last run, not the first trigger), so this bounds a burst rather than delaying an
+ * isolated write, and the cost of the ceiling is that a query over a document being typed into
+ * trails the keystrokes by up to this interval.
+ *
+ * Only save-driven runs are throttled: `open`, `batch-continuation` and the `flush()` RPC force a
+ * run, so startup and bulk indexing still paginate at full speed.
+ */
+const SAVE_DRIVEN_INDEX_RUNS_PER_SEC = 2;
+
+/** Reasons that must not wait on the save-driven ceiling. */
+const UNTHROTTLED_INDEX_RUNS: ReadonlySet<IndexRunReason> = new Set<IndexRunReason>([
+  'open',
+  'batch-continuation',
+  'rpc-update-indexes',
+]);
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -141,11 +165,11 @@ export class EchoHost extends Resource {
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
 
-  private _updateIndexes!: DeferredTask;
+  private _updateIndexes!: UpdateScheduler;
 
   /**
-   * Why the pending index run was scheduled, counted per reason. `DeferredTask` coalesces
-   * overlapping `schedule()` calls into one run, so attributing a run needs the full multiset of
+   * Why the pending index run was scheduled, counted per reason. The scheduler coalesces
+   * overlapping triggers into one run, so attributing a run needs the full multiset of
    * reasons that accumulated before it started — a single "last caller" field would misattribute
    * every coalesced run.
    */
@@ -319,7 +343,9 @@ export class EchoHost extends Resource {
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
     log('echo-host: index engine migration done');
-    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+    this._updateIndexes = new UpdateScheduler(this._ctx, this._runUpdateIndexes, {
+      maxFrequency: SAVE_DRIVEN_INDEX_RUNS_PER_SEC,
+    });
 
     log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
@@ -1078,7 +1104,11 @@ export class EchoHost extends Resource {
 
   #scheduleIndexRun(reason: IndexRunReason): void {
     this.#noteIndexRunReason(reason);
-    this._updateIndexes.schedule();
+    if (UNTHROTTLED_INDEX_RUNS.has(reason)) {
+      this._updateIndexes.forceTrigger();
+    } else {
+      this._updateIndexes.trigger();
+    }
   }
 
   /** Drains the pending reasons so each run reports only the requests that produced it. */
