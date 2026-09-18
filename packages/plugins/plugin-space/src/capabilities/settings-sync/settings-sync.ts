@@ -12,6 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Database, Obj, Ref } from '@dxos/echo';
 import { createKvsStore } from '@dxos/effect';
@@ -115,6 +116,7 @@ export default Capability.makeModule(
     // costs the account a decision: the two converge on one object, and the device that switches
     // reseeds from it, overwriting what it had already published.
     let settings = yield* created ? createSettings(space) : awaitSettings(space);
+    diag({ op: 'resolved', created, spaceId: space.id, settingsId: settings.id });
     // This device's pins. One per device, so the key names no device.
     const device = createKvsStore({
       key: 'org.dxos.app-toolkit.settings-scope',
@@ -170,6 +172,12 @@ export default Capability.makeModule(
           const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
             Option.getOrUndefined,
           );
+          diag({
+            op: 'follow',
+            from: settings.id,
+            to: next.id,
+            skip: next.id === settings.id || named?.uri !== ref.uri,
+          });
           if (next.id === settings.id || named?.uri !== ref.uri) {
             return;
           }
@@ -194,6 +202,7 @@ export default Capability.makeModule(
       ),
       shared: JSON.parse(JSON.stringify(settings.shared)),
       trace: diagSink.slice(-60),
+      settingsSpaces: AppSpace.getSettingsSpaces(client).map((each) => each.id),
       local: registry.get(device),
       enabled: manager.getEnabled(),
       failed: manager
