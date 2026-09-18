@@ -869,7 +869,7 @@ loaded, 6–12 ms per shape).
 | `reactive first result` (400)               |    37.1 ms ±1.6% (27) |
 | `cold: reload + open + run type + property` | 2,086.5 ms ±18.0% (3) |
 
-## `3f17ac76` — 2026-09-17 — mixed types, memory sampling, N = 2,000 and N = 10,000
+## `3f17ac76` — 2026-09-17 — mixed types, memory sampling, N = 2,000 and N = 5,000
 
 The bench was rewritten (`3f17ac76`) to answer three questions the runs above leave open: what the
 executors cost in memory, how they behave when the queried type is a minority of the store, and how they
