@@ -14,8 +14,9 @@ Five changes, specified independently but landing as one API break:
    `Operation.PersistentOperation` and its lossy serialize/deserialize bridge.
 3. `Process` stops being a callback bag and becomes the process-kind entity — a **live
    handle** with a URI, referenceable by `Ref`, observable.
-4. Process implementations move into operations: `Operation.durableHandler` is a new
-   **handler kind** carrying every semantic currently in `Process.make`.
+4. An operation's implementation becomes a **handler kind**: code, script, prompt,
+   instructions or durable. `durable` carries every semantic currently in `Process.make`;
+   `script` absorbs `Script.Script` and its deploy-created operation record.
 5. A process has a **parent**, which may be another process or an ECHO object.
 
 ## 1. Before
@@ -282,28 +283,30 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = ne
 ## 5. Handler kinds
 
 An operation declares _what_ it does (key, input, output, services, types). _How_ it is
-implemented is a **handler kind** attached to the definition. `Operation.withHandler` —
-an ordinary `(input) => Effect<O>` — is the baseline. Three declarative kinds sit beside
-it:
+implemented is a **handler kind** attached to the definition. `Operation.withHandler` — an
+ordinary `(input) => Effect<O>` — is the baseline. Four kinds sit beside it:
 
 | Kind             | Attached with                   | Body is                                             | Runs as                                        |
 | ---------------- | ------------------------------- | --------------------------------------------------- | ---------------------------------------------- |
+| **script**       | `Operation.scriptHandler`       | user-authored source, bundled and deployed to EDGE  | a remote invocation of the deployed function   |
 | **prompt**       | `Operation.promptHandler`       | a `Template.Template` rendered from the input       | one model call, output parsed to `output`      |
-| **durable**      | `Operation.durableHandler`      | callbacks over a process context (§5.1)             | a long-lived process, suspend/resume capable   |
 | **instructions** | `Operation.instructionsHandler` | natural-language instructions plus the tools to use | an agent turn that works until `output` is met |
+| **durable**      | `Operation.durableHandler`      | callbacks over a process context                    | a long-lived process, suspend/resume capable   |
 
-Properties they share, and why they are kinds rather than three unrelated APIs:
+Properties they share, and why they are kinds rather than five unrelated APIs:
 
-- All four produce a **process** (§5.2). Only the durable kind writes its own lifecycle;
-  the others are wrapped by an adapter that spawns, runs, submits output and succeeds.
-- All four are addressed and invoked identically — by operation key, through
+- All of them produce a **process** (§5.2). Only the durable kind writes its own
+  lifecycle; the rest are wrapped by an adapter that spawns, runs, submits output and
+  succeeds.
+- All of them are addressed and invoked identically — by operation key, through
   `OperationHandlerSet`. A caller does not know or care which kind backs a definition,
-  which is what lets an operation be reimplemented from code to instructions without
-  touching its callers.
-- Only the **kind marker** is part of the persisted projection; handler bodies are never
-  persisted, with one exception worth deciding (§9): a prompt template and an
-  instructions body are _data_, so an operation of those kinds could be fully defined in a
-  space with no code at all.
+  which is what lets an operation be reimplemented from code to script to instructions
+  without touching its callers.
+- Three of them — script, prompt, instructions — have bodies that are **data**
+  (`Ref<Text>` or a `Template.Template`), so those operations can be authored and
+  redefined in a space with no code deployed. Script already works that way today, which
+  is the existence proof; §9.8 is whether prompt and instructions follow it into the
+  persisted projection.
 
 `OperationHandlerSet` resolves kinds uniformly: `getHandlerFor(key)` returns the
 definition with whichever handler slot is populated, and the runtime dispatches on the
@@ -357,6 +360,37 @@ export default RunAgent.pipe(
 - `DurableContext` is today's `ProcessContext` with `ctx.process` (the live `Process`)
   replacing `ctx.id` / `ctx.params`, so a handler can hand its own URI to what it spawns.
 
+**Script.** `Script` stops being a separate object joined to an operation record by a
+deploy step. Today `deployScript` (`plugin-script/src/util/deploy.ts`) bundles the source,
+uploads it to EDGE, and then creates or updates a **second** object — a
+`PersistentOperation` whose meta carries the deployed function id and whose `source` field
+points back at the script. After, there is one entity: an operation whose handler kind is
+`script`.
+
+```ts
+// Authored in the app — the definition and its body are one object in the space.
+const op = Operation.make({
+  meta: { key: DXN.make('org.dxos.operation.user.fetchSales'), name: 'Fetch Sales' },
+  input: Schema.Struct({ quarter: Schema.String }),
+  output: Schema.Struct({ rows: Schema.Array(Row) }),
+}).pipe(Operation.scriptHandler({ source: Ref.make(Text.make({ content: sourceText })) }));
+
+yield * db.addOperation(op);
+yield * Operation.deploy(op); // bundles, uploads, stamps the deployed id on the same entity
+```
+
+- The handler payload is `{ source: Ref<Text.Text>, changed?: boolean }`; the deployed
+  function id and `binding` stay where they already are — the entity's meta and
+  `binding` field (`Operation.ts:452`).
+- `changed` (source edited since last deploy) moves from `Script.changed` onto the script
+  handler, where it describes exactly one thing: this body is ahead of its deployment.
+- Invocation needs no new mechanism. "Handler body absent locally ⇒ invoke remotely by
+  deployed id" is what `deserialize` already encodes by omission (§3.4); the script kind
+  makes it explicit rather than inferred.
+- `Script` the type is deleted. Its `source`/`description`/`name` fold into the operation;
+  the `source: Ref.Ref(Obj.Unknown)` field on today's record (`Operation.ts:439`) becomes
+  the typed `Ref<Text.Text>` on the handler.
+
 **Instructions.** The body is prose plus the tools the agent may use; the runtime runs an
 agent turn against the definition's `output` schema and completes when it is satisfied.
 The same thing a `Skill` expresses today, addressable as an operation:
@@ -399,10 +433,10 @@ deployed.
 Every operation invocation is a process. The kinds differ only in who writes the
 lifecycle:
 
-| Handler kind                 | Runtime behavior                                                                                                                                            |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| code / prompt / instructions | Wrapped in the **default adapter** — today's `Process.fromOperation` body: idempotency marker, the four trace events, `submitOutput` + `succeed` on return. |
-| durable                      | Runs as-is; the adapter's trace events are emitted by the runtime around `onSpawn`/`onInput`.                                                               |
+| Handler kind                          | Runtime behavior                                                                                                                                            |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| code / script / prompt / instructions | Wrapped in the **default adapter** — today's `Process.fromOperation` body: idempotency marker, the four trace events, `submitOutput` + `succeed` on return. |
+| durable                               | Runs as-is; the adapter's trace events are emitted by the runtime around `onSpawn`/`onInput`.                                                               |
 
 `executionMode: 'sync'` stays a hint that the caller may await inline; it does not bypass
 the process runtime.
@@ -515,8 +549,11 @@ of an unregistered kind (§2.2). Processes never reach a document at all.
 6. Whether kind registration is global (a module-scope `registerKind` side effect) or
    scoped to a graph. Global is simpler and matches how types are declared today; scoped
    avoids two runtimes in one process disagreeing about what `operation` means.
-7. Whether the plain code handler counts as a fourth handler kind or as the baseline the
-   other three are declared against (§5).
-8. Whether a prompt template or an instructions body belongs in the persisted projection.
-   If it does, an operation of those kinds is fully defined by data — authored in a space,
-   with no code deployed — which is a larger claim than the rest of this spec makes.
+7. Whether the plain code handler counts as a fifth handler kind or as the baseline the
+   other four are declared against (§5).
+8. Whether a prompt template or an instructions body belongs in the persisted projection,
+   as a script body already does. If so, those operations are fully defined by data —
+   authored in a space, no code deployed.
+9. Whether `Operation.deploy` belongs in `@dxos/compute` or stays in the script plugin.
+   The script kind is the only one whose body needs a build-and-upload step, and pulling
+   it into core drags the bundler and the EDGE functions client with it.
