@@ -15,8 +15,8 @@ export type Binding = {
   namespace: string;
   /** The values in effect locally right now. */
   read: () => AppSettings.Values;
-  /** Put resolved values into effect locally, returning a promise where applying them is async. */
-  write: (values: AppSettings.Values) => void | Promise<void>;
+  /** Put resolved values into effect locally. */
+  write: (values: AppSettings.Values) => Promise<void>;
   /** Report local edits, returning an unsubscribe. Omit where the local side cannot notify. */
   subscribe?: (onChange: () => void) => () => void;
   /**
@@ -36,7 +36,9 @@ export const pluginSettings = (entry: AppCapabilities.Settings, registry: AtomRe
   namespace: entry.prefix,
   freezes: true,
   read: () => registry.get(entry.atom),
-  write: (values) => registry.set(entry.atom, values),
+  write: async (values) => {
+    registry.set(entry.atom, values);
+  },
   subscribe: (onChange) => registry.subscribe(entry.atom, onChange),
 });
 
@@ -59,16 +61,15 @@ export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRe
       const enabled = manager.getEnabled();
       return Object.fromEntries(toggleable().map((id) => [id, enabled.includes(id)]));
     },
-    // Awaited by the reconciler: `enable` waits on the plugin's import, and `getEnabled` reports the
-    // old set until it lands, so a decision published back before then would undo the one arriving.
-    write: (decisions) => {
+    write: async (decisions) => {
       const target = new Set(AppSettings.getEnabledPlugins(decisions));
       const current = manager.getEnabled();
-      const applied = toggleable()
-        // An id with no decision is one no device has an opinion about yet.
-        .filter((id) => id in decisions && target.has(id) !== current.includes(id))
-        .map((id) => EffectEx.runAndForwardErrors(target.has(id) ? manager.enable(id) : manager.disable(id)));
-      return applied.length > 0 ? Promise.all(applied).then(() => {}) : undefined;
+      await Promise.all(
+        toggleable()
+          // An id with no decision is one no device has an opinion about yet.
+          .filter((id) => id in decisions && target.has(id) !== current.includes(id))
+          .map((id) => EffectEx.runAndForwardErrors(target.has(id) ? manager.enable(id) : manager.disable(id))),
+      );
     },
     // `plugins` as well as `enabled`, so a newly registered plugin gets a decision recorded rather
     // than waiting for the next unrelated toggle.
@@ -90,7 +91,7 @@ export const installedPlugins = (): Binding => ({
   namespace: AppSettings.INSTALLED_NAMESPACE,
   freezes: true,
   read: () => Object.fromEntries(UrlLoader.getRemoteEntries().map((entry) => [entry.id, entry])),
-  write: (entries) => {
+  write: async (entries) => {
     UrlLoader.setRemoteEntries(Object.values(entries).filter(AppSettings.isInstalledPlugin));
   },
 });

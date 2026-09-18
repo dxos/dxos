@@ -77,8 +77,6 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
-    // Contributed once the account's plugin set is bound, and not before: the binding's first
-    // reconciliation lets the account win, so a toggle made ahead of it is silently undone.
     const settingsSync = useOptionalCapability(AppCapabilities.SettingsSync);
     const [filter, setFilter] = useState('');
 

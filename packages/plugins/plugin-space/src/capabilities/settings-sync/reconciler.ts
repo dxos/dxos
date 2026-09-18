@@ -3,12 +3,9 @@
 //
 
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { log } from '@dxos/log';
 
 import { type Binding } from './binding.ts';
-
-/** A binding whose `write` applies over several turns returns a promise; most return nothing. */
-const isPromise = (value: unknown): value is Promise<void> =>
-  typeof value === 'object' && value !== null && 'then' in value && typeof value.then === 'function';
 
 /** Read and write access to the settings store's two layers. */
 export type Store = {
@@ -19,17 +16,12 @@ export type Store = {
 /**
  * Two-way reconciler for one namespace. {@link Reconciler.pull} and {@link Reconciler.push} are
  * guarded against reentrancy: a push writes ECHO, whose change notification would pull straight back.
- *
- * The guard spans an asynchronous {@link Binding.write} too. A binding that applies over several
- * turns — enabling a plugin waits on its import — keeps reporting the pre-write value meanwhile, and
- * an unguarded notification in that window would publish it back over the value being applied.
  */
 export class Reconciler {
   /** Values last known to be in agreement, and the base every local edit is diffed against. */
   #agreed: AppSettings.Values;
   #busy = false;
-  /** Whether a reconciliation was dropped by the guard, so one runs again once the write lands. */
-  #missed = false;
+  #missed: 'seed' | 'sync' | undefined;
 
   constructor(
     private readonly _store: Store,
@@ -62,7 +54,7 @@ export class Reconciler {
     const stored = this.#stored();
     const local = this._binding.read();
     const merged = { ...local, ...stored };
-    this.#guard(() => {
+    this.#guard('seed', () => {
       this._store.update((draft) => {
         AppSettings.applyResolved(draft, this._binding.namespace, stored, merged);
       });
@@ -72,7 +64,7 @@ export class Reconciler {
 
   /** Store changed: put the newly resolved values into effect locally. */
   pull(): void {
-    this.#guard(() => {
+    this.#guard('sync', () => {
       const resolved = this.#resolved();
       const changed = AppSettings.changedKeys(this.#agreed, resolved);
       if (changed.length === 0) {
@@ -83,18 +75,9 @@ export class Reconciler {
     });
   }
 
-  /**
-   * Local value changed: route each changed key to the layer that owns it, then put the newly
-   * resolved values back into effect.
-   *
-   * Writing back matters as much as publishing. Resolution lets the account win for a key this
-   * device does not pin, so a local edit to one key can leave another resolving to a shared value
-   * this device has not applied. Recording that value as agreed without applying it would suppress
-   * the pull that would have applied it, and leave the next push reporting the unapplied local
-   * value as an edit — publishing it over the account's.
-   */
+  /** Local value changed: route each changed key to the layer that owns it. */
   push(): void {
-    this.#guard(() => {
+    this.#guard('sync', () => {
       const local = this._binding.read();
       const before = this.#baseline(local);
       const changed = AppSettings.changedKeys(before, local);
@@ -109,21 +92,9 @@ export class Reconciler {
     });
   }
 
-  /**
-   * Put values into effect locally, recording the new baseline only once they are. A binding that
-   * fails leaves the old baseline, so the next reconciliation retries rather than skipping a change
-   * it never applied.
-   */
-  #write(values: AppSettings.Values): Promise<void> | undefined {
-    const applied = this._binding.write(values);
-    if (!isPromise(applied)) {
-      this.#agreed = values;
-      return undefined;
-    }
-
-    return applied.then(() => {
-      this.#agreed = values;
-    });
+  async #write(values: AppSettings.Values): Promise<void> {
+    await this._binding.write(values);
+    this.#agreed = values;
   }
 
   /**
@@ -147,9 +118,9 @@ export class Reconciler {
     return AppSettings.resolve(this._store.read(), this._binding.namespace, this._binding.read());
   }
 
-  #guard(fn: () => Promise<void> | undefined): void {
+  #guard(kind: 'seed' | 'sync', fn: () => Promise<void> | undefined): void {
     if (this.#busy) {
-      this.#missed = true;
+      this.#missed = kind === 'seed' || this.#missed === 'seed' ? 'seed' : 'sync';
       return;
     }
 
@@ -163,26 +134,24 @@ export class Reconciler {
       }
     }
 
-    // Rethrown once the guard is open: the failure still surfaces as an unhandled rejection, as it
-    // did when every write was synchronous.
     void applied?.then(
       () => this.#release(),
       (error) => {
         this.#release();
-        throw error;
+        log.catch(error);
       },
     );
   }
 
-  /** Reopen the guard, replaying both directions if either was dropped while it was closed. */
   #release(): void {
     this.#busy = false;
-    if (!this.#missed) {
-      return;
+    const missed = this.#missed;
+    this.#missed = undefined;
+    if (missed === 'seed') {
+      this.seed();
+    } else if (missed === 'sync') {
+      this.pull();
+      this.push();
     }
-
-    this.#missed = false;
-    this.pull();
-    this.push();
   }
 }

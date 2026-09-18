@@ -63,7 +63,6 @@ export type PluginItemProps = {
    * phase, reason, and error message.
    */
   failure?: PluginManager.PluginFailure;
-  /** Shows whether the plugin is enabled without letting it be toggled. */
   readOnly?: boolean;
 };
 
@@ -223,13 +222,7 @@ export const PluginItem = ({
               </Button>
             ) : (
               <Field.Root id={inputId}>
-                <Field.Switch
-                  classNames='self-center'
-                  checked={isEnabled}
-                  // Browsers ignore `readonly` on a checkbox, so only `disabled` stops the toggle.
-                  disabled={readOnly}
-                  onClick={handleChange}
-                />
+                <Field.Switch classNames='self-center' checked={isEnabled} disabled={readOnly} onClick={handleChange} />
               </Field.Root>
             )}
           </div>
