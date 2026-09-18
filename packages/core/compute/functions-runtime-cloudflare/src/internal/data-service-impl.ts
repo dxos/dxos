@@ -53,17 +53,14 @@ export class DataServiceImpl implements DataService.Handlers {
     const addIds = request.addIds ?? [];
     const self = this;
     return Effect.gen(function* () {
-      const sub = self.dataSubscriptions.get(request.subscriptionId);
-      if (!sub) {
-        // Failed, not raised: the promise this method used to be turned a throw into a typed
-        // Error, and an Effect defect here would bypass every caller's error channel instead.
-        return yield* Effect.fail(
+      const sub =
+        self.dataSubscriptions.get(request.subscriptionId) ??
+        raise(
           new RuntimeServiceError({
             message: 'Subscription not found.',
             context: { subscriptionId: request.subscriptionId },
           }),
         );
-      }
 
       if (addIds.length === 0) {
         return;
