@@ -13,11 +13,12 @@ import { Alarm } from '@dxos/assistant';
 import { resolveSlashCommand } from '@dxos/assistant-toolkit';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
-import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Button, type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type ChatThreadController,
@@ -716,7 +717,8 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
       {hasTasks && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
-          <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
+          {/* The same surface and border as the prompt below, so the two read as one shell. */}
+          <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
@@ -779,17 +781,41 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     Task.update(task, patch);
   }, []);
 
-  // Delete is a contributed action rather than fixed chrome, matching `TaskSetArticle`: a row shows
-  // one trailing affordance whatever ends up on the list.
+  // The same write `/task:run` makes: an assistant assignee on a `todo` task is what the
+  // supervisor's reconcile picks up. A terminal task has nothing left to run, and delegating a
+  // running one would fork it, so the item is disabled for those rather than silently ignored.
+  const { invokePromise } = useOperationInvoker();
+  const handleExecute = useCallback(
+    (task: Task.Task) => {
+      const db = chat && Obj.getDatabase(chat);
+      if (db) {
+        void invokePromise(
+          TaskOperation.UpdateTask,
+          { task: Ref.make(task), assignee: { role: 'assistant' as const }, status: 'todo' as const },
+          { spaceId: db.spaceId },
+        );
+      }
+    },
+    [chat, invokePromise],
+  );
+
+  // Contributed actions rather than fixed chrome, matching `TaskSetArticle`: two items, so the row
+  // shows one overflow menu rather than a bare delete button.
   const getTaskActions = useCallback(
     (task: Task.Task) => [
+      createMenuAction(`execute-${task.id}`, () => handleExecute(task), {
+        label: t('execute-task.label'),
+        icon: 'ph--play--regular',
+        disabled: task.status === 'done' || task.status === 'cancelled' || task.status === 'started',
+        testId: 'tasks.task.execute',
+      }),
       createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
         label: t('delete-task.label'),
-        icon: 'ph--x--regular',
+        icon: 'ph--trash--regular',
         testId: 'tasks.task.delete',
       }),
     ],
-    [handleDelete, t],
+    [handleExecute, handleDelete, t],
   );
 
   if (!chat) {
@@ -799,6 +825,8 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <TaskList.Root
       tasks={tasks}
+      // The clicked row is highlighted, and the edit strip below edits it rather than creating.
+      selectable
       showGroupLabels={false}
       showOrdinals
       showEstimates
