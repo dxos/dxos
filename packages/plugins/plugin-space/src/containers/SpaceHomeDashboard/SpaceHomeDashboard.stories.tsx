@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -92,7 +93,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+/** Counts every object by type and places them all on today, the day they were written. */
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const valueOf = (id: SpaceStatId) => canvas.getByTestId(`space-home-dashboard.${id}`).textContent;
+
+    // The seeded objects plus the space's own properties object, which is its third type.
+    await canvas.findByTestId('space-home-dashboard.objects', {}, { timeout: 10_000 });
+    await waitFor(() => expect(valueOf('objects')).toBe(String(OBJECT_COUNT + 1)), { timeout: 10_000 });
+    await expect(valueOf('types')).toBe('3');
+    await expect(valueOf('active-days')).toBe('1');
+    await expect(canvasElement.querySelectorAll('[data-level]:not([data-level="0"])')).toHaveLength(1);
+  },
+};
 
 /** Subset of stat cards via the `stats` prop; the default renders all. */
 export const Subset: Story = {
