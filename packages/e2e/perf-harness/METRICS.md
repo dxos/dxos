@@ -365,9 +365,12 @@ Recorded here so nobody rediscovers them as bugs.
    variance that motivated it is real and does not go away — `open-tasks` moved
    9,172 → 6,803 → 7,833 → 10,195 ms across single runs, and `boot` moved +20.9% between two runs
    instrumented identically (not at all) — so a single sample could not resolve anything below
-   ~20-30% per stage, the instruments' own cost included. What remains is the read side: a tile
-   averaging ten samples is still worse than one taking their median, since one expired stage
-   drags a mean and not a median.
+   ~20-30% per stage, the instruments' own cost included. The read side is settled too: each tile
+   is a box over the ten run totals — mean +/- one sample sd, with the median drawn — so the
+   spread is now measured rather than asserted. Both statistics are shown because they answer
+   different questions: one slow but SUCCESSFUL iteration moves the mean and not the median. A
+   failed stage is not that case and never was — `writePosthogBatch` filters on `row.ok`, so an
+   expired stage lowers the sample count instead of dragging anything.
 6. **`boot` carries no profile** in either mode: there is no target to attach to until the page
    exists, so boot-time attribution belongs to the startup harness, not this one.
 
