@@ -53,7 +53,7 @@ export type DeckPlank = {
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
   sigilActions: AttentionSigilAction[][] | undefined;
   popoverAnchorId?: string;
-  scrollIntoView?: string;
+  scrollIntoView?: DeckSchema.ScrollIntoView;
   /** Whether this plank is the one currently expanded to fill the deck. */
   expanded: boolean;
   onAction: (action: AttentionSigilAction) => void;

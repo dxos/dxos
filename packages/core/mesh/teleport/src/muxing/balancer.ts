@@ -79,6 +79,13 @@ export class Balancer {
     if (this._sendBuffers.size !== 0) {
       log.info('destroying balancer with pending calls');
     }
+    // Nothing queued will go out now; release the waiters instead of leaving them to time out. They resolve although
+    // their frames were dropped: the muxer's destruction, not the send, is how a caller learns the link is gone.
+    for (const buffer of this._sendBuffers.values()) {
+      for (const { trigger } of buffer) {
+        trigger?.wake();
+      }
+    }
     this._sendBuffers.clear();
     this._framer.destroy();
   }

@@ -14,7 +14,7 @@ import { Context, Resource } from '@dxos/context';
 import { EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
-import { type FeedStore, SyncClient } from '@dxos/feed';
+import { type FeedStore, SyncClient, SyncSpaceDeletedError } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -41,8 +41,8 @@ const DEFAULT_RECONCILE_POLLING_INTERVAL = 30_000;
 /** Re-subscribe this long before the server's stated expiry, so a refresh never races the lapse. */
 const SUBSCRIPTION_REFRESH_MARGIN_MS = 5 * 60_000;
 const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
-const DEFAULT_PUSH_FAILURE_BACKOFF_MS = 250;
-const MAX_PUSH_FAILURE_BACKOFF_MS = 30_000;
+const DEFAULT_FAILURE_BACKOFF_MS = 250;
+const MAX_FAILURE_BACKOFF_MS = 30_000;
 const MAX_BLOCKING_SYNC_ITERATIONS = 100;
 
 export type FeedSyncerOptions = {
@@ -127,12 +127,19 @@ export class FeedSyncer extends Resource {
   readonly #getSpaceIds: () => SpaceId[];
 
   #spacesToPoll = new Set<SpaceId>();
+  /**
+   * Spaces the server reported deleted on this connection. Nothing addressed to them is answered, so
+   * a request only waits out its timeout and holds the run for every other space; they are left out
+   * until the next reconnect, when the report is trusted afresh.
+   */
+  readonly #deletedSpaces = new Set<SpaceId>();
   /** Last time full poll was completed. */
   #lastFullPoll: number | null = null;
   #throttledPollScheduled = false;
   #lastRequestedPollAt: number | null = null;
   readonly #feedStoreMutex = new Mutex();
-  #pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+  #pushFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
+  #pullFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
 
   /**
    * True once the server answered a `SubscribeRequest` on the current connection, which is the only
@@ -239,6 +246,7 @@ export class FeedSyncer extends Resource {
         // held is gone with it, so the capability has to be re-established rather than assumed.
         this.#serverPushesHints = false;
         this.#subscriptionExpiresAt = null;
+        this.#deletedSpaces.clear();
         if (this.#backgroundSync) {
           this.#sendSubscriptions();
           this.#resetSpacesToPoll();
@@ -559,18 +567,30 @@ export class FeedSyncer extends Resource {
 
   #schedulePushRetry({ hadFailure, needsMore }: { hadFailure: boolean; needsMore: boolean }): void {
     if (!needsMore) {
-      this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+      this.#pushFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
       return;
     }
     if (hadFailure) {
       const delayMs = this.#pushFailureBackoffMs;
-      this.#pushFailureBackoffMs = Math.min(this.#pushFailureBackoffMs * 2, MAX_PUSH_FAILURE_BACKOFF_MS);
+      this.#pushFailureBackoffMs = Math.min(this.#pushFailureBackoffMs * 2, MAX_FAILURE_BACKOFF_MS);
       log('feed sync push retry scheduled with backoff', { delayMs });
       scheduleTask(this._ctx, () => this.#pushTask.schedule(), delayMs);
       return;
     }
-    this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+    this.#pushFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
     this.#pushTask.schedule();
+  }
+
+  /**
+   * Delays the next poll after a failed pull. A pull that fails the same way on every attempt
+   * would otherwise re-run the moment it returns, since a space that is not done is polled again
+   * immediately -- a tight loop of requests against the very server that is failing them.
+   */
+  #schedulePollRetry(): void {
+    const delayMs = this.#pullFailureBackoffMs;
+    this.#pullFailureBackoffMs = Math.min(this.#pullFailureBackoffMs * 2, MAX_FAILURE_BACKOFF_MS);
+    log('feed sync poll retry scheduled with backoff', { delayMs });
+    scheduleTask(this._ctx, () => this.#pollTask.schedule(), delayMs);
   }
 
   #resetSpacesToPoll(): void {
@@ -623,6 +643,24 @@ export class FeedSyncer extends Resource {
     });
   }
 
+  /**
+   * Stops syncing a space for the rest of this connection once the server reports it deleted: the
+   * namespace counts as done, and the other namespaces are not asked. Logged once, since both tasks
+   * may report it.
+   */
+  #dropDeletedSpace(spaceId: SpaceId, feedNamespace: string, cause: SyncSpaceDeletedError): void {
+    if (this.#deletedSpaces.has(spaceId)) {
+      return;
+    }
+    this.#deletedSpaces.add(spaceId);
+    this.#spacesToPoll.delete(spaceId);
+    log.warn('feed sync stopped for a space the server reports deleted', {
+      spaceId,
+      feedNamespace,
+      cause: cause.message,
+    });
+  }
+
   #logSyncFailure(
     operation: 'pull' | 'push' | 'peekPull',
     { spaceId, feedNamespace, cause }: { spaceId: SpaceId; feedNamespace: string; cause: unknown },
@@ -645,12 +683,16 @@ export class FeedSyncer extends Resource {
 
   readonly #pollTask = new AsyncTask(async () =>
     Effect.gen({ self: this }, function* () {
+      let hadPullFailure = false;
       yield* Effect.forEach(
         this.#spacesToPoll,
         (spaceId) =>
           Effect.gen({ self: this }, function* () {
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
+              if (this.#deletedSpaces.has(spaceId)) {
+                break;
+              }
               const { done } = yield* this.#syncClient
                 .pull(this._ctx, {
                   spaceId,
@@ -659,8 +701,13 @@ export class FeedSyncer extends Resource {
                 })
                 .pipe(
                   Effect.catch((cause) =>
-                    Effect.gen({ self: this }, function* () {
+                    Effect.sync(() => {
+                      if (cause instanceof SyncSpaceDeletedError) {
+                        this.#dropDeletedSpace(spaceId, feedNamespace, cause);
+                        return { done: true };
+                      }
                       this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
+                      hadPullFailure = true;
                       return { done: false };
                     }),
                   ),
@@ -676,13 +723,20 @@ export class FeedSyncer extends Resource {
         { concurrency: this.#syncConcurrency },
       );
 
+      // A failed pull only swaps the immediate re-poll for the back-off; the full-poll bookkeeping
+      // below still runs, or the failing space would become the only one ever polled again.
+      const scheduleNext = hadPullFailure ? () => this.#schedulePollRetry() : () => this.#pollTask.schedule();
+      if (!hadPullFailure) {
+        this.#pullFailureBackoffMs = DEFAULT_FAILURE_BACKOFF_MS;
+      }
+
       // If its time to do a full poll, reset the spaces to poll and schedule the next poll immediately.
       if (this.#lastFullPoll == null || Date.now() - this.#lastFullPoll > this.#currentPollingInterval) {
         this.#resetSpacesToPoll();
-        this.#pollTask.schedule();
+        scheduleNext();
       } else if (this.#spacesToPoll.size > 0) {
         // If there are some spaces still syncing, poll them immediately.
-        this.#pollTask.schedule();
+        scheduleNext();
       } else {
         // All spaces sync, and there's time before the next full poll, schedule it later.
         this.#resetSpacesToPoll();
@@ -697,13 +751,16 @@ export class FeedSyncer extends Resource {
 
   readonly #pushTask = new AsyncTask(async () =>
     Effect.gen({ self: this }, function* () {
-      yield* Effect.forEach(
+      const outcomes = yield* Effect.forEach(
         this.#getSpaceIds(),
         (spaceId) =>
           Effect.gen({ self: this }, function* () {
-            let needsMorePush = false;
-            let hadPushFailure = false;
+            let needsMore = false;
+            let hadFailure = false;
             for (const feedNamespace of this.#syncNamespaces) {
+              if (this.#deletedSpaces.has(spaceId)) {
+                break;
+              }
               const { done } = yield* this.#syncClient
                 .push(this._ctx, {
                   spaceId,
@@ -711,27 +768,32 @@ export class FeedSyncer extends Resource {
                   limit: this.#messageBlocksLimit,
                 })
                 .pipe(
-                  Effect.tap(() =>
-                    Effect.sync(() => {
-                      this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
-                    }),
-                  ),
                   Effect.catch((cause) =>
-                    Effect.gen({ self: this }, function* () {
+                    Effect.sync(() => {
+                      if (cause instanceof SyncSpaceDeletedError) {
+                        this.#dropDeletedSpace(spaceId, feedNamespace, cause);
+                        return { done: true };
+                      }
                       this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
-                      hadPushFailure = true;
+                      hadFailure = true;
                       return { done: false };
                     }),
                   ),
                 );
               if (!done) {
-                needsMorePush = true;
+                needsMore = true;
               }
             }
-            this.#schedulePushRetry({ hadFailure: hadPushFailure, needsMore: needsMorePush });
+            return { hadFailure, needsMore };
           }),
         { concurrency: this.#syncConcurrency },
       );
+      // One decision per run: decided per space, a space that pushed fine reset the back-off a
+      // failing one was growing, so the failing one was retried at the minimum delay forever.
+      this.#schedulePushRetry({
+        hadFailure: outcomes.some((outcome) => outcome.hadFailure),
+        needsMore: outcomes.some((outcome) => outcome.needsMore),
+      });
     }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
   );
 }

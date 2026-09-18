@@ -13,6 +13,7 @@ export * as RuntimeProvider from './RuntimeProvider.ts';
 export * as GlobalValue from './internal/GlobalValue.ts';
 export * as SchemaAST from './internal/schema-ast.ts';
 export * as SchemaEx from './SchemaEx.ts';
+export * as Yield from './Yield.ts';
 export * as SpanAttributes from './SpanAttributes.ts';
 
 // Re-export core types at the top level so TypeScript can name them in declaration files.
