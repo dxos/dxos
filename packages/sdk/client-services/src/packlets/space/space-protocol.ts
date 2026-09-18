@@ -254,6 +254,10 @@ export class SpaceProtocolSession implements WireProtocol {
     return this._teleport.stream;
   }
 
+  get closed() {
+    return this._teleport.closed;
+  }
+
   async open(sessionId?: PublicKey): Promise<void> {
     await this._teleport.open(sessionId);
     this._teleport.addExtension(

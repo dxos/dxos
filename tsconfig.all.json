@@ -13,6 +13,9 @@
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
+      "path": "packages/experimental/ai-typesafe/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {
@@ -484,6 +487,9 @@
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-labeler/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-lametric/tsconfig.json"
     },
     {
@@ -656,6 +662,9 @@
     },
     {
       "path": "packages/plugins/plugin-typefully/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-typesafe/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-video/tsconfig.json"
