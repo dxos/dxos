@@ -63,12 +63,14 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   changes, with a fresh heal budget. Without this, a doc that exhausts heal on a dead connection is
   orphaned forever (a healthy WS never bumps the generation). Verified: after a drop, 100/100 rounds
   re-drove ~2.6 s post-settle and all succeeded.
-- **Wake on connection loss**: `AdapterConnections` reports a bound peer's `peer-disconnected` as
-  `connectionLost`, and `SubductionSource` wakes every round in flight. `subduction_core` never
-  settles requests pending on a removed connection, so without this one lost peer held every
+- **Disconnect a lost peer in `subduction_core`**: the transport's disconnect callback leaves the
+  connection registered, with its requests pending until the timeout, so one lost peer held every
   in-flight round, and every local edit parked behind it on `needsResync`, for the full timeout.
-  A woken round re-syncs at once against the peers still connected. The loss does not bump the
-  connection generation: that would re-sync every idle document against the peers left.
+  `AdapterConnections` calls `disconnectFromPeer` on a bound peer's `peer-disconnected`, which removes
+  the connection and settles its requests: the round finishes against the peers still connected, and
+  only rounds with a request to that peer are affected. A handshake that completes after its peer
+  left is disconnected the same way, and a reconnecting peer's handshake waits for the old
+  connection's disconnect, since both bind the same subduction PeerId.
 - **Never re-offer a peer whose auth scope widens**: under Subduction, `peer-disconnected` followed by
   `peer-candidate` makes `AdapterConnections` bind a second connection to the same peer, stranding the
   rounds pending on the first until the timeout. `EchoNetworkAdapter` takes `onConnectionAuthScopeChanged`,
