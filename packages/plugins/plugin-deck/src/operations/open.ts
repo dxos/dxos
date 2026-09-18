@@ -110,6 +110,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const { segments } = yield* DeckCapabilities.getDeck();
 
       let previouslyOpenIds: Set<string>;
+      /** The plank the deck write below focuses, so the followups know whether one carried the intent. */
+      let scrolled: string | undefined;
       {
         const deck = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(deck.active);
@@ -195,22 +197,25 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
         // Subjects the graph has not built yet open at once: the URL projection shows them while they
-        // load and turns any that do not exist into not-found.
-        yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });
+        // load and turns any that do not exist into not-found. The focus intent rides on the write that
+        // mounts the plank, so its first painted frame is already attended.
+        scrolled =
+          input.scrollIntoView === false ? undefined : deckUpdates.active.find((id) => !previouslyOpenIds.has(id));
+        yield* navigateDeck({
+          workspace,
+          active: deckUpdates.active,
+          companionPlanks,
+          intent: { scrollIntoView: scrolled, transition: true },
+        });
       }
 
-      // Schedule side-effects for the newly opened items: scroll into view, expose in
-      // the navigation sidebar, and emit observability events.
-      // When nothing is newly opened (subject was already visible), the fallback
-      // `input.subject[0]` still triggers scroll and expose so the user is taken there.
       {
         const deck = yield* DeckCapabilities.getDeck();
         const newlyOpen = deck.active.filter((i: string) => !previouslyOpenIds.has(i));
 
-        if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, {
-            subject: newlyOpen[0] ?? input.subject[0],
-          });
+        // Nothing newly open means no URL changed, so no write carried the intent above.
+        if (scrolled === undefined && input.scrollIntoView !== false && input.subject[0]) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.subject[0] });
         }
 
         if (newlyOpen[0] ?? input.subject[0]) {

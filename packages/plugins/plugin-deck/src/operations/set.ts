@@ -24,14 +24,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperati
       }
       const deck = yield* DeckCapabilities.getDeck();
       const { workspace } = yield* currentNavigation();
-      const displaced = yield* navigateDeck({
-        workspace,
-        active: subject,
-        companionPlanks: deck.companionPlanks,
-      });
-      if (displaced) {
-        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: displaced });
-      }
+      // No intent: the write focuses whichever plank attention falls to.
+      yield* navigateDeck({ workspace, active: subject, companionPlanks: deck.companionPlanks });
     }),
   ),
 );
