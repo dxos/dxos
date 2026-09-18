@@ -91,6 +91,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-debug"
+    },
+    {
       "path": "../plugin-script"
     },
     {

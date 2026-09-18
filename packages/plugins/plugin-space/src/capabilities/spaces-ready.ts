@@ -18,7 +18,7 @@ import { SubscriptionList } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import { PublicKey, SPACE_ID_LENGTH, parseId } from '@dxos/keys';
+import { PublicKey, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -32,12 +32,11 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
+import { getAwaitedTarget } from '../util/awaited-path.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
-
-const isEchoRef = (id: string) => id.startsWith('echo:/');
 
 /**
  * Resolve the designated default space, migrating a legacy profile into the settings space until
@@ -177,7 +176,7 @@ export default Capability.makeModule(
           }
 
           const node = AppGraph.getNode(graph, id).pipe(Option.getOrNull);
-          if (!node && (isEchoRef(id) || id.length === SPACE_ID_LENGTH)) {
+          if (!node && getAwaitedTarget(id)) {
             const timeout = setTimeout(async () => {
               const node = AppGraph.getNode(graph, id).pipe(Option.getOrNull);
               if (!node) {

@@ -173,6 +173,26 @@ export const Undo = Operation.make({
   }),
 });
 
+/**
+ * Shows a page of the debug panel. Debug pages have no URL, so `LayoutOperation.Open` cannot reach
+ * them; a tool linking to another page selects it here instead.
+ */
+export const SelectPage = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.debug.selectPage'),
+    name: 'Select debug page',
+    description: 'Shows a page of the debug panel, addressed by its qualified graph id under `root/debug`.',
+    icon: 'ph--bug--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    nodeId: Schema.String.annotate({
+      description: 'Qualified graph id of the page, e.g. `root/debug/devtools/echo/space`.',
+    }),
+  }),
+  output: Schema.Void,
+});
+
 const SampleSpaceSummary = Schema.Struct({
   id: Schema.String,
   label: Schema.String,

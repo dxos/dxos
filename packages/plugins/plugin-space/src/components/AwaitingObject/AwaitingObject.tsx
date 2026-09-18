@@ -17,6 +17,8 @@ import { osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
+import { getAwaitedTarget } from '../../util/awaited-path.ts';
+
 const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
 const TOAST_TIMEOUT = 4 * 60 * 1_000;
 
@@ -45,14 +47,22 @@ export const AwaitingObject = ({ id }: { id: string }) => {
     return () => clearTimeout(timeout);
   }, [id]);
 
+  const target = useMemo(() => getAwaitedTarget(id), [id]);
   useEffect(() => {
-    if (objects.findIndex((object) => Obj.getURI(object) === id) > -1) {
+    if (!target) {
+      return;
+    }
+    const { spaceId, objectId } = target;
+    const present = objectId
+      ? objects.some((object) => object.id === objectId && Obj.getDatabase(object)?.spaceId === spaceId)
+      : spaces.some((space) => space.id === spaceId);
+    if (present) {
       setFound(true);
-      if (layout.active.includes(id)) {
+      if (layout.active.includes(id) || layout.workspace === id) {
         setOpen(false);
       }
     }
-  }, [id, objects, layout]);
+  }, [id, target, objects, spaces, layout]);
 
   const handleClose = useCallback(
     async () => invokePromise(SpaceOperation.WaitForObject, { id: undefined }),
@@ -60,9 +70,13 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   );
 
   const handleNavigate = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, { subject: [id] });
+    if (target?.objectId) {
+      void invokePromise(LayoutOperation.Open, { subject: [id] });
+    } else {
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: id });
+    }
     void handleClose();
-  }, [id, handleClose, invokePromise]);
+  }, [id, target, handleClose, invokePromise]);
 
   // TODO(burdon): Why are we not using LayoutOperation.AddToast?
   return (

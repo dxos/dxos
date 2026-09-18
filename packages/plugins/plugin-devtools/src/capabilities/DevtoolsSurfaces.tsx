@@ -13,6 +13,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer, SpaceInfoArticle, SpaceListArticle, TestingArticle } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
+import * as DebugOperation from '@dxos/plugin-debug/DebugOperation';
 import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Space } from '@dxos/react-client/echo';
@@ -38,7 +39,7 @@ export const ActiveSpacePanel = ({ role, Panel }: ActiveSpacePanelProps) => {
 export const SpaceListSurface = ({ role }: { role?: string }) => {
   const { invokePromise } = useOperationInvoker();
   const handleSelect = useCallback(
-    () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Space] }),
+    () => invokePromise(DebugOperation.SelectPage, { nodeId: Devtools.getNodePath(Devtools.Echo.Space) }),
     [invokePromise],
   );
 
@@ -49,7 +50,7 @@ export const SpaceInfoSurface = ({ role }: { role?: string }) => {
   const space = useActiveSpace();
   const { invokePromise } = useOperationInvoker();
   const handleSelect = useCallback(
-    () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Feeds] }),
+    () => invokePromise(DebugOperation.SelectPage, { nodeId: Devtools.getNodePath(Devtools.Echo.Feeds) }),
     [invokePromise],
   );
   if (!space) {
