@@ -63,6 +63,19 @@ export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
  *
  * Pass `createObject` to add a "+" action on the section header automatically.
  */
+/** The id a type section gives the extension producing its objects. */
+const sectionObjectsId = (typename: string): string => `${typename}.sectionObjects`;
+
+/**
+ * Whether a registered extension produces the objects of `typename`'s type section. Registration may
+ * qualify the id with the contributing module (`<module>.<id>`) and the extension part (`<id>/connector`).
+ */
+export const isSectionObjectsExtension = (extensionId: string, typename: string): boolean => {
+  const [id] = extensionId.split('/');
+  const objectsId = sectionObjectsId(typename);
+  return id === objectsId || id.endsWith(`.${objectsId}`);
+};
+
 export const createTypeSectionExtension = (
   type: Type.AnyEntity,
   options: {
@@ -212,7 +225,7 @@ export const createTypeSectionExtension = (
   // The section's objects — always a separate extension so each object gets its own item binding
   // (keyed by urlKey) independent of how the section node itself is addressed.
   const objectsExtension = AppGraphBuilder.createExtension({
-    id: `${typename}.sectionObjects`,
+    id: sectionObjectsId(typename),
     url: { key: options.urlKey, kind: 'item', path: sectionSegments },
     match: whenSection,
     connector: (space, get) => Effect.succeed(buildObjectNodes(space, get, queryOrderedObjects(space, get))),
