@@ -33,7 +33,7 @@ import {
   findInStates,
   reconnectAdapters,
   shutdownRepo,
-  waitForQueryState,
+  waitForReadyWithRedrive,
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
 
@@ -45,7 +45,7 @@ describe('AutomergeRepo with Subduction', () => {
   test('documents missing from local storage go to loading state', async () => {
     const { repos, adapters } = await createHostClientRepoTopology();
     const [host] = repos;
-    await connectAdapters(adapters);
+    await connectAdapters(adapters, { repos: repos });
     const url = 'automerge:3JN8F3Z4dUWEEKKFN7WE9gEGvVUT' as AutomergeUrl;
 
     const progress = host.findWithProgress(url);
@@ -80,14 +80,14 @@ describe('AutomergeRepo with Subduction', () => {
     test('basic networking', async () => {
       const { repos, adapters } = await createHostClientRepoTopology();
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = host.create<{ text?: string }>();
       const text = 'Hello world';
       handle.change((doc: any) => {
         doc.text = text;
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       await expect
         .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
@@ -102,13 +102,13 @@ describe('AutomergeRepo with Subduction', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = host.create<{ text?: string }>();
       handle.change((doc: any) => {
         doc.text = 'Hello world';
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       await expect
         .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
@@ -138,13 +138,13 @@ describe('AutomergeRepo with Subduction', () => {
         ],
       });
       const [repoA, repoB, repoC, repoD] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const docA = repoA.create<{ text?: string }>();
       docA.change((doc: any) => {
         doc.text = 'Hello world';
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const docB = await findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES);
       await expect.poll(() => docB.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
@@ -164,7 +164,7 @@ describe('AutomergeRepo with Subduction', () => {
         const peer1 = createRepo({ network: [], storage }, { registerCleanup: false });
         const handle = peer1.create({ text: 'foo' });
         await peer1.flush();
-        await waitForSubductionSave();
+        await waitForSubductionSave([peer1]);
         url = handle.url;
         await shutdownRepo(peer1);
       }
@@ -174,7 +174,7 @@ describe('AutomergeRepo with Subduction', () => {
 
       const { repos, adapters } = await createHostClientRepoTopology({ storages: [storage] });
       const [peer1, peer2] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const hostHandle = await peer1.find<any>(url as AutomergeUrl);
       await hostHandle.whenReady();
@@ -211,7 +211,7 @@ describe('AutomergeRepo with Subduction', () => {
 
       const serverHandle = await repo.find<any>(documentId);
       expect(serverHandle.doc()!.field).to.deep.equal(value);
-      await waitForSubductionSave();
+      await waitForSubductionSave([repo]);
       await repo.shutdown();
 
       // `Repo.shutdown()` closes its storage adapter; reopen before reusing it for `repo2`.
@@ -225,9 +225,12 @@ describe('AutomergeRepo with Subduction', () => {
     test('two repo sync docs on `update` call', async () => {
       const { repos, adapters } = await createHostClientRepoTopology();
       const [repoA, repoB] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handleA = repoA.create<any>();
+      // Barrier before B looks: a fetch that races A's unflushed save settles success-empty and
+      // subduction never re-asks, so B's handle would stay empty for the whole poll window.
+      await waitForSubductionSave(repos);
       const handleB = await findInStates<any>(repoB, handleA.url, FIND_STATES);
 
       const text = 'Hello world';
@@ -236,7 +239,7 @@ describe('AutomergeRepo with Subduction', () => {
           doc.text = text;
         });
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       expect(handleA.doc()!.text).to.equal(text);
       await expect.poll(() => handleB.doc()?.text, { timeout: 5_000 }).toEqual(text);
@@ -293,13 +296,13 @@ describe('AutomergeRepo with Subduction', () => {
         connectionStateProvider: () => connectionState,
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handleA = host.create<{ fromHost?: string; fromClient?: string }>();
       handleA.change((doc: any) => {
         doc.fromHost = 'initial';
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
       const handleB = await findInStates<{ fromHost?: string; fromClient?: string }>(client, handleA.url, FIND_STATES);
       await expect.poll(() => handleB.doc()?.fromHost, { timeout: 20_000 }).toEqual('initial');
 
@@ -312,11 +315,11 @@ describe('AutomergeRepo with Subduction', () => {
       handleB.change((doc: any) => {
         doc.fromClient = 'client-offline';
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
       expect(getHeads(handleA.doc()!).some((head) => getHeads(handleB.doc()!).includes(head))).toBe(false);
 
       connectionState = 'on';
-      await reconnectAdapters(adapters);
+      await reconnectAdapters(adapters, { repos });
 
       await expect.poll(() => handleB.doc()?.fromHost, { timeout: 30_000 }).toEqual('host-offline');
       await expect.poll(() => handleA.doc()?.fromClient, { timeout: 30_000 }).toEqual('client-offline');
@@ -345,7 +348,7 @@ describe('AutomergeRepo with Subduction', () => {
       docA.change((doc: any) => {
         doc.text = 'Hello world';
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(docA.url);
       // TODO(mykola): Subduction does not drive this query to `'unavailable'` while
@@ -359,8 +362,8 @@ describe('AutomergeRepo with Subduction', () => {
       // to start a fresh transport and bumps the generation so the dormant
       // source re-syncs. We must reconnect on BOTH sides; with only one side
       // emitting `peer-candidate`, only one transport is initiated.
-      await reconnectAdapters(adapters);
-      await waitForQueryState(progress, ['ready'], { timeout: 10_000 });
+      await reconnectAdapters(adapters, { repos });
+      await waitForReadyWithRedrive(client, progress, { timeout: 10_000 });
     });
 
     // Regression test for the concurrent-shutdown stall in
@@ -400,7 +403,7 @@ describe('AutomergeRepo with Subduction', () => {
           ]);
         });
 
-        await connectAdapters([adapters]);
+        await connectAdapters([adapters], { repos: [repoA, repoB] });
 
         // Get a doc onto both sides so each peer has a running entry.
         // Wait for `'ready'` (NOT `FIND_STATES` which permits `'loading'`)
@@ -411,7 +414,7 @@ describe('AutomergeRepo with Subduction', () => {
         handle.change((doc: any) => {
           doc.text = 'initial';
         });
-        await waitForSubductionSave();
+        await waitForSubductionSave([repoA, repoB]);
         await findInStates(repoB, handle.url, ['ready']);
 
         // Pending throttled save at the moment of shutdown — required
@@ -439,13 +442,13 @@ describe('AutomergeRepo with Subduction', () => {
           roles: { host: 'connect', client: 'accept' },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters);
+        await connectAdapters(adapters, { repos: repos });
 
         const handle = host.create<{ text?: string }>();
         handle.change((doc: any) => {
           doc.text = 'connect/accept';
         });
-        await waitForSubductionSave();
+        await waitForSubductionSave(repos);
 
         await expect
           .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
@@ -457,13 +460,13 @@ describe('AutomergeRepo with Subduction', () => {
           roles: { host: 'accept', client: 'connect' },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters);
+        await connectAdapters(adapters, { repos: repos });
 
         const handle = host.create<{ text?: string }>();
         handle.change((doc: any) => {
           doc.text = 'accept/connect';
         });
-        await waitForSubductionSave();
+        await waitForSubductionSave(repos);
 
         // Bumped from 5_000 to 10_000: on a loaded CI box, the underlying
         // subduction `RequestId` round-trip can hit its own internal timeout
@@ -490,7 +493,7 @@ describe('AutomergeRepo with Subduction', () => {
         handle.change((doc: any) => {
           doc.text = 'accept/accept';
         });
-        await waitForSubductionSave();
+        await waitForSubductionSave(repos);
 
         const progress = client.findWithProgress<{ text?: string }>(handle.url);
         // Stays in `'loading'` (or worst case never reaches `'ready'`) within the
@@ -546,10 +549,10 @@ describe('AutomergeRepo with Subduction', () => {
           subductionPolicies: { host: denyingPolicy },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters);
+        await connectAdapters(adapters, { repos: repos });
 
         const handle = host.create<{ text?: string }>({ text: 'should-not-fetch' });
-        await waitForSubductionSave();
+        await waitForSubductionSave(repos);
 
         // Client explicitly requests the doc by URL. Host's `authorizeFetch`
         // denial should prevent the response. We rely on `findWithProgress`
@@ -573,10 +576,10 @@ describe('AutomergeRepo with Subduction', () => {
       test('authorizeFetch permissive on server allows fetcher (control)', async () => {
         const { repos, adapters } = await createHostClientRepoTopology();
         const [host, client] = repos;
-        await connectAdapters(adapters);
+        await connectAdapters(adapters, { repos: repos });
 
         const handle = host.create<{ text?: string }>({ text: 'should-fetch' });
-        await waitForSubductionSave();
+        await waitForSubductionSave(repos);
 
         await expect
           .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, {
@@ -602,10 +605,10 @@ describe('AutomergeRepo with Subduction', () => {
           subductionPolicies: { host: denyingPolicy },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters);
+        await connectAdapters(adapters, { repos: repos });
 
         const hostHandle = host.create<{ text?: string }>({ text: 'initial' });
-        await waitForSubductionSave();
+        await waitForSubductionSave(repos);
 
         const clientHandle = await findInStates<{ text?: string }>(client, hostHandle.url, FIND_STATES);
         const initialHostHeads = getHeads(hostHandle.doc()!);
@@ -656,10 +659,10 @@ describe('AutomergeRepo with Subduction', () => {
           subductionPolicies: { host: mutablePolicy },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters);
+        await connectAdapters(adapters, { repos: repos });
 
         const handle = host.create<{ text?: string }>({ text: 'gated' });
-        await waitForSubductionSave();
+        await waitForSubductionSave(repos);
 
         // (1) Initial denial: query does not reach `'ready'`, doc stays empty.
         const progress = client.findWithProgress<{ text?: string }>(handle.url);
@@ -723,13 +726,13 @@ describe('AutomergeRepo with Subduction', () => {
         onMessageByConnection: { 1: onMessage },
       });
       const [repoA, repoB, repoC] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const docA = repoA.create<{ text?: string }>();
       docA.change((doc: any) => {
         doc.text = 'relayed';
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const docC = await findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES);
       await expect.poll(() => docC.doc()?.text, { timeout: 10_000 }).toEqual('relayed');

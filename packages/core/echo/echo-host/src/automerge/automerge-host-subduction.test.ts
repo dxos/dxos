@@ -27,6 +27,7 @@ import { AutomergeHost } from './automerge-host.ts';
 import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
+import { SUBDUCTION_PUSH_SETTLE_MS } from './subduction-test-utils.ts';
 
 describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
@@ -923,8 +924,12 @@ const countStoredRemoteHeads = async (runtime: RuntimeArg): Promise<number> => {
   return (await adapter.loadRange(['subduction', 'remote-heads'])).length;
 };
 
+/**
+ * Every call site already awaits `host.flush()`, which is the durability half of the barrier; this
+ * covers only the window a proactive push needs to traverse the replication network.
+ */
 const waitForSubductionSave = async () => {
-  await sleep(150);
+  await sleep(SUBDUCTION_PUSH_SETTLE_MS);
 };
 
 /**

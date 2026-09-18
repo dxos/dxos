@@ -19,7 +19,7 @@ import {
 import { type MemorySigner, SedimentreeId } from '@automerge/automerge-subduction';
 import { onTestFinished } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { isNonNullable } from '@dxos/util';
 
 import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
@@ -68,6 +68,32 @@ export const waitForQueryState = async <T>(
     await trigger.wait({ timeout });
   } finally {
     unsubscribe();
+  }
+};
+
+/**
+ * Wait for a dormant query to reach `'ready'`, re-driving the source while it waits.
+ *
+ * Nothing re-asks at the raw-`Repo` level once a query has settled with no peers: the fork does not
+ * re-sync an `all-failed` entry on a connection-generation change, so recovery falls to the heal
+ * backoff (100→200→…→6400 ms) and routinely overruns the window. `AutomergeHost` hides this in
+ * production by firing `_sharePolicyChangedTask` on `documentRequested`; this mirrors that.
+ */
+export const waitForReadyWithRedrive = async <T>(
+  repo: Repo,
+  progress: DocumentProgress<T>,
+  { timeout = 10_000, interval = 250 }: { timeout?: number; interval?: number } = {},
+): Promise<void> => {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    if (progress.peek().state === 'ready') {
+      return;
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`query did not reach 'ready' within ${timeout}ms (state: ${progress.peek().state})`);
+    }
+    repo.shareConfigChanged();
+    await sleep(interval);
   }
 };
 
@@ -197,10 +223,31 @@ export const createStarTopology = (options?: ConnectedRepoOptions) =>
     options,
   });
 
+/**
+ * Resolve once `repo` completes a subduction handshake with a peer. Armed before the peer
+ * candidate goes out, since a fast handshake would otherwise bind before the listener attaches.
+ */
+const onceSubductionPeerBound = (repo: Repo): Promise<void> => {
+  const trigger = new Trigger();
+  repo.once('subduction-peer-bound', () => trigger.wake());
+  return trigger.wait();
+};
+
+/**
+ * Only the side that verifies the peer emits `subduction-peer-bound`, so the FIRST binding — not
+ * all of them — is what says the handshake completed.
+ */
+const awaitFirstBinding = (bound: Promise<void>[], timeout = 10_000): Promise<unknown> =>
+  asyncTimeout(Promise.race(bound), timeout);
+
 export const connectAdapters = async (
   pairs: [TestAdapter, TestAdapter][],
-  options?: { noEmitPeerCandidate?: boolean },
+  options?: { noEmitPeerCandidate?: boolean; repos?: Repo[]; timeout?: number },
 ) => {
+  // `peer-candidate` only STARTS the handshake. A test whose data already exists must wait for it
+  // to bind: a fetch issued first settles success-empty and subduction never re-asks, so the doc
+  // never arrives. Opt-in, because a test that denies `authorizeConnect` never binds at all.
+  const bound = options?.repos?.map((repo) => onceSubductionPeerBound(repo));
   for (const pair of pairs) {
     await pair[0].onConnect.wait();
     await pair[1].onConnect.wait();
@@ -208,6 +255,9 @@ export const connectAdapters = async (
       pair[0].peerCandidate(pair[1].peerId!);
       pair[1].peerCandidate(pair[0].peerId!);
     }
+  }
+  if (bound) {
+    await awaitFirstBinding(bound, options?.timeout);
   }
 };
 
@@ -222,12 +272,21 @@ export const disconnectAdapters = (pairs: [TestAdapter, TestAdapter][]) => {
   }
 };
 
-export const reconnectAdapters = async (pairs: [TestAdapter, TestAdapter][]) => {
+export const reconnectAdapters = async (
+  pairs: [TestAdapter, TestAdapter][],
+  options?: { repos?: Repo[]; timeout?: number },
+) => {
+  // Same handshake barrier as `connectAdapters`: the candidate only starts the new handshake, and a
+  // fetch — or a `shareConfigChanged()` kick — issued before it binds sees no peers and settles.
+  const bound = options?.repos?.map((repo) => onceSubductionPeerBound(repo));
   for (const pair of pairs) {
     pair[0].peerDisconnected(pair[1].peerId!);
     pair[1].peerDisconnected(pair[0].peerId!);
     pair[0].peerCandidate(pair[1].peerId!);
     pair[1].peerCandidate(pair[0].peerId!);
+  }
+  if (bound) {
+    await awaitFirstBinding(bound, options?.timeout);
   }
 };
 
@@ -256,8 +315,24 @@ export const createRepo = (
   return repo;
 };
 
-export const waitForSubductionSave = async () => {
-  await sleep(150);
+/**
+ * How long a proactive push needs to traverse the in-memory transport once the commit is durable.
+ * Cannot be an event: the same barrier serves negative assertions, which need a window in which
+ * delivery WOULD have happened rather than a signal that it did.
+ */
+export const SUBDUCTION_PUSH_SETTLE_MS = 500;
+
+/**
+ * Barrier for "every pending subduction commit is durable, and its push has had time to land".
+ *
+ * The flush is the load-bearing half: `Repo.flush()` forces the throttled subduction save and
+ * waits for the storage-bridge write, and a peer fetch that races an unflushed save settles
+ * success-empty with nothing to re-ask, so that miss is permanent (`Document <id> is unavailable`,
+ * a push that never fires) rather than slow.
+ */
+export const waitForSubductionSave = async (repos: Repo[]): Promise<void> => {
+  await Promise.all(repos.map((repo) => repo.flush()));
+  await sleep(SUBDUCTION_PUSH_SETTLE_MS);
 };
 
 export const createSqliteAdapter = async (filename = ':memory:') => {

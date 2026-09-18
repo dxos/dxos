@@ -22,7 +22,7 @@ import {
   documentIdToSedimentreeIdString,
   findInStates,
   reconnectAdapters,
-  waitForQueryState,
+  waitForReadyWithRedrive,
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
 
@@ -68,10 +68,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = host.create<{ text?: string }>({ text: 'server-only' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
@@ -105,10 +105,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = host.create<{ text?: string }>({ text: 'pushed' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       await expect
         .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
@@ -137,7 +137,7 @@ describe('SubductionPolicy', () => {
       // wiring up the client's policy.
       const docA = host.create<{ text?: string }>({ text: 'A-blocked' });
       const docB = host.create<{ text?: string }>({ text: 'B-allowed' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const allow = new Set<string>([documentIdToSedimentreeIdString(docB.documentId)]);
       // Now wire the client with a per-sedimentree gate. We can't pass
@@ -165,7 +165,7 @@ describe('SubductionPolicy', () => {
       holder.import(aBytes!, { docId: docA.documentId });
       holder.import(bBytes!, { docId: docB.documentId });
       await holder.flush();
-      await connectAdapters(adapters2);
+      await connectAdapters(adapters2, { repos: repos2 });
 
       // Allowed doc arrives.
       await expect
@@ -210,11 +210,11 @@ describe('SubductionPolicy', () => {
         subductionPolicies: { client: denyPeers(denied, 'authorizePut') },
       });
       const [client, server1, server2] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const docFromServer1 = server1.create<{ text?: string }>({ text: 'from-server1' });
       const docFromServer2 = server2.create<{ text?: string }>({ text: 'from-server2' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       // Allowed peer's doc arrives.
       await expect
@@ -244,7 +244,7 @@ describe('SubductionPolicy', () => {
       const [host] = repos;
       const docA = host.create<{ text?: string }>({ text: 'A' });
       const docB = host.create<{ text?: string }>({ text: 'B' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
       await host.flush();
 
       const allow = new Set<string>([documentIdToSedimentreeIdString(docB.documentId)]);
@@ -263,7 +263,7 @@ describe('SubductionPolicy', () => {
       holder.import(aBytes!, { docId: docA.documentId });
       holder.import(bBytes!, { docId: docB.documentId });
       await holder.flush();
-      await connectAdapters(adapters2);
+      await connectAdapters(adapters2, { repos: repos2 });
 
       await expect
         .poll(async () => (await fetcher.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: 5_000 })
@@ -311,10 +311,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = client.create<{ text?: string }>({ text: 'from-client' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       await expect
         .poll(async () => (await host.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
@@ -353,10 +353,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = client.create<{ text?: string }>({ text: 'from-client' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const progress = host.findWithProgress<{ text?: string }>(handle.url);
       await sleep(1_500);
@@ -378,10 +378,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = client.create<{ text?: string }>({ text: 'from-client' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       await expect
         .poll(async () => (await host.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
@@ -414,7 +414,7 @@ describe('SubductionPolicy', () => {
 
       const clientHandle = client.create<{ text?: string }>({ text: 'from-client' });
       const hostHandle = host.create<{ text?: string }>({ text: 'from-server' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       // Server never gets client's doc.
       const hostProgressOfClientDoc = host.findWithProgress<{ text?: string }>(clientHandle.url);
@@ -456,7 +456,7 @@ describe('SubductionPolicy', () => {
 
       const doc1 = server1.create<{ text?: string }>({ text: 'from-server1' });
       const doc2 = server2.create<{ text?: string }>({ text: 'from-server2' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       await expect
         .poll(async () => (await client.find<{ text?: string }>(doc2.url)).doc()?.text, { timeout: 5_000 })
@@ -468,8 +468,9 @@ describe('SubductionPolicy', () => {
       const progress1 = client.findWithProgress<{ text?: string }>(doc1.url);
       expect(progress1.peek().state).to.not.equal('ready');
 
-      // Connect hook fired at least once per peer (server1 deny + server2 allow).
-      expect(counters.authorizeConnect).to.be.greaterThanOrEqual(2);
+      // Connect hook fired at least once per peer (server1 deny + server2 allow). Polled: the
+      // denied peer's handshake attempt is not ordered against server2's replication.
+      await expect.poll(() => counters.authorizeConnect, { timeout: 5_000 }).toBeGreaterThanOrEqual(2);
     });
 
     // Hypothesis: the role matrix requires at least one peer to be
@@ -498,7 +499,7 @@ describe('SubductionPolicy', () => {
       await connectAdapters(adapters);
 
       const handle = host.create<{ text?: string }>({ text: 'should-not-arrive' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
@@ -569,16 +570,18 @@ describe('SubductionPolicy', () => {
           subductionPolicies: { host: pushPolicy },
         });
         const [pushHost, pushClient] = pushRepos;
-        await connectAdapters(pushAdapters);
+        await connectAdapters(pushAdapters, { repos: pushRepos });
         const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
-        await waitForSubductionSave();
+        await waitForSubductionSave(pushRepos);
         // Assert the host-side hook fired BEFORE the client issues any
         // explicit `find` — proves it was the proactive broadcast (not a
         // later fetch) that consulted `authorizeFetch`.
         // Empirical: >= 1 (observed 2 locally). Don't pin an exact
         // count — the bridge may batch or invoke twice per broadcast
         // (once at connect-time-sync, once per `#save`).
-        expect(pushCounters.authorizeFetch).to.be.greaterThan(0);
+        // Polled rather than read once: the broadcast is asynchronous, and polling the counter
+        // issues no `find`, so the "before any explicit fetch" property still holds.
+        await expect.poll(() => pushCounters.authorizeFetch, { timeout: 5_000 }).toBeGreaterThan(0);
         await expect
           .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
             timeout: 5_000,
@@ -597,10 +600,10 @@ describe('SubductionPolicy', () => {
         const [fetchHost, fetchClient] = fetchRepos;
         await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
         const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'fetched' });
-        await waitForSubductionSave();
+        await waitForSubductionSave(fetchRepos);
         const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
-        await reconnectAdapters(fetchAdapters);
-        await waitForQueryState(fetchProgress, ['ready'], { timeout: 10_000 });
+        await reconnectAdapters(fetchAdapters, { repos: fetchRepos });
+        await waitForReadyWithRedrive(fetchClient, fetchProgress, { timeout: 10_000 });
         expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
       },
     );
@@ -622,9 +625,9 @@ describe('SubductionPolicy', () => {
         subductionPolicies: { host: pushPolicy },
       });
       const [pushHost, pushClient] = pushRepos;
-      await connectAdapters(pushAdapters);
+      await connectAdapters(pushAdapters, { repos: pushRepos });
       const handle = pushHost.create<{ text?: string }>({ text: 'snapshot' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(pushRepos);
       await expect
         .poll(async () => (await pushClient.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
         .toEqual('snapshot');
@@ -642,8 +645,12 @@ describe('SubductionPolicy', () => {
       const [fetchHost, fetchClient] = fetchRepos;
       await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
       const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'snapshot-fetch' });
-      await waitForSubductionSave();
-      await reconnectAdapters(fetchAdapters);
+      await waitForSubductionSave(fetchRepos);
+      await reconnectAdapters(fetchAdapters, { repos: fetchRepos });
+      // `reconnectAdapters` alone only re-drives an entry whose last sync settled `no-peers`; one
+      // that settled `all-failed` is left to heal backoff (100→200→…→6400 ms), which overruns the
+      // window. `shareConfigChanged()` is the documented reset for both — see the subduction skill.
+      fetchClient.shareConfigChanged();
       await expect
         .poll(async () => (await fetchClient.find<{ text?: string }>(fetchHandle.url)).doc()?.text, {
           timeout: 10_000,
@@ -668,11 +675,11 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const a = host.create<{ text?: string }>({ text: 'a' });
       const b = host.create<{ text?: string }>({ text: 'b' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       await expect
         .poll(async () => (await client.find<{ text?: string }>(a.url)).doc()?.text, { timeout: 5_000 })
@@ -723,10 +730,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [repoA, , repoC] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const docA = repoA.create<{ text?: string }>({ text: 'from-A' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
       await expect
         .poll(async () => (await repoC.find<{ text?: string }>(docA.url)).doc()?.text, { timeout: 10_000 })
         .toEqual('from-A');
@@ -791,11 +798,11 @@ describe('SubductionPolicy', () => {
         },
       });
       const [repoA, repoB, repoC] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const docA = repoA.create<{ text?: string }>({ text: 'from-A-blocked' });
       const docB = repoB.create<{ text?: string }>({ text: 'from-B-allowed' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       // Control: B-authored doc lands at C.
       await expect
@@ -846,10 +853,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = host.create<{ text?: string }>({ text: 'gated-put' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
@@ -867,7 +874,7 @@ describe('SubductionPolicy', () => {
       // Reconnect recovers: the connection-generation bump re-drives the
       // holder's stuck 'all-failed' push, and the now-allowing policy lets
       // it land.
-      await reconnectAdapters(adapters);
+      await reconnectAdapters(adapters, { repos });
       await expect
         .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
         .toEqual('gated-put');
@@ -898,10 +905,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = host.create<{ text?: string }>({ text: 'no-kick' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       // Initial denial settled.
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
@@ -949,10 +956,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = host.create<{ text?: string }>({ text: 'initial' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
       const clientHandle = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
       await expect.poll(() => clientHandle.doc()?.text, { timeout: 5_000 }).toEqual('initial');
 
@@ -960,7 +967,7 @@ describe('SubductionPolicy', () => {
       handle.change((doc: any) => {
         doc.text = 'after-revoke';
       });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       // Within the negative window the client's view must NOT advance.
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
@@ -1000,10 +1007,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = host.create<{ text?: string }>({ text: 'blocked' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
@@ -1035,8 +1042,8 @@ describe('SubductionPolicy', () => {
       await connectAdapters(adapters, { noEmitPeerCandidate: true });
 
       const handle = host.create<{ text?: string }>({ text: 'fetch-blocked' });
-      await waitForSubductionSave();
-      await reconnectAdapters(adapters);
+      await waitForSubductionSave(repos);
+      await reconnectAdapters(adapters, { repos });
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
@@ -1073,10 +1080,10 @@ describe('SubductionPolicy', () => {
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters);
+      await connectAdapters(adapters, { repos: repos });
 
       const handle = client.create<{ text?: string }>({ text: 'client-outbound-blocked' });
-      await waitForSubductionSave();
+      await waitForSubductionSave(repos);
 
       const progress = host.findWithProgress<{ text?: string }>(handle.url);
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
