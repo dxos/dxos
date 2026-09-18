@@ -29,6 +29,38 @@ declare module '@dxos/app-framework' {
 }
 
 declare global {
+  /** A space, narrowed to the database method the perf fixture uses. */
+  type DebugSpace = {
+    id: string;
+    db: {
+      /**
+       * A HYDRATED reference to an object by URI (`echo:///<objectId>`).
+       *
+       * `Database.makeRef` is documented as the one to prefer over `Ref.fromURI`, which returns an
+       * unhydrated reference whose `.load`/`.target` do not work — the fixture needs the former,
+       * because the operation handler resolves the ref it is handed.
+       */
+      makeRef: (uri: string) => unknown;
+    };
+  };
+
+  /**
+   * The client/ECHO debug hook (`window.__DXOS__`), mounted at the end of `client.initialize()`.
+   *
+   * Narrowed to what the specs use, per this file's convention.
+   *
+   * Only `db.makeRef` is needed: an operation that CREATES an object returns a JSON snapshot
+   * (`{ id, title, … }`) while one that CONSUMES it takes a `Ref`, and neither obvious shortcut
+   * bridges them — a hand-assembled `{ '/': 'echo:///<id>' }` envelope is rejected by the input
+   * schema (`Expected <Declaration>`), and `Ref.fromURI` yields an unhydrated ref whose resolution
+   * fails with `Resolver is not set`.
+   */
+  var dxos:
+    | {
+        spaces?: () => DebugSpace[];
+      }
+    | undefined;
+
   /** Long-task samples accumulated by the observer the startup spec installs. */
   var __longTasks: Array<{ start: number; duration: number }> | undefined;
 

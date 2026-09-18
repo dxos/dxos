@@ -115,6 +115,7 @@
       "@dxos/node-std",
       "@dxos/observability",
       "@dxos/operation",
+      "@dxos/perf-harness",
       "@dxos/phoenix",
       "@dxos/pipeline",
       "@dxos/pipeline-discord",
