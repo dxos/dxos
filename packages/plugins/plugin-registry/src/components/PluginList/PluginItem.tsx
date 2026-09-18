@@ -63,11 +63,8 @@ export type PluginItemProps = {
    * phase, reason, and error message.
    */
   failure?: PluginManager.PluginFailure;
-  /**
-   * Whether the account's plugin set has yet to be bound on this device. The switch is inert until
-   * it is: a toggle made before then is reverted when the account's answer arrives.
-   */
-  awaitingSettings?: boolean;
+  /** Shows whether the plugin is enabled without letting it be toggled. */
+  readOnly?: boolean;
 };
 
 export const PluginItem = ({
@@ -86,7 +83,7 @@ export const PluginItem = ({
   hasSettings: hasSettingsProp,
   onSettings,
   failure,
-  awaitingSettings,
+  readOnly,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
@@ -229,7 +226,8 @@ export const PluginItem = ({
                 <Field.Switch
                   classNames='self-center'
                   checked={isEnabled}
-                  disabled={awaitingSettings}
+                  // Browsers ignore `readonly` on a checkbox, so only `disabled` stops the toggle.
+                  disabled={readOnly}
                   onClick={handleChange}
                 />
               </Field.Root>

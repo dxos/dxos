@@ -167,7 +167,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
                   failuresById={failuresById}
                   deviceOnlyIds={deviceOnlyIds}
                   onClick={handleClick}
-                  awaitingSettings={settingsSync === undefined}
+                  readOnly={settingsSync === undefined}
                   onChange={handleChange}
                   onInstall={onInstall}
                   onUpdate={onUpdate}
