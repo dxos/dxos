@@ -25,6 +25,19 @@ const awaitSettingsSync = async (from: AppManager, to: AppManager) => {
   await expect(to.getDevPluginUrlInput()).toHaveValue(marker, { timeout: 60_000 });
 };
 
+/** TEMPORARY DIAGNOSTIC (DX-1264): dump both devices' settings-sync state when an assertion fails. */
+const probing = async (peers: Record<string, AppManager>, assertion: () => Promise<void>) => {
+  try {
+    await assertion();
+  } catch (err) {
+    for (const [name, peer] of Object.entries(peers)) {
+      // eslint-disable-next-line no-console
+      console.log(`SETTINGS-PROBE ${name} ${JSON.stringify(await peer.settingsSyncProbe().catch((e) => String(e)))}`);
+    }
+    throw err;
+  }
+};
+
 test.describe('HALO tests', () => {
   let host: AppManager;
   let guest: AppManager;
@@ -81,46 +94,53 @@ test.describe('HALO tests', () => {
     // });
   });
 
-  test('settings sync across devices, and one device can keep its own', async () => {
-    test.setTimeout(180_000);
+  // TEMPORARY DIAGNOSTIC (DX-1264): repeated so one CI run samples the flake several times.
+  for (const attempt of [1, 2, 3, 4, 5, 6]) {
+    test(`settings sync across devices, and one device can keep its own ${attempt}`, async () => {
+      test.setTimeout(180_000);
 
-    // Both boots have to land first: the navigation to the default space arrives seconds after the
-    // shell renders and closes any dialog opened before it.
-    await host.waitForDefaultWorkspace();
-    await guest.waitForDefaultWorkspace();
-    await host.openUserDevices();
-    const invitationCode = await host.createDeviceInvitation();
-    await guest.openUserDevices();
-    await guest.joinNewIdentity();
-    await guest.shell.acceptDeviceInvitation(invitationCode);
-    // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
-    const authCode = await host.getAuthCode();
-    await guest.shell.authenticateDevice(authCode);
-    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
-    await guest.waitForJoinedWorkspace();
+      // Both boots have to land first: the navigation to the default space arrives seconds after the
+      // shell renders and closes any dialog opened before it.
+      await host.waitForDefaultWorkspace();
+      await guest.waitForDefaultWorkspace();
+      await host.openUserDevices();
+      const invitationCode = await host.createDeviceInvitation();
+      await guest.openUserDevices();
+      await guest.joinNewIdentity();
+      await guest.shell.acceptDeviceInvitation(invitationCode);
+      // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
+      const authCode = await host.getAuthCode();
+      await guest.shell.authenticateDevice(authCode);
+      await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
+      await guest.waitForJoinedWorkspace();
 
-    await host.openRegistryCategory('recommended');
-    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
-    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
-    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
+      await host.openRegistryCategory('recommended');
+      await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+      await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+      await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
-    // 1. Sync: the host's decision replicates to the guest.
-    await guest.openRegistryCategory('recommended');
-    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 60_000 });
+      // 1. Sync: the host's decision replicates to the guest.
+      await guest.openRegistryCategory('recommended');
+      await probing({ host, guest }, () =>
+        expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 60_000 }),
+      );
 
-    // 2. Local override: the guest leaves the account for the plugin set only.
-    await guest.openPluginSettings('org.dxos.plugin.registry');
-    await guest.usePluginSetForThisDeviceOnly();
+      // 2. Local override: the guest leaves the account for the plugin set only.
+      await guest.openPluginSettings('org.dxos.plugin.registry');
+      await guest.usePluginSetForThisDeviceOnly();
 
-    await guest.openRegistryCategory('recommended');
-    await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
-    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+      await guest.openRegistryCategory('recommended');
+      await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
+      await probing({ host, guest }, () =>
+        expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked(),
+      );
 
-    // 3. The host keeps the account's decision.
-    await awaitSettingsSync(guest, host);
-    await host.openRegistryCategory('recommended');
-    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
-  });
+      // 3. The host keeps the account's decision.
+      await awaitSettingsSync(guest, host);
+      await host.openRegistryCategory('recommended');
+      await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
+    });
+  }
 
   test('deleting a space replicates across devices', async () => {
     test.setTimeout(120_000);

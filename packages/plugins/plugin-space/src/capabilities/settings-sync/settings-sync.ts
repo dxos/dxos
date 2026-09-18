@@ -144,6 +144,19 @@ export default Capability.makeModule(
       );
     };
 
+    // TEMPORARY DIAGNOSTIC (DX-1264): remove once the settings-sync e2e flake is attributed.
+    (globalThis as any).composer = (globalThis as any).composer ?? {};
+    (globalThis as any).composer.settingsSyncProbe = () => ({
+      spaceId: space.id,
+      settingsId: settings.id,
+      annotation: Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+        Option.match({ onSome: (ref) => ref.uri, onNone: () => undefined }),
+      ),
+      shared: JSON.parse(JSON.stringify(settings.shared)),
+      local: registry.get(device),
+      enabled: manager.getEnabled(),
+    });
+
     const onSettingsChange = () => (Obj.isDeleted(settings) ? follow() : refresh());
     let unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
 

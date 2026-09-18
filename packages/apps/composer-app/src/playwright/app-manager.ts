@@ -637,6 +637,11 @@ export class AppManager {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
   }
 
+  /** TEMPORARY DIAGNOSTIC (DX-1264): which settings object this device is bound to, and what it holds. */
+  async settingsSyncProbe(): Promise<unknown> {
+    return this.page.evaluate(() => (globalThis as any).composer?.settingsSyncProbe?.() ?? 'no probe');
+  }
+
   async changeStorageVersionInMetadata(version: number): Promise<void> {
     await this.page.evaluate(
       ({ version }) => {
