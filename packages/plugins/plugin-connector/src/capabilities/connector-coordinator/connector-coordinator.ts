@@ -29,6 +29,7 @@ import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import * as Binding from '../../Binding.ts';
+import { ConnectorCommandError } from '../../commands/errors.ts';
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants.ts';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors.ts';
 import * as SyncTemplate from '../../SyncTemplate.ts';
@@ -105,12 +106,12 @@ const runOnTokenCreated = (
     return Effect.void;
   }
   return onTokenCreated(input).pipe(
-    Effect.provide(FetchHttpClient.layer),
-    // Resolved through the process manager so the connector reads its credential from the same
-    // space-scoped `CredentialsService` operations use.
     Effect.provide(
-      ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
-        Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+      Layer.provideMerge(
+        FetchHttpClient.layer,
+        ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
+          Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+        ),
       ),
     ),
     Effect.catch((error) =>
@@ -643,7 +644,9 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connector = yield* resolveConnector(getConnectorEntries, connectorId);
         if (!connector.credentialForm) {
-          return yield* Effect.fail(new Error(`ConnectorSpec.Connector ${connectorId} has no credentialForm.`));
+          return yield* Effect.fail(
+            new ConnectorCommandError({ message: `ConnectorSpec.Connector ${connectorId} has no credentialForm.` }),
+          );
         }
 
         const result = yield* connector.credentialForm.onSubmit({ values, connector, db });
@@ -666,7 +669,9 @@ export default Capability.makeModule(
         const loginHint = result.loginHint?.trim();
         if (!loginHint) {
           return yield* Effect.fail(
-            new Error(`ConnectorSpec.Connector ${connectorId} credentialForm produced an empty loginHint.`),
+            new ConnectorCommandError({
+              message: `ConnectorSpec.Connector ${connectorId} credentialForm produced an empty loginHint.`,
+            }),
           );
         }
         return yield* createConnection({ db, spaceId, connectorId, loginHint, existingTarget });

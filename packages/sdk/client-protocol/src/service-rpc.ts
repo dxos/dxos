@@ -18,7 +18,7 @@ import { Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { normalizeHandlers, runServiceCall } from '@dxos/protocols';
+import { normalizeHandlers, runServiceCall, toServiceError } from '@dxos/protocols';
 import {
   ContactsService,
   DataService,
@@ -93,8 +93,6 @@ export type ClientServicesHandlers = {
   EdgeAgentService: EdgeAgentService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
 };
-
-const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
 const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'Void';
 
@@ -249,7 +247,7 @@ export const makeClientServicesHandlers = ({
   services,
   onRequest,
 }: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>> => {
-  const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toError }) : Effect.void;
+  const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toServiceError }) : Effect.void;
 
   const handlers: Record<string, (payload: unknown) => unknown> = {};
   for (const [tag, rpc] of ClientServicesRpcs.requests) {
@@ -419,7 +417,7 @@ export const makeRpcFromServices = (services: () => Partial<ClientServices>): Cl
         pbStreamToStream(() => resolveMethod()(request) as PbStream<unknown>);
     } else {
       service[methodName] = (request?: unknown) =>
-        Effect.tryPromise({ try: async () => resolveMethod()(request), catch: toError });
+        Effect.tryPromise({ try: async () => resolveMethod()(request), catch: toServiceError });
     }
   }
   return rpc as unknown as ClientServicesRpc;
@@ -439,12 +437,12 @@ export const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, E
     try {
       source = open();
     } catch (err) {
-      emit.fail(toError(err));
+      emit.fail(toServiceError(err));
       return;
     }
     source.subscribe(
       (data) => void emit.single(data),
-      (err) => void (err ? emit.fail(toError(err)) : emit.end()),
+      (err) => void (err ? emit.fail(toServiceError(err)) : emit.end()),
     );
     return Effect.promise(async () => source.close());
   });
@@ -465,7 +463,7 @@ export const streamToPbStream = <T>(
       Effect.matchCauseEffect({
         onFailure: (cause) =>
           Effect.sync(() => {
-            const error = toError(Cause.squash(cause));
+            const error = toServiceError(Cause.squash(cause));
             if (Cause.hasInterruptsOnly(cause)) {
               close();
               return;

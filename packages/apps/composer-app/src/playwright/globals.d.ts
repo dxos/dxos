@@ -29,7 +29,7 @@ declare module '@dxos/app-framework' {
 }
 
 declare global {
-  /** A space, narrowed to the database method the perf fixture uses. */
+  /** A space, narrowed to the database members the perf specs use. */
   type DebugSpace = {
     id: string;
     db: {
@@ -41,6 +41,34 @@ declare global {
        * because the operation handler resolves the ref it is handed.
        */
       makeRef: (uri: string) => unknown;
+
+      /** Drains pending head updates, so a sync state read after it is not built on stale heads. */
+      flush: () => Promise<void>;
+
+      /**
+       * Combined automerge-document and feed-block backlog, reported against the EDGE peer.
+       *
+       * Feed counts are strings on this interface because a block count is not bounded by
+       * `Number.MAX_SAFE_INTEGER` in principle.
+       */
+      getSyncState: () => Promise<{
+        localDocumentCount: number;
+        remoteDocumentCount: number;
+        totalDocumentCount: number;
+        unsyncedDocumentCount: number;
+        blocksToPull: string;
+        blocksToPush: string;
+        totalBlocks: string;
+      }>;
+
+      /**
+       * The raw per-peer automerge view.
+       *
+       * Read only for the peer LIST: {@link getSyncState} reports zeroes for every document field
+       * when no EDGE peer is selected, so this is the one place "replicated" can be told apart from
+       * "not replicating".
+       */
+      getAutomergeSyncState: () => Promise<{ peers?: Array<{ peerId: string }> }>;
     };
   };
 
