@@ -162,6 +162,9 @@ export type ActionMenuProps = Partial<MenuActions> &
      * for menus nobody opens — the largest single cost in the task list's stages of the performance
      * flow. Ignored for a controlled or virtually-anchored menu, which may be opened from anywhere
      * and so cannot wait for its own trigger.
+     *
+     * Building the menu re-parents the trigger under it, so a caller holding the trigger's element
+     * has to re-read it afterwards.
      */
     deferUntilOpen?: boolean;
     /** Anchors the content at an element that is not the trigger; the child is then optional. */
