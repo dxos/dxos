@@ -6,6 +6,15 @@ import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 
 import { type Binding } from './binding.ts';
 
+// TEMPORARY DIAGNOSTIC (DX-1264).
+const STACK = 'org.dxos.plugin.stack';
+const diag = (entry: Record<string, unknown>): void => {
+  const sink = (globalThis as Record<string, any>).__settingsDiag;
+  if (Array.isArray(sink)) {
+    sink.push({ t: Date.now(), ...entry });
+  }
+};
+
 /** A binding whose `write` applies over several turns returns a promise; most return nothing. */
 const isPromise = (value: unknown): value is Promise<void> =>
   typeof value === 'object' && value !== null && 'then' in value && typeof value.then === 'function';
@@ -62,6 +71,7 @@ export class Reconciler {
     const stored = this.#stored();
     const local = this._binding.read();
     const merged = { ...local, ...stored };
+    diag({ op: 'seed', ns: this.namespace, stored: stored[STACK], local: local[STACK], merged: merged[STACK] });
     this.#guard(() => {
       this._store.update((draft) => {
         AppSettings.applyResolved(draft, this._binding.namespace, stored, merged);
@@ -74,7 +84,16 @@ export class Reconciler {
   pull(): void {
     this.#guard(() => {
       const resolved = this.#resolved();
-      if (AppSettings.changedKeys(this.#agreed, resolved).length === 0) {
+      const changed = AppSettings.changedKeys(this.#agreed, resolved);
+      diag({
+        op: 'pull',
+        ns: this.namespace,
+        agreed: this.#agreed[STACK],
+        resolved: resolved[STACK],
+        shared: this._store.read().shared[this.namespace]?.[STACK],
+        changed: changed.length,
+      });
+      if (changed.length === 0) {
         return undefined;
       }
 
@@ -96,7 +115,17 @@ export class Reconciler {
     this.#guard(() => {
       const local = this._binding.read();
       const before = this.#baseline(local);
-      if (AppSettings.changedKeys(before, local).length === 0) {
+      const changed = AppSettings.changedKeys(before, local);
+      diag({
+        op: 'push',
+        ns: this.namespace,
+        before: before[STACK],
+        local: local[STACK],
+        shared: this._store.read().shared[this.namespace]?.[STACK],
+        changed: changed.length,
+        stackChanged: changed.includes(STACK),
+      });
+      if (changed.length === 0) {
         return undefined;
       }
 
@@ -113,6 +142,7 @@ export class Reconciler {
    * it never applied.
    */
   #write(values: AppSettings.Values): Promise<void> | undefined {
+    diag({ op: 'write', ns: this.namespace, value: values[STACK] });
     const applied = this._binding.write(values);
     if (!isPromise(applied)) {
       this.#agreed = values;
@@ -148,6 +178,7 @@ export class Reconciler {
   #guard(fn: () => Promise<void> | undefined): void {
     if (this.#busy) {
       this.#missed = true;
+      diag({ op: 'dropped', ns: this.namespace });
       return;
     }
 

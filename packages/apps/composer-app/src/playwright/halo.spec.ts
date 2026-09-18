@@ -31,8 +31,16 @@ const probing = async (peers: Record<string, AppManager>, assertion: () => Promi
     await assertion();
   } catch (err) {
     for (const [name, peer] of Object.entries(peers)) {
+      const probe: any = await peer.settingsSyncProbe().catch((e) => ({ error: String(e) }));
+      const stack = 'org.dxos.plugin.stack';
       // eslint-disable-next-line no-console
-      console.log(`SETTINGS-PROBE ${name} ${JSON.stringify(await peer.settingsSyncProbe().catch((e) => String(e)))}`);
+      console.log(
+        `SETTINGS-PROBE ${name} id=${probe.settingsId} sharedStack=${probe.shared?.['org.dxos.app-framework.plugins']?.[stack]} enabled=${probe.enabled?.includes(stack)} pins=${JSON.stringify(probe.local)}`,
+      );
+      for (const entry of probe.trace ?? []) {
+        // eslint-disable-next-line no-console
+        console.log(`SETTINGS-TRACE ${name} ${JSON.stringify(entry)}`);
+      }
     }
     throw err;
   }

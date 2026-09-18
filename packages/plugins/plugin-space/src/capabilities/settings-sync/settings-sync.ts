@@ -27,6 +27,13 @@ import { Sync } from './sync.ts';
  * device's pins in local storage. A write opens both, since only {@link AppSettings.setValue} knows
  * whether an edit reaches the account.
  */
+// TEMPORARY DIAGNOSTIC (DX-1264).
+const STACK = 'org.dxos.plugin.stack';
+const diagSink = ((globalThis as Record<string, any>).__settingsDiag ??= []);
+const diag = (entry: Record<string, unknown>): void => {
+  diagSink.push({ t: Date.now(), ...entry });
+};
+
 const makeStore = (
   current: () => AppSettings.AppSettings,
   device: Atom.Writable<AppSettings.DeviceSettings>,
@@ -37,7 +44,12 @@ const makeStore = (
     const before = registry.get(device);
     const local: AppSettings.DeviceSettings = structuredClone(before);
     const settings = current();
+    const was = settings.shared[AppSettings.PLUGINS_NAMESPACE]?.[STACK];
     Obj.update(settings, (settings) => fn({ shared: settings.shared, local }));
+    const now = settings.shared[AppSettings.PLUGINS_NAMESPACE]?.[STACK];
+    if (was !== now) {
+      diag({ op: 'store', was, now, stack: new Error('trace').stack?.split('\n').slice(1, 6).join(' | ') });
+    }
     if (JSON.stringify(local) !== JSON.stringify(before)) {
       registry.set(device, local);
     }
@@ -153,11 +165,15 @@ export default Capability.makeModule(
         Option.match({ onSome: (ref) => ref.uri, onNone: () => undefined }),
       ),
       shared: JSON.parse(JSON.stringify(settings.shared)),
+      trace: diagSink.slice(-60),
       local: registry.get(device),
       enabled: manager.getEnabled(),
     });
 
-    const onSettingsChange = () => (Obj.isDeleted(settings) ? follow() : refresh());
+    const onSettingsChange = () => {
+      diag({ op: 'echo', stack: settings.shared[AppSettings.PLUGINS_NAMESPACE]?.[STACK] });
+      return Obj.isDeleted(settings) ? follow() : refresh();
+    };
     let unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
 
     const unsubscribe = [
