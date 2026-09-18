@@ -15,22 +15,37 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
 
-import { updatePlankNames } from '../util/index.ts';
 import {
   closeCompanionPlank,
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
   updateActiveDeck,
+  updatePlankNames,
+  withViewTransition,
 } from '../util/index.ts';
 import * as Navigation from './navigation.ts';
 import { computeActiveUpdates } from './set-active.ts';
 
 /**
+ * How a navigation lands, carried down to the single write that mounts the planks because a plank
+ * focuses itself in the commit that mounts it.
+ */
+export type NavigationIntent = {
+  /** The plank this write focuses; an intent that names none declines the focus outright. */
+  scrollIntoView?: string;
+  /** Run the write as the update step of a view transition, so the content region crossfades. */
+  transition?: boolean;
+};
+
+/**
  * Write the deck's active planks and the URL segment each one came from, returning the item to
  * attend if attention moved.
  */
-export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigation.Plank[]) {
+export const applyActive = Effect.fnUntraced(function* (
+  planks: readonly Navigation.Plank[],
+  intent?: NavigationIntent,
+) {
   const deck = yield* DeckCapabilities.getDeck();
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
   const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
@@ -55,20 +70,33 @@ export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigat
   const activeSegments = deckUpdates.active.map((id) => Navigation.segmentOf(segments, id));
   const plankNames = updatePlankNames(deck.plankNames, activeSegments);
   const { active, inactive, companionPlanks } = deckUpdates;
+  // A caller with no intent at all (a close, a set) has no opinion, so the write falls back to the plank
+  // attention is displaced onto, which has to be one that is open. A caller that passed an intent has
+  // already decided, including when it names no plank.
+  const scrollIntoView = intent ? intent.scrollIntoView : toAttend;
+  const changed =
+    !sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments);
 
-  // The projection applies the same URL twice and re-applies it on any navigation, so writing
-  // unconditionally would hand every reader new arrays each time and re-render every plank for a
-  // deck that did not change.
-  if (!sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments)) {
-    registry.set(ephemeralAtom, {
-      ...ephemeral,
-      open: { ...ephemeral.open, [workspace]: { ...open, active, inactive, segments } },
-    });
-  }
-  const stored = registry.get(stateAtom).decks[workspace];
-  if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
-    registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
-  }
+  const write = Effect.sync(() => {
+    // The projection re-applies the same URL, so writing unconditionally would re-render every plank of
+    // an unchanged deck; a `scrollIntoView` forces the write, since it has to land in the commit that
+    // mounts its plank.
+    if (changed || scrollIntoView !== undefined) {
+      registry.set(ephemeralAtom, {
+        ...ephemeral,
+        open: { ...ephemeral.open, [workspace]: { ...open, active, inactive, segments } },
+        ...(scrollIntoView !== undefined ? { scrollIntoView: { id: scrollIntoView } } : {}),
+      });
+    }
+    const stored = registry.get(stateAtom).decks[workspace];
+    if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
+      registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
+    }
+  });
+
+  // Only a write that changes what is open is worth animating, since rendering is frozen for the whole
+  // update step.
+  yield* intent?.transition && changed ? withViewTransition(write) : write;
 
   return toAttend;
 });

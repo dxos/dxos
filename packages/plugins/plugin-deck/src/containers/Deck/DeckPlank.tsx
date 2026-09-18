@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -85,11 +85,10 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [invokePromise, active],
   );
 
-  // Newly opened/navigated planks (and a folded plank returned to view by its spine) are flagged via
-  // `scrollIntoView`; unless the reveal leaves focus where it is, focus the pane so it gains attention, then
-  // clear the one-shot flag. Scrolling is owned by the deck viewport, which positions the plank past the
-  // pile of spines, so this focus must not scroll on its own.
-  useEffect(() => {
+  // A layout effect, since attention is derived from focus and focus has to move in the task that
+  // inserted this plank or its first painted frame reads as unattended. Scrolling is owned by the deck
+  // viewport, which positions the plank past the pile of spines, so this focus must not scroll.
+  useLayoutEffect(() => {
     if (scrollIntoView?.id === id) {
       if (scrollIntoView.focus !== false) {
         focusPane(rootRef.current);

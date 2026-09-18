@@ -123,4 +123,25 @@ describe('the companion flag', () => {
     expect(openCompanionPlank(['a'], true, 'b')).toEqual(['b']);
     expect(closeCompanionPlank(['a'], true, 'b')).toEqual([]);
   });
+
+  test('an uninitialized deck starts closed while stacked, so a companion never hangs off every plank', ({
+    expect,
+  }) => {
+    expect(isCompanionOpen(undefined, false, 'a')).toBe(false);
+    expect(isCompanionOpen(undefined, false, undefined)).toBe(false);
+  });
+
+  test('an uninitialized deck starts open while flat, matching the single pane it lays out', ({ expect }) => {
+    expect(isCompanionOpen(undefined, true, 'a')).toBe(true);
+  });
+
+  test('opening still works from an uninitialized deck, and only marks the plank asked for', ({ expect }) => {
+    expect(openCompanionPlank(undefined, false, 'a')).toEqual(['a']);
+    expect(isCompanionOpen(['a'], false, 'b')).toBe(false);
+  });
+
+  test('closing an uninitialized deck is a no-op rather than materializing every other plank as open', ({ expect }) => {
+    expect(closeCompanionPlank(undefined, false, 'a')).toEqual([]);
+    expect(closeCompanionPlank(undefined, true, 'a')).toEqual([]);
+  });
 });

@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { DeckCapabilities, DeckSchema } from '#types';
 
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme.ts';
-import { type CompanionTarget, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
+import { type CompanionTarget, type NavigationIntent, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
 import * as Navigation from './navigation.ts';
 import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation.ts';
 
@@ -86,6 +86,8 @@ export type ProjectOptions = {
   attend?: boolean;
   /** Node ids an in-app navigation already holds; see {@link Navigation.PlankIds}. */
   navigatedIds?: Navigation.PlankIds;
+  /** How this navigation lands; see {@link NavigationIntent}. */
+  intent?: NavigationIntent;
 };
 
 /**
@@ -195,7 +197,9 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
   yield* switchWorkspace(workspacePath);
 
-  yield* applyActive(initialPlanks(pairs, idsBySegment()));
+  // An in-app navigation already holds its ids, so this first pass is the write that mounts its planks
+  // and carries the caller's intent.
+  yield* applyActive(initialPlanks(pairs, idsBySegment()), options?.intent);
 
   const loaders = navigationTargetLoaders;
   const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
@@ -245,7 +249,9 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     });
   });
 
-  const displaced = yield* applyActive(planks);
+  // An external URL's planks resolve only here, so the chain end lands with the write that mounts them.
+  const chainEnd = attendChainEnd ? (companionAnchorId ?? planks[planks.length - 1]?.id) : undefined;
+  const displaced = yield* applyActive(planks, { scrollIntoView: chainEnd });
 
   yield* applyCompanion(companion);
 
@@ -262,7 +268,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     return displaced;
   }
 
-  return companionAnchorId ?? planks[planks.length - 1]?.id;
+  return chainEnd;
 });
 
 /**
