@@ -675,6 +675,9 @@ describe('path-resolution', () => {
         url({ key: 'thread', kind: 'item', path: ['threads'], depth: { min: 1 } }),
         url({ key: 'type', kind: 'item', path: ['database'] }),
         url({ key: 'db', kind: 'item', path: ['database'], depth: { min: 2 } }),
+        url({ key: 'feed', kind: 'item', path: ['feeds'], depth: { min: 1 } }),
+        url({ key: 'post', kind: 'item', path: ['feeds'], depth: { min: 2 } }),
+        url({ key: 'pin', kind: 'item', path: ['feeds'], depth: 2 }),
       ]);
       return builder;
     };
@@ -712,6 +715,12 @@ describe('path-resolution', () => {
         id: 't1+replies+r1',
         workspace: 'space',
       });
+    });
+
+    test('the larger declared depth wins, and an exact depth beats an equal minimum', ({ expect }) => {
+      expect(represent('space/feeds/f1')?.key).toBe('feed');
+      expect(represent('space/feeds/f1/p1')?.key).toBe('pin');
+      expect(represent('space/feeds/f1/p1/r1')?.key).toBe('post');
     });
 
     test('a node its bindings do not shape has no URL', ({ expect }) => {
