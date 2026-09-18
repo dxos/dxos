@@ -45,7 +45,7 @@ const FOOTER_ACTIONS: ActionSpec[] = [
   {
     action: 'repair',
     label: 'Repair',
-    title: 'Delete sync heads stored for remote peers (re-learned on next sync); fixes profiles that freeze on load',
+    title: 'Run repair tool cleaning up stale data',
     // Amber: the one variant Boot (primary) and Reset (danger) have not taken.
     className: 'running',
   },
