@@ -4,7 +4,6 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { sleep } from '@dxos/async';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -95,10 +94,11 @@ describe('DatabaseImpl', () => {
       await openAndClose(testBuilder);
       const spaceKey = PublicKey.random();
       let rootUrl: string;
+      let objectIds: string[];
       {
         const peer = await testBuilder.createPeer({ storagePath: tmpPath });
         const db = await peer.createDatabase(spaceKey);
-        range(5).forEach((index) => db.add(Obj.make(TestSchema.Expando, { name: `object-${index}` })));
+        objectIds = range(5).map((index) => db.add(Obj.make(TestSchema.Expando, { name: `object-${index}` })).id);
         await db.flush({ indexes: true });
         rootUrl = db.rootUrl!;
         await peer.close();
@@ -106,9 +106,10 @@ describe('DatabaseImpl', () => {
 
       const peer = await testBuilder.createPeer({ storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, rootUrl);
-      // Long enough for a load queued on open to have happened.
-      await sleep(100);
-      expect(db.getLinkedDocHandles()).toHaveLength(0);
+      // Asking for one object is what opens a document: awaiting its load also drains a load the
+      // open itself started, so a space that opened its links would hold five handles here.
+      await db.loadObjectCoreById(objectIds[0]);
+      expect(db.getLinkedDocHandles()).toHaveLength(1);
 
       const objects = await db.query(Filter.type(TestSchema.Expando)).run();
       expect(objects).toHaveLength(5);
