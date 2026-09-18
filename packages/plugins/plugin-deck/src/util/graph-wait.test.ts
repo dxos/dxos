@@ -2,17 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { EffectEx } from '@dxos/effect';
-import * as GraphNode from '@dxos/graph/GraphNode';
-import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { firstOpenableChild } from './graph-wait.ts';
 
