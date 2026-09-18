@@ -50,6 +50,9 @@ regression. Filter on them rather than trusting them to be constant.
 | `ciTaskMs`, `ciScriptMs`, `ciLayoutMs`, `ciRecalcStyleMs` | ms            | tab only, by construction                                                       |
 | `ciTbtMs`, `ciLongTaskMaxMs`                              | ms            | tab only — the Long Tasks API is a page API                                     |
 | `ciCodeBytes`, `ciApiBytes`, `ciApiRequests`              | bytes / count | —                                                                               |
+| `ciEdgeApiBytes`, `ciEdgeSocketBytes`, `ciEdgeBytes`      | bytes         | the app's own backend only; `ciEdgeBytes` is the two summed                     |
+| `ciEdgeApiRequests`, `ciEdgeSocketFrames`                 | count         | frames are counted in both directions                                           |
+| `ciAnalyticsBytes`                                        | bytes         | telemetry, kept out of the edge columns and recorded so the split is auditable  |
 | `ciRealms`                                                | count         | how many realms the row read, so a `0` column is readable as absent             |
 
 **The realm columns are keyed by KIND, not by script name.** A name-keyed column
@@ -92,6 +95,7 @@ night's ten iterations.
 | 8   | Peak heap per run — tab               | `ciHeapUsedBytesTab` | max     |
 | 9   | Total app code transferred per run    | `ciCodeBytes`        | sum     |
 | 10  | Total blocking time per run           | `ciTbtMs`            | sum     |
+| 11  | Total edge traffic per run            | `ciEdgeBytes`        | sum     |
 
 ### The two stacked tiles
 
@@ -115,6 +119,25 @@ optimizing the JS heap cannot move the memory number.
 One honest caveat, recorded in the tile's SQL: the RSS peak and the heap peak need not occur at the
 same instant within a phase, so the total is exact and the boundary between the two segments is
 approximate.
+
+### Edge traffic, and what it took to measure it
+
+`ciEdgeBytes` is `fetch`/`xhr` **plus WebSocket frames** to the app's own backend, with analytics
+excluded. Each half needed fixing before the tile meant anything:
+
+- **Frames were invisible.** A WebSocket emits exactly ONE `response` — the 101, with an empty body
+  — so the `response` handler saw none of ECHO's replication. On a real CI run that read as
+  `edit-document`, `toggle-task`, `scroll-tasks` and `reopen-project` each recording **0 API bytes
+  and 0 requests**, which is impossible for a flow that syncs. Counted via `page.on('websocket')`
+  now, in both directions.
+- **Analytics rode the same resource type** as a real API call, so whatever PostHog flushed during
+  a stage landed in the same column as the app's own traffic. Origin is classified by host,
+  suffix-matched so every deployment of the worker counts without being listed, with the analytics
+  list tested FIRST so telemetry proxied through an edge subdomain cannot widen the backend column.
+
+Origin accumulates alongside the code/API split rather than partitioning it: a deployed build
+serves the bundle from the same host as the API, so `codeBytes` has to keep meaning the whole
+bundle.
 
 ### Shared-worker panels are deliberately absent
 
