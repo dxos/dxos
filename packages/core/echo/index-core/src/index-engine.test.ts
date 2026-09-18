@@ -47,7 +47,7 @@ class MockIndexDataSource implements IndexDataSource {
     _ctx: Context,
     cursors: IndexCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; done: boolean }> {
     return Effect.sync(() => {
       const results: { object: IndexerObject; hash: string }[] = [];
 
@@ -80,7 +80,7 @@ class MockIndexDataSource implements IndexDataSource {
         cursor: r.hash,
       }));
 
-      return { objects, cursors: newCursors };
+      return { objects, cursors: newCursors, done: limitedResults.length === results.length };
     });
   }
 }
@@ -282,17 +282,47 @@ describe('IndexEngine', () => {
         },
       ]);
 
-      // Update with pending data — sub-indexes process objects, done is false.
+      // A pass that drains the source reports done, so the caller schedules no follow-up.
       const { updated: updated1, done: done1 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
       expect(updated1).toBeGreaterThan(0);
-      expect(done1).toBe(false);
+      expect(done1).toBe(true);
 
-      // Second update with no new data — all sub-indexes caught up, done is true.
+      // A pass cut short by its limit does not, so pagination continues.
+      dataSource.push([
+        {
+          spaceId,
+          queueId: null,
+          queueNamespace: null,
+          documentId: 'doc-done-test-2',
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test 2' },
+        },
+        {
+          spaceId,
+          queueId: null,
+          queueNamespace: null,
+          documentId: 'doc-done-test-3',
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test 3' },
+        },
+      ]);
       const { updated: updated2, done: done2 } = yield* engine.update(Context.default(), dataSource, {
         spaceId: null,
+        limit: 1,
       });
-      expect(updated2).toBe(0);
-      expect(done2).toBe(true);
+      expect(updated2).toBeGreaterThan(0);
+      expect(done2).toBe(false);
+
+      // Once it is drained again, done is true.
+      const { updated: updated3, done: done3 } = yield* engine.update(Context.default(), dataSource, {
+        spaceId: null,
+      });
+      expect(updated3).toBeGreaterThan(0);
+      expect(done3).toBe(true);
     }, Effect.provide(TestLayer)),
   );
 
@@ -333,7 +363,7 @@ describe('IndexEngine', () => {
       const result: IndexingResult = yield* engine.update(Context.default(), dataSource, { spaceId: null });
 
       expect(result.updated).toBeGreaterThan(0);
-      expect(result.done).toBe(false);
+      expect(result.done).toBe(true);
 
       // Spaces: both spaceIds should be present.
       expect(result.spaces.has(spaceId1)).toBe(true);

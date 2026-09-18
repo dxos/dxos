@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
+import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -75,27 +75,30 @@ const AUTOMATIC_GARBAGE_COLLECTION = false;
 export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
 
 /**
- * Ceiling on index runs driven by a document save, in runs per second.
+ * Idle period after the last local write before the index run it asked for, in milliseconds.
  *
- * A save-driven run re-indexes every object the document changed, and an object's FTS row holds its
- * whole JSON snapshot — so one keystroke in a 110KB markdown document rewrites 110KB of index. The
- * saves arrive per keystroke, which without a ceiling makes that the per-keystroke cost: typing 19
- * characters into the perf fixture's document wrote 4.95MB and spent 3.6s of worker CPU inside
- * SQLite. The first save after an idle period still indexes immediately (the scheduler throttles
- * from the last run, not the first trigger), so this bounds a burst rather than delaying an
- * isolated write, and the cost of the ceiling is that a query over a document being typed into
- * trails the keystrokes by up to this interval.
- *
- * Only save-driven runs are throttled: `open`, `batch-continuation` and the `flush()` RPC force a
- * run, so startup and bulk indexing still paginate at full speed.
+ * An index run re-indexes every object the write touched, and an object's FTS row holds its whole
+ * JSON snapshot under a trigram tokenizer, so one keystroke in a 110KB markdown document rewrites
+ * the document's whole index entry: ~700KB of SQLite pages and ~300ms of worker CPU. Document
+ * saves and feed blocks both arrive per keystroke, which made that the per-keystroke cost — six
+ * seconds of typing drove 22 re-indexes, 15MB of writes and 6.6s of worker CPU. Waiting for the
+ * burst to settle collapses that, at the cost of a query over a document being typed into trailing
+ * the keystrokes by this much.
  */
-const SAVE_DRIVEN_INDEX_RUNS_PER_SEC = 2;
+const WRITE_DRIVEN_INDEX_DEBOUNCE_MS = 500;
 
-/** Reasons that must not wait on the save-driven ceiling. */
-const UNTHROTTLED_INDEX_RUNS: ReadonlySet<IndexRunReason> = new Set<IndexRunReason>([
-  'open',
-  'batch-continuation',
-  'rpc-update-indexes',
+/**
+ * Ceiling on how long a write-driven index run may be deferred, in milliseconds.
+ *
+ * Writes that never pause — replication catching up, an agent writing, a long typing run — would
+ * postpone the debounce indefinitely, so the first deferred write also starts this deadline.
+ */
+const WRITE_DRIVEN_INDEX_MAX_WAIT_MS = 2_000;
+
+/** Reasons that arrive per local write, and so are debounced rather than run on arrival. */
+const WRITE_DRIVEN_INDEX_RUNS: ReadonlySet<IndexRunReason> = new Set<IndexRunReason>([
+  'documents-saved',
+  'feed-blocks',
 ]);
 
 export type EchoHostProps = {
@@ -165,11 +168,15 @@ export class EchoHost extends Resource {
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
 
-  private _updateIndexes!: UpdateScheduler;
+  private _updateIndexes!: DeferredTask;
+
+  /** Pending write-driven run, and the deadline its burst must not outlive. */
+  #writeIndexTimer: ReturnType<typeof setTimeout> | undefined;
+  #writeIndexDeadline: number | undefined;
 
   /**
-   * Why the pending index run was scheduled, counted per reason. The scheduler coalesces
-   * overlapping triggers into one run, so attributing a run needs the full multiset of
+   * Why the pending index run was scheduled, counted per reason. `DeferredTask` coalesces
+   * overlapping `schedule()` calls into one run, so attributing a run needs the full multiset of
    * reasons that accumulated before it started — a single "last caller" field would misattribute
    * every coalesced run.
    */
@@ -343,9 +350,8 @@ export class EchoHost extends Resource {
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
     log('echo-host: index engine migration done');
-    this._updateIndexes = new UpdateScheduler(this._ctx, this._runUpdateIndexes, {
-      maxFrequency: SAVE_DRIVEN_INDEX_RUNS_PER_SEC,
-    });
+    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+    this._ctx.onDispose(() => this.#cancelWriteDrivenIndexRun());
 
     log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
@@ -446,6 +452,8 @@ export class EchoHost extends Resource {
     }
     do {
       this.#noteIndexRunReason('rpc-update-indexes');
+      // Subsumes any deferred write-driven run, so its timer cannot fire into an empty pass later.
+      this.#cancelWriteDrivenIndexRun();
       await this._updateIndexes.runBlocking();
       if (this._ctx.disposed) {
         return;
@@ -1104,11 +1112,36 @@ export class EchoHost extends Resource {
 
   #scheduleIndexRun(reason: IndexRunReason): void {
     this.#noteIndexRunReason(reason);
-    if (UNTHROTTLED_INDEX_RUNS.has(reason)) {
-      this._updateIndexes.forceTrigger();
+    if (WRITE_DRIVEN_INDEX_RUNS.has(reason)) {
+      this.#deferWriteDrivenIndexRun();
     } else {
-      this._updateIndexes.trigger();
+      this.#runIndexesNow();
     }
+  }
+
+  /**
+   * Holds a write-driven run until the writes stop, or until the burst's deadline, whichever is
+   * sooner. Any other reason runs immediately and takes the deferred writes with it.
+   */
+  #deferWriteDrivenIndexRun(): void {
+    const now = Date.now();
+    this.#writeIndexDeadline ??= now + WRITE_DRIVEN_INDEX_MAX_WAIT_MS;
+    clearTimeout(this.#writeIndexTimer);
+    this.#writeIndexTimer = setTimeout(
+      () => this.#runIndexesNow(),
+      Math.max(0, Math.min(WRITE_DRIVEN_INDEX_DEBOUNCE_MS, this.#writeIndexDeadline - now)),
+    );
+  }
+
+  #runIndexesNow(): void {
+    this.#cancelWriteDrivenIndexRun();
+    this._updateIndexes.schedule();
+  }
+
+  #cancelWriteDrivenIndexRun(): void {
+    clearTimeout(this.#writeIndexTimer);
+    this.#writeIndexTimer = undefined;
+    this.#writeIndexDeadline = undefined;
   }
 
   /** Drains the pending reasons so each run reports only the requests that produced it. */

@@ -21,6 +21,9 @@ import type { Index, IndexerObject } from './interface.ts';
 // Use 500 as a safe chunk size for IN (...) clauses.
 const SQL_CHUNK_SIZE = 500;
 
+/** Upsert probe row: `snapshot` is null when the caller does not need the prior value. */
+type SnapshotProbe = { snapshot: string | null };
+
 /**
  * The space and queue constrains are combined together using a logical OR.
  */
@@ -282,16 +285,13 @@ export class FtsIndex implements Index {
               // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
               const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
 
-              // FTS5 doesn't support UPDATE, need DELETE + INSERT for upsert, so the row is probed
-              // either way. The snapshot column is projected only on the merge path: a full block
-              // discards the prior snapshot, and a snapshot is the object's whole JSON — reading one
-              // back on every change re-reads the entire indexed document, 110KB per keystroke on
-              // the perf fixture's markdown document.
+              // FTS5 has no UPDATE, so an upsert is DELETE + INSERT and the row must be probed
+              // either way. Only the merge path projects `snapshot`: a full block discards the
+              // prior one, and a snapshot is the object's whole JSON — 110KB for the perf fixture's
+              // markdown document, re-read on every keystroke.
               const existing = isPartialBlock
-                ? yield* sql<{ snapshot: string | null }>`SELECT snapshot FROM ftsIndex WHERE rowid = ${recordId}`
-                : yield* sql<{
-                    snapshot: string | null;
-                  }>`SELECT NULL AS snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
+                ? yield* sql<SnapshotProbe>`SELECT snapshot FROM ftsIndex WHERE rowid = ${recordId}`
+                : yield* sql<SnapshotProbe>`SELECT NULL AS snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
               const prior = existing.length > 0 ? existing[0].snapshot : null;
 
               const merged = prior !== null ? { ...(JSON.parse(prior) as Record<string, unknown>), ...data } : data;
