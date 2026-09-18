@@ -568,7 +568,9 @@ export class EchoHost extends Resource {
    * A local root that disagrees is REPLACED, not kept: the root in force is the one EDGE recorded,
    * write-once and identical for every device, so a local one can only be a root this device minted
    * before that record existed. Keeping it would leave the device reading a document no one else
-   * writes to.
+   * writes to. The credentials document the replaced root named is dropped with it, which costs
+   * nothing while the control feed is still the source of truth -- every credential in it is
+   * replayed into whichever document the space is anchored on.
    */
   async adoptSpaceRoot(
     ctx: Context,
@@ -600,9 +602,10 @@ export class EchoHost extends Resource {
     invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);
 
     // The directory travels with the root, so a peer that has never opened the space gets one here.
-    if (!this._spaceStateManager.getRootBySpaceId(spaceId)) {
-      await this.updateSpaceRoot(ctx, spaceId, root.directory);
-    }
+    // Unconditional, and `updateSpaceRoot` no-ops on an unchanged url: a peer REPLACING a root has a
+    // directory already, and skipping on that would leave it writing to the directory its own root
+    // named while every other device reads the one edge recorded.
+    await this.updateSpaceRoot(ctx, spaceId, root.directory);
 
     const refs: SpaceRootRefs = {
       spaceRootDocUrl: spaceRootUrl,

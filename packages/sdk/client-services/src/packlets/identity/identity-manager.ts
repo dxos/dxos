@@ -168,7 +168,10 @@ export class IdentityManager {
   private readonly _devicePresenceOfflineTimeout: number;
   private readonly _automergeCredentials: boolean;
   private readonly _meshReplicator: MeshEchoReplicator | undefined;
-  /** Backoff, capped rather than terminating, for adopting a root that has not replicated yet. */
+  /**
+   * Backoff, capped rather than terminating, for adopting a root that has not replicated yet. One
+   * per manager because there is one HALO; never reset, since the ceiling is the steady state.
+   */
   private _haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
   /** Spaces whose credential mirroring is wired, so re-anchoring cannot double-subscribe. */
   private readonly _haloCredentialsWired = new Set<SpaceId>();
@@ -530,7 +533,10 @@ export class IdentityManager {
           } catch (err) {
             log('halo space root named by the inviting device has not replicated yet', { spaceId, adopted, err });
             // The root arrives over the mesh without emitting an identity state update, and this
-            // retry is the only path, so it backs off to a ceiling rather than giving up.
+            // retry is the only path, so it backs off to a ceiling rather than giving up. Unlike
+            // `DataSpaceManager`'s report to edge, which has a ceiling and then stops, there is no
+            // later trigger to fall back on here and an identity left on a feed-only chain never
+            // recovers on its own -- so the loop is capped in period, not in attempts.
             scheduleTask(ctx, () => this._anchorHaloOnRootDocument(ctx, identity), this._haloAnchorRetryDelay);
             this._haloAnchorRetryDelay = Math.min(this._haloAnchorRetryDelay * 2, HALO_ANCHOR_RETRY_MAX);
             return;
