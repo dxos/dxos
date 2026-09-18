@@ -41,12 +41,14 @@ export type NavigableSurfaceProps = {
   onNavigate?: (nodeId: string) => void;
 };
 
+/** The space list; selecting a space shows its page in the debug panel. */
 export const SpaceListSurface = ({ role, onNavigate }: NavigableSurfaceProps) => {
   const handleSelect = useCallback(() => onNavigate?.(Devtools.getNodePath(Devtools.Echo.Space)), [onNavigate]);
 
   return <SpaceListArticle role={role} onSelect={handleSelect} />;
 };
 
+/** The active space; selecting a feed or pipeline shows the feeds page in the debug panel. */
 export const SpaceInfoSurface = ({ role, onNavigate }: NavigableSurfaceProps) => {
   const space = useActiveSpace();
   const handleSelect = useCallback(() => onNavigate?.(Devtools.getNodePath(Devtools.Echo.Feeds)), [onNavigate]);
