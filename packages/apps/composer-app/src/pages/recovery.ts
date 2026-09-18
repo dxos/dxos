@@ -135,10 +135,13 @@ const recoveryHelpers: RecoveryHelpers = {
     if (!isRecoveryClientBooted()) {
       await recoveryHelpers.startClient();
     }
-    print('Deleting sync heads stored for remote peers…');
+    print('Deleting sync heads stored for remote peers (a large profile can take a few minutes)…');
     const started = performance.now();
     const { deleted } = await deleteBootedRemoteHeads((progress) =>
-      print(`  ${progress.deleted.toLocaleString()} / ${progress.total.toLocaleString()}`),
+      print(
+        `  ${progress.deleted.toLocaleString()} / ${progress.total.toLocaleString()} ` +
+          `(${((performance.now() - started) / 1000).toFixed(0)} s)`,
+      ),
     );
     const elapsedMs = Math.round(performance.now() - started);
     print(

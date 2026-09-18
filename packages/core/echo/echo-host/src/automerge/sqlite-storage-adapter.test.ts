@@ -222,6 +222,7 @@ describe('deleteSubductionRemoteHeads', () => {
 
     expect(result).toEqual({ deleted: 6 });
     expect(progress).toEqual([
+      { deleted: 0, total: 6 },
       { deleted: 4, total: 6 },
       { deleted: 6, total: 6 },
     ]);
@@ -242,6 +243,7 @@ describe('deleteSubductionRemoteHeads', () => {
 
     expect(result).toEqual({ deleted: 6 });
     expect(progress).toEqual([
+      { deleted: 0, total: 6 },
       { deleted: 3, total: 6 },
       { deleted: 6, total: 6 },
     ]);

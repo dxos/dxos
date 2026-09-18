@@ -277,6 +277,7 @@ const descendantRange = (prefix: string): { lower: string; upper: string } => ({
 export type DeleteSubductionRemoteHeadsOptions = {
   /** Rows per statement. Bounds each transaction (and so the WAL) and sets how often progress is reported. */
   batchSize?: number;
+  /** Called once the total is known (`deleted: 0`), then after every batch. Not called when there is nothing to delete. */
   onProgress?: (progress: { deleted: number; total: number }) => void;
 };
 
@@ -314,6 +315,9 @@ export const deleteSubductionRemoteHeads = ({
 
     const total = yield* countRemaining;
     let deleted = 0;
+    if (total > 0) {
+      onProgress?.({ deleted, total });
+    }
     while (true) {
       // The `batchSize`-th remaining key: everything from the start of the range up to it is exactly one batch.
       const [last] = yield* sql<{ key: string }>`
