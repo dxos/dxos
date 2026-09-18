@@ -22,23 +22,25 @@ import {
   resolveCompanionAnchor,
   resolveCompanionPlank,
   updateActiveDeck,
+  withViewTransition,
 } from '../util/index.ts';
 import * as Navigation from './navigation.ts';
 import { computeActiveUpdates } from './set-active.ts';
 
-export type ApplyActiveOptions = {
-  /** An id the caller already knows should take the scroll/focus intent from this write. */
-  scrollIntoView?: string;
-  /** Fold the plank displaced from attention (`toAttend`) into this write, when the caller has no better id. */
-  attendDisplaced?: boolean;
-};
-
 /**
- * The id to land this write's scroll/focus intent on, or `undefined` when there is none: an explicit
- * id wins, else the plank displaced from attention when the caller asked for that, else nothing.
+ * How a navigation lands. Carried from the operation down to the single write that mounts the planks,
+ * because a plank focuses itself in the commit that mounts it: an intent arriving in a later write is
+ * a frame of the wrong plank attended.
  */
-export const resolveScrollIntoView = (toAttend: string | undefined, options?: ApplyActiveOptions): string | undefined =>
-  options?.scrollIntoView ?? (options?.attendDisplaced ? toAttend : undefined);
+export type NavigationIntent = {
+  /**
+   * The plank this write focuses. Defaults to the one attention is displaced onto, since attention has
+   * to end on a plank that is open.
+   */
+  scrollIntoView?: string;
+  /** Run the write as the update step of a view transition, so the content region crossfades. */
+  transition?: boolean;
+};
 
 /**
  * Write the deck's active planks and the URL segment each one came from, returning the item to
@@ -46,7 +48,7 @@ export const resolveScrollIntoView = (toAttend: string | undefined, options?: Ap
  */
 export const applyActive = Effect.fnUntraced(function* (
   planks: readonly Navigation.Plank[],
-  options?: ApplyActiveOptions,
+  intent?: NavigationIntent,
 ) {
   const deck = yield* DeckCapabilities.getDeck();
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
@@ -72,28 +74,31 @@ export const applyActive = Effect.fnUntraced(function* (
   const activeSegments = deckUpdates.active.map((id) => Navigation.segmentOf(segments, id));
   const plankNames = updatePlankNames(deck.plankNames, activeSegments);
   const { active, inactive, companionPlanks } = deckUpdates;
-  const scrollIntoView = resolveScrollIntoView(toAttend, options);
+  const scrollIntoView = intent?.scrollIntoView ?? toAttend;
+  const changed =
+    !sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments);
 
-  // The projection applies the same URL twice and re-applies it on any navigation, so writing
-  // unconditionally would hand every reader new arrays each time and re-render every plank for a
-  // deck that did not change. A requested `scrollIntoView` forces the write, since the intent has to
-  // land in the commit that mounts its plank.
-  if (
-    scrollIntoView !== undefined ||
-    !sameList(open?.active, active) ||
-    !sameList(open?.inactive, inactive) ||
-    !sameMap(open?.segments, segments)
-  ) {
-    registry.set(ephemeralAtom, {
-      ...ephemeral,
-      open: { ...ephemeral.open, [workspace]: { active, inactive, segments } },
-      ...(scrollIntoView !== undefined ? { scrollIntoView: { id: scrollIntoView } } : {}),
-    });
-  }
-  const stored = registry.get(stateAtom).decks[workspace];
-  if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
-    registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
-  }
+  const write = Effect.sync(() => {
+    // The projection applies the same URL twice and re-applies it on any navigation, so writing
+    // unconditionally would hand every reader new arrays each time and re-render every plank for a
+    // deck that did not change. A `scrollIntoView` forces the write, since the intent has to land in
+    // the commit that mounts its plank.
+    if (changed || scrollIntoView !== undefined) {
+      registry.set(ephemeralAtom, {
+        ...ephemeral,
+        open: { ...ephemeral.open, [workspace]: { active, inactive, segments } },
+        ...(scrollIntoView !== undefined ? { scrollIntoView: { id: scrollIntoView } } : {}),
+      });
+    }
+    const stored = registry.get(stateAtom).decks[workspace];
+    if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
+      registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
+    }
+  });
+
+  // Only a write that changes what is open is worth animating: rendering is frozen for the whole
+  // update step, and the projection's other passes leave the deck looking the same.
+  yield* intent?.transition && changed ? withViewTransition(write) : write;
 
   return toAttend;
 });

@@ -19,8 +19,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const { workspace } = yield* currentNavigation();
 
       const active = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
-      // The neighbor attention falls to takes its focus intent in the same write, so it never paints unattended.
-      yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks, attendDisplaced: true });
+      // No intent: the write focuses whichever plank attention falls to, which is what closing means.
+      yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
     }),
   ),
 );

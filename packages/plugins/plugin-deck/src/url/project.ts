@@ -24,8 +24,7 @@ import { log } from '@dxos/log';
 import { DeckCapabilities, DeckSchema } from '#types';
 
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme.ts';
-import { withViewTransition } from '../util/index.ts';
-import { type CompanionTarget, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
+import { type CompanionTarget, type NavigationIntent, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
 import * as Navigation from './navigation.ts';
 import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation.ts';
 
@@ -69,12 +68,8 @@ export type ProjectOptions = {
   attend?: boolean;
   /** Node ids an in-app navigation already holds; see {@link Navigation.PlankIds}. */
   navigatedIds?: Navigation.PlankIds;
-  /** An id already known to take this write's scroll/focus intent; see {@link applyActive}. */
-  scrollIntoView?: string;
-  /** Fold the plank displaced from attention into this write's scroll/focus intent. */
-  attendDisplaced?: boolean;
-  /** Run the write that mounts the planks as the update step of a view transition. */
-  transition?: boolean;
+  /** How this navigation lands; see {@link NavigationIntent}. */
+  intent?: NavigationIntent;
 };
 
 /**
@@ -185,14 +180,8 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
   yield* switchWorkspace(workspacePath);
 
   // An in-app navigation already holds its ids, so this first pass is the write that mounts its planks
-  // and the caller's intent has to ride on it; the resolved pass below only lands the chain end.
-  // Only this write is transitioned: the resolved pass below can wait on loaders for seconds, and
-  // rendering stays frozen for the whole update step.
-  const mount = applyActive(initialPlanks(pairs, idsBySegment()), {
-    scrollIntoView: options?.scrollIntoView,
-    attendDisplaced: options?.attendDisplaced,
-  });
-  yield* options?.transition ? withViewTransition(mount) : mount;
+  // and the caller's intent rides on it; the resolved pass below only lands the chain end.
+  yield* applyActive(initialPlanks(pairs, idsBySegment()), options?.intent);
 
   const loaders = navigationTargetLoaders;
   const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');

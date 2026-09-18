@@ -37,18 +37,6 @@ import {
   updateActiveDeck,
 } from '../util/index.ts';
 
-/**
- * The plank this open's write lands its scroll/focus intent on: the first newly opened plank, or
- * `undefined` when nothing new opens or the caller declined it (`scrollIntoView: false`).
- */
-export const resolveOpenScrollTarget = ({
-  newlyOpen,
-  scrollIntoView,
-}: {
-  newlyOpen: readonly string[];
-  scrollIntoView: boolean | undefined;
-}): string | undefined => (scrollIntoView !== false ? newlyOpen[0] : undefined);
-
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -208,18 +196,14 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
         // A newly opened plank takes its focus intent in the write that mounts it, so its first painted
-        // frame is already attended.
-        const scrollIntoView = resolveOpenScrollTarget({
-          newlyOpen: deckUpdates.active.filter((id) => !previouslyOpenIds.has(id)),
-          scrollIntoView: input.scrollIntoView,
-        });
-        // The content region crossfades from the old deck to the new one instead of cutting.
+        // frame is already attended, and that write crossfades rather than cutting.
+        const opened =
+          input.scrollIntoView === false ? undefined : deckUpdates.active.find((id) => !previouslyOpenIds.has(id));
         yield* navigateDeck({
           workspace,
           active: deckUpdates.active,
           companionPlanks,
-          scrollIntoView,
-          transition: true,
+          intent: { scrollIntoView: opened, transition: true },
         });
       }
 

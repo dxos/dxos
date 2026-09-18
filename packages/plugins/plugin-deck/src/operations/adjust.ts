@@ -39,7 +39,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           workspace,
           active: deckUpdates.active,
           companionPlanks: deckUpdates.companionPlanks,
-          scrollIntoView: input.id,
+          intent: { scrollIntoView: input.id },
         });
       }
 

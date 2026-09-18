@@ -17,6 +17,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { CompanionViewState, DeckCapabilities } from '#types';
 
 import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util/index.ts';
+import { type NavigationIntent } from './apply.ts';
 import * as Navigation from './navigation.ts';
 import { projectUrl } from './project.ts';
 
@@ -38,29 +39,14 @@ export const currentNavigation = Effect.fnUntraced(function* () {
  */
 export const navigate = Effect.fnUntraced(function* (
   next: Navigation.Navigation,
-  options?: {
-    method?: 'push' | 'replace';
-    navigatedIds?: Navigation.PlankIds;
-    /** An id already known to take this write's scroll/focus intent; see {@link projectUrl}. */
-    scrollIntoView?: string;
-    /** Fold the plank displaced from attention into this write's scroll/focus intent. */
-    attendDisplaced?: boolean;
-    /** Run the write that mounts the planks as the update step of a view transition. */
-    transition?: boolean;
-  },
+  options?: { method?: 'push' | 'replace'; navigatedIds?: Navigation.PlankIds; intent?: NavigationIntent },
 ) {
   if (!next.workspace) {
     log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
     return undefined;
   }
   return Navigation.push(next, options?.method)
-    ? yield* projectUrl(undefined, {
-        attend: false,
-        navigatedIds: options?.navigatedIds,
-        scrollIntoView: options?.scrollIntoView,
-        attendDisplaced: options?.attendDisplaced,
-        transition: options?.transition,
-      })
+    ? yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds, intent: options?.intent })
     : undefined;
 });
 
@@ -111,18 +97,9 @@ export const navigateDeck = Effect.fnUntraced(function* (params: {
   workspace: string;
   active: readonly string[];
   companionPlanks?: readonly string[];
-  /** An id already known to take this write's scroll/focus intent; see {@link navigate}. */
-  scrollIntoView?: string;
-  /** Fold the plank displaced from attention into this write's scroll/focus intent. */
-  attendDisplaced?: boolean;
-  /** Run the write that mounts the planks as the update step of a view transition. */
-  transition?: boolean;
+  /** How this navigation lands; see {@link NavigationIntent}. */
+  intent?: NavigationIntent;
 }) {
   const { navigation, navigatedIds } = yield* deckNavigation(params);
-  return yield* navigate(navigation, {
-    navigatedIds,
-    scrollIntoView: params.scrollIntoView,
-    attendDisplaced: params.attendDisplaced,
-    transition: params.transition,
-  });
+  return yield* navigate(navigation, { navigatedIds, intent: params.intent });
 });
