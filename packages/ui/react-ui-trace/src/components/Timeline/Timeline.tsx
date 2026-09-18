@@ -539,7 +539,7 @@ const LineVector = memo(({ layout, index, commit, highlightedBranch, options }: 
   const color = colors[col % colors.length];
   const opacity = (branch: string | undefined) => [
     'duration-500 transition-opacity',
-    highlightedBranch === undefined || branch === highlightedBranch ? 'opacity-100' : 'opacity-50',
+    highlightedBranch === undefined || branch === highlightedBranch ? 'opacity-100' : 'opacity-40',
   ];
 
   return (
