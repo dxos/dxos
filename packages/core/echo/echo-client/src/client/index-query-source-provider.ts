@@ -78,6 +78,9 @@ type RecordOutcome =
   | { _tag: 'unresolved'; hit: UnresolvedHit }
   | { _tag: 'excluded' };
 
+/** Whether a disk-only load produced the object, established it is gone, or ran out of budget. */
+type ResolvedIndexHit = { _tag: 'object'; object: Entity.Unknown } | { _tag: 'absent' } | { _tag: 'timed-out' };
+
 /** Entries and the hits that failed to become entries, from one hydration pass. */
 type MappedRecords = {
   entries: SourceEntry[];
@@ -564,8 +567,9 @@ export class IndexQuerySource implements QuerySource {
       // object under the same id, so re-resolving from its identity map is the whole re-hydration.
       if (documentJsonReleased) {
         const cached = feedHandle?.getCachedObjectById(EntityId.make(result.id));
+        // Released and not retained: the object is positively gone, so the index hit is stale.
         if (!cached) {
-          return unresolvedHit(result, 'load-failed');
+          return { _tag: 'excluded' };
         }
         return {
           _tag: 'entry',
@@ -602,7 +606,7 @@ export class IndexQuerySource implements QuerySource {
         return unresolvedHit(result, 'schema-invalid');
       }
       if (!object) {
-        return unresolvedHit(result, 'load-failed');
+        return { _tag: 'excluded' };
       }
       if (feedHandle) {
         hydratedIntoFeedHandle?.add(result.id);
@@ -619,10 +623,17 @@ export class IndexQuerySource implements QuerySource {
       };
     }
 
-    const object = await this._resolveIndexedObject(result);
-    if (!object) {
-      return unresolvedHit(result, 'load-failed');
+    const resolved = await this._resolveIndexedObject(result);
+    if (resolved._tag === 'timed-out') {
+      return unresolvedHit(result, 'load-timeout');
     }
+    // The loader ran to completion and found nothing: the host's index lists an object this peer
+    // cannot produce (deleted elsewhere, or a document url that no longer resolves). Dropping it is
+    // the answer, not a gap in one.
+    if (resolved._tag === 'absent') {
+      return { _tag: 'excluded' };
+    }
+    const object = resolved.object;
 
     // An abandoned pass, not a missing object: the caller discards its whole result.
     if (ctx.disposed) {
@@ -664,12 +675,16 @@ export class IndexQuerySource implements QuerySource {
   /**
    * Hydrate an index hit via disk-only load; skip objects whose strong deps
    * are permanently unavailable.
+   *
+   * The two ways this comes back empty are not the same fact, so they are not the same tag: a load
+   * that ran out of budget says nothing about whether the object exists, while one that completed
+   * and found nothing says the index entry is stale.
    */
-  private async _resolveIndexedObject(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
+  private async _resolveIndexedObject(result: QueryService.QueryResult): Promise<ResolvedIndexHit> {
     const spaceId = SpaceId.make(result.spaceId);
 
     try {
-      return await asyncTimeout(
+      const object = await asyncTimeout(
         this._params.objectLoader.loadObject({
           spaceId,
           objectId: result.id,
@@ -677,10 +692,11 @@ export class IndexQuerySource implements QuerySource {
         }),
         INDEX_OBJECT_LOAD_TIMEOUT,
       );
+      return object ? { _tag: 'object', object } : { _tag: 'absent' };
     } catch (err) {
       if (err instanceof TimeoutError) {
         log.warn('index object load timed out', { objectId: result.id, spaceId });
-        return undefined;
+        return { _tag: 'timed-out' };
       }
       throw err;
     }

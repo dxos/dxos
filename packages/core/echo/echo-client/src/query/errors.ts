@@ -6,14 +6,15 @@
 const MAX_REPORTED_UNRESOLVED_HITS = 5;
 
 /**
- * An index hit a query source could not turn into an object. The index matched it, so it is a
- * failure to report rather than a filter that was applied — though another source may still hold
- * the object, which is why only the merged result decides whether it is missing.
+ * An index hit a query source could not turn into an object, and could not rule out that the object
+ * is there — a hit the source positively established is gone is a stale index entry, dropped rather
+ * than reported. Another source may still hold the object, which is why only the merged result
+ * decides whether it is missing.
  */
 export type UnresolvedHit = {
   id: string;
   spaceId: string;
-  reason: 'load-failed' | 'schema-invalid';
+  reason: 'load-timeout' | 'schema-invalid';
 };
 
 /**

@@ -54,11 +54,11 @@ describe('GraphQueryContext', () => {
   test('run fails when an index hit reached no source', async () => {
     const found = EntityId.random();
     const missing = EntityId.random();
-    const context = makeContext(stubSource([entry(found)], [{ id: missing, spaceId, reason: 'load-failed' }]));
+    const context = makeContext(stubSource([entry(found)], [{ id: missing, spaceId, reason: 'load-timeout' }]));
 
     const run = context.run(Context.default(), makeQuery(spaceId));
     await expect(run).rejects.toBeInstanceOf(QueryIncompleteError);
-    await expect(run).rejects.toMatchObject({ unresolved: [{ id: missing, reason: 'load-failed' }] });
+    await expect(run).rejects.toMatchObject({ unresolved: [{ id: missing, reason: 'load-timeout' }] });
   });
 
   // The object is in the answer, so the index source's failure to hydrate it cost the caller
@@ -66,7 +66,7 @@ describe('GraphQueryContext', () => {
   test('run succeeds when another source produced the unresolved object', async () => {
     const covered = EntityId.random();
     const context = makeContext(
-      stubSource([], [{ id: covered, spaceId, reason: 'load-failed' }]),
+      stubSource([], [{ id: covered, spaceId, reason: 'load-timeout' }]),
       stubSource([entry(covered)]),
     );
 

@@ -62,9 +62,9 @@ export interface QuerySource {
   run(ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]>;
 
   /**
-   * Index hits the last {@link run} matched but could not turn into objects. Implemented by sources
-   * that hydrate remote records; the aggregate decides what to do with them, since another source
-   * may hold the same object.
+   * Index hits the last {@link run} matched but could not hydrate, where the object may still be
+   * there. Implemented by sources that hydrate remote records; the aggregate decides what to do
+   * with them, since another source may hold the same object.
    */
   unresolvedHits?(): readonly UnresolvedHit[];
 
@@ -167,9 +167,9 @@ export class GraphQueryContext implements QueryContext {
     }
     const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
 
-    // A source that could not hydrate an index hit reports it instead of dropping it, and a hit is
-    // only missing from the answer when no other source produced that object. Failing here beats
-    // returning a short result a one-shot caller would read as the whole set.
+    // A source that could not rule out an index hit's object reports it instead of dropping it, and
+    // a hit is only missing from the answer when no other source produced that object. Failing here
+    // beats returning a short result a one-shot caller would read as the whole set.
     const resolvedIds = new Set(mergedResults.map((entry) => entry.id));
     const missing = [...this._sources]
       .flatMap((source) => source.unresolvedHits?.() ?? [])

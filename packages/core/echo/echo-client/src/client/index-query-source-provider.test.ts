@@ -246,10 +246,10 @@ describe('IndexQuerySource', () => {
   // one-shot caller — an agent or an MCP tool, which unlike a reactive query gets no second pass —
   // read a short result as the whole set and concluded the missing objects did not exist. The
   // source reports them; `GraphQueryContext` decides, since another source may hold the object.
-  test('a one-shot run reports index hits that never loaded', async () => {
+  test('a one-shot run reports an index hit whose load never completes', async () => {
     const spaceId = SpaceId$.random();
     const loadable = EntityId.random();
-    const unloadable = EntityId.random();
+    const stalled = EntityId.random();
 
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
@@ -261,7 +261,7 @@ describe('IndexQuerySource', () => {
                 queryId: request.queryId,
                 results: [
                   { id: loadable, spaceId, rank: 0 },
-                  { id: unloadable, spaceId, rank: 0 },
+                  { id: stalled, spaceId, rank: 0 },
                 ],
               }),
           );
@@ -273,9 +273,10 @@ describe('IndexQuerySource', () => {
       service,
       runtime: EffectContext.empty(),
       objectLoader: {
-        // The document behind `unloadable` never arrives, which is what an expired per-hit load
-        // budget looks like from here.
-        loadObject: async ({ objectId }) => (objectId === loadable ? fakeEntity(loadable) : undefined),
+        // The document behind `stalled` never arrives, so the load runs out of budget without ever
+        // establishing whether the object is there.
+        loadObject: ({ objectId }) =>
+          objectId === loadable ? Promise.resolve(fakeEntity(loadable)) : new Promise(() => {}),
         updateEvent: noopUpdateEvent,
       },
       graph: mockGraph,
@@ -285,7 +286,51 @@ describe('IndexQuerySource', () => {
     const results = await source.run(Context.default(), makeQuery(spaceId));
 
     expect(results.map((entry) => entry.id)).toEqual([loadable]);
-    expect(source.unresolvedHits()).toEqual([{ id: unloadable, spaceId, reason: 'load-failed' }]);
+    expect(source.unresolvedHits()).toEqual([{ id: stalled, spaceId, reason: 'load-timeout' }]);
+  });
+
+  // Regression: reporting every empty load made a stale index entry — an object deleted elsewhere,
+  // released, or behind a document url that no longer resolves — fail the whole query, where the
+  // host simply lists an object this peer correctly does not return.
+  test('a one-shot run drops an index hit the loader establishes is gone', async () => {
+    const spaceId = SpaceId$.random();
+    const present = EntityId.random();
+    const gone = EntityId.random();
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id: present, spaceId, rank: 0 },
+                  { id: gone, spaceId, rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        // Completing with nothing is an answer: the object is not here.
+        loadObject: async ({ objectId }) => (objectId === present ? fakeEntity(present) : undefined),
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+
+    expect(results.map((entry) => entry.id)).toEqual([present]);
+    expect(source.unresolvedHits()).toEqual([]);
   });
 
   test('a one-shot query retries a hit whose document arrives late', async () => {
@@ -316,14 +361,14 @@ describe('IndexQuerySource', () => {
       service,
       runtime: EffectContext.empty(),
       objectLoader: {
-        loadObject: async ({ objectId }) => {
+        loadObject: ({ objectId }) => {
           if (objectId === prompt) {
-            return fakeEntity(prompt);
+            return Promise.resolve(fakeEntity(prompt));
           }
-          // Absent on the first pass and present when the retry asks again — a document that lost
-          // its race with the load budget rather than one that is missing.
+          // In flight past the budget on the first pass and there when the retry asks again — a
+          // document that lost its race with the load budget rather than one that is missing.
           lateAttempts++;
-          return lateAttempts > 1 ? fakeEntity(late) : undefined;
+          return lateAttempts > 1 ? Promise.resolve(fakeEntity(late)) : new Promise(() => {});
         },
         updateEvent: noopUpdateEvent,
       },
