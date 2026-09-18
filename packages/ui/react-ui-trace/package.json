@@ -17,6 +17,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./headless": {
+      "source": "./src/headless.ts",
+      "types": "./dist/types/src/headless.d.ts",
+      "import": "./dist/lib/headless.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",

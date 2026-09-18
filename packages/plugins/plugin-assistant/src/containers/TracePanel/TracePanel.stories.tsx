@@ -23,6 +23,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type Commit, Timeline, buildExecutionGraph } from '@dxos/react-ui-trace';
 import {
@@ -341,6 +342,7 @@ export const Default: Story = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size) overflow-hidden' }),
+    withMosaic(),
     withPluginManager({
       // Fire SetupSettings so the assistant settings module activates and contributes
       // `AssistantCapabilities.Settings`, which `TracePanel` reads via `useAtomCapability`.
@@ -364,7 +366,7 @@ export const Default: Story = {
 
 export const WithSubAgentFixture: Story = {
   render: FixtureStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withMosaic()],
 };
 
 export const WithSnapshot: Story = {
@@ -372,6 +374,7 @@ export const WithSnapshot: Story = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    withMosaic(),
     withPluginManager({
       plugins: [
         ...corePlugins(),
@@ -390,6 +393,7 @@ export const WithRemoteSnapshot: Story = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    withMosaic(),
     withPluginManager({
       plugins: [
         ...corePlugins(),
@@ -410,6 +414,7 @@ export const WithRemoteMultipleSnapshot: Story = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    withMosaic(),
     withPluginManager({
       plugins: [
         ...corePlugins(),
