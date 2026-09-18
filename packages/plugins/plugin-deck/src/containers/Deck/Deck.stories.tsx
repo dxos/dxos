@@ -16,12 +16,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
@@ -80,6 +82,14 @@ const STORY_CONTENT: Record<string, string> = Object.fromEntries(
 );
 
 const contentFor = (title: string): string => STORY_CONTENT[title] ?? `# ${title}`;
+
+/**
+ * The graph's single workspace level: every story node hangs off `root/<workspace>` rather than
+ * directly off root, matching the `root/<workspace>/<id>` shape `PathResolution.representNode`
+ * requires to round-trip `LayoutOperation.Open` through the URL (a bare `root/<id>` node has no
+ * workspace segment and so has no URL binding).
+ */
+const STORY_WORKSPACE_ID = `${GraphNode.RootId}/${DeckSchema.DEFAULT_DECK_ID}`;
 
 /**
  * A plank's article: a real markdown editor rather than placeholder copy, so the deck is exercised
@@ -157,7 +167,7 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   );
 };
 
-const REVEAL_PLANK_ID = 'root/story-item-5';
+const REVEAL_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-5`;
 
 /** Reveals a plank from outside the deck, and marks the button once the deck's effects have run. */
 const TestRevealControls = () => {
@@ -180,6 +190,30 @@ const TestRevealControls = () => {
       </button>
       <button data-testid='story.reveal-without-focus' onClick={(event) => void reveal(event.currentTarget, false)}>
         Reveal without focus
+      </button>
+    </div>
+  );
+};
+
+const NEW_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-3`;
+
+/**
+ * Opens the third story item as a new plank alongside whatever is already seeded (`disposition: 'add'`,
+ * so the seeded planks stay mounted rather than being replaced) — the path the flash-of-unattended
+ * regression test below drives.
+ */
+const TestOpenNextControls = ({ targetId }: { targetId?: string }) => {
+  const { invokePromise } = useOperationInvoker();
+  const handleClick = useCallback(() => {
+    if (targetId) {
+      void invokePromise(LayoutOperation.Open, { subject: [targetId], disposition: 'add' });
+    }
+  }, [invokePromise, targetId]);
+
+  return (
+    <div className='fixed bottom-2 end-2 z-10'>
+      <button data-testid='story.open-next' onClick={handleClick} disabled={!targetId}>
+        Open next
       </button>
     </div>
   );
@@ -331,8 +365,28 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
       Effect.fnUntraced(function* () {
         const extensions = yield* Effect.all([
           AppGraphBuilder.createExtension({
-            id: 'storyItems',
+            id: 'storyWorkspace',
+            // A node id may not itself contain '/' (`GraphNode.qualifyId`'s invariant), so the workspace
+            // segment `PathResolution.representNode` requires has to come from a real intermediate node
+            // rather than being folded into each item's raw id.
             match: GraphNodeMatcher.whenRoot,
+            connector: () =>
+              Effect.succeed([
+                AppGraphNode.make({
+                  id: DeckSchema.DEFAULT_DECK_ID,
+                  type: 'story-workspace',
+                  data: { id: DeckSchema.DEFAULT_DECK_ID },
+                  properties: { label: 'Story workspace' },
+                }),
+              ]),
+          }),
+          AppGraphBuilder.createExtension({
+            id: 'storyItems',
+            // A URL binding, so `LayoutOperation.Open` can round-trip a story item through the deck's
+            // real navigate-then-project path (as opposed to the other stories, which seed `active`
+            // directly) — the exact path the flash-of-unattended regression test below exercises.
+            url: { key: 'item', kind: 'item', path: [] },
+            match: GraphNodeMatcher.whenNodeType('story-workspace'),
             connector: () =>
               Effect.succeed([
                 ...STORY_ITEMS.map((item) =>
@@ -405,6 +459,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 type StoryArgs = {
   /** Renders controls that reveal a plank from outside the deck. */
   revealControls?: boolean;
+  /** Renders a control that opens the third story item as a new plank via `LayoutOperation.Open`. */
+  openNextControl?: boolean;
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
@@ -432,6 +488,7 @@ const DefaultStory = ({
   companionPlanks = NO_COMPANIONS,
   launcher = false,
   revealControls = false,
+  openNextControl = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: StoryArgs) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
@@ -444,13 +501,19 @@ const DefaultStory = ({
   const { graph } = useAppGraph();
   const { state, deck, updateState, updateEphemeral } = useDeckState();
 
-  // Subscribe to the root's children so the `whenRoot` connector runs and materializes the story
-  // nodes; without this each plank's `useNode` never resolves and the deck stays in the loading state.
-  // The graph qualifies connector node ids with their parent path (e.g. `root/story-item-1`), so the
-  // seeded `active` list holds the materialized ids rather than the bare `STORY_ITEMS` ids.
-  const rootChildren = useConnections(graph, GraphNode.RootId, 'child');
-  const items = useMemo(() => rootChildren.filter((node) => node.type === 'story-item'), [rootChildren]);
-  const launcherNode = useMemo(() => rootChildren.find((node) => node.type === 'story-launcher'), [rootChildren]);
+  // Root expands once, automatically, at graph-capability startup; the workspace node this story added
+  // is not root, so nothing expands it on its own — this story owns expanding that one extra level, the
+  // way `useLoadDescendents` does for a navtree branch. Without it each plank's `useNode` never resolves
+  // and the deck stays in the loading state. The graph qualifies connector node ids with their parent
+  // path (e.g. `root/default/story-item-1`), so the seeded `active` list holds the materialized ids
+  // rather than the bare `STORY_ITEMS` ids.
+  useState(() => AppGraph.expandSync(graph, STORY_WORKSPACE_ID, 'child'));
+  const workspaceChildren = useConnections(graph, STORY_WORKSPACE_ID, 'child');
+  const items = useMemo(() => workspaceChildren.filter((node) => node.type === 'story-item'), [workspaceChildren]);
+  const launcherNode = useMemo(
+    () => workspaceChildren.find((node) => node.type === 'story-launcher'),
+    [workspaceChildren],
+  );
 
   // Seed the deck's active planks in one shot rather than opening them one by one: each `Open` schedules
   // its own scroll-into-view, so a multi-plank deck would visibly page from plank to plank on load.
@@ -485,6 +548,7 @@ const DefaultStory = ({
   return (
     <>
       {revealControls && <TestRevealControls />}
+      {openNextControl && <TestOpenNextControls targetId={items[2]?.id} />}
       <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
         <Deck.Content>
           <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
@@ -575,7 +639,7 @@ export const ManyPlanksWithCompanion: Story = {
 
 /** Attends a plank by focusing it — attention is focus-driven, and a click would have to land on a plank that may be folded. */
 const attendPlank = async (canvasElement: HTMLElement, position: number) => {
-  const id = `root/story-item-${position}`;
+  const id = `${STORY_WORKSPACE_ID}/story-item-${position}`;
   const plank = canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${id}"]`);
   await expect(plank, `no plank for ${id}`).not.toBeNull();
   plank?.focus();
@@ -690,5 +754,91 @@ export const SidebarClosedAtDesktop: Story = {
 
     // `closed` parks the sidebar at `-start-[100vw]`; the rail has to be on screen to be usable.
     await expect(sidebar.getBoundingClientRect().left).toBeGreaterThanOrEqual(0);
+  },
+};
+
+const DISPLACED_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-1`;
+
+/**
+ * A newly opened plank's heading must never paint unattended: `LayoutOperation.Open` has to land its
+ * focus in the same commit that inserts the plank, not a later one.
+ *
+ * A `MutationObserver` callback fires as a microtask at the end of the task that mutated the DOM — the
+ * same boundary the browser paints against — so one callback invocation ("batch") is exactly what the
+ * viewer would have seen painted after that task. Under the old code (a passive focus effect, plus a
+ * `ScrollIntoView` operation scheduled as a detached followup) the plank's insertion and its focus landed
+ * in two separate tasks: the insertion batch read the heading present but unattended, and a later batch
+ * flipped it — the flash this fix removes. This asserts no batch is ever caught in that state.
+ */
+export const OpenFocusesBeforePaint: Story = {
+  tags: ['test'],
+  args: { count: 2, openNextControl: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+
+    // Something has to hold attention before the navigation for "the displaced plank ends up
+    // unattended" to be a meaningful assertion.
+    await attendPlank(canvasElement, 1);
+    const displacedTitle = () =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-testid="deck.plank"][data-attendable-id="${DISPLACED_PLANK_ID}"] h1[data-attention]`,
+      );
+    await waitFor(() => expect(displacedTitle()).toHaveAttribute('data-attention', 'true'));
+
+    const findNewPlank = () =>
+      canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${NEW_PLANK_ID}"]`);
+
+    type Snapshot = { present: boolean; attended: boolean; focused: boolean };
+    const snapshot = (): Snapshot => {
+      const plank = findNewPlank();
+      const title = plank?.querySelector<HTMLElement>('h1[data-attention]');
+      return {
+        present: !!plank,
+        attended: title?.getAttribute('data-attention') === 'true',
+        focused: !!plank && plank.contains(document.activeElement),
+      };
+    };
+
+    const batches: Snapshot[] = [];
+    const observer = new MutationObserver(() => batches.push(snapshot()));
+    observer.observe(canvasElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-attention', 'data-w-attention-source'],
+    });
+
+    // The seeded planks bypassed the URL (see the seeding effect's comment), so the address bar is
+    // still wherever Storybook left it. `LayoutOperation.Open` reads the *current* URL to learn which
+    // workspace to navigate within, falling back to the deck's `activeDeck` token only when that URL
+    // fails to parse — and `activeDeck` here is the bare token `'default'` with no `root/` prefix, which
+    // fails that fallback (`GraphPath.getWorkspaceToken` expects a qualified path) and drops the
+    // navigation silently. Priming a parseable URL first lets `Open` round-trip for real, through
+    // `Navigation.push` and back through `projectUrl`, rather than only exercising the seeding path.
+    const previousUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.history.replaceState(null, '', `/${UrlPath.WORKSPACE_KEY}/${DeckSchema.DEFAULT_DECK_ID}`);
+    try {
+      const openNext = await canvas.findByTestId('story.open-next');
+      openNext.click();
+
+      await waitFor(async () => {
+        const plank = findNewPlank();
+        await expect(plank).not.toBeNull();
+        await expect(plank?.querySelector('h1[data-attention]')).toHaveAttribute('data-attention', 'true');
+        await expect(plank?.contains(document.activeElement)).toBe(true);
+      });
+
+      observer.disconnect();
+
+      await expect(batches.some((batch) => batch.present && !batch.attended)).toBe(false);
+
+      // The plank that lost attention to the new one stays mounted (`disposition: 'add'`) but unattended.
+      await expect(displacedTitle()).toHaveAttribute('data-attention', 'false');
+    } finally {
+      // Undoes the priming above so a later story in the same browser session does not inherit this
+      // story's URL.
+      window.history.replaceState(null, '', previousUrl);
+    }
   },
 };
