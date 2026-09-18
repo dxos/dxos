@@ -39,6 +39,24 @@ const RESOLVE_TIMEOUT = `${RESOLVE_TIMEOUT_MS} millis`;
 
 const LOADER_TIMEOUT = '5 seconds';
 
+/** What the navigation target loaders say about an object; `absent` only when every answer is `absent`. */
+const targetVerdict = (
+  loaders: readonly AppCapabilities.NavigationTargetLoader[],
+  spaceId: string,
+  entityIds: readonly string[],
+): Effect.Effect<AppCapabilities.NavigationTargetVerdict> =>
+  Effect.forEach(entityIds, (entityId) =>
+    Effect.forEach(loaders, (loader) =>
+      loader.load({ spaceId, entityId }).pipe(
+        Effect.timeoutOrElse({
+          duration: LOADER_TIMEOUT,
+          orElse: () => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'),
+        }),
+        Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
+      ),
+    ),
+  ).pipe(Effect.map((results) => NotFound.combineVerdicts(results.flat())));
+
 /** Dispatch navigation handlers for a URL arriving from outside the app, then project it. */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
   const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
@@ -190,18 +208,8 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
         if (candidates.length === 0) {
           return Effect.void;
         }
-        return Effect.forEach(candidates, (entityId) =>
-          Effect.forEach(loaders, (loader) =>
-            loader.load({ spaceId: pair.workspace, entityId }).pipe(
-              Effect.timeoutOrElse({
-                duration: LOADER_TIMEOUT,
-                orElse: () => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'),
-              }),
-              Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
-            ),
-          ),
-        ).pipe(
-          Effect.tap((results) => Effect.sync(() => (verdicts[index] = NotFound.combineVerdicts(results.flat())))),
+        return targetVerdict(loaders, pair.workspace, candidates).pipe(
+          Effect.tap((verdict) => Effect.sync(() => (verdicts[index] = verdict))),
         );
       },
       { concurrency: 'unbounded' },
@@ -240,6 +248,15 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
   const displaced = yield* applyActive(planks);
 
   yield* applyCompanion(companion);
+
+  const open = registry.get(ephemeralAtom).open[workspacePath];
+  if (open && open.url !== pathname) {
+    const ephemeral = registry.get(ephemeralAtom);
+    registry.set(ephemeralAtom, {
+      ...ephemeral,
+      open: { ...ephemeral.open, [workspacePath]: { ...open, url: pathname } },
+    });
+  }
 
   if (!attendChainEnd) {
     return displaced;

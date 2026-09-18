@@ -22,6 +22,7 @@ describe('Capability arity', () => {
 
   it('contributeAll rejects a singleton tag', () => {
     expect(Capability.contributeAll(single, [{ example: 'value' }])).type.toRaiseError(
+      'This Effect requires a service that is missing from the expected Effect context: `CapabilityIdentifier<"org.dxos.test.single", "single">`.',
       "is not assignable to parameter of type 'MultiTag",
     );
   });

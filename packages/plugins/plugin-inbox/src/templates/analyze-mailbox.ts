@@ -11,6 +11,7 @@ import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
+import { InboxOperationError } from '../operations/errors.ts';
 import * as InboxOperation from '../types/InboxOperation.ts';
 import * as Mailbox from '../types/Mailbox.ts';
 
@@ -37,7 +38,7 @@ export const analyzeMailbox: RoutineCapabilities.Template = {
   scaffold: ({ name, input }) =>
     Effect.gen(function* () {
       if (!Ref.isRef(input?.mailbox)) {
-        return yield* Effect.fail(new Error('Analyze Mailbox template requires a mailbox.'));
+        return yield* Effect.fail(new InboxOperationError({ message: 'Analyze Mailbox template requires a mailbox.' }));
       }
       const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
 

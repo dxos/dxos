@@ -113,11 +113,11 @@ feat F-1: Spotlight Window Integration
 
   req F-1.1:
     when: the main Composer window receives a spotlight:invoke Tauri event with operation = 'open'
-    then: the LayoutOperation.Open intent is dispatched with the provided payload
+    then: the LayoutOperation.Open intent is dispatched with the payload, decoded against its input schema
 
   req F-1.2:
     when: the main Composer window receives a spotlight:invoke event with operation = 'switch-workspace'
-    then: the LayoutOperation.SwitchWorkspace intent is dispatched with the provided payload
+    then: the LayoutOperation.SwitchWorkspace intent is dispatched with the payload, decoded against its input schema
 
   req F-1.3:
     when: a spotlight:invoke event is handled successfully
@@ -126,6 +126,10 @@ feat F-1: Spotlight Window Integration
   req F-1.4:
     when: a spotlight:invoke event carries an unrecognised operation
     then: a warning is logged and no intent is dispatched
+
+  req F-1.5:
+    when: a spotlight:invoke payload does not decode against the operation's input schema
+    then: the error is logged and no intent is dispatched
 ```
 
 ```mdl
@@ -173,9 +177,9 @@ feat F-3: Ollama Sidecar
 ```mdl
 scenario T-1: Spotlight open dispatches LayoutOperation.Open
   given: Composer is running and SpotlightListener is active
-  when: a spotlight:invoke Tauri event arrives with operation = 'open' and payload { spaceId: 'abc' }
+  when: a spotlight:invoke Tauri event arrives with operation = 'open' and payload { subject: ['root/abc/home'], disposition: 'add' }
   then:
-    - LayoutOperation.Open is invoked with { spaceId: 'abc' }
+    - LayoutOperation.Open is invoked with { subject: ['root/abc/home'], disposition: 'add' }
     - main window is visible and focused
 ```
 

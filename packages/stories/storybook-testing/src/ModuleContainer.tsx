@@ -9,9 +9,9 @@ import React, { type FC, useEffect, useState } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Role from '@dxos/app-framework/Role';
 import { Surface, useCapabilities, useCapability, useSurfaceManager } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
@@ -227,7 +227,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
     : [];
   useEffect(() => {
     for (const path of objectPaths) {
-      NotFound.expandPath(graph, path);
+      AppGraph.expandPath(graph, path);
     }
   }, [graph, JSON.stringify(objectPaths)]);
 

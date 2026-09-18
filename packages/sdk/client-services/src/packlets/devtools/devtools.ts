@@ -12,10 +12,12 @@ import { Event as AsyncEvent, type Trigger } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import { NotImplementedError } from '@dxos/errors';
 import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
+import { toServiceError } from '@dxos/protocols';
 import {
   type GetSpaceSnapshotResponse,
   type SaveSpaceSnapshotResponse,
@@ -112,7 +114,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
           usageQuota: navigatorInfo?.quota ?? 0,
         };
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -122,20 +124,20 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
     }));
   }
 
-  ['DevtoolsHost.resetStorage'](_request: DevtoolsHost.ResetStorageRequest): Effect.Effect<void, Error> {
-    return Effect.fail(new Error());
+  ['DevtoolsHost.resetStorage'](_request: DevtoolsHost.ResetStorageRequest): Effect.Effect<void, NotImplementedError> {
+    return Effect.fail(new NotImplementedError({ message: 'DevtoolsHost.resetStorage is not implemented.' }));
   }
 
   ['DevtoolsHost.enableDebugLogging'](
     _request: DevtoolsHost.EnableDebugLoggingRequest,
-  ): Effect.Effect<DevtoolsHost.EnableDebugLoggingResponse, Error> {
-    return Effect.fail(new Error());
+  ): Effect.Effect<DevtoolsHost.EnableDebugLoggingResponse, NotImplementedError> {
+    return Effect.fail(new NotImplementedError({ message: 'DevtoolsHost.enableDebugLogging is not implemented.' }));
   }
 
   ['DevtoolsHost.disableDebugLogging'](
     _request: DevtoolsHost.EnableDebugLoggingRequest,
-  ): Effect.Effect<DevtoolsHost.EnableDebugLoggingResponse, Error> {
-    return Effect.fail(new Error());
+  ): Effect.Effect<DevtoolsHost.EnableDebugLoggingResponse, NotImplementedError> {
+    return Effect.fail(new NotImplementedError({ message: 'DevtoolsHost.disableDebugLogging is not implemented.' }));
   }
 
   ['DevtoolsHost.subscribeToKeyringKeys'](
@@ -180,24 +182,26 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
 
   ['DevtoolsHost.getSpaceSnapshot'](
     _request: DevtoolsHost.GetSpaceSnapshotRequest,
-  ): Effect.Effect<GetSpaceSnapshotResponse, Error> {
-    return Effect.fail(new Error());
+  ): Effect.Effect<GetSpaceSnapshotResponse, NotImplementedError> {
+    return Effect.fail(new NotImplementedError({ message: 'DevtoolsHost.getSpaceSnapshot is not implemented.' }));
   }
 
   ['DevtoolsHost.saveSpaceSnapshot'](
     _request: DevtoolsHost.SaveSpaceSnapshotRequest,
-  ): Effect.Effect<SaveSpaceSnapshotResponse, Error> {
-    return Effect.fail(new Error());
+  ): Effect.Effect<SaveSpaceSnapshotResponse, NotImplementedError> {
+    return Effect.fail(new NotImplementedError({ message: 'DevtoolsHost.saveSpaceSnapshot is not implemented.' }));
   }
 
-  ['DevtoolsHost.clearSnapshots'](_request: DevtoolsHost.ClearSnapshotsRequest): Effect.Effect<void, Error> {
-    return Effect.fail(new Error());
+  ['DevtoolsHost.clearSnapshots'](
+    _request: DevtoolsHost.ClearSnapshotsRequest,
+  ): Effect.Effect<void, NotImplementedError> {
+    return Effect.fail(new NotImplementedError({ message: 'DevtoolsHost.clearSnapshots is not implemented.' }));
   }
 
   ['DevtoolsHost.getNetworkPeers'](
     _request: DevtoolsHost.GetNetworkPeersRequest,
-  ): Effect.Effect<DevtoolsHost.GetNetworkPeersResponse, Error> {
-    return Effect.fail(new Error());
+  ): Effect.Effect<DevtoolsHost.GetNetworkPeersResponse, NotImplementedError> {
+    return Effect.fail(new NotImplementedError({ message: 'DevtoolsHost.getNetworkPeers is not implemented.' }));
   }
 
   ['DevtoolsHost.subscribeToNetworkTopics'](): EffectStream.Stream<
@@ -229,7 +233,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
       try: async () => ({
         data: await this.exportSqliteDatabase(),
       }),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

@@ -714,6 +714,7 @@ export class EchoHost extends Resource {
         documents: this._automergeHost.loadedDocsCountForSpace(spaceId),
         documentsTotal: this._automergeHost.loadedDocsCount,
         queriesTotal: this._queryService.activeQueryCount,
+        leases: this._automergeHost.leasedDocsCount,
       },
     };
   }

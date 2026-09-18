@@ -24,8 +24,8 @@ const LAG_INTERVAL_MS = 16;
  * the main thread only, while drift is measurable in ANY realm — and the realm that blocks under a
  * large space is usually the shared worker, which no page-side API can observe.
  */
-export const installProbes = (page: Page): Promise<void> =>
-  page.addInitScript(
+export const installProbes = async (page: Page): Promise<void> => {
+  await page.addInitScript(
     ({ intervalMs, floorMs }: { intervalMs: number; floorMs: number }) => {
       (globalThis as any).__perfLag = [];
       (globalThis as any).__longTasks = [];
@@ -54,6 +54,7 @@ export const installProbes = (page: Page): Promise<void> =>
     },
     { intervalMs: LAG_INTERVAL_MS, floorMs: LAG_FLOOR_MS },
   );
+};
 
 /**
  * Installs the drift probe in a non-page realm, idempotently.

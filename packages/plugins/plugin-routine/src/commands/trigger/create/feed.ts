@@ -17,6 +17,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Ref, Feed as Feed$ } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
+import { RoutineCommandError } from '../../errors.ts';
 import { Enabled, Feed, Input } from '../options.ts';
 import { printTrigger, promptForSchemaInput, selectFeed, selectFunction } from '../util.ts';
 
@@ -40,7 +41,7 @@ export const feed = Command.make(
       const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
-        return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
+        return yield* Effect.fail(new RoutineCommandError({ message: `Function not found: ${functionId}` }));
       }
 
       const feed = yield* Option.match(options.feed, {

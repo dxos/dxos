@@ -62,6 +62,33 @@ describe('Spaces', () => {
     expect(client.spaces.get(space.key) === space).to.be.true;
   });
 
+  test('creates a space whose database opens only after a long stall', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    const openStarted = new Trigger();
+    const openReleased = new Trigger();
+    const open = DatabaseImpl.prototype.open;
+    const openSpy = vi
+      .spyOn(DatabaseImpl.prototype, 'open')
+      .mockImplementationOnce(async function (this: DatabaseImpl, ctx) {
+        openStarted.wake();
+        await openReleased.wait();
+        return open.call(this, ctx);
+      });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+      openSpy.mockRestore();
+    });
+
+    const created = client.spaces.create({ name: 'Stalled' });
+    await openStarted.wait();
+    await vi.advanceTimersByTimeAsync(10_000);
+    openReleased.wake();
+
+    const space = await created;
+    expect(space.properties.name).toEqual('Stalled');
+  });
+
   test('create rejects with the error when the space database fails to open', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
     const error = new Error('Database open failed.');

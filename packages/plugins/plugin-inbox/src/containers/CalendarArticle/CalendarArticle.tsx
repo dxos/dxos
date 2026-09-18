@@ -30,7 +30,7 @@ import { EventStack, type EventStackActionHandler, useTargetConnection } from '#
 import { meta } from '#meta';
 import { Calendar, DraftEvent, SystemTags } from '#types';
 
-import { getCalendarRangeSelectionId } from '../../paths.ts';
+import { getCalendarPath, getCalendarRangeSelectionId, getFeedObjectPath } from '../../paths.ts';
 import { InitializeCalendar } from './InitializeCalendar.tsx';
 
 const byDate =
@@ -45,9 +45,10 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const { invokePromise } = useOperationInvoker();
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   const [calendar] = useObject(subject);
-  const id = attendableId ?? Obj.getURI(calendar);
-  const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(calendar);
+  // The calendar's graph node id: events open as its children and it is their pivot.
+  const id = attendableId ?? (db ? getCalendarPath(db.spaceId, calendar.id) : Obj.getURI(calendar));
+  const currentId = useSelection(id, 'single');
   const [selectedDate, setSelectedDate] = useState<Date>();
   const calendarRef = useRef<CalendarController>(null);
   const eventStackRef = useRef<MosaicScrollController>(null);
@@ -121,7 +122,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
       void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: eventId } });
       // Open the event as its own plank beside the calendar (add), never a companion.
       void invokePromise(LayoutOperation.Open, {
-        subject: [`${id}/${eventId}`],
+        subject: [getFeedObjectPath(id, eventId)],
         pivotId: id,
         disposition: 'add',
         navigation: 'immediate',

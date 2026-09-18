@@ -4,6 +4,7 @@
 
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
@@ -80,8 +81,7 @@ describe.runIf(process.env.DX_BENCH)('runGoogleSync benchmark', () => {
       const startedAt = performance.now();
       const { newMessages } = await EffectEx.runPromise(
         runGoogleSync({ binding: Ref.make(binding) }).pipe(
-          Effect.provide(googleSyncTestServices(db, dataset)),
-          Effect.provide(harness.layer),
+          Effect.provide(Layer.provideMerge(googleSyncTestServices(db, dataset), harness.layer)),
         ),
       );
       const wallMs = performance.now() - startedAt;

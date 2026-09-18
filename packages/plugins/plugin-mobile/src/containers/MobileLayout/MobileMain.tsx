@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useDeckState } from '@dxos/plugin-deck/hooks';
 import { useNode } from '@dxos/plugin-graph/hooks';
@@ -60,6 +62,7 @@ MainPanel.displayName = MAIN_PANEL_NAME;
  */
 export const MobileMain = () => {
   const { state } = useDeckState();
+  const { graph } = useAppGraph();
   const { stack, topId, pop } = useMobileStack();
   const attentionAttrs = useAttentionAttributes(topId);
   const { keyboardOpen } = useMobileLayout(MAIN_NAME);
@@ -67,6 +70,10 @@ export const MobileMain = () => {
   const appBarProps = useMobileAppBar();
 
   useExpandPath(topId);
+  // The navbar's companion tabs come from the top panel's companions, which nothing else expands.
+  useEffect(() => {
+    AppGraph.expandSync(graph, topId, AppNode.companion);
+  }, [graph, topId]);
 
   // The drawer occupies the bottom of the screen when open, so the navbar would collide with it.
   const drawerClosed = !state.complementarySidebarPanel || state.complementarySidebarState === 'closed';
