@@ -13,6 +13,7 @@ import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { Trigger } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
+import { type BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import * as WorkerProtocol from './WorkerProtocol.ts';
@@ -86,12 +87,13 @@ export type Options = {
    * Builds the runtime after receiving init config from the leader. The provided scope is the
    * runtime's lifetime: it stays open until the worker shuts down (displaced by a newer worker, or
    * `requestShutdown` called), and every session scope is a child of it, so shutdown closes the
-   * sessions first and then the runtime. Put the runtime's teardown in its finalizers.
+   * sessions first and then the runtime. Put the runtime's teardown in its finalizers. A failure is reported
+   * to the leader as `init-failed` and shuts the worker down.
    */
   createRuntime: (args: {
     config: Record<string, any> | undefined;
     requestShutdown: () => void;
-  }) => Effect.Effect<RuntimeHandle, never, Scope.Scope>;
+  }) => Effect.Effect<RuntimeHandle, BaseError, Scope.Scope>;
 };
 
 const defaultEndpoint = (): WorkerProtocol.WorkerEndpoint => {
@@ -191,9 +193,20 @@ export const run = ({
         case 'init': {
           owningClientId = message.ownerClientId ?? message.clientId;
           log('worker init with config', { keys: Object.keys(message.config ?? {}) });
-          runtime = await EffectEx.runPromise(
-            createRuntime({ config: message.config, requestShutdown }).pipe(Scope.provide(runtimeScope)),
-          );
+          try {
+            runtime = await EffectEx.runPromise(
+              createRuntime({ config: message.config, requestShutdown }).pipe(Scope.provide(runtimeScope)),
+            );
+          } catch (err) {
+            // A worker with no runtime serves nothing, so it reports why and exits instead of advertising `ready`.
+            log.error('dedicated-worker: runtime failed to start', { err });
+            endpoint.postMessage({
+              type: 'init-failed',
+              error: WorkerProtocol.encodeError(err),
+            } satisfies WorkerProtocol.DedicatedWorkerMessage);
+            await shutdown();
+            break;
+          }
           log('dedicated-worker: runtime ready, posting ready');
           endpoint.postMessage({
             type: 'ready',

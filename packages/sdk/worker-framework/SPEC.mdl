@@ -131,12 +131,15 @@ module Coordinator
 ```mdl
 module WorkerProtocol
   desc: |
-    The wire protocol shared across the Client, Worker, and Coordinator modules.
-    Types only; re-exported from every entrypoint that references them.
+    The wire protocol shared across the Client, Worker, and Coordinator modules,
+    plus the error codec it posts; re-exported from every entrypoint that references them.
   api:
     WorkerCoordinator: interface         # { onMessage: Event<CoordinatorMessage>; sendMessage(msg): void }.
     CoordinatorMessage: union            # new-leader | leader-heartbeat | request-port | provide-port.
-    DedicatedWorkerMessage: union        # listening | init | ready | start-session | session.
+    DedicatedWorkerMessage: union        # listening | init | ready | init-failed | start-session | session.
+    SerializedError: {...}               # name, message, stack?, cause?, errors? — an error that survives postMessage.
+    encodeError: (error: unknown) => SerializedError   # keeps name, cause chain, and AggregateError.errors.
+    decodeError: (error: SerializedError) => Error     # rebuilds it as a plain Error / AggregateError.
     WorkerEndpoint: interface            # postMessage / add + removeEventListener('message') / close?.
     WorkerOrPort: Worker | MessagePort   # worker handle usable from a leader tab or a test port.
 ```
@@ -164,6 +167,12 @@ feat F-1: Leader election
     when: a leader session fails (worker init/crash) rather than the lock being stolen
     then: the tab re-enters election after a capped exponential backoff with jitter,
           resetting the failure count once a session opens
+
+  req F-1.5:
+    when: the worker replies `init-failed` while the tab has not yet connected
+    then: open() rejects with the worker's decoded error, whatever its name, and the
+          tab neither re-enters election nor keeps requesting a port; a tab that has
+          connected before treats it as F-1.4
 ```
 
 ```mdl
@@ -202,6 +211,11 @@ feat F-3: Worker lifecycle and displacement
     when: the leader sends `init` with config and an `ownerClientId`
     then: the worker builds its runtime, marks the owning client, and replies `ready`
           with its `livenessLockKey`
+
+  req F-3.4:
+    when: building the runtime fails
+    then: the worker replies `init-failed` with the encoded error instead of `ready`,
+          then shuts down, releasing its liveness and storage locks
 ```
 
 ```mdl

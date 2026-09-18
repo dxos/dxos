@@ -9,8 +9,16 @@ Wants=network-online.target
 # --access_log_level defaults to all (one line per CAS/AC request) and filled the disk in
 # 8 days at CI volume; `none` disables it, the request rate isn't otherwise interesting.
 # --max_size is bounded by RAM, not disk: bazel-remote holds one index entry per cache file,
-# measured at ~1.1 KB. At 200 GiB the cache reached 10.5M files and an 11.7 GB heap on a 16 GB
-# droplet, which swapped and took BatchReadBlobs to 18 s. 50 GiB is ~3.7M files, ~4 GB of index.
+# measured at ~604 bytes on a freshly built index. At 200 GiB the cache reached 10.5M files and an
+# 11.7 GB heap on a 16 GB droplet, which swapped and took BatchReadBlobs to 18 s. 50 GiB is
+# ~3.7M files, ~2.3 GB of index.
+# The index is long-lived, so Go's default GOGC=100 lets the heap grow to twice it between
+# collections. That put the GC target at 8 GB on a 16 GB box, the kernel paged the cold half of
+# the heap out, and every collection dragged it back through swap: README item 8. GOGC=50 holds
+# the target near 1.5x live, and GOMEMLIMIT collects rather than grows if the index ever gets
+# bigger than that leaves room for.
+Environment=GOGC=50
+Environment=GOMEMLIMIT=10GiB
 ExecStart=/usr/local/bin/bazel-remote \
   --dir /var/cache/moon \
   --max_size 50 \
