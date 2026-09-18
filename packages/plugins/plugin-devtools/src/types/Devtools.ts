@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import * as DebugNodes from '@dxos/plugin-debug/DebugNodes';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
 import { meta } from '#meta';
 
@@ -22,7 +22,7 @@ const devtoolsId = `${meta.profile.key}.devtools`;
  * segment of the namespaced ID below the plugin key.
  */
 export const getNodePath = (fullId: string): string =>
-  [DebugNodes.DEBUG_ROOT_ID, ...fullId.slice(meta.profile.key.length + 1).split('.')].join('/');
+  GraphPath.getSpacePath(GraphPath.GroupSegments.debug, ...fullId.slice(meta.profile.key.length + 1).split('.'));
 
 export const id = devtoolsId;
 export const AppGraph = `${devtoolsId}.appGraph`;

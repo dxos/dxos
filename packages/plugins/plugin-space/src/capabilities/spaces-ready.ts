@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -29,14 +28,12 @@ import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceCapabilities, SpaceOperation } from '#types';
+import { SpaceCapabilities } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
-import { getAwaitedTarget } from '../util/awaited-path.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
-const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
 /**
  * Resolve the designated default space, migrating a legacy profile into the settings space until
@@ -95,8 +92,7 @@ export default Capability.makeModule(
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invoke, invokePromise } = yield* Capabilities.OperationInvoker;
-    const { graph } = yield* AppCapabilities.AppGraph;
+    const { invoke } = yield* Capabilities.OperationInvoker;
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
     const attention = yield* AttentionCapabilities.Attention;
@@ -157,41 +153,6 @@ export default Capability.makeModule(
     //
     // Space subscriptions — set up immediately, do not depend on default space.
     //
-
-    // Await missing objects - subscribe to layout atom changes.
-    // NOTE: Use immediate: true to check initial state (URL handler may have already set active).
-    let lastActiveCleanup: (() => void) | undefined;
-    subscriptions.add(
-      registry.subscribe(
-        layoutAtom,
-        (layout) => {
-          // Clean up previous effect.
-          lastActiveCleanup?.();
-          lastActiveCleanup = undefined;
-
-          // Determine the ID to check - either from active item or workspace.
-          const id = layout.active.length === 1 ? layout.active[0] : layout.workspace;
-          if (!id) {
-            return;
-          }
-
-          const node = AppGraph.getNode(graph, id).pipe(Option.getOrNull);
-          if (!node && getAwaitedTarget(id)) {
-            const timeout = setTimeout(async () => {
-              const node = AppGraph.getNode(graph, id).pipe(Option.getOrNull);
-              if (!node) {
-                await invokePromise(SpaceOperation.WaitForObject, { id });
-              }
-            }, WAIT_FOR_OBJECT_TIMEOUT);
-
-            lastActiveCleanup = () => clearTimeout(timeout);
-          }
-        },
-        { immediate: true },
-      ),
-    );
-    // Also add cleanup for the last effect.
-    subscriptions.add(() => lastActiveCleanup?.());
 
     // Cache space names.
     const spaceNamesSub = client.spaces.subscribe((spaces) => {

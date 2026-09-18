@@ -63,7 +63,6 @@ export const NavigationTargetResolver = AppCapability.navigationResolver(
   },
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.space.role.homeContent',

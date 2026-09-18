@@ -13,7 +13,6 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer, SpaceInfoArticle, SpaceListArticle, TestingArticle } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
-import * as DebugOperation from '@dxos/plugin-debug/DebugOperation';
 import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Space } from '@dxos/react-client/echo';
@@ -36,23 +35,21 @@ export const ActiveSpacePanel = ({ role, Panel }: ActiveSpacePanelProps) => {
   return space ? <Panel role={role} space={space} /> : null;
 };
 
-export const SpaceListSurface = ({ role }: { role?: string }) => {
-  const { invokePromise } = useOperationInvoker();
-  const handleSelect = useCallback(
-    () => invokePromise(DebugOperation.SelectPage, { nodeId: Devtools.getNodePath(Devtools.Echo.Space) }),
-    [invokePromise],
-  );
+export type NavigableSurfaceProps = {
+  role?: string;
+  /** Set by the debug panel, which hosts these pages; see `AppSurface.ArticleData.onNavigate`. */
+  onNavigate?: (nodeId: string) => void;
+};
+
+export const SpaceListSurface = ({ role, onNavigate }: NavigableSurfaceProps) => {
+  const handleSelect = useCallback(() => onNavigate?.(Devtools.getNodePath(Devtools.Echo.Space)), [onNavigate]);
 
   return <SpaceListArticle role={role} onSelect={handleSelect} />;
 };
 
-export const SpaceInfoSurface = ({ role }: { role?: string }) => {
+export const SpaceInfoSurface = ({ role, onNavigate }: NavigableSurfaceProps) => {
   const space = useActiveSpace();
-  const { invokePromise } = useOperationInvoker();
-  const handleSelect = useCallback(
-    () => invokePromise(DebugOperation.SelectPage, { nodeId: Devtools.getNodePath(Devtools.Echo.Feeds) }),
-    [invokePromise],
-  );
+  const handleSelect = useCallback(() => onNavigate?.(Devtools.getNodePath(Devtools.Echo.Feeds)), [onNavigate]);
   if (!space) {
     return null;
   }

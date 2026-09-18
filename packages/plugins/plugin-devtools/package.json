@@ -113,7 +113,6 @@
     "@dxos/graph": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",

@@ -269,13 +269,13 @@ export default Capability.makeModule(
         id: 'echo.spaces',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Spaces),
         component: SpaceListSurface,
-        props: ({ role }) => ({ role }),
+        props: ({ role, data: { onNavigate } }) => ({ role, onNavigate }),
       }),
       Surface.create({
         id: 'echo.space',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Space),
         component: SpaceInfoSurface,
-        props: ({ role }) => ({ role }),
+        props: ({ role, data: { onNavigate } }) => ({ role, onNavigate }),
       }),
       Surface.create({
         id: 'echo.feeds',
