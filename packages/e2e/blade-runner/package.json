@@ -65,6 +65,7 @@
     "effect": "catalog:",
     "esbuild": "catalog:",
     "esbuild-plugin-wasm": "catalog:",
+    "fast-check": "catalog:",
     "ioredis": "catalog:",
     "isomorphic-ws": "catalog:",
     "js-yaml": "catalog:",

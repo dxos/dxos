@@ -191,7 +191,7 @@
   -webkit-mask-size: 200% 100%;
   mask-repeat: repeat-x;
   -webkit-mask-repeat: repeat-x;
-  animation: shimmer-text 2s linear infinite;
+  animation: shimmer-text 3s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

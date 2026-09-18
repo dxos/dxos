@@ -505,6 +505,14 @@ describe('Annotation', () => {
       expect(registry.get(atomA)).toEqual(['x', 'y']);
     });
 
+    test('atom is one atom per target and annotation', ({ expect }) => {
+      const obj = Obj.make(Container, { name: 'A' });
+      expect(Annotation.atom(obj, OrderAnnotation)).toBe(Annotation.atom(obj, OrderAnnotation));
+      expect(Annotation.atom(obj, OrderAnnotation)).not.toBe(
+        Annotation.atom(Obj.make(Container, { name: 'B' }), OrderAnnotation),
+      );
+    });
+
     test('atom exposes the whole annotation value as an Option', ({ expect }) => {
       const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });

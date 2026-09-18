@@ -238,15 +238,16 @@ type SyntaxCodeProps = ComposableProps<{
   testId?: string;
 }>;
 
-/** Highlighted code leaf. Reads source/data from `Syntax.Root` context. */
+/** Highlighted code leaf, unscrolled: `Syntax.Viewport` owns the scrolling. Reads source/data from `Syntax.Root`. */
 const SyntaxCode = composable<HTMLDivElement, SyntaxCodeProps>(({ testId, ...props }, forwardedRef) => {
-  const merged = composableProps(props, { classNames: 'text-sm overflow-visible' });
+  const merged = composableProps(props, { classNames: 'text-sm' });
 
   const context = useSyntaxContext(SYNTAX_CODE_NAME);
   if (context.mode === 'json') {
     return (
       <JsonHighlighter
         {...merged}
+        scroll={false}
         data={context.filteredData}
         replacer={context.replacer}
         testId={testId}
@@ -256,7 +257,7 @@ const SyntaxCode = composable<HTMLDivElement, SyntaxCodeProps>(({ testId, ...pro
   }
 
   return (
-    <SyntaxHighlighter {...merged} language={context.language} data-testid={testId} ref={forwardedRef}>
+    <SyntaxHighlighter {...merged} scroll={false} language={context.language} data-testid={testId} ref={forwardedRef}>
       {context.source ?? ''}
     </SyntaxHighlighter>
   );

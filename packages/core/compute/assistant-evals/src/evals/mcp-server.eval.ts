@@ -41,12 +41,13 @@ import * as Scorer from '../Scorer.ts';
 // the agent is never told an endpoint or credential it could reach the surface with by hand.
 //
 // `DX_EVAL_MCP_TARGET` picks the surface: `local` (the in-process host, the default), `local-edge`
-// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Against `dev` the harness
-// brings its own identity: it replicates the space it seeds to dev EDGE and mints the worker's grant
-// itself (`McpAuth`), so the run is graded from the database exactly as a local one is — every write
-// the agent makes through the deployed worker comes back by replication. A worker reached with a
-// hand-minted `DX_EVAL_MCP_TOKEN` serves a space this process cannot see, so that run drops the
-// write stages and scores what a client can see from outside: discovery, and per-tool latency.
+// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Against `dev` and `main` the
+// harness brings its own identity: it binds a `test+*@dxos.org` account through that EDGE's test
+// hatch, replicates the space it seeds, and mints the worker's grant itself (`McpAuth`), so the run
+// is graded from the database exactly as a local one is — every write the agent makes through the
+// deployed worker comes back by replication. `prod`, whose hatch is closed, and any worker reached
+// with a hand-minted `DX_EVAL_MCP_TOKEN` serve a space this process cannot see, so those runs drop
+// the write stages and score what a client can see from outside: discovery, and per-tool latency.
 //
 
 const TARGET = McpTarget.fromEnv();

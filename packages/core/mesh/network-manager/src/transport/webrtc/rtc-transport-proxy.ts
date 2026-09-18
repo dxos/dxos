@@ -132,22 +132,17 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  async getStats(): Promise<TransportStats> {
+  async getStats(): Promise<TransportStats | undefined> {
     try {
       const response = await this._run(
         this._options.rtcService['RTCService.getStats'](
           create(StatsRequestSchema, { proxyId: fromPublicKey(this._proxyId) }),
         ),
       );
-      return response.stats as TransportStats;
+      return response.stats as TransportStats | undefined;
     } catch (err) {
-      return {
-        bytesSent: 0,
-        bytesReceived: 0,
-        packetsSent: 0,
-        packetsReceived: 0,
-        rawStats: 'rtc-svc unreachable',
-      };
+      log('transport stats unavailable', { err });
+      return undefined;
     }
   }
 

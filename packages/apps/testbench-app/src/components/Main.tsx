@@ -5,7 +5,18 @@
 import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
+import {
+  DatabaseCard,
+  Devtools,
+  MemoryCard,
+  NetworkCard,
+  PerformanceCard,
+  QueriesCard,
+  ReplicatorCard,
+  ReplicatorMessagesCard,
+  StatsPanel,
+  useStats,
+} from '@dxos/devtools';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
@@ -222,7 +233,15 @@ export const Main = () => {
           <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
           {showStats && (
             <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
-              <StatsPanel stats={stats} onRefresh={refreshStats} />
+              <StatsPanel onRefresh={refreshStats}>
+                <MemoryCard memory={stats.memory} />
+                <NetworkCard network={stats.network} />
+                <PerformanceCard entries={stats.performanceEntries} />
+                <DatabaseCard database={stats.database} />
+                <ReplicatorCard database={stats.database} />
+                <ReplicatorMessagesCard database={stats.database} />
+                <QueriesCard queries={stats.queries} />
+              </StatsPanel>
             </div>
           )}
         </div>

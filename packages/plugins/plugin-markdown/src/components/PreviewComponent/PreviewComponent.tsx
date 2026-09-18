@@ -189,7 +189,9 @@ export const PreviewComponent = ({
           {...resizeAttributes}
           ref={containerRef}
         >
-          <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
+          {/* The row is capped at the box (`minmax(0, 1fr)`): with the default `auto` row the section
+              keeps its intrinsic height and only its overflow is clipped, so it never scrolls. */}
+          <div className='grid grid-rows-[minmax(0,1fr)] overflow-hidden border border-subdued-separator rounded-md'>
             <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 

@@ -48,7 +48,7 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { EffectEx } from '@dxos/effect';
+import { AtomEx, EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event.ts';
@@ -110,6 +110,7 @@ export type ManagerOptions = {
    * `plugins` are ignored.
    */
   core?: string[];
+  /** Registry to use instead of creating one; `atomIdleTTL` does not apply to it. */
   registry?: Registry.AtomRegistry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
@@ -131,6 +132,11 @@ export type ManagerOptions = {
    * Defaults to 30 seconds; pass `Duration.infinity` to disable.
    */
   loadTimeout?: Duration.Input;
+  /**
+   * Grace period before an atom with no subscribers is removed from the registry this manager creates.
+   * Defaults to {@link AtomEx.DEFAULT_IDLE_TTL}; see `AtomEx.makeRegistry`.
+   */
+  atomIdleTTL?: Duration.Input;
   /**
    * Maximum time allowed for a single module's `activate()` Effect to settle.
    * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
@@ -318,6 +324,7 @@ class ManagerImpl implements PluginManager {
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
+    atomIdleTTL = AtomEx.DEFAULT_IDLE_TTL,
     whenIdle,
   }: ManagerOptions) {
     // Core plugins default to `meta.tags.includes('system')`, overridden by the host's
@@ -328,7 +335,7 @@ class ManagerImpl implements PluginManager {
     const core: string[] = coreProp
       ? coreProp.filter((id) => registered.has(id))
       : plugins.filter(({ meta }) => meta.profile.tags?.includes('system')).map(({ meta }) => meta.profile.key);
-    this.registry = registry ?? Registry.make();
+    this.registry = registry ?? AtomEx.makeRegistry({ idleTTL: atomIdleTTL });
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });
