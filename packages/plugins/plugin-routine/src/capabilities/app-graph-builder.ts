@@ -56,6 +56,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createTypeExtension({
         id: 'routineRuns',
+        relation: AppNode.companion,
         type: Routine.Routine,
         connector: () =>
           Effect.succeed([

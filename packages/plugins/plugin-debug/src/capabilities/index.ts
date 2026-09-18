@@ -38,6 +38,11 @@ export const DebugSettings = AppCapability.settings(() => import('./settings.ts'
   provides: [Debug.DebugCapabilities.Settings],
   environments: ['node'],
 });
+export const GraphRetention = Capability.lazyModule(
+  'GraphRetention',
+  { provides: [AppCapabilities.AppGraphRetention] },
+  () => import('./graph-retention.ts'),
+);
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',
   {

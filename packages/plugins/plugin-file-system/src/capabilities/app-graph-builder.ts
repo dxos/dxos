@@ -26,7 +26,7 @@ import { Position, isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { findDirectoryById } from '../util.ts';
+import { findDirectoryById, isFileId } from '../util.ts';
 import type { FileSystemManager } from './state/index.ts';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
@@ -67,20 +67,26 @@ export const createFileSystemEntryExtensions = (
 ) => {
   // Files/directories sit at a variable-depth, data-dependent path (`root/<workspace>/<dir>/…/<id>`), so
   // forward URL resolution walks the current workspace tree to rebuild the node path from the entry id.
-  const resolve: AppGraphBuilder.PathResolver = ({ id, workspace }) =>
-    Effect.sync(() => {
-      const ws = readState().workspaces.find((item) => item.id === workspace);
-      if (!ws) {
-        return null;
-      }
-      const chain = findEntryAncestorChain(ws.children, id, []);
-      return chain ? [GraphNode.RootId, workspace, ...chain, id].join('/') : null;
-    });
+  const url: AppGraphBuilder.UrlBinding = {
+    key: 'file',
+    kind: 'item',
+    path: [],
+    workspace: isFileId,
+    resolve: ({ id, workspace }) =>
+      Effect.sync(() => {
+        const ws = readState().workspaces.find((item) => item.id === workspace);
+        if (!ws) {
+          return null;
+        }
+        const chain = findEntryAncestorChain(ws.children, id, []);
+        return chain ? [GraphNode.RootId, workspace, ...chain, id].join('/') : null;
+      }),
+  };
 
   return Effect.all([
     AppGraphBuilder.createExtension({
       id: 'workspaceEntries',
-      url: { key: 'file', kind: 'item', path: resolve },
+      url,
       match: GraphNodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -104,7 +110,7 @@ export const createFileSystemEntryExtensions = (
 
     AppGraphBuilder.createExtension({
       id: 'directoryEntries',
-      url: { key: 'file', kind: 'item', path: resolve },
+      url,
       match: GraphNodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
