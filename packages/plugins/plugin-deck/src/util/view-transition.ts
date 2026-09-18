@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 /**
  * Whether the document can animate a same-document view transition right now. A hidden tab is
@@ -14,6 +15,35 @@ const canTransition = (): boolean =>
   'startViewTransition' in document &&
   document.visibilityState === 'visible' &&
   !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** The two ends of a started transition's update callback. */
+type Handles = {
+  /** Resolves once the browser has captured the old state and invoked the update callback. */
+  captured: Promise<void>;
+  /** Settles the update callback, releasing the browser to capture the new state. */
+  settle: () => void;
+};
+
+/**
+ * Start a transition whose update callback only reports that it was invoked, then waits to be settled.
+ * Promises rather than Effects because the callback has to hand the browser one. Fails when the
+ * document refuses to start a transition (detached, mid-navigation).
+ */
+const startTransition = Effect.try(() => {
+  let signalCaptured = () => {};
+  let settle = () => {};
+  const captured = new Promise<void>((resolve) => {
+    signalCaptured = resolve;
+  });
+  const settled = new Promise<void>((resolve) => {
+    settle = resolve;
+  });
+  document.startViewTransition(() => {
+    signalCaptured();
+    return settled;
+  });
+  return { captured, settle } satisfies Handles;
+});
 
 /**
  * Run `effect` as the update step of a view transition, so the browser animates the DOM from the
@@ -30,28 +60,18 @@ export const withViewTransition = <A, E, R>(effect: Effect.Effect<A, E, R>): Eff
       return effect;
     }
 
-    let signalCaptured = () => {};
-    let signalSettled = () => {};
-    const captured = new Promise<void>((resolve) => {
-      signalCaptured = resolve;
-    });
-    const settled = new Promise<void>((resolve) => {
-      signalSettled = resolve;
-    });
-
-    try {
-      document.startViewTransition(() => {
-        signalCaptured();
-        return settled;
-      });
-    } catch {
-      // A document that cannot start one (detached, mid-navigation) is no failure of the caller's.
-      return effect;
-    }
-
-    return Effect.promise(() => captured).pipe(
-      Effect.andThen(effect),
-      // Settled on every exit, interruption included, or rendering stays frozen until the browser gives up on the callback.
-      Effect.ensuring(Effect.sync(() => signalSettled())),
+    return Effect.option(startTransition).pipe(
+      Effect.flatMap(
+        Option.match({
+          // A document that refuses to start one is no failure of the caller's.
+          onNone: () => effect,
+          onSome: ({ captured, settle }) =>
+            Effect.promise(() => captured).pipe(
+              Effect.andThen(effect),
+              // Settled on every exit, interruption included, or rendering stays frozen until the browser gives up on the callback.
+              Effect.ensuring(Effect.sync(settle)),
+            ),
+        }),
+      ),
     );
   });

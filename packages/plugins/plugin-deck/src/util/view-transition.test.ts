@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -12,16 +13,21 @@ import { withViewTransition } from './view-transition.ts';
 
 type UpdateCallback = () => Promise<void>;
 
-type FakeTransition = {
+type FakeDocument = {
   /** The update callbacks `startViewTransition` received. */
   callbacks: UpdateCallback[];
   /** The one callback a transition received. */
   callback: () => UpdateCallback;
 };
 
-/** Stand in for a visible document whose `startViewTransition` records its callbacks without running them. */
-const installDocument = (options: { reducedMotion?: boolean; visibility?: DocumentVisibilityState } = {}) => {
-  const fake: FakeTransition = {
+/**
+ * Stand in for a document whose `startViewTransition` records its update callback without invoking
+ * it, so a test can play the browser's side of the contract itself.
+ */
+const installDocument = (
+  options: { api?: boolean; reducedMotion?: boolean; visibility?: DocumentVisibilityState } = {},
+): FakeDocument => {
+  const fake: FakeDocument = {
     callbacks: [],
     callback: () => {
       const [callback] = fake.callbacks;
@@ -33,10 +39,12 @@ const installDocument = (options: { reducedMotion?: boolean; visibility?: Docume
   };
   vi.stubGlobal('document', {
     visibilityState: options.visibility ?? 'visible',
-    startViewTransition: (callback: UpdateCallback) => {
-      fake.callbacks.push(callback);
-      return {};
-    },
+    ...(options.api !== false && {
+      startViewTransition: (callback: UpdateCallback) => {
+        fake.callbacks.push(callback);
+        return {};
+      },
+    }),
   });
   vi.stubGlobal('window', {
     matchMedia: () => ({ matches: options.reducedMotion ?? false }),
@@ -52,22 +60,14 @@ describe('withViewTransition', () => {
     vi.unstubAllGlobals();
   });
 
-  test('runs the effect directly when the document cannot animate', async () => {
-    vi.stubGlobal('document', undefined);
+  test.each([
+    ['the API is missing', { api: false }],
+    ['the document is hidden', { visibility: 'hidden' as const }],
+    ['the reader prefers reduced motion', { reducedMotion: true }],
+  ])('runs the effect without a transition when %s', async (_, options) => {
+    const fake = installDocument(options);
     const result = await EffectEx.runPromise(withViewTransition(Effect.succeed('ran')));
     expect(result).toBe('ran');
-  });
-
-  test('runs the effect directly under reduced motion', async () => {
-    const fake = installDocument({ reducedMotion: true });
-    const result = await EffectEx.runPromise(withViewTransition(Effect.succeed('ran')));
-    expect(result).toBe('ran');
-    expect(fake.callbacks).toHaveLength(0);
-  });
-
-  test('runs the effect directly in a hidden document', async () => {
-    const fake = installDocument({ visibility: 'hidden' });
-    await EffectEx.runPromise(withViewTransition(Effect.void));
     expect(fake.callbacks).toHaveLength(0);
   });
 
@@ -99,5 +99,17 @@ describe('withViewTransition', () => {
     const exit = await running;
     expect(Exit.isFailure(exit)).toBe(true);
     await expect(done).resolves.toBeUndefined();
+  });
+
+  test('settles the callback when interrupted before the old state is captured', async () => {
+    const fake = installDocument();
+    const ran = vi.fn();
+    const fiber = Effect.runFork(withViewTransition(Effect.sync(() => ran())));
+    await flush();
+    const callback = fake.callback();
+    await EffectEx.runPromise(Fiber.interrupt(fiber));
+    expect(ran).not.toHaveBeenCalled();
+    // The browser invokes the callback whether or not anyone is still waiting, and must not hang on it.
+    await expect(callback()).resolves.toBeUndefined();
   });
 });

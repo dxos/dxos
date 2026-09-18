@@ -162,6 +162,7 @@
     }
 
     &[data-side='ie'] {
+      view-transition-name: dx-main-complementary-sidebar;
       @apply -end-[100vw] border-s;
       border-inline-start-width: var(--border-width-landmark-line);
       border-inline-start-style: solid;
@@ -191,6 +192,7 @@
   }
 
   .dx-main-overlay {
+    view-transition-name: dx-main-overlay;
     @apply fixed inset-0 bg-scrim-surface;
     transition-property: opacity;
     transition-duration: 200ms;
@@ -212,6 +214,7 @@
    * them); the content pads for it.
    */
   .dx-main-drawer {
+    view-transition-name: dx-main-drawer;
     @apply fixed grid grid-rows-[min-content_1fr] border-t border-separator overflow-hidden;
     --surface-bg: var(--dx-surface-chrome);
     background-color: var(--surface-bg);
@@ -293,9 +296,11 @@
 /**
  * View transitions.
  *
- * The content and the navigation sidebar are each their own transition group, so a same-document view
- * transition (see `withViewTransition` in `@dxos/plugin-deck`) crossfades each region's content and
- * morphs the sidebar between its collapsed and expanded boxes instead of crossfading the page as one.
+ * Every fixed region of the layout is its own transition group, so a same-document view transition
+ * (see `withViewTransition` in `@dxos/plugin-deck`) crossfades each region's content and morphs a
+ * sidebar between its collapsed and expanded boxes instead of crossfading the page as one. All of them,
+ * not only the ones that change: the content's box spans the viewport and a named group paints above
+ * the root snapshot, so a sidebar or drawer left in the root would vanish under it for the duration.
  */
 @layer dx-components {
   .dx-main-content {
