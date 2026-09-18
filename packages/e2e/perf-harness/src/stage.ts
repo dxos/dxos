@@ -16,6 +16,7 @@ import {
   readRealmThreadMetrics,
   readThreadMetrics,
 } from './collectors/cpu.ts';
+import { diffDisk, readDisk } from './collectors/disk.ts';
 import { type Screencast } from './collectors/frames.ts';
 import { readDomCounters, readHeap, sumHeapUsed, trackPeakRss } from './collectors/memory.ts';
 import { diffNetwork } from './collectors/network.ts';
@@ -24,6 +25,7 @@ import { installWorkerProbe, readResponsiveness } from './collectors/responsiven
 import { STAGE_MARK_PREFIX } from './collectors/tracing.ts';
 import {
   type Comparability,
+  type DiskMetrics,
   type Mode,
   type NetworkMetrics,
   type RealmThreadMetrics,
@@ -80,6 +82,7 @@ type Boundary = {
   thread: ThreadMetrics;
   threadByRealm: RealmThreadMetrics[];
   network: NetworkMetrics;
+  disk: DiskMetrics;
 };
 
 /**
@@ -184,6 +187,7 @@ export class StageRunner {
       thread: pageTarget ? await readThreadMetrics(pageTarget) : { ...EMPTY_THREAD },
       threadByRealm: await readRealmThreadMetrics(this.#targets),
       network: network(),
+      disk: await readDisk(this.#targets),
     };
     const stopRss = trackPeakRss(browserPid);
 
@@ -207,15 +211,23 @@ export class StageRunner {
       ? diffThreadMetrics(before.thread, await readThreadMetrics(pageTarget))
       : { ...EMPTY_THREAD };
     const networkDelta = diffNetwork(before.network, network());
-    // Read before the target refresh below, so a realm is diffed against the same realm set the
-    // opening boundary saw; one that appeared mid-stage is picked up by the refresh and reported
-    // whole, which is correct — it did all its work inside this stage.
+    // Read BEFORE the refresh, so a realm is diffed against the same realm set the opening boundary
+    // saw; one that appeared mid-stage is picked up by the refresh and reported whole, which is
+    // correct — it did all its work inside this stage.
     const threadByRealm = diffRealmThreadMetrics(before.threadByRealm, await readRealmThreadMetrics(this.#targets));
 
-    // Refreshed again before the per-realm readings: a stage can BRING a realm into existence —
-    // `boot` is where the shared worker running ECHO first appears — and a set captured only at
-    // the opening boundary would report that stage's heap as the page's alone.
+    // Refreshed before the per-realm readings: a stage can BRING a realm into existence — `boot` is
+    // where the shared worker running ECHO first appears — and a set captured only at the opening
+    // boundary would report that stage's heap as the page's alone.
     this.#targets = await refreshTargets(debugPort, this.#targets);
+
+    // AFTER the refresh, unlike the readings above, and the difference is load-bearing. SQLite runs
+    // in the dedicated worker, and `boot` is the stage that creates it: read against the opening
+    // set, boot found no instrumented realm at either boundary and reported `realms: 0` with no
+    // I/O, so opening the database and running migrations — the largest disk event in the flow —
+    // was missing from every run. A realm that appeared during the stage contributes its whole
+    // counters, which is right: it did that work inside this stage.
+    const diskDelta = diffDisk(before.disk, await readDisk(this.#targets));
 
     const responsiveness = await readResponsiveness(page, this.#targets);
     const domCounters = await readDomCounters(this.#targets.find((target) => target.kind === 'page'));
@@ -256,6 +268,7 @@ export class StageRunner {
       domListeners: domCounters.listeners,
       domDocuments: domCounters.documents,
       network: networkDelta,
+      disk: diskDelta,
       responsiveness: {
         ...responsiveness,
         ...(stills ? { stillFrameMaxMs: stills.maxMs, stillFrameCount: stills.count } : {}),

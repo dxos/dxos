@@ -123,15 +123,60 @@ export type RealmLag = {
   count: number;
 };
 
+/**
+ * SQLite's own disk I/O, from the OPFS VFS.
+ *
+ * The only instrument that reports this: nothing in CDP gives read/write bytes,
+ * `Storage.getUsageAndQuota` gives a stored LEVEL rather than operations, and `/proc/<pid>/io`
+ * counts Chrome's own traffic alongside ours. The VFS is the one layer where a byte count is
+ * attributable to SQLite.
+ *
+ * Browser-only: node uses native SQLite with no JS VFS, so a node run reports zeroes.
+ */
+export type DiskMetrics = {
+  readBytes: number;
+  writeBytes: number;
+  reads: number;
+  writes: number;
+  /** `jSync` calls — an fsync is the expensive operation a write amplification shows up as. */
+  syncs: number;
+  /**
+   * How many realms published counters.
+   *
+   * The integrity column: `0` means nothing was instrumented, which is a different fact from
+   * SQLite having done no I/O, and the two are indistinguishable from the byte columns alone.
+   */
+  realms: number;
+};
+
 /** Bytes split by what the request was for. The code/API split is the point. */
 export type NetworkMetrics = {
   /** Scripts, stylesheets, wasm, fonts, the document itself — the cost of loading the app. */
   codeBytes: number;
-  /** `fetch`/`xhr`/websocket traffic — the cost of using it. */
+  /** `fetch`/`xhr` traffic to ANY host — the cost of using the app, analytics included. */
   apiBytes: number;
   otherBytes: number;
   requests: number;
   apiRequests: number;
+  /**
+   * `fetch`/`xhr` bytes to the EDGE hosts alone, which is the app talking to its backend.
+   *
+   * Separate from `apiBytes` because that column counts analytics and any third party too, so it
+   * cannot answer what the app costs the backend.
+   */
+  edgeApiBytes: number;
+  edgeApiRequests: number;
+  /**
+   * WebSocket FRAME bytes to the edge hosts — ECHO's replication traffic.
+   *
+   * The `response` event cannot see this: a socket produces exactly one response, the 101 with an
+   * empty body, so before frame accounting every data-syncing stage of the flow recorded 0 bytes
+   * and 0 requests. This is the column that makes the network numbers mean anything.
+   */
+  edgeSocketBytes: number;
+  edgeSocketFrames: number;
+  /** Analytics and third-party bytes, recorded so the edge columns can be read as clean. */
+  analyticsBytes: number;
 };
 
 /**
@@ -209,6 +254,8 @@ export type StageRow = {
   domDocuments: number;
 
   network: NetworkMetrics;
+  /** SQLite's VFS-level disk I/O for this stage. Zeroes on node, which has no JS VFS. */
+  disk: DiskMetrics;
   responsiveness: ResponsivenessMetrics;
 
   comparability: Comparability;
