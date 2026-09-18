@@ -69,3 +69,7 @@ export const getHandleState = (repo: Repo, documentId: DocumentId): HandleQueryS
  */
 export const isLoaded = <T>(state: QueryState<T>): boolean =>
   state.state === 'ready' && state.sources.storage !== 'pending';
+
+/** {@link isLoaded} for a document the repo may not hold; never faults one in. */
+export const isDocumentLoaded = (repo: Repo, documentId: DocumentId): boolean =>
+  repo.getHandle(documentId) ? isLoaded(repo.findWithProgress(documentId).peek()) : false;
