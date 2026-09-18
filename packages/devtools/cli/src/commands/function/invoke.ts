@@ -16,6 +16,7 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/edge-compute';
 
+import { CliError } from '../../util/errors.ts';
 import { printInvokeResult } from './util.ts';
 
 export const invoke = Command.make(
@@ -46,7 +47,7 @@ export const invoke = Command.make(
     // TODO(dmaretskyi): Should we make the keys unique?
     const fn = fns.findLast((fn) => Obj.getMeta(fn).key === key);
     if (!fn) {
-      return yield* Effect.fail(new Error(`Function not found: ${key}`));
+      return yield* Effect.fail(new CliError({ message: `Function not found: ${key}` }));
     }
 
     const edgeClient = createEdgeClient(client);

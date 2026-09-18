@@ -217,8 +217,12 @@ describe('makeToolResolverFromOperations', () => {
       const resolver = yield* ToolResolverService;
       return yield* body((id) => resolver.resolve(ToolId.make(id)));
     }).pipe(
-      Effect.provide(makeToolResolverFromOperations().pipe(Layer.provide(Layer.succeed(Registry.Service, registry)))),
-      Effect.provide(OpaqueToolkit.providerLayer(OpaqueToolkit.empty)),
+      Effect.provide(
+        Layer.provideMerge(
+          makeToolResolverFromOperations().pipe(Layer.provide(Layer.succeed(Registry.Service, registry))),
+          OpaqueToolkit.providerLayer(OpaqueToolkit.empty),
+        ),
+      ),
       EffectEx.runPromise,
     );
 

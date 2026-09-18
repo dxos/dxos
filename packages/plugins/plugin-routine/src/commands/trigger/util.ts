@@ -29,6 +29,8 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getFeedRef, isFeedOwnerSchema } from '@dxos/schema';
 
+import { RoutineCommandError } from '../errors.ts';
+
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
 
 /**
@@ -300,7 +302,7 @@ export const selectFunction = Effect.fn(function* () {
   const functions = allFunctions.filter((fn) => Operation.isVisible(fn));
 
   if (functions.length === 0) {
-    return yield* Effect.fail(new Error('No functions available'));
+    return yield* Effect.fail(new RoutineCommandError({ message: 'No functions available' }));
   }
 
   const selected = yield* Prompt.Select({
@@ -327,7 +329,9 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
   const filteredTriggers = kind ? triggers.filter((trigger) => trigger.spec?.kind === kind) : triggers;
 
   if (filteredTriggers.length === 0) {
-    return yield* Effect.fail(new Error(kind ? `No ${kind} triggers available` : 'No triggers available'));
+    return yield* Effect.fail(
+      new RoutineCommandError({ message: kind ? `No ${kind} triggers available` : 'No triggers available' }),
+    );
   }
 
   const choices = yield* Effect.all(
@@ -371,7 +375,7 @@ export const selectFeed = Effect.fn(function* () {
   const feedSchemas = schemas.filter(isFeedOwnerSchema);
 
   if (feedSchemas.length === 0) {
-    return yield* Effect.fail(new Error('No schemas with Feed annotation found'));
+    return yield* Effect.fail(new RoutineCommandError({ message: 'No schemas with Feed annotation found' }));
   }
 
   // Collect all Feed objects referenced by host objects.
@@ -407,7 +411,7 @@ export const selectFeed = Effect.fn(function* () {
   }
 
   if (feedChoices.length === 0) {
-    return yield* Effect.fail(new Error('No objects with feed properties found'));
+    return yield* Effect.fail(new RoutineCommandError({ message: 'No objects with feed properties found' }));
   }
 
   const selected = yield* Prompt.Select({

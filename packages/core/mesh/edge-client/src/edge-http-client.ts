@@ -5,6 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -734,8 +735,7 @@ export class EdgeHttpClient extends BaseHttpClient {
       HttpClient.execute(HttpClientRequest.make(_args.method as any)(url.toString())),
       withLogging,
       withRetryConfig,
-      Effect.provide(FetchHttpClient.layer),
-      Effect.provide(HttpConfig.default),
+      Effect.provide(Layer.provideMerge(FetchHttpClient.layer, HttpConfig.default)),
       Effect.withSpan('EdgeHttpClient'),
       EffectEx.runAndForwardErrors,
     ) as T;

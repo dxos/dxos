@@ -11,7 +11,8 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { type DeleteIdentityResponse, type LegacyDeleteIdentityResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
+import { CliError } from '../../../util/errors.ts';
+import { AdminApiError, adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 export const del = Command.make(
   'delete',
@@ -24,13 +25,13 @@ export const del = Command.make(
   },
   Effect.fn(function* ({ identityKey, force }) {
     if (!force) {
-      return yield* Effect.fail(new Error('This action is irreversible. Pass --force to confirm.'));
+      return yield* Effect.fail(new CliError({ message: 'This action is irreversible. Pass --force to confirm.' }));
     }
 
     const result = yield* adminRequest<DeleteIdentityResponse | LegacyDeleteIdentityResponse>(
       'DELETE',
       `/admin/identities/${identityKey}`,
-    ).pipe(Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))));
+    ).pipe(Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));
