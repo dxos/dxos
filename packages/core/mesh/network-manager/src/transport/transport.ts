@@ -6,6 +6,7 @@ import { type Event } from '@dxos/async';
 import { type ErrorStream } from '@dxos/debug';
 import { type PublicKey } from '@dxos/keys';
 import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { type DuplexStream } from '@dxos/teleport';
 
 export enum TransportKind {
   WEB_RTC = 'WEB-RTC',
@@ -34,7 +35,8 @@ export interface Transport {
   /**
    * Transport-specific stats.
    */
-  getStats(): Promise<TransportStats>;
+  /** Undefined when there is nothing to sample, such as a transport that has closed. */
+  getStats(): Promise<TransportStats | undefined>;
 
   /**
    * Transport-specific connection details.
@@ -58,7 +60,7 @@ export type TransportOptions = {
   /**
    * Wire protocol for data stream.
    */
-  stream: NodeJS.ReadWriteStream;
+  stream: DuplexStream;
 
   /**
    * Sends signal message to remote peer.
@@ -69,6 +71,14 @@ export type TransportOptions = {
 
   timeout?: number;
 };
+
+/**
+ * How long `Connection` waits for a transport to connect before aborting.
+ *
+ * Lives here so a transport can size its own internal waits against it rather than duplicating the
+ * number: `Connection` is the owner of the deadline that should actually fire.
+ */
+export const TRANSPORT_CONNECTION_TIMEOUT = 10_000;
 
 export interface TransportFactory {
   createTransport(options: TransportOptions): Transport;

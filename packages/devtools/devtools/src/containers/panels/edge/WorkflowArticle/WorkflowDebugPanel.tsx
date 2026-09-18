@@ -137,8 +137,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             .pipe(
               Effect.withSpan('runWorkflow'),
               Effect.flatMap(ValueBag.unwrap),
-              Effect.provide(createLocalExecutionContext(space)),
-              Effect.provide(layerNoop),
+              Effect.provide(Layer.provideMerge(createLocalExecutionContext(space), layerNoop)),
               Effect.scoped,
             ),
         );

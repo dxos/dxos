@@ -4,6 +4,7 @@
 
 export * from './companion-anchor.ts';
 export * from './companion-mount.ts';
+export * from './focus-pane.ts';
 export * from './layout.ts';
 export * from './layoutAppliesTopbar.ts';
 export * from './resolve-sidebar-state.ts';
@@ -11,3 +12,5 @@ export * from './upsert-toast.ts';
 export * from './openable-children.ts';
 export * from './resolve-deck-spec.ts';
 export * from './update-active-deck.ts';
+export * from './view-transition.ts';
+export * from './workspace-retention.ts';

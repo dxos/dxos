@@ -391,7 +391,10 @@ export class QueryExecutor extends Resource {
           results[index].queueNamespace !== item.queueNamespace ||
           // A property edit can move an item between groups without changing its flat position
           // (e.g. the last item of group A becomes the first item of group B at the same index).
-          results[index].groupKey !== item.groupKey,
+          results[index].groupKey !== item.groupKey ||
+          // A collapsed group ships only its size and aggregates, so those are what can change.
+          results[index].groupCount !== item.groupCount ||
+          results[index].aggregates !== item.aggregates,
       );
 
     if (TRACE_QUERY_EXECUTION) {
@@ -444,14 +447,25 @@ export class QueryExecutor extends Resource {
   }
 }
 
-const compiledRowToResult = (row: CompiledRow): QueryService.QueryResult => ({
-  id: row.objectId,
-  spaceId: row.spaceId,
-  documentId: row.documentId !== '' ? row.documentId : undefined,
-  queueId: row.queueId !== '' ? row.queueId : undefined,
-  queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
-  rank: row.rank,
-  documentJson: row.documentJson ?? undefined,
-  groupKey: row.groupKey ?? undefined,
-  groupCount: row.groupCount ?? undefined,
-});
+const compiledRowToResult = (row: CompiledRow): QueryService.QueryResult =>
+  row.aggregates !== null && row.groupKey !== null
+    ? // A collapsed group stands for its members, so it ships no object fields; its id is the key.
+      {
+        id: row.groupKey,
+        spaceId: row.spaceId,
+        rank: row.rank,
+        groupKey: row.groupKey,
+        groupCount: row.groupCount ?? undefined,
+        aggregates: row.aggregates,
+      }
+    : {
+        id: row.objectId,
+        spaceId: row.spaceId,
+        documentId: row.documentId !== '' ? row.documentId : undefined,
+        queueId: row.queueId !== '' ? row.queueId : undefined,
+        queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
+        rank: row.rank,
+        documentJson: row.documentJson ?? undefined,
+        groupKey: row.groupKey ?? undefined,
+        groupCount: row.groupCount ?? undefined,
+      };

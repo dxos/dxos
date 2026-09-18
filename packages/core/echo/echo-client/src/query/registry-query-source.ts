@@ -49,6 +49,11 @@ export class RegistryQuerySource implements QuerySource {
     return this.#match(simple.filter);
   }
 
+  /** The in-process registry is matched on read, so this source never has an answer outstanding. */
+  isPending(): boolean {
+    return false;
+  }
+
   /** The in-process registry is matched synchronously. */
   isSynchronous(): boolean {
     return this.#query !== undefined && this.#isValidSourceForQuery(this.#query);
@@ -106,7 +111,7 @@ export class RegistryQuerySource implements QuerySource {
           id: object.id,
           result: object,
           match: { rank: 1 },
-          resolution: { source: 'local' as const, time: 0 },
+          resolution: { source: 'registry' as const, time: 0 },
         },
       ];
     });

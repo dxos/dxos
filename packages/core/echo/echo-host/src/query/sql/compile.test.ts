@@ -21,6 +21,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EntityMetaIndex, type IndexerObject, ObjectDataIndex, ReverseRefIndex } from '@dxos/index-core';
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 
+import { GroupBy } from '../group-by.ts';
 import { QueryPlanner } from '../query-planner.ts';
 import { compilePlan } from './compile.ts';
 
@@ -326,7 +327,7 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('aggregates into groups with counts, ordered by first appearance', () =>
+  it.effect('collapses groups with counts to one row each, ordered by first appearance', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
       const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
@@ -337,11 +338,63 @@ describe('SqlPlanCompiler', () => {
           .aggregate({ tag: Aggregate.group('done'), count: Aggregate.count() })
           .from(scope),
       );
+      // Without an `items` aggregate each group ships one row, standing for its members.
       expect(rows.map((row) => [names(fixture, [row.objectId])[0], row.groupKey, row.groupCount])).toEqual([
         ['t1', '{"tag":null}', 2],
-        ['t3', '{"tag":null}', 2],
         ['t4', '{"tag":true}', 1],
       ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('collapses a count by type and hour to one row per group, carrying its aggregates', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      const { rows } = yield* run(
+        fixture,
+        Query.select(Filter.everything())
+          .aggregate({ type: Aggregate.type(), hour: Aggregate.updated('hour'), count: Aggregate.count() })
+          .from(scope),
+      );
+      // Every fixture object was updated at 2,000 ms, inside the first UTC hour; the deleted project
+      // and the task under it are out, so the task group counts three.
+      const groups = rows.map((row) => ({
+        ...JSON.parse(row.groupKey ?? '{}'),
+        ...JSON.parse(row.aggregates ?? '{}'),
+      }));
+      expect(groups).toEqual([
+        { type: String(PROJECT), hour: 0, count: 1 },
+        { type: String(TASK), hour: 0, count: 3 },
+        { type: String(PERSON), hour: 0, count: 2 },
+        { type: String(HAS_MANAGER), hour: 0, count: 1 },
+      ]);
+      // One row per group, standing for the group's first member; the executor replaces the id with
+      // the key before the row leaves the host.
+      expect(rows.map((row) => [names(fixture, [row.objectId])[0], row.groupCount])).toEqual([
+        ['project', 1],
+        ['t1', 3],
+        ['alice', 2],
+        ['rel', 1],
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('truncates a timestamp key to the local day of a named zone and leaves members uncollapsed', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      const { rows } = yield* run(
+        fixture,
+        Query.select(Filter.type(TASK))
+          .aggregate({ day: Aggregate.created('day', { timeZone: 'Asia/Kolkata' }), items: Aggregate.items() })
+          .from(scope),
+      );
+      // 1,000 ms after the epoch is 05:30 on 1 January 1970 in Kolkata, a day that began at 18:30 UTC
+      // the evening before.
+      const day = GroupBy.truncateTimestamp(1000, 'day', 'Asia/Kolkata');
+      expect(day).toBe(Date.UTC(1969, 11, 31, 18, 30));
+      expect(rows).toHaveLength(3);
+      expect(rows.every((row) => row.groupKey === JSON.stringify({ day }) && row.aggregates === null)).toBe(true);
     }).pipe(Effect.provide(TestLayer)),
   );
 

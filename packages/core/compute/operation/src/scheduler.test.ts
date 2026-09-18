@@ -13,6 +13,7 @@ import { describe, expect } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
+import { OperationInvocationError } from './errors.ts';
 import * as OperationInvoker from './OperationInvoker.ts';
 import * as Scheduler from './scheduler.ts';
 
@@ -125,7 +126,7 @@ describe('Scheduler', () => {
           Effect.gen(function* () {
             executed.push(input.id);
             if (input.id === 'b') {
-              return yield* Effect.fail(new Error('Intentional error'));
+              return yield* Effect.fail(new OperationInvocationError({ message: 'Intentional error' }));
             }
           })) as Scheduler.InvokeFn;
 

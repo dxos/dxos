@@ -277,8 +277,7 @@ notifies on writes to unrelated nodes both cascades expansion across the graph a
 flush-invalidate-flush loop. `GraphModel`'s per-node atoms already do this.
 
 `meta` is opaque to the builder and reaches `decorateNode` unchanged — the seam a layer uses to attach
-its own vocabulary (app-graph stamps URL segments through it). `getNodeExtensionId(nodeId)` maps back
-the other way, from a materialized node to the extension that produced it.
+its own vocabulary (app-graph's URL bindings live there).
 
 `explore` walks the graph eagerly, materializing what it reaches — useful for search indexes and
 tests, not for the render path:

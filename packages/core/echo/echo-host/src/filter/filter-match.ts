@@ -12,6 +12,7 @@ import {
   filterMatchValue,
   makeFilterMatcher,
 } from '@dxos/echo/internal';
+import { type EntityMeta } from '@dxos/index-core';
 import { EntityId, SpaceId } from '@dxos/keys';
 
 export { filterMatchEntity, filterMatchValue };
@@ -47,6 +48,19 @@ const objectJSONAccessor: FilterRecordAccessor<ObjectJSON> = {
   matchTextSearch: noTextSearch,
 };
 
+/** Untyped objects are indexed under this placeholder type. */
+const UNTYPED_INDEX_TYPE = 'type';
+
+/** Index rows carry no properties or meta keys, so only id, type and parent predicates can match. */
+const entityMetaAccessor: FilterRecordAccessor<EntityMeta> = {
+  getId: (meta) => meta.objectId,
+  getTypeURI: (meta) => (meta.typeDXN === UNTYPED_INDEX_TYPE ? undefined : meta.typeDXN),
+  getProps: () => undefined,
+  getMeta: () => ({}),
+  hasParent: (meta) => meta.parent !== null,
+  matchTextSearch: noTextSearch,
+};
+
 /**
  * Matches a filter against an object structure as stored in automerge.
  */
@@ -57,3 +71,12 @@ export const filterMatchDoc: (filter: QueryAST.Filter, obj: MatchedDoc) => boole
  */
 export const filterMatchObjectJSON: (filter: QueryAST.Filter, obj: ObjectJSON) => boolean =
   makeFilterMatcher(objectJSONAccessor);
+
+/**
+ * Matches a filter against an object's index row.
+ */
+export const filterMatchEntityMeta: (filter: QueryAST.Filter, meta: EntityMeta) => boolean =
+  makeFilterMatcher(entityMetaAccessor);
+
+/** The type URI an index row records, or `undefined` for an untyped object. */
+export const getEntityMetaTypeURI = (meta: EntityMeta): string | undefined => entityMetaAccessor.getTypeURI(meta);

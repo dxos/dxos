@@ -7,8 +7,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type * as Statement from 'effect/unstable/sql/Statement';
 
-import { type QueryAST } from '@dxos/echo-protocol';
-import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { EncodedReference, QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, matchMetaKey } from '@dxos/echo/internal';
 import {
   EscapedPropPath,
@@ -24,6 +23,7 @@ import {
 import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 
 import { QueryError } from '../errors.ts';
+import { GroupBy } from '../group-by.ts';
 import { type QueryPlan } from '../plan.ts';
 import { QueryPlanner } from '../query-planner.ts';
 
@@ -71,6 +71,12 @@ export type CompiledRow = {
   /** JSON text of the group key; present iff the plan aggregates. */
   groupKey: string | null;
   groupCount: number | null;
+  /**
+   * JSON text of the scalar aggregate values, present iff the row stands for a whole group: the
+   * query declared no `items` aggregate, so one member represents its group and `objectId` is the
+   * serialized key rather than an object.
+   */
+  aggregates: string | null;
 };
 
 export type CompiledQuery = {
@@ -90,9 +96,18 @@ type Relation = {
 };
 
 type GroupedShape = {
-  /** Result field names of `group`/`max`/`min`/`count` aggregates, orderable as group columns. */
+  /** Result field names of every non-`items` aggregate, orderable as group columns. */
   aggregateNames: readonly string[];
+  /** One row per group, carrying its aggregates, because the query asked for no members. */
+  collapsed: boolean;
 };
+
+/** The start of every local day a store's timestamps can fall in, ascending, per IANA zone. */
+export type DayStarts = ReadonlyMap<string, readonly number[]>;
+
+const HOUR_MS = 3_600_000;
+const DAY_MS = 86_400_000;
+const UNTYPED_INDEX_TYPE = 'type';
 
 type Fragment = Statement.Fragment;
 
@@ -111,12 +126,19 @@ export class SqlPlanCompiler {
   readonly #subqueries = new Map<string, string>();
   /** Resolved `metaVersion` literal sets, keyed by `key\0range`. */
   readonly #metaVersions: Map<string, readonly string[]>;
+  /** Day boundaries for `timestamp` group keys in a named zone; SQLite has no zone tables of its own. */
+  readonly #dayStarts: DayStarts;
   /** Whether any select in the plan scopes a space with its feeds, which lets a traversal reach feed items. */
   #includeAllFeeds = false;
 
-  constructor(sql: SqlClient.SqlClient, metaVersions: Map<string, readonly string[]> = new Map()) {
+  constructor(
+    sql: SqlClient.SqlClient,
+    metaVersions: Map<string, readonly string[]> = new Map(),
+    dayStarts: DayStarts = new Map(),
+  ) {
     this.#sql = sql;
     this.#metaVersions = metaVersions;
+    this.#dayStarts = dayStarts;
   }
 
   compile(plan: QueryPlan.Plan, options: CompileOptions = {}): CompiledQuery {
@@ -935,8 +957,9 @@ export class SqlPlanCompiler {
   #compileAggregate(step: QueryPlan.AggregateStep, ws: Relation): Relation {
     const sql = this.#sql;
     const wsRef = this.#ref(ws);
-    const groups = step.aggregates.filter((aggregate) => aggregate.kind === 'group');
+    const groups = step.aggregates.filter(QueryAST.isGroupKeyAggregate);
     const scalarAggregates = step.aggregates.filter((aggregate) => aggregate.kind !== 'items');
+    const collapsed = !step.aggregates.some((aggregate) => aggregate.kind === 'items');
     const itemsOrders = step.aggregates.flatMap((aggregate) =>
       aggregate.kind === 'items' && aggregate.order?.length ? [aggregate.order] : [],
     );
@@ -948,13 +971,10 @@ export class SqlPlanCompiler {
     }
     const itemsOrder = itemsOrders[0];
 
-    // Group key: one coerced scalar per `group` entry, falling through its property chain.
-    const keyColumns = groups.map((group) => {
-      const coerced = group.properties.map((property) => this.#coercedProperty(property));
-      // `COALESCE` needs two arguments; a single-property chain is the property itself.
-      const chain = coerced.length === 1 ? coerced[0] : sql`COALESCE(${sql.join(', ', false)(coerced)})`;
-      return sql`${chain} AS ${sql.literal(keyColumn(group.name))}`;
-    });
+    // Group key: one coerced scalar per key entry; a `group` entry falls through its property chain.
+    const keyColumns = groups.map(
+      (group) => sql`${this.#keyComponent(group)} AS ${sql.literal(keyColumn(group.name))}`,
+    );
     const keyJson =
       groups.length === 0
         ? sql`'{}'`
@@ -969,6 +989,8 @@ export class SqlPlanCompiler {
       const name = sql.literal(aggregateColumn(aggregate.name));
       switch (aggregate.kind) {
         case 'group':
+        case 'type':
+        case 'timestamp':
           return sql`k.${sql.literal(keyColumn(aggregate.name))} AS ${name}`;
         case 'count':
           return sql`COUNT(*) OVER (PARTITION BY k.groupKey) AS ${name}`;
@@ -987,16 +1009,60 @@ export class SqlPlanCompiler {
         COUNT(*) OVER (PARTITION BY k.groupKey) AS groupCount${aggregateColumns.length > 0 ? sql`, ${sql.csv(aggregateColumns)}` : sql``}
         FROM ${this.#ref(keyed)} k JOIN objectMeta m NOT INDEXED ON m.recordId = k.recordId JOIN objectData d ON d.recordId = k.recordId`,
     );
-    const shape: GroupedShape = { aggregateNames: scalarAggregates.map((aggregate) => aggregate.name) };
+    const shape: GroupedShape = { aggregateNames: scalarAggregates.map((aggregate) => aggregate.name), collapsed };
     // Groups take the order of their first member; members keep their order, or the `items`
-    // aggregate's own order when it declares one.
+    // aggregate's own order when it declares one. A collapsed set keeps only the first member,
+    // which already carries the group's key, count and aggregates.
     const memberOrder = itemsOrder ? sql.csv(itemsOrder.map((order) => this.#orderTerm(order, undefined))) : sql`w.ord`;
+    const members = collapsed ? sql`WHERE w.ord = w.firstOrd` : sql``;
     return this.#define(
       'ws',
       sql`SELECT ${this.#groupedColumns(shape, sql`w`, sql`DENSE_RANK() OVER (ORDER BY w.firstOrd)`, sql`ROW_NUMBER() OVER (ORDER BY w.firstOrd, ${memberOrder})`)}
-        FROM ${this.#ref(stamped)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
+        FROM ${this.#ref(stamped)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId ${members}`,
       shape,
     );
+  }
+
+  /** A group key component in the scalar domain, from the joined `m` (meta) and `d` (body) rows. */
+  #keyComponent(aggregate: QueryAST.GroupAggregate): Fragment {
+    const sql = this.#sql;
+    switch (aggregate.kind) {
+      case 'group': {
+        const coerced = aggregate.properties.map((property) => this.#coercedProperty(property));
+        // `COALESCE` needs two arguments; a single-property chain is the property itself.
+        return coerced.length === 1 ? coerced[0] : sql`COALESCE(${sql.join(', ', false)(coerced)})`;
+      }
+      case 'type':
+        return sql`CASE WHEN m.typeDXN = ${UNTYPED_INDEX_TYPE} THEN NULL ELSE m.typeDXN END`;
+      case 'timestamp':
+        return this.#truncatedTimestamp(aggregate);
+      default:
+        throw new QueryError({ message: 'Not a group key aggregate', context: { kind: aggregate.kind } });
+    }
+  }
+
+  /**
+   * The start of the hour or day a system timestamp falls in, as unix ms. Hours and UTC days are
+   * arithmetic; a day in a named zone is looked up in the boundaries `compilePlan` computed with
+   * `GroupBy.truncateTimestamp`, so both executors agree on daylight-saving days.
+   */
+  #truncatedTimestamp(aggregate: QueryAST.GroupAggregate & { kind: 'timestamp' }): Fragment {
+    const sql = this.#sql;
+    const column = aggregate.field === 'updatedAt' ? sql`m.updatedAt` : sql`m.createdAt`;
+    if (aggregate.unit === 'hour') {
+      return sql`CAST(${column} / ${HOUR_MS} AS INTEGER) * ${HOUR_MS}`;
+    }
+    if (!aggregate.timeZone || aggregate.timeZone === 'UTC') {
+      return sql`CAST(${column} / ${DAY_MS} AS INTEGER) * ${DAY_MS}`;
+    }
+    const starts = this.#dayStarts.get(aggregate.timeZone);
+    if (!starts) {
+      throw new QueryError({
+        message: 'Day boundaries were not resolved for the time zone',
+        context: { timeZone: aggregate.timeZone },
+      });
+    }
+    return sql`CASE WHEN ${column} IS NULL THEN NULL ELSE (SELECT MAX(b.value) FROM json_each(${JSON.stringify(starts)}) b WHERE b.value <= ${column}) END`;
   }
 
   /** The grouped working-set columns, with `groupOrd` (and optionally `ord`) replaced. */
@@ -1027,8 +1093,11 @@ export class SqlPlanCompiler {
   }
 
   /** The group key component as JSON, so booleans serialize as `true`/`false` like `JSON.stringify`. */
-  #jsonKeyComponent(group: QueryAST.GroupAggregate & { kind: 'group' }): Fragment {
+  #jsonKeyComponent(group: QueryAST.GroupAggregate): Fragment {
     const sql = this.#sql;
+    if (group.kind !== 'group') {
+      return this.#keyComponent(group);
+    }
     const branches = group.properties.map((property) => {
       if (property === 'id') {
         return sql`WHEN m.objectId IS NOT NULL THEN m.objectId`;
@@ -1045,9 +1114,15 @@ export class SqlPlanCompiler {
 
   #final(ws: Relation): Fragment {
     const sql = this.#sql;
+    const aggregates =
+      ws.grouped?.collapsed && ws.grouped.aggregateNames.length > 0
+        ? sql`json_object(${sql.join(', ', false)(ws.grouped.aggregateNames.map((name) => sql`${name}, w.${sql.literal(aggregateColumn(name))}`))})`
+        : ws.grouped?.collapsed
+          ? sql`'{}'`
+          : sql`NULL`;
     const groupColumns = ws.grouped
-      ? sql`w.groupKey AS groupKey, w.groupCount AS groupCount`
-      : sql`NULL AS groupKey, NULL AS groupCount`;
+      ? sql`w.groupKey AS groupKey, w.groupCount AS groupCount, ${aggregates} AS aggregates`
+      : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
       m.createdAt, m.updatedAt,
       CASE WHEN m.queueId != '' THEN json(d.body) END AS documentJson,
@@ -1088,7 +1163,16 @@ export const compilePlan = (
         .filter((version) => matchMetaKey(key, range, key, version));
       metaVersions.set(metaVersionKey(key, range), matching);
     }
-    return new SqlPlanCompiler(sql, metaVersions).compile(plan, options);
+    const dayStarts = new Map<string, readonly number[]>();
+    const timeZones = collectDayTimeZones(plan);
+    if (timeZones.size > 0) {
+      const [range] = yield* sql<{ min: number | null; max: number | null }>`
+        SELECT MIN(MIN(createdAt), MIN(updatedAt)) AS min, MAX(MAX(createdAt), MAX(updatedAt)) AS max FROM objectMeta`;
+      for (const timeZone of timeZones) {
+        dayStarts.set(timeZone, dayStartsBetween(range?.min ?? null, range?.max ?? null, timeZone));
+      }
+    }
+    return new SqlPlanCompiler(sql, metaVersions, dayStarts).compile(plan, options);
   });
 
 //
@@ -1096,6 +1180,58 @@ export const compilePlan = (
 //
 
 const metaVersionKey = (key: string, range: string): string => `${key}\0${range}`;
+
+/** IANA zones of every `timestamp` group key that truncates to a local day, sub-plans included. */
+const collectDayTimeZones = (plan: QueryPlan.Plan): Set<string> => {
+  const zones = new Set<string>();
+  const visit = (plan: QueryPlan.Plan) => {
+    for (const step of plan.steps) {
+      switch (step._tag) {
+        case 'AggregateStep':
+          for (const aggregate of step.aggregates) {
+            if (
+              aggregate.kind === 'timestamp' &&
+              aggregate.unit === 'day' &&
+              aggregate.timeZone &&
+              aggregate.timeZone !== 'UTC'
+            ) {
+              zones.add(aggregate.timeZone);
+            }
+          }
+          break;
+        case 'UnionStep':
+          step.plans.forEach(visit);
+          break;
+        case 'SetDifferenceStep':
+          visit(step.source);
+          visit(step.exclude);
+          break;
+        default:
+          break;
+      }
+    }
+  };
+  visit(plan);
+  return zones;
+};
+
+/**
+ * The start of every `timeZone` day from the one holding `min` through the one holding `max`. Days
+ * in a zone are 23 to 25 hours apart, so stepping 36 hours from a day's start lands inside the next
+ * day and truncating again gives its start.
+ */
+const dayStartsBetween = (min: number | null, max: number | null, timeZone: string): number[] => {
+  if (min === null || max === null) {
+    return [];
+  }
+  const starts: number[] = [];
+  let start = GroupBy.truncateTimestamp(min, 'day', timeZone);
+  while (start !== null && start <= max) {
+    starts.push(start);
+    start = GroupBy.truncateTimestamp(start + DAY_MS * 1.5, 'day', timeZone);
+  }
+  return starts;
+};
 
 /** True when any select step, sub-plans included, scopes a space with `includeAllFeeds`. */
 const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>

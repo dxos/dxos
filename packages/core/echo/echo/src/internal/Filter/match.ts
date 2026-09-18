@@ -58,6 +58,12 @@ export const matchMetaKey = (
  * Compares a filter's type discriminator against the value stored on an object's `system.type`.
  */
 export const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
+  // Identical strings agree under every branch below, and a type query compares the same pair once
+  // per candidate, so the parse is skipped rather than repeated.
+  if (expectedStr === actualStr) {
+    return true;
+  }
+
   const expectedEid = EID.tryParse(expectedStr);
   if (expectedEid) {
     const actualEid = EID.tryParse(actualStr);

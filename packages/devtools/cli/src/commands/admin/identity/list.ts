@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { type LegacyListActiveIdentitiesResponse, type ListActiveIdentitiesResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
+import { AdminApiError, adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 type IdentityItem =
   | ListActiveIdentitiesResponse['identities'][number]
@@ -41,7 +41,7 @@ export const list = Command.make(
       'GET',
       '/admin/identities',
       { query },
-    ).pipe(Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))));
+    ).pipe(Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));

@@ -506,14 +506,16 @@ export const BranchRevisions: Story = {
     // first commit of the highlighted lane on every selection change).
     await selectTimelineNode(canvasElement, 'draft-r2');
     await canvas.findByTestId('version-banner-checkpoint');
-    // The label also appears in the checkpoint banner, so pick the timeline row (an aria-current ancestor).
-    const currentRow = (label: string) =>
+    // The label also appears in the checkpoint banner, so pick the timeline row.
+    const timelineRow = (label: string) =>
       canvas
         .getAllByText(label)
-        .map((element) => element.closest('[aria-current]'))
+        .map((element) => element.closest('[role="listitem"]'))
         .find((element): element is Element => element !== null);
-    await waitFor(() => expect(currentRow('draft-r2')?.getAttribute('aria-current')).toBe('true'));
-    await expect(currentRow('fork: draft')?.getAttribute('aria-current')).toBe('false');
+    await waitFor(() => expect(timelineRow('draft-r2')?.getAttribute('aria-current')).toBe('true'));
+    // Only the current row carries `aria-current`; the others leave it off, as the attribute expects.
+    await expect(timelineRow('fork: draft')).toBeTruthy();
+    await expect(timelineRow('fork: draft')?.getAttribute('aria-current')).toBeNull();
   },
 };
 

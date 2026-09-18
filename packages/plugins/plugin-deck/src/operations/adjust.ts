@@ -10,6 +10,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
@@ -34,12 +35,17 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         const next = incrementPlank(deck.active, input);
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         const { workspace } = yield* currentNavigation();
-        yield* navigateDeck({
+        // The moved plank takes its focus intent in the same write, so it never paints unattended. A
+        // plank already at the edge moves nowhere, leaving the URL unchanged and the intent undelivered.
+        const moved = yield* navigateDeck({
           workspace,
           active: deckUpdates.active,
           companionPlanks: deckUpdates.companionPlanks,
+          intent: { scrollIntoView: input.id },
         });
-        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
+        if (!moved) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
+        }
       }
 
       if (input.type === 'expand') {
@@ -53,7 +59,8 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         if (expanding) {
           // An expanded plank is sized to the space *between* the two spine piles, which is only where
           // it sits once it is at the front. Left where it was, its trailing edge — and with it the
-          // whole toolbar button group — ends up underneath the following planks' spines.
+          // whole toolbar button group — ends up underneath the following planks' spines. Only `expanded`
+          // changes here, so there is no deck write to carry the intent.
           yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
         }
       }
@@ -76,8 +83,8 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           const companions = Function.pipe(
             AppGraph.getNode(graph, input.id),
             Option.map((node) =>
-              AppGraph.getConnections(graph, node.id, 'child')
-                .filter((n) => n.type === DeckSchema.PLANK_COMPANION_TYPE)
+              AppGraph.getConnections(graph, node.id, AppNode.companion)
+                .filter(DeckSchema.isPlankCompanion)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
                 ),

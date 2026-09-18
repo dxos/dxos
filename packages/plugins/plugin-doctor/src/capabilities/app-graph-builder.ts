@@ -20,6 +20,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: `${meta.profile.key}.diagnosticsDeckCompanion`,
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

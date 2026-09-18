@@ -97,7 +97,7 @@ const storyDeckState = Capability.makeModule(
         workspace: state.activeDeck,
         active: open.active,
         inactive: open.inactive,
-        scrollIntoView: ephemeral.scrollIntoView,
+        scrollIntoView: ephemeral.scrollIntoView?.id,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
@@ -241,6 +241,7 @@ const storyGraphBuilder = Capability.inlineModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'storyItemCompanions',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenNodeType('story-item'),
         connector: (node) =>
           Effect.succeed([
@@ -333,11 +334,7 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
   const connections = useConnections(graph, id, 'child');
-  const items = useMemo(
-    () =>
-      connections.filter((node) => !AppGraphNode.isActionLike(node) && node.type !== DeckSchema.PLANK_COMPANION_TYPE),
-    [connections],
-  );
+  const items = useMemo(() => connections.filter((node) => !AppGraphNode.isActionLike(node)), [connections]);
 
   return (
     <Listbox.Root>

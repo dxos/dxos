@@ -228,6 +228,49 @@ export const TestOpenClose: StoryObj = {
   },
 };
 
+/**
+ * Unmounts when a long task holds the frame past its exit animation, so `animationend` fires before the presence
+ * machine listens. Pins `patches/@zag-js__presence@1.43.3.patch`; `patches/README.md` says when it can go.
+ */
+export const TestCloseDuringLongTask: StoryObj = {
+  render: () => (
+    <Dialog.Root defaultOpen>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Closing dialog</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.ActionIconButton action='close' />
+            </Dialog.Close>
+          </Dialog.Header>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async () => {
+    const dialog = await waitFor(async () => {
+      const element = dialogElement();
+      await expect(element).not.toBeNull();
+      invariant(element);
+      return element;
+    });
+    await waitFor(async () => expect(dialog.getAnimations()).toHaveLength(0));
+    const observer = new MutationObserver(() => {
+      if (dialog.getAttribute('data-state') !== 'closed') {
+        return;
+      }
+      observer.disconnect();
+      getComputedStyle(dialog).animationName;
+      const until = performance.now() + 600;
+      while (performance.now() < until) {}
+    });
+    observer.observe(dialog, { attributes: true, attributeFilter: ['data-state'] });
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => expect(dialogElement()).toBeNull(), { timeout: 3_000 });
+  },
+};
+
 /** The action bar's first control takes focus, not the close button that precedes it in the DOM. */
 export const TestActionBarFocus: StoryObj = {
   render: () => (
