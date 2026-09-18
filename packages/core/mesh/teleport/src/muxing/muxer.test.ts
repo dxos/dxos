@@ -4,7 +4,6 @@
 
 import { create } from '@bufbuild/protobuf';
 import { EmptySchema } from '@bufbuild/protobuf/wkt';
-import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
@@ -15,7 +14,9 @@ import {
   TestService as TestServiceDesc,
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
+import { concatUint8Arrays } from '@dxos/util';
 
+import { connectDuplexStreams, readAll } from './duplex-stream.ts';
 import { Muxer } from './muxer.ts';
 import { type RpcPort } from './rpc-port.ts';
 
@@ -25,14 +26,10 @@ const setupPeers = () => {
   const peer1 = new Muxer();
   const peer2 = new Muxer();
 
-  peer1.stream.pipe(peer2.stream).pipe(peer1.stream);
+  const unpipe = connectDuplexStreams(peer1.stream, peer2.stream);
 
-  const unpipe = () => {
-    peer1.stream.unpipe(peer2.stream);
-    peer2.stream.unpipe(peer1.stream);
-  };
   onTestFinished(async () => {
-    unpipe();
+    await unpipe();
     await peer1.destroy();
     await peer2.destroy();
   });
@@ -101,15 +98,17 @@ describe('Muxer', () => {
     });
     // peer1's first frame, its OpenChannel, reaches peer2 twice.
     let repeated = false;
-    const repeatFirstFrame = new Transform({
-      transform: (chunk, _encoding, callback) => {
-        const frames = repeated ? chunk : Buffer.concat([chunk, chunk]);
+    const repeatFirstFrame = new TransformStream<Uint8Array, Uint8Array>({
+      transform: (chunk, controller) => {
+        controller.enqueue(repeated ? chunk : concatUint8Arrays(chunk, chunk));
         repeated = true;
-        callback(null, frames);
       },
     });
     // peer2's frames to peer1 are not consumed yet, so peer2's flush of its buffer is stalled when the repeat arrives.
-    peer1.stream.pipe(repeatFirstFrame).pipe(peer2.stream);
+    void peer1.stream.readable
+      .pipeThrough(repeatFirstFrame)
+      .pipeTo(peer2.stream.writable)
+      .catch(() => {});
 
     const port2 = await peer2.createPort('example.extension/rpc');
     const count = 40;
@@ -123,12 +122,16 @@ describe('Muxer', () => {
 
     await sleep(200);
     // One frame every 60 ms: the backlog takes longer to go out than a later write is allowed to wait.
-    const throttle = new Transform({
-      transform: (chunk, _encoding, callback) => {
-        setTimeout(() => callback(null, chunk), 60);
+    const throttle = new TransformStream<Uint8Array, Uint8Array>({
+      transform: async (chunk, controller) => {
+        await sleep(60);
+        controller.enqueue(chunk);
       },
     });
-    peer2.stream.pipe(throttle).pipe(peer1.stream);
+    void peer2.stream.readable
+      .pipeThrough(throttle)
+      .pipeTo(peer1.stream.writable)
+      .catch(() => {});
     const later = 5;
     for (let i = count; i < count + later; i++) {
       await port2.send(new Uint8Array(8_000).fill(i), 1_500);
@@ -147,7 +150,7 @@ describe('Muxer', () => {
       await peer2.destroy();
     });
     // peer2's frames to peer1 are not consumed yet, so everything peer2 sends backs up.
-    peer1.stream.pipe(peer2.stream);
+    void peer1.stream.readable.pipeTo(peer2.stream.writable).catch(() => {});
 
     const port2 = await peer2.createPort('example.extension/rpc');
     const count = 20;
@@ -164,7 +167,7 @@ describe('Muxer', () => {
     const outcome = await Promise.race([write.then(() => 'sent'), sleep(500).then(() => 'waiting')]);
     expect(outcome).toEqual('waiting');
 
-    peer2.stream.pipe(peer1.stream);
+    void peer2.stream.readable.pipeTo(peer1.stream.writable).catch(() => {});
     await write;
     await expect.poll(() => received.length, { timeout: 5_000 }).toBe(count + 1);
     expect(received).toEqual(Array.from({ length: count + 1 }, (_, index) => index));
@@ -177,7 +180,7 @@ describe('Muxer', () => {
       await peer1.destroy();
     });
     // peer2's frames to peer1 are never consumed, so everything peer2 sends backs up.
-    peer1.stream.pipe(peer2.stream);
+    void peer1.stream.readable.pipeTo(peer2.stream.writable).catch(() => {});
 
     const port2 = await peer2.createPort('example.extension/rpc');
     for (let i = 0; i < 20; i++) {
@@ -239,37 +242,41 @@ describe('Muxer', () => {
     await wait();
   });
 
-  test('node.js streams', async () => {
+  test('duplex byte streams', async () => {
     const { peer1, peer2 } = setupPeers();
+
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
 
     const stream2 = await peer2.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
+    const writer2 = stream2.writable.getWriter();
 
     // Buffer data before remote peer opens.
-    stream2.write('hello');
+    void writer2.write(encoder.encode('hello'));
 
     const stream1 = await peer1.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
 
-    pipeline(
-      stream1,
-      new Transform({
-        transform: (chunk, encoding, callback) => {
-          callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
-        },
-      }),
-      stream1,
-      () => {},
-    );
+    // Echo back in upper case.
+    const upperCase = new TransformStream<Uint8Array, Uint8Array>({
+      transform: (chunk, controller) => {
+        controller.enqueue(encoder.encode(decoder.decode(chunk).toUpperCase()));
+      },
+    });
+    void stream1.readable
+      .pipeThrough(upperCase)
+      .pipeTo(stream1.writable)
+      .catch(() => {});
 
     let received = '';
-    stream2.on('data', (chunk) => {
-      received += Buffer.from(chunk).toString();
-    });
+    void readAll(stream2.readable, (chunk) => {
+      received += decoder.decode(chunk);
+    }).catch(() => {});
 
-    stream2.write(' world!');
+    void writer2.write(encoder.encode(' world!'));
 
     await expect.poll(() => received).toEqual('HELLO WORLD!');
   });
@@ -287,8 +294,10 @@ describe('Muxer', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 500 });
 
-    stream1.once('close', inc);
-    stream2.once('close', inc);
+    // A destroyed muxer ends both channel readables — cleanly when there is no error, with a
+    // rejection when there is — so either settlement counts as the stream having been closed.
+    void stream1.readable.getReader().closed.then(inc, inc);
+    void stream2.readable.getReader().closed.then(inc, inc);
 
     await peer1.destroy();
     // Peer2 should also be destroyed.
