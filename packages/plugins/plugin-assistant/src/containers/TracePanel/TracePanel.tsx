@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
@@ -95,13 +96,17 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 
     const handleOpenLink = useCallback(
       (uri: string) => {
-        const echoUri = EID.tryParse(uri);
-        const spaceId = echoUri ? EID.getSpaceId(echoUri) : undefined;
-        const objectId = echoUri ? EID.getEntityId(echoUri) : undefined;
-        if (spaceId && objectId) {
-          // TODO(dmaretskyi): Navigates, but fails to open.
-          void invokePromise(LayoutOperation.Open, { subject: [`${spaceId}:${objectId}`] });
+        const eid = EID.tryParse(uri);
+        if (!eid || !EID.getSpaceId(eid) || !EID.getEntityId(eid)) {
+          return;
         }
+
+        void invokePromise(NavigationOperation.ResolveNavigationTargets, { query: { uri: eid } }).then(({ data }) => {
+          const path = data?.targets[0]?.path;
+          if (path) {
+            void invokePromise(LayoutOperation.Open, { subject: [path] });
+          }
+        });
       },
       [invokePromise],
     );

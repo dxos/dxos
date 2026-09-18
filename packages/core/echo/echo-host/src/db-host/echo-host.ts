@@ -101,11 +101,6 @@ export type FeedSyncHandlers = {
    * Callback to run blocking feed sync.
    */
   syncFeed: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
-
-  /**
-   * Callback to read feed sync backlog per namespace.
-   */
-  getSyncState: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 };
 
 /**
@@ -166,7 +161,6 @@ export class EchoHost extends Resource {
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
   #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
-  #getSyncState?: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 
   constructor({
     peerIdProvider,
@@ -199,10 +193,9 @@ export class EchoHost extends Resource {
       getSpaceIds: () => this._spaceStateManager.spaceIds,
     });
     this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, {
-      // Read the mutable slots lazily so handlers wired after construction take effect;
-      // fall back to no-op / empty state before they are set.
+      // Read the mutable slot lazily so a handler wired after construction takes effect;
+      // fall back to a no-op before it is set.
       syncFeed: (ctx, request) => this.#syncFeed?.(ctx, request) ?? Promise.resolve(),
-      getSyncState: (ctx, request) => this.#getSyncState?.(ctx, request) ?? Promise.resolve({ namespaces: [] }),
     });
 
     // SQLite-based index engine for all queries.
@@ -315,7 +308,6 @@ export class EchoHost extends Resource {
    */
   setFeedSyncHandlers(handlers: FeedSyncHandlers): void {
     this.#syncFeed = handlers.syncFeed;
-    this.#getSyncState = handlers.getSyncState;
   }
 
   /**
@@ -724,6 +716,7 @@ export class EchoHost extends Resource {
         documents: this._automergeHost.loadedDocsCountForSpace(spaceId),
         documentsTotal: this._automergeHost.loadedDocsCount,
         queriesTotal: this._queryService.activeQueryCount,
+        leases: this._automergeHost.leasedDocsCount,
       },
     };
   }

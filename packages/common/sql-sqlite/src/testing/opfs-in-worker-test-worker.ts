@@ -9,8 +9,11 @@ import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
+import { BaseError } from '@dxos/errors';
+
 import * as OpfsPool from '../OpfsPool.ts';
 import * as SqliteClient from '../SqliteClient.ts';
+import { SqliteTestError } from './errors.ts';
 import { TEST_HALO_CONTROL_FEED_KEY } from './opfs-test-helpers.ts';
 
 const DB_NAME = 'DXOS';
@@ -49,7 +52,7 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
       }
       case 'import': {
         if (!(payload instanceof Uint8Array)) {
-          return yield* Effect.fail(new Error('import test requires Uint8Array payload'));
+          return yield* Effect.fail(new SqliteTestError({ message: 'import test requires Uint8Array payload' }));
         }
         const sql = yield* SqliteClient.SqliteClient;
         const copy = new Uint8Array(payload.byteLength);
@@ -73,7 +76,7 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
       }
       case 'persist-write': {
         if (typeof payload !== 'string') {
-          return yield* Effect.fail(new Error('persist-write test requires string payload'));
+          return yield* Effect.fail(new SqliteTestError({ message: 'persist-write test requires string payload' }));
         }
         const client = yield* SqlClient.SqlClient;
         yield* client`CREATE TABLE IF NOT EXISTS in_worker_persist (marker TEXT NOT NULL)`;
@@ -113,10 +116,10 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
         };
       }
       default:
-        return yield* Effect.fail(new Error(`Unknown in-worker test case: ${testCase}`));
+        return yield* Effect.fail(new SqliteTestError({ message: `Unknown in-worker test case: ${testCase}` }));
     }
   }).pipe(
-    Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))),
+    Effect.mapError((error) => (error instanceof BaseError ? error : SqliteTestError.wrap()(error))),
     (effect) => runWithClient(effect),
   );
 

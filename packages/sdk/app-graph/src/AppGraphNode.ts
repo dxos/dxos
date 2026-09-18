@@ -74,9 +74,12 @@ export type Relation = Readonly<{
 export type RelationInput = Relation | string;
 
 export const relation = (kind: string, direction: RelationDirection = 'outbound'): Relation => ({ kind, direction });
-// TODO(wittjosiah): Consider moving these helpers out of the core API.
-export const childRelation = (direction: RelationDirection = 'outbound'): Relation => relation('child', direction);
-export const actionRelation = (direction: RelationDirection = 'outbound'): Relation => relation('action', direction);
+
+/** The relation a node's children hang off; the graph's structure. */
+export const child: Relation = relation('child');
+
+/** The relation a node's actions hang off, which live and die with it. */
+export const action: Relation = relation('action');
 
 export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' && 'id' in data && 'properties' in data && data.properties

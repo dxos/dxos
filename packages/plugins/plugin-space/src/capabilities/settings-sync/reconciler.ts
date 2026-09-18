@@ -3,6 +3,7 @@
 //
 
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { log } from '@dxos/log';
 
 import { type Binding } from './binding.ts';
 
@@ -20,6 +21,7 @@ export class Reconciler {
   /** Values last known to be in agreement, and the base every local edit is diffed against. */
   #agreed: AppSettings.Values;
   #busy = false;
+  #missed: 'seed' | 'sync' | undefined;
 
   constructor(
     private readonly _store: Store,
@@ -52,44 +54,47 @@ export class Reconciler {
     const stored = this.#stored();
     const local = this._binding.read();
     const merged = { ...local, ...stored };
-    this.#guard(() => {
+    this.#guard('seed', () => {
       this._store.update((draft) => {
         AppSettings.applyResolved(draft, this._binding.namespace, stored, merged);
       });
-      this._binding.write(this.#resolved());
-      this.#agreed = this.#resolved();
+      return this.#write(this.#resolved());
     });
   }
 
   /** Store changed: put the newly resolved values into effect locally. */
   pull(): void {
-    this.#guard(() => {
+    this.#guard('sync', () => {
       const resolved = this.#resolved();
-      if (AppSettings.changedKeys(this.#agreed, resolved).length === 0) {
-        return;
+      const changed = AppSettings.changedKeys(this.#agreed, resolved);
+      if (changed.length === 0) {
+        return undefined;
       }
 
-      // Recorded only once the write lands: a binding that throws leaves the old baseline, so the
-      // next pull retries instead of skipping a change it never applied.
-      this._binding.write(resolved);
-      this.#agreed = resolved;
+      return this.#write(resolved);
     });
   }
 
   /** Local value changed: route each changed key to the layer that owns it. */
   push(): void {
-    this.#guard(() => {
+    this.#guard('sync', () => {
       const local = this._binding.read();
       const before = this.#baseline(local);
-      if (AppSettings.changedKeys(before, local).length === 0) {
-        return;
+      const changed = AppSettings.changedKeys(before, local);
+      if (changed.length === 0) {
+        return undefined;
       }
 
       this._store.update((draft) => {
         AppSettings.applyResolved(draft, this._binding.namespace, before, local);
       });
-      this.#agreed = this.#resolved();
+      return this.#write(this.#resolved());
     });
+  }
+
+  async #write(values: AppSettings.Values): Promise<void> {
+    await this._binding.write(values);
+    this.#agreed = values;
   }
 
   /**
@@ -113,16 +118,40 @@ export class Reconciler {
     return AppSettings.resolve(this._store.read(), this._binding.namespace, this._binding.read());
   }
 
-  #guard(fn: () => void): void {
+  #guard(kind: 'seed' | 'sync', fn: () => Promise<void> | undefined): void {
     if (this.#busy) {
+      this.#missed = kind === 'seed' || this.#missed === 'seed' ? 'seed' : 'sync';
       return;
     }
 
     this.#busy = true;
+    let applied: Promise<void> | undefined;
     try {
-      fn();
+      applied = fn();
     } finally {
-      this.#busy = false;
+      if (applied === undefined) {
+        this.#release();
+      }
+    }
+
+    void applied?.then(
+      () => this.#release(),
+      (error) => {
+        this.#release();
+        log.catch(error);
+      },
+    );
+  }
+
+  #release(): void {
+    this.#busy = false;
+    const missed = this.#missed;
+    this.#missed = undefined;
+    if (missed === 'seed') {
+      this.seed();
+    } else if (missed === 'sync') {
+      this.pull();
+      this.push();
     }
   }
 }

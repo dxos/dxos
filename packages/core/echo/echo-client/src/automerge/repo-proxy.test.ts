@@ -23,6 +23,7 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
+import { EchoClientError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
 import { RepoProxy } from './repo-proxy.ts';
@@ -267,6 +268,54 @@ describe('RepoProxy', () => {
     }
   });
 
+  test('flush throws while the host refuses to create a document', { timeout: 5_000 }, async () => {
+    const { dataService } = await setup(undefined, (props) => new RefusingDataService(props));
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+
+    // Closing settles the handle rather than leaving `whenReady` pending forever.
+    await clientRepo.close();
+    await expect(handle.whenReady()).rejects.toThrow('document creation refused');
+  });
+
+  test('a document the host failed to create is created by the next flush', { timeout: 5_000 }, async () => {
+    let refusing: RefusingDataService | undefined;
+    const { dataService, host } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
+    invariant(refusing);
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'retried' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+
+    refusing.refuse = false;
+    await clientRepo.flush();
+    await handle.whenReady();
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), handle.url!);
+    invariant(hostHandle);
+    expect(hostHandle.doc()?.text).toEqual('retried');
+  });
+
+  test('a document deleted before the host created it is not requested again', { timeout: 5_000 }, async () => {
+    let refusing: RefusingDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
+    invariant(refusing);
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'deleted' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+    const requests = refusing.requests;
+
+    handle.delete();
+    refusing.refuse = false;
+    await clientRepo.flush();
+    expect(refusing.requests).toEqual(requests);
+  });
+
   test('document mutation persists with `flush`', async () => {
     const dbPath = createTmpPath();
     let url: AutomergeUrl;
@@ -466,6 +515,8 @@ describe('RepoProxy', () => {
     const count = 300;
     const handles = Array.from({ length: count }, () => clientRepo.create<{ text: string }>());
     await Promise.all(handles.map((handle) => handle.whenReady()));
+    // A host batch arrives only once the host holds the subscription, and an injected one wakes the client as if it did.
+    await clientRepo.flush();
     const payload = 'x'.repeat(4_000);
     const updates = handles.map((handle) => {
       const documentId = handle.documentId;
@@ -556,6 +607,21 @@ const setupWithDroppableSubscription = async () => {
   return { droppable, host, clientRepo, clientHandle };
 };
 
+/** Fails every document creation, as a host that is gone or refuses the call does. */
+class RefusingDataService extends DataServiceImpl {
+  'refuse' = true;
+  'requests' = 0;
+
+  override ['DataService.createDocument'](
+    request: DataService.CreateDocumentRequest,
+  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
+    this.requests++;
+    return this.refuse
+      ? Effect.fail(new EchoClientError({ message: 'document creation refused' }))
+      : super['DataService.createDocument'](request);
+  }
+}
+
 /**
  * Ends the first `subscribe` stream on demand, so the host runs the finalizer that forgets the
  * subscription while the client stays connected — the shape that made every later call on that
@@ -594,7 +660,7 @@ const setup = async (
       documents: 0,
       feeds: 0,
       feedBlocks: 0,
-      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0 },
+      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0, leases: 0 },
     }),
     runGarbageCollection: async () => ({
       unlinkedObjects: 0,

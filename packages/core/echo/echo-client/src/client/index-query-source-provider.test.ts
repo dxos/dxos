@@ -243,6 +243,55 @@ describe('IndexQuerySource', () => {
 
     void ctx.dispose();
   });
+
+  // Regression: a per-hit 2-second budget dropped any object whose load outran it, with only a log
+  // line, so a one-shot caller — an agent or an MCP tool, which unlike a reactive query gets no
+  // second pass — read the short result as the whole set.
+  test('a slow load is waited for rather than dropped', async () => {
+    const spaceId = SpaceId$.random();
+    const prompt = EntityId.random();
+    const slow = EntityId.random();
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id: prompt, spaceId, rank: 0 },
+                  { id: slow, spaceId, rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+      'QueryService.activity': () => EffectStream.empty,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async ({ objectId }) => {
+          if (objectId === slow) {
+            // Longer than the budget this used to be held to.
+            await new Promise((resolve) => setTimeout(resolve, 2_500));
+          }
+          return { id: objectId } as unknown as Entity.Unknown;
+        },
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+
+    expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
+  });
 });
 
 /**

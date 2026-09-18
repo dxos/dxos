@@ -62,7 +62,7 @@ export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigat
   if (!sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments)) {
     registry.set(ephemeralAtom, {
       ...ephemeral,
-      open: { ...ephemeral.open, [workspace]: { active, inactive, segments } },
+      open: { ...ephemeral.open, [workspace]: { ...open, active, inactive, segments } },
     });
   }
   const stored = registry.get(stateAtom).decks[workspace];

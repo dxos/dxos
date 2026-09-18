@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -40,8 +41,12 @@ describe('list-tasks', () => {
       const byAssignee = yield* listTasks.handler({ taskSet: Ref.make(taskSet), assignee: 'KAI@example.com' });
       expect(titles(byAssignee.tasks)).toEqual(['Open thing']);
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -63,8 +68,12 @@ describe('list-tasks', () => {
 
       expect([...titles(first.tasks), ...titles(second.tasks)].sort()).toEqual(['a', 'b', 'c']);
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -73,8 +82,12 @@ describe('list-tasks', () => {
       const exit = yield* Effect.exit(listTasks.handler({}));
       expect(exit._tag).toBe('Failure');
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -127,8 +140,12 @@ describe('list-tasks', () => {
 
       expect(titles(filed.tasks)).toEqual(['Filed']);
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 });

@@ -31,6 +31,9 @@ tasks:
       DX_EDGE_BASE_URL: 'https://dxos.network'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: 'false'
+    options:
+      # Local only: the ~320 MB bundle takes minutes to download from the remote cache and ~25s to rebuild.
+      cache: local
   # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
   # than a step inside `bundle`: a perf budget must not fail the local build you are running in
   # order to measure the very thing it is budgeting. `check-boot-budget` runs in the `check` job, so
@@ -248,6 +251,24 @@ tasks:
       - ~:#prebuild
       # `vite preview` serves `out/composer`, and PWA is a build-time decision — so the flag rides
       # the dep too, or the harness measures a service worker precaching ~30 MB mid-run.
+      - target: bundle
+        env:
+          DX_PWA: 'false'
+  # Performance flows — `perf-*.spec.ts` against `vite preview`, driven by `@dxos/perf-harness`.
+  # Outside the `e2e` pool for the same reason as `e2e-startup`: it records measurements rather than
+  # asserting behaviour, so a number must never gate a merge. Scale tier and modes come from the
+  # environment (`DX_PERF_SCALE`, `DX_PERF_MODES`) so the nightly can sweep them without a task per
+  # combination. Not cacheable — the point is to measure this commit on this machine.
+  e2e-perf:
+    command: pnpm exec playwright test --config=src/playwright/playwright-perf.config.ts
+    env:
+      DX_PWA: 'false'
+    options:
+      cache: false
+    deps:
+      - ~:#prebuild
+      # PWA is a build-time decision, so the flag rides the dep too — otherwise a service worker
+      # precaches ~30 MB mid-run and lands in the network split as app code.
       - target: bundle
         env:
           DX_PWA: 'false'

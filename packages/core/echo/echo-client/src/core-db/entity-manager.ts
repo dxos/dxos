@@ -18,7 +18,6 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
-  yieldToEventLoop,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
@@ -47,6 +46,7 @@ import {
   type SaveStateChangedEvent,
   toDocumentId,
 } from '../automerge/index.ts';
+import { EchoClientError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
@@ -68,12 +68,6 @@ const TRACE_LOADING = false;
 
 /** Ceiling on db update emissions per second while a bulk delivery keeps arriving. */
 const DB_UPDATE_MAX_FREQ = 10;
-
-/**
- * Longest synchronous run of speculative link loading. A space root arriving over sync names every
- * object at once, and opening a handle per link is enough work per link to block input for the lot.
- */
-const LINK_LOAD_SLICE_MS = 8;
 
 /** A satisfaction request that will not change again without a new load. */
 const isSettled = (request: RefResolverRequest): boolean =>
@@ -215,12 +209,14 @@ export class EntityManager implements IDatabaseBinding {
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
 
-  /** Links seen on the space root that nothing has asked for yet, loaded in {@link LINK_LOAD_SLICE_MS} slices. */
-  #queuedLinkLoads = new Map<string, NonNullable<SpaceDocumentLinks>[string]>();
-  #drainingLinkLoads = false;
-
   // ── Private event field ──────────────────────────────────────────────────
   private readonly _rootChangedEvent = new Event<void>();
+
+  /** Object ids the space root has started routing, as it gains them. */
+  private readonly _linksAddedEvent = new Event<string[]>();
+
+  /** Ids {@link _linksAddedEvent} has already reported. */
+  #linkedObjectIds = new Set<string>();
 
   constructor(options: EntityManagerProps) {
     this._createEntity = options.createEntity;
@@ -246,6 +242,10 @@ export class EntityManager implements IDatabaseBinding {
 
   get rootChanged(): ReadOnlyEvent<void> {
     return this._rootChangedEvent;
+  }
+
+  get linksAdded(): ReadOnlyEvent<string[]> {
+    return this._linksAddedEvent;
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -906,7 +906,7 @@ export class EntityManager implements IDatabaseBinding {
       this._runtime,
       this._dataService['DataService.subscribeSpaceSyncState']({ spaceId: this.spaceId }).pipe(
         Stream.runHead,
-        Effect.map(Option.getOrElse(() => raise(new Error('Failed to get sync state')))),
+        Effect.map(Option.getOrElse(() => raise(new EchoClientError({ message: 'Failed to get sync state.' })))),
       ),
       { timeout: RPC_TIMEOUT },
     );
@@ -1451,6 +1451,13 @@ export class EntityManager implements IDatabaseBinding {
     if (!links) {
       return;
     }
+    // A reader that could not route an object to its document — an index hit, say — can once these
+    // arrive.
+    const added = Object.keys(links).filter((objectId) => !this.#linkedObjectIds.has(objectId));
+    if (added.length > 0) {
+      added.forEach((objectId) => this.#linkedObjectIds.add(objectId));
+      this._linksAddedEvent.emit(added);
+    }
     const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
       this._objectsPendingDocumentLoad.has(objectId),
     );
@@ -1468,57 +1475,6 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
-
-    const newLinks = Object.entries(links).filter(
-      ([objectId]) => !this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId),
-    );
-    if (newLinks.length > 0) {
-      this.#queueLinkLoads(newLinks);
-    }
-  }
-
-  #queueLinkLoads(links: [string, NonNullable<SpaceDocumentLinks>[string]][]): void {
-    for (const [objectId, link] of links) {
-      this.#queuedLinkLoads.set(objectId, link);
-    }
-    void this.#drainQueuedLinkLoads();
-  }
-
-  /**
-   * Opens handles for queued links a slice at a time. A link bound by another path while queued
-   * (an explicit load, a rebind) is skipped rather than loaded twice, and one the root no longer
-   * carries is dropped.
-   */
-  async #drainQueuedLinkLoads(): Promise<void> {
-    if (this.#drainingLinkLoads) {
-      return;
-    }
-    this.#drainingLinkLoads = true;
-    try {
-      // Speculative, so the update that queued these links finishes its own slice first.
-      await yieldToEventLoop();
-      while (this.#queuedLinkLoads.size > 0 && this._ctx && !this._ctx.disposed) {
-        const started = performance.now();
-        for (const [objectId, link] of this.#queuedLinkLoads) {
-          this.#queuedLinkLoads.delete(objectId);
-          if (
-            this._spaceRootDocHandle?.doc()?.links?.[objectId]?.toString() === link.toString() &&
-            !this._objectDocumentHandles.has(objectId) &&
-            !this._objectsPendingDocumentLoad.has(objectId)
-          ) {
-            this._loadLinkedObjects({ [objectId]: link }, { diskOnly: true });
-          }
-          if (performance.now() - started >= LINK_LOAD_SLICE_MS) {
-            break;
-          }
-        }
-        if (this.#queuedLinkLoads.size > 0) {
-          await yieldToEventLoop();
-        }
-      }
-    } finally {
-      this.#drainingLinkLoads = false;
-    }
   }
 
   private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
@@ -1586,6 +1542,9 @@ export class EntityManager implements IDatabaseBinding {
           newDoc.links[objectId] = new A.RawString(url);
         });
       })
+      .catch((error: unknown) => {
+        log('object not bound: the database closed before its document was created', { objectId, err: error });
+      })
       .finally(() => {
         this._pendingDocumentCreations.delete(objectId);
       });
@@ -1595,14 +1554,16 @@ export class EntityManager implements IDatabaseBinding {
     return spaceDocHandle;
   }
 
+  /** Throws if a document could not be created, since its object would otherwise never reach the host. */
   private async _waitForPendingCreations(): Promise<void> {
+    await this._repoProxy.flushCreations();
     await Promise.all([...this._pendingDocumentCreations.values()]);
   }
 
   private _clearHandleReferences(): string[] {
     const objectsWithHandles = [...this._objectDocumentHandles.keys()];
     this._objectDocumentHandles.clear();
-    this.#queuedLinkLoads.clear();
+    this.#linkedObjectIds.clear();
     this._documentObjects.clear();
     this._spaceRootDocHandle = null;
     return objectsWithHandles;

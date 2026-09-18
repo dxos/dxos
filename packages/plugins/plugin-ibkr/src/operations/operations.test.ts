@@ -4,6 +4,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
@@ -274,7 +275,9 @@ const run = <T>(
   creds: typeof credentials = [],
 ): Promise<T> =>
   EffectEx.runPromise(
-    effect.pipe(Effect.provide(Database.layer(db)), Effect.provide(configuredCredentialsLayer(creds))) as Effect.Effect<
+    effect.pipe(
+      Effect.provide(Layer.provideMerge(Database.layer(db), configuredCredentialsLayer(creds))),
+    ) as Effect.Effect<
       T,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       any,

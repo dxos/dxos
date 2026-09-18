@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './AppError.tsx';
 export * from './Main.tsx';
 export * from './Root.tsx';
 export * from './TodoContainer.tsx';

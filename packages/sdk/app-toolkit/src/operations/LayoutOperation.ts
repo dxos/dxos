@@ -424,6 +424,9 @@ export const ScrollIntoView = Operation.make({
     subject: Schema.optional(Schema.String.annotate({ description: 'The id of the item to scroll into view.' })),
     cursor: Schema.optional(Schema.String.annotate({ description: 'A cursor to scroll to within the item.' })),
     ref: Schema.optional(Schema.String.annotate({ description: 'A reference id for the scroll target.' })),
+    focus: Schema.optional(
+      Schema.Boolean.annotate({ description: 'Whether the item takes focus once in view; defaults to true.' }),
+    ),
   }),
   output: Schema.Void,
 });

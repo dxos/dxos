@@ -92,7 +92,9 @@ Every interaction lives behind a page-object so specs read as intent, not select
   (`e2ePreset`, `vite preview` on port 4173, pre-built bundle).
 - `PLAYWRIGHT_BROWSER=chromium|firefox|webkit|all` selects projects; many tests are chromium-only
   via `test.skip(browserName !== 'chromium')`.
-- CI: the `Check` `e2e` job runs only on main/release or `workflow_dispatch e2e=true`.
+- CI: the `Check` `e2e` job runs on every trigger, scoped to affected projects except on main, the
+  schedule and a dispatch. A dispatch forces every suite to run rather than replay; `only=e2e` skips
+  the other jobs.
 - `DX_HARNESS_THROTTLED=1` enables the startup harness's throttled cold start (chromium-only, CDP).
   Its profile defaults to Fast 3G + 2x CPU and each field is overridable via `DX_HARNESS_LATENCY_MS`,
   `DX_HARNESS_DOWN_MBPS`, `DX_HARNESS_UP_KBPS`, `DX_HARNESS_CPU` (`throttleProfile` in

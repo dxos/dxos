@@ -35,6 +35,7 @@ import {
   checkpointWal,
 } from './opfs-pragmas.ts';
 import { logSqliteQuery, summarizeLoggedParams } from './query-log.ts';
+import { instrumentVfs } from './vfs-metrics.ts';
 
 export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas.ts';
 
@@ -145,6 +146,11 @@ export const makeOpfs = (
         registeredVfs.add(vfsDirectory);
         const factory = yield* initModule;
         const vfs = yield* Effect.promise(() => AccessHandlePoolVFS.create(vfsDirectory, factory));
+        // Instrumented BEFORE registration: `vfs_register` hands the object to wasm, so wrapping
+        // afterwards would leave the registered methods unwrapped. This is the only place in the
+        // codebase where SQLite's disk I/O carries a byte count — nothing in CDP reports read/write
+        // bytes, and `Storage.getUsageAndQuota` gives a stored level rather than operations.
+        instrumentVfs(vfs);
         // AccessHandlePoolVFS is an untyped wa-sqlite example; vfs_register expects its VFS shape.
         sqlite3.vfs_register(vfs as any, false);
       }

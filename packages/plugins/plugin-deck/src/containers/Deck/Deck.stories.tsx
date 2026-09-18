@@ -157,6 +157,34 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   );
 };
 
+const REVEAL_PLANK_ID = 'root/story-item-5';
+
+/** Reveals a plank from outside the deck, and marks the button once the deck's effects have run. */
+const TestRevealControls = () => {
+  const { invokePromise } = useOperationInvoker();
+  const reveal = useCallback(
+    async (button: HTMLButtonElement, focus?: boolean) => {
+      delete button.dataset.revealed;
+      await invokePromise(LayoutOperation.ScrollIntoView, { subject: REVEAL_PLANK_ID, focus });
+      // The state update renders in the first frame; the deck's effects have run by the second.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      button.dataset.revealed = 'true';
+    },
+    [invokePromise],
+  );
+
+  return (
+    <div className='fixed bottom-2 start-2 z-10 flex gap-2'>
+      <button data-testid='story.reveal' onClick={(event) => void reveal(event.currentTarget)}>
+        Reveal
+      </button>
+      <button data-testid='story.reveal-without-focus' onClick={(event) => void reveal(event.currentTarget, false)}>
+        Reveal without focus
+      </button>
+    </div>
+  );
+};
+
 // In-memory deck settings so stories don't read/write the persisted plugin settings.
 const storyDeckSettings = Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -212,7 +240,7 @@ const storyDeckState = Capability.makeModule(
         workspace: state.activeDeck,
         active: open.active,
         inactive: open.inactive,
-        scrollIntoView: ephemeral.scrollIntoView,
+        scrollIntoView: ephemeral.scrollIntoView?.id,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
@@ -347,6 +375,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           // plank to plank as attention changes.
           AppGraphBuilder.createExtension({
             id: 'storyItemCompanions',
+            relation: AppNode.companion,
             match: (node) =>
               node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
             connector: (node) =>
@@ -375,6 +404,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 );
 
 type StoryArgs = {
+  /** Renders controls that reveal a plank from outside the deck. */
+  revealControls?: boolean;
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
@@ -401,6 +432,7 @@ const DefaultStory = ({
   sidebarState = 'closed',
   companionPlanks = NO_COMPANIONS,
   launcher = false,
+  revealControls = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: StoryArgs) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
@@ -452,11 +484,14 @@ const DefaultStory = ({
   }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState, updateEphemeral]);
 
   return (
-    <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
-      <Deck.Content>
-        <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
-      </Deck.Content>
-    </Deck.Root>
+    <>
+      {revealControls && <TestRevealControls />}
+      <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
+        <Deck.Content>
+          <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
+        </Deck.Content>
+      </Deck.Root>
+    </>
   );
 };
 
@@ -559,6 +594,32 @@ const showingCompanionsFor = (canvasElement: HTMLElement): string[] => [
       .filter((title): title is string => !!title),
   ),
 ];
+
+// A reveal that leaves focus where it is brings the plank forward without focusing it; a plain reveal
+// focuses it.
+export const RevealWithoutFocus: Story = {
+  tags: ['test'],
+  args: { count: 6, revealControls: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+    const plank = () =>
+      canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${REVEAL_PLANK_ID}"]`);
+    await waitFor(() => expect(plank()).not.toBeNull());
+
+    const withoutFocus = await canvas.findByTestId('story.reveal-without-focus');
+    withoutFocus.focus();
+    withoutFocus.click();
+    await waitFor(() => expect(withoutFocus).toHaveAttribute('data-revealed', 'true'));
+    await expect(document.activeElement).toBe(withoutFocus);
+
+    const reveal = await canvas.findByTestId('story.reveal');
+    reveal.focus();
+    reveal.click();
+    await waitFor(() => expect(reveal).toHaveAttribute('data-revealed', 'true'));
+    await waitFor(() => expect(plank()?.contains(document.activeElement)).toBe(true));
+  },
+};
 
 // Companions are per-plank state: every plank whose companion is open renders it beside that plank, and
 // attention plays no part in what is laid out. Planks 1 and 3 start open here, plank 2 closed. (This
