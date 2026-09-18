@@ -89,9 +89,9 @@ elsewhere. See "The two stacked tiles" below.
 
 ### The two reducers, and why a tile has the one it has
 
-| reducer               | tiles                                       | why                                                                                                                                                   |
-| --------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sum` over the phases | wall time, CPU (all three), TBT, code bytes | Additive: the run cost what its phases cost.                                                                                                          |
+| reducer               | tiles                                       | why                                                                                                                                                         |
+| --------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sum` over the phases | wall time, CPU (all three), TBT, code bytes | Additive: the run cost what its phases cost.                                                                                                                |
 | `max` over the phases | peak RSS, peak heap, lag p95                | A **level**, not a quantity. Summing eleven peaks reports memory never simultaneously resident, and summing eleven p95s is a number with no interpretation. |
 
 | #   | tile                                  | measure              | reducer |
