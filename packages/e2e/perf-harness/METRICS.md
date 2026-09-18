@@ -403,6 +403,14 @@ Recorded here so nobody rediscovers them as bugs.
 
 ## Where the numbers go
 
+- **Publishing happens per ITERATION, from inside the flow, and there is no end-of-run step.**
+  `publishPosthogBatch` shells out to `scripts/ci-event.mjs` after each iteration writes its batch,
+  so a run that loses its runner partway has already published what it measured. A step afterwards
+  cannot do that — it does not run when the job dies, which is exactly when the rows matter. The
+  obvious backstop is deliberately absent: it would be a second publish path relying on PostHog's
+  dedup to collapse re-sent rows, and a dedup miss puts duplicates into the distributions, which
+  tightens a box with nothing on the page to reveal it. A failed publish retries once and is then
+  logged at `warn` — the loss is made visible rather than papered over.
 - `test-results/perf/<flow>-<mode>.rows.ndjson` — every row, one JSON object per line.
 - `test-results/perf/<flow>-<mode>-<runId>.json` — the per-run report.
 - `test-results/perf/<flow>-<mode>.events.ndjson` — PostHog batch, `measure` and `ok` rows only.

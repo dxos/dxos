@@ -96,6 +96,14 @@ jobs:
           # the repeats are distinct rows to take a median over, not overwrites of each other.
           ITERATIONS: ${{ inputs.iterations || '10' }}
           DX_PWA: 'false'
+          # The key lives on THIS step because publishing now happens inside the flow, once per
+          # iteration, rather than in a step afterwards. A step afterwards cannot run when the job
+          # dies partway, so a ten-iteration run that lost its runner on iteration eight published
+          # nothing — including the seven that had completed and were already on disk.
+          #
+          # Empty on a pull_request event, where no secret is exposed; the harness then measures,
+          # writes its artifacts and skips publishing, which is what a PR run should do.
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           set -o pipefail
           # Cleared first so a re-run cannot inherit the previous attempt's rows and trend them
@@ -135,36 +143,16 @@ jobs:
             '
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Only `measure` rows reach PostHog, and only from an iteration that completed its stages.
-      # `writePosthogBatch` is what enforces that per row: it drops the diagnose rows (whose CPU
-      # carries the profiler's overhead) and the failed stages (whose durations are the budgets
-      # they exhausted).
+      # NO end-of-run publish step. Rows are published per iteration by the flow above, and the
+      # obvious backstop here would be a second publish path whose safety rests on PostHog's dedup
+      # collapsing re-sent rows — a dedup miss would put duplicates into the distributions, which
+      # tightens a box with nothing on the dashboard to show it. `publishPosthogBatch` records the
+      # reasoning and retries once instead.
       #
-      # NOT gated on the flow step succeeding any more. That gate was right when the run was one
-      # iteration — a truncated single sample reads as a regression nobody caused — but with ten it
-      # discards nine good iterations over one flaky stage, which is the opposite of why there are
-      # ten. Integrity now rests where it belongs: the per-row drop above, and the runs table's
-      # `stages` column, which shows an iteration that came up short instead of hiding it.
-      #
-      # A manual dispatch publishes too, from any branch. Recording is not what protects the trend:
-      # every row carries `ciBranch`, so a branch run is stored and can be filtered out whenever
-      # that is the question. Refusing to record it instead made the numbers from a dispatch
-      # unreachable, which is the opposite of why the run exists.
-      - name: Trend the measured rows
-        if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-        continue-on-error: true
-        env:
-          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
-        run: |
-          shopt -s nullglob
-          batches=(test-results/perf/*.events.ndjson)
-          if [ ${#batches[@]} -eq 0 ]; then
-            echo "::warning::No measure-mode events to trend."
-            exit 0
-          fi
-          for batch in "${batches[@]}"; do
-            node scripts/ci-event.mjs --batch "$batch"
-          done
+      # What still holds from the old step: only `measure` rows and only completed stages are ever
+      # sent, enforced per row by `writePosthogBatch` rather than by a job-level gate. Branch is
+      # not filtered — every row carries `ciBranch`, so a branch run is stored and filtered at read
+      # time, and refusing to record it made the numbers from a dispatch unreachable.
 
       # The artifacts — a `.cpuprofile` per stage per realm, one screenshot per stage, and the
       # screencast's first/last frames in `diagnose` — are what a regression is read with. Not

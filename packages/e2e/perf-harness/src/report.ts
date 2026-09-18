@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { spawnSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -226,6 +227,40 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
  * is the normal case. Failed stages are dropped for a different reason — their durations are the
  * locator budgets they exhausted, so publishing them would invent a regression.
  */
+/**
+ * Publishes a batch file to PostHog by shelling out to `scripts/ci-event.mjs`.
+ *
+ * Reuses the repo's publisher rather than posting here, so the uuid seeding, property namespacing
+ * and dedup rules live in exactly one place — a second implementation would drift from the one CI
+ * uses and the drift would show up as duplicate rows.
+ *
+ * Called PER ITERATION, and it is the ONLY publish path. An end-of-run step was the obvious
+ * backstop and is deliberately absent: the case it would cover is a network failure on one
+ * iteration of a job that then survives to the end, and paying for that means a second publish
+ * path whose safety rests on PostHog's dedup collapsing the re-sent rows. A dedup miss would put
+ * duplicate rows into the distributions, which is a worse failure than the one being prevented —
+ * duplicates tighten a box and there is nothing on the dashboard that would show it. The transient
+ * case is covered by the retry below instead.
+ *
+ * NEVER throws: a stage that measured cleanly must not fail because the network did. It returns
+ * false instead, which the caller logs — a silent loss is the thing to avoid, not the loss itself.
+ */
+export const publishPosthogBatch = (workspaceRoot: string, file: string): boolean => {
+  if (!process.env.DX_POSTHOG_API_KEY) {
+    return false;
+  }
+  const script = path.join(workspaceRoot, 'scripts', 'ci-event.mjs');
+  // Two attempts, because the only failure this can recover from is transient; a rejected key or a
+  // malformed batch fails identically twice and the caller reports it either way.
+  for (let attempt = 0; attempt < 2; ++attempt) {
+    const result = spawnSync(process.execPath, [script, '--batch', file], { cwd: workspaceRoot, encoding: 'utf8' });
+    if (result.status === 0) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const writePosthogBatch = (
   workspaceRoot: string,
   name: string,

@@ -15,6 +15,7 @@ import {
   attachAll,
   installProbes,
   launchInstrumentedBrowser,
+  publishPosthogBatch,
   startProfiling,
   startScreencast,
   startTracing,
@@ -349,7 +350,22 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     appendRows(WORKSPACE_ROOT, name, rows);
     writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
     if (mode === 'measure') {
-      writePosthogBatch(WORKSPACE_ROOT, name, rows, capturedAt);
+      // Published HERE, at the end of each iteration, rather than once for the whole run: the
+      // workflow's trending step cannot run if the job dies partway, so a ten-iteration run that
+      // lost its runner on iteration eight used to publish nothing at all — including the seven
+      // that had completed and were sitting on disk. Each iteration now stands on its own.
+      //
+      // The batch file carries the iteration in its name, so this publishes exactly what this
+      // iteration measured. There is no end-of-run backstop on purpose — see `publishPosthogBatch`.
+      const batch = writePosthogBatch(WORKSPACE_ROOT, `${name}-${iteration}`, rows, capturedAt);
+      const published = publishPosthogBatch(WORKSPACE_ROOT, batch);
+      // Logged at `warn` when it did not publish, because that row reached disk and the artifact
+      // but not the trend, and nothing on the dashboard can show a point that was never sent.
+      if (published) {
+        log.info('published perf batch', { batch, iteration });
+      } else {
+        log.warn('perf batch NOT published', { batch, iteration, keyPresent: !!process.env.DX_POSTHOG_API_KEY });
+      }
     }
 
     runner.dispose();
