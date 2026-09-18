@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { EffectEx } from '@dxos/effect';
 
-import { firstOpenableChild } from './graph-wait.ts';
+import { firstOpenableChild } from './openable-children.ts';
 
 const setup = () => {
   const registry = Registry.make();
