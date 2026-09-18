@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { DeckCapabilities } from '#types';
 
 import { applyWorkspace, navigateDeck } from '../url/index.ts';
-import { openableChildren } from '../util/index.ts';
+import { openableChildren, withViewTransition } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
@@ -25,7 +25,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      yield* applyWorkspace(input.subject);
+      // Only the flip is the transition's update step: navigating below waits on URL resolution, and
+      // rendering stays frozen for as long as the step takes.
+      yield* withViewTransition(applyWorkspace(input.subject));
 
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
       const deck = state.decks[input.subject];

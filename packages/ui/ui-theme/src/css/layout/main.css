@@ -131,6 +131,7 @@
     }
 
     &[data-side='is'] {
+      view-transition-name: dx-main-navigation-sidebar;
       @apply -start-[100vw] border-e;
       border-inline-end-width: var(--border-width-landmark-line) !important;
       border-inline-end-style: solid;
@@ -286,5 +287,41 @@
         scroll-padding-inline-end: var(--dx-complementary-sidebar-size);
       }
     }
+  }
+}
+
+/**
+ * View transitions.
+ *
+ * The content and the navigation sidebar are each their own transition group, so a same-document view
+ * transition (see `withViewTransition` in `@dxos/plugin-deck`) crossfades each region's content and
+ * morphs the sidebar between its collapsed and expanded boxes instead of crossfading the page as one.
+ */
+@layer dx-components {
+  .dx-main-content {
+    view-transition-name: dx-main-content;
+  }
+
+  /*
+   * A view transition animates the layout from the snapshot before its update to the snapshot after
+   * it, so the layout's own slides are suspended while one is active: left running, the new snapshot
+   * would be taken a frame into a 200ms slide and the layout would jump the rest of the way when the
+   * view transition released it.
+   */
+  :root:active-view-transition {
+    .dx-main-sidebar,
+    .dx-main-bounce-layout,
+    .dx-main-content-padding-transitions,
+    .dx-main-intrinsic-size,
+    .dx-main-drawer,
+    .dx-main-overlay {
+      transition: none;
+    }
+  }
+
+  /* Timed as the slides it stands in for. */
+  ::view-transition-group(*) {
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
   }
 }
