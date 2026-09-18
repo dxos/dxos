@@ -169,7 +169,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                                     branch={currentBranch}
                                     commits={commits}
                                     showTimestamp
-                                    getScrollElement={() => traceViewport}
+                                    scroller={traceViewport}
                                     onSelect={handleCommitSelect}
                                   />
                                 )}

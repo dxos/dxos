@@ -10,7 +10,6 @@ import { LogLevel } from '@dxos/log';
 import { random } from '@dxos/random';
 import { Button, Panel, ScrollArea, ScrollContainer, Toolbar, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
-import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { defaultOptions } from './timeline-options.ts';
@@ -133,13 +132,13 @@ const generateCommits = (n: number): Pick<TimelineProps, 'commits' | 'branches'>
   return { commits, branches };
 };
 
-const DefaultStory = (props: Omit<TimelineProps, 'getScrollElement'>) => {
+const DefaultStory = (props: Omit<TimelineProps, 'scroller'>) => {
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
   return (
     <ScrollArea.Root>
       <ScrollArea.Viewport ref={setViewport}>
-        <Timeline {...props} getScrollElement={() => viewport} />
+        <Timeline {...props} scroller={viewport} />
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -148,11 +147,7 @@ const DefaultStory = (props: Omit<TimelineProps, 'getScrollElement'>) => {
 const meta = {
   title: 'ui/react-ui-trace/Timeline',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
-    withMosaic(),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -285,9 +280,9 @@ export const Large: Story = {
     await waitFor(() => expect(mountedRows(canvasElement).length).toBeGreaterThan(0));
 
     const rows = mountedRows(canvasElement);
-    // Windowed: a viewport's worth of rows plus the stack's overscan, never the whole history.
+    // Windowed: a viewport's worth of rows plus the overscan, never the whole history.
     await expect(rows.length).toBeLessThan(LARGE_HISTORY_LENGTH / 10);
-    // Rows are exactly `lineHeight` tall, which is what makes the stack's size estimate exact.
+    // Rows are exactly `lineHeight` tall, which is what makes the declared extent exact.
     for (const row of rows) {
       await expect(row.getBoundingClientRect().height).toBe(defaultOptions.lineHeight);
     }
@@ -399,7 +394,7 @@ export const Streaming: Story = {
           <ScrollContainer.Root pin ref={scrollerRef}>
             <ScrollContainer.Content thin>
               <ScrollContainer.Viewport ref={setViewport}>
-                <Timeline branches={branches} commits={commits} showTimestamp getScrollElement={() => viewport} />
+                <Timeline branches={branches} commits={commits} showTimestamp scroller={viewport} />
               </ScrollContainer.Viewport>
               <ScrollContainer.ScrollDownButton />
             </ScrollContainer.Content>

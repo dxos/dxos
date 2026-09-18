@@ -10,7 +10,6 @@ import * as Process from '@dxos/compute/Process';
 import type * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { buildExecutionGraph } from '../../execution-graph/index.ts';
@@ -87,11 +86,7 @@ const DefaultStory = ({ debug }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-trace/TracePanel',
   component: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
-    withMosaic(),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' })],
   parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<StoryProps>;
 

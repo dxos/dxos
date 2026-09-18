@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
-import { buildExecutionGraph } from '@dxos/react-ui-trace/headless';
+import { buildExecutionGraph } from '@dxos/react-ui-trace';
 
 /**
  * Regression for sub-operations collapsing onto `main` when the event window in `buildSpanTree`

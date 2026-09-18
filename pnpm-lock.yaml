@@ -6949,9 +6949,6 @@ importers:
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
-      '@dxos/react-ui-dnd':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-graph':
         specifier: workspace:*
         version: link:../../ui/react-ui-graph
@@ -20330,9 +20327,6 @@ importers:
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
-      '@dxos/react-ui-dnd':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
@@ -23268,12 +23262,12 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
+      '@dxos/react-ui-virtual':
+        specifier: workspace:*
+        version: link:../react-ui-virtual
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

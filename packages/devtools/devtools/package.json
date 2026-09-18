@@ -53,7 +53,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
-    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

@@ -230,7 +230,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
               branches={branches}
               branch={currentBranch}
               commits={commits}
-              getScrollElement={() => viewport}
+              scroller={viewport}
               onSelect={handleSelect}
             />
           </ScrollArea.Viewport>

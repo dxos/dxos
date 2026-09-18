@@ -30,44 +30,45 @@ These figures come from a real profile with 4,105 trace messages. Only the numbe
 - Changing `mount: 'always'` or the companion's lifecycle.
 - Graph-building cost beyond linear-time construction and a debounce. For example, `doctor()` is still O(C²); that is a follow-up.
 - Virtualizing `ProcessTree`, which is already capped by `max-h-[8lh]`.
-- Changes to `@dxos/react-ui-virtual` or `MessageList`; see [Follow-ups](#follow-ups).
+- Fixes to `@dxos/react-ui-virtual` beyond what the timeline needs; see [Follow-ups](#follow-ups).
 
 ## Design
 
 ### Component map
 
-| Need                                     | Framework part                                                                         | Package                                    |
-| ---------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Scroller with thin overlay scrollbars    | `ScrollContainer.Content` (a `ScrollArea.Root`)                                        | `@dxos/react-ui`                           |
-| Follow the tail; stop following on wheel | `ScrollContainer.Root pin`                                                             | `@dxos/react-ui`                           |
-| Scroll-to-bottom button                  | `ScrollContainer.ScrollDownButton`                                                     | `@dxos/react-ui`                           |
-| Top fade                                 | `ScrollContainer.Fade`                                                                 | `@dxos/react-ui`                           |
-| Windowed rows (sizer, positioned rows)   | `Mosaic.VirtualStack` with `draggable={false}`                                         | `@dxos/react-ui-mosaic`                    |
-| Current row, hover                       | `Mosaic.Container currentId`, `Mosaic.Tile` with the `dx-current` / `dx-hover` classes | `@dxos/react-ui-mosaic`, `@dxos/ui-theme`  |
-| Read-only JSON with folding and search   | `Editor.View` with `json()`, `folding()` and search                                    | `@dxos/react-ui-editor`, `@dxos/ui-editor` |
-| Oversized payload in the details pane    | `SyntaxHighlighter`'s own pipeline, as plain text                                      | `@dxos/react-ui-syntax-highlighter`        |
+| Need                                     | Framework part                                                         | Package                                    |
+| ---------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------ |
+| Scroller with thin overlay scrollbars    | `ScrollContainer.Content` (a `ScrollArea.Root`)                        | `@dxos/react-ui`                           |
+| Follow the tail; stop following on wheel | `ScrollContainer.Root pin`                                             | `@dxos/react-ui`                           |
+| Scroll-to-bottom button                  | `ScrollContainer.ScrollDownButton`                                     | `@dxos/react-ui`                           |
+| Top fade                                 | `ScrollContainer.Fade`                                                 | `@dxos/react-ui`                           |
+| Windowed rows (sizer, translated window) | `useWindow` bound to the host's viewport, `useListModel` over the rows | `@dxos/react-ui-virtual`                   |
+| Current row, hover                       | `aria-current` on the row with the `dx-current` / `dx-hover` classes   | `@dxos/ui-theme`                           |
+| Read-only JSON with folding and search   | `Editor.View` with `json()`, `folding()` and search                    | `@dxos/react-ui-editor`, `@dxos/ui-editor` |
+| Oversized payload in the details pane    | `SyntaxHighlighter`'s own pipeline, as plain text                      | `@dxos/react-ui-syntax-highlighter`        |
 
-The repo already builds long lists this way in `SearchStack`, `EventStack` and `InboxStack`. The host owns a `ScrollArea` viewport, and a `Mosaic.VirtualStack` binds to it through `getScrollElement`.
+This is how `MessageList` in `@dxos/react-ui-feed` is built: the host owns a `ScrollArea` viewport, and `useWindow` binds to that element through a ref. The window renders a sizer that gives the scrollbar the whole history's extent and a translated container holding the rows in view. Nothing in it is about drag and drop, so no `Dnd.Root` is needed and no drag-and-drop package enters the trace's dependency closure.
 
 ### Timeline
 
-`Timeline` stays a single component with the same props. It gains one prop, `getScrollElement`, which it passes to the stack; every `VirtualStack` host already supplies this. It no longer renders every commit:
+`Timeline` stays a single component with the same props. It gains one prop, `scroller`: the host's viewport element, which every host already holds because it renders the `ScrollArea`. It no longer renders every commit:
 
 - **Layout.** `layoutTimeline(commits, branches)` is a pure, linear-time function in `timeline-layout.ts`. It replaces `find`/`findIndex` with index maps and releases lanes by merge row. It returns the visible rows, and each row carries the lanes and spans of its layout pass. Commits on branches outside the whitelist get no row, so every row is exactly `lineHeight` tall.
-- **Rows.** The rows are rendered by a `Mosaic.VirtualStack`:
-  - `items` is the rows and `getId` is `row.commit.id`.
-  - `estimateSize` is `() => lineHeight`, which is exact because rows have a fixed height.
-  - `Tile` is `TimelineTile`, which renders the existing row content (lane SVG, icon, message, timestamp) inside `Mosaic.Tile`.
+- **Rows.** The rows are rendered by a `TimelineWindow` built on `useWindow`:
+  - `useListModel(layout.rows, row => row.commit.id)` is the model; the window keys rows by commit id.
+  - The extents are `{ of: () => lineHeight, exact: true }`. Every row is the same fixed height, so offsets are a prefix sum and the window never has to correct a measurement.
+  - The rows in the mounted range are rendered from the layout, each with the existing row content (lane SVG, icon, message, timestamp). A row carries `data-index` and `data-object-id`, which is how the window finds it.
+  - The window mounts once the host's `scroller` exists, because the placement binds to the element on mount.
 
   Positioned rows cannot share one grid, so each row gets the column template that the shared subgrid used to provide. The columns still line up: every row in a layout pass has the same lane width, and the icon and timestamp columns have fixed widths.
 
-- **Current row and selection.** These map to `Mosaic.Container currentId` / `onCurrentChange`. The tile sets `aria-current`, styled by the shared `dx-current` class, which replaces the row's own `aria-current:bg-*` classes.
-- **Keyboard.** The keymap does not change: ArrowUp/Down, Shift for the same branch, Meta for the ends, Enter to toggle selection. To reach rows that are not mounted, keyboard moves call `scrollToIndex(index, { align: 'auto' })` on the stack's virtualizer, which the Timeline captures from `onChange`. `align: 'auto'` scrolls to the nearest edge, matching the `scrollIntoView({ block: 'nearest' })` it replaces. The stack's own `scrollIntoView` is turned off, because it aligns the row to the top and would move the view on every arrow press.
+- **Current row and selection.** The row sets `aria-current="true"` when it is current and leaves the attribute off otherwise, styled by the shared `dx-current` class, which replaces the row's own `aria-current:bg-*` classes.
+- **Keyboard.** The keymap does not change: ArrowUp/Down, Shift for the same branch, Meta for the ends, Enter to toggle selection. To reach rows that are not mounted, a change of the current row calls the window controller's `scrollToIndex`, aligned to `start` when the row is above the visible range and to `end` when it is below. A row already in view is left alone, matching the `scrollIntoView({ block: 'nearest' })` it replaces.
 - **Empty state.** Unchanged (`no-commits.message`).
 
 ### Trace panel
 
-`TracePanel` keeps its current composition: `ScrollContainer.Root pin` › `Content thin` › `Fade` › `Viewport` › `Timeline`, plus `ScrollDownButton`. The viewport element becomes the Timeline's `getScrollElement`. Pinning needs no change: `ScrollContainer` observes the viewport's children, the stack grows by one row height per commit, and it scrolls to the bottom.
+`TracePanel` keeps its current composition: `ScrollContainer.Root pin` › `Content thin` › `Fade` › `Viewport` › `Timeline`, plus `ScrollDownButton`. The viewport element becomes the Timeline's `scroller`. Pinning needs no change: `ScrollContainer` observes the viewport's children, the timeline's sizer grows by one row height per commit, and it scrolls to the bottom. `useFollow` is not used, because the pin already exists in the host.
 
 ### Debug view
 
@@ -93,14 +94,13 @@ Above `MAX_HIGHLIGHTED_LENGTH` (20,000 characters), `SyntaxHighlighter` passes `
 
 ## Alternatives considered
 
-1. **`@dxos/react-ui-virtual`'s `Window`.** This is the engine behind `MessageList`, with exact extents, a follow and a controller. But `Window` renders its own native scroller instead of a `ScrollArea`, and it has no scroll-to-bottom part. Using it would mean losing the thin overlay scrollbar and the button, or first extending the framework: a `ScrollArea` viewport and a follow button in `react-ui-virtual`, shared with `MessageList`.
-2. **A Timeline-local composite on `useWindow`, like `MessageList.Viewport`.** This was prototyped. It needs its own sizer and window markup and its own scroll-to-bottom button, which means new styles in a feature component. Rejected on that principle.
-3. **Calling `useVirtualizer` directly.** This has the same drawback as option 2.
+1. **`Mosaic.VirtualStack`.** The first revision used it, as `SearchStack` and `InboxStack` do. It works, but it brings `@dxos/react-ui-mosaic` and through it a drag-and-drop package into a component that never drags anything; every host then needs a `Dnd.Root`, and the package needed a separate `headless` entrypoint because the drag-and-drop dependency's CJS build requires a stylesheet that node cannot load. Replaced by `useWindow`, which has none of these costs.
+2. **`@dxos/react-ui-virtual`'s `Window` component.** It renders its own native scroller, so it cannot sit inside the host's `ScrollArea`. `useWindow` is the same engine with the scroller handed in, which is what `MessageList` does and what the timeline does now.
+3. **Calling `@tanstack/react-virtual` directly.** A second virtualizer in the repo, with its own measurement and anchoring rules, next to the one `react-ui-virtual` already provides.
 
 ## Dependencies
 
-- `@dxos/react-ui-trace` gains a dependency on `@dxos/react-ui-mosaic`. The mosaic package's dependency closure does not include the trace package, so this creates no cycle.
-- `Mosaic.Container` requires a DnD root. In Composer, `DeckLayout` provides `Dnd.Root` around the deck. Stories use `withMosaic()`. Hosts outside Composer (devtools, storybook-testing) must add one if they do not already have it.
+- `@dxos/react-ui-trace` gains a dependency on `@dxos/react-ui-virtual`, which depends only on `@dxos/react-ui`, `@dxos/ui-theme` and `effect`. It imports no stylesheet, so the root barrel stays importable from node tests.
 
 ## Testing
 
@@ -128,7 +128,7 @@ Above `MAX_HIGHLIGHTED_LENGTH` (20,000 characters), `SyntaxHighlighter` passes `
 
 1. This design doc.
 2. Execution graph: linear-time build and debounce.
-3. Timeline on `Mosaic.VirtualStack`, and the host updates.
+3. Timeline on `useWindow`, and the host updates.
 4. Debug view on `Editor.View`, and the `Editor.View` minimal-change sync.
 5. The `SyntaxHighlighter` guard.
 6. The recovery page's Repair line reworded to match its button, which was requested for this PR.
@@ -140,11 +140,10 @@ Above `MAX_HIGHLIGHTED_LENGTH` (20,000 characters), `SyntaxHighlighter` passes `
   - the count is not clamped when it shrinks;
   - a follow does not re-arm after its scroller is hidden.
 
-  They affect `MessageList`, not the trace, so they get their own PR.
+  The first now also affects the timeline's Meta+ArrowDown on a long history, at the cost above; the other two do not (the timeline uses no follow, and a trace history only grows). They get their own PR.
 
 - The remaining graph-building cost: `doctor()` is O(C²).
 
 ## Open questions
 
-1. Is `Mosaic.VirtualStack` the right engine, given that every Timeline host then needs a DnD root? The alternative is to first give `@dxos/react-ui-virtual` a `ScrollArea`-based viewport (alternative 1).
-2. Should the `Editor.View` line-diff sync apply everywhere, or be opt-in?
+1. Should the `Editor.View` line-diff sync apply everywhere, or be opt-in?
