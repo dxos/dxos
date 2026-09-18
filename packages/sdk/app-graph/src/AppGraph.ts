@@ -694,6 +694,18 @@ export const expandSync = <T extends ExpandableGraph | WritableGraph>(
 };
 
 /**
+ * {@link expandSync} the `child` relation of every ancestor of a qualified id, and of the id itself.
+ * A missing ancestor's expand is deferred until it arrives, so a single call populates the whole path.
+ */
+export const expandPath = <T extends ExpandableGraph | WritableGraph>(graph: T, qualifiedId: string): T => {
+  const segments = qualifiedId.split('/');
+  for (let index = 1; index <= segments.length; index++) {
+    expandSync(graph, segments.slice(0, index).join('/'), 'child');
+  }
+  return graph;
+};
+
+/**
  * Expand a node in the graph, off the paint-critical path.
  *
  * Yields to the main thread before running {@link expandSync}, so a caller reacting to input does not

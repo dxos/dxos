@@ -16,7 +16,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 - Add items to a card header's ⋮ menu by contributing a `AppSurface.CardMenu` surface filtered to the type; the component calls `useMenuContribution(menu, { id, mode: 'additive', items })` and returns `null`. Hosts render `CardMenuSlot` and pass `useMenuItems(menu, undefined, baseItems)` to decide `disabled` (`plugin-deck/src/containers/Overlays/Popover.tsx`).
 - A preview-popover subject (link resolver) is minted in memory — `Obj.getDatabase` is undefined; resolve the stored copy by natural key via `useQuery(db, Filter.type(T, { … }))` in the active space (`useActiveSpace`) before operating on it.
-- `LayoutOperation.Open` on an object created moments ago fails with `node has no URL binding` (`plugin-deck/src/url/navigate.ts`): `NotFound.expandPath` is fire-and-forget. `expandPath` then `AppGraph.waitFor(graph, path).pipe(Effect.timeout(...))` before invoking Open.
+- `LayoutOperation.Open` on an object created moments ago fails with `node has no URL binding` (`plugin-deck/src/url/navigate.ts`): `AppGraph.expandPath` is fire-and-forget. `expandPath` then `AppGraph.waitFor(graph, path).pipe(Effect.timeout(...))` before invoking Open.
 - `Effect.runPromise` is lint-banned (`@dxos/rules(no-effect-run-promise)`); use `EffectEx.runPromise` from `@dxos/effect` (a runtime dep, not devDep).
 
 ## 2026-08-27 — plugin-registry (boot-graph hygiene)

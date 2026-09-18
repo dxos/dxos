@@ -155,19 +155,6 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   return table;
 };
 
-/**
- * Expand every ancestor prefix of a qualified node id (including the id itself), then flush once.
- * Mirrors `@dxos/app-toolkit`'s `NotFound.expandPath` technique, reimplemented locally so app-graph
- * doesn't depend on app-toolkit.
- */
-const expandAncestors = async (builder: GraphBuilder.GraphBuilder, qualifiedId: string): Promise<void> => {
-  const segments = qualifiedId.split('/');
-  for (let index = 1; index <= segments.length; index++) {
-    Graph.expandSync(builder.graph, segments.slice(0, index).join('/'), 'child');
-  }
-  await GraphBuilder.flush(builder);
-};
-
 /** An extension registered for a URL key: its path (static segments or a dynamic resolver). */
 type KeyedExtension = { id: string; path: string[] | GraphBuilder.PathResolver };
 
@@ -184,7 +171,8 @@ const materializeCandidate = async (
   builder: GraphBuilder.GraphBuilder,
   candidateId: string,
 ): Promise<string | null> => {
-  await expandAncestors(builder, candidateId);
+  Graph.expandPath(builder.graph, candidateId);
+  await GraphBuilder.flush(builder);
   return Option.isSome(Graph.getNode(builder.graph, candidateId)) ? candidateId : null;
 };
 

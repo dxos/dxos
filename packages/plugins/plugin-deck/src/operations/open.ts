@@ -11,7 +11,6 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -58,7 +57,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       );
 
       for (const subjectId of input.subject) {
-        NotFound.expandPath(graph, subjectId);
+        AppGraph.expandPath(graph, subjectId);
       }
 
       {
