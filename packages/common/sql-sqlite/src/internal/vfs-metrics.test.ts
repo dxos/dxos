@@ -10,18 +10,6 @@ const SQLITE_OK = 0;
 const SQLITE_IOERR = 10;
 const SQLITE_IOERR_SHORT_READ = 522;
 
-/** A VFS that records its calls and returns whatever the test needs it to. */
-const fakeVfs = (result: number = SQLITE_OK) => {
-  const calls: string[] = [];
-  return {
-    calls,
-    jRead: (_fileId: number, _pData: Uint8Array, _iOffset: number) => (calls.push('read'), result),
-    jWrite: (_fileId: number, _pData: Uint8Array, _iOffset: number) => (calls.push('write'), result),
-    jTruncate: (_fileId: number, _iSize: number) => (calls.push('truncate'), SQLITE_OK),
-    jSync: (_fileId: number, _flags: number) => (calls.push('sync'), SQLITE_OK),
-  };
-};
-
 describe('instrumentVfs', () => {
   beforeEach(() => {
     resetSqliteIoStats();
@@ -110,3 +98,15 @@ describe('instrumentVfs', () => {
     expect(getSqliteIoStats().writeBytes).toBe(512);
   });
 });
+
+/** A VFS that records its calls and returns whatever the test needs it to. */
+const fakeVfs = (result: number = SQLITE_OK) => {
+  const calls: string[] = [];
+  return {
+    calls,
+    jRead: (_fileId: number, _pData: Uint8Array, _iOffset: number) => (calls.push('read'), result),
+    jWrite: (_fileId: number, _pData: Uint8Array, _iOffset: number) => (calls.push('write'), result),
+    jTruncate: (_fileId: number, _iSize: number) => (calls.push('truncate'), SQLITE_OK),
+    jSync: (_fileId: number, _flags: number) => (calls.push('sync'), SQLITE_OK),
+  };
+};
