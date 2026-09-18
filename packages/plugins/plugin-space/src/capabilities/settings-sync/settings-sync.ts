@@ -12,12 +12,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { type Space } from '@dxos/client/echo';
 import { Annotation, Database, Obj, Ref } from '@dxos/echo';
 import { createKvsStore } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { resolveSettingsSpace } from '../../util/index.ts';
+import { resolveSettingsSpaceOrigin } from '../../util/index.ts';
 import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
 import { type Store } from './reconciler.ts';
 import { Sync } from './sync.ts';
@@ -56,6 +57,42 @@ const makeStore = (
   },
 });
 
+/** Name the settings space's own settings object. Only correct for a space created here. */
+const createSettings = (space: Space) =>
+  Effect.sync(() => {
+    const settings = space.db.add(AppSettings.make());
+    Obj.update(space.properties, (properties) => {
+      Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
+    });
+    return settings;
+  });
+
+/** Wait for the settings object the space names, which arrives with the rest of the space. */
+const awaitSettings = Effect.fnUntraced(function* (space: Space) {
+  const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation);
+  const ref = yield* Option.match(named, {
+    onSome: (ref) => Effect.succeed(ref),
+    // Checked again under the subscription, so a name landing between the two is not missed.
+    onNone: () =>
+      Effect.callback<Ref.Ref<AppSettings.AppSettings>>((resume) => {
+        let resumed = false;
+        const check = () => {
+          const found = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+            Option.getOrUndefined,
+          );
+          if (found && !resumed) {
+            resumed = true;
+            resume(Effect.succeed(found));
+          }
+        };
+        const unsubscribe = Obj.subscribe(space.properties, check);
+        check();
+        return Effect.sync(unsubscribe);
+      }),
+  });
+  return yield* Database.load(ref);
+});
+
 /**
  * Binds every settings surface the app already has — each plugin's settings atom, the enabled
  * plugin set, and the remote plugin install list — to the {@link AppSettings.AppSettings} object in
@@ -72,21 +109,12 @@ export default Capability.makeModule(
       return [];
     }
 
-    const space = yield* resolveSettingsSpace(client);
-    // Named at genesis; a settings space that predates the name is given one here.
-    let settings = yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
-      Option.match({
-        onSome: (ref) => Database.load(ref),
-        onNone: () =>
-          Effect.sync(() => {
-            const settings = space.db.add(AppSettings.make());
-            Obj.update(space.properties, (properties) => {
-              Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
-            });
-            return settings;
-          }),
-      }),
-    );
+    const { space, created } = yield* resolveSettingsSpaceOrigin(client);
+    // Named at genesis, so only a space created here can be without one. On every other path the
+    // name arrives with the space's contents, and creating a second object while waiting for it
+    // costs the account a decision: the two converge on one object, and the device that switches
+    // reseeds from it, overwriting what it had already published.
+    let settings = yield* created ? createSettings(space) : awaitSettings(space);
     // This device's pins. One per device, so the key names no device.
     const device = createKvsStore({
       key: 'org.dxos.app-toolkit.settings-scope',
