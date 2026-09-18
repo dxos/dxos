@@ -13,8 +13,7 @@ tasks:
       # The service worker breaks `page.route` interception.
       DX_PWA: 'false'
     options:
-      # Suites run one at a time (they share ports) while their dependencies hydrate in parallel.
-      mutex: e2e
+      mutex: e2e-ports
     deps:
       - test-utils:build
       - vite-plugin-icons:build

@@ -532,10 +532,7 @@ jobs:
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
 
-      # No bundle step: the e2e targets declare `bundle-e2e` as a dep, and composer's is local-cache
-      # only because rebuilding it beats downloading it. Step `id`s and outputs survive the block
-      # (Depot merges each unit's env and outputs back on join); were the shard output ever lost, the Test step's interpolation leaves
-      # `moon exec` with no targets, which exits 1 in a non-TTY rather than running nothing green.
+      # Depot merges each parallel unit's env and step outputs back on join, so `steps.shard` survives.
       - parallel:
           # Only this cell's browser — the other two engines' downloads are dead weight here.
           - name: Install Playwright
@@ -550,9 +547,8 @@ jobs:
           - name: Clean stale test results
             run: rm -rf test-results
 
-          # The pool list is computed, not globbed: `:e2e` would match composer-app too. composer-app is
-          # dropped in node because moon ignores MQL negation in `moon query tasks` as well as
-          # `moon exec --query`. Empty is fatal — a bad query would otherwise run nothing and report green.
+          # moon ignores MQL negation in `moon query tasks` and `moon exec --query`, so composer-app is
+          # filtered in node.
           - name: Select shard targets
             id: shard
             run: |
@@ -593,8 +589,7 @@ jobs:
   # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
   # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
   cli:
-    # Pushes/schedules to main and the Changesets "Version Packages" PR, so nothing publishes untested.
-    # `github.head_ref` catches that PR, whose `github.ref` is refs/pull/N/merge.
+    # The Changesets PR's `github.ref` is refs/pull/N/merge, so only `github.head_ref` matches it.
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
