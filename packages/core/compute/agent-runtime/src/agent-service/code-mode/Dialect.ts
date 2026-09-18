@@ -35,6 +35,7 @@ export type SandboxType = {
   readonly fields: readonly string[];
 };
 
+/** What a dialect is handed to build its bindings: the ECHO runtime, the skills' operations, and the turn's printer. */
 export type BindingsContext = {
   /**
    * Services the sandbox's code runs against: the database it reads and writes, and the operation
@@ -67,6 +68,7 @@ export interface Dialect {
   readonly bindings: (context: BindingsContext) => Record<string, unknown>;
 }
 
+/** What a dialect is handed to write its instructions: the operations and the types the model may name. */
 export type InstructionsContext = {
   readonly operations: readonly SandboxOperation[];
   readonly types: readonly SandboxType[];

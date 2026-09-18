@@ -18,6 +18,7 @@ export class EvaluationError extends Schema.TaggedError<EvaluationError>('Evalua
   message: Schema.String,
 }) {}
 
+/** One evaluation: the model's code, the names in scope while it runs, and the budget it may take. */
 export type EvaluateParams = {
   /** The body of an async function, as the dialect wrapped it. */
   readonly code: string;
@@ -46,6 +47,7 @@ export interface Sandbox {
   readonly evaluate: (params: EvaluateParams) => Effect.Effect<unknown, EvaluationError>;
 }
 
+/** The ambient {@link Sandbox}, so a deployment chooses the execution seam without touching the producer. */
 export class Service extends Context.Service<Service, Sandbox>()('@dxos/agent-runtime/Sandbox') {}
 
 /** `AsyncFunction` is not a global binding, so it is reached through an async function's prototype. */

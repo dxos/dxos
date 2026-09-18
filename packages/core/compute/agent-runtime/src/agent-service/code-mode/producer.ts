@@ -22,6 +22,7 @@ import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
 import { makeEvalToolkit } from './eval-tool.ts';
 import * as Sandbox from './Sandbox.ts';
 
+/** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
 export type CodeModeOptions = {
   /**
    * What the model writes and what it writes it against.

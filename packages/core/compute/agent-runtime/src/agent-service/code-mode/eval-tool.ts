@@ -24,6 +24,7 @@ export const EVAL_TOOL_NAME = 'eval';
 /** Characters of printed output returned from one eval call before it is truncated. */
 const DEFAULT_MAX_OUTPUT = 8_000;
 
+/** The one tool a code-mode turn carries: everything the model does, it does by writing code for this. */
 export const EvalTool = Tool.make(EVAL_TOOL_NAME, {
   description:
     'Runs code against the workspace and returns whatever that code printed. ' +
@@ -39,8 +40,10 @@ export const EvalTool = Tool.make(EVAL_TOOL_NAME, {
   failure: Schema.Never,
 });
 
+/** The toolkit shape, separate from the handler so callers can describe the turn without building one. */
 export const EvalToolkitDefinition = Toolkit.make(EvalTool);
 
+/** What binds a toolkit to a conversation: the dialect and sandbox to run in, and the turn's output budget. */
 export type EvalToolkitOptions = {
   readonly dialect: Dialect;
   readonly sandbox: Sandbox.Sandbox;
