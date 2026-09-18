@@ -91,7 +91,7 @@ const ServiceContextLive = Layer.mergeAll(
   HypercoreFactoryLayer({ hypercore: { valueEncoding, stats: true } }),
   HypercoreStoreLayer(),
   SpaceManagerLayer({ disableP2pReplication }),
-  EchoHostLayer({ peerIdProvider, getSpaceKeyByRootDocumentId, syncFeed, getSyncState, useSubduction }),
+  EchoHostLayer({ peerIdProvider, getSpaceKeyByRootDocumentId, syncFeed, useSubduction }),
   // ...identity, invitations, data-space layers
 ).pipe(Layer.provideMerge(sqliteLayer));
 ```

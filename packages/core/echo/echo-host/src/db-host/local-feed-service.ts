@@ -7,13 +7,14 @@ import * as Function from 'effect/Function';
 import * as EffectStream from 'effect/Stream';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
+import { type Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
@@ -24,23 +25,17 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   #feedStore: FeedStore;
   #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
-  #getSyncState?: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 
   'constructor'(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
     feedStore: FeedStore,
     options?: {
       syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
-      getSyncState?: (
-        ctx: Context,
-        request: FeedService.GetSyncStateRequest,
-      ) => Promise<FeedService.GetSyncStateResponse>;
     },
   ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
     this.#syncFeed = options?.syncFeed;
-    this.#getSyncState = options?.getSyncState;
   }
 
   ['FeedService.queryFeed'](request: FeedService.QueryFeedRequest): Effect.Effect<FeedService.FeedQueryResult, Error> {
@@ -61,7 +56,12 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   ['FeedService.subscribeFeed'](
     request: FeedService.QueryFeedRequest,
   ): EffectStream.Stream<FeedService.FeedQueryResult, Error> {
-    return this.#recomputeOnNewBlocks(() => this.#queryFeedImpl(request), feedQueryResultChanged);
+    return this.#recomputeOn(
+      this.#feedStore.onNewBlocks,
+      request.query.spaceId,
+      () => this.#queryFeedImpl(request),
+      feedQueryResultChanged,
+    );
   }
 
   async #queryFeedImpl(request: FeedService.QueryFeedRequest): Promise<FeedService.FeedQueryResult> {
@@ -164,24 +164,27 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     });
   }
 
-  /**
-   * `onNewBlocks` is unscoped (fires for any space's writes), so every active subscription
-   * recomputes on each signal regardless of relevance.
-   */
   ['FeedService.subscribeSyncState'](
     request: FeedService.GetSyncStateRequest,
   ): EffectStream.Stream<FeedService.GetSyncStateResponse, Error> {
-    return this.#recomputeOnNewBlocks(() => this.#getSyncStateImpl(request), syncStateResponseChanged);
+    return this.#recomputeOn(
+      this.#feedStore.onSyncStateChanged,
+      request.spaceId,
+      () => this.#getSyncStateImpl(request),
+      syncStateResponseChanged,
+    );
   }
 
   /**
    * Shared by every `subscribeX` RPC: pushes `compute()`'s result on subscribe, then again whenever
-   * {@link FeedStore.onNewBlocks} fires and `changed` says the recomputed value actually differs from
-   * the last one sent. Coalesced, not concurrent -- an `onNewBlocks` signal that arrives
+   * `event` fires for `spaceId` and `changed` says the recomputed value
+   * actually differs from the last one sent. Coalesced, not concurrent -- a signal that arrives
    * mid-recomputation only marks `dirty` rather than starting a second overlapping read, so a slow
    * recomputation can never finish after (and thus emit over) a faster, later one.
    */
-  #recomputeOnNewBlocks<T>(
+  #recomputeOn<T>(
+    event: Event<{ spaceId: string }>,
+    spaceId: string,
     compute: () => Promise<T>,
     changed: (before: T, after: T) => boolean,
   ): EffectStream.Stream<T, Error> {
@@ -212,22 +215,29 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         }
       };
       void recompute();
-      this.#feedStore.onNewBlocks.on(ctx, () => void recompute());
+      event.on(ctx, (signal) => {
+        if (signal.spaceId === spaceId) {
+          void recompute();
+        }
+      });
       return Effect.promise(() => ctx.dispose());
     });
   }
 
   #getSyncStateImpl(request: FeedService.GetSyncStateRequest): Promise<FeedService.GetSyncStateResponse> {
-    const ctx = Context.default();
-    if (this.#getSyncState) {
-      return this.#getSyncState(ctx, request);
-    }
-
-    const spaceId = request.spaceId as SpaceId;
+    const { spaceId } = request;
+    assertArgument(SpaceId.isValid(spaceId), 'request.spaceId', 'expected a space id');
     const namespaces =
       request.namespaces != null && request.namespaces.length > 0
         ? request.namespaces
         : Object.values(FeedProtocol.WellKnownNamespaces);
+    for (const feedNamespace of namespaces) {
+      assertArgument(
+        FeedProtocol.isWellKnownNamespace(feedNamespace),
+        'request.namespaces',
+        'expected well-known feed namespaces',
+      );
+    }
 
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen({ self: this }, function* () {
@@ -243,9 +253,10 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
                 spaceId,
                 feedNamespace,
               });
+              const { blocksToPull } = yield* this.#feedStore.getSyncState({ spaceId, feedNamespace });
               return {
                 namespace: feedNamespace,
-                blocksToPull: '0',
+                blocksToPull: String(blocksToPull),
                 blocksToPush: String(blocksToPush),
                 totalBlocks: String(totalBlocks),
               };
@@ -259,8 +270,8 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
 }
 
 /**
- * Assumes both responses enumerate namespaces in the same order -- true for both `#getSyncState`
- * paths, which always iterate the same fixed `namespaces` list for a given request.
+ * Assumes both responses enumerate namespaces in the same order -- true because `#getSyncStateImpl`
+ * always iterates the same fixed `namespaces` list for a given request.
  */
 const syncStateResponseChanged = (
   before: FeedService.GetSyncStateResponse,
