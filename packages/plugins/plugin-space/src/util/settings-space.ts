@@ -31,6 +31,18 @@ import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space.ts
  * {@link runSettingsSpaceHealing} converges the profile rather than this guarding harder.
  */
 export const resolveSettingsSpace = Effect.fnUntraced(function* (client: Client) {
+  const { space } = yield* resolveSettingsSpaceOrigin(client);
+  return space;
+});
+
+/**
+ * {@link resolveSettingsSpace}, also reporting whether the space was created here.
+ *
+ * A caller that seeds the space's contents needs the distinction: a space this device created is
+ * empty for good, while one that arrived by replication carries contents that have not landed yet,
+ * and treating those as absent seeds a second copy of them.
+ */
+export const resolveSettingsSpaceOrigin = Effect.fnUntraced(function* (client: Client) {
   // The space list replays on subscribe, so the current state is checked with no gap in which an
   // arriving settings space could be missed.
   const existing = yield* Effect.callback<Space | undefined>((resume) => {
@@ -45,11 +57,13 @@ export const resolveSettingsSpace = Effect.fnUntraced(function* (client: Client)
     return Effect.sync(() => sub.unsubscribe());
   });
   if (!existing) {
-    return yield* ensureSettingsSpace(client);
+    const before = AppSpace.getSettingsSpace(client);
+    const space = yield* ensureSettingsSpace(client);
+    return { space, created: space !== before };
   }
 
   yield* Effect.promise(() => existing.waitUntilReady());
-  return existing;
+  return { space: existing, created: false };
 });
 
 /**
