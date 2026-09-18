@@ -38,14 +38,26 @@ export const currentNavigation = Effect.fnUntraced(function* () {
  */
 export const navigate = Effect.fnUntraced(function* (
   next: Navigation.Navigation,
-  options?: { method?: 'push' | 'replace'; navigatedIds?: Navigation.PlankIds },
+  options?: {
+    method?: 'push' | 'replace';
+    navigatedIds?: Navigation.PlankIds;
+    /** An id already known to take this write's scroll/focus intent; see {@link projectUrl}. */
+    scrollIntoView?: string;
+    /** Fold the plank displaced from attention into this write's scroll/focus intent. */
+    attendDisplaced?: boolean;
+  },
 ) {
   if (!next.workspace) {
     log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
     return undefined;
   }
   return Navigation.push(next, options?.method)
-    ? yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds })
+    ? yield* projectUrl(undefined, {
+        attend: false,
+        navigatedIds: options?.navigatedIds,
+        scrollIntoView: options?.scrollIntoView,
+        attendDisplaced: options?.attendDisplaced,
+      })
     : undefined;
 });
 
@@ -96,7 +108,15 @@ export const navigateDeck = Effect.fnUntraced(function* (params: {
   workspace: string;
   active: readonly string[];
   companionPlanks?: readonly string[];
+  /** An id already known to take this write's scroll/focus intent; see {@link navigate}. */
+  scrollIntoView?: string;
+  /** Fold the plank displaced from attention into this write's scroll/focus intent. */
+  attendDisplaced?: boolean;
 }) {
   const { navigation, navigatedIds } = yield* deckNavigation(params);
-  return yield* navigate(navigation, { navigatedIds });
+  return yield* navigate(navigation, {
+    navigatedIds,
+    scrollIntoView: params.scrollIntoView,
+    attendDisplaced: params.attendDisplaced,
+  });
 });

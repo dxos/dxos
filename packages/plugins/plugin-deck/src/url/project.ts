@@ -68,6 +68,10 @@ export type ProjectOptions = {
   attend?: boolean;
   /** Node ids an in-app navigation already holds; see {@link Navigation.PlankIds}. */
   navigatedIds?: Navigation.PlankIds;
+  /** An id already known to take this write's scroll/focus intent; see {@link applyActive}. */
+  scrollIntoView?: string;
+  /** Fold the plank displaced from attention into this write's scroll/focus intent. */
+  attendDisplaced?: boolean;
 };
 
 /**
@@ -177,7 +181,12 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
   yield* switchWorkspace(workspacePath);
 
-  yield* applyActive(initialPlanks(pairs, idsBySegment()));
+  // An in-app navigation already holds its ids, so this first pass is the write that mounts its planks
+  // and the caller's intent has to ride on it; the resolved pass below only lands the chain end.
+  yield* applyActive(initialPlanks(pairs, idsBySegment()), {
+    scrollIntoView: options?.scrollIntoView,
+    attendDisplaced: options?.attendDisplaced,
+  });
 
   const loaders = navigationTargetLoaders;
   const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
@@ -237,7 +246,9 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     });
   });
 
-  const displaced = yield* applyActive(planks);
+  // An external URL's planks resolve only here, so the chain end lands with the write that mounts them.
+  const chainEnd = attendChainEnd ? (companionAnchorId ?? planks[planks.length - 1]?.id) : undefined;
+  const displaced = yield* applyActive(planks, { scrollIntoView: chainEnd });
 
   yield* applyCompanion(companion);
 
@@ -245,7 +256,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     return displaced;
   }
 
-  return companionAnchorId ?? planks[planks.length - 1]?.id;
+  return chainEnd;
 });
 
 /**

@@ -16,14 +16,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperati
     Effect.fnUntraced(function* (input) {
       const deck = yield* DeckCapabilities.getDeck();
       const { workspace } = yield* currentNavigation();
-      const displaced = yield* navigateDeck({
+      // The plank attention falls to takes its focus intent in the same write, so it never paints unattended.
+      yield* navigateDeck({
         workspace,
         active: input.subject as string[],
         companionPlanks: deck.companionPlanks,
+        attendDisplaced: true,
       });
-      if (displaced) {
-        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: displaced });
-      }
     }),
   ),
 );

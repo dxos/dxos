@@ -37,6 +37,18 @@ import {
   updateActiveDeck,
 } from '../util/index.ts';
 
+/**
+ * The plank this open's write lands its scroll/focus intent on: the first newly opened plank, or
+ * `undefined` when nothing new opens or the caller declined it (`scrollIntoView: false`).
+ */
+export const resolveOpenScrollTarget = ({
+  newlyOpen,
+  scrollIntoView,
+}: {
+  newlyOpen: readonly string[];
+  scrollIntoView: boolean | undefined;
+}): string | undefined => (scrollIntoView !== false ? newlyOpen[0] : undefined);
+
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -195,21 +207,24 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
-        yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });
+        // A newly opened plank takes its focus intent in the write that mounts it, so its first painted
+        // frame is already attended.
+        const scrollIntoView = resolveOpenScrollTarget({
+          newlyOpen: deckUpdates.active.filter((id) => !previouslyOpenIds.has(id)),
+          scrollIntoView: input.scrollIntoView,
+        });
+        yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks, scrollIntoView });
       }
 
-      // Schedule side-effects for the newly opened items: scroll into view, expose in
-      // the navigation sidebar, and emit observability events.
-      // When nothing is newly opened (subject was already visible), the fallback
-      // `input.subject[0]` still triggers scroll and expose so the user is taken there.
+      // Schedule side-effects for the newly opened items: expose in the navigation sidebar and emit
+      // observability events. A subject that was already open changes no URL, so no write carried its
+      // scroll; the followup still takes the user there.
       {
         const deck = yield* DeckCapabilities.getDeck();
         const newlyOpen = deck.active.filter((i: string) => !previouslyOpenIds.has(i));
 
-        if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, {
-            subject: newlyOpen[0] ?? input.subject[0],
-          });
+        if (input.scrollIntoView !== false && newlyOpen.length === 0 && input.subject[0]) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.subject[0] });
         }
 
         if (newlyOpen[0] ?? input.subject[0]) {
