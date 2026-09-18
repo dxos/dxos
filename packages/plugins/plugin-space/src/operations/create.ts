@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -100,7 +101,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         return yield* Effect.fail(applyError);
       }
 
-      return { id: space.id, subject: [space.id], space };
+      return { id: space.id, subject: [GraphPath.getSpaceHomePath(space.id)], space };
     }),
   ),
 );

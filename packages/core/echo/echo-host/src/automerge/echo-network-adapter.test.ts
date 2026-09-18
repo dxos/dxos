@@ -85,6 +85,47 @@ describe('EchoNetworkAdapter', () => {
     expect(disconnectedPeer.peerId).to.eq(ANOTHER_PEER_ID);
   });
 
+  test('transport reset re-announces the peer without closing the connection', async () => {
+    const controller = createReplicatorController();
+    const adapter = await createConnectedAdapter(controller.replicator);
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const entry = (adapter as any)._connections.get(ANOTHER_PEER_ID);
+    invariant(entry);
+
+    // The mark is how the collection synchronizer tells a rebound transport from a real rejoin.
+    const events: string[] = [];
+    let markedThroughout = true;
+    adapter.on('peer-disconnected', ({ peerId }) => {
+      events.push('peer-disconnected');
+      markedThroughout &&= adapter.isTransportResetting(peerId);
+    });
+    adapter.on('peer-candidate', ({ peerId }) => {
+      events.push('peer-candidate');
+      markedThroughout &&= adapter.isTransportResetting(peerId);
+    });
+
+    expect((adapter as any)._onConnectionTransportReset(entry.connection)).to.be.true;
+    expect(events).to.deep.eq(['peer-disconnected', 'peer-candidate']);
+    expect(markedThroughout).to.be.true;
+
+    // The connection itself is untouched — same entry, still open, and no longer marked.
+    expect((adapter as any)._connections.get(ANOTHER_PEER_ID)).to.eq(entry);
+    expect(entry.isOpen).to.be.true;
+    expect(adapter.isTransportResetting(ANOTHER_PEER_ID)).to.be.false;
+  });
+
+  test('transport reset reports failure for a peer with no open connection', async () => {
+    const controller = createReplicatorController();
+    const adapter = await createConnectedAdapter(controller.replicator);
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const { connection } = (adapter as any)._connections.get(ANOTHER_PEER_ID);
+
+    await adapter.removeReplicator(controller.replicator);
+
+    // Caller falls back to a full restart rather than silently losing the recovery.
+    expect((adapter as any)._onConnectionTransportReset(connection)).to.be.false;
+  });
+
   test('message sending is queued', async () => {
     let sentTotal = 0;
     let sendInProgress = false;

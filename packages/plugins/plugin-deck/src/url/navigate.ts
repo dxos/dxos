@@ -75,10 +75,7 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   for (const nodeId of active) {
     const represented = PathResolution.representNode(builder, nodeId);
     if (Option.isNone(represented)) {
-      log.error('node has no URL binding, so it cannot be opened', {
-        nodeId,
-        extension: builder.getNodeExtensionId(nodeId),
-      });
+      log.error('node has no URL binding, so it cannot be opened', { nodeId });
       continue;
     }
     pairs.push(represented.value);
@@ -96,7 +93,8 @@ export const navigateDeck = Effect.fnUntraced(function* (params: {
   workspace: string;
   active: readonly string[];
   companionPlanks?: readonly string[];
+  method?: 'push' | 'replace';
 }) {
   const { navigation, navigatedIds } = yield* deckNavigation(params);
-  return yield* navigate(navigation, { navigatedIds });
+  return yield* navigate(navigation, { method: params.method, navigatedIds });
 });

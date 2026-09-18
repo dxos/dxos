@@ -22,6 +22,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
+    'org.dxos.plugin.debug.surface.page',
     'org.dxos.plugin.debug.surface.stats',
     'org.dxos.role.article',
     'org.dxos.role.deckCompanion.spaceObjects',
@@ -38,6 +39,11 @@ export const DebugSettings = AppCapability.settings(() => import('./settings.ts'
   provides: [Debug.DebugCapabilities.Settings],
   environments: ['node'],
 });
+export const GraphRetention = Capability.lazyModule(
+  'GraphRetention',
+  { provides: [AppCapabilities.AppGraphRetention] },
+  () => import('./graph-retention.ts'),
+);
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',
   {

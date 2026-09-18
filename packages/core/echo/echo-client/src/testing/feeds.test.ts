@@ -451,7 +451,7 @@ describe('feeds', () => {
       sub();
     });
 
-    test('synchronous space query still fires an empty initial event immediately', async ({ expect }) => {
+    test('an empty space query fires its initial event once the index has answered', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
 
@@ -459,9 +459,9 @@ describe('feeds', () => {
       const observed: number[] = [];
       const sub = query.subscribe(() => observed.push(query.results.length), { fire: true });
 
-      // The working set serves space queries synchronously, so the initial event fires immediately
-      // even when there are no results.
-      expect(observed).toEqual([0]);
+      // Nothing is loaded and the index has not answered, so an empty snapshot would be a guess.
+      expect(observed).toEqual([]);
+      await expect.poll(() => observed).toEqual([0]);
       sub();
     });
   });

@@ -52,7 +52,6 @@ type PluginState
   fields:
     viewersByObject: Record<ObjectId, Map<PublicKey, ObjectViewerProps>>
     viewersByIdentity: Map<PublicKey, Set<ObjectId>>
-    awaiting: string | undefined        # DXN of an object being waited on
     spaceNames: Record<string, string>  # cached names for closed/loading spaces
     sdkMigrationRunning: Record<string, boolean>
     navigableCollections: boolean
