@@ -1090,5 +1090,12 @@ export const TestStatusPickerBuildsOnFirstClick: Story = {
     await waitFor(async () => expect(options()).toHaveLength(Task.StatusOptions.length), { timeout: 5_000 });
     const checked = options().find((option) => option.getAttribute('aria-checked') === 'true');
     await expect(checked?.textContent).toEqual(nextLabel);
+
+    // The row's other pickers defer the same way, and the priority one is the picker whose absence
+    // from the tree row changed when the row commits — so it is opened here rather than assumed.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => expect(options()).toHaveLength(0), { timeout: 5_000 });
+    await userEvent.click(first.querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!);
+    await waitFor(async () => expect(options()).toHaveLength(Task.PriorityOptions.length + 1), { timeout: 5_000 });
   },
 };
