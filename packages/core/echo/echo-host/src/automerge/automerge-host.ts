@@ -361,6 +361,8 @@ export class AutomergeHost extends Resource {
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       onConnectionOpen: () => this._sharePolicyChangedTask?.schedule(),
+      // Re-announcing under Subduction binds a second connection to the peer, stranding the rounds pending on the first.
+      onConnectionAuthScopeChanged: useSubduction ? () => this._sharePolicyChangedTask?.schedule() : 'reannounce-peer',
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
