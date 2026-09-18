@@ -24,8 +24,9 @@ import { range } from '@dxos/util';
 
 import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing/index.ts';
 import { AutomergeHost } from './automerge-host.ts';
+import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
-import { SqliteStorageAdapter, deleteSubductionRemoteHeads } from './sqlite-storage-adapter.ts';
+import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
 // (limited concurrency, signal-server timing). Re-enable once the suite

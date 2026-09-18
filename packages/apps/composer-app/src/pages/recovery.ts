@@ -14,7 +14,6 @@ import {
   bootRecoveryClient,
   compactDocumentsInRecovery,
   createRecoveryUi,
-  deleteBootedRemoteHeads,
   destroyRecoveryClient,
   downloadProfileArchiveExport,
   downloadRecoveryLogs,
@@ -25,6 +24,7 @@ import {
   importSqliteInRecovery,
   installDxosGlobals,
   isRecoveryClientBooted,
+  repairRemoteHeads,
   resetComposerStorage,
   runRecoveryDiagnostics,
   runSqlStorageDiagnostics,
@@ -132,12 +132,14 @@ const recoveryHelpers: RecoveryHelpers = {
   }),
   inspectOpfsPool: OpfsPool.listFiles,
   deleteRemoteHeads: async () => {
-    if (!isRecoveryClientBooted()) {
-      await recoveryHelpers.startClient();
+    if (isRecoveryClientBooted()) {
+      print('Stopping recovery client before the repair…');
+      await destroyRecoveryClient();
+      mountDevtoolsHooks({});
     }
-    print('Deleting sync heads stored for remote peers (a large profile can take a few minutes)…');
+    print('Deleting sync heads stored for remote peers…');
     const started = performance.now();
-    const { deleted } = await deleteBootedRemoteHeads((progress) =>
+    const { deleted } = await repairRemoteHeads((progress) =>
       print(
         `  ${progress.deleted.toLocaleString()} / ${progress.total.toLocaleString()} ` +
           `(${((performance.now() - started) / 1000).toFixed(0)} s)`,
@@ -149,6 +151,7 @@ const recoveryHelpers: RecoveryHelpers = {
         ? `Deleted ${deleted.toLocaleString()} record(s) in ${elapsedMs} ms — Boot to reopen Composer.`
         : 'No stored sync heads — nothing to delete.',
     );
+    attachRecoveryHelpers(recoveryHelpers);
     return { deleted, elapsedMs };
   },
   compactDocuments: async (options) => {
