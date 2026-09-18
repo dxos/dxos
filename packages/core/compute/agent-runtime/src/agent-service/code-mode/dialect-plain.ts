@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
@@ -10,6 +11,19 @@ import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { type BindingsContext, type Dialect, NO_OPERATIONS, type Operation, renderOperation } from './Dialect.ts';
+
+/**
+ * A typename the registry has no object type for — an expected failure of the model's code, so it
+ * belongs in the effect's error channel rather than being a defect. `RuntimeProvider.runPromise`
+ * surfaces it to the sandbox as a rejected promise either way.
+ */
+export class UnknownObjectTypeError extends Schema.TaggedError<UnknownObjectTypeError>('UnknownObjectTypeError')(
+  'UnknownObjectTypeError',
+  {
+    typename: Schema.String,
+    message: Schema.String,
+  },
+) {}
 
 /**
  * Plain async JavaScript over a small facade: `await query(...)`, `update(obj, mutator)`,
@@ -46,7 +60,9 @@ export const PlainDialect: Dialect = {
               .list()
               .find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
             if (type === undefined || !Type.isType(type) || !Type.isObject(type)) {
-              throw new Error(`Unknown object type: ${typename}`);
+              return yield* Effect.fail(
+                new UnknownObjectTypeError({ typename, message: `Unknown object type: ${typename}` }),
+              );
             }
             return Obj.make(type, props);
           }),
