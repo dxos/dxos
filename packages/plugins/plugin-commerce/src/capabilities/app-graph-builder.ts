@@ -31,7 +31,6 @@ export default Capability.makeModule(
           key: 'commerce',
           kind: 'item',
           path: [],
-          depth: { min: 1 },
           accepts: ([section]) => section === getProvidersSectionId(),
         },
         match: AppNodeMatcher.whenSpace,

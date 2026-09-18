@@ -78,7 +78,8 @@ export type UrlBinding = {
   segment?: string;
   /**
    * How many segments an item's id spans after `path`, joined by the grammar's tail separator: exactly
-   * `n`, or at least `min`. Defaults to exactly one; ignored with `resolve`.
+   * `n`, or at least `min`. Defaults to any number; a binding sharing its path with a shallower one
+   * declares the depth that sets it apart. Ignored with `resolve`.
    */
   depth?: number | { min: number };
   /** Narrows the tails an item claims, where its shape alone would overlap another binding's. */
@@ -139,7 +140,7 @@ export type PathResolveParams = {
 export type PathResolver = (params: PathResolveParams) => Effect.Effect<string | null>;
 
 /** Whether a binding's `depth` admits a tail of `length` segments. */
-const fitsDepth = (length: number, depth: UrlBinding['depth'] = 1): boolean =>
+const fitsDepth = (length: number, depth: UrlBinding['depth'] = { min: 1 }): boolean =>
   typeof depth === 'number' ? length === depth : length >= depth.min;
 
 const startsWith = (segments: readonly string[], prefix: readonly string[]): boolean =>

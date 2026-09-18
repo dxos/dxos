@@ -105,7 +105,7 @@ export default Capability.makeModule(
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
       AppGraphBuilder.createExtension({
         id: 'codeProjectListing',
-        url: { key: 'code', kind: 'item', path: [getCodeProjectsSectionId()], depth: { min: 1 } },
+        url: { key: 'code', kind: 'item', path: [getCodeProjectsSectionId()] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();
