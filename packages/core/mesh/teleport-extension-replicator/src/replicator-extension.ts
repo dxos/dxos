@@ -29,6 +29,8 @@ import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
+import { toNodeDuplex } from './hypercore-bridge.ts';
+
 type ReplicatorService = BufService<typeof ReplicatorServiceDesc>;
 
 /**
@@ -256,9 +258,11 @@ export class ReplicatorExtension implements TeleportExtension {
     invariant(!this._streams.has(info.feedKey), `Replication already in progress for feed: ${info.feedKey}`);
 
     const feed = this._feeds.get(info.feedKey) ?? failUndefined();
-    const networkStream = await this._extensionContext!.createStream(streamTag, {
-      contentType: 'application/x-hypercore',
-    });
+    const networkStream = toNodeDuplex(
+      await this._extensionContext!.createStream(streamTag, {
+        contentType: 'application/x-hypercore',
+      }),
+    );
     let replicationStreamErrors = 0;
 
     // https://github.com/holepunchto/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
