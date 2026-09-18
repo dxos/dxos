@@ -79,3 +79,31 @@ export const isEncodedUint8Array = (value: unknown): value is EncodedUint8Array 
  */
 export const decodeUint8ArrayFromJson = (encoded: EncodedUint8Array): Uint8Array =>
   bufferToArray(Buffer.from(encoded['/'].bytes, 'base64'));
+
+/**
+ * Concatenate byte arrays into a single newly-allocated one.
+ * Replaces `Buffer.concat` in code that must not pull the `buffer` polyfill into a browser bundle.
+ * Takes an iterable as well as varargs, since spreading an unbounded array would hit the argument limit.
+ */
+export const concatUint8Arrays = (...arrays: [Iterable<Uint8Array>] | Uint8Array[]): Uint8Array => {
+  // `ArrayBuffer.isView`, not `instanceof`: a typed array from another realm (a worker, `node:vm`,
+  // a jsdom test environment) is not an `instanceof Uint8Array` and would be spread into numbers.
+  const parts: Uint8Array[] =
+    arrays.length === 1 && !ArrayBuffer.isView(arrays[0])
+      ? [...(arrays[0] as Iterable<Uint8Array>)]
+      : (arrays as Uint8Array[]);
+
+  let total = 0;
+  for (const array of parts) {
+    total += array.length;
+  }
+
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const array of parts) {
+    result.set(array, offset);
+    offset += array.length;
+  }
+
+  return result;
+};

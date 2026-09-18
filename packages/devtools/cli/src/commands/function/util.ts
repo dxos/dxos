@@ -10,6 +10,8 @@ import { Ansi, Doc, FormBuilder } from '@dxos/cli-util';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 
+import { CliError } from '../../util/errors.ts';
+
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
 
 /**
@@ -99,7 +101,7 @@ export const selectDeployedFunction = Effect.fn(function* (fns: Operation.Persis
   });
 
   if (importableFunctions.length === 0) {
-    return yield* Effect.fail(new Error('No functions available to import (all are up-to-date)'));
+    return yield* Effect.fail(new CliError({ message: 'No functions available to import (all are up-to-date)' }));
   }
 
   const selected = yield* Prompt.Select({

@@ -17,6 +17,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Obj, Ref, Feed as Feed$ } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
+import { RoutineCommandError } from '../../errors.ts';
 import { Enabled, Feed, Input, TriggerId } from '../options.ts';
 import { printTrigger, promptForSchemaInput, selectFeed, selectFunction, selectTrigger } from '../util.ts';
 
@@ -40,7 +41,7 @@ export const feed = Command.make(
       const dxn = EID.make({ entityId: triggerId as EntityId });
       const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
       if (trigger.spec?.kind !== 'feed') {
-        return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
+        return yield* Effect.fail(new RoutineCommandError({ message: `Invalid trigger type: ${trigger.spec?.kind}` }));
       }
 
       const currentFn = yield* updateFunction(trigger, options.functionId);
@@ -91,7 +92,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
-      return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
+      return yield* Effect.fail(new RoutineCommandError({ message: `Function not found: ${functionId}` }));
     }
     Obj.update(trigger, (trigger) => {
       trigger.runnable = Ref.make(foundFn);
@@ -101,7 +102,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
 
   if (!currentFn) {
     const runnableId = (trigger.runnable ? trigger.runnable.uri.toString() : undefined) ?? 'unknown';
-    return yield* Effect.fail(new Error(`Invalid reference for ${runnableId}`));
+    return yield* Effect.fail(new RoutineCommandError({ message: `Invalid reference for ${runnableId}` }));
   }
 
   return currentFn;

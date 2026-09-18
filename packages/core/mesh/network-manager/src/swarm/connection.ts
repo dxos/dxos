@@ -174,13 +174,24 @@ export class Connection {
       this.errors.raise(err);
     });
 
-    // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
-    this._protocol.stream.on('close', () => {
-      log('protocol stream closed');
+    // Splits the two Node stream events this replaced. `error` tore the connection down; `close`
+    // could not fire before the stream was destroyed, so it only ever confirmed a teardown already
+    // finished. The web-stream `closed` fires as soon as the muxer disposes, so acting on a clean
+    // end here would start a second teardown racing the one under way.
+    this._protocol.closed.on((err) => {
+      log('protocol stream closed', { err });
       this._protocolClosed.wake();
-      this.close({ error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
-        this.errors.raise(err),
-      );
+      // Scheduled on the connection's own context so that a teardown already under way — which
+      // disposes that context first — cancels this one instead of racing it. The Node `close` event
+      // this replaced could not fire before the stream was destroyed and so always arrived after
+      // teardown; the web-stream `closed` fires as soon as the muxer disposes.
+      scheduleTask(this._ctx, async () => {
+        // Caught here rather than left to the context: `close()` disposes it, and `Context.raise` is
+        // a silent no-op on a disposed context, so a later throw would vanish.
+        await this.close({ error: err ?? new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
+          this.errors.raise(err),
+        );
+      });
     });
 
     scheduleTask(

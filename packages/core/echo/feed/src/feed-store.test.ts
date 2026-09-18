@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Result from 'effect/Result';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -178,6 +179,72 @@ describe('Feed V2', () => {
 
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0].feedId).toBe(feedId);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('append notifies on committed blocks even when the cursor token write fails', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      // The cursor token is written after the blocks commit, so its failure must not silence them.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DROP TABLE cursor_tokens`;
+      const notified: string[] = [];
+      feed.onNewBlocks.on((event) => void notified.push(event.spaceId));
+
+      const exit = yield* Effect.exit(
+        feed.append({
+          spaceId,
+          feedNamespace: WellKnownNamespaces.data,
+          blocks: [
+            {
+              feedId,
+              actorId: ALICE,
+              sequence: 0,
+              prevActorId: null,
+              prevSequence: null,
+              position: null,
+              timestamp: 0,
+              data: new Uint8Array([1]),
+            },
+          ],
+        }),
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(notified).toEqual([spaceId]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('assigning a position announces a block change, not only a sync state change', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const [block] = yield* feed.appendLocal([
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+      ]);
+      const notified: string[] = [];
+      feed.onNewBlocks.on((event) => void notified.push(event.spaceId));
+
+      yield* feed.setPosition({
+        spaceId,
+        blocks: [
+          {
+            feedId,
+            actorId: block.actorId,
+            sequence: block.sequence,
+            position: 0,
+            feedNamespace: WellKnownNamespaces.data,
+          },
+        ],
+      });
+
+      // A feed subscription serves the position, so a push that assigns one has to wake it.
+      expect(notified).toEqual([spaceId]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -836,178 +903,48 @@ describe('FeedStore server token', () => {
         feedNamespace: WellKnownNamespaces.data,
         lastPulledPosition: 2,
         serverToken: 'old',
+        blocksToPull: 5,
       });
+
+      const changed: string[] = [];
+      const blocksChanged: string[] = [];
+      feed.onSyncStateChanged.on((event) => void changed.push(event.spaceId));
+      feed.onNewBlocks.on((event) => void blocksChanged.push(event.spaceId));
 
       yield* feed.resetSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, serverToken: 'new' });
 
+      expect(changed).toEqual([spaceId]);
+      // Stripping positions changes what a feed subscription serves, not just the sync state.
+      expect(blocksChanged).toEqual([spaceId]);
       expect(yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: 'new',
+        // The estimate belonged to the server whose positions were just discarded.
+        blocksToPull: 0,
       });
       const { blocks } = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
       expect(blocks.map((block) => block.position)).toEqual([null, null, null]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('a position authority reports its high-water mark, a replica does not', () =>
+  it.effect('the backlog estimate survives a restart', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = EntityId.random();
-      const authority = new FeedStore({ localActorId: ALICE, assignPositions: true });
-      yield* authority.migrate();
-
-      const empty = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
-      expect(empty.maxPosition).toBe(-1);
-
-      yield* seed(authority, spaceId, feedId, 3);
-      const caughtUp = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 2 });
-      expect(caughtUp.blocks).toHaveLength(0);
-      expect(caughtUp.maxPosition).toBe(2);
-
-      // Same database, so the replica sees the same rows; only the role differs.
-      const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
-      const fromReplica = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
-      expect(fromReplica.blocks).toHaveLength(3);
-      expect(fromReplica.maxPosition).toBeUndefined();
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  // The high-water mark says nothing once the authority has been written past a client's cursor
-  // again, so the response also names the block it holds there.
-  it.effect('a position authority names the block at the requested position', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const feedId = EntityId.random();
-      const authority = new FeedStore({ localActorId: ALICE, assignPositions: true });
-      yield* authority.migrate();
-      yield* seed(authority, spaceId, feedId, 3);
-
-      const atOne = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 1 });
-      expect(atOne.cursorBlock).toEqual({ feedId, actorId: ALICE, sequence: 1 });
-      expect(atOne.blocks.map((block) => block.position)).toEqual([2]);
-
-      // Nothing at 5: a client with its cursor there is caching a position this store never had.
-      const beyond = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 5 });
-      expect(beyond.cursorBlock).toBeNull();
-
-      // Before the first pull there is no cursor to check.
-      const fromStart = yield* authority.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: -1 });
-      expect(fromStart.cursorBlock).toBeUndefined();
-
-      const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
-      const fromReplica = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 1 });
-      expect(fromReplica.cursorBlock).toBeUndefined();
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  // A position only ever reaches a replica from its authority, so when the authority hands out a
-  // position the replica already gave another block, it is the replica's copy that is stale.
-  it.effect('a replica adopts the positions it is handed and clears whatever else held them', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const feedId = EntityId.random();
-      const replica = new FeedStore({ localActorId: ALICE, assignPositions: false });
-      yield* replica.migrate();
-
-      const pulled = yield* replica.append({
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      yield* feed.setSyncState({
         spaceId,
         feedNamespace: WellKnownNamespaces.data,
-        blocks: [replicatedBlock(feedId, 'bob', 0, 0), replicatedBlock(feedId, 'bob', 1, 1)],
-      });
-      expect(pulled.displaced).toBe(0);
-
-      // The authority now places another block at 1 and bob's second block at 5.
-      const reissued = yield* replica.append({
-        spaceId,
-        feedNamespace: WellKnownNamespaces.data,
-        blocks: [replicatedBlock(feedId, 'carol', 0, 1), replicatedBlock(feedId, 'bob', 1, 5)],
-      });
-      expect(reissued.displaced).toBe(1);
-      // Carol's block had already cleared bob's second block out of 1 when its new position arrived,
-      // so the batch reports one displacement rather than a move.
-      expect(reissued.moved).toBe(0);
-
-      const { blocks } = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
-      expect(blocks.map((block) => [block.actorId, block.sequence, block.position])).toEqual([
-        ['bob', 0, 0],
-        ['carol', 0, 1],
-        ['bob', 1, 5],
-      ]);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  // A re-issued position that lands in a slot nobody holds displaces nothing, so the move of the
-  // block itself is the only sign the authority's ordering changed.
-  it.effect('a replica counts a block handed a new position as moved even into an empty slot', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const feedId = EntityId.random();
-      const replica = new FeedStore({ localActorId: ALICE, assignPositions: false });
-      yield* replica.migrate();
-
-      yield* replica.append({
-        spaceId,
-        feedNamespace: WellKnownNamespaces.data,
-        blocks: [replicatedBlock(feedId, 'bob', 0, 0), replicatedBlock(feedId, 'bob', 1, 1)],
+        lastPulledPosition: 1,
+        blocksToPull: 7,
       });
 
-      const moved = yield* replica.append({
-        spaceId,
-        feedNamespace: WellKnownNamespaces.data,
-        blocks: [replicatedBlock(feedId, 'bob', 1, 7)],
-      });
-      expect(moved).toMatchObject({ displaced: 0, moved: 1 });
+      // A second store over the same database stands in for a restart: the estimate is a row, not
+      // process state, so a cold start no longer reports a drained namespace.
+      const restarted = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      const syncState = yield* restarted.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data });
 
-      // Handing out the position a block already holds is not a move.
-      const unchanged = yield* replica.append({
-        spaceId,
-        feedNamespace: WellKnownNamespaces.data,
-        blocks: [replicatedBlock(feedId, 'bob', 1, 7)],
-      });
-      expect(unchanged).toMatchObject({ displaced: 0, moved: 0 });
-
-      const { blocks } = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
-      expect(blocks.map((block) => [block.actorId, block.sequence, block.position])).toEqual([
-        ['bob', 0, 0],
-        ['bob', 1, 7],
-      ]);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('setPosition takes the authority over a stale local ordering', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const feedId = EntityId.random();
-      const replica = new FeedStore({ localActorId: ALICE, assignPositions: false });
-      yield* replica.migrate();
-
-      yield* replica.append({
-        spaceId,
-        feedNamespace: WellKnownNamespaces.data,
-        blocks: [replicatedBlock(feedId, 'bob', 0, 0), replicatedBlock(feedId, 'bob', 1, 1)],
-      });
-      // Sequences are per feed, so alice's block continues after bob's.
-      const [aliceBlock] = yield* seed(replica, spaceId, feedId, 1);
-      expect(aliceBlock.sequence).toBe(2);
-
-      // The authority answers a push of alice's block with 1, and moves bob's second block to 2.
-      const { displaced, moved } = yield* replica.setPosition({
-        spaceId,
-        blocks: [
-          { feedId, feedNamespace: WellKnownNamespaces.data, actorId: ALICE, sequence: 2, position: 1 },
-          { feedId, feedNamespace: WellKnownNamespaces.data, actorId: 'bob', sequence: 1, position: 2 },
-        ],
-      });
-      expect(displaced).toBe(1);
-      // Alice's block cleared bob's second out of 1 before its own new position was applied.
-      expect(moved).toBe(0);
-
-      const { blocks } = yield* replica.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
-      expect(blocks.map((block) => [block.actorId, block.sequence, block.position])).toEqual([
-        ['bob', 0, 0],
-        [ALICE, 2, 1],
-        ['bob', 1, 2],
-      ]);
+      expect(syncState.blocksToPull).toBe(7);
     }).pipe(Effect.provide(TestLayer)),
   );
 
