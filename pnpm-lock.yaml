@@ -1664,6 +1664,9 @@ patchedDependencies:
   '@vitest/browser@4.1.10':
     hash: a986f87598d00b4753574afb9fcad1a84d9b0145eaf80189a0b49d32b7af569a
     path: patches/@vitest__browser@4.1.10.patch
+  '@zag-js/presence@1.43.3':
+    hash: 724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58
+    path: patches/@zag-js__presence@1.43.3.patch
   js-clipper@1.0.1:
     hash: 6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f
     path: patches/js-clipper@1.0.1.patch
@@ -43156,7 +43159,7 @@ snapshots:
       '@zag-js/password-input': 1.43.3
       '@zag-js/pin-input': 1.43.3
       '@zag-js/popover': 1.43.3
-      '@zag-js/presence': 1.43.3
+      '@zag-js/presence': 1.43.3(patch_hash=724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58)
       '@zag-js/progress': 1.43.3
       '@zag-js/qr-code': 1.43.3
       '@zag-js/radio-group': 1.43.3
@@ -54380,7 +54383,7 @@ snapshots:
       '@zag-js/dom-query': 1.43.3
       '@zag-js/utils': 1.43.3
 
-  '@zag-js/presence@1.43.3':
+  '@zag-js/presence@1.43.3(patch_hash=724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58)':
     dependencies:
       '@zag-js/core': 1.43.3
       '@zag-js/dom-query': 1.43.3
