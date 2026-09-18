@@ -10,7 +10,7 @@ import { File } from '@dxos/types';
 
 import { FileLimits, FileOperation } from '#types';
 
-import { NoBackendError, resolveActiveStorage } from './create.ts';
+import { NoBackendError, resolvePreferredStorage } from './create.ts';
 
 /** Raised when the named upload cannot be adopted — never uploaded, already consumed, or expired. */
 export class UploadNotFoundError extends Error {
@@ -32,13 +32,14 @@ const handler: Operation.WithHandler<typeof FileOperation.CreateFromUpload> = Fi
   Operation.withHandler(
     Effect.fnUntraced(function* ({ uploadId, name }) {
       // Shared with the UI and `createFromSource` paths, so all three agree on which backend an
-      // upload lands in.
-      const storage = yield* resolveActiveStorage;
+      // upload lands in. The lenient resolver, because this operation runs in hosts with no plugin
+      // capabilities at all — an unregistered backend is reported below, by the store that has to
+      // adopt the bytes, rather than guessed at from the settings UI's descriptors.
+      const storage = yield* resolvePreferredStorage;
 
       const blob = yield* Blob.fromUpload(uploadId, { storage }).pipe(
-        // `not-found` is the adoptable-upload miss; every other reason is a misconfigured backend,
-        // which is the same condition `resolveActiveStorage` reports and should not be dressed up
-        // as a missing upload.
+        // `not-found` is the adoptable-upload miss; every other reason is a misconfigured
+        // backend, which is not a missing upload and should not be dressed up as one.
         Effect.catchTag('BlobNotAvailableError', (error) =>
           error.context.reason === 'not-found'
             ? Effect.fail(new UploadNotFoundError(uploadId))
