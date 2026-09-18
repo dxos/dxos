@@ -162,7 +162,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         key: 'db',
         kind: 'item',
         path: [GraphPath.GroupSegments.system, GraphPath.Segments.database],
-        depth: { min: 2 },
+        minDepth: 2,
       },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -212,7 +212,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         key: 'db',
         kind: 'item',
         path: [GraphPath.GroupSegments.system, GraphPath.Segments.database],
-        depth: { min: 2 },
+        minDepth: 2,
       },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;

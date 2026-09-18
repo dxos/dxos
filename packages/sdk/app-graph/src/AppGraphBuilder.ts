@@ -63,7 +63,7 @@ export type BuilderExtensions = Builder.Extensions<BuilderExtension>;
  * - `'singleton'` — A single fixed node per workspace, addressed by the key alone (`settings`); its own
  *                   segment is the key, below `path`.
  *
- * The binding's shape (`workspace`, `path`, `depth`) decides which node ids it addresses, and
+ * The binding's shape (`workspace`, `path`, `minDepth`) decides which node ids it addresses, and
  * a node's URL comes from the one binding its id fits. A node therefore has a URL whether or not it is
  * loaded, and bindings of different keys must not claim the same ids.
  *
@@ -76,11 +76,10 @@ export type UrlBinding = {
   /** Node-id segments between the workspace and the node's own. */
   path: readonly string[];
   /**
-   * How many segments an item's id spans after `path`, joined by the grammar's tail separator: exactly
-   * `n`, or at least `min`. Defaults to any number; a binding sharing its path with a shallower one
-   * declares the depth that sets it apart. Ignored with `resolve`.
+   * The fewest segments an item's id spans after `path`, joined by the grammar's tail separator; defaults
+   * to 1. Of two bindings sharing a path, the larger minimum claims the deeper ids. Ignored with `resolve`.
    */
-  depth?: number | { min: number };
+  minDepth?: number;
   /** Narrows the workspaces the binding applies to; defaults to every workspace. */
   workspace?: (workspace: string) => boolean;
   /**
@@ -96,9 +95,8 @@ export type UrlBinding = {
  * The two keys are fixed tiers no extension declares (no connector produces their nodes): `anchorKey`
  * establishes the base that following pairs resolve against and is consumed as a rebase
  * (`w/<workspace>`); `linked` addresses a node attached to the preceding item through its relation
- * (`<key>/<variant>`, its segment `<prefix><variant>`). `tailSeparator` joins the
- * fixed-depth node-id segments between a key's static `path` and the object id into one URL id
- * (`db/<slug>+<id>`) so a fixed-depth nested shape needs no resolver.
+ * (`<key>/<variant>`, its segment `<prefix><variant>`). `tailSeparator` joins the node-id segments
+ * after a key's static `path` into one URL id (`db/<slug>+<id>`), so a nested shape needs no resolver.
  */
 export type UrlGrammar = {
   anchorKey?: string;
@@ -136,10 +134,6 @@ export type PathResolveParams = {
  */
 export type PathResolver = (params: PathResolveParams) => Effect.Effect<string | null>;
 
-/** Whether a binding's `depth` admits a tail of `length` segments. */
-const fitsDepth = (length: number, depth: UrlBinding['depth'] = { min: 1 }): boolean =>
-  typeof depth === 'number' ? length === depth : length >= depth.min;
-
 const startsWith = (segments: readonly string[], prefix: readonly string[]): boolean =>
   prefix.length <= segments.length && prefix.every((segment, index) => segments[index] === segment);
 
@@ -167,7 +161,7 @@ export const urlRepresentation = (
   if (url.resolve) {
     return Option.some({ key: url.key, id: tail[tail.length - 1] });
   }
-  return fitsDepth(tail.length, url.depth)
+  return tail.length >= (url.minDepth ?? 1)
     ? Option.some({ key: url.key, id: tail.join(tailSeparator) })
     : Option.none();
 };
@@ -190,7 +184,7 @@ export const urlCandidate = (
     return id === undefined ? Option.some([...base, url.key].join(GraphNode.PathSeparator)) : Option.none();
   }
   const tail = id?.split(tailSeparator) ?? [];
-  return tail.length > 0 && fitsDepth(tail.length, url.depth)
+  return tail.length > 0 && tail.length >= (url.minDepth ?? 1)
     ? Option.some([...base, ...tail].join(GraphNode.PathSeparator))
     : Option.none();
 };

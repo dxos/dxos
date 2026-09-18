@@ -50,7 +50,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'pluginSpec',
         // Plugin nodes sit under the registry's `plugins` node, so a spec is `<plugin>/spec` below it.
-        url: { key: 'spec', kind: 'item', path: ['plugins'], depth: 2 },
+        url: { key: 'spec', kind: 'item', path: ['plugins'], minDepth: 2 },
         match: GraphNodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;

@@ -336,7 +336,7 @@ export default Capability.makeModule(
           key: 'message',
           kind: 'item',
           path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()],
-          depth: { min: 2 },
+          minDepth: 2,
         },
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (mailbox, get) => {
@@ -436,7 +436,12 @@ export default Capability.makeModule(
       // deep-link shape.
       AppGraphBuilder.createExtension({
         id: 'calendarEvents',
-        url: { key: 'event', kind: 'item', path: [GraphPath.GroupSegments.communications, calendarTypename], depth: 2 },
+        url: {
+          key: 'event',
+          kind: 'item',
+          path: [GraphPath.GroupSegments.communications, calendarTypename],
+          minDepth: 2,
+        },
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (calendar, get) => {
           const db = Obj.getDatabase(calendar);

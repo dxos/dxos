@@ -393,15 +393,10 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
 
 /**
  * How narrowly a binding's shape pins its nodes: literal segments count most (a singleton's own segment
- * included), then the depth it requires, an exact depth above an equal minimum and any declared depth
- * above the default, so the deeper of two bindings sharing a path claims its tails.
+ * included), then its `minDepth`, so the deeper of two bindings sharing a path claims its ids.
  */
-const specificity = (binding: GraphBuilder.UrlBinding): number => {
-  const literals = binding.path.length + (binding.kind === 'singleton' ? 1 : 0);
-  const depth =
-    binding.depth === undefined ? 0 : typeof binding.depth === 'number' ? 2 * binding.depth + 1 : 2 * binding.depth.min;
-  return literals * MAX_DEPTH_RANK + depth;
-};
+const specificity = (binding: GraphBuilder.UrlBinding): number =>
+  (binding.path.length + (binding.kind === 'singleton' ? 1 : 0)) * MAX_DEPTH_RANK + (binding.minDepth ?? 1);
 
-/** Above any depth rank a binding declares, so a literal segment always outranks depth. */
+/** Above any `minDepth` a binding declares, so a literal segment always outranks depth. */
 const MAX_DEPTH_RANK = 1_000;
