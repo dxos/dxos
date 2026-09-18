@@ -12,11 +12,7 @@ import { log } from '@dxos/log';
 
 import { openableChildren } from './openable-children.ts';
 
-/**
- * The graph settles asynchronously — a released subtree returns when its connectors run again, and a
- * cold one when its source loads — so a caller waits on the atom that changes when it might have.
- * Undefined when the wait times out.
- */
+/** The first value of `atom` that satisfies `settled`, or undefined if none arrives in time. */
 const awaitAtom = <T>(
   registry: Registry.AtomRegistry,
   atom: Atom.Atom<T>,
@@ -39,10 +35,8 @@ const awaitAtom = <T>(
   }).pipe(Effect.timeoutOrElse({ duration: `${timeoutMs} millis`, orElse: () => Effect.succeed(undefined) }));
 
 /**
- * Waits for `ids` a retention change released to be back in the graph, so a caller's reads resolve them.
- * Expanding only starts the rebuild — connector output lands on a flush, and a path rebuilds a level per
- * round — so awaiting one flush would not tell a caller the subjects had returned. Ids that were never
- * released are not waited on at all, which is what keeps a stale or bogus one from costing the timeout.
+ * Waits for `ids` a retention released to return; a path rebuilds a level per flush, so one flush
+ * proves nothing, and an id that was never released is never waited on.
  */
 export const awaitReleaseSettled = (
   registry: Registry.AtomRegistry,

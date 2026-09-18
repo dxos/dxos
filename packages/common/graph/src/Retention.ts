@@ -17,10 +17,7 @@ export type Region = { readonly id: string; readonly depth?: number };
 export interface Retention<Rel = string> {
   /** Collected whenever this changes; across every installed retention the deepest ask for a node wins. */
   readonly retained: Atom.Atom<readonly Region[]>;
-  /**
-   * Relations whose targets live and die with their source rather than sitting a level below it. Union
-   * of every installed retention's list; a relation no retention names counts as a level.
-   */
+  /** Relations whose targets live and die with their source; any other relation costs a level. */
   readonly attached?: readonly Rel[];
 }
 

@@ -67,8 +67,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           yield* applyWorkspace(input.workspace);
         }
       }
-      // The reads below — EID dedup, the deck spec, plank naming — resolve nothing for a subject the
-      // expansion above has not finished rebuilding.
+      // The reads below resolve nothing for a subject the expansion above is still rebuilding.
       yield* awaitReleaseSettled(registry, builder, input.subject, RESOLVE_TIMEOUT_MS);
 
       // Dedup subjects against the active deck using EID identity.

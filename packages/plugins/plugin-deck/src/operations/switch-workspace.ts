@@ -64,8 +64,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
 
       const seeds = remembered.length === 0 && platform !== 'mobile';
       if (seeds) {
-        // A workspace entered after release has no children until its connectors run again, and their
-        // output lands on a flush — so the switch waits for it and seeds in one navigation.
+        // Connector output lands on a flush, so the switch waits for it and seeds in one navigation.
         AppGraph.expandSync(graph, input.subject, 'child');
         yield* Effect.promise(() => AppGraphBuilder.flush(builder));
       }
@@ -73,10 +72,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const active = remembered.length > 0 ? remembered : seeded;
       yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
 
-      // Only a workspace whose children are still loading reaches here, and its seed replaces the
-      // empty URL rather than pushing a second entry.
+      // Only a workspace whose children are still loading reaches here; its seed replaces the empty URL.
       if (seeds && seeded.length === 0) {
-        // Detached: a switch that lands first leaves this one to find the deck already moved on.
+        // Detached: a later switch leaves this one to find the deck already moved on.
         yield* Effect.forkDetach(
           seedWhenLoaded(graph, input.subject, workspace).pipe(
             Effect.catchCause((cause) => Effect.sync(() => log.warn('seeding the workspace failed', { cause }))),
