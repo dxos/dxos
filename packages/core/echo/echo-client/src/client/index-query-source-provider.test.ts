@@ -28,9 +28,6 @@ const mockGraph = {} as Hypergraph.Hypergraph;
 /** No-op update signal for tests that don't exercise re-hydration. */
 const noopUpdateEvent = new Event<ObjectUpdate>();
 
-/** Fake entity at the loader boundary — only `id` is read by the source under test. */
-const fakeEntity = (id: string): Entity.Unknown => ({ id }) as unknown as Entity.Unknown;
-
 const makeScopedQuery = (scopes: QueryAST.Scope[]): QueryAST.Query => ({
   type: 'from',
   query: {
@@ -242,102 +239,13 @@ describe('IndexQuerySource', () => {
     void ctx.dispose();
   });
 
-  // Regression: a hit that failed to hydrate was dropped from the result with only a log line, so a
-  // one-shot caller — an agent or an MCP tool, which unlike a reactive query gets no second pass —
-  // read a short result as the whole set and concluded the missing objects did not exist. The
-  // source reports them; `GraphQueryContext` decides, since another source may hold the object.
-  test('a one-shot run reports an index hit whose load never completes', async () => {
-    const spaceId = SpaceId$.random();
-    const loadable = EntityId.random();
-    const stalled = EntityId.random();
-
-    const service = await makeQueryClient({
-      'QueryService.setConfig': () => Effect.void,
-      'QueryService.execQuery': (request) =>
-        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
-          queueMicrotask(
-            () =>
-              void emit.single({
-                queryId: request.queryId,
-                results: [
-                  { id: loadable, spaceId, rank: 0 },
-                  { id: stalled, spaceId, rank: 0 },
-                ],
-              }),
-          );
-        }),
-      'QueryService.reindex': () => Effect.void,
-    });
-
-    const source = new IndexQuerySource({
-      service,
-      runtime: EffectContext.empty(),
-      objectLoader: {
-        // The document behind `stalled` never arrives, so the load runs out of budget without ever
-        // establishing whether the object is there.
-        loadObject: ({ objectId }) =>
-          objectId === loadable ? Promise.resolve(fakeEntity(loadable)) : new Promise(() => {}),
-        updateEvent: noopUpdateEvent,
-      },
-      graph: mockGraph,
-    });
-    onTestFinished(() => source.close());
-
-    const results = await source.run(Context.default(), makeQuery(spaceId));
-
-    expect(results.map((entry) => entry.id)).toEqual([loadable]);
-    expect(source.unresolvedHits()).toEqual([{ id: stalled, spaceId, reason: 'load-timeout' }]);
-  });
-
-  // Regression: reporting every empty load made a stale index entry — an object deleted elsewhere,
-  // released, or behind a document url that no longer resolves — fail the whole query, where the
-  // host simply lists an object this peer correctly does not return.
-  test('a one-shot run drops an index hit the loader establishes is gone', async () => {
-    const spaceId = SpaceId$.random();
-    const present = EntityId.random();
-    const gone = EntityId.random();
-
-    const service = await makeQueryClient({
-      'QueryService.setConfig': () => Effect.void,
-      'QueryService.execQuery': (request) =>
-        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
-          queueMicrotask(
-            () =>
-              void emit.single({
-                queryId: request.queryId,
-                results: [
-                  { id: present, spaceId, rank: 0 },
-                  { id: gone, spaceId, rank: 0 },
-                ],
-              }),
-          );
-        }),
-      'QueryService.reindex': () => Effect.void,
-    });
-
-    const source = new IndexQuerySource({
-      service,
-      runtime: EffectContext.empty(),
-      objectLoader: {
-        // Completing with nothing is an answer: the object is not here.
-        loadObject: async ({ objectId }) => (objectId === present ? fakeEntity(present) : undefined),
-        updateEvent: noopUpdateEvent,
-      },
-      graph: mockGraph,
-    });
-    onTestFinished(() => source.close());
-
-    const results = await source.run(Context.default(), makeQuery(spaceId));
-
-    expect(results.map((entry) => entry.id)).toEqual([present]);
-    expect(source.unresolvedHits()).toEqual([]);
-  });
-
-  test('a one-shot query retries a hit whose document arrives late', async () => {
+  // Regression: a per-hit 2-second budget dropped any object whose load outran it, with only a log
+  // line, so a one-shot caller — an agent or an MCP tool, which unlike a reactive query gets no
+  // second pass — read the short result as the whole set.
+  test('a slow load is waited for rather than dropped', async () => {
     const spaceId = SpaceId$.random();
     const prompt = EntityId.random();
-    const late = EntityId.random();
-    let lateAttempts = 0;
+    const slow = EntityId.random();
 
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
@@ -349,7 +257,7 @@ describe('IndexQuerySource', () => {
                 queryId: request.queryId,
                 results: [
                   { id: prompt, spaceId, rank: 0 },
-                  { id: late, spaceId, rank: 0 },
+                  { id: slow, spaceId, rank: 0 },
                 ],
               }),
           );
@@ -361,14 +269,12 @@ describe('IndexQuerySource', () => {
       service,
       runtime: EffectContext.empty(),
       objectLoader: {
-        loadObject: ({ objectId }) => {
-          if (objectId === prompt) {
-            return Promise.resolve(fakeEntity(prompt));
+        loadObject: async ({ objectId }) => {
+          if (objectId === slow) {
+            // Longer than the budget this used to be held to.
+            await new Promise((resolve) => setTimeout(resolve, 2_500));
           }
-          // In flight past the budget on the first pass and there when the retry asks again — a
-          // document that lost its race with the load budget rather than one that is missing.
-          lateAttempts++;
-          return lateAttempts > 1 ? Promise.resolve(fakeEntity(late)) : new Promise(() => {});
+          return { id: objectId } as unknown as Entity.Unknown;
         },
         updateEvent: noopUpdateEvent,
       },
@@ -378,10 +284,7 @@ describe('IndexQuerySource', () => {
 
     const results = await source.run(Context.default(), makeQuery(spaceId));
 
-    // Re-keyed by the host's record order, so the retried entry lands where the host ranked it.
-    expect(results.map((entry) => entry.id)).toEqual([prompt, late]);
-    expect(lateAttempts).toBe(2);
-    expect(source.unresolvedHits()).toEqual([]);
+    expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
   });
 });
 

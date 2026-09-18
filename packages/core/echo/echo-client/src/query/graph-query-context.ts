@@ -13,7 +13,6 @@ import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
-import { QueryIncompleteError, type UnresolvedHit } from './errors.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
 import {
   getTargetSpacesForQuery,
@@ -60,13 +59,6 @@ export interface QuerySource {
    * One-shot query.
    */
   run(ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]>;
-
-  /**
-   * Index hits the last {@link run} matched but could not hydrate, where the object may still be
-   * there. Implemented by sources that hydrate remote records; the aggregate decides what to do
-   * with them, since another source may hold the same object.
-   */
-  unresolvedHits?(): readonly UnresolvedHit[];
 
   /**
    * Set the filter and trigger continuous updates.
@@ -166,18 +158,6 @@ export class GraphQueryContext implements QueryContext {
       return [];
     }
     const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
-
-    // A source that could not rule out an index hit's object reports it instead of dropping it, and
-    // a hit is only missing from the answer when no other source produced that object. Failing here
-    // beats returning a short result a one-shot caller would read as the whole set.
-    const resolvedIds = new Set(mergedResults.map((entry) => entry.id));
-    const missing = [...this._sources]
-      .flatMap((source) => source.unresolvedHits?.() ?? [])
-      .filter((hit) => !resolvedIds.has(hit.id));
-    if (missing.length > 0) {
-      throw new QueryIncompleteError(missing);
-    }
-
     return mergedResults;
   }
 
