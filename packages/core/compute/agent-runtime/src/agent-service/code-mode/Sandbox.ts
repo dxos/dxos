@@ -124,6 +124,9 @@ const rejectAfter = (timeout: Duration.Input): { promise: Promise<never>; cancel
       () => reject(new Error(`Evaluation did not finish within ${Duration.format(duration)}; it was abandoned.`)),
       Duration.toMillis(duration),
     );
+    // Unref'd because the deadline exists to bound an evaluation, never to be a reason the host
+    // stays alive: a process with nothing else pending should exit rather than serve out the budget.
+    handle.unref?.();
   });
   return { promise, cancel: () => clearTimeout(handle) };
 };

@@ -183,6 +183,12 @@ defineTask({
       ),
     }),
     Scorer.database({
+      name: 'nothing-created',
+      description: 'A read-only task created nothing: no people exist, since none were seeded.',
+      query: Query.select(Filter.type(Person.Person)),
+      score: (results) => results.length === 0,
+    }),
+    Scorer.database({
       name: 'nothing-written',
       description: 'A read-only task wrote nothing: the seeded organizations are untouched.',
       query: organizations,
