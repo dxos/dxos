@@ -3,8 +3,10 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { RuntimeProvider } from '@dxos/effect';
@@ -205,43 +207,88 @@ describe('deleteSubductionRemoteHeads', () => {
     ['doc1', 'incremental', 'hash1'],
   ];
 
+  // Enough classical chunks that the rows outside the range outnumber the records, which selects in-place deletion.
+  const documentChunks = Array.from({ length: 8 }, (_, index) => ['doc2', 'incremental', `hash${index}`]);
+
   const seed = async (adapter: SqliteStorageAdapter, keys: string[][]) => {
     for (const key of keys) {
       await adapter.save(key, bufferToArray(Buffer.from(key.join('/'))));
     }
   };
 
-  test('deletes every remote-heads record in batches and nothing else', async () => {
-    const { adapter, runtime } = await setup();
-    await seed(adapter, [...remoteHeads, ...unrelated]);
+  const expectIntact = async (adapter: SqliteStorageAdapter, keys: string[][]) => {
+    for (const key of keys) {
+      expect(await adapter.load(key), key.join('/')).toEqual(bufferToArray(Buffer.from(key.join('/'))));
+    }
+  };
 
+  const deleteWithProgress = async (
+    runtime: ReturnType<typeof makeTestLayer>['runtime'],
+    options: { batchSize?: number } = {},
+  ) => {
     const progress: { deleted: number; total: number }[] = [];
     const result = await RuntimeProvider.runPromise(runtime)(
-      deleteSubductionRemoteHeads({ batchSize: 4, onProgress: (update) => progress.push(update) }),
+      deleteSubductionRemoteHeads({ ...options, onProgress: (update) => progress.push(update) }),
+    );
+    return { ...result, progress };
+  };
+
+  test('rebuilds the table when the records outnumber the other rows, keeping every other row', async () => {
+    const { adapter, runtime } = await setup();
+    await seed(adapter, [...remoteHeads, ...unrelated]);
+    // SQLite allows a NULL key here, and it lies outside the range, so the rebuild has to keep it.
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`INSERT INTO automerge_chunks (key, data) VALUES (NULL, ${new Uint8Array([7])})`;
+      }),
     );
 
-    expect(result).toEqual({ deleted: 6 });
+    const { deleted, progress } = await deleteWithProgress(runtime, { batchSize: 4 });
+
+    expect(deleted).toBe(6);
+    expect(progress).toEqual([
+      { deleted: 0, total: 6 },
+      { deleted: 6, total: 6 },
+    ]);
+    expect(await adapter.loadRange(['subduction', 'remote-heads'])).toEqual([]);
+    await expectIntact(adapter, unrelated);
+    const [leftovers] = await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        return yield* sql<{ nullKeys: number; stagingTables: number }>`
+          SELECT
+            (SELECT count(*) FROM automerge_chunks WHERE key IS NULL) AS nullKeys,
+            (SELECT count(*) FROM sqlite_schema WHERE name = 'automerge_chunks_repair') AS stagingTables
+        `;
+      }),
+    );
+    expect(leftovers).toEqual({ nullKeys: 1, stagingTables: 0 });
+  });
+
+  test('deletes in batches when the other rows outnumber the records', async () => {
+    const { adapter, runtime } = await setup();
+    await seed(adapter, [...remoteHeads, ...unrelated, ...documentChunks]);
+
+    const { deleted, progress } = await deleteWithProgress(runtime, { batchSize: 4 });
+
+    expect(deleted).toBe(6);
     expect(progress).toEqual([
       { deleted: 0, total: 6 },
       { deleted: 4, total: 6 },
       { deleted: 6, total: 6 },
     ]);
     expect(await adapter.loadRange(['subduction', 'remote-heads'])).toEqual([]);
-    for (const key of unrelated) {
-      expect(await adapter.load(key), key.join('/')).toEqual(bufferToArray(Buffer.from(key.join('/'))));
-    }
+    await expectIntact(adapter, [...unrelated, ...documentChunks]);
   });
 
   test('a batch size that divides the range exactly counts every row once', async () => {
     const { adapter, runtime } = await setup();
-    await seed(adapter, remoteHeads);
+    await seed(adapter, [...remoteHeads, ...documentChunks]);
 
-    const progress: { deleted: number; total: number }[] = [];
-    const result = await RuntimeProvider.runPromise(runtime)(
-      deleteSubductionRemoteHeads({ batchSize: 3, onProgress: (update) => progress.push(update) }),
-    );
+    const { deleted, progress } = await deleteWithProgress(runtime, { batchSize: 3 });
 
-    expect(result).toEqual({ deleted: 6 });
+    expect(deleted).toBe(6);
     expect(progress).toEqual([
       { deleted: 0, total: 6 },
       { deleted: 3, total: 6 },
@@ -254,14 +301,11 @@ describe('deleteSubductionRemoteHeads', () => {
     const { adapter, runtime } = await setup();
     await seed(adapter, unrelated);
 
-    const progress: unknown[] = [];
-    const result = await RuntimeProvider.runPromise(runtime)(
-      deleteSubductionRemoteHeads({ onProgress: (update) => progress.push(update) }),
-    );
+    const { deleted, progress } = await deleteWithProgress(runtime);
 
-    expect(result).toEqual({ deleted: 0 });
+    expect(deleted).toBe(0);
     expect(progress).toEqual([]);
-    expect((await adapter.loadRange(['subduction'])).length).toBe(4);
+    await expectIntact(adapter, unrelated);
   });
 });
 
