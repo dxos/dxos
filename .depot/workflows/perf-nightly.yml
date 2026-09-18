@@ -18,6 +18,10 @@ on:
         type: string
         description: 'DX_PERF_MODES to run (measure, diagnose)'
         default: 'measure'
+      iterations:
+        type: string
+        description: 'Repeats of the whole flow per mode (DX_PERF_ITERATIONS)'
+        default: '10'
 
 permissions:
   contents: read
@@ -86,6 +90,11 @@ jobs:
         continue-on-error: true
         env:
           MODES: ${{ inputs.modes || 'measure' }}
+          # Ten, because one sample per night cannot separate a regression from the ~20% run-to-run
+          # spread on a stage. Each repeat is a fresh browser and a fresh fixture, ~1.5 min, so ten
+          # is ~18 min against this job's 180-minute bound. Every row carries its `iteration`, so
+          # the repeats are distinct rows to take a median over, not overwrites of each other.
+          ITERATIONS: ${{ inputs.iterations || '10' }}
           DX_PWA: 'false'
         run: |
           set -o pipefail
@@ -94,7 +103,7 @@ jobs:
           rm -rf test-results/perf
           # The modes run serially inside one invocation — two flows measured at once contend for
           # the same cores and measure each other.
-          DX_PERF_MODES="$MODES" moon run composer-app:e2e-perf
+          DX_PERF_MODES="$MODES" DX_PERF_ITERATIONS="$ITERATIONS" moon run composer-app:e2e-perf
 
       - name: Summarize
         if: always()
@@ -126,18 +135,23 @@ jobs:
             '
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Only `measure` rows from a COMPLETE run reach PostHog. `writePosthogBatch` drops the
-      # diagnose rows (whose CPU carries the profiler's overhead) and the failed stages (whose
-      # durations are the budgets they exhausted), but the flow step is `continue-on-error`, so a
-      # run that died partway would otherwise publish whatever it had managed to write — a trend
-      # built from a truncated run reads as a regression nobody caused.
+      # Only `measure` rows reach PostHog, and only from an iteration that completed its stages.
+      # `writePosthogBatch` is what enforces that per row: it drops the diagnose rows (whose CPU
+      # carries the profiler's overhead) and the failed stages (whose durations are the budgets
+      # they exhausted).
+      #
+      # NOT gated on the flow step succeeding any more. That gate was right when the run was one
+      # iteration — a truncated single sample reads as a regression nobody caused — but with ten it
+      # discards nine good iterations over one flaky stage, which is the opposite of why there are
+      # ten. Integrity now rests where it belongs: the per-row drop above, and the runs table's
+      # `stages` column, which shows an iteration that came up short instead of hiding it.
       #
       # A manual dispatch publishes too, from any branch. Recording is not what protects the trend:
-      # every row carries `ciBranch`, and each dashboard tile filters `ciBranch = 'main'`, so a
-      # branch run is stored and simply not charted. Refusing to record it instead made the numbers
-      # from a dispatch unreachable, which is the opposite of why the run exists.
+      # every row carries `ciBranch`, so a branch run is stored and can be filtered out whenever
+      # that is the question. Refusing to record it instead made the numbers from a dispatch
+      # unreachable, which is the opposite of why the run exists.
       - name: Trend the measured rows
-        if: steps.flows.outcome == 'success' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         continue-on-error: true
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}

@@ -18,7 +18,7 @@ Field names below match the JSON in `test-results/perf/<flow>-<mode>.rows.ndjson
 | `mode`                | `measure` or `diagnose`. **Never compare across these** — see [Modes](#modes-and-why-timings-do-not-cross-them).                                                                                                                                                                                                                                                                                                                                                                      |
 | `scale`               | The fixture shape, e.g. `tasks=200,depth=2,projects=1,docs=3x400`. The join key for a trend: if the fixture changes shape, the label changes and the trend visibly breaks rather than silently shifting.                                                                                                                                                                                                                                                                              |
 | `fixtureSize`         | Tasks actually created. Deliberately outside the `scale` join key, because a fixture that produces 199 of 200 tasks is still the same tier.                                                                                                                                                                                                                                                                                                                                           |
-| `iteration`           | Which repeat of the flow this row is. Present for multi-sample runs; the nightly currently writes one iteration per mode.                                                                                                                                                                                                                                                                                                                                                             |
+| `iteration`           | Which repeat of the flow this row is, zero-based. The nightly runs 10 per mode (`DX_PERF_ITERATIONS`), each a fresh browser and fixture, so a stage's tiles have a distribution to take a median over rather than one sample.                                                                                                                                                                                                                                                         |
 | `ok`, `error`         | Whether the stage body completed. **A failed stage's `wallMs` is its timeout, not a measurement** — `writePosthogBatch` drops `ok: false` rows so a timeout can never enter a trend as a regression.                                                                                                                                                                                                                                                                                  |
 | `comparability`       | Five things that change what every other number means: `servingMode` (`preview` over a production bundle vs `serve`, which costs ~2.5× on the main thread), `pluginSet`, `profileState` (`first-run` performs onboarding and loads a different module set), `settleMs`, and `instruments` (`profiler` or `profiler+screencast` — neither mode is bare). Two rows that differ here are not comparable, whatever their stage ids say. Per `scripts/memory/README.md` §"Comparing runs". |
 
@@ -361,12 +361,13 @@ Recorded here so nobody rediscovers them as bugs.
    The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
 4. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
    would be visible per realm.
-5. **One iteration per mode, and this is the gap that limits every other number.** `open-tasks` has
-   moved 9,172 → 6,803 → 7,833 → 10,195 ms across runs, and `boot` moved +20.9% between two runs
-   whose `boot` stage was instrumented identically (not at all). So the floor for detecting a
-   regression is currently ~20-30% per stage, and any effect smaller than that — including the
-   instruments' own cost — cannot be measured with one sample. `iteration` is on every row; the
-   nightly does not yet use it.
+5. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode. The
+   variance that motivated it is real and does not go away — `open-tasks` moved
+   9,172 → 6,803 → 7,833 → 10,195 ms across single runs, and `boot` moved +20.9% between two runs
+   instrumented identically (not at all) — so a single sample could not resolve anything below
+   ~20-30% per stage, the instruments' own cost included. What remains is the read side: a tile
+   averaging ten samples is still worse than one taking their median, since one expired stage
+   drags a mean and not a median.
 6. **`boot` carries no profile** in either mode: there is no target to attach to until the page
    exists, so boot-time attribution belongs to the startup harness, not this one.
 

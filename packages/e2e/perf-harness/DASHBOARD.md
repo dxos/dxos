@@ -58,9 +58,14 @@ the old series flat. All four are always present; `0` means the realm was absent
 
 ## Tiles
 
-Every tile is the same shape: **x axis is days, one line per scenario.** A trends insight with
-`interval: day`, `math: avg` on the measure property, and a breakdown on `properties.ciStage` — not
-HogQL, because the native controls give the dashboard a working date range and interval picker.
+Every tile is the same shape: **x axis is days, one line per scenario** — a HogQL
+`DataVisualizationNode` grouping on `toStartOfDay(timestamp)` with `seriesBreakdownColumn:
+scenario`, over the last 90 days.
+
+**The aggregate is `median`, not `avg`.** The nightly runs ten iterations, so a day holds ten
+samples per stage; a mean is dragged by one slow iteration where a median is not, and the point of
+ten samples was to stop reading noise as a level change. Peak RSS is the exception and uses
+`max` — an averaged peak is not a peak.
 
 Realms get separate tiles rather than separate series, so a tile's ten lines are always the ten
 scenarios and never a ten-by-four grid nobody can read.
@@ -81,6 +86,9 @@ scenarios and never a ten-by-four grid nobody can read.
 | 12  | Lag p95 — shared worker | `ciLagP95MsSharedWorker`      |
 | 13  | App code transferred    | `ciCodeBytes`                 |
 
+Tiles 4, 7 and 12 — the shared-worker realm — were created as insights but left off the dashboard
+until a later change attached them; if a shared-worker tile is missing, that is what happened.
+
 ### The runs table
 
 The last tile is a table rather than a chart: one row per run, newest first, with when it ran, its
@@ -88,10 +96,13 @@ branch, commit, trigger and Depot run id, and its totals. The charts aggregate b
 answer _which runs is this point made of_ — this is how a point that looks wrong gets traced back to
 a commit and a run.
 
+It groups by `ciIteration` as well as by run, so a ten-iteration nightly is **ten rows**, one per
+sample, and the spread down those rows is the noise floor read directly rather than asserted.
+
 Its `stages` column is the integrity check, and worth reading before any other number on the page.
 The flow has **ten** stages and `writePosthogBatch` drops failed ones, so a row showing fewer than
-ten is a partial run whose totals are not comparable to a complete one — it will still be averaged
-into the charts above, where nothing marks it as short.
+ten is a partial iteration whose totals are not comparable to a complete one — it still feeds the
+charts above, where nothing marks it as short.
 
 ## Two things to know before reading a tile
 
@@ -100,7 +111,7 @@ into the charts above, where nothing marks it as short.
 - **`ciDomNodes` is the only machine-independent measure here.** Across a CI runner and a local
   sandbox it differs by 1% while wall time differs 1.7x and TBT 3x. Read it for regressions; read
   the timing tiles as trends.
-- **The run-to-run noise floor is ~20% per stage, and the nightly runs one iteration per mode.** A
-  single point moving is not a regression; only a level shift sustained over several nights is. The
-  fix is more iterations per night charted as a median, not a tighter chart — until then, read
-  levels and not points.
+- **The run-to-run noise floor is ~20% per stage; the nightly takes ten samples against it.** Ten
+  iterations charted as a median is what makes a day's point mean something, but it does not make a
+  single point a regression — a level shift sustained over several nights still is. The runs table
+  is where the samples behind a point are visible: one row per iteration, ten rows per run.
