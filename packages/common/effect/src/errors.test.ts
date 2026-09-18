@@ -2,13 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-// These tests assert on a plain `Error`'s stack frames, so the `catch` returns the thrown value
-// untouched; narrowing it would buy nothing (`failWith` takes `unknown`) and re-wrapping it would
-// replace the stack under test. Dropping the `catch` does not work either: `Effect.try(thunk)`
-// wraps the throw in `UnknownError` and `causeToError` then reports the wrapper's stack. All three
-// rules fire here, at three anchors across nine lines, so the directive covers the file.
-/** @effect-diagnostics unknownInEffectCatch:skip-file globalErrorInEffectCatch:skip-file globalErrorInEffectFailure:skip-file */
-
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -47,6 +40,10 @@ describe('causeToError', () => {
       Effect.sync(() => {
         throw new Error('defect');
       }),
+      // The assertion below is on the thrown `Error`'s own stack, so the `catch` has to hand it
+      // back untouched; wrapping it would replace the frames under test, and dropping the `catch`
+      // reports `UnknownError`'s stack instead.
+      // @effect-diagnostics-next-line unknownInEffectCatch:off
       Effect.try({
         try: () => {
           throw new Error('failure');

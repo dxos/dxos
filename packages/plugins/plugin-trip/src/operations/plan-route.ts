@@ -47,8 +47,6 @@ export default RoutingOperation.PlanRoute.pipe(
           continue;
         }
 
-        // `tryPromise` routes a rejection to the operation's failure channel, passing a routing
-        // error through untouched so the UI can tell a missing key from a failed geocode.
         const result = yield* Effect.tryPromise({
           try: () => service.route({ waypoints, profile: 'driving' }),
           catch: (error) => (Routing.isFailure(error) ? error : RoutePlanError.wrap()(error)),

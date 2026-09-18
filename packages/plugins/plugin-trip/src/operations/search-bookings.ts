@@ -21,8 +21,6 @@ const handler: Operation.WithHandler<typeof BookingOperation.SearchBookings> = B
       if (!service) {
         return { offers: [] };
       }
-      // `tryPromise` routes a `search` rejection to the operation's failure channel, passing a
-      // booking error through untouched so callers can still match it by tag.
       const offers = yield* Effect.tryPromise({
         try: async () => [...(await service.search(query))],
         catch: (error) => (BookingSearch.isFailure(error) ? error : BookingSearchError.wrap()(error)),

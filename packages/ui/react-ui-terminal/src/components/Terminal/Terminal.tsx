@@ -132,9 +132,8 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
 
     const bridge = new XtermBridge(xterm);
     const shell = runShell(bridge, { command, name, version, prompt, banner }).pipe(
-      // Kept as two provides: `R` is still generic here, and the checker can only discharge
-      // `Exclude<R, XtermContext.Provided>` one provide at a time — any combined form
-      // leaves the requirement unsolved.
+      // `R` is generic here, so the checker can discharge `Exclude<R, XtermContext.Provided>` only
+      // one provide at a time; any combined form leaves the requirement unsolved.
       // @effect-diagnostics-next-line multipleEffectProvide:off
       Effect.provide(XtermContext.layer(bridge)),
       Effect.provide(layer),

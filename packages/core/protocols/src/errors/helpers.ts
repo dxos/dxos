@@ -52,11 +52,8 @@ const nameOf = (error: unknown): string | undefined => {
  * Narrows a thrown value for a service RPC's error channel.
  *
  * A DXOS error is returned as it is. Anything else is rebuilt as a `BaseError` under its own
- * `name` and stack, because those are the fields `encodeError` puts on the wire and
- * `decodeError` rebuilds from: collapsing a `TypeError` or an `InvariantViolation` into one
- * tag would make every host-side bug look alike on the client and in any telemetry that
- * groups by error name. `cause` is kept for the in-process case only, since the wire format
- * has no field for it. Services that grow a more specific error return it directly.
+ * `name` and stack, the fields `encodeError` puts on the wire and `decodeError` rebuilds from.
+ * `cause` survives in-process only, since the wire format has no field for it.
  */
 export const toServiceError = (error: unknown): BaseError => {
   if (error instanceof BaseError) {
