@@ -369,7 +369,7 @@ describe('AutomergeHost', () => {
   // `DeferredTask` clears its scheduled flag before running the callback, so a throttle that waited
   // inside the callback queued a second run for kicks it had already covered — and that run fanned
   // out again a full interval later.
-  test('a burst of share-policy kicks inside the throttle window fans out once', async () => {
+  test('a burst of share-policy kicks inside the throttle window fans out once', { timeout: 15_000 }, async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({ runtime, useSubduction: true });
@@ -379,8 +379,6 @@ describe('AutomergeHost', () => {
         await host.close();
       }
     });
-    // Let any kick scheduled by `open` land before counting.
-    await sleep(100);
 
     const repo = (host as any)._repo;
     const shareConfigChanged = repo.shareConfigChanged.bind(repo);
@@ -390,16 +388,21 @@ describe('AutomergeHost', () => {
       shareConfigChanged();
     };
 
-    // Inside a throttle window, as right after a previous kick.
-    (host as any)._sharePolicyKickNextAllowedAt = Date.now() + 300;
+    // Inside a throttle window, as right after a previous kick. Wide, so the first run parks even on a
+    // loaded runner: one that reached it only after the deadline would kick at once, and the burst
+    // below would then legitimately cause a second kick.
+    (host as any)._sharePolicyKickNextAllowedAt = Date.now() + 3_000;
     const task = (host as any)._sharePolicyChangedTask;
     task.schedule();
-    await sleep(50);
-    task.schedule();
-    task.schedule();
+    await expect.poll(() => (host as any)._sharePolicyKickParked, { timeout: 2_500 }).toBe(true);
 
-    // Past the parked run and a full minimum interval after it, where a second fan-out would land.
-    await sleep(1_600);
+    // Issued while the first run is parked, which is exactly what the parked kick covers.
+    task.schedule();
+    task.schedule();
+    await expect.poll(() => kicks, { timeout: 10_000 }).toBe(1);
+
+    // A second fan-out would land one minimum interval after the first.
+    await sleep(1_500);
     expect(kicks).toBe(1);
   });
 });
