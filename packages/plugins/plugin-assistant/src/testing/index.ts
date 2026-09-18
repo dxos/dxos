@@ -7,5 +7,4 @@ export * from '#plugin';
 
 export * from './test-sequence.ts';
 export * from './test-services.ts';
-export * from './test-trace.ts';
 export * from './snapshot.ts';

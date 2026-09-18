@@ -48,6 +48,8 @@ const defaultGetId = <T extends AccordionItemRecord>(item: T) => item.id ?? '';
 export type AccordionRootProps<T extends AccordionItemRecord> = ThemedClassName<
   {
     children?: (props: AccordionRendererProps<T>) => ReactNode;
+    /** Whether to round the item's corners. */
+    rounded?: boolean;
     items?: T[];
     getId?: (item: T) => string;
   } & AccordionValueProps
@@ -56,6 +58,7 @@ export type AccordionRootProps<T extends AccordionItemRecord> = ThemedClassName<
 const AccordionRoot = <T extends AccordionItemRecord>({
   classNames,
   children,
+  rounded,
   items,
   getId = defaultGetId,
   value,
@@ -64,13 +67,13 @@ const AccordionRoot = <T extends AccordionItemRecord>({
 }: AccordionRootProps<T>) => {
   const { tx } = useThemeContext();
   return (
-    <AccordionProvider {...{ getId }}>
+    <AccordionProvider {...{ getId, rounded }}>
       <AccordionPrimitive.Root
         multiple
         value={value}
         defaultValue={defaultValue}
         onValueChange={onValueChange && ((details) => onValueChange(details.value))}
-        className={tx('accordion.root', {}, classNames)}
+        className={tx('accordion.root', { rounded }, classNames)}
       >
         {children?.({ items: items ?? [] })}
       </AccordionPrimitive.Root>
@@ -102,7 +105,7 @@ const AccordionItem = <T extends AccordionItemRecord>({
   disabled,
 }: AccordionItemProps<T>) => {
   const { tx } = useThemeContext();
-  const { getId } = useAccordionContext(ACCORDION_ITEM_NAME);
+  const { getId, rounded } = useAccordionContext(ACCORDION_ITEM_NAME);
 
   return (
     <AccordionItemProvider {...{ item }}>
@@ -110,7 +113,7 @@ const AccordionItem = <T extends AccordionItemRecord>({
         ref={ref}
         value={getId(item)}
         disabled={disabled}
-        className={tx('accordion.item', {}, classNames)}
+        className={tx('accordion.item', { rounded }, classNames)}
       >
         {children}
       </AccordionPrimitive.Item>
@@ -150,14 +153,15 @@ const AccordionItemHeader = ({
   const { tx } = useThemeContext();
   // A disabled item has nothing to open, so the caret that promises a body is dropped.
   const { disabled } = useAccordionItemContext();
+  const { rounded } = useAccordionContext(ACCORDION_ITEM_NAME);
   return (
     // Ark exposes no `Header` part — `ItemTrigger` is the control itself — so this is a plain row.
-    <div {...props} className={tx('accordion.header', {}, classNames)}>
+    <div {...props} className={tx('accordion.header', { rounded }, classNames)}>
       {leading && <div className={tx('accordion.trailing', {})}>{leading}</div>}
       {/* `justify-between` pins the toggle caret to the trailing edge of the row regardless of
           the header content's intrinsic width — so the affordance lives at a predictable
           right-end position. The content wrapper grabs the remaining space. */}
-      <AccordionPrimitive.ItemTrigger className={tx('accordion.trigger', { hover })}>
+      <AccordionPrimitive.ItemTrigger className={tx('accordion.trigger', { rounded, hover })}>
         {/* Leading icon and caret center within a single line-height band so they sit on the same
             centerline as the first line of the content, which may span multiple lines. */}
         {icon && (

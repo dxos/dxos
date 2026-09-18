@@ -54,6 +54,16 @@ export class RemoteServiceConnectionTimeout extends BaseError.extend('RemoteServ
 
 registerErrorMessageContext('RemoteServiceConnectionTimeout', RemoteServiceConnectionTimeout);
 
+/**
+ * The worker runtime failed to build, so the worker serves nothing.
+ */
+export class WorkerRuntimeStartError extends BaseError.extend(
+  'WorkerRuntimeStartError',
+  'Worker runtime failed to start.',
+) {}
+
+registerErrorMessageContext('WorkerRuntimeStartError', WorkerRuntimeStartError);
+
 export class DataCorruptionError extends BaseError.extend('DataCorruptionError') {}
 
 registerErrorMessageContext('DataCorruptionError', DataCorruptionError);
