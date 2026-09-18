@@ -54,6 +54,7 @@
   ],
   "dependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/wa-sqlite": "catalog:",
@@ -62,7 +63,6 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/errors": "workspace:*",
     "@effect/sql-sqlite-wasm": "catalog:",
     "@effect/wa-sqlite": "catalog:"
   },
