@@ -7,8 +7,9 @@ Scope: the public shape of operations and processes in `@dxos/compute` /
 
 Five changes, specified independently but landing as one API break:
 
-1. **Two new entity kinds**, `operation` and `process`, alongside `object` / `relation` /
-   `type`. Neither is an object type, and neither is bound to automerge.
+1. **Entity kinds become open.** ECHO owns the mechanism and knows nothing about
+   operations or processes; `@dxos/compute` registers the two new kinds. Neither is an
+   object type, and neither is bound to automerge.
 2. `Operation.Definition` becomes the operation-kind entity, **replacing**
    `Operation.PersistentOperation` and its lossy serialize/deserialize bridge.
 3. `Process` stops being a callback bag and becomes the process-kind entity — a **live
@@ -43,61 +44,180 @@ Consequences we are removing:
 - **Processes are invisible to ECHO.** `Monitor.list(filter)` is a bespoke query language
   parallel to `Filter` / `Query`.
 
-## 2. Entity kinds
+## 2. Open entity kinds
 
-A kind is not decoration. It fixes identity/addressing, which APIs accept the value, and
-what a persisted projection looks like — but **not** where instances are stored. Storage
-is orthogonal and per-entity.
+**ECHO must know nothing about operations or processes.** It owns the _mechanism_ —
+entities have a kind, kinds decide addressing and storability — and `@dxos/compute`
+registers the two new kinds against it. Nothing in `@dxos/echo` names either one.
+
+That means the closed enum goes:
 
 ```ts
-export enum EntityKind {
-  Object = 'object',
-  Relation = 'relation',
-  Type = 'type',
-  Operation = 'operation', // a definition of behavior
-  Process = 'process', // a running instance of behavior
+// @dxos/echo — an open brand, plus the three kinds ECHO itself owns.
+export type EntityKind = string & Brand.Brand<'EntityKind'>;
+export const EntityKind = { Object: …, Relation: …, Type: … } as const;
+
+// Decodes ANY kind — an unknown kind is data, not a parse error.
+export const EntityKindSchema = Schema.String.pipe(Schema.brand('EntityKind'));
+
+export interface KindDescriptor {
+  readonly kind: EntityKind;
+  /** URIs an instance is indexed and resolved under (registry + ref resolution). */
+  readonly addressing: (entity: Entity.Unknown) => readonly URI.URI[];
+  /** Whether instances may be written into a document. */
+  readonly storage: 'document' | 'external';
 }
+
+export const registerKind: (descriptor: KindDescriptor) => void;
 ```
+
+and `@dxos/compute` registers:
+
+| Kind        | `storage`  | `addressing`                          |
+| ----------- | ---------- | ------------------------------------- |
+| `operation` | `document` | `dxn:<key>` and `dxn:<key>:<version>` |
+| `process`   | `external` | `process://<runtimeId>/<pid>`         |
+
+A kind fixes identity/addressing, which APIs accept the value, and what a persisted
+projection looks like — but **not** where instances live. Storage is orthogonal and
+per-entity: an operation may sit in the registry _or_ in a space document; a process lives
+in the compute runtime and is never stored.
 
 |                      | Type                             | **Operation**                                         | **Process**                            |
 | -------------------- | -------------------------------- | ----------------------------------------------------- | -------------------------------------- |
 | Is a                 | definition of _shape_            | definition of _behavior_                              | _instance_ of behavior                 |
 | Created by           | `Type.makeObject(dxn)(schema)`   | `Operation.make({ key, input, output, services, … })` | `manager.spawn(op, input, options)`    |
-| Identity             | typename DXN, or EID when stored | key DXN (`dxn:<key>` and `dxn:<key>:<version>`)       | pid → `process://<runtime>/<pid>`      |
+| Identity             | typename DXN, or EID when stored | key DXN                                               | pid                                    |
 | Backing store        | registry, or a space (`addType`) | registry, **or** a space (`addOperation`)             | the compute runtime — **never stored** |
 | Hidden slots         | source Effect Schema             | input/output codecs, `services`, `types`, handler     | scope, output queue, status atom, RPC  |
 | Persisted projection | `jsonSchema`                     | `inputSchema`/`outputSchema`, `services: string[]`    | none                                   |
-| `db.add()`           | rejected (`RejectTypeEntity`)    | rejected — persist deliberately via `addOperation`    | rejected — never a document            |
 
-Mechanically, each kind needs what `type` needed when it was added as the third:
+### 2.1 Making the mechanism generic
 
-1. `internal/common/types/entity.ts:124` — the enum (`EntityKindSchema` follows).
-2. `internal/Entity/operation-kind.ts`, `process-kind.ts` — pipeables modelled on
-   `type-kind.ts`, stamping `[SchemaKindId]` and `TypeAnnotation.kind`.
-3. `Entity.ts` / `Type.ts` — `isOperationKind` / `isProcessKind` and `AnyEntity` widening.
-4. `Ref.ts:56-70` — one overload arm each, exactly where `Type.Type` got its arm.
-5. `registry.ts` `getEntityUris` — the operation-key case, plus a bare-EID fallback (it
-   returns `getEntityKeyDXNs` for non-type kinds, which is empty for an unkeyed entity).
-6. `Database.ts:83` — `RejectOperationEntity` / `RejectProcessEntity` beside
-   `RejectTypeEntity`, and `db.addOperation()` beside `db.addType()`.
-7. `internal/Obj/create-object.ts:106-110` — the three-way kind-inference ladder becomes a
-   lookup off `annotation.kind`.
+Each of these is a place ECHO currently hard-codes its three kinds. Opening them is the
+whole of the ECHO-side work; none of it mentions operations or processes.
 
-Naming assumption: the kinds are named for the concepts (`operation`, `process`), not for
-the variables (`definition`, `process`). Open — see §9.
+1. `internal/common/types/entity.ts:124` — enum → brand + descriptor registry;
+   `EntityKindSchema` → open string. `EchoTypeSchema` is already generic over
+   `K extends EntityKind` (`internal/Entity/entity.ts:63`) and needs no change.
+2. `internal/Entity/type-kind.ts` — generalize `EchoTypeKindSchema` into
+   `makeEntityType(kind, dxn)(schema)`. The type-kind pipeable becomes one call of it;
+   `Operation.makeDefinition` and the process type factory are two more, declared in
+   `@dxos/compute`.
+3. `internal/Obj/create-object.ts:106-110` — the three-way kind-inference ladder becomes a
+   read of `annotation.kind`.
+4. `registry.ts` `getEntityUris` — the type-kind special case becomes
+   `descriptor.addressing(entity)`, with the existing behavior registered as the `type`
+   descriptor. (It falls back to `getEntityKeyDXNs`, which is empty for an unkeyed entity —
+   a bare-EID fallback is worth adding as the default.)
+5. `Ref.ts:56-70` — the per-kind overload arms (object, relation, `Type.Type`,
+   `UnknownTypeSchema`) collapse into **one** arm over any entity type of any registered
+   kind. Fewer arms than today, and no new ones per kind.
+6. `Database.ts:83` — `RejectTypeEntity` hard-codes `EntityKind.Type`. Replace it with a
+   capability brand: `db.add()` bounds on kinds whose descriptor is `storage: 'document'`,
+   so ECHO rejects by _capability_ rather than by naming a kind. The runtime check reads
+   the same descriptor. `db.addType()` gets a generic sibling (`db.addEntity(kind, …)`, or
+   a per-kind entry point contributed by the registering package) for the deliberate
+   persist path.
+
+### 2.2 What an unregistered kind must do
+
+Once kinds are open, a peer can receive an entity whose kind it has never heard of — a
+space holding operations opened by a client that did not load `@dxos/compute`. The
+decoder must surface it as an opaque `Entity.Unknown` carrying its kind string, never
+fail. This is strictly better than the closed enum, which decodes `entityKind` with
+`Schema.decodeSync` today (`JsonSchema/json-schema.ts:585`) and would throw.
 
 ## 3. Operation — the definition is the entity
 
-`Operation.PersistentOperation` is deleted. `Operation.Definition` becomes the
-operation-kind entity, keeping the same DXN so no data migration is required:
+`Operation.PersistentOperation` is deleted. An operation definition is no longer a plain
+value shadowed by a separate database record: **it is an instance of the operation kind**,
+which `@dxos/compute` registers once (§2) under the existing `org.dxos.type.function`
+v0.2.0 DXN, so stored data needs no migration.
+
+For a consumer, almost nothing changes at the point of definition — `Operation.make`
+already produces what is now the entity:
 
 ```ts
-export class Definition extends Operation.makeDefinition<Definition>(
-  DXN.make('org.dxos.type.function', '0.2.0'), // unchanged
-)(Schema.Struct({ name, description, icon, inputSchema, outputSchema, services, binding, … })) {}
+// packages/plugins/plugin-markdown/src/types/MarkdownOperation.ts — unchanged today.
+export const Create = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.markdown.create'),
+    name: 'Create',
+    description: 'Creates a new markdown document and adds it to the space.',
+    icon: 'ph--file-text--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({ name: Schema.String, content: Schema.String }),
+  output: Schema.Struct({ object: Type.getSchema(Markdown.Document) }),
+});
 ```
 
-The live-only parts ride on hidden slots, as `Type` already does with its source schema:
+What changes is what that value now _is_ — an entity with a URI, so it can be referenced,
+resolved, queried and (optionally) persisted:
+
+```ts
+Type.getURI(Create); // 'dxn:org.dxos.operation.markdown.create'
+Obj.getMeta(Create).key; // the registry key — already true today
+```
+
+### 3.1 Attaching a handler
+
+Unchanged for the code kind; the other kinds are siblings (§5):
+
+```ts
+export default Create.pipe(
+  Operation.withHandler(({ name, content }) =>
+    Effect.gen(function* () {
+      const db = yield* Database.Service;
+      return { object: db.add(Markdown.make({ name, content })) };
+    }),
+  ),
+);
+```
+
+### 3.2 Referencing an operation
+
+The reason to make it an entity. Today a reference to an operation is a bare string
+(`Skill.tools: Array(ToolId)`) resolved by convention; it becomes an ordinary ref:
+
+```ts
+// In a schema.
+export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.trigger', '0.1.0'))(
+  Schema.Struct({
+    operation: Ref.Ref(Operation.Definition), // was: Schema.String
+    input: Schema.Any,
+  }),
+) {}
+
+// At a call site.
+const op = yield * trigger.operation.load(); // Operation.Definition
+const result = yield * Operation.invoke(op, trigger.input);
+```
+
+`Ref` resolution needs nothing new: the operation-kind descriptor indexes instances under
+`dxn:<key>` and `dxn:<key>:<version>` (§2), which the registry ref backend already serves.
+
+### 3.3 Where the definition lives
+
+Registry or space document, **one entity either way** — the same registry-first,
+db-second path `Type` already takes (`hypergraph.ts:214-218`):
+
+```ts
+// From code: contributed by a plugin, resolvable process-wide.
+graph.registry.add([Create]);
+
+// From a space: authored or deployed, replicated, resolvable by any peer that opens it.
+yield * db.addOperation(Create);
+
+// Either way, one query.
+const ops = yield * db.query(Filter.type(Operation.Definition)).from(Scope.registry()).run();
+```
+
+### 3.4 What rides where
+
+The parts a database cannot hold live on hidden slots, as `Type` already does with its
+source Effect Schema:
 
 | Slot                                   | Holds                          | Persisted projection         |
 | -------------------------------------- | ------------------------------ | ---------------------------- |
@@ -106,18 +226,11 @@ The live-only parts ride on hidden slots, as `Type` already does with its source
 | `TypesSlot`                            | `readonly Type.AnyEntity[]`    | refs, or omitted             |
 | `HandlerSlot`                          | plain / lazy / durable handler | never persisted              |
 
-- `Operation.make(props)` yields the entity directly; meta already carries `key` and
-  `version`, so it is addressable as `dxn:<key>` and `dxn:<key>:<version>`.
-- **Registry or automerge, one entity either way.** A definition sourced from code lives
-  in the registry; one persisted into a space lives in a document. `createRefResolver`
-  already normalizes both to the same registered entity for types
-  (`hypergraph.ts:214-218`); operations take the same path.
-- `serialize` / `serializable` / `deserialize` / `setFrom` disappear. A record read from a
-  space _is_ a Definition; its codecs rebuild lazily from `inputSchema`/`outputSchema` on
-  first access (the `Type.getSchema` rebuild path), and an absent handler slot is the
-  signal to invoke remotely — what `deserialize` encoded by omission.
-- `Ref.Ref(Operation.Definition)` becomes usable: `Skill.tools` (bare `ToolId` strings
-  today) and triggers stop round-tripping keys by hand.
+So `serialize` / `serializable` / `deserialize` / `setFrom` (`Operation.ts:478-560`)
+disappear. A definition read back from a space _is_ a `Definition`; its codecs rebuild
+lazily from `inputSchema`/`outputSchema` on first access (the `Type.getSchema` rebuild
+path), and an absent handler slot is the signal to invoke remotely — exactly what
+`deserialize` encoded by omission.
 
 **Instance ids must be derived from `key` + `version`, not random.** `Operation.make` is
 called at module scope in hundreds of files, and module-scope RNG is forbidden under
@@ -196,24 +309,90 @@ Properties they share, and why they are kinds rather than three unrelated APIs:
 definition with whichever handler slot is populated, and the runtime dispatches on the
 marker. `Operation.lazyHandler` composes with each of them.
 
-### 5.1 The durable kind
+### 5.1 Defining each kind
 
-`Process.make`, `MakeProcessOpts`, `Process.Callbacks`, `ProcessContext` and
-`Process.fromOperation` are removed. Their semantics become the durable handler:
+**Code** — the baseline, as today (§3.1): `Op.pipe(Operation.withHandler((input) => …))`.
+
+**Durable.** `Process.make`, `MakeProcessOpts`, `Process.Callbacks`, `ProcessContext` and
+`Process.fromOperation` are removed; their semantics become a handler attached to an
+ordinary definition. Today's `AgentProcess`
+(`agent-runtime/src/agent-service/agent-process.ts:106`) re-declares `key`, `input`,
+`output`, `types` and `services` beside the operation that spawns it; after, it declares
+them once:
 
 ```ts
-export const durableHandler: {
-  <Def extends Definition.Any>(create: Create<Def>): (op: Def) => WithDurableHandler<Def>;
-  <Def extends Definition.Any>(op: Def, create: Create<Def>): WithDurableHandler<Def>;
-};
+export const RunAgent = Operation.make({
+  meta: { key: DXN.make('org.dxos.operation.agent.run'), name: 'Run Agent' },
+  input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
+  output: Schema.Void,
+  types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm],
+  services: [Database.Service, AiService.AiService, StorageService.StorageService],
+  rpcs: HarnessControl, // the one field moving onto `make`.
+});
+
+export default RunAgent.pipe(
+  Operation.durableHandler((ctx) =>
+    Effect.gen(function* () {
+      // Runtime state lives in this scope, exactly as `Process.make`'s `create` does today.
+      const chat = yield* Database.resolve(/* … */).pipe(Effect.orDie);
+
+      return {
+        onSpawn: () => Effect.void,
+        onInput: (prompt) =>
+          Effect.gen(function* () {
+            yield* runTurn(chat, prompt);
+            yield* ctx.setAlarm(UNSEEN_WRITE_RETRY_MS); // suspend, resume later
+          }),
+        onAlarm: () => drainPendingWrites(chat),
+        onChildEvent: (event) => handleSubAgent(event),
+        rpcHandlers: HarnessControl.toLayer({/* … */}),
+      };
+    }),
+  ),
+);
 ```
 
 - `DurableCallbacks` is today's `Process.Callbacks` verbatim — `onSpawn`, `onInput`,
-  `onAlarm`, `onChildEvent`, `rpcHandlers`, defaulted to no-ops by the combinator.
+  `onAlarm`, `onChildEvent`, `rpcHandlers`, all defaulted to no-ops by the combinator.
 - `DurableContext` is today's `ProcessContext` with `ctx.process` (the live `Process`)
-  replacing `ctx.id` / `ctx.params`.
-- Everything `MakeProcessOpts` declared already lives on `Definition`; the one addition is
-  `rpcs`, which `Definition.Rpcs<Def>` feeds to `rpcHandlers` and `Process.rpc`.
+  replacing `ctx.id` / `ctx.params`, so a handler can hand its own URI to what it spawns.
+
+**Instructions.** The body is prose plus the tools the agent may use; the runtime runs an
+agent turn against the definition's `output` schema and completes when it is satisfied.
+The same thing a `Skill` expresses today, addressable as an operation:
+
+```ts
+export const TriageIssue = Operation.make({
+  meta: { key: DXN.make('org.dxos.operation.issue.triage'), name: 'Triage Issue' },
+  input: Schema.Struct({ issue: Ref.Ref(Issue) }),
+  output: Schema.Struct({ severity: Severity, assignee: Schema.optional(Ref.Ref(Contact)) }),
+  services: [Database.Service],
+});
+
+export default TriageIssue.pipe(
+  Operation.instructionsHandler({
+    instructions: Template.make(`
+      Read {{issue}} and any linked discussion. Decide a severity from the rubric in the
+      team's triage doc. Suggest an assignee only when one contact clearly owns the area.
+    `),
+    tools: [SearchOperation, ListContacts],
+  }),
+);
+```
+
+**Prompt.** One model call — a template rendered from the input, its reply parsed into
+`output`. No tools, no turn loop:
+
+```ts
+export default Summarize.pipe(
+  Operation.promptHandler({ prompt: Template.make('Summarize in one sentence:\n\n{{text}}') }),
+);
+```
+
+Both `instructions` and `prompt` bodies are _data_ (a `Template.Template`), which is what
+makes §9.8 — whether they belong in the persisted projection — a real question rather than
+a detail: if they do, such an operation can be authored entirely in a space with no code
+deployed.
 
 ### 5.2 One execution model
 
@@ -318,11 +497,9 @@ document (`core-db/object-core.ts:568` defaults unknown kinds to `Object`). They
 without error but as the _wrong kind_, so the loader must derive the kind from the
 typename rather than trusting the stored value. Nothing needs rewriting on disk.
 
-`entityKind` also reaches stored JSON Schema and is decoded strictly
-(`JsonSchema/json-schema.ts:585`), so a peer on an older build fails to decode a
-_persisted_ operation-kind entity. This does not affect processes (never stored) or
-registry-only operations. Either make `EntityKindSchema` decode unknown values to a
-sentinel before persisted operations ship, or keep them registry-only until it lands.
+Opening the enum (§2) removes the wire hazard the closed version had: an older peer no
+longer fails to decode a persisted operation-kind entity, it reads it as an opaque entity
+of an unregistered kind (§2.2). Processes never reach a document at all.
 
 ## 9. Open questions
 
@@ -333,10 +510,13 @@ sentinel before persisted operations ship, or keep them registry-only until it l
 3. Reaping policy for terminal processes — how long a query still sees a finished process.
 4. Whether `rpcs` belongs on `Definition` (and so in its persisted projection) or only on
    the durable handler.
-5. Whether `Type.AnyEntity` widening should explicitly forbid naming an operation or
-   process in `Definition.types`.
-6. Whether the plain code handler counts as a fourth handler kind or as the baseline the
+5. Whether `Definition.types` should be narrowed to reject operation- and process-kind
+   entities, now that `Type.AnyEntity` spans every registered kind.
+6. Whether kind registration is global (a module-scope `registerKind` side effect) or
+   scoped to a graph. Global is simpler and matches how types are declared today; scoped
+   avoids two runtimes in one process disagreeing about what `operation` means.
+7. Whether the plain code handler counts as a fourth handler kind or as the baseline the
    other three are declared against (§5).
-7. Whether a prompt template or an instructions body belongs in the persisted projection.
+8. Whether a prompt template or an instructions body belongs in the persisted projection.
    If it does, an operation of those kinds is fully defined by data — authored in a space,
    with no code deployed — which is a larger claim than the rest of this spec makes.
