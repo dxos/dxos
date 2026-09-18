@@ -27,6 +27,8 @@ export type TimelineLayout = {
   spans: Map<string, TimelineSpan>;
   /** Row index per commit index — the keyboard navigates in commit indices but scrolls rows. */
   rowByCommitIndex: Map<number, number>;
+  /** Commit index per commit id — a click names a commit, everything else speaks in indices. */
+  commitIndexById: Map<string, number>;
 };
 
 /**
@@ -41,18 +43,23 @@ export const layoutTimeline = (commits: readonly Commit[], branches: readonly st
   const visibleBranches = new Set(branches);
   const firstBranch = branches[0];
 
-  const positionById = new Map<string, { index: number; branch: string }>();
+  const commitIndexById = new Map<string, number>();
   commits.forEach((commit, index) => {
-    if (!positionById.has(commit.id)) {
-      positionById.set(commit.id, { index, branch: commit.branch });
+    if (!commitIndexById.has(commit.id)) {
+      commitIndexById.set(commit.id, index);
     }
   });
+
+  const positionOf = (commitId: string): { index: number; branch: string } | undefined => {
+    const index = commitIndexById.get(commitId);
+    return index === undefined ? undefined : { index, branch: commits[index].branch };
+  };
 
   // The row at which each branch is merged by another branch, and so may hand its lane back.
   const mergeRow = new Map<string, number>();
   commits.forEach((commit, row) => {
     for (const parentId of commit.parents ?? []) {
-      const parent = positionById.get(parentId);
+      const parent = positionOf(parentId);
       if (parent && parent.branch !== commit.branch && visibleBranches.has(parent.branch)) {
         mergeRow.set(parent.branch, row);
       }
@@ -116,7 +123,7 @@ export const layoutTimeline = (commits: readonly Commit[], branches: readonly st
 
     const parents = commit.parents ?? [];
     for (const parentId of parents) {
-      const parent = positionById.get(parentId);
+      const parent = positionOf(parentId);
       if (!parent || parent.branch === commit.branch) {
         continue;
       }
@@ -142,5 +149,5 @@ export const layoutTimeline = (commits: readonly Commit[], branches: readonly st
     }
   });
 
-  return { rows, branchLane, laneCount: maxLane + 1, spans, rowByCommitIndex };
+  return { rows, branchLane, laneCount: maxLane + 1, spans, rowByCommitIndex, commitIndexById };
 };

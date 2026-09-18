@@ -4,13 +4,16 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { LogLevel } from '@dxos/log';
 import { random } from '@dxos/random';
 import { Button, Panel, ScrollArea, ScrollContainer, Toolbar, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { defaultOptions } from './timeline-options.ts';
 import { type Commit, Timeline, TimelineProps } from './Timeline.tsx';
 
 random.seed(1);
@@ -130,11 +133,13 @@ const generateCommits = (n: number): Pick<TimelineProps, 'commits' | 'branches'>
   return { commits, branches };
 };
 
-const DefaultStory = (props: TimelineProps) => {
+const DefaultStory = (props: Omit<TimelineProps, 'getScrollElement'>) => {
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+
   return (
     <ScrollArea.Root>
-      <ScrollArea.Viewport>
-        <Timeline {...props} />
+      <ScrollArea.Viewport ref={setViewport}>
+        <Timeline {...props} getScrollElement={() => viewport} />
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -142,10 +147,13 @@ const DefaultStory = (props: TimelineProps) => {
 
 const meta = {
   title: 'ui/react-ui-trace/Timeline',
-  component: Timeline,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' })],
-} satisfies Meta<typeof Timeline>;
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+    withMosaic(),
+  ],
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -250,6 +258,59 @@ export const Compact: Story = {
   args: { ...generateCommits(100), compact: true },
 };
 
+/** A history far longer than any viewport; only the rows in view are in the DOM. */
+const LARGE_HISTORY_LENGTH = 5_000;
+
+const generateLargeHistory = (): Pick<TimelineProps, 'commits' | 'branches'> => {
+  const branches = ['main', 'worker'];
+  const commits: Commit[] = [];
+  for (let index = 0; index < LARGE_HISTORY_LENGTH; index++) {
+    const branch = index % 20 < 4 ? 'worker' : 'main';
+    commits.push({
+      id: `commit-${index}`,
+      branch,
+      message: `Commit ${index}`,
+      parents: index > 0 ? [`commit-${index - 1}`] : [],
+    });
+  }
+
+  return { commits, branches };
+};
+
+const mountedRows = (canvasElement: HTMLElement) => canvasElement.querySelectorAll<HTMLElement>('[role="listitem"]');
+
+export const Large: Story = {
+  args: { ...generateLargeHistory(), showTimestamp: true },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(mountedRows(canvasElement).length).toBeGreaterThan(0));
+
+    const rows = mountedRows(canvasElement);
+    // Windowed: a viewport's worth of rows plus the stack's overscan, never the whole history.
+    await expect(rows.length).toBeLessThan(LARGE_HISTORY_LENGTH / 10);
+    // Rows are exactly `lineHeight` tall, which is what makes the stack's size estimate exact.
+    for (const row of rows) {
+      await expect(row.getBoundingClientRect().height).toBe(defaultOptions.lineHeight);
+    }
+  },
+};
+
+export const Keyboard: Story = {
+  args: generateLargeHistory(),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(mountedRows(canvasElement).length).toBeGreaterThan(0));
+
+    // The last row is thousands of rows down, so it is only reachable if the move scrolls to it.
+    const timeline = canvasElement.querySelector<HTMLElement>('[tabindex="0"]');
+    await expect(timeline).not.toBeNull();
+    timeline?.focus();
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+
+    const lastRow = () => canvasElement.querySelector(`[data-commit-index="${LARGE_HISTORY_LENGTH - 1}"]`);
+    await waitFor(() => expect(lastRow()).not.toBeNull());
+    await waitFor(() => expect(lastRow()?.getAttribute('aria-current')).toBe('true'));
+  },
+};
+
 export const Streaming: Story = {
   render: () => {
     const [branches, setBranches] = useState<string[]>(['main']);
@@ -295,6 +356,7 @@ export const Streaming: Story = {
     );
 
     const scrollerRef = useRef<ScrollController>(null);
+    const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
     return (
       <Panel.Root>
@@ -309,8 +371,8 @@ export const Streaming: Story = {
         <Panel.Content>
           <ScrollContainer.Root pin ref={scrollerRef}>
             <ScrollContainer.Content thin>
-              <ScrollContainer.Viewport>
-                <Timeline branches={branches} commits={commits} showTimestamp />
+              <ScrollContainer.Viewport ref={setViewport}>
+                <Timeline branches={branches} commits={commits} showTimestamp getScrollElement={() => viewport} />
               </ScrollContainer.Viewport>
               <ScrollContainer.ScrollDownButton />
             </ScrollContainer.Content>

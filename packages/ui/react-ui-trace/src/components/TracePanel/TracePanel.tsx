@@ -22,6 +22,7 @@ import { type ExecutionGraph } from '../../execution-graph/index.ts';
 import { translationKey } from '../../translations.ts';
 import { ProcessTree, type ProcessTreeProps } from '../ProcessTree/index.ts';
 import { type Commit, Timeline } from '../Timeline/index.ts';
+import { SpanTreeView } from './SpanTreeView.tsx';
 import { type ProcessEnvironment, filterProcesses } from './trace-filter.ts';
 import { useTraceMenu } from './useTraceMenu.ts';
 
@@ -85,6 +86,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     );
     // Remembered across selections, so collapsing a section once keeps it collapsed.
     const [openSections, setOpenSections] = useState<string[]>(SECTIONS.map((section) => section.id));
+    // The timeline windows its rows against this scroller.
+    const [traceViewport, setTraceViewport] = useState<HTMLDivElement | null>(null);
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
@@ -157,15 +160,16 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                           <ScrollContainer.Root pin>
                             <ScrollContainer.Content thin>
                               <ScrollContainer.Fade />
-                              <ScrollContainer.Viewport>
+                              <ScrollContainer.Viewport ref={setTraceViewport}>
                                 {debug ? (
-                                  <JsonHighlighter data={spanTree} classNames='text-xs' />
+                                  <SpanTreeView spanTree={spanTree} />
                                 ) : (
                                   <Timeline
                                     branches={branches}
                                     branch={currentBranch}
                                     commits={commits}
                                     showTimestamp
+                                    getScrollElement={() => traceViewport}
                                     onSelect={handleCommitSelect}
                                   />
                                 )}

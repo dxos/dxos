@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { ExecutionGraph } from '@dxos/assistant/ExecutionGraph';
 import { InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Dnd } from '@dxos/react-ui-dnd';
 import { Timeline } from '@dxos/react-ui-trace';
 
 export const ExecutionGraphModule = () => {
@@ -36,6 +37,8 @@ const ExecutionGraphContainer = ({ space }: { space: Space }) => {
     space.db,
     feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
   );
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+
   // The message-based graph, built from the feed's objects rather than the trace.
   const { branches, commits } = useMemo(() => {
     const graph = new ExecutionGraph();
@@ -51,7 +54,13 @@ const ExecutionGraphContainer = ({ space }: { space: Space }) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <Timeline branches={branches} commits={commits} />
+        <Dnd.Root>
+          <ScrollArea.Root orientation='vertical' classNames='h-full' thin>
+            <ScrollArea.Viewport ref={setViewport}>
+              <Timeline branches={branches} commits={commits} getScrollElement={() => viewport} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Dnd.Root>
       </Panel.Content>
     </Panel.Root>
   );
