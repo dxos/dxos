@@ -21,12 +21,27 @@ Five changes, specified independently but landing as one API break:
 
 ## At a glance
 
+Nodes are entity kinds. `==>` is "is an entity kind"; `-->` is a reference one entity holds
+to another; `-.->` is derived by query rather than stored.
+
 ```mermaid
 graph TD
+  Entity["Entity"]
+
+  Type["<b>type</b><br/><i>Type.Type</i>"] ==> Entity
+  Object["<b>object</b><br/><i>e.g. Chat</i>"] ==> Entity
+  Relation["<b>relation</b>"] ==> Entity
+  Op["<b>operation</b><br/><i>Operation.Definition</i>"] ==> Entity
+  Proc["<b>process</b>"] ==> Entity
+
+  Object -->|type| Type
+  Relation -->|type| Type
+  Relation -->|source| Object
+  Relation -->|target| Object
+  Object -->|parent| Object
+
   Trigger["Trigger"] -->|runnable| Op
   Routine["Routine"] -->|spec.runnable| Op
-
-  Op["Operation.Definition<br/><i>kind: operation</i>"]
 
   Op --> Code["code<br/><i>(input) =&gt; Effect</i>"]
   Op --> Script["script<br/><i>Ref&lt;Text&gt; → EDGE</i>"]
@@ -34,32 +49,33 @@ graph TD
   Op --> Instructions["instructions<br/><i>Template + tools</i>"]
   Op --> Durable["durable<br/><i>process callbacks</i>"]
 
-  Proc["Process<br/><i>kind: process</i>"] -->|operation| Op
+  Proc -->|operation| Op
   Proc -->|parent| Proc
-  Proc -->|parent| Obj["ECHO object — e.g. Chat<br/><i>kind: object</i>"]
-  Obj -.->|"Query.incoming(Process, 'parent')"| Proc
+  Proc -->|parent| Object
+  Object -.->|"Query.incoming(Process, 'parent')"| Proc
 
   classDef runtimeOnly stroke-dasharray: 5 5;
   class Proc runtimeOnly;
 ```
 
-Dashed node = never stored (the compute runtime is its only home). Everything else may
-live in the registry or in a space document, at the owner's choice (§2).
+Reading it:
 
-The object → process direction is a **dotted edge because it is a query, not a stored
-ref**. A conversation's agent process is parented to its `Chat` — today expressed as a
-`TargetAnnotation` holding a Chat DXN (`agent-process.ts:135`) — and a `Chat` finds its
-processes by querying for them. It must not hold a `Ref<Process>`: a process ref resolves
-only where that runtime is reachable, so persisting one would dangle on every other peer
-(§7).
-
-Two indirections collapse here. `Runnable` (`compute/src/Runnable.ts`) is today a type
-alias for `Operation.PersistentOperation`, so a trigger and a routine already point at an
-operation through an extra name — after §3 they point at the definition itself. And
-`Routine.spec.instructions` currently carries an owned `Instructions` object whose
-operation is "implicitly the static `RunInstructions`" (`types/Routine.ts:46-48`); with
-`instructions` as a handler kind, that routine simply references an operation like any
-other.
+- **The five kinds are siblings.** `operation` and `process` are not object types with a
+  `type` ref; their kind _is_ their identity, and the schema behind each is declared once
+  by `@dxos/compute` when it registers the kind (§2).
+- **Dashed node = never stored.** A process lives only in the compute runtime. Everything
+  else may live in the registry or in a space document, at the owner's choice (§2).
+- **The object → process edge is dotted because it is a query, not a stored ref.** A
+  conversation's agent process is parented to its `Chat` — today a `TargetAnnotation`
+  holding a Chat DXN (`agent-process.ts:135`) — and the `Chat` finds its processes by
+  querying. It must not hold a `Ref<Process>`: a process ref resolves only where that
+  runtime is reachable, so persisting one would dangle on every other peer (§7).
+- **Two indirections collapse.** `Runnable` (`compute/src/Runnable.ts`) is today a type
+  alias for `Operation.PersistentOperation`, so a trigger and a routine already point at an
+  operation through an extra name — after §3 they point at the definition itself. And
+  `Routine.spec.instructions` currently carries an owned `Instructions` object whose
+  operation is "implicitly the static `RunInstructions`" (`types/Routine.ts:46-48`); with
+  `instructions` as a handler kind, that routine references an operation like any other.
 
 ## 1. Before
 
