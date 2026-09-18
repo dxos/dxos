@@ -58,46 +58,80 @@ the old series flat. All four are always present; `0` means the realm was absent
 
 ## Tiles
 
-Every tile is the same shape: **x axis is days, one line per scenario** — a HogQL
-`DataVisualizationNode` grouping on `toStartOfDay(timestamp)` with `seriesBreakdownColumn:
-scenario`, over the last 90 days.
+**Every chart is a RUN TOTAL with an error bar.** One box per night: the phases are reduced within
+an iteration to a single run-level number, and the box then describes the spread across the
+night's ten iterations.
 
-**The aggregate is `median`, not `avg`.** The nightly runs ten iterations, so a day holds ten
-samples per stage; a mean is dragged by one slow iteration where a median is not, and the point of
-ten samples was to stop reading noise as a level change. Peak RSS is the exception and uses
-`max` — an averaged peak is not a peak.
+- **Box** = mean +/- one **sample** standard deviation. An error bar, not an interquartile range —
+  the choice `EDGE nightly join latency` made, and the reason its tiles read as measurements. True
+  quartiles are one edit away (`quantile(0.25)` / `quantile(0.75)`) if the spread is ever the wrong
+  question.
+- **Whiskers** = the lowest and highest iteration. **Line** = median, **marker** = mean.
+- Whiskers are widened to enclose the box and the lower edge floored at zero: a renderer needs
+  `min <= p25 <= p75 <= max`, and a sample whose sd exceeds its mean would otherwise invert them.
+- `stddevSamp` returns **NaN** for a single sample, and no `coalesce` catches a NaN — hence
+  `if(count() > 1, stddevSamp(x), 0)`. Without it a one-iteration day renders an empty box rather
+  than a degenerate one.
 
-Realms get separate tiles rather than separate series, so a tile's ten lines are always the ten
-scenarios and never a ten-by-four grid nobody can read.
+### The two reducers, and why a tile has the one it has
 
-| #   | tile                    | measure                       |
-| --- | ----------------------- | ----------------------------- |
-| 1   | Wall time               | `ciWallMs`                    |
-| 2   | CPU, all processes      | `ciCpuMsTotal`                |
-| 3   | CPU — tab               | `ciCpuMsTab`                  |
-| 4   | CPU — shared worker     | `ciCpuMsSharedWorker`         |
-| 5   | CPU — dedicated workers | `ciCpuMsWorker`               |
-| 6   | Heap — tab              | `ciHeapUsedBytesTab`          |
-| 7   | Heap — shared worker    | `ciHeapUsedBytesSharedWorker` |
-| 8   | Peak RSS                | `ciPeakRssBytes`              |
-| 9   | DOM nodes               | `ciDomNodes`                  |
-| 10  | Total blocking time     | `ciTbtMs`                     |
-| 11  | Lag p95 — tab           | `ciLagP95MsTab`               |
-| 12  | Lag p95 — shared worker | `ciLagP95MsSharedWorker`      |
-| 13  | App code transferred    | `ciCodeBytes`                 |
+| reducer               | tiles                                        | why                                                                                                                                                   |
+| --------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sum` over the phases | wall time, CPU (all three), TBT, code bytes  | Additive: the run cost what its phases cost.                                                                                                          |
+| `max` over the phases | peak RSS, peak heap, peak DOM nodes, lag p95 | A **level**, not a quantity. Summing ten peaks reports memory never simultaneously resident, and summing ten p95s is a number with no interpretation. |
 
-Tiles 4, 7 and 12 — the shared-worker realm — were created as insights but left off the dashboard
-until a later change attached them; if a shared-worker tile is missing, that is what happened.
+| #   | tile                                  | measure              | reducer |
+| --- | ------------------------------------- | -------------------- | ------- |
+| 1   | Total wall time per run               | `ciWallMs`           | sum     |
+| 2   | Total CPU per run — all processes     | `ciCpuMsTotal`       | sum     |
+| 3   | Total CPU per run — tab               | `ciCpuMsTab`         | sum     |
+| 4   | Total CPU per run — dedicated workers | `ciCpuMsWorker`      | sum     |
+| 5   | Peak DOM nodes per run                | `ciDomNodes`         | max     |
+| 6   | Peak RSS per run                      | `ciPeakRssBytes`     | max     |
+| 7   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`      | max     |
+| 8   | Peak heap per run — tab               | `ciHeapUsedBytesTab` | max     |
+| 9   | Total app code transferred per run    | `ciCodeBytes`        | sum     |
+| 10  | Total blocking time per run           | `ciTbtMs`            | sum     |
+
+### The two stacked tiles
+
+**Wall time by phase (mean, stacked)** answers a different question from the rest of the page. The
+distributions say whether the run got slower; this says **where**, and a regression in `open-tasks`
+(ECHO and list rendering) has nothing in common with one in `edit-document` (the editor keystroke
+path).
+
+It uses `avg`, not `median`, and that is load-bearing: the mean of a sum is the sum of the means, so
+its ten segments add up to the mean on the wall-time distribution tile. Per-phase medians would not
+sum to the total median, and a stacked chart whose segments do not add up to a number shown
+elsewhere on the same dashboard is worse than no chart.
+
+**Peak memory composition (mean, stacked)** is the memory counterpart, and it stacks by
+**composition, not by phase** — deliberately. Time is additive, so phases stack; memory is a level,
+so stacking ten phases' peaks would draw ~40 GB that never existed at any instant. What genuinely
+sums is JS heap plus everything else = peak RSS, which puts the finding on the page: ~250 MB of heap
+inside ~4 GB of RSS, so ~15x of this app's memory is wasm linear memory and native allocation and
+optimizing the JS heap cannot move the memory number.
+
+One honest caveat, recorded in the tile's SQL: the RSS peak and the heap peak need not occur at the
+same instant within a phase, so the total is exact and the boundary between the two segments is
+approximate.
+
+### Shared-worker panels are deliberately absent
+
+The realm measured ~1 MB of heap flat across a run, a few hundred ms of CPU, and **lag p95 of 0 ms
+on every stage of every run**. Three instruments agree it is idle, so its three tiles were noise on
+a page where every tile should earn its space. The insights still exist unattached
+(`CPU / Heap / Lag p95 — shared worker, by scenario`) for the day that stops being true.
 
 ### The runs table
 
-The last tile is a table rather than a chart: one row per run, newest first, with when it ran, its
-branch, commit, trigger and Depot run id, and its totals. The charts aggregate by day and so cannot
-answer _which runs is this point made of_ — this is how a point that looks wrong gets traced back to
-a commit and a run.
+The last tile is a table rather than a chart: **one row per iteration**, newest first, with when it
+ran, its branch, commit, trigger, iteration index and its totals.
 
-It groups by `ciIteration` as well as by run, so a ten-iteration nightly is **ten rows**, one per
-sample, and the spread down those rows is the noise floor read directly rather than asserted.
+These rows are exactly the population each box summarizes — the charts reduce these same phases
+within an iteration and then take the mean, sd and median across the run's iterations. So the
+spread down a run's ten rows _is_ the box, available as numbers when the picture is not enough, and
+it is also how a point that looks wrong gets traced back to a commit and a Depot run id.
 
 Its `stages` column is the integrity check, and worth reading before any other number on the page.
 The flow has **ten** stages and `writePosthogBatch` drops failed ones, so a row showing fewer than
@@ -111,7 +145,8 @@ charts above, where nothing marks it as short.
 - **`ciDomNodes` is the only machine-independent measure here.** Across a CI runner and a local
   sandbox it differs by 1% while wall time differs 1.7x and TBT 3x. Read it for regressions; read
   the timing tiles as trends.
-- **The run-to-run noise floor is ~20% per stage; the nightly takes ten samples against it.** Ten
-  iterations charted as a median is what makes a day's point mean something, but it does not make a
-  single point a regression — a level shift sustained over several nights still is. The runs table
-  is where the samples behind a point are visible: one row per iteration, ten rows per run.
+- **The box IS the noise floor, so read it before reading the trend.** The run-to-run spread on a
+  stage is ~20%, and the nightly's ten iterations now measure that directly rather than leaving it
+  asserted. A mean that moves by less than the boxes overlap is not a regression; a shift that
+  separates two nights' boxes is worth investigating. This is what one sample per night could never
+  support.
