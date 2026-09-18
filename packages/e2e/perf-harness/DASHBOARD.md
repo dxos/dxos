@@ -50,6 +50,12 @@ regression. Filter on them rather than trusting them to be constant.
 | `ciTaskMs`, `ciScriptMs`, `ciLayoutMs`, `ciRecalcStyleMs` | ms            | tab only, by construction                                                       |
 | `ciTbtMs`, `ciLongTaskMaxMs`                              | ms            | tab only — the Long Tasks API is a page API                                     |
 | `ciCodeBytes`, `ciApiBytes`, `ciApiRequests`              | bytes / count | —                                                                               |
+| `ciEdgeApiBytes`, `ciEdgeSocketBytes`, `ciEdgeBytes`      | bytes         | the app's own backend only; `ciEdgeBytes` is the two summed                     |
+| `ciEdgeApiRequests`, `ciEdgeSocketFrames`                 | count         | frames are counted in both directions                                           |
+| `ciAnalyticsBytes`                                        | bytes         | telemetry, kept out of the edge columns and recorded so the split is auditable  |
+| `ciSqliteReadBytes`, `ciSqliteWriteBytes`                 | bytes         | SQLite's own VFS I/O, browser only                                              |
+| `ciSqliteReads`, `ciSqliteWrites`, `ciSqliteSyncs`        | count         | `syncs` is where write amplification shows up                                   |
+| `ciSqliteRealms`                                          | count         | **read this first**: `0` means nothing was instrumented, not that I/O was zero  |
 | `ciRealms`                                                | count         | how many realms the row read, so a `0` column is readable as absent             |
 
 **The realm columns are keyed by KIND, not by script name.** A name-keyed column
@@ -58,49 +64,186 @@ the old series flat. All four are always present; `0` means the realm was absent
 
 ## Tiles
 
-Every tile is the same shape: **x axis is days, one line per scenario.** A trends insight with
-`interval: day`, `math: avg` on the measure property, and a breakdown on `properties.ciStage` — not
-HogQL, because the native controls give the dashboard a working date range and interval picker.
+**Every DISTRIBUTION tile is a run total with an error bar.** One box per night: the phases are
+reduced within an iteration to a single run-level number, and the box then describes the spread
+across the night's ten iterations. That is tiles 1-12 below.
 
-Realms get separate tiles rather than separate series, so a tile's ten lines are always the ten
-scenarios and never a ten-by-four grid nobody can read.
+The **two stacked tiles are the exception** and carry no error bar — they answer "where did it go"
+rather than "how much and how variable", and they use means so their segments sum to a total shown
+elsewhere. See "The two stacked tiles" below.
 
-| #   | tile                    | measure                       |
-| --- | ----------------------- | ----------------------------- |
-| 1   | Wall time               | `ciWallMs`                    |
-| 2   | CPU, all processes      | `ciCpuMsTotal`                |
-| 3   | CPU — tab               | `ciCpuMsTab`                  |
-| 4   | CPU — shared worker     | `ciCpuMsSharedWorker`         |
-| 5   | CPU — dedicated workers | `ciCpuMsWorker`               |
-| 6   | Heap — tab              | `ciHeapUsedBytesTab`          |
-| 7   | Heap — shared worker    | `ciHeapUsedBytesSharedWorker` |
-| 8   | Peak RSS                | `ciPeakRssBytes`              |
-| 9   | DOM nodes               | `ciDomNodes`                  |
-| 10  | Total blocking time     | `ciTbtMs`                     |
-| 11  | Lag p95 — tab           | `ciLagP95MsTab`               |
-| 12  | Lag p95 — shared worker | `ciLagP95MsSharedWorker`      |
-| 13  | App code transferred    | `ciCodeBytes`                 |
+- **Box** = mean +/- one **sample** standard deviation. An error bar, not an interquartile range —
+  the choice `EDGE nightly join latency` made, and the reason its tiles read as measurements. True
+  quartiles are one edit away (`quantile(0.25)` / `quantile(0.75)`) if the spread is ever the wrong
+  question.
+- **Line** = median, **marker** = mean.
+- **Whiskers** = the lowest and highest iteration, EXCEPT where the renderer needs them widened.
+  A box plot requires `min <= p25 <= p75 <= max`, so when one sd reaches past the observed range
+  the whisker is pushed out to enclose the box, and the lower edge is floored at zero. The two
+  cases are worth keeping apart when reading a tile: a whisker at the box edge is the widening
+  rule, not a night where the extreme iteration happened to sit exactly one sd out. The raw
+  minimum and maximum are always available per iteration in the runs table.
+- `stddevSamp` returns **NaN** for a single sample, and no `coalesce` catches a NaN — hence
+  `if(count() > 1, stddevSamp(x), 0)`. Without it a one-iteration day renders an empty box rather
+  than a degenerate one.
+
+### The two reducers, and why a tile has the one it has
+
+| reducer               | tiles                                       | why                                                                                                                                                   |
+| --------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sum` over the phases | wall time, CPU (all three), TBT, code bytes | Additive: the run cost what its phases cost.                                                                                                          |
+| `max` over the phases | peak RSS, peak heap, lag p95                | A **level**, not a quantity. Summing ten peaks reports memory never simultaneously resident, and summing ten p95s is a number with no interpretation. |
+
+| #   | tile                                  | measure              | reducer |
+| --- | ------------------------------------- | -------------------- | ------- |
+| 1   | Total wall time per run               | `ciWallMs`           | sum     |
+| 2   | Total CPU per run — all processes     | `ciCpuMsTotal`       | sum     |
+| 3   | Total CPU per run — tab               | `ciCpuMsTab`         | sum     |
+| 4   | Total CPU per run — dedicated workers | `ciCpuMsWorker`      | sum     |
+| 5   | Peak RSS per run                      | `ciPeakRssBytes`     | max     |
+| 6   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`      | max     |
+| 7   | Peak heap per run — tab               | `ciHeapUsedBytesTab` | max     |
+| 8   | Total app code transferred per run    | `ciCodeBytes`        | sum     |
+| 9   | Total blocking time per run           | `ciTbtMs`            | sum     |
+| 10  | Total edge traffic per run            | `ciEdgeBytes`        | sum     |
+| 11  | Total SQLite read bytes per run       | `ciSqliteReadBytes`  | sum     |
+| 12  | Total SQLite write bytes per run      | `ciSqliteWriteBytes` | sum     |
+
+### `open-space` is not yet trustworthy
+
+Worth knowing before reading any tile that includes it. Across four runs its wall time is 254,
+378, 648 and 1,638 ms — a **6.4x** span — and its within-run CV is **41.6%**, against 1-3% for
+most phases. Every other phase is stable both within and across runs, so this is the stage and not
+the harness. Until it is understood, a movement in a run total is more likely to be `open-space`
+than anything else in the flow, and the phase-stacked tile is where to check.
+
+### The SQLite tiles filter on `ciSqliteRealms > 0`
+
+Alone among the tiles, these two carry a `WHERE` that is not about comparability. Zero bytes means
+either that SQLite did no I/O or that nothing was instrumented, and the byte columns cannot tell
+those apart — so without the filter every run predating the VFS wrapper plots as a floor of zero
+and reads as a dramatic improvement that never happened. The integrity column is what makes the
+absence droppable rather than plottable.
+
+The two are not symmetric, and the difference is in the VFS contract rather than in the tiles:
+
+- **Read bytes are REQUESTED.** SQLite asks for a whole page past end-of-file during recovery and
+  the VFS zero-fills the remainder, so this is the I/O asked of storage.
+- **Write bytes are DELIVERED.** A short write is an error the VFS reports rather than a partial
+  success, so a rejected write contributes nothing and lands in `writeErrors`.
+
+Read the write tile against `ciSqliteSyncs`: bytes rising while syncs stay flat is a bigger
+transaction, while syncs rising with bytes flat is write amplification — the journal mode doing
+more fsyncs for the same data. `applyOpfsPragmas` sets journal mode and `synchronous`, so a change
+there should move these tiles and nothing else on the page.
+
+### The two stacked tiles
+
+**Wall time by phase (mean, stacked)** answers a different question from the rest of the page. The
+distributions say whether the run got slower; this says **where**, and a regression in `open-tasks`
+(ECHO and list rendering) has nothing in common with one in `edit-document` (the editor keystroke
+path).
+
+It uses `avg`, not `median`, and that is load-bearing: the mean of a sum is the sum of the means, so
+its ten segments add up to the mean on the wall-time distribution tile. Per-phase medians would not
+sum to the total median, and a stacked chart whose segments do not add up to a number shown
+elsewhere on the same dashboard is worse than no chart.
+
+**Peak memory composition (mean, stacked)** is the memory counterpart, and it stacks by
+**composition, not by phase** — deliberately. Time is additive, so phases stack; memory is a level,
+so stacking ten phases' peaks would draw ~40 GB that never existed at any instant. What genuinely
+sums is JS heap plus everything else = peak RSS, which puts the finding on the page: ~250 MB of heap
+inside ~4 GB of RSS, so ~15x of this app's memory is wasm linear memory and native allocation and
+optimizing the JS heap cannot move the memory number.
+
+One honest caveat, recorded in the tile's SQL: the RSS peak and the heap peak need not occur at the
+same instant within a phase, so the total is exact and the boundary between the two segments is
+approximate.
+
+### Edge traffic, and what it took to measure it
+
+`ciEdgeBytes` is `fetch`/`xhr` **plus WebSocket frames** to the app's own backend, with analytics
+excluded. Each half needed fixing before the tile meant anything:
+
+- **Frames were invisible.** A WebSocket emits exactly ONE `response` — the 101, with an empty body
+  — so the `response` handler saw none of ECHO's replication. On a real CI run that read as
+  `edit-document`, `toggle-task`, `scroll-tasks` and `reopen-project` each recording **0 API bytes
+  and 0 requests**, which is impossible for a flow that syncs. Counted via `page.on('websocket')`
+  now, in both directions.
+- **Analytics rode the same resource type** as a real API call, so whatever PostHog flushed during
+  a stage landed in the same column as the app's own traffic. Origin is classified by host,
+  suffix-matched so every deployment of the worker counts without being listed, with the analytics
+  list tested FIRST so telemetry proxied through an edge subdomain cannot widen the backend column.
+
+Origin accumulates alongside the code/API split rather than partitioning it: a deployed build
+serves the bundle from the same host as the API, so `codeBytes` has to keep meaning the whole
+bundle.
+
+### Peak DOM nodes is off the page
+
+The insight still exists (`UXeKiR4q`) and `ciDomNodes` is still on every row — it is simply not a
+tile. Earlier revisions of this file called it "the only machine-independent measure, read this one
+for regressions"; that claim is gone rather than the tile being restored, because a dashboard is
+not obliged to carry every field the harness records.
+
+### Every aggregate tile requires a COMPLETE iteration
+
+`writePosthogBatch` drops a failed stage, so an iteration that lost one publishes nine rows rather
+than ten. A run total summed over nine phases is smaller than one summed over ten, and nothing
+about the number says so — a partial iteration would enter the distribution looking like a fast
+one and drag the whole box down.
+
+Each distribution and stacked query therefore reduces an iteration only if it has all ten stages
+(`HAVING count() = 10` on the per-iteration group). The partial rows stay in the store and in the
+runs table, where the `stages` column is what makes them legible; they are excluded from the
+aggregates alone.
+
+### Shared-worker panels are deliberately absent
+
+The realm measured ~1 MB of heap flat across a run, a few hundred ms of CPU, and **lag p95 of 0 ms
+on every stage of every run**. Three instruments agree it is idle, so its three tiles were noise on
+a page where every tile should earn its space. The insights still exist unattached
+(`CPU / Heap / Lag p95 — shared worker, by scenario`) for the day that stops being true.
 
 ### The runs table
 
-The last tile is a table rather than a chart: one row per run, newest first, with when it ran, its
-branch, commit, trigger and Depot run id, and its totals. The charts aggregate by day and so cannot
-answer _which runs is this point made of_ — this is how a point that looks wrong gets traced back to
-a commit and a run.
+The last tile is a table rather than a chart: **one row per iteration**, newest first, with when it
+ran, its branch, commit, trigger, iteration index and its totals.
+
+These rows are exactly the population each box summarizes — the charts reduce these same phases
+within an iteration and then take the mean, sd and median across the run's iterations. So the
+spread down a run's ten rows _is_ the box, available as numbers when the picture is not enough, and
+it is also how a point that looks wrong gets traced back to a commit and a Depot run id.
 
 Its `stages` column is the integrity check, and worth reading before any other number on the page.
 The flow has **ten** stages and `writePosthogBatch` drops failed ones, so a row showing fewer than
-ten is a partial run whose totals are not comparable to a complete one — it will still be averaged
-into the charts above, where nothing marks it as short.
+ten is a partial iteration whose totals are not comparable to a complete one. The aggregate tiles
+exclude it (`HAVING count() = 10`), so this table and the stored rows are the only place it shows.
 
 ## Two things to know before reading a tile
 
 - **Tiles are dated by run, not by commit.** A nightly can run hours after the commit it measures,
   the same caveat the EDGE join-latency dashboard carries.
-- **`ciDomNodes` is the only machine-independent measure here.** Across a CI runner and a local
-  sandbox it differs by 1% while wall time differs 1.7x and TBT 3x. Read it for regressions; read
-  the timing tiles as trends.
-- **The run-to-run noise floor is ~20% per stage, and the nightly runs one iteration per mode.** A
-  single point moving is not a regression; only a level shift sustained over several nights is. The
-  fix is more iterations per night charted as a median, not a tighter chart — until then, read
-  levels and not points.
+- **The timing tiles are trends, not absolutes.** Across a CI runner and a local sandbox wall time
+  differs 1.7x and TBT 3x, so a number is comparable only to numbers from the same runner.
+- **The box measures WITHIN-night noise, which is much smaller than night-to-night, so it is not
+  the error bar the trend needs.** Measured on the first ten-iteration run (`0cb927f5`, 100 rows):
+  the coefficient of variation across ten iterations of one run is **1.6%** on total wall time,
+  2.9% CPU, 1.9% TBT, 3.1% peak RSS and **0.11%** DOM nodes. The same phases compared ACROSS runs
+  move far more — `edit-document` spans 1,438-1,589 ms over four runs (~10%) against 1.2% inside
+  one, and `boot` spans 3,720-4,219 ms (~13%) against 9.2% inside one.
+
+  So a box being narrow says the harness is repeatable on one machine in one job; it does NOT say a
+  night-to-night move of that size is meaningful. The between-night component — a different runner
+  cell, a different bundle, a cold cache — is the larger term and no tile currently measures it.
+  Two nights whose boxes do not overlap can still differ by less than the machine does.
+
+  This corrects the figure this file carried before any of it was measured, "~20% run-to-run spread
+  per stage". That number came from comparing separate runs and was then used to describe
+  iterations, which are an order of magnitude tighter.
+
+  What the box is NOT: mean +/- one sd is a description of the samples, not a confidence interval
+  and not a hypothesis test. Overlapping boxes are not evidence that nothing regressed, and
+  separated boxes do not establish that something did. Read overlap as "this movement is within
+  what the harness sees night to night" and separation as "worth investigating", and if a decision
+  actually rests on it, take more samples rather than reading more into these.

@@ -1,0 +1,21 @@
+# @dxos/plugin-labeler
+
+Labels mailbox messages with the space's own tags, using a decision model rather than a prompt.
+
+Per message it asks three questions in one call:
+
+| Question                                    | Primitive | Applied as                                  |
+| ------------------------------------------- | --------- | ------------------------------------------- |
+| Does this ask the recipient for a reply?     | `Noul`    | `Needs reply` tag above the truth threshold |
+| Which of the user's labels fits?             | `Choice`  | that tag, if the model is confident enough  |
+| How soon does it need dealing with?          | `Score`   | `Urgent` tag for the top band               |
+
+The choices are the space's own user tags — nothing is invented, and a low-confidence answer applies
+nothing rather than a guess.
+
+Two entry points, both from plugin-inbox's own seams:
+
+- **Toolbar action** (`MailboxAction`) — "Label messages" runs it over the whole inbox.
+- **Cascade pass** (`MailboxProcessor`, id `label`, after `contacts`) — runs as part of Analyze.
+
+Requires a decision model in the space: see `@dxos/plugin-typesafe`. See [docs/DESIGN.md](./docs/DESIGN.md).
