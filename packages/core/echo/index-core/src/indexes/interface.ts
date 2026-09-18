@@ -63,6 +63,17 @@ export interface IndexerObject {
 }
 
 /**
+ * One Automerge change as the activity ledger counts it: where it happened, when its author's clock
+ * said it happened, and how many ops it carried.
+ */
+export interface ChangeSummary {
+  spaceId: SpaceId;
+  /** Unix ms. */
+  time: number;
+  ops: number;
+}
+
+/**
  * SQLite-based index for storing and querying object data.
  */
 export interface Index {

@@ -11,9 +11,9 @@ import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
-import { type RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
@@ -70,9 +70,19 @@ type QueryInvalidationStats = {
   averageQueriesActive: number;
 };
 
+/** An open activity stream: re-read after every index pass that touches its space, sent when it changed. */
+type ActivitySubscription = {
+  request: QueryService.ActivityRequest;
+  last: string | undefined;
+  send: (response: QueryService.ActivityResponse) => void;
+  onError: (error: Error) => void;
+};
+
 export class QueryServiceImpl extends Resource implements QueryService.Handlers {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly '_queries' = new Set<ActiveQuery>();
+
+  private readonly '_activity' = new Set<ActivitySubscription>();
 
   private '_updateQueries'!: DeferredTask;
 
@@ -169,6 +179,24 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       return Effect.promise(async () => {
         await queryEntry.close();
         await ctx.dispose();
+      });
+    });
+  }
+
+  ['QueryService.activity'](
+    request: QueryService.ActivityRequest,
+  ): EffectStream.Stream<QueryService.ActivityResponse, Error> {
+    return EffectEx.streamFromEmitter<QueryService.ActivityResponse, Error>((emit) => {
+      const subscription: ActivitySubscription = {
+        request,
+        last: undefined,
+        send: (response) => void emit.single(response),
+        onError: (error) => void emit.fail(error),
+      };
+      this._activity.add(subscription);
+      scheduleMicroTask(this._ctx, async () => this._updateQueries.schedule());
+      return Effect.sync(() => {
+        this._activity.delete(subscription);
       });
     });
   }
@@ -277,6 +305,33 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
             query: JSON.stringify(query.executor.query),
           });
           query.onError(err as Error);
+        }
+      }),
+    );
+
+    await Promise.all(
+      Array.from(this._activity).map(async (subscription) => {
+        // An unread subscription always reads; afterwards only a pass over its space can change it.
+        const affected =
+          subscription.last === undefined ||
+          hint === 'all' ||
+          (hint !== null &&
+            (hint.spaceIds === undefined || hint.spaceIds.has(SpaceId.make(subscription.request.spaceId))));
+        if (!affected) {
+          return;
+        }
+        try {
+          const rows = await this._params.indexEngine
+            .queryActivity(subscription.request)
+            .pipe(RuntimeProvider.runPromise(this._params.runtime));
+          const serialized = JSON.stringify(rows);
+          if (serialized !== subscription.last) {
+            subscription.last = serialized;
+            subscription.send({ rows: [...rows] });
+          }
+        } catch (err) {
+          log.catch(err, { spaceId: subscription.request.spaceId });
+          subscription.onError(err as Error);
         }
       }),
     );

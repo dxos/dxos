@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 import { toActivity } from './activity.ts';
 
 describe('toActivity', () => {
-  test('gives each day one calendar entry and drops unknown days', ({ expect }) => {
+  test('sums hours into local days', ({ expect }) => {
     const rows = [
-      { day: new Date(2026, 0, 5).getTime(), count: 3 },
-      { day: null, count: 4 },
-      { day: new Date(2026, 0, 6).getTime(), count: 5 },
+      { hour: hourOf(new Date(2026, 0, 5, 9)), changes: 2 },
+      { hour: hourOf(new Date(2026, 0, 5, 17)), changes: 1 },
+      { hour: hourOf(new Date(2026, 0, 6, 1)), changes: 5 },
     ];
 
     expect(toActivity(rows)).toEqual([
@@ -20,3 +20,5 @@ describe('toActivity', () => {
     ]);
   });
 });
+
+const hourOf = (date: Date): number => Math.floor(date.getTime() / 3_600_000);

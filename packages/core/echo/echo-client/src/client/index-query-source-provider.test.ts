@@ -6,6 +6,7 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as EffectScope from 'effect/Scope';
+import * as EffectStream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -60,6 +61,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const source = new IndexQuerySource({
@@ -100,6 +102,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const source = new IndexQuerySource({
@@ -142,6 +145,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const source = new IndexQuerySource({
@@ -195,6 +199,7 @@ describe('IndexQuerySource', () => {
           emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
         }),
       'QueryService.reindex': () => Effect.void,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const updateEvent = new Event<ObjectUpdate>();
@@ -263,6 +268,7 @@ describe('IndexQuerySource', () => {
           );
         }),
       'QueryService.reindex': () => Effect.void,
+      'QueryService.activity': () => EffectStream.empty,
     });
 
     const source = new IndexQuerySource({

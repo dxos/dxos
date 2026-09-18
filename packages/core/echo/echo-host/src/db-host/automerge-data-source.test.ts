@@ -327,4 +327,73 @@ describe('AutomergeDataSource', () => {
     expect(result.objects).toHaveLength(1);
     expect(result.objects[0].spaceId).toBe(spaceId);
   });
+
+  test('a late-arriving old change lands in its own hour and is counted once', async () => {
+    const host = await setupAutomergeHost();
+    const spaceId = SpaceId.random();
+
+    const handle = await createDatabaseDirectory(host, spaceId, {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Original' } }),
+    });
+    await host.flush(Context.default());
+
+    const dataSource = new AutomergeDataSource(host);
+
+    const firstResult = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), [], { changes: true }),
+    );
+    const firstChanges = firstResult.changes ?? [];
+    expect(firstChanges.length).toBeGreaterThan(0);
+    const now = Date.now();
+    for (const change of firstChanges) {
+      expect(Math.abs(change.time - now)).toBeLessThan(5_000);
+    }
+    const firstCursor = firstResult.cursors[0];
+
+    // A DocumentLease never hands out the raw DocHandle, so there is no fork-and-merge available
+    // through it; nothing else touches the document between the two calls, so a plain change
+    // back-dated to an old device's clock produces the same history a genuinely late replica would.
+    // A numeric field keeps the change to a single scalar put — a string field is spliced
+    // character-by-character in this Automerge build and would not exercise `ops === 1`.
+    const OLD_MS = Date.now() - 30 * 24 * 3_600_000;
+    const OLD_S = Math.floor(OLD_MS / 1000);
+    handle.change(
+      (doc: DatabaseDirectory) => {
+        doc.objects!['obj-1'].data.count = 42;
+      },
+      { time: OLD_S },
+    );
+    await host.flush(Context.default());
+
+    const cursorsAfterFirstCall: IndexCursor[] = [
+      {
+        indexName: 'activity',
+        spaceId: null,
+        sourceName: 'automerge',
+        resourceId: handle.documentId,
+        cursor: firstCursor.cursor,
+      },
+    ];
+    const secondResult = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), cursorsAfterFirstCall, { changes: true }),
+    );
+    expect(secondResult.changes).toHaveLength(1);
+    expect(secondResult.changes![0].time).toBe(OLD_S * 1000);
+    expect(secondResult.changes![0].ops).toBe(1);
+    const secondCursor = secondResult.cursors[0];
+
+    const cursorsAfterSecondCall: IndexCursor[] = [
+      {
+        indexName: 'activity',
+        spaceId: null,
+        sourceName: 'automerge',
+        resourceId: handle.documentId,
+        cursor: secondCursor.cursor,
+      },
+    ];
+    const thirdResult = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), cursorsAfterSecondCall, { changes: true }),
+    );
+    expect(thirdResult.changes).toEqual([]);
+  });
 });

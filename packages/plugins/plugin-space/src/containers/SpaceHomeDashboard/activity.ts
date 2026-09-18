@@ -2,22 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type ActivityDatum } from '@dxos/react-ui-dashboard';
 
-/** Counts live objects by the local day in `timeZone` they were last updated; one row per day. */
-export const dailyActivityQuery = (timeZone: string) =>
-  Query.select(Filter.everything()).aggregate({
-    day: Aggregate.updated('day', { timeZone }),
-    count: Aggregate.count(),
-  });
-
-/** A row of {@link dailyActivityQuery}. */
-export type DayCount = {
-  readonly day: number | null;
-  readonly count: number;
+/** One row of the space activity ledger: changes counted in a UTC hour. */
+export type HourlyChanges = {
+  readonly hour: number;
+  readonly changes: number;
 };
 
-/** One calendar entry per day; a `null` day (no timestamp recorded) has no square and is dropped. */
-export const toActivity = (rows: readonly DayCount[]): ActivityDatum[] =>
-  rows.flatMap(({ day, count }) => (day === null ? [] : [{ date: new Date(day), value: count }]));
+const HOUR_MS = 3_600_000;
+
+/**
+ * Sums UTC-hour change counts into local calendar days, which is what the activity calendar draws.
+ */
+export const toActivity = (rows: readonly HourlyChanges[]): ActivityDatum[] => {
+  const days = new Map<number, ActivityDatum>();
+  for (const { hour, changes } of rows) {
+    const at = new Date(hour * HOUR_MS);
+    const date = new Date(at.getFullYear(), at.getMonth(), at.getDate());
+    const datum = days.get(date.getTime());
+    if (datum) {
+      datum.value += changes;
+    } else {
+      days.set(date.getTime(), { date, value: changes });
+    }
+  }
+  return [...days.values()];
+};
