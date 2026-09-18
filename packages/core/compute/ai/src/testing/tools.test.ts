@@ -76,8 +76,7 @@ describe('ToolResolverService', () => {
         const result = yield* results.pipe();
         log.info('result', { result });
       },
-      Effect.provide(TestToolResolverService),
-      Effect.provide(TestToolExecutionService),
+      Effect.provide(Layer.provideMerge(TestToolResolverService, TestToolExecutionService)),
     ),
   );
 
@@ -101,8 +100,7 @@ describe('ToolResolverService', () => {
           providerExecuted: false,
         });
       },
-      Effect.provide(TestToolResolverService),
-      Effect.provide(TestToolExecutionService),
+      Effect.provide(Layer.provideMerge(TestToolResolverService, TestToolExecutionService)),
     ),
   );
 
@@ -125,8 +123,7 @@ describe('ToolResolverService', () => {
         expect((result as any).result).toBeUndefined();
         expect((result as any).error).toMatch(/SyntaxError/);
       },
-      Effect.provide(TestToolResolverService),
-      Effect.provide(TestToolExecutionService),
+      Effect.provide(Layer.provideMerge(TestToolResolverService, TestToolExecutionService)),
     ),
   );
 });

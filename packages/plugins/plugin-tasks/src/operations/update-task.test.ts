@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { TestTraceService } from '@dxos/compute/testing';
@@ -33,8 +34,12 @@ describe('update-task', () => {
       expect(task.status).toBe('started');
       expect(task.estimate).toBe('m');
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -62,11 +67,13 @@ describe('update-task', () => {
       expect(task.assignee?.role).toBe('assistant');
       expect(Task.refEntityId(task.assignee?.subject)).toBe(sessions[0].id);
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
       Effect.provide(
-        TestDatabaseLayer({
-          types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
-        }),
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({
+            types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
       ),
     ),
   );
@@ -92,11 +99,13 @@ describe('update-task', () => {
       // since the session reports its own state and this call is not that report.
       expect(existing.title).toBe('Draft the thing');
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
       Effect.provide(
-        TestDatabaseLayer({
-          types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
-        }),
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({
+            types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
       ),
     ),
   );
@@ -125,8 +134,12 @@ describe('update-task', () => {
       yield* updateTask.handler({ task: Ref.make(task), status: 'done' });
       expect(task.history).toHaveLength(1);
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -147,8 +160,12 @@ describe('update-task', () => {
       expect(task.assignee).toBeUndefined();
       expect(task.history?.at(-1)?.description).toEqual('Unassigned.');
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -170,8 +187,12 @@ describe('update-task', () => {
       expect(child.parentTask).toBeUndefined();
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -190,8 +211,12 @@ describe('update-task', () => {
       expect(child.parentTask).toBeUndefined();
       expect(Obj.getParent(child)).toBeUndefined();
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -209,8 +234,12 @@ describe('update-task', () => {
       const exit = yield* Effect.exit(updateTask.handler({ task: Ref.make(parent), parentTask: Ref.make(child) }));
       expect(exit._tag).toBe('Failure');
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 
@@ -231,8 +260,12 @@ describe('update-task', () => {
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 });
@@ -258,8 +291,12 @@ describe('update-task tracing', () => {
           { taskId: task.id, title: 'Draft v2', status: 'done', previousStatus: 'started' },
         ]);
       },
-      Effect.provide(TestTraceService.layer),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          TestTraceService.layer,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 });

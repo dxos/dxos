@@ -322,9 +322,9 @@ const runConnection = <T>(connection: Ref.Ref<Connection.Connection>, program: T
   }
   return EffectEx.runPromise(
     program.pipe(
-      Effect.provide(fromConnection(connection)),
-      Effect.provide(ProxyHttpLayer),
-      Effect.provide(Database.layer(db)),
+      Effect.provide(
+        fromConnection(connection).pipe(Layer.provideMerge(ProxyHttpLayer), Layer.provideMerge(Database.layer(db))),
+      ),
     ),
   );
 };
