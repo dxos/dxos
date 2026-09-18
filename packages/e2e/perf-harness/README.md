@@ -65,6 +65,21 @@ Every row carries `comparability`, and a comparison that does not hold these con
 Memory means four different things that differ by 3-5x (JS heap, snapshot self size, attributed
 allocators, private footprint). The trended one is peak RSS, because it is what a user feels.
 
+## Recording a run
+
+`DX_PERF_VIDEO=1` records the whole flow as a Playwright video and writes a chapter index beside it:
+
+```bash
+DX_PERF_VIDEO=1 moon run composer-app:e2e-perf
+```
+
+It lands as `artifacts/<mode>-<runId>/<flow>-<mode>-<iteration>.webm`, with a
+`.chapters.json` giving each stage's offset into the file — a run is minutes of footage in which
+the stage worth watching is seconds long. A recorded run is NOT a measured run: the capture path
+runs on every frame, so its numbers are not comparable with an unrecorded run's and the nightly
+never sets the flag. Separate from `diagnose`'s screencast, which keeps a stage's first and last
+frame as a measurement (`stillFrame*`) rather than as something to watch.
+
 ## Output
 
 Written under `test-results/perf/`:
