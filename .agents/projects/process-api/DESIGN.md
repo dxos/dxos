@@ -19,6 +19,48 @@ Five changes, specified independently but landing as one API break:
    `script` absorbs `Script.Script` and its deploy-created operation record.
 5. A process has a **parent**, which may be another process or an ECHO object.
 
+## At a glance
+
+```mermaid
+graph TD
+  Trigger["Trigger"] -->|runnable| Op
+  Routine["Routine"] -->|spec.runnable| Op
+
+  Op["Operation.Definition<br/><i>kind: operation</i>"]
+
+  Op --> Code["code<br/><i>(input) =&gt; Effect</i>"]
+  Op --> Script["script<br/><i>Ref&lt;Text&gt; → EDGE</i>"]
+  Op --> Prompt["prompt<br/><i>Template</i>"]
+  Op --> Instructions["instructions<br/><i>Template + tools</i>"]
+  Op --> Durable["durable<br/><i>process callbacks</i>"]
+
+  Proc["Process<br/><i>kind: process</i>"] -->|operation| Op
+  Proc -->|parent| Proc
+  Proc -->|parent| Obj["ECHO object — e.g. Chat<br/><i>kind: object</i>"]
+  Obj -.->|"Query.incoming(Process, 'parent')"| Proc
+
+  classDef runtimeOnly stroke-dasharray: 5 5;
+  class Proc runtimeOnly;
+```
+
+Dashed node = never stored (the compute runtime is its only home). Everything else may
+live in the registry or in a space document, at the owner's choice (§2).
+
+The object → process direction is a **dotted edge because it is a query, not a stored
+ref**. A conversation's agent process is parented to its `Chat` — today expressed as a
+`TargetAnnotation` holding a Chat DXN (`agent-process.ts:135`) — and a `Chat` finds its
+processes by querying for them. It must not hold a `Ref<Process>`: a process ref resolves
+only where that runtime is reachable, so persisting one would dangle on every other peer
+(§7).
+
+Two indirections collapse here. `Runnable` (`compute/src/Runnable.ts`) is today a type
+alias for `Operation.PersistentOperation`, so a trigger and a routine already point at an
+operation through an extra name — after §3 they point at the definition itself. And
+`Routine.spec.instructions` currently carries an owned `Instructions` object whose
+operation is "implicitly the static `RunInstructions`" (`types/Routine.ts:46-48`); with
+`instructions` as a handler kind, that routine simply references an operation like any
+other.
+
 ## 1. Before
 
 Today three distinct things are called "process", and operations are modelled twice:
