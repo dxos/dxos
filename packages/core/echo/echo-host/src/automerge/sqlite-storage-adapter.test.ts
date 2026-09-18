@@ -3,8 +3,10 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { RuntimeProvider } from '@dxos/effect';
@@ -43,7 +45,7 @@ describe('encodeKey / decodeKey', () => {
 });
 
 describe('SqliteStorageAdapter', () => {
-  const setup = async () => {
+  const setupWithRuntime = async () => {
     const { runtime, dispose } = makeTestLayer();
     const adapter = new SqliteStorageAdapter({ runtime });
     await adapter.open?.();
@@ -52,8 +54,9 @@ describe('SqliteStorageAdapter', () => {
       await adapter.close?.();
       await dispose();
     });
-    return adapter;
+    return { adapter, runtime };
   };
+  const setup = async () => (await setupWithRuntime()).adapter;
 
   const chunks = [
     { key: ['a', 'b', 'c', '1'], data: PublicKey.random().asUint8Array() },
@@ -166,6 +169,54 @@ describe('SqliteStorageAdapter', () => {
     const adapter = await setup();
     await adapter.save(['sub', 'doc', ''], bufferToArray(Buffer.from('empty')));
     expect((await adapter.loadRange(['sub', 'doc'])).map((chunk) => chunk.key)).toEqual([['sub', 'doc', '']]);
+  });
+
+  describe('subduction remote-heads family', () => {
+    const sedimentreeId = 'ab'.repeat(16) + '00'.repeat(16);
+    const peerId = 'cd'.repeat(32);
+    const remoteHeadsKey = ['subduction', 'remote-heads', sedimentreeId, peerId];
+    const commitKey = ['subduction', 'commits', sedimentreeId, 'ef'.repeat(32)];
+    const heads = bufferToArray(Buffer.from('{"heads":[],"timestamp":0}'));
+
+    test('is neither written nor read, while other subduction families are', async () => {
+      const adapter = await setup();
+      await adapter.save(remoteHeadsKey, heads);
+      await adapter.saveBatch([
+        [['subduction', 'remote-heads', sedimentreeId, 'aa'.repeat(32)], heads],
+        [commitKey, heads],
+      ]);
+
+      expect(await adapter.load(remoteHeadsKey)).toBeUndefined();
+      expect(await adapter.loadRange(['subduction', 'remote-heads', sedimentreeId])).toEqual([]);
+      expect((await adapter.loadRange(['subduction', 'commits', sedimentreeId])).map(({ key }) => key)).toEqual([
+        commitKey,
+      ]);
+    });
+
+    // Profiles written before the family was skipped still hold its rows — one held ~1M. Reads must
+    // ignore them without a migration, and document removal must still be able to sweep them.
+    test('reads an already-bloated store as empty and still removes its rows', async () => {
+      const { adapter, runtime } = await setupWithRuntime();
+      const countRows = () =>
+        RuntimeProvider.runPromise(runtime)(
+          Effect.gen(function* () {
+            const sql = yield* SqlClient.SqlClient;
+            const rows = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM automerge_chunks`;
+            return rows[0].count;
+          }),
+        );
+      await RuntimeProvider.runPromise(runtime)(
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          yield* sql`INSERT INTO automerge_chunks (key, data) VALUES (${encodeKey(remoteHeadsKey)}, ${heads})`;
+        }),
+      );
+      expect(await countRows()).toBe(1);
+
+      expect(await adapter.loadRange(['subduction', 'remote-heads', sedimentreeId])).toEqual([]);
+      await adapter.removeRange(['subduction', 'remote-heads', sedimentreeId]);
+      expect(await countRows()).toBe(0);
+    });
   });
 
   test('removeRange deletes whole segments only, including the exact prefix', async () => {

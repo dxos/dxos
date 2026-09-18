@@ -73,7 +73,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   );
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
-    if (!this.isOpen) {
+    if (!this.isOpen || isRemoteHeadsKey(keyArray)) {
       return undefined;
     }
     const startMs = Date.now();
@@ -95,7 +95,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 
   async save(keyArray: StorageKey, binary: Uint8Array): Promise<void> {
-    if (!this.isOpen) {
+    if (!this.isOpen || isRemoteHeadsKey(keyArray)) {
       return;
     }
     const startMs = Date.now();
@@ -112,7 +112,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     await this.#callbacks?.afterSave?.(keyArray);
   }
 
-  async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
+  async saveBatch(allEntries: Array<[StorageKey, Uint8Array]>): Promise<void> {
+    const entries = allEntries.filter(([key]) => !isRemoteHeadsKey(key));
     if (!this.isOpen || entries.length === 0) {
       return;
     }
@@ -154,7 +155,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    if (!this.isOpen) {
+    if (!this.isOpen || isRemoteHeadsKey(keyPrefix)) {
       return [];
     }
     const startMs = Date.now();
@@ -218,13 +219,31 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
  */
 export const SUBDUCTION_PREFIX = 'subduction';
 
+const REMOTE_HEADS_FAMILY = 'remote-heads';
+
+/**
+ * Whether `key` is in Subduction's `remote-heads` family, which this adapter neither reads nor writes.
+ *
+ * The family holds the last heads each remote peer advertised for a sedimentree, one record per
+ * (sedimentree, remote peer id), kept only so automerge-repo can pre-fill a handle's sync info on
+ * attach. Nothing in DXOS reads that, and the WASM's own storage interface has no such family. But
+ * the peer in the key was the sync server's per-incarnation identity, so a new set of records
+ * accumulated with every server restart and nothing deleted them: one profile reached ~1M rows (98%
+ * of its store), and scanning a document's share on each open was 98.8% of its boot SQLite time.
+ *
+ * Skipping the family here is what makes an already-bloated profile boot like a clean one, with no
+ * migration. The dead rows stay until {@link AutomergeHost.removeDocument} sweeps them with their
+ * document, which is why deletes are not skipped.
+ */
+const isRemoteHeadsKey = (key: StorageKey): boolean => key[0] === SUBDUCTION_PREFIX && key[1] === REMOTE_HEADS_FAMILY;
+
 export const SUBDUCTION_KEY_FAMILIES = [
   'ids',
   'commits',
   'blobs',
   'fragments',
   'fragment-blobs',
-  'remote-heads',
+  REMOTE_HEADS_FAMILY,
 ] as const;
 
 /** Coerces a value to a plain Uint8Array (Buffer is a subclass in Node.js but not identical). */

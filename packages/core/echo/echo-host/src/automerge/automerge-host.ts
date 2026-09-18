@@ -1167,15 +1167,7 @@ export class AutomergeHost extends Resource {
 
     if (path[0] === SUBDUCTION_PREFIX) {
       // Subduction keys are `[prefix, family, sedimentreeId, ...]`, so they carry no documentId and
-      // fall through the handle lookup below unnoticed. A `remote-heads` write is the only
-      // persisted evidence that a head exchange with a peer completed for a document.
-      const [, family, sedimentreeId] = path;
-      if (family === 'remote-heads' && sedimentreeId) {
-        log.verbose('subduction remote-heads persisted', {
-          documentId: sedimentreeHexToDocumentId(sedimentreeId),
-          sedimentreeId,
-        });
-      }
+      // would fall through the handle lookup below unnoticed.
       return;
     }
 
@@ -1758,18 +1750,6 @@ const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId =>
  * subduction WASM module to be initialized; `sqlite-storage-adapter.test.ts` pins the two against
  * each other.
  */
-/**
- * Inverse of {@link documentIdToSedimentreeIdHex}, for naming the document behind a storage key.
- * Decodes the leading 16 bytes by hand — `Buffer` is not available in the browser worker.
- */
-const sedimentreeHexToDocumentId = (sedimentreeIdHex: string): DocumentId => {
-  const bytes = new Uint8Array(16);
-  for (let index = 0; index < 16; index++) {
-    bytes[index] = Number.parseInt(sedimentreeIdHex.slice(index * 2, index * 2 + 2), 16);
-  }
-  return bs58check.encode(bytes) as DocumentId;
-};
-
 export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string => {
   const bytes = new Uint8Array(32);
   bytes.set(bs58check.decode(documentId).subarray(0, 16));
