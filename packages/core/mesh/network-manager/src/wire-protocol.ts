@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Duplex } from 'node:stream';
-
+import { type Event } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { Teleport, type TeleportProps } from '@dxos/teleport';
+import { type DuplexStream, Teleport, type TeleportProps } from '@dxos/teleport';
 
 export type WireProtocolProps = {
   initiator: boolean;
@@ -21,7 +20,12 @@ export type WireProtocolProvider = (params: WireProtocolProps) => WireProtocol;
  * Will implement high-level logic, like replication, authentication, etc.
  */
 export interface WireProtocol {
-  stream: Duplex;
+  stream: DuplexStream;
+
+  /**
+   * Emitted when the byte pipe ends; the swarm connection tears down in response.
+   */
+  closed: Event<Error | undefined>;
 
   open(sessionId?: PublicKey): Promise<void>;
   close(): Promise<void>;
@@ -42,6 +46,7 @@ export const createTeleportProtocolFactory = (
     const teleport = new Teleport({ ...defaultProps, ...params });
     return {
       stream: teleport.stream,
+      closed: teleport.closed,
       open: async (sessionId?: PublicKey) => {
         await teleport.open(sessionId);
         await onConnection(teleport);

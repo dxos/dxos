@@ -125,4 +125,40 @@ describe('SpaceOperation.QueryObjects', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'a result capped by the limit reports itself as truncated',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        // More objects than the handler's default limit, so a truncating default is visible.
+        const count = 24;
+        for (let index = 0; index < count; index++) {
+          yield* Database.add(Obj.make(TestObject, { name: `unfiltered-${index}` }));
+        }
+        yield* Database.flush();
+
+        // A capped page must say so, or the caller reads it as the whole space.
+        const { results, truncated } = yield* Operation.invoke(SpaceOperation.QueryObjects, {});
+        expect(results).toHaveLength(10);
+        expect(truncated).toBe(true);
+
+        // An explicit limit bounds the result and reports the same way.
+        const { results: bounded, truncated: boundedTruncated } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+          limit: 5,
+        });
+        expect(bounded).toHaveLength(5);
+        expect(boundedTruncated).toBe(true);
+
+        // A limit the result fits inside is not a truncation, and must not over-fetch.
+        const { results: whole, truncated: wholeTruncated } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+          typename: Type.getTypename(TestObject),
+          limit: count + 1,
+        });
+        expect(whole).toHaveLength(count);
+        expect(wholeTruncated).toBe(false);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

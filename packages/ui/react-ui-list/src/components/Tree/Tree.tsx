@@ -50,6 +50,7 @@ import {
   type ColumnRenderer,
   type HeadingRenderer,
   type IconRenderer,
+  type SelectModifiers,
   type TreeItemDataProps,
   type TreeModel,
   type TreeNodeEntry,
@@ -66,6 +67,8 @@ const hoverableDescriptionIcons =
 
 /** How long recorded pointer modifiers stay valid for the machine's selection callback. */
 const MODIFIER_WINDOW = 500;
+
+const NO_MODIFIERS: SelectModifiers = { option: false, shift: false, meta: false };
 
 type TreeWalkState<T extends { id: string }> = {
   root: TreeNodeEntry<T>;
@@ -261,7 +264,12 @@ export type TreeProps<T extends { id: string } = any> = {
   dropAtEnd?: boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
-  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
+  /**
+   * A row activation; `current` is the state the row is being taken to. In `multiple` mode a plain
+   * click reports `current: true` without `meta`, meaning the row alone, and a meta-click reports
+   * the toggled state with `meta`, meaning the row on top of the others.
+   */
+  onSelect?: (params: { item: T; path: string[]; current: boolean } & SelectModifiers) => void;
   onItemHover?: (params: { item: T }) => void;
   /**
    * Keydown on the tree container. The escape hatch for gestures the machine does not own — zag
@@ -329,13 +337,18 @@ export const Tree = <T extends { id: string } = any>({
 
   // The machine's callbacks carry no input modifiers, so the last pointer-down's modifiers are
   // captured here and consulted (within a freshness window) when selection changes.
-  const modifiersRef = useRef({ option: false, shift: false, at: 0 });
+  const modifiersRef = useRef<SelectModifiers & { at: number }>({ ...NO_MODIFIERS, at: 0 });
   const handlePointerDownCapture = useCallback((event: PointerEvent) => {
-    modifiersRef.current = { option: event.altKey, shift: event.shiftKey, at: Date.now() };
+    modifiersRef.current = {
+      option: event.altKey,
+      shift: event.shiftKey,
+      meta: event.metaKey || event.ctrlKey,
+      at: Date.now(),
+    };
   }, []);
-  const recentModifiers = useCallback(() => {
-    const { option, shift, at } = modifiersRef.current;
-    return Date.now() - at < MODIFIER_WINDOW ? { option, shift } : { option: false, shift: false };
+  const recentModifiers = useCallback((): SelectModifiers => {
+    const { option, shift, meta, at } = modifiersRef.current;
+    return Date.now() - at < MODIFIER_WINDOW ? { option, shift, meta } : NO_MODIFIERS;
   }, []);
 
   // Values whose branch content is running its conceal animation; the model close commits when the
@@ -367,18 +380,20 @@ export const Tree = <T extends { id: string } = any>({
   );
 
   const onSelectNode = useCallback(
-    (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => {
+    (node: TreeNodeEntry<T>, modifiers: SelectModifiers, current = !node.current) => {
       // A branch that is already current, or an option-activation, toggles instead of selecting.
-      if (node.branch && (modifiers.option || node.current)) {
+      // Not in multiple mode: there a click on a current row re-selects it alone, and disclosure
+      // stays on the chevron and the keyboard.
+      if (node.branch && (modifiers.option || (node.current && selectionMode !== 'multiple'))) {
         // Closing goes through the same deferral the chevron uses. Calling `onOpenChange` here
         // committed the close at once, so the machine hid the content before it could animate —
         // the same gesture read as instant from the row and animated from the chevron.
         toggleOpen(node);
       } else if (canSelect?.({ item: node.item, path: node.path }) ?? true) {
-        onSelect?.({ item: node.item, path: node.path, current: !node.current, ...modifiers });
+        onSelect?.({ item: node.item, path: node.path, current, ...modifiers });
       }
     },
-    [canSelect, onSelect, toggleOpen],
+    [canSelect, onSelect, toggleOpen, selectionMode],
   );
 
   const onCommitClose = useCallback(
@@ -490,7 +505,7 @@ export const Tree = <T extends { id: string } = any>({
       }
       const entry = byValue.get(focusedValue);
       if (entry) {
-        onSelectNode(entry, { option: false, shift: false });
+        onSelectNode(entry, NO_MODIFIERS);
       }
     },
     [selectionFollowsFocus, selected, byValue, onSelectNode],
@@ -566,6 +581,7 @@ export const Tree = <T extends { id: string } = any>({
       onOpenChange,
       onItemHover,
       selectNode: onSelectNode,
+      selectionMode,
       closingValues,
       commitClose: onCommitClose,
       mountedRef,
@@ -586,6 +602,7 @@ export const Tree = <T extends { id: string } = any>({
       debug,
       dropBelowExpanded,
       onSelectNode,
+      selectionMode,
       closingValues,
       onOpenChange,
       onItemHover,
@@ -835,6 +852,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     onOpenChange,
     onItemHover,
     selectNode,
+    selectionMode,
     focusNode,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -993,10 +1011,31 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     (event: MouseEvent) => {
       if (current) {
         event.preventDefault();
-        selectNode(node, { option: event.altKey, shift: event.shiftKey });
+        selectNode(node, { option: event.altKey, shift: event.shiftKey, meta: event.metaKey || event.ctrlKey });
       }
     },
     [current, node, selectNode],
+  );
+
+  // In multiple mode a plain click selects the row alone and a meta-click toggles it. The machine
+  // reports a selection change one row at a time and nothing at all for a re-click of the only
+  // selected row (and `handleClick` would report a current row a second time), so both clicks are
+  // taken here in the capture phase and never reach it. A shift-click keeps the machine's range
+  // gesture, and a click on a control inside the row is the control's.
+  const handleClickCapture = useCallback(
+    (event: MouseEvent) => {
+      if (selectionMode !== 'multiple' || event.shiftKey || event.altKey) {
+        return;
+      }
+      if ((event.target as HTMLElement).closest('button, input, textarea, [contenteditable="true"]')) {
+        return;
+      }
+      event.stopPropagation();
+      event.preventDefault();
+      const meta = event.metaKey || event.ctrlKey;
+      selectNode(node, { option: false, shift: false, meta }, meta ? !current : true);
+    },
+    [selectionMode, node, current, selectNode],
   );
 
   const handleItemHover = useCallback(() => onItemHover?.({ item }), [onItemHover, item]);
@@ -1042,6 +1081,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         props.className,
       )}
       onClick={handleClick}
+      onClickCapture={handleClickCapture}
       onMouseEnter={handleItemHover}
       onContextMenu={handleContextMenu}
     >
