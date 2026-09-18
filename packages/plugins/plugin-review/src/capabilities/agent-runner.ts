@@ -253,8 +253,9 @@ export default Capability.makeModule(
 
           const response = yield* LanguageModel.generateText({ prompt, toolkit }).pipe(
             Effect.scoped,
-            Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer))),
-            Effect.provide(toolkitLayer),
+            Effect.provide(
+              Layer.provideMerge(AiService.model(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer)), toolkitLayer),
+            ),
           );
 
           // The chat message defaults to whatever the model returned, but when

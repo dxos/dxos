@@ -14,8 +14,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import type * as Operation from '@dxos/compute/Operation';
+import { BaseError } from '@dxos/errors';
 import { SpaceId } from '@dxos/keys';
 import { getDebugPortController } from '@dxos/react-client/devtools';
+
+import { DebugOperationError } from '../../operations/errors.ts';
 
 /**
  * The debug console's command set — the introspection surface an agent uses over the debug port
@@ -43,7 +46,7 @@ const findDefinition = Effect.fn(function* (key: string) {
       return definition;
     }
   }
-  return yield* Effect.fail(new Error(`Unknown operation: ${key} (try "ops").`));
+  return yield* Effect.fail(new DebugOperationError({ message: `Unknown operation: ${key} (try "ops").` }));
 });
 
 const invokeOperation = Effect.fn(function* (key: string, input: unknown, spaceId?: SpaceId) {
@@ -54,7 +57,7 @@ const invokeOperation = Effect.fn(function* (key: string, input: unknown, spaceI
     invoker.invokePromise(definition as Operation.Definition.Any, input as never, spaceId ? { spaceId } : undefined),
   );
   if (error) {
-    return yield* Effect.fail(error instanceof Error ? error : new Error(String(error)));
+    return yield* Effect.fail(error instanceof BaseError ? error : DebugOperationError.wrap()(error));
   }
   return data;
 });

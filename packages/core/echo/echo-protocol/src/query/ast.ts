@@ -503,6 +503,9 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
  *   ordering, independent of any `orderBy` clause elsewhere in the query (which orders the whole
  *   input stream / the resulting groups, not this aggregate's member selection).
  * - `count` yields the member count. Opt-in — a row carries no count otherwise.
+ * - `type` partitions members by their type URI; the field carries the URI string.
+ * - `timestamp` partitions members by the hour or calendar day a system timestamp falls in; the field
+ *   carries the start of that interval in unix ms. Days are local to `timeZone` (UTC when absent).
  */
 const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
@@ -524,6 +527,15 @@ const GroupAggregateItems_ = Schema.Struct({
   order: Schema.optional(Schema.Array(Order)),
 });
 const GroupAggregateCount_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('count') });
+const GroupAggregateType_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('type') });
+const GroupAggregateTimestamp_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('timestamp'),
+  field: Schema.Literals(['createdAt', 'updatedAt']),
+  unit: Schema.Literals(['hour', 'day']),
+  /** IANA time zone that `day` boundaries follow. */
+  timeZone: Schema.optional(Schema.String),
+});
 
 const GroupAggregate_ = Schema.Union([
   GroupAggregateGroup_,
@@ -531,7 +543,15 @@ const GroupAggregate_ = Schema.Union([
   GroupAggregateMin_,
   GroupAggregateItems_,
   GroupAggregateCount_,
+  GroupAggregateType_,
+  GroupAggregateTimestamp_,
 ]);
+
+/** Aggregate kinds that contribute a component to the group key. */
+export const isGroupKeyAggregate = (
+  aggregate: GroupAggregate,
+): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'timestamp' }> =>
+  aggregate.kind === 'group' || aggregate.kind === 'type' || aggregate.kind === 'timestamp';
 
 export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
 export const GroupAggregate: Schema.Codec<GroupAggregate> = GroupAggregate_;

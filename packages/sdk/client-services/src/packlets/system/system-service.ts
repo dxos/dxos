@@ -10,8 +10,10 @@ import * as EffectStream from 'effect/Stream';
 import { Event, MulticastObservable } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
 import { EffectEx, Hook } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
+import { toServiceError } from '@dxos/protocols';
 import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { SystemService } from '@dxos/protocols/rpc';
@@ -87,10 +89,10 @@ export class SystemServiceImpl implements SystemService.Handlers {
     }).pipe(Effect.provideService(Hook.Controller, this.#options.controller));
   }
 
-  ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
+  ['SystemService.getConfig'](): Effect.Effect<ConfigProto, BaseError> {
     return Effect.tryPromise({
       try: async () => (await this.#options.config?.())?.values ?? create(ConfigSchema, {}),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -117,18 +119,18 @@ export class SystemServiceImpl implements SystemService.Handlers {
           ),
         };
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['SystemService.getPlatform'](): Effect.Effect<Platform, Error> {
+  ['SystemService.getPlatform'](): Effect.Effect<Platform, BaseError> {
     return Effect.tryPromise({
       try: async () => getPlatform(),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['SystemService.updateStatus']({ status }: SystemService.UpdateStatusRequest): Effect.Effect<void, Error> {
+  ['SystemService.updateStatus']({ status }: SystemService.UpdateStatusRequest): Effect.Effect<void, BaseError> {
     return Effect.sync(() => this.statusRequested.emit(status));
   }
 
@@ -148,7 +150,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
     });
   }
 
-  ['SystemService.reset'](): Effect.Effect<void, Error> {
+  ['SystemService.reset'](): Effect.Effect<void, BaseError> {
     return this.reset();
   }
 }
