@@ -268,11 +268,6 @@ export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = 
    * intrinsic content, so the surface can fit its content to the box instead of sizing to it.
    */
   extrinsic?: boolean;
-  /**
-   * Shows another node in the same host. Set by hosts that render graph nodes outside the deck, such
-   * as the debug panel, whose nodes have no URL for `LayoutOperation.Open` to reach.
-   */
-  onNavigate?: (nodeId: string) => void;
 } & (unknown extends CompanionTo ? { companionTo?: CompanionTo } : { companionTo: CompanionTo }) &
   Props;
 

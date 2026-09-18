@@ -40,6 +40,7 @@ import {
   TimeSeriesCard,
   WorkflowArticle,
 } from '@dxos/devtools';
+import * as DebugSurface from '@dxos/plugin-debug/DebugSurface';
 
 import {
   CliArticle,
@@ -267,13 +268,13 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'echo.spaces',
-        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Spaces),
+        filter: AppSurface.literal(DebugSurface.Page, Devtools.Echo.Spaces),
         component: SpaceListSurface,
         props: ({ role, data: { onNavigate } }) => ({ role, onNavigate }),
       }),
       Surface.create({
         id: 'echo.space',
-        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Space),
+        filter: AppSurface.literal(DebugSurface.Page, Devtools.Echo.Space),
         component: SpaceInfoSurface,
         props: ({ role, data: { onNavigate } }) => ({ role, onNavigate }),
       }),

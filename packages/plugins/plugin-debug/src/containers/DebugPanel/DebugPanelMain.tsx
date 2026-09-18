@@ -12,7 +12,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { DebugNodes } from '#types';
+import { DebugNodes, DebugSurface } from '#types';
 
 import { useDebugPanelContext } from './DebugPanelContext.ts';
 
@@ -92,7 +92,7 @@ type DebugPanelPageProps = {
 const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugPanelPageProps) => {
   const { t } = useTranslation(meta.profile.key);
   const node = useNode(graph, nodeId);
-  const data = useMemo<AppSurface.ArticleData | undefined>(
+  const data = useMemo<DebugSurface.PageData | undefined>(
     () =>
       node && {
         attendableId: `${contextId}/${nodeId}`,

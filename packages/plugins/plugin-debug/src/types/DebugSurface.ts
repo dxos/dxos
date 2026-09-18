@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Role from '@dxos/app-framework/Role';
+import type { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { meta } from '#meta';
 
@@ -14,3 +15,15 @@ import { meta } from '#meta';
  * the surface reads the store directly, so it needs no subject.
  */
 export const Stats = Role.make<Record<string, unknown>>(`${meta.profile.key}.surface.stats`);
+
+/** Article data for a page of the debug panel, whose nodes have no URL for `LayoutOperation.Open`. */
+export type PageData = AppSurface.ArticleData<unknown, { onNavigate: (nodeId: string) => void }>;
+
+/**
+ * The article role as the debug panel renders it, typed with {@link PageData}. Spelled out rather
+ * than read from `AppSurface.Article`, which would pull the UI barrel into this types module.
+ *
+ * TODO(wittjosiah): Should the drawer render its pages through a surface role of its own rather than
+ *   the article role?
+ */
+export const Page = Role.make<PageData>('org.dxos.role.article');
