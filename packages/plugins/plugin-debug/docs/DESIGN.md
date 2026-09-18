@@ -27,9 +27,10 @@ to the graph root, so each page exists twice (`root/devtools/...` and `root/<spa
 - The console and logs become the first two pages under the Debug node (`root/debug/debug/console`,
   `root/debug/debug/logs`), each with a page surface; the title-bar tabs go. A pristine panel
   opens the Debug node with the console selected, as the tabs did.
-- Every page under `root/debug` registers its surface on `DebugSurface.Page`: the article role, typed
-  with `DebugSurface.PageData`, whose `onNavigate(nodeId)` selects another page. `LayoutOperation.Open`
-  cannot reach these nodes, so a page links to another through that callback.
+- Every page under `root/debug` registers its surface on `DebugSurface.Page`
+  (`org.dxos.plugin.debug.surface.page`), a role of its own rather than the deck's article role. Its
+  data, `DebugSurface.PageData`, carries `onNavigate(nodeId)`, which selects another page:
+  `LayoutOperation.Open` cannot reach these nodes, so a page links to another through that callback.
 - Nothing under `root/debug` declares a URL binding. The devtools bindings added in #13087 and the
   `system`-group attachment are removed with the move; devtools pages are reachable only through
   the panel. (The `home` boot-time "no URL binding" log is a deck race and out of scope.)

@@ -19,12 +19,5 @@ export const Stats = Role.make<Record<string, unknown>>(`${meta.profile.key}.sur
 /** Article data for a page of the debug panel, whose nodes have no URL for `LayoutOperation.Open`. */
 export type PageData = AppSurface.ArticleData<unknown, { onNavigate: (nodeId: string) => void }>;
 
-/**
- * The role every debug-panel page registers its surface on: the article role, typed with
- * {@link PageData}. Spelled out rather than read from `AppSurface.Article`, which would pull the UI
- * barrel into this types module.
- *
- * TODO(wittjosiah): Should the drawer render its pages through a surface role of its own rather than
- *   the article role?
- */
-export const Page = Role.make<PageData>('org.dxos.role.article');
+/** Role token for a page of the debug panel; every node under `root/debug` registers its surface on it. */
+export const Page = Role.make<PageData>(`${meta.profile.key}.surface.page`);

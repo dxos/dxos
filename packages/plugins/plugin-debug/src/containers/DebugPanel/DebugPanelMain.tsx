@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
@@ -110,7 +110,7 @@ const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugP
 
   return (
     <div role='none' className='dx-expand' hidden={hidden}>
-      <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
+      <Surface.Surface type={DebugSurface.Page} data={data} limit={1} />
     </div>
   );
 };

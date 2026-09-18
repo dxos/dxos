@@ -23,7 +23,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.devtoolsOverview'],
+  roles: ['org.dxos.plugin.debug.surface.page', 'org.dxos.role.deckCompanion.devtoolsOverview'],
 });
 export const SetupDevtools = Capability.inlineModule('setup-devtools', { provides: [] }, () =>
   Effect.sync(() => setupDevtools()),
