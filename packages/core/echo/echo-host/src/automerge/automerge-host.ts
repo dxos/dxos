@@ -470,10 +470,19 @@ export class AutomergeHost extends Resource {
       this._ctx,
       ((e: PeerCandidatePayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerConnected(e.peerId)) as any,
     );
-    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(
-      this._ctx,
-      ((e: PeerDisconnectedPayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerDisconnected(e.peerId)) as any,
-    );
+    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(this._ctx, ((e: PeerDisconnectedPayload) => {
+      // A rebind still owes the peer the half of `_onPeerDisconnected` that is about the failed
+      // push rather than the peer leaving: the frames in flight died with the remote's session,
+      // and `_resetResyncBudget` is what lets them be sent again. Skipping it left a diverged
+      // document parked behind `_divergedResyncHeads` -- neither side's heads move when a round
+      // is lost, so the guard reads the retry as one that "cannot do better" and refuses every
+      // later attempt.
+      if (!updatingAuthScope && this._echoNetworkAdapter.isTransportResetting(e.peerId)) {
+        this._resetResyncBudget(e.peerId);
+        return;
+      }
+      return !peerLifecycleSuppressed(e.peerId) && this._onPeerDisconnected(e.peerId);
+    }) as any);
 
     this._collectionSynchronizer.peerCollectionStateUpdated.on(
       this._ctx,
@@ -1462,20 +1471,28 @@ export class AutomergeHost extends Resource {
   }
 
   private _onPeerDisconnected(peerId: PeerId): void {
+    this._resetResyncBudget(peerId);
+    this._collectionSynchronizer.onConnectionClosed(peerId);
+  }
+
+  /**
+   * Forget what has already been tried against `peerId`, so a push that did not land can be sent
+   * again. Shared by a real disconnect and an in-place transport rebind: both end a connection the
+   * frames were owed to, and neither side's heads move when a round is lost, so without this the
+   * head-pair guard in `_handleCollectionSync` refuses every retry.
+   */
+  private _resetResyncBudget(peerId: PeerId): void {
     // Passes are only consecutive within one connection.
     for (const syncKey of this._nonConvergingSyncPasses.keys()) {
       if (syncKey.endsWith(`:${peerId}`)) {
         this._nonConvergingSyncPasses.delete(syncKey);
       }
     }
-    // A reconnect is a fresh chance for the push that did not land, so the resync budget resets
-    // with the connection.
     for (const [resyncKey, entry] of this._divergedResyncHeads) {
       if (entry.peerId === peerId) {
         this._divergedResyncHeads.delete(resyncKey);
       }
     }
-    this._collectionSynchronizer.onConnectionClosed(peerId);
   }
 
   private _onRemoteCollectionStateUpdated(collectionId: string, peerId: PeerId): void {
