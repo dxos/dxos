@@ -351,6 +351,12 @@ describe('AutomergeHost', () => {
     synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
     await sleep(500);
     expect(resynced).toEqual([documentId]);
+
+    // A removed document never converges, so its retry budget has to go with it.
+    const resyncHeads: Map<string, string> = (host as any)._divergedResyncHeads;
+    expect([...resyncHeads.keys()].some((key) => key.endsWith(`:${documentId}`))).toBe(true);
+    await host.removeDocument(documentId);
+    expect([...resyncHeads.keys()].some((key) => key.endsWith(`:${documentId}`))).toBe(false);
   });
 });
 

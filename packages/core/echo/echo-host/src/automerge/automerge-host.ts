@@ -903,6 +903,14 @@ export class AutomergeHost extends Resource {
     for (const requested of this._documentsRequested.values()) {
       requested.delete(documentId);
     }
+    // A removed document never converges, so neither of the other cleanups (convergence of its
+    // collection, or its peer disconnecting) is guaranteed to reach its entry. The document id is
+    // the last key segment and contains no `:`, so the suffix match cannot catch a sibling.
+    for (const resyncKey of this._divergedResyncHeads.keys()) {
+      if (resyncKey.endsWith(`:${documentId}`)) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
+    }
   }
 
   /**
