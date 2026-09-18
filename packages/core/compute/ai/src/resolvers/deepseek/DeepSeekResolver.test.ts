@@ -138,8 +138,7 @@ describe('DeepSeekResolver', () => {
         log.info('tools', { text: response.text, toolCalls: response.toolCalls.length });
         expect(response.toolCalls.length).toBeGreaterThan(0);
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(modelLayer({ thinking: false })),
+      Effect.provide(Layer.provideMerge(CalculatorLayer, modelLayer({ thinking: false }))),
     ),
     { timeout: 180_000, tags: ['manual'] },
   );

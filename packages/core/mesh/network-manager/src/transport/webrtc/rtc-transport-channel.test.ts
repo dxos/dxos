@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
 import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
+import { type DuplexStream } from '@dxos/teleport';
 
 import { type TransportOptions } from '../transport.ts';
 import { type RtcPeerConnection } from './rtc-peer-connection.ts';
@@ -102,27 +102,37 @@ describe('RtcTransportChannel', () => {
 
   test('error raised if send fails', async () => {
     const controller = createChannelController();
-    const { transport, stream } = createTransport(controller.connection);
+    const { transport, push } = createTransport(controller.connection);
     await transport.open();
     await controller.onChannelCreated();
     const transportClosedEvent = handleChannelErrors(transport);
     controller.channel.onopen();
     controller.setFailSending(true);
-    stream.push('hello');
+    push('hello');
     await transportClosedEvent.expectErrorRaised();
   });
 
   const createTransport = (connection: RtcPeerConnection) => {
     const deliveredMessages: any[] = [];
-    const stream = new Duplex({
-      read: () => {},
-      write: (chunk: any, _: BufferEncoding, callback: (error?: Error | null) => void) => {
-        deliveredMessages.push(Buffer.from(chunk).toString());
-        callback();
-      },
-    });
+    const decoder = new TextDecoder();
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    const stream: DuplexStream = {
+      readable: new ReadableStream<Uint8Array>({
+        start: (ctrl) => {
+          controller = ctrl;
+        },
+      }),
+      writable: new WritableStream<Uint8Array>({
+        write: (chunk) => {
+          // The mocked data channel delivers strings, so accept both it and real bytes.
+          deliveredMessages.push(typeof chunk === 'string' ? chunk : decoder.decode(chunk));
+        },
+      }),
+    };
+    const encoder = new TextEncoder();
+    const push = (data: string) => controller.enqueue(encoder.encode(data));
     const options = { topic: 'test', stream } as any as TransportOptions;
-    return { deliveredMessages, stream, transport: new RtcTransportChannel(connection, options) };
+    return { deliveredMessages, stream, push, transport: new RtcTransportChannel(connection, options) };
   };
 
   const handleClose = (channel: RtcTransportChannel) => {

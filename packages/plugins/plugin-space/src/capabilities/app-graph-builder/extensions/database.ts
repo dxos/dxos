@@ -31,6 +31,7 @@ import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
+import { SpaceOperationError } from '../../../operations/errors.ts';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util/index.ts';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
@@ -448,7 +449,7 @@ const createSchemaActions = ({
               object: type,
               caller: `${params?.caller}:${params?.parent?.id}`,
             })
-          : Effect.fail(new Error('Cannot rename immutable schema')),
+          : Effect.fail(new SpaceOperationError({ message: 'Cannot rename immutable schema' })),
       properties: {
         label: AppNode.getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',

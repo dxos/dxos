@@ -1,0 +1,13 @@
+--
+-- Records how many blocks the server still held past `lastPulledPosition` when that position was
+-- written. An estimate, not a count: the server reports only whether more remains, so a batch's
+-- size stands in for the next one. Readers use it to tell "caught up" from "still behind" without
+-- asking the server, which a client cannot do during startup without blocking on the socket.
+--
+-- 0 on rows written before this migration, and on any row whose last pull drained the namespace.
+--
+-- Not idempotent, by design: `feed_migrations` guarantees it runs exactly once. Immutable once
+-- shipped -- change the schema by adding the next numbered migration.
+--
+-- AlterTable
+ALTER TABLE "sync_state" ADD COLUMN "blocksToPull" INTEGER NOT NULL DEFAULT 0;

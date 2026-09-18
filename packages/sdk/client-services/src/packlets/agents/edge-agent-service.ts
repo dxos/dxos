@@ -10,7 +10,8 @@ import * as EffectStream from 'effect/Stream';
 import { Context } from '@dxos/context';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
-import { EdgeAgentStatus } from '@dxos/protocols';
+import { BaseError } from '@dxos/errors';
+import { EdgeAgentStatus, toServiceError } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
   type QueryAgentStatusResponse,
@@ -46,10 +47,10 @@ export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
     });
   }
 
-  ['EdgeAgentService.createAgent'](): Effect.Effect<void, Error> {
+  ['EdgeAgentService.createAgent'](): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => (await this._agentManagerProvider()).createAgent(Context.default()),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

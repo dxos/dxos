@@ -21,7 +21,9 @@ export type Spec =
   | { kind: 'max'; property: string }
   | { kind: 'min'; property: string }
   | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
-  | { kind: 'count' };
+  | { kind: 'count' }
+  | { kind: 'type' }
+  | { kind: 'timestamp'; field: 'createdAt' | 'updatedAt'; unit: TimeUnit; timeZone?: string };
 
 export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
 export type AggregateTypeId = typeof AggregateTypeId;
@@ -115,3 +117,38 @@ export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Agg
  * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.
  */
 export const count = <T>(): Aggregate<T, number> => new AggregateClass({ kind: 'count' });
+
+/**
+ * Group members by their stored type URI. The field carries the URI string as written, so two
+ * schema versions are two groups.
+ */
+export const type = <T>(): Aggregate<T, string | null> => new AggregateClass({ kind: 'type' });
+
+/** Time units a timestamp aggregate can group by. */
+export type TimeUnit = 'hour' | 'day';
+
+export type TimeUnitOptions = {
+  /** IANA time zone that day boundaries follow, e.g. the viewer's. Defaults to UTC. */
+  timeZone?: string;
+};
+
+/**
+ * Group members by the hour or calendar day their system `updatedAt` falls in. The field carries the
+ * start of that interval in unix ms, or `null` when the timestamp is unknown.
+ */
+export const updated = <T>(unit: TimeUnit, options?: TimeUnitOptions): Aggregate<T, number | null> =>
+  new AggregateClass({
+    kind: 'timestamp',
+    field: 'updatedAt',
+    unit,
+    ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
+  });
+
+/** Like {@link updated}, over the system `createdAt` timestamp. */
+export const created = <T>(unit: TimeUnit, options?: TimeUnitOptions): Aggregate<T, number | null> =>
+  new AggregateClass({
+    kind: 'timestamp',
+    field: 'createdAt',
+    unit,
+    ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
+  });

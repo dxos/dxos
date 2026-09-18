@@ -2,15 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
-
 import { log } from '@dxos/log';
 
 import { type TransportOptions } from '../transport.ts';
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
 const MAX_MESSAGE_SIZE = 64 * 1024;
-// The default Readable stream buffer size: https://nodejs.org/api/stream.html#implementing-a-readable-stream
+// Bytes the channel may hold before we stop accepting writes; the real backpressure signal.
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
 export type DataChannelHandlers = {
@@ -35,25 +33,34 @@ export const bindDataChannel = (
   stream: TransportOptions['stream'],
   { onOpen, onClose, onError }: DataChannelHandlers,
 ): (() => void) => {
-  let duplex: Duplex | undefined;
+  let inbound: ReadableStreamDefaultController<Uint8Array> | undefined;
   /** Whether the wire protocol has been piped into the channel, which only happens once it opens. */
   let writable = false;
   // Held while the channel's send buffer is above the watermark, released by `onbufferedamountlow`.
   let flushed: (() => void) | null = null;
   let disposed = false;
+  // Frames convert one after another, so a blob's asynchronous read cannot let a later frame land first.
+  let frameOrder = Promise.resolve();
+  // Detach each direction without ending the wire-protocol stream, which outlives this channel.
+  const inboundAbort = new AbortController();
+  const outboundAbort = new AbortController();
 
-  const write = (chunk: any, callback: () => void): void => {
+  const write = async (chunk: Uint8Array): Promise<void> => {
     if (chunk.length > MAX_MESSAGE_SIZE) {
       onError(new Error(`Message too large: ${chunk.length} > ${MAX_MESSAGE_SIZE}.`));
-      callback();
       return;
     }
 
     try {
-      channel.send(chunk);
+      // `send` demands an ArrayBuffer-backed view; re-wrapping is free unless the chunk is
+      // SharedArrayBuffer-backed, which this pipeline never produces.
+      channel.send(
+        chunk.buffer instanceof ArrayBuffer
+          ? new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+          : new Uint8Array(chunk),
+      );
     } catch (err: any) {
       onError(err);
-      callback();
       return;
     }
 
@@ -61,9 +68,9 @@ export const bindDataChannel = (
       if (flushed !== null) {
         log.error('consumer trying to write before we are ready for more data');
       }
-      flushed = callback;
-    } else {
-      callback();
+      await new Promise<void>((resolve) => {
+        flushed = resolve;
+      });
     }
   };
 
@@ -76,15 +83,19 @@ export const bindDataChannel = (
    * of the two arrives first.
    */
   const attachInbound = () => {
-    if (duplex || disposed) {
+    if (inbound || disposed) {
       return;
     }
 
-    duplex = new Duplex({
-      read: () => {},
-      write: (chunk, _encoding, callback) => write(chunk, callback),
+    const readable = new ReadableStream<Uint8Array>({
+      start: (controller) => {
+        inbound = controller;
+      },
     });
-    duplex.pipe(stream);
+    // `preventClose`/`preventAbort`: detaching this channel must not end the wire-protocol stream.
+    void readable
+      .pipeTo(stream.writable, { signal: inboundAbort.signal, preventClose: true, preventAbort: true })
+      .catch(() => {});
   };
 
   /**
@@ -99,34 +110,37 @@ export const bindDataChannel = (
     attachInbound();
     writable = true;
     log('channel open');
-    stream.pipe(duplex!);
+    const sink = new WritableStream<Uint8Array>({ write: (chunk) => write(chunk) });
+    // `preventCancel`: the wire-protocol readable outlives this channel.
+    void stream.readable.pipeTo(sink, { signal: outboundAbort.signal, preventCancel: true }).catch(() => {});
     onOpen();
   };
 
+  channel.binaryType = 'arraybuffer';
   Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
     onopen: () => attachOutbound(),
 
     onclose: () => (disposed ? undefined : onClose()),
 
-    onmessage: async (event: MessageEvent) => {
+    onmessage: (event: MessageEvent) => {
       attachInbound();
-      if (!duplex) {
+      if (!inbound) {
         log.warn('ignoring message on a closed channel');
         return;
       }
 
-      let data = event.data;
-      if (data instanceof ArrayBuffer) {
-        data = Buffer.from(data);
-      } else if (data instanceof Blob) {
-        // The only await on this path, so re-read the binding after it: disposal in the meantime
-        // leaves nothing to push to.
-        data = Buffer.from(await data.arrayBuffer());
-        if (!duplex) {
-          return;
-        }
-      }
-      duplex.push(data);
+      const data = event.data;
+      frameOrder = frameOrder.then(async () => {
+        const frame =
+          data instanceof ArrayBuffer
+            ? new Uint8Array(data)
+            : data instanceof Blob
+              ? new Uint8Array(await data.arrayBuffer())
+              : data;
+        // Re-read after the read: disposal in the meantime leaves nothing to push to.
+        inbound?.enqueue(frame);
+      });
+      return frameOrder;
     },
 
     onerror: (event: Event & any) => {
@@ -153,13 +167,12 @@ export const bindDataChannel = (
     // Release a writer parked on the watermark, otherwise the pipe never unwinds.
     flushed?.();
     flushed = null;
-    if (duplex) {
+    if (inbound) {
       // Both pipe directions have to go: the wire-protocol stream outlives this channel, and a
       // chunk it writes afterwards would otherwise reach `send` on a closed channel.
-      duplex.unpipe(stream);
-      stream.unpipe(duplex);
-      duplex.destroy();
-      duplex = undefined;
+      inboundAbort.abort();
+      outboundAbort.abort();
+      inbound = undefined;
       writable = false;
     }
     try {

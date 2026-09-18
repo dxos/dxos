@@ -34,10 +34,7 @@ const GENERAL_TYPE = `${meta.profile.key}.general`;
 const DIRECTORY_TYPE = `${meta.profile.key}.directory`;
 const MARKDOWN_PENDING_TYPE = `${meta.profile.key}.markdown-pending`;
 
-const workspaceRearrangeCache = new Map<
-  string,
-  (nextOrder: (FileSystemCapabilities.FileSystemWorkspace | unknown)[]) => void
->();
+const workspaceRearrangeCache = new Map<string, (nextOrder: string[]) => void>();
 
 /**
  * Depth-first walk of a workspace tree from its top-level entries to `targetId`, accumulating the
@@ -219,25 +216,9 @@ export default Capability.makeModule(
               let onRearrange = workspaceRearrangeCache.get(workspace.id);
               if (!onRearrange && graph && spacesOrder) {
                 onRearrange = (nextOrder) => {
-                  AppGraph.sortEdges(
-                    graph,
-                    GraphNode.RootId,
-                    'outbound',
-                    nextOrder.map((item) => {
-                      if (FileSystemCapabilities.isFileSystemWorkspace(item)) {
-                        return item.id;
-                      }
-                      return (item as { id: string }).id;
-                    }),
-                  );
-
+                  AppGraph.sortEdges(graph, GraphNode.RootId, 'outbound', nextOrder);
                   Obj.update(spacesOrder, (spacesOrder: Record<string, unknown>) => {
-                    spacesOrder.order = nextOrder.map((item) => {
-                      if (FileSystemCapabilities.isFileSystemWorkspace(item)) {
-                        return item.id;
-                      }
-                      return (item as { id: string }).id;
-                    });
+                    spacesOrder.order = nextOrder;
                   });
                 };
                 workspaceRearrangeCache.set(workspace.id, onRearrange);

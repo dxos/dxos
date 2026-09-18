@@ -49,6 +49,8 @@ export type EchoNetworkAdapterProps = {
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   /** Invoked when a replicator connection opens (including after reconnect). */
   onConnectionOpen?: () => void;
+  /** What a connected peer gaining access to more spaces does: re-announce it, or run this handler instead. */
+  onConnectionAuthScopeChanged: 'reannounce-peer' | ((peerId: PeerId) => void);
   monitor?: NetworkDataMonitor;
 };
 
@@ -316,6 +318,10 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     log('Connection auth scope changed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
+    if (this._params.onConnectionAuthScopeChanged !== 'reannounce-peer') {
+      this._params.onConnectionAuthScopeChanged(connection.peerId as PeerId);
+      return;
+    }
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
     this._emitPeerCandidate(connection);
   }
