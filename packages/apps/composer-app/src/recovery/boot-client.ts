@@ -91,6 +91,20 @@ export const exportBootedSqlite = async (): Promise<Uint8Array> => {
   return devtoolsHost.exportSqliteDatabase();
 };
 
+/**
+ * Deletes the Subduction remote-heads records from the booted client's database: sync bookkeeping the client re-learns
+ * on its next sync, which bloats profiles that synced with edge across many edge restarts.
+ */
+export const deleteBootedRemoteHeads = async (
+  onProgress?: (progress: { deleted: number; total: number }) => void,
+): Promise<{ deleted: number }> => {
+  if (!bootedClient) {
+    throw new Error('Client not booted');
+  }
+  const devtoolsHost = Context.get((bootedClient.services as LocalClientServices).stack, DevtoolsHostService);
+  return devtoolsHost.deleteSubductionRemoteHeads({ onProgress });
+};
+
 export const destroyRecoveryClient = async (): Promise<void> => {
   if (!bootedClient) {
     return;

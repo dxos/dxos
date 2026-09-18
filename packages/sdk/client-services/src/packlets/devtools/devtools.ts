@@ -11,6 +11,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { Event as AsyncEvent, type Trigger } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { type DeleteSubductionRemoteHeadsOptions, deleteSubductionRemoteHeads } from '@dxos/echo-host';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -83,6 +84,13 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
         return yield* sql`${sql.unsafe(query, params)}`;
       }),
     );
+  }
+
+  /**
+   * Repair util: deletes every stored Subduction remote-heads record (see {@link deleteSubductionRemoteHeads}).
+   */
+  async 'deleteSubductionRemoteHeads'(options?: DeleteSubductionRemoteHeadsOptions): Promise<{ deleted: number }> {
+    return RuntimeProvider.runPromise(this.params.sql)(deleteSubductionRemoteHeads(options));
   }
 
   ['DevtoolsHost.events'](): EffectStream.Stream<DevtoolsHost.Event, Error> {

@@ -1554,9 +1554,11 @@ export class AutomergeHost extends Resource {
     // consisting entirely of diverged documents whose resync is already spent has nothing: for
     // those the policy is provably a no-op (`shareConfigChanged` revives only `all-failed` /
     // `no-peers` entries, and a diverged-but-settled entry is neither), while re-arming it
-    // re-probes every document against every connection — and since Subduction keys its
-    // `remote-heads` records by an ephemeral per-connection peer id, each probe persists a fresh
-    // record. That is the storage growth this branch used to drive, once per diff pass, forever.
+    // re-probes every document against every connection. The answering peer reports heads for
+    // each, and Subduction persists a `remote-heads` record the first time it hears a document's
+    // heads from a peer; with edge coming back under a new Subduction identity after every restart,
+    // each restart turned the next probe into one fresh row per document. That is the storage
+    // growth this branch used to drive.
     //
     // A pass that *issues* a resync still schedules it, so first-pass behaviour is unchanged and
     // only the repeating tail is dropped.

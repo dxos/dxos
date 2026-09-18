@@ -4,7 +4,15 @@
 
 import { Domino } from '@dxos/ui';
 
-export type RecoveryAction = 'diagnostics' | 'boot' | 'reset' | 'export' | 'import' | 'logs' | 'debug-port';
+export type RecoveryAction =
+  | 'diagnostics'
+  | 'boot'
+  | 'reset'
+  | 'export'
+  | 'import'
+  | 'clear-heads'
+  | 'logs'
+  | 'debug-port';
 
 export type RecoveryUi = {
   print: (message: string) => void;
@@ -51,6 +59,11 @@ const FOOTER_ACTIONS: ActionSpec[] = [
     action: 'import',
     label: 'Import',
     title: 'Import .dxprofile or raw .sqlite into OPFS DXOS database',
+  },
+  {
+    action: 'clear-heads',
+    label: 'Clear Heads',
+    title: 'Delete sync heads stored for remote peers (re-learned on next sync); fixes profiles that freeze on load',
   },
   {
     action: 'logs',

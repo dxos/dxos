@@ -9,6 +9,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { RuntimeProvider } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks/index.ts';
@@ -272,3 +273,66 @@ const descendantRange = (prefix: string): { lower: string; upper: string } => ({
   lower: prefix + SEPARATOR,
   upper: prefix + SEPARATOR_UPPER_BOUND,
 });
+
+export type DeleteSubductionRemoteHeadsOptions = {
+  /** Rows per statement. Bounds each transaction (and so the WAL) and sets how often progress is reported. */
+  batchSize?: number;
+  onProgress?: (progress: { deleted: number; total: number }) => void;
+};
+
+/**
+ * Deletes every stored Subduction remote-heads record — `[SUBDUCTION_PREFIX, 'remote-heads', <sedimentreeId>,
+ * <peerId>]`, one per document per remote peer it has synced with. A repair for profiles those records have bloated.
+ *
+ * The records cache what a peer last reported having. `SubductionSource` replays them when a document attaches (into
+ * `getSyncInfo` and the handle's `remote-heads` event) and persists one again when a peer next reports heads.
+ * The heads Subduction exchanges while syncing are computed from the local sedimentree, never read from here, so
+ * deleting the records loses no document data and changes nothing about what gets synced. Edge used to come back
+ * under a new Subduction identity after every restart, which is how a long-lived profile collects one record per
+ * document per restart — the bulk of the table.
+ *
+ * Deletes in key order, `batchSize` rows per statement, so an interrupted run keeps what it deleted and a rerun
+ * resumes. Each batch is cut at an existing key rather than selected with `IN (SELECT … LIMIT)`, which would
+ * materialize the batch in a temp B-tree.
+ */
+export const deleteSubductionRemoteHeads = ({
+  batchSize = 100_000,
+  onProgress,
+}: DeleteSubductionRemoteHeadsOptions = {}): Effect.Effect<
+  { deleted: number },
+  SqlError.SqlError,
+  SqlClient.SqlClient
+> =>
+  Effect.gen(function* () {
+    invariant(Number.isInteger(batchSize) && batchSize > 0, 'batchSize must be a positive integer');
+    const sql = yield* SqlClient.SqlClient;
+    const { lower, upper } = descendantRange(encodeKey([SUBDUCTION_PREFIX, 'remote-heads']));
+    const countRemaining = Effect.map(
+      sql<{ n: number }>`SELECT count(*) AS n FROM automerge_chunks WHERE key >= ${lower} AND key < ${upper}`,
+      ([row]) => row.n,
+    );
+
+    const total = yield* countRemaining;
+    let deleted = 0;
+    while (true) {
+      // The `batchSize`-th remaining key: everything from the start of the range up to it is exactly one batch.
+      const [last] = yield* sql<{ key: string }>`
+        SELECT key FROM automerge_chunks WHERE key >= ${lower} AND key < ${upper}
+        ORDER BY key LIMIT 1 OFFSET ${batchSize - 1}
+      `;
+      if (last === undefined) {
+        break;
+      }
+      yield* sql`DELETE FROM automerge_chunks WHERE key >= ${lower} AND key <= ${last.key}`;
+      deleted += batchSize;
+      onProgress?.({ deleted, total });
+    }
+
+    const remaining = yield* countRemaining;
+    if (remaining > 0) {
+      yield* sql`DELETE FROM automerge_chunks WHERE key >= ${lower} AND key < ${upper}`;
+      deleted += remaining;
+      onProgress?.({ deleted, total });
+    }
+    return { deleted };
+  }).pipe(Effect.withSpan('deleteSubductionRemoteHeads'));
