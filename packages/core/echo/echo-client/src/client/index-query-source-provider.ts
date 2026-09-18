@@ -24,6 +24,7 @@ import { DatabaseImpl } from '../proxy-db/index.ts';
 import {
   type QuerySource,
   type SourceEntry,
+  type UnresolvedHit,
   getQueryDeletedOption,
   getTargetSpacesForQuery,
   queryTargetsSpacesOrFeeds,
@@ -67,6 +68,21 @@ const QUERY_SERVICE_TIMEOUT = 20_000;
 
 /** Per-index-hit object hydration budget (parallel across hits). */
 const INDEX_OBJECT_LOAD_TIMEOUT = 2_000;
+
+/**
+ * What one host record produced: an entry, a hit that failed to hydrate, or a deliberate exclusion
+ * (a local delete the host's index has not caught up with, or an abandoned pass).
+ */
+type RecordOutcome =
+  | { _tag: 'entry'; entry: SourceEntry }
+  | { _tag: 'unresolved'; hit: UnresolvedHit }
+  | { _tag: 'excluded' };
+
+/** Entries and the hits that failed to become entries, from one hydration pass. */
+type MappedRecords = {
+  entries: SourceEntry[];
+  unresolved: UnresolvedHit[];
+};
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -134,6 +150,9 @@ export class IndexQuerySource implements QuerySource {
   /** Subscription to local object-load updates (plumbed from `DatabaseImpl`). */
   private _updateSubscription?: CleanupFn = undefined;
 
+  /** Index hits the last one-shot run could not hydrate, for the aggregate to judge. */
+  #lastUnresolved: readonly UnresolvedHit[] = [];
+
   constructor(private readonly _params: IndexQuerySourceProps) {}
 
   open(): void {
@@ -163,8 +182,13 @@ export class IndexQuerySource implements QuerySource {
     return false;
   }
 
+  unresolvedHits(): readonly UnresolvedHit[] {
+    return this.#lastUnresolved;
+  }
+
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
     this._query = query;
+    this.#lastUnresolved = [];
     // The index serves spaces and feeds; a query whose explicit scopes target neither
     // (e.g. registry-only) is answered entirely by other sources. Forwarding it anyway
     // made the whole query fail on edge — the query host rejects space-less queries, and
@@ -247,8 +271,14 @@ export class IndexQuerySource implements QuerySource {
               if (settled) {
                 return;
               }
-              const results = await this._mapRecords(new Context(), queryId, query, start, response.results ?? []);
-              settle(() => resolve(results));
+              const records = response.results ?? [];
+              const { entries, unresolved } = await this._mapRecords(new Context(), queryId, query, start, records);
+              if (unresolved.length === 0) {
+                settle(() => resolve(entries));
+                return;
+              }
+              const retried = await this._retryUnresolved(queryId, query, start, records, entries, unresolved);
+              settle(() => resolve(retried));
             } catch (err: any) {
               settle(() => reject(err));
             }
@@ -354,7 +384,9 @@ export class IndexQuerySource implements QuerySource {
 
         const ctx = new Context();
         this._hydrationCtx = ctx;
-        const results = await this._mapRecords(ctx, queryId, query, Date.now(), records);
+        // A reactive query keeps its unresolved hits rather than failing on them: `_onObjectsUpdated`
+        // re-runs this pass as their documents arrive, which a one-shot caller has no equivalent of.
+        const { entries } = await this._mapRecords(ctx, queryId, query, Date.now(), records);
 
         // Dropped if the source closed (or was re-opened with a new query) during hydration; a pass
         // queued for the new query still runs.
@@ -362,7 +394,7 @@ export class IndexQuerySource implements QuerySource {
           continue;
         }
 
-        this._results = results;
+        this._results = entries;
         this.changed.emit();
       } while (this._hydratePending);
     } catch (err: any) {
@@ -372,14 +404,40 @@ export class IndexQuerySource implements QuerySource {
     }
   }
 
-  /** Hydrate raw host records into query entries, dropping objects that fail to load or validate. */
+  /**
+   * Second chance for the hits a one-shot pass could not hydrate: a document still in flight when
+   * its budget expired is routinely there a moment later. What is still missing afterwards is
+   * recorded for {@link unresolvedHits} rather than dropped, since only the aggregate knows whether
+   * another source produced the object.
+   */
+  private async _retryUnresolved(
+    queryId: number,
+    query: QueryAST.Query,
+    start: number,
+    records: readonly QueryService.QueryResult[],
+    entries: readonly SourceEntry[],
+    unresolved: readonly UnresolvedHit[],
+  ): Promise<SourceEntry[]> {
+    log('retrying unresolved index hits', { queryId, count: unresolved.length });
+    const unresolvedIds = new Set(unresolved.map((hit) => hit.id));
+    const retryRecords = records.filter((record) => unresolvedIds.has(record.id));
+    const retried = await this._mapRecords(new Context(), queryId, query, start, retryRecords);
+    this.#lastUnresolved = retried.unresolved;
+
+    // Re-keyed by the host's record order rather than concatenated, so a retried entry lands where
+    // the host ranked it.
+    const byId = new Map([...entries, ...retried.entries].map((entry) => [entry.id, entry]));
+    return records.map((record) => byId.get(record.id)).filter(isNonNullable);
+  }
+
+  /** Hydrate raw host records into query entries, reporting the hits that failed to load or validate. */
   private async _mapRecords(
     ctx: Context,
     queryId: number,
     query: QueryAST.Query,
     start: number,
     records: readonly QueryService.QueryResult[],
-  ): Promise<SourceEntry[]> {
+  ): Promise<MappedRecords> {
     log('queryIndex raw results', {
       queryId,
       query: Query.pretty(Query.fromAst(query)),
@@ -388,7 +446,7 @@ export class IndexQuerySource implements QuerySource {
 
     const hydratedIntoFeedHandle = new Set<string>();
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
-    const processedResults: (SourceEntry | null)[] = [];
+    const processedResults: RecordOutcome[] = [];
     for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
       await yieldOrContinue('smooth');
       processedResults.push(
@@ -397,7 +455,20 @@ export class IndexQuerySource implements QuerySource {
         )),
       );
     }
-    const results = processedResults.filter(isNonNullable);
+    const results: SourceEntry[] = [];
+    const unresolved: UnresolvedHit[] = [];
+    for (const outcome of processedResults) {
+      switch (outcome._tag) {
+        case 'entry':
+          results.push(outcome.entry);
+          break;
+        case 'unresolved':
+          unresolved.push(outcome.hit);
+          break;
+        case 'excluded':
+          break;
+      }
+    }
 
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
     if (hydratedIntoFeedHandle.size > 0 && this._lastRemoteResults === records) {
@@ -423,9 +494,10 @@ export class IndexQuerySource implements QuerySource {
       query: Query.pretty(Query.fromAst(query)),
       fetchedFromIndex: records.length,
       loaded: results.length,
+      unresolved: unresolved.length,
     });
 
-    return results;
+    return { entries: results, unresolved };
   }
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
@@ -439,16 +511,17 @@ export class IndexQuerySource implements QuerySource {
   }
 
   /**
-   * Hydrate one host record into a query entry, or null if it fails to load or validate. Ids
-   * hydrated through a feed handle are added to `hydratedIntoFeedHandle` so the caller can release
-   * their retained `documentJson`.
+   * Hydrate one host record into a query entry, an unresolved hit when it fails to load or validate,
+   * or an exclusion when it is deliberately not part of the result. Ids hydrated through a feed
+   * handle are added to `hydratedIntoFeedHandle` so the caller can release their retained
+   * `documentJson`.
    */
   private async _filterMapResult(
     ctx: Context,
     queryStartTimestamp: number,
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle?: Set<string>,
-  ): Promise<SourceEntry | null> {
+  ): Promise<RecordOutcome> {
     recordObjectDiagnostic(result.id, () => ({
       objectId: result.id,
       spaceId: result.spaceId,
@@ -492,14 +565,17 @@ export class IndexQuerySource implements QuerySource {
       if (documentJsonReleased) {
         const cached = feedHandle?.getCachedObjectById(EntityId.make(result.id));
         if (!cached) {
-          return null;
+          return unresolvedHit(result, 'load-failed');
         }
         return {
-          id: result.id,
-          result: cached,
-          match: { rank: result.rank },
-          resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
-          group: _groupFromRemoteResult(result),
+          _tag: 'entry',
+          entry: {
+            id: result.id,
+            result: cached,
+            match: { rank: result.rank },
+            resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+            group: _groupFromRemoteResult(result),
+          },
         };
       }
 
@@ -523,48 +599,53 @@ export class IndexQuerySource implements QuerySource {
           emittedSchemaValidationWarnings.add(typeDxn);
           log.warn('object failed schema validation', { type: typeDxn, error: err });
         }
-        return null;
+        return unresolvedHit(result, 'schema-invalid');
       }
       if (!object) {
-        return null;
+        return unresolvedHit(result, 'load-failed');
       }
       if (feedHandle) {
         hydratedIntoFeedHandle?.add(result.id);
       }
-      const queryResult: SourceEntry = {
-        id: result.id,
-        result: object,
-        match: { rank: result.rank },
-        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
-        group: _groupFromRemoteResult(result),
+      return {
+        _tag: 'entry',
+        entry: {
+          id: result.id,
+          result: object,
+          match: { rank: result.rank },
+          resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+          group: _groupFromRemoteResult(result),
+        },
       };
-      return queryResult;
     }
 
     const object = await this._resolveIndexedObject(result);
     if (!object) {
-      return null;
+      return unresolvedHit(result, 'load-failed');
     }
 
+    // An abandoned pass, not a missing object: the caller discards its whole result.
     if (ctx.disposed) {
-      return null;
+      return { _tag: 'excluded' };
     }
 
     // The host's index lags a local delete: its in-flight response still lists the object, and
     // because results are a union across sources any stale entry resurfaces it after the working
     // set has already dropped it. The local flag is authoritative here.
     if (!this._matchesDeletedOption(object)) {
-      return null;
+      return { _tag: 'excluded' };
     }
 
-    const queryResult: SourceEntry = {
-      id: object.id,
-      result: object,
-      match: { rank: result.rank },
-      resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
-      group: _groupFromRemoteResult(result),
+    return {
+      _tag: 'entry',
+      entry: {
+        id: object.id,
+        result: object,
+        match: { rank: result.rank },
+        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+        group: _groupFromRemoteResult(result),
+      },
     };
-    return queryResult;
   }
 
   /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
@@ -620,6 +701,11 @@ let nextQueryId = 1;
  * Keyed by the type DXN.
  */
 const emittedSchemaValidationWarnings = new Set<string>();
+
+const unresolvedHit = (result: QueryService.QueryResult, reason: UnresolvedHit['reason']): RecordOutcome => ({
+  _tag: 'unresolved',
+  hit: { id: result.id, spaceId: result.spaceId, reason },
+});
 
 /**
  * Builds the group membership from a wire record; present iff the query has a `groupBy` clause.

@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from './errors.ts';
 export * from './graph-query-context.ts';
 export * from './query-context.ts';
 export * from './query-result.ts';

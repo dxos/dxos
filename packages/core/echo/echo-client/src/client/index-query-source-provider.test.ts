@@ -28,6 +28,9 @@ const mockGraph = {} as Hypergraph.Hypergraph;
 /** No-op update signal for tests that don't exercise re-hydration. */
 const noopUpdateEvent = new Event<ObjectUpdate>();
 
+/** Fake entity at the loader boundary — only `id` is read by the source under test. */
+const fakeEntity = (id: string): Entity.Unknown => ({ id }) as unknown as Entity.Unknown;
+
 const makeScopedQuery = (scopes: QueryAST.Scope[]): QueryAST.Query => ({
   type: 'from',
   query: {
@@ -237,6 +240,103 @@ describe('IndexQuerySource', () => {
     expect(source.getResults().map((entry) => entry.id)).toEqual([objectId]);
 
     void ctx.dispose();
+  });
+
+  // Regression: a hit that failed to hydrate was dropped from the result with only a log line, so a
+  // one-shot caller — an agent or an MCP tool, which unlike a reactive query gets no second pass —
+  // read a short result as the whole set and concluded the missing objects did not exist. The
+  // source reports them; `GraphQueryContext` decides, since another source may hold the object.
+  test('a one-shot run reports index hits that never loaded', async () => {
+    const spaceId = SpaceId$.random();
+    const loadable = EntityId.random();
+    const unloadable = EntityId.random();
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id: loadable, spaceId, rank: 0 },
+                  { id: unloadable, spaceId, rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        // The document behind `unloadable` never arrives, which is what an expired per-hit load
+        // budget looks like from here.
+        loadObject: async ({ objectId }) => (objectId === loadable ? fakeEntity(loadable) : undefined),
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+
+    expect(results.map((entry) => entry.id)).toEqual([loadable]);
+    expect(source.unresolvedHits()).toEqual([{ id: unloadable, spaceId, reason: 'load-failed' }]);
+  });
+
+  test('a one-shot query retries a hit whose document arrives late', async () => {
+    const spaceId = SpaceId$.random();
+    const prompt = EntityId.random();
+    const late = EntityId.random();
+    let lateAttempts = 0;
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id: prompt, spaceId, rank: 0 },
+                  { id: late, spaceId, rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async ({ objectId }) => {
+          if (objectId === prompt) {
+            return fakeEntity(prompt);
+          }
+          // Absent on the first pass and present when the retry asks again — a document that lost
+          // its race with the load budget rather than one that is missing.
+          lateAttempts++;
+          return lateAttempts > 1 ? fakeEntity(late) : undefined;
+        },
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+
+    // Re-keyed by the host's record order, so the retried entry lands where the host ranked it.
+    expect(results.map((entry) => entry.id)).toEqual([prompt, late]);
+    expect(lateAttempts).toBe(2);
+    expect(source.unresolvedHits()).toEqual([]);
   });
 });
 
