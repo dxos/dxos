@@ -37,10 +37,7 @@ import {
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
+describe('AutomergeRepo with Subduction', () => {
   beforeAll(async () => {
     await initSubduction();
   });

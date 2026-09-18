@@ -165,8 +165,11 @@ export const createRepoTopology = async <Peers extends string[], Peer extends st
   });
   onTestFinished(async () => {
     await Promise.all(repos.map((repo) => repo.flush().catch(() => {})));
-    await Promise.all(repos.map((repo) => shutdownRepo(repo)));
+    // Drop the peers before shutdown: `SubductionSource.shutdown()` runs a final sync round bounded
+    // by a hard-coded 5 s `SHUTDOWN_SYNC_TIMEOUT_MS`, and with both ends tearing down concurrently
+    // that round always burns the full 5 s, leaving every positive assertion no headroom under CI.
     disconnectAdapters(adapters);
+    await Promise.all(repos.map((repo) => shutdownRepo(repo)));
   });
   return { repos, adapters };
 };

@@ -28,10 +28,7 @@ import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
+describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
     const { runtime, dispose } = createRuntime();
     onTestFinished(() => dispose());
