@@ -81,8 +81,7 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     const connection = openConnections[0];
     const peerId = connection.peerId;
 
-    // The edge signals a lost session on this connection lifetime (DX-1275). Recovery re-runs the
-    // handshake on the connection we already hold rather than tearing it down for a new one.
+    // The edge signals a lost session on this connection lifetime (DX-1275).
     await sendErrorForCurrentConnection(client, server, spaceId, openConnections);
     await waitForCondition({ condition: () => transportResets.length === 1 });
 
@@ -118,8 +117,7 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     await sendErrorForCurrentConnection(client, server, spaceId, openConnections);
     await waitForReopen;
 
-    // The replaced connection's own close runs detached, so assert on the connection the replicator
-    // now holds rather than on the array being down to one entry.
+    // The replaced connection's close runs detached, so assert on what the replicator now holds.
     const currentConnection = openConnections[openConnections.length - 1];
     expect(transportResets.length).toBe(MAX_IN_PLACE_REHANDSHAKES);
     expect(currentConnection).not.toBe(firstConnection);
@@ -221,11 +219,7 @@ const createMockContext = (args?: {
   return { context, openConnections, connectionOpen, transportResets };
 };
 
-/**
- * Deliver an edge `error` frame for the connection the replicator currently holds. The frame must
- * carry that connection's `_connectionId` (private, but visible to a same-package test) or the
- * client drops it as belonging to a prior lifetime.
- */
+/** Deliver an edge `error` frame carrying the current connection's `_connectionId`, which the client matches before acting. */
 const sendErrorForCurrentConnection = async (
   client: EdgeClient,
   server: Awaited<ReturnType<typeof createTestEdgeWsServer>>,

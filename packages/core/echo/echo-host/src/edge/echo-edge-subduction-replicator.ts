@@ -61,15 +61,7 @@ const MAX_RESTART_DELAY = 5000;
 
 /**
  * Consecutive error signals answered by an in-place re-handshake before the connection is restarted
- * instead (DX-1275).
- *
- * The edge loses its sessions with every Durable Object instance — routinely, tens of seconds apart
- * — and its only recovery signal is this error frame. Restarting costs a new connection id, a new
- * repo peer id and a collection re-announce over every document in the space; re-running the
- * handshake on the connection we already hold costs one round trip and keeps both. The bound is
- * what makes it safe: an edge that keeps refusing the rebound session would otherwise loop here,
- * so after this many unanswered attempts the connection is torn down as before. Any inbound frame
- * is proof the rebind took and clears the count.
+ * instead (DX-1275). Bounded so an edge that keeps refusing the rebound session cannot loop here.
  */
 export const MAX_IN_PLACE_REHANDSHAKES = 3;
 
@@ -535,9 +527,8 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           });
           return;
         }
-        // The edge lost the session, not the link: re-run the handshake on this connection so the
-        // peer id — and every piece of sync state keyed by it — survives. Restarting is the
-        // fallback for an edge that will not take the rebound session.
+        // The edge lost the session, not the link: re-running the handshake here keeps the peer id
+        // and every piece of sync state keyed by it.
         if (this.#inPlaceRehandshakes < MAX_IN_PLACE_REHANDSHAKES && this._context.onConnectionTransportReset(this)) {
           this.#discardPendingFrames();
           this.#inPlaceRehandshakes++;
@@ -601,9 +592,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           this._readableStreamController.enqueue(inner);
           enqueued++;
         }
-        // Counted, not assumed: an empty or wholly malformed batch delivers nothing to the
-        // transport, and crediting it would refill the re-handshake budget that exists to escape
-        // exactly such a session.
+        // Counted, not assumed: an empty or malformed batch must not refill the budget.
         if (enqueued > 0) {
           this.#onInboundFrame();
         }
@@ -701,9 +690,8 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   }
 
   /**
-   * Drop what is buffered for a session that no longer exists on either side, and let the next
-   * frame ship alone: flushing stale `SUM` bytes after the rebind would feed them to the fresh
-   * transport mid-handshake, and the handshake itself must stay unbatched (see `#firstFrameSent`).
+   * Drop what is buffered for a session that no longer exists, and let the next frame ship alone:
+   * flushing stale `SUM` bytes after a rebind would reach the fresh transport mid-handshake.
    */
   #discardPendingFrames(): void {
     if (this.#flushTimer !== undefined) {

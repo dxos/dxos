@@ -69,11 +69,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
    * Remote peer id -> connection.
    */
   private readonly _connections = new Map<PeerId, ConnectionEntry>();
-  /**
-   * Peers whose subduction transport is mid-reset. Their `peer-disconnected`/`peer-candidate` pair
-   * re-runs a handshake on a connection that stays open, so it must not read as a peer leaving and
-   * rejoining — see {@link _onConnectionTransportReset}.
-   */
+  /** Peers mid-reset, whose event pair must not read as a peer leaving and rejoining (DX-1277). */
   private readonly _resettingTransports = new Set<PeerId>();
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
@@ -333,12 +329,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   /**
-   * Re-run the peer's transport handshake without closing the connection (DX-1275). The
-   * `peer-disconnected`/`peer-candidate` pair is what drives `AdapterConnections` to tear down the
-   * stale subduction transport and start a fresh one; the connection entry, its streams and its
-   * peer id are untouched, and {@link _resettingTransports} marks the pair so listeners keyed on
-   * peer lifecycle (the collection synchronizer) leave their per-peer state alone. Both emissions
-   * are synchronous, so the mark covers exactly this pair.
+   * Re-run the peer's transport handshake without closing the connection (DX-1275). The event pair
+   * is the only thing that drives `AdapterConnections` to rebuild a subduction transport; the mark
+   * covers exactly this pair, since both emissions are synchronous.
    */
   private _onConnectionTransportReset(connection: AutomergeReplicatorConnection): boolean {
     const peerId = connection.peerId as PeerId;

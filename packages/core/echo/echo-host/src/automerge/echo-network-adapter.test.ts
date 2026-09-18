@@ -92,8 +92,7 @@ describe('EchoNetworkAdapter', () => {
     const entry = (adapter as any)._connections.get(ANOTHER_PEER_ID);
     invariant(entry);
 
-    // Both emissions must be marked as a reset: that mark is how the collection synchronizer tells
-    // a rebound transport from a peer that actually left and came back (DX-1275).
+    // The mark is how the collection synchronizer tells a rebound transport from a real rejoin.
     const events: string[] = [];
     let markedThroughout = true;
     adapter.on('peer-disconnected', ({ peerId }) => {
