@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './errors.ts';
 export * from '#platform';
 
 export * as Ansi from './Ansi.ts';

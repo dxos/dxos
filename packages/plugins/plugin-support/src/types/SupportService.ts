@@ -91,7 +91,7 @@ const uploadLogs = (
  * already filed by this point, and the dump can be large.
  */
 const flushLogs = (observability: Observability.Observability, attributes: Record<string, string>) =>
-  Effect.tryPromise({ try: () => observability.support.flushLogs(attributes as never), catch: (cause) => cause }).pipe(
+  Effect.tryPromise(() => observability.support.flushLogs(attributes as never)).pipe(
     Effect.catchCause((cause) => Effect.logWarning('support logs flush failed', { cause })),
     Effect.forkDetach,
   );

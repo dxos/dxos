@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+
+const { isGroupKeyAggregate } = QueryAST;
 
 /**
  * A (possibly composite) group key: one coerced scalar component per grouped property.
@@ -22,7 +24,69 @@ export type GroupAggregates = Record<string, AggregateValue>;
  * client `WorkingSetQueryExecutor`. The clause itself is declared in `QueryPlan.AggregateStep`; this
  * module holds the runtime grouping/pagination algorithms that the executors apply.
  */
+const HOUR_MS = 3_600_000;
+
+const dateTimeFormats = new Map<string, Intl.DateTimeFormat>();
+
+/** Wall-clock fields of `timestamp` in `timeZone`, from a formatter cached per zone. */
+const wallClock = (timestamp: number, timeZone: string) => {
+  let format = dateTimeFormats.get(timeZone);
+  if (!format) {
+    format = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    });
+    dateTimeFormats.set(timeZone, format);
+  }
+  const parts = format.formatToParts(timestamp);
+  const field = (type: Intl.DateTimeFormatPartTypes): number => Number(parts.find((part) => part.type === type)?.value);
+  return {
+    year: field('year'),
+    month: field('month'),
+    day: field('day'),
+    hour: field('hour'),
+    minute: field('minute'),
+    second: field('second'),
+  };
+};
+
+/** How far `timeZone` is ahead of UTC at `timestamp`, in ms. */
+const zoneOffset = (timestamp: number, timeZone: string): number => {
+  const { year, month, day, hour, minute, second } = wallClock(timestamp, timeZone);
+  return Date.UTC(year, month - 1, day, hour, minute, second) - Math.floor(timestamp / 1000) * 1000;
+};
+
 export const GroupBy = Object.freeze({
+  /**
+   * The start of the hour or calendar day `timestamp` falls in, in unix ms, or `null` when unknown.
+   * Hours are UTC. Days follow `timeZone` (UTC when absent), so a day that starts or ends on a
+   * daylight-saving change still begins at that zone's local midnight.
+   */
+  truncateTimestamp: (timestamp: number | null | undefined, unit: 'hour' | 'day', timeZone = 'UTC'): number | null => {
+    if (timestamp == null) {
+      return null;
+    }
+    if (unit === 'hour') {
+      return Math.floor(timestamp / HOUR_MS) * HOUR_MS;
+    }
+    const { year, month, day } = wallClock(timestamp, timeZone);
+    const midnightAsUtc = Date.UTC(year, month - 1, day);
+    // The offset at local midnight can differ from the offset at `timestamp` across a DST change, so
+    // correct again unless the first candidate already falls on the day asked for. A zone that skips
+    // midnight (Santiago in September) has no 00:00, and its first candidate is the day's first instant.
+    const candidate = midnightAsUtc - zoneOffset(midnightAsUtc, timeZone);
+    const onDay = wallClock(candidate, timeZone);
+    return onDay.year === year && onDay.month === month && onDay.day === day
+      ? candidate
+      : midnightAsUtc - zoneOffset(candidate, timeZone);
+  },
+
   /**
    * Coerces a raw property value into a group-key component.
    * `typeof value` must be `string`, `number`, or `boolean`; anything else (missing,
@@ -187,7 +251,7 @@ export const GroupBy = Object.freeze({
    * requested across the group's `items`-kind aggregates — two conflicting orders are rejected
    * rather than silently honoring only one of them.
    */
-  withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
+  withGroupAggregates: <T extends { groupKey?: GroupKeyValue; aggregates?: GroupAggregates }>(
     items: readonly T[],
     getKey: (item: T) => string,
     aggregates: readonly QueryAST.GroupAggregate[],
@@ -240,9 +304,9 @@ export const GroupBy = Object.freeze({
         computed[aggregate.name] =
           aggregate.kind === 'count'
             ? members.length
-            : aggregate.kind === 'group'
-              ? // All members of a group share the key, so read the group value off any member.
-                GroupBy.resolveKeyComponent(aggregate.properties, (property) => getProperty(members[0], property))
+            : isGroupKeyAggregate(aggregate)
+              ? // All members of a group share the key, so read the component off any member.
+                (members[0].groupKey?.[aggregate.name] ?? null)
               : GroupBy.reduceAggregate(
                   members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
                   aggregate.kind,
@@ -251,6 +315,29 @@ export const GroupBy = Object.freeze({
       for (const member of members) {
         result.push({ ...member, aggregates: computed });
       }
+      index = end;
+    }
+    return result;
+  },
+
+  /**
+   * Keeps one member per group as its stand-in, recording the group size. Used when the query asks
+   * for no members, so nothing downstream has to carry or ship the objects.
+   * Assumes `items` are already partitioned into contiguous groups (see {@link partitionByGroupKey}).
+   */
+  collapseGroups: <T extends { collapsed?: { size: number } }>(
+    items: readonly T[],
+    getKey: (item: T) => string,
+  ): T[] => {
+    const result: T[] = [];
+    let index = 0;
+    while (index < items.length) {
+      const key = getKey(items[index]);
+      let end = index;
+      while (end < items.length && getKey(items[end]) === key) {
+        end += 1;
+      }
+      result.push({ ...items[index], collapsed: { size: end - index } });
       index = end;
     }
     return result;
