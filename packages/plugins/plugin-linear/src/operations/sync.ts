@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
@@ -21,6 +22,7 @@ import { meta } from '#meta';
 import { LinearOperation } from '#types';
 
 import { LINEAR_SOURCE } from '../constants.ts';
+import { LinearGraphQLError } from '../errors.ts';
 import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors.ts';
 import { LinearApi } from '../services/index.ts';
 
@@ -549,7 +551,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           const allTeams = yield* LinearApi.fetchTeams();
           const remoteTeam = allTeams.find((team) => team.id === externalId);
           if (!remoteTeam) {
-            return yield* Effect.fail(new Error('Team not accessible to connection token'));
+            return yield* Effect.fail(new LinearGraphQLError({ message: 'Team not accessible to connection token' }));
           }
 
           // Pull: projects → DXOS Projects, issues → DXOS Tasks. Each
@@ -657,7 +659,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           tasks: syncResult.success.pushedTasks,
         },
       };
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(LinearApi.fromAccessToken(binding.spec.source))),
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), LinearApi.fromAccessToken(binding.spec.source)))),
   );
 
   if (outcome._tag === 'Success') {

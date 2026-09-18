@@ -453,6 +453,40 @@ describe('Query', () => {
       expect(byKey.get('b')?.items).to.have.length(1);
     });
 
+    test('a count by type and hour is answered without members and agrees with the loaded rows', async () => {
+      const startedAt = Math.floor(Date.now() / 3_600_000) * 3_600_000;
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Ship it' }));
+      // Counted from index rows, a child still has to follow its deleted parent out of the result.
+      const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: parent, title: 'Orphaned' }));
+      db.remove(parent);
+      await db.flush({ indexes: true });
+      const loaded = await db.query(Filter.everything()).run();
+
+      const rows = await db
+        .query(
+          Query.select(Filter.everything()).aggregate({
+            type: Aggregate.type(),
+            hour: Aggregate.updated('hour'),
+            count: Aggregate.count(),
+          }),
+        )
+        .run();
+
+      // The hour may turn between the edits and this assertion, so accept either side of a boundary.
+      const hours = new Set([startedAt, Math.floor(Date.now() / 3_600_000) * 3_600_000]);
+      const countOf = (typename: string) => rows.find((row) => String(row.type).includes(typename))?.count;
+      expect(rows).to.have.length(2);
+      expect(countOf(Type.getTypename(TestSchema.Person))).to.equal(2);
+      expect(countOf(Type.getTypename(TestSchema.Task))).to.equal(1);
+      expect(rows.every((row) => hours.has(Number(row.hour)))).to.be.true;
+      expect(rows.every((row) => !('items' in row))).to.be.true;
+      expect(rows.reduce((total, row) => total + row.count, 0)).to.equal(loaded.length);
+    });
+
     test('a coalesce group key gives each member without the leading property its own group', async () => {
       const { db } = await builder.createDatabase();
       // One thread of 3 messages, plus 5 messages carrying no threadId at all.
@@ -831,8 +865,11 @@ describe('Query', () => {
         let lastResult = await subscribeAndWaitForFirstResult(query);
         expect(lastResult).to.have.length(1);
 
+        // Without `items` the working set declines the aggregate, so the host answers after its
+        // index round trip, which `db.flush({ updates: true })` does not await — poll.
         db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
         await db.flush({ updates: true });
+        await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
         lastResult = query.results;
 
         expect(lastResult).to.have.length(2);
@@ -840,6 +877,10 @@ describe('Query', () => {
 
         db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
         await db.flush({ updates: true });
+        await waitForCondition({
+          condition: () => query.results.find((group) => group.category === 'a')?.count === 2,
+          timeout: 2000,
+        });
         lastResult = query.results;
 
         expect(lastResult.find((group) => group.category === 'a')?.count).to.equal(2);
@@ -889,6 +930,8 @@ describe('Query', () => {
 
         db.remove(obj);
         await db.flush({ updates: true });
+        // Host-routed (no `items`), so the removal lands after the index round trip — poll.
+        await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
         const lastResult = query.results;
 
         expect(lastResult).to.have.length(1);

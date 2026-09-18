@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Aggregate, Feed, Filter, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { EID, EntityId, SpaceId } from '@dxos/keys';
+import { EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { type QueryPlan } from './plan.ts';
 import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
@@ -1618,6 +1618,43 @@ describe('QueryPlanner', () => {
   });
 
   describe('aggregate', () => {
+    test('a count by index fields selects bare index rows; a property key loads documents', () => {
+      const selectOf = (query: Query.Any) =>
+        planner.createPlan(withSpaceIdOptions(query.ast)).steps.find((step) => step._tag === 'SelectStep');
+
+      const everything = Query.select(Filter.everything()).aggregate({
+        type: Aggregate.type(),
+        hour: Aggregate.updated('hour'),
+        count: Aggregate.count(),
+      });
+      const tasks = Query.select(Filter.type(TestSchema.Task)).aggregate({ count: Aggregate.count() });
+      const byTitle = Query.select(Filter.type(TestSchema.Task)).aggregate({
+        title: Aggregate.group('title'),
+        count: Aggregate.count(),
+      });
+
+      // A metadata predicate reads keys an index row does not carry (only a stored AST can pair one
+      // with a typename, since `Filter.key` carries no typename).
+      const byMetaKey: QueryAST.Query = {
+        type: 'aggregate',
+        query: {
+          type: 'select',
+          filter: {
+            type: 'object',
+            typename: URI.make('dxn:com.example.type.task:0.1.0'),
+            props: {},
+            metaKey: 'example.com/id',
+          },
+        },
+        aggregates: [{ name: 'count', kind: 'count' }],
+      };
+
+      expect(selectOf(everything)).toMatchObject({ bare: true });
+      expect(selectOf(tasks)).toMatchObject({ bare: true });
+      expect(selectOf(byTitle)).not.toHaveProperty('bare');
+      expect(planner.createPlan(withSpaceIdOptions(byMetaKey)).steps[0]).not.toHaveProperty('bare');
+    });
+
     test('group by single property inserts a natural OrderStep before AggregateStep', () => {
       const query = Query.select(Filter.type(TestSchema.Task)).aggregate({ title: Aggregate.group('title') });
 
