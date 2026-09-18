@@ -258,9 +258,11 @@ export class RepoProxy extends Resource {
     this._sendUpdatesJob = this._createSendUpdatesJob();
     // TODO(dmaretskyi): Set proper space id.
     this._subscribe();
+    this._pageEvents('addEventListener');
   }
 
   protected override async _close(): Promise<void> {
+    this._pageEvents('removeEventListener');
     await this._sendUpdatesJob?.join();
     this._sendUpdatesJob = undefined;
     for (const handle of Object.values(this._handles)) {
@@ -275,6 +277,22 @@ export class RepoProxy extends Resource {
     this._failedCreations.clear();
     this._subscriptionCleanup?.();
     this._subscriptionCleanup = undefined;
+  }
+
+  /**
+   * A batch throttled to {@link MAX_UPDATE_FREQ} would not survive the page going away; sending it
+   * as the page hides reaches the worker, which outlives the tab, within the handler's microtasks.
+   */
+  private readonly _onPageHide = () => {
+    this._sendUpdatesJob?.forceTrigger();
+  };
+
+  /** Registers or unregisters {@link _onPageHide} where a page exists; a worker or Node has no such event. */
+  private _pageEvents(method: 'addEventListener' | 'removeEventListener'): void {
+    const fn = Reflect.get(globalThis, method);
+    if (typeof fn === 'function') {
+      fn.call(globalThis, 'pagehide', this._onPageHide);
+    }
   }
 
   /**
@@ -649,15 +667,18 @@ export class RepoProxy extends Resource {
 
     try {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
-      await runServiceCall(
-        this._runtime,
-        this._dataService['DataService.updateSubscription']({
-          subscriptionId: this._subscriptionId,
-          addIds,
-          removeIds,
-        }),
-        { timeout: RPC_TIMEOUT },
-      );
+      // A round trip a batch of plain mutations does not need, and one a hiding page cannot afford.
+      if (addIds.length > 0 || removeIds.length > 0) {
+        await runServiceCall(
+          this._runtime,
+          this._dataService['DataService.updateSubscription']({
+            subscriptionId: this._subscriptionId,
+            addIds,
+            removeIds,
+          }),
+          { timeout: RPC_TIMEOUT },
+        );
+      }
 
       const updates: DataService.DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
