@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
@@ -24,46 +24,42 @@ export const [AttentionContextProvider, useAttentionContext] = createContext<Att
 
 export const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false } as Attention;
 
+/** Stable snapshot for `useAttended` when there is nothing to subscribe to. */
+const NO_ATTENDED: readonly string[] = [];
+
+/** Stable no-op unsubscribe for when there is no id/manager to subscribe to. */
+const noopUnsubscribe = () => {};
+
 /**
  * Subscribe to the attention state for a qualified graph ID.
+ * Reads synchronously via `useSyncExternalStore` so the first render (and any update fired during
+ * a layout effect, before paint) already reflects the manager's current state.
  */
 // TODO(burdon): Unify with selection state and change to contextId?
 export const useAttention = (attendableId?: string): Attention => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
-  const [state, setState] = useState<Attention>(UNKNOWN_ATTENDABLE);
-  useEffect(() => {
-    if (!attendableId || !attention) {
-      setState(UNKNOWN_ATTENDABLE);
-      return;
-    }
+  const subscribe = useCallback(
+    (onStoreChange: () => void) =>
+      !attendableId || !attention ? noopUnsubscribe : attention.subscribe(attendableId, onStoreChange),
+    [attention, attendableId],
+  );
+  const getSnapshot = useCallback(
+    () => (attendableId && attention ? attention.get(attendableId) : UNKNOWN_ATTENDABLE),
+    [attention, attendableId],
+  );
 
-    const currentState = attention.get(attendableId);
-    setState(currentState);
-
-    return attention.subscribe(attendableId, (newState) => {
-      setState(newState);
-    });
-  }, [attention, attendableId]);
-
-  return state;
+  return useSyncExternalStore(subscribe, getSnapshot);
 };
 
-export const useAttended = () => {
+export const useAttended = (): readonly string[] => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
-  const [current, setCurrent] = useState<readonly string[]>([]);
-  useEffect(() => {
-    if (!attention) {
-      return;
-    }
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => (!attention ? noopUnsubscribe : attention.subscribeCurrent(onStoreChange)),
+    [attention],
+  );
+  const getSnapshot = useCallback(() => (attention ? attention.getCurrent() : NO_ATTENDED), [attention]);
 
-    setCurrent(attention.getCurrent());
-
-    return attention.subscribeCurrent((newCurrent) => {
-      setCurrent(newCurrent);
-    });
-  }, [attention]);
-
-  return current;
+  return useSyncExternalStore(subscribe, getSnapshot);
 };
 
 /**
