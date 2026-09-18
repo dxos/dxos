@@ -228,7 +228,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
 
     // TODO(wittjosiah): Remove. This is for backwards compatibility.
     if (relation === CHILD_RELATION) {
-      Graph.expandSync(this.graph, id, Node.actionRelation());
+      Graph.expandSync(this.graph, id, Node.action);
     }
   }
 }
@@ -422,7 +422,7 @@ export const createExtensionRaw = <const Id extends string = string>(
       ? ({
           id: getId('actionGroups'),
           position,
-          relation: Node.actionRelation(),
+          relation: Node.action,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -443,7 +443,7 @@ export const createExtensionRaw = <const Id extends string = string>(
       ? ({
           id: getId('actions'),
           position,
-          relation: Node.actionRelation(),
+          relation: Node.action,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {

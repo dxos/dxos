@@ -38,7 +38,12 @@ const awaitAtom = <T>(
     return Effect.sync(unsubscribe);
   }).pipe(Effect.timeoutOrElse({ duration: `${timeoutMs} millis`, orElse: () => Effect.succeed(undefined) }));
 
-/** Waits out the re-expansion of `ids` that a retention change released, so callers resolve the rebuilt nodes. */
+/**
+ * Waits for `ids` a retention change released to be back in the graph, so a caller's reads resolve them.
+ * Expanding only starts the rebuild — connector output lands on a flush, and a path rebuilds a level per
+ * round — so awaiting one flush would not tell a caller the subjects had returned. Ids that were never
+ * released are not waited on at all, which is what keeps a stale or bogus one from costing the timeout.
+ */
 export const awaitReleaseSettled = (
   registry: Registry.AtomRegistry,
   builder: AppGraphBuilder.GraphBuilder,

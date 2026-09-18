@@ -355,7 +355,7 @@ export class GraphImpl implements WritableGraph {
       if (!id) {
         return [];
       }
-      return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
+      return get(this._connections(connectionKey(id, Node.action))) as (Node.Action | Node.ActionGroup)[];
     }).pipe(withLabel(`graph:actions:${id}`));
   });
 
@@ -663,7 +663,9 @@ export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> 
  *
  * Fires the `onExpand` callback to add connections to the node. That callback subscribes to the node's
  * connector atom immediately, so every matching builder extension runs before this returns — which is why
- * anything on a paint-critical path (a pointer handler, a render) should prefer {@link expand}.
+ * anything on a paint-critical path (a pointer handler, a render) should prefer {@link expand}. Their
+ * output reaches the graph on the builder's next flush, so a caller that reads the connections straight
+ * after this sees none: await the builder's flush first.
  *
  * Expanding a node that is already expanded for the same relation is a no-op.
  */
@@ -894,13 +896,12 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
 
   if (actions) {
     addNodes(graph, actions);
-    const actionRelation = Node.actionRelation();
-    const _edges = actions.map((node) => ({ source: id, target: node.id, relation: actionRelation }));
+    const _edges = actions.map((node) => ({ source: id, target: node.id, relation: Node.action }));
     addEdges(graph, _edges);
     sortEdges(
       graph,
       id,
-      actionRelation,
+      Node.action,
       actions.map((node) => node.id),
     );
   }

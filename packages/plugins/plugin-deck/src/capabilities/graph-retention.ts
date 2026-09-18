@@ -22,7 +22,7 @@ export default Capability.makeModule(
 
     const retention: AppGraphBuilder.Retention = {
       // Actions and companions are facets of the node they hang off, so their edges span no distance.
-      attached: [AppGraphNode.actionRelation(), AppNode.companion],
+      attached: [AppGraphNode.action, AppNode.companion],
       retained: Atom.make((get) => {
         const { activeDeck, previousDeck } = get(stateAtom);
         return retainedWorkspaces({

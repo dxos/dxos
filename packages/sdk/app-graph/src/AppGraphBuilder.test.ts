@@ -41,18 +41,18 @@ describe('GraphBuilder', () => {
         builder,
         GraphBuilder.createExtensionRaw({
           id: 'inboundConnector',
-          relation: Node.childRelation('inbound'),
+          relation: Graph.inverseRelation(Node.child),
           connector: () => Atom.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
         }),
       );
 
       const graph = builder.graph;
       Graph.expandSync(graph, GraphNode.RootId, 'child');
-      Graph.expandSync(graph, GraphNode.RootId, Node.childRelation('inbound'));
+      Graph.expandSync(graph, GraphNode.RootId, Graph.inverseRelation(Node.child));
       await GraphBuilder.flush(builder);
 
       const outbound = registry.get(graph.connections(GraphNode.RootId, 'child'));
-      const inbound = registry.get(graph.connections(GraphNode.RootId, Node.childRelation('inbound')));
+      const inbound = registry.get(graph.connections(GraphNode.RootId, Graph.inverseRelation(Node.child)));
 
       expect(outbound).has.length(1);
       expect(outbound[0].id).to.equal('root/child');
@@ -805,7 +805,7 @@ describe('GraphBuilder', () => {
 
         GraphBuilder.setRetention(builder, [
           {
-            attached: [Node.actionRelation(), ATTACHED],
+            attached: [Node.action, ATTACHED],
             retained: Atom.make([{ id: 'root/w0', depth: 1 }]),
           },
         ]);

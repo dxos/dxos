@@ -158,7 +158,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (AppGraphNode.isAction(node)) {
-          const [parent] = AppGraph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound'));
+          const [parent] = AppGraph.getConnections(graph, node.id, AppGraph.inverseRelation(AppGraphNode.child));
           if (parent) {
             void runAction(node, { parent, path, caller: NAV_TREE_ITEM });
           }

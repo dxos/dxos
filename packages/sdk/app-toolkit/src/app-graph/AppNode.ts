@@ -547,7 +547,7 @@ export const makeToolbarAction = <R = never>({
  * toolbar. Unlike a flat {@link makeToolbarAction}, a group MUST be returned from a `connector:`
  * extension callback — not `actions:`, which always stamps `type: AppGraphNode.ActionType` on every
  * returned node and would clobber the group's type — with the extension's `relation` set to
- * `AppGraphNode.actionRelation()` so `graph.actions(nodeId)` picks the group up as one of the node's
+ * `AppGraphNode.action` so `graph.actions(nodeId)` picks the group up as one of the node's
  * actions. The group's own nested `actions` are wired automatically by `@dxos/app-graph` (it
  * recurses into any `NodeArg.actions` field), so the children need no separate extension.
  */
